@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Format staged files with Prettier
+npx prettier --write --ignore-unknown $(git diff --cached --name-only)
+
+# Run ESLint on staged files
+npx eslint --fix --max-warnings 0 $(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|jsx|ts|tsx)$' | xargs)
+
+# Add back the modified files
+git add -A
