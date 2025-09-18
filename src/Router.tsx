@@ -8,7 +8,6 @@ import MainLayout from './components/layouts/MainLayout'
 // Feature components
 import HomePage from './features/auth/HomePage'
 import LoginPage from './features/auth/LoginPage'
-import OnboardingFlow from './features/onboarding/OnboardingFlow'
 
 // Protected route wrapper
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
@@ -42,14 +41,7 @@ const AppRouter: React.FC = () => {
         }
       />
 
-      <Route
-        path="/onboarding/*"
-        element={
-          <ProtectedRoute>
-            <OnboardingFlow />
-          </ProtectedRoute>
-        }
-      />
+      {/* TODO: Add onboarding flow when implemented */}
 
       {/* Catch all route */}
       <Route path="*" element={<Navigate to="/" replace />} />
