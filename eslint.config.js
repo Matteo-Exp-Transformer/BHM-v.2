@@ -7,6 +7,31 @@ import tsparser from '@typescript-eslint/parser'
 
 export default [
   { ignores: ['dist'] },
+  // Configuration for Node.js config files
+  {
+    files: ['*.config.{js,ts}', 'vite.config.ts', 'vitest.config.ts'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: { ...globals.node, ...globals.es2020 },
+      parser: tsparser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...tseslint.configs.recommended.rules,
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
+    },
+  },
+  // Configuration for React/browser files
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
