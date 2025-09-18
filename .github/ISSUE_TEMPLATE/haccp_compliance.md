@@ -18,7 +18,7 @@ A clear and concise description of the compliance issue or request.
 - [ ] Audit trail
 - [ ] Staff certification
 - [ ] Product management
-- [ ] Other: ****\_\_\_****
+- [ ] Other: \***\*\_\_\_\*\***
 
 ## 🚨 Severity Level
 
