@@ -8,15 +8,19 @@ import path from 'path'
 export default defineConfig({
   plugins: [
     react(),
-    sentryVitePlugin({
-      org: process.env.SENTRY_ORG,
-      project: process.env.SENTRY_PROJECT,
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-      telemetry: false,
-      sourcemaps: {
-        assets: './dist/**',
-      },
-    }),
+    ...(process.env.SENTRY_AUTH_TOKEN
+      ? [
+          sentryVitePlugin({
+            org: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT,
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+            telemetry: false,
+            sourcemaps: {
+              assets: './dist/**',
+            },
+          }),
+        ]
+      : []),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
@@ -71,6 +75,17 @@ export default defineConfig({
       },
     }),
   ],
+  optimizeDeps: {
+    force: true,
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@tanstack/react-query',
+      '@clerk/clerk-react',
+      '@sentry/react',
+    ],
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
