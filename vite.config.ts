@@ -6,6 +6,15 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@tanstack/react-query',
+      '@clerk/clerk-react',
+    ],
+  },
   plugins: [
     react(),
     sentryVitePlugin({
