@@ -7,6 +7,11 @@ import { initSentry } from './lib/sentry'
 import App from './App.tsx'
 import './styles/index.css'
 
+// Test Supabase connection in development
+if (import.meta.env.DEV) {
+  import('./lib/supabase/test-connection')
+}
+
 // Initialize Sentry
 initSentry()
 

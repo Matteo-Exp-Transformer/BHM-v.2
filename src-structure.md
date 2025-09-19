@@ -34,15 +34,18 @@ src/
 ## 🔧 Key Files for Backend Integration
 
 ### **1. Authentication Setup**
+
 - **`main.tsx`**: ClerkProvider configuration
 - **`src/features/auth/LoginPage.tsx`**: Clerk SignIn component
 - **`src/features/auth/HomePage.tsx`**: UserButton and user data
 
 ### **2. Routing & Layout**
+
 - **`App.tsx`**: Main routing with protected routes
 - **`src/components/layouts/MainLayout.tsx`**: Tab navigation (6 tabs)
 
 ### **3. Missing Backend Integration Files**
+
 The following files need to be created for Supabase integration:
 
 ```
@@ -55,18 +58,21 @@ src/lib/supabase/
 ## 🎯 Integration Points
 
 ### **Authentication Flow**
+
 1. User visits `/login` → `LoginPage.tsx`
 2. Clerk handles authentication
 3. Redirects to `/` → `HomePage.tsx` (protected)
 4. `MainLayout.tsx` provides navigation
 
 ### **Database Integration Needed**
+
 - Supabase client setup in `src/lib/supabase/`
 - Type definitions from `supabase-schema.sql`
 - API calls for CRUD operations
 - User profile management
 
 ### **Current State**
+
 - ✅ Frontend structure complete
 - ✅ Authentication UI ready
 - ✅ Navigation implemented
