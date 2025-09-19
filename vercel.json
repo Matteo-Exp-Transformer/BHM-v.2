@@ -11,10 +11,12 @@
     }
   ],
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "src": "/sw.js", "headers": { "cache-control": "public, max-age=0, must-revalidate" } },
+    { "src": "/workbox-.*\.js", "headers": { "cache-control": "public, max-age=0, must-revalidate" } },
+    { "src": "/manifest\\.webmanifest", "dest": "/manifest.webmanifest" },
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/(.*)\\.(?:js|css|png|jpg|jpeg|gif|svg|ico|txt)", "dest": "/$1.$2" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ],
   "env": {
     "VITE_SUPABASE_URL": "@vite_supabase_url",
