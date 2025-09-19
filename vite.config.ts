@@ -71,6 +71,16 @@ export default defineConfig({
       },
     }),
   ],
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@tanstack/react-query',
+      '@clerk/clerk-react',
+      '@sentry/react',
+    ],
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
