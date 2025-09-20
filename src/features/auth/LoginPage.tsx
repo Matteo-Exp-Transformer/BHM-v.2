@@ -12,16 +12,20 @@ const LoginPage: React.FC = () => {
           {/* Logo */}
           <div className="mx-auto h-16 w-16 mb-4">
             <img
-              src="/assets/icon-192x192.png"
+              src="/dist/assets/icon-192x192.png"
               alt="HACCP Manager Logo"
               className="h-16 w-16 rounded-xl shadow-lg"
             />
           </div>
 
-          {/* Titolo con font moderno */}
+          {/* Titolo con font in corsivo elegante */}
           <h1
-            className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-green-600 to-blue-800 bg-clip-text text-transparent mb-2"
-            style={{ fontFamily: 'Poppins, sans-serif' }}
+            className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-green-600 to-blue-800 bg-clip-text text-transparent mb-2"
+            style={{
+              fontFamily: 'Playfair Display, serif',
+              fontStyle: 'italic',
+              letterSpacing: '0.02em',
+            }}
           >
             Business HACCP Manager
           </h1>
