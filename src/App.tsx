@@ -6,9 +6,15 @@ import 'react-toastify/dist/ReactToastify.css'
 // Layout
 import MainLayout from './components/layouts/MainLayout'
 
+// Components
+import ProtectedRoute from './components/ProtectedRoute'
+
 // Pages
 import HomePage from './features/auth/HomePage'
 import LoginPage from './features/auth/LoginPage'
+import ManagementPage from './features/management/ManagementPage'
+import CalendarPage from './features/calendar/CalendarPage'
+import ConservationPage from './features/conservation/ConservationPage'
 
 function App() {
   return (
@@ -22,26 +28,55 @@ function App() {
               <SignedIn>
                 <MainLayout>
                   <Routes>
-                    <Route path="/" element={<HomePage />} />
+                    <Route
+                      path="/"
+                      element={
+                        <ProtectedRoute>
+                          <HomePage />
+                        </ProtectedRoute>
+                      }
+                    />
                     <Route
                       path="/conservazione"
-                      element={<div>Conservazione - Coming Soon</div>}
+                      element={
+                        <ProtectedRoute>
+                          <ConservationPage />
+                        </ProtectedRoute>
+                      }
                     />
                     <Route
                       path="/attivita"
-                      element={<div>Attività e Mansioni - Coming Soon</div>}
+                      element={
+                        <ProtectedRoute>
+                          <CalendarPage />
+                        </ProtectedRoute>
+                      }
                     />
                     <Route
                       path="/inventario"
-                      element={<div>Inventario - Coming Soon</div>}
+                      element={
+                        <ProtectedRoute>
+                          <div>Inventario - Coming Soon</div>
+                        </ProtectedRoute>
+                      }
                     />
                     <Route
                       path="/impostazioni"
-                      element={<div>Impostazioni - Coming Soon</div>}
+                      element={
+                        <ProtectedRoute requiredRole="admin">
+                          <div>Impostazioni - Coming Soon (Solo Admin)</div>
+                        </ProtectedRoute>
+                      }
                     />
                     <Route
                       path="/gestione"
-                      element={<div>Gestione - Coming Soon</div>}
+                      element={
+                        <ProtectedRoute
+                          requiredRole={['admin', 'responsabile']}
+                        >
+                          <ManagementPage />
+                        </ProtectedRoute>
+                      }
                     />
                   </Routes>
                 </MainLayout>

@@ -7,6 +7,18 @@ import { initSentry } from './lib/sentry'
 import App from './App.tsx'
 import './styles/index.css'
 
+// DEBUG - rimuovi dopo il test
+console.log('🔍 Debug env vars:')
+console.log('Clerk key exists:', !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY)
+console.log(
+  'Clerk key length:',
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY?.length
+)
+console.log(
+  'First 20 chars:',
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY?.substring(0, 20)
+)
+
 // Test Supabase connection in development
 if (import.meta.env.DEV) {
   import('./lib/supabase/test-connection')
