@@ -8,23 +8,21 @@ const supabaseAnonKey =
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjZHlhZHNsdXp6enN5YndybWx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyNzM3ODksImV4cCI6MjA3Mzg0OTc4OX0.m2Jxd5ZwnUtAGuxw_Sj0__kcJUlILdKTJJbwESZP9c4'
 
-// Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    storage: {
-      // Use localStorage for better cross-origin compatibility
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    },
-  },
-  global: {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-    },
-  },
-})
+// Create Supabase client (singleton pattern)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+export const supabase = (() => {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+      },
+    })
+  }
+  return supabaseInstance
+})()
 
 // Service role client (for admin operations - server-side only)
 const supabaseServiceKey =
@@ -196,10 +194,23 @@ export type Database = {
 // Helper function to test connection
 export const testConnection = async () => {
   try {
-    const { data, error } = await supabase.from('companies').select('count')
-    if (error) throw error
-    console.log('✅ Supabase connection successful:', data)
-    return { success: true, data }
+    console.log('🔍 Testing Supabase connection...')
+    console.log('Supabase URL:', supabaseUrl)
+    console.log('Supabase instance:', !!supabase)
+
+    // Test basic connection first
+    const { data: healthData, error: healthError } = await supabase
+      .from('companies')
+      .select('count')
+      .limit(1)
+
+    if (healthError) {
+      console.error('❌ Health check failed:', healthError)
+      return { success: false, error: healthError }
+    }
+
+    console.log('✅ Supabase connection successful:', healthData)
+    return { success: true, data: healthData }
   } catch (error) {
     console.error('❌ Supabase connection failed:', error)
     return { success: false, error }

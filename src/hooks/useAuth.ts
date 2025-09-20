@@ -100,6 +100,7 @@ export const useAuth = () => {
     userEmail: user?.emailAddresses?.[0]?.emailAddress,
     currentOrigin: window.location.origin,
     currentHost: window.location.host,
+    clerkSession: user?.id ? 'Present' : 'Missing',
   })
 
   // Fetch user profile and determine role
