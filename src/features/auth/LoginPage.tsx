@@ -18,13 +18,12 @@ const LoginPage: React.FC = () => {
             />
           </div>
 
-          {/* Titolo con font in corsivo elegante */}
+          {/* Titolo con font Self Deception */}
           <h1
             className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-green-600 to-blue-800 bg-clip-text text-transparent mb-2"
             style={{
-              fontFamily: 'Playfair Display, serif',
-              fontStyle: 'italic',
-              letterSpacing: '0.02em',
+              fontFamily: 'Self Deception, cursive',
+              letterSpacing: '0.05em',
             }}
           >
             Business HACCP Manager
