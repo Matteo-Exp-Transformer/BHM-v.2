@@ -22,7 +22,7 @@ const LoginPage: React.FC = () => {
           <h1
             className="text-5xl font-bold text-blue-700 mb-2"
             style={{
-              fontFamily: 'Self Deception, cursive',
+              fontFamily: '"Self Deception", "Agatha", cursive',
               fontStyle: 'italic',
               letterSpacing: '0.05em',
             }}
