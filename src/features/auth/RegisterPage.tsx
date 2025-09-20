@@ -7,7 +7,7 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-lg w-full space-y-8">
+      <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           {/* Logo grande e centrato */}
           <div className="mx-auto mb-6 flex justify-center">
@@ -18,17 +18,17 @@ const RegisterPage: React.FC = () => {
             />
           </div>
 
-          {/* Sottotitolo elegante */}
-          <h2
-            className="text-2xl font-semibold text-gray-700 mb-2"
+          {/* Titolo con font in corsivo elegante */}
+          <h1
+            className="text-5xl font-bold bg-gradient-to-r from-green-600 via-blue-600 to-green-800 bg-clip-text text-transparent mb-2"
             style={{
               fontFamily: 'Playfair Display, serif',
               fontStyle: 'italic',
-              letterSpacing: '0.01em',
+              letterSpacing: '0.02em',
             }}
           >
-            Gestione Professionale
-          </h2>
+            Business HACCP Manager
+          </h1>
 
           <h2 className="text-xl font-semibold text-gray-700 mb-2">
             Registrati al Sistema

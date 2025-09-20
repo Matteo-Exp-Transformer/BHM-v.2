@@ -7,7 +7,7 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-lg w-full space-y-8">
+      <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           {/* Logo grande e centrato */}
           <div className="mx-auto mb-6 flex justify-center">
@@ -18,17 +18,17 @@ const LoginPage: React.FC = () => {
             />
           </div>
 
-          {/* Sottotitolo elegante */}
-          <h2
-            className="text-2xl font-semibold text-gray-700 mb-2"
+          {/* Titolo con font in corsivo elegante */}
+          <h1
+            className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-green-600 to-blue-800 bg-clip-text text-transparent mb-2"
             style={{
               fontFamily: 'Playfair Display, serif',
               fontStyle: 'italic',
-              letterSpacing: '0.01em',
+              letterSpacing: '0.02em',
             }}
           >
-            Gestione Professionale
-          </h2>
+            Business HACCP Manager
+          </h1>
 
           <h2 className="text-xl font-semibold text-gray-700 mb-2">
             Accedi al Sistema
