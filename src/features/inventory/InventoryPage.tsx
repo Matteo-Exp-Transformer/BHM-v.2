@@ -12,11 +12,13 @@ import {
 import { useProducts } from './hooks/useProducts'
 import { useCategories } from './hooks/useCategories'
 import { useExpiryTracking } from './hooks/useExpiryTracking'
+import { useExpiredProducts } from './hooks/useExpiredProducts'
 import { ProductCard } from './components/ProductCard'
 import { AddProductModal } from './components/AddProductModal'
 import { AddCategoryModal } from './components/AddCategoryModal'
 import { ExpiryAlert } from './components/ExpiryAlert'
 import { CategoryFilter } from './components/CategoryFilter'
+import { ExpiredProductsManager } from './components/ExpiredProductsManager'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 import {
   Product,
@@ -67,6 +69,13 @@ export default function InventoryPage() {
     isLoading: isLoadingExpiry,
     markAsExpired,
   } = useExpiryTracking(7) // 7 days ahead
+
+  const {
+    expiredProducts,
+    isLoadingExpired,
+    reinsertExpiredProduct,
+    deleteExpiredProduct,
+  } = useExpiredProducts()
 
   const handleCreateProduct = (productData: CreateProductForm) => {
     createProduct(productData, {
@@ -120,6 +129,15 @@ export default function InventoryPage() {
     if (window.confirm('Sei sicuro di voler eliminare questa categoria?')) {
       deleteCategory(categoryId)
     }
+  }
+
+  const handleReinsertExpiredProduct = (_productId: string) => {
+    // This will be handled by the ExpiredProductsManager modal
+    // The actual reinsertion logic is in the useExpiredProducts hook
+  }
+
+  const handleDeleteExpiredProduct = (productId: string) => {
+    deleteExpiredProduct.mutate(productId)
   }
 
   const isLoading = isLoadingProducts || isLoadingCategories || isLoadingExpiry
@@ -240,7 +258,7 @@ export default function InventoryPage() {
       {expiryAlerts.length > 0 && (
         <CollapsibleCard
           title="Prodotti in Scadenza"
-          icon={<AlertTriangle className="w-5 h-5 text-yellow-600" />}
+          icon={AlertTriangle}
           count={expiryAlerts.length}
           defaultOpen={true}
         >
@@ -259,7 +277,7 @@ export default function InventoryPage() {
       {/* Products List */}
       <CollapsibleCard
         title="Prodotti"
-        icon={<Package className="w-5 h-5 text-blue-600" />}
+        icon={Package}
         count={products.length}
         defaultOpen={true}
       >
@@ -295,10 +313,19 @@ export default function InventoryPage() {
         )}
       </CollapsibleCard>
 
+      {/* Expired Products Management */}
+      <ExpiredProductsManager
+        expiredProducts={expiredProducts}
+        onReinsertProduct={handleReinsertExpiredProduct}
+        onDeleteProduct={handleDeleteExpiredProduct}
+        isLoading={isLoadingExpired}
+        reinsertExpiredProduct={reinsertExpiredProduct.mutate}
+      />
+
       {/* Categories Management */}
       <CollapsibleCard
         title="Categorie Prodotti"
-        icon={<FileText className="w-5 h-5 text-green-600" />}
+        icon={FileText}
         count={categories.length}
         defaultOpen={false}
       >

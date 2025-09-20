@@ -189,6 +189,16 @@ export interface ReinsertExpiredProductRequest {
   notes?: string
 }
 
+export interface WasteStats {
+  total_expired_products: number
+  total_waste_cost: number
+  average_expiry_days: number
+  most_wasted_category: string
+  waste_trend: 'increasing' | 'decreasing' | 'stable'
+  monthly_waste_cost: number[]
+  prevention_savings: number
+}
+
 // PDF generation types
 export interface ShoppingListPDFConfig {
   format: 'A4' | 'A5'

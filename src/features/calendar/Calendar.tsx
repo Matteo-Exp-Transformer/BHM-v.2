@@ -346,7 +346,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       )}
 
       {/* Calendar Styles */}
-      <style jsx>{`
+      <style>{`
         .calendar-container {
           --fc-border-color: #e5e7eb;
           --fc-button-bg-color: #3b82f6;
