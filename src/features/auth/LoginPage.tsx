@@ -7,14 +7,14 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+      <div className="max-w-lg w-full space-y-8">
         <div className="text-center">
-          {/* Logo */}
-          <div className="mx-auto h-20 w-auto mb-4">
+          {/* Logo grande e centrato */}
+          <div className="mx-auto mb-6 flex justify-center">
             <img
-              src="/dist/assets/logo_ridimensionato.png"
+              src="/dist/assets/logo_ottimizzato.png"
               alt="Business HACCP Manager Logo"
-              className="h-20 w-auto rounded-xl shadow-lg"
+              className="h-32 w-auto max-w-full rounded-xl shadow-xl"
             />
           </div>
 
