@@ -10,25 +10,25 @@ const LoginPage: React.FC = () => {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           {/* Logo */}
-          <div className="mx-auto h-16 w-16 mb-4">
+          <div className="mx-auto h-20 w-auto mb-4">
             <img
-              src="/dist/assets/icon-192x192.png"
-              alt="HACCP Manager Logo"
-              className="h-16 w-16 rounded-xl shadow-lg"
+              src="/dist/assets/logo_ridimensionato.png"
+              alt="Business HACCP Manager Logo"
+              className="h-20 w-auto rounded-xl shadow-lg"
             />
           </div>
 
-          {/* Titolo con font in corsivo elegante */}
-          <h1
-            className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-green-600 to-blue-800 bg-clip-text text-transparent mb-2"
+          {/* Sottotitolo elegante */}
+          <h2
+            className="text-2xl font-semibold text-gray-700 mb-2"
             style={{
               fontFamily: 'Playfair Display, serif',
               fontStyle: 'italic',
-              letterSpacing: '0.02em',
+              letterSpacing: '0.01em',
             }}
           >
-            Business HACCP Manager
-          </h1>
+            Gestione Professionale
+          </h2>
 
           <h2 className="text-xl font-semibold text-gray-700 mb-2">
             Accedi al Sistema
