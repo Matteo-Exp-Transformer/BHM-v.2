@@ -30,31 +30,42 @@ export const testSupabaseConnection = async () => {
       console.log('✅ RLS test passed:', userProfiles)
     }
 
-    // Test 3: Test table structure
-    const { data: tables, error: tablesError } = await supabase
-      .from('information_schema.tables')
-      .select('table_name')
-      .eq('table_schema', 'public')
-      .in('table_name', [
-        'companies',
-        'user_profiles',
-        'departments',
-        'staff',
-        'conservation_points',
-        'maintenance_tasks',
-        'tasks',
-        'product_categories',
-        'events',
-        'notes',
-        'temperature_readings',
-        'non_conformities'
-      ])
+    // Test 3: Test specific tables that exist
+    const tableTests = [
+      {
+        name: 'companies',
+        test: () => supabase.from('companies').select('id').limit(1),
+      },
+      {
+        name: 'user_profiles',
+        test: () => supabase.from('user_profiles').select('id').limit(1),
+      },
+      {
+        name: 'departments',
+        test: () => supabase.from('departments').select('id').limit(1),
+      },
+      {
+        name: 'staff',
+        test: () => supabase.from('staff').select('id').limit(1),
+      },
+    ]
 
-    if (tablesError) {
-      console.error('❌ Tables check failed:', tablesError)
-    } else {
-      console.log('✅ Tables found:', tables?.map(t => t.table_name))
+    const existingTables = []
+    for (const table of tableTests) {
+      try {
+        const { error } = await table.test()
+        if (!error) {
+          existingTables.push(table.name)
+          console.log(`✅ Table ${table.name} exists`)
+        } else {
+          console.log(`⚠️ Table ${table.name} not accessible:`, error.message)
+        }
+      } catch (err) {
+        console.log(`❌ Table ${table.name} error:`, err)
+      }
     }
+
+    console.log('✅ Available tables:', existingTables)
 
     console.log('🎉 Supabase connection test completed successfully!')
     return {
@@ -62,10 +73,9 @@ export const testSupabaseConnection = async () => {
       data: {
         healthCheck,
         userProfiles,
-        tables: tables?.map(t => t.table_name)
-      }
+        tables: existingTables,
+      },
     }
-
   } catch (error) {
     console.error('❌ Connection test failed:', error)
     return { success: false, error }

@@ -201,62 +201,6 @@ export default function ConservationPage() {
             Gestisci punti di conservazione e monitoraggio temperature
           </p>
         </div>
-        <button
-          onClick={handleAddNew}
-          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Nuovo Punto</span>
-        </button>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg border p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Totale Punti</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-            </div>
-            <Thermometer className="w-8 h-8 text-blue-600" />
-          </div>
-        </div>
-
-        <div className="bg-green-50 rounded-lg border border-green-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-green-700">Regolari</p>
-              <p className="text-2xl font-bold text-green-900">
-                {stats.normal}
-              </p>
-            </div>
-            <CheckCircle className="w-8 h-8 text-green-600" />
-          </div>
-        </div>
-
-        <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-yellow-700">Attenzione</p>
-              <p className="text-2xl font-bold text-yellow-900">
-                {stats.warning}
-              </p>
-            </div>
-            <AlertTriangle className="w-8 h-8 text-yellow-600" />
-          </div>
-        </div>
-
-        <div className="bg-red-50 rounded-lg border border-red-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-red-700">Critici</p>
-              <p className="text-2xl font-bold text-red-900">
-                {stats.critical}
-              </p>
-            </div>
-            <AlertTriangle className="w-8 h-8 text-red-600" />
-          </div>
-        </div>
       </div>
 
       {/* Type Distribution */}
@@ -297,7 +241,10 @@ export default function ConservationPage() {
         icon={Thermometer}
         actions={
           <button
-            onClick={handleAddNew}
+            onClick={e => {
+              e.stopPropagation()
+              handleAddNew()
+            }}
             className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -305,6 +252,55 @@ export default function ConservationPage() {
           </button>
         }
       >
+        {/* Mini Statistics - Punti di Conservazione */}
+        <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="bg-blue-50 rounded-lg border border-blue-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-blue-700">Totale</p>
+                <p className="text-lg font-bold text-blue-900">{stats.total}</p>
+              </div>
+              <Thermometer className="w-5 h-5 text-blue-600" />
+            </div>
+          </div>
+
+          <div className="bg-green-50 rounded-lg border border-green-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-green-700">Regolari</p>
+                <p className="text-lg font-bold text-green-900">
+                  {stats.normal}
+                </p>
+              </div>
+              <CheckCircle className="w-5 h-5 text-green-600" />
+            </div>
+          </div>
+
+          <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-yellow-700">Attenzione</p>
+                <p className="text-lg font-bold text-yellow-900">
+                  {stats.warning}
+                </p>
+              </div>
+              <AlertTriangle className="w-5 h-5 text-yellow-600" />
+            </div>
+          </div>
+
+          <div className="bg-red-50 rounded-lg border border-red-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-red-700">Critici</p>
+                <p className="text-lg font-bold text-red-900">
+                  {stats.critical}
+                </p>
+              </div>
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+            </div>
+          </div>
+        </div>
+
         {conservationPoints.length === 0 ? (
           <div className="text-center py-8">
             <Thermometer className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -337,57 +333,6 @@ export default function ConservationPage() {
         )}
       </CollapsibleCard>
 
-      {/* Temperature Readings Section */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg border p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Totale Letture</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {tempStats.total}
-              </p>
-            </div>
-            <Clock className="w-8 h-8 text-blue-600" />
-          </div>
-        </div>
-
-        <div className="bg-green-50 rounded-lg border border-green-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-green-700">Conformi</p>
-              <p className="text-2xl font-bold text-green-900">
-                {tempStats.compliant}
-              </p>
-            </div>
-            <CheckCircle className="w-8 h-8 text-green-600" />
-          </div>
-        </div>
-
-        <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-yellow-700">Attenzione</p>
-              <p className="text-2xl font-bold text-yellow-900">
-                {tempStats.warning}
-              </p>
-            </div>
-            <AlertTriangle className="w-8 h-8 text-yellow-600" />
-          </div>
-        </div>
-
-        <div className="bg-red-50 rounded-lg border border-red-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-red-700">Critiche</p>
-              <p className="text-2xl font-bold text-red-900">
-                {tempStats.critical}
-              </p>
-            </div>
-            <AlertTriangle className="w-8 h-8 text-red-600" />
-          </div>
-        </div>
-      </div>
-
       {/* Temperature Readings List */}
       <CollapsibleCard
         title="Letture Temperature"
@@ -408,8 +353,14 @@ export default function ConservationPage() {
                     e.target.value = ''
                   }
                 }}
+                onClick={e => {
+                  e.stopPropagation()
+                }}
+                onMouseDown={e => {
+                  e.stopPropagation()
+                }}
                 value=""
-                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
               >
                 <option value="">Registra temperatura...</option>
                 {conservationPoints.map(point => (
@@ -422,6 +373,56 @@ export default function ConservationPage() {
           </div>
         }
       >
+        {/* Mini Statistics - Letture Temperature */}
+        <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="bg-blue-50 rounded-lg border border-blue-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-blue-700">Totale</p>
+                <p className="text-lg font-bold text-blue-900">
+                  {tempStats.total}
+                </p>
+              </div>
+              <Clock className="w-5 h-5 text-blue-600" />
+            </div>
+          </div>
+
+          <div className="bg-green-50 rounded-lg border border-green-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-green-700">Conformi</p>
+                <p className="text-lg font-bold text-green-900">
+                  {tempStats.compliant}
+                </p>
+              </div>
+              <CheckCircle className="w-5 h-5 text-green-600" />
+            </div>
+          </div>
+
+          <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-yellow-700">Attenzione</p>
+                <p className="text-lg font-bold text-yellow-900">
+                  {tempStats.warning}
+                </p>
+              </div>
+              <AlertTriangle className="w-5 h-5 text-yellow-600" />
+            </div>
+          </div>
+
+          <div className="bg-red-50 rounded-lg border border-red-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-red-700">Critiche</p>
+                <p className="text-lg font-bold text-red-900">
+                  {tempStats.critical}
+                </p>
+              </div>
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+            </div>
+          </div>
+        </div>
         {isLoadingReadings ? (
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map(i => (
@@ -478,88 +479,6 @@ export default function ConservationPage() {
         )}
       </CollapsibleCard>
 
-      {/* Maintenance Tasks Section */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg border p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Totale Manutenzioni</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {maintenanceStats.total}
-              </p>
-            </div>
-            <Wrench className="w-8 h-8 text-blue-600" />
-          </div>
-        </div>
-
-        <div className="bg-red-50 rounded-lg border border-red-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-red-700">In Ritardo</p>
-              <p className="text-2xl font-bold text-red-900">
-                {maintenanceStats.overdue}
-              </p>
-            </div>
-            <AlertTriangle className="w-8 h-8 text-red-600" />
-          </div>
-        </div>
-
-        <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-yellow-700">Urgenti</p>
-              <p className="text-2xl font-bold text-yellow-900">
-                {maintenanceStats.pending}
-              </p>
-            </div>
-            <Clock className="w-8 h-8 text-yellow-600" />
-          </div>
-        </div>
-
-        <div className="bg-green-50 rounded-lg border border-green-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-green-700">Programmate</p>
-              <p className="text-2xl font-bold text-green-900">
-                {maintenanceStats.scheduled}
-              </p>
-            </div>
-            <CheckCircle className="w-8 h-8 text-green-600" />
-          </div>
-        </div>
-      </div>
-
-      {/* Maintenance Type Distribution */}
-      <div className="bg-white rounded-lg border p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <Wrench className="w-5 h-5 mr-2 text-blue-600" />
-          Distribuzione Manutenzioni per Tipo
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center">
-            <div className="text-2xl mb-1">🌡️</div>
-            <div className="text-sm text-gray-600">Controllo Temperature</div>
-            <div className="text-lg font-semibold">
-              {maintenanceStats.byType.temperature}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl mb-1">🧼</div>
-            <div className="text-sm text-gray-600">Sanificazione</div>
-            <div className="text-lg font-semibold">
-              {maintenanceStats.byType.sanitization}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl mb-1">❄️</div>
-            <div className="text-sm text-gray-600">Sbrinamento</div>
-            <div className="text-lg font-semibold">
-              {maintenanceStats.byType.defrosting}
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Maintenance Tasks List */}
       <CollapsibleCard
         title="Manutenzioni Programmate"
@@ -568,9 +487,10 @@ export default function ConservationPage() {
         icon={Wrench}
         actions={
           <button
-            onClick={() =>
+            onClick={e => {
+              e.stopPropagation()
               alert('Aggiungi manutenzione - Funzionalità in arrivo')
-            }
+            }}
             className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -578,6 +498,87 @@ export default function ConservationPage() {
           </button>
         }
       >
+        {/* Mini Statistics - Manutenzioni */}
+        <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="bg-blue-50 rounded-lg border border-blue-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-blue-700">Totale</p>
+                <p className="text-lg font-bold text-blue-900">
+                  {maintenanceStats.total}
+                </p>
+              </div>
+              <Wrench className="w-5 h-5 text-blue-600" />
+            </div>
+          </div>
+
+          <div className="bg-red-50 rounded-lg border border-red-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-red-700">In Ritardo</p>
+                <p className="text-lg font-bold text-red-900">
+                  {maintenanceStats.overdue}
+                </p>
+              </div>
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+            </div>
+          </div>
+
+          <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-yellow-700">Urgenti</p>
+                <p className="text-lg font-bold text-yellow-900">
+                  {maintenanceStats.pending}
+                </p>
+              </div>
+              <Clock className="w-5 h-5 text-yellow-600" />
+            </div>
+          </div>
+
+          <div className="bg-green-50 rounded-lg border border-green-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-green-700">Programmate</p>
+                <p className="text-lg font-bold text-green-900">
+                  {maintenanceStats.scheduled}
+                </p>
+              </div>
+              <CheckCircle className="w-5 h-5 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Maintenance Type Distribution - Mini */}
+        <div className="mb-6 bg-gray-50 rounded-lg p-4">
+          <h4 className="text-sm font-semibold mb-3 flex items-center text-gray-700">
+            <Wrench className="w-4 h-4 mr-2 text-blue-600" />
+            Distribuzione per Tipo
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="text-center">
+              <div className="text-lg mb-1">🌡️</div>
+              <div className="text-xs text-gray-600">Controllo Temperature</div>
+              <div className="text-sm font-semibold">
+                {maintenanceStats.byType.temperature}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg mb-1">🧼</div>
+              <div className="text-xs text-gray-600">Sanificazione</div>
+              <div className="text-sm font-semibold">
+                {maintenanceStats.byType.sanitization}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg mb-1">❄️</div>
+              <div className="text-xs text-gray-600">Sbrinamento</div>
+              <div className="text-sm font-semibold">
+                {maintenanceStats.byType.defrosting}
+              </div>
+            </div>
+          </div>
+        </div>
         {isLoadingMaintenance ? (
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map(i => (

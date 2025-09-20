@@ -10,6 +10,7 @@ const supabaseAnonKey =
 
 // Create Supabase client (singleton pattern)
 let supabaseInstance: ReturnType<typeof createClient> | null = null
+let supabaseAdminInstance: ReturnType<typeof createClient> | null = null
 
 export const supabase = (() => {
   if (!supabaseInstance) {
@@ -18,6 +19,8 @@ export const supabase = (() => {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
+        storage:
+          typeof window !== 'undefined' ? window.localStorage : undefined,
       },
     })
   }
@@ -29,12 +32,17 @@ const supabaseServiceKey =
   import.meta.env.SUPABASE_SERVICE_ROLE_KEY ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjZHlhZHNsdXp6enN5YndybWx6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODI3Mzc4OSwiZXhwIjoyMDczODQ5Nzg5fQ.QT-P0WDDOD8AsM3LVCpz0LAjr-7O-D8nQhSs8YMBuLY'
 
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-})
+export const supabaseAdmin = (() => {
+  if (!supabaseAdminInstance) {
+    supabaseAdminInstance = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+  }
+  return supabaseAdminInstance
+})()
 
 // Database types (will be generated from schema)
 export type Database = {
@@ -119,7 +127,7 @@ export type Database = {
           hire_date: string | null
           status: string
           notes: string | null
-          haccp_certification: any | null
+          haccp_certification: Record<string, unknown> | null
           department_assignments: string[] | null
           created_at: string
           updated_at: string
@@ -135,7 +143,7 @@ export type Database = {
           hire_date?: string | null
           status?: string
           notes?: string | null
-          haccp_certification?: any | null
+          haccp_certification?: Record<string, unknown> | null
           department_assignments?: string[] | null
           created_at?: string
           updated_at?: string
@@ -151,7 +159,7 @@ export type Database = {
           hire_date?: string | null
           status?: string
           notes?: string | null
-          haccp_certification?: any | null
+          haccp_certification?: Record<string, unknown> | null
           department_assignments?: string[] | null
           created_at?: string
           updated_at?: string
@@ -182,6 +190,106 @@ export type Database = {
           name?: string
           description?: string | null
           is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      product_categories: {
+        Row: {
+          id: string
+          company_id: string
+          name: string
+          description: string | null
+          temperature_requirements: Record<string, unknown> | null
+          default_expiry_days: number | null
+          allergen_info: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          name: string
+          description?: string | null
+          temperature_requirements?: Record<string, unknown> | null
+          default_expiry_days?: number | null
+          allergen_info?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          name?: string
+          description?: string | null
+          temperature_requirements?: Record<string, unknown> | null
+          default_expiry_days?: number | null
+          allergen_info?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      products: {
+        Row: {
+          id: string
+          company_id: string
+          name: string
+          category_id: string | null
+          department_id: string | null
+          conservation_point_id: string | null
+          barcode: string | null
+          sku: string | null
+          supplier_name: string | null
+          purchase_date: string | null
+          expiry_date: string | null
+          quantity: number | null
+          unit: string | null
+          allergens: string[]
+          label_photo_url: string | null
+          status: string
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          name: string
+          category_id?: string | null
+          department_id?: string | null
+          conservation_point_id?: string | null
+          barcode?: string | null
+          sku?: string | null
+          supplier_name?: string | null
+          purchase_date?: string | null
+          expiry_date?: string | null
+          quantity?: number | null
+          unit?: string | null
+          allergens?: string[]
+          label_photo_url?: string | null
+          status?: string
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          name?: string
+          category_id?: string | null
+          department_id?: string | null
+          conservation_point_id?: string | null
+          barcode?: string | null
+          sku?: string | null
+          supplier_name?: string | null
+          purchase_date?: string | null
+          expiry_date?: string | null
+          quantity?: number | null
+          unit?: string | null
+          allergens?: string[]
+          label_photo_url?: string | null
+          status?: string
+          notes?: string | null
           created_at?: string
           updated_at?: string
         }

@@ -7,17 +7,7 @@ import { initSentry } from './lib/sentry'
 import App from './App.tsx'
 import './styles/index.css'
 
-// DEBUG - rimuovi dopo il test
-console.log('🔍 Debug env vars:')
-console.log('Clerk key exists:', !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY)
-console.log(
-  'Clerk key length:',
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY?.length
-)
-console.log(
-  'First 20 chars:',
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY?.substring(0, 20)
-)
+// Debug logs removed for cleaner console
 
 // Test Supabase connection in development
 if (import.meta.env.DEV) {
@@ -56,11 +46,16 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       }}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
-      afterSignInUrl="/"
-      afterSignUpUrl="/"
+      signInFallbackRedirectUrl="/"
+      signUpFallbackRedirectUrl="/"
     >
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
           <App />
         </BrowserRouter>
       </QueryClientProvider>

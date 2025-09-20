@@ -166,6 +166,12 @@ export const MAINTENANCE_COLORS = {
     text: 'text-gray-900',
     icon: 'text-gray-600',
   },
+  scheduled: {
+    bg: 'bg-green-50',
+    border: 'border-green-200',
+    text: 'text-green-900',
+    icon: 'text-green-600',
+  },
 } as const
 
 export function classifyConservationPoint(

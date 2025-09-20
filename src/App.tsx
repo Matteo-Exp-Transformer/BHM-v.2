@@ -16,6 +16,7 @@ import RegisterPage from './features/auth/RegisterPage'
 import ManagementPage from './features/management/ManagementPage'
 import CalendarPage from './features/calendar/CalendarPage'
 import ConservationPage from './features/conservation/ConservationPage'
+import InventoryPage from './features/inventory/InventoryPage'
 
 function App() {
   return (
@@ -59,7 +60,7 @@ function App() {
                       path="/inventario"
                       element={
                         <ProtectedRoute>
-                          <div>Inventario - Coming Soon</div>
+                          <InventoryPage />
                         </ProtectedRoute>
                       }
                     />

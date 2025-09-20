@@ -7,27 +7,18 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+      <div className="w-full max-w-2xl flex flex-col items-center space-y-8">
         <div className="text-center">
-          {/* Logo grande e centrato */}
-          <div className="mx-auto mb-6 flex justify-center">
-            <img
-              src="/dist/assets/logo_ottimizzato.png"
-              alt="Business HACCP Manager Logo"
-              className="h-32 w-auto max-w-full rounded-xl shadow-xl"
-            />
-          </div>
-
-          {/* Titolo con font Self Deception locale, in corsivo e blu */}
+          {/* Titolo con font Tangerine, in corsivo e blu */}
           <h1
-            className="text-5xl font-bold text-blue-700 mb-2"
+            className="text-6xl font-bold text-blue-700 mb-4 whitespace-nowrap"
             style={{
-              fontFamily: '"Self Deception", "Agatha", cursive',
+              fontFamily: 'Tangerine, cursive',
               fontStyle: 'italic',
-              letterSpacing: '0.05em',
+              letterSpacing: '0.02em',
             }}
           >
-            Business HACCP Manager
+            Business H<span className="lowercase">accp</span> Manager
           </h1>
 
           <h2 className="text-xl font-semibold text-gray-700 mb-2">
@@ -40,26 +31,26 @@ const RegisterPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="mt-8">
-          <SignUp
-            appearance={{
-              elements: {
-                formButtonPrimary:
-                  'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl',
-                card: 'shadow-2xl border-0 rounded-2xl',
-                headerTitle: 'text-gray-800 font-semibold',
-                headerSubtitle: 'text-gray-600',
-                socialButtonsBlockButton:
-                  'border-gray-200 hover:border-green-300 hover:bg-green-50 transition-all duration-200',
-                formFieldInput:
-                  'border-gray-200 focus:border-green-500 focus:ring-green-500 rounded-lg',
-                footerActionLink:
-                  'text-green-600 hover:text-green-700 font-medium',
-              },
-            }}
-            afterSignInUrl="/"
-            afterSignUpUrl="/"
-          />
+        <div className="w-full flex justify-center">
+          <div className="w-full max-w-md ml-12">
+            <SignUp
+              appearance={{
+                elements: {
+                  formButtonPrimary:
+                    'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl',
+                  card: 'shadow-2xl border-0 rounded-2xl',
+                  headerTitle: 'text-gray-800 font-semibold',
+                  headerSubtitle: 'text-gray-600',
+                  socialButtonsBlockButton:
+                    'border-gray-200 hover:border-green-300 hover:bg-green-50 transition-all duration-200',
+                  formFieldInput:
+                    'border-gray-200 focus:border-green-500 focus:ring-green-500 rounded-lg',
+                  footerActionLink:
+                    'text-green-600 hover:text-green-700 font-medium',
+                },
+              }}
+            />
+          </div>
         </div>
 
         <div className="mt-6 text-center">
