@@ -18,13 +18,13 @@ const LoginPage: React.FC = () => {
             />
           </div>
 
-          {/* Titolo con font Agatha, in corsivo e blu */}
+          {/* Titolo con font Self Deception locale, in corsivo e blu */}
           <h1
             className="text-5xl font-bold text-blue-700 mb-2"
             style={{
-              fontFamily: 'Agatha, cursive',
+              fontFamily: 'Self Deception, cursive',
               fontStyle: 'italic',
-              letterSpacing: '0.03em',
+              letterSpacing: '0.05em',
             }}
           >
             Business HACCP Manager
