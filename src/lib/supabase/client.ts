@@ -14,6 +14,15 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    storage: {
+      // Use localStorage for better cross-origin compatibility
+      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    },
+  },
+  global: {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
   },
 })
 

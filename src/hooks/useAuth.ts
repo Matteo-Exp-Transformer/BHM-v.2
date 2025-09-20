@@ -92,6 +92,16 @@ const getPermissionsFromRole = (role: UserRole): UserPermissions => {
 export const useAuth = () => {
   const { user, isLoaded: isClerkLoaded, isSignedIn } = useUser()
 
+  // DEBUG - Log authentication state
+  console.log('🔍 Auth Debug:', {
+    isClerkLoaded,
+    isSignedIn,
+    hasUser: !!user,
+    userEmail: user?.emailAddresses?.[0]?.emailAddress,
+    currentOrigin: window.location.origin,
+    currentHost: window.location.host,
+  })
+
   // Fetch user profile and determine role
   const {
     data: userProfile,
