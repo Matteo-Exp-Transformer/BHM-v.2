@@ -1,8 +1,8 @@
 import React from 'react'
-import { SignIn } from '@clerk/clerk-react'
+import { SignUp } from '@clerk/clerk-react'
 import { useNavigate } from 'react-router-dom'
 
-const LoginPage: React.FC = () => {
+const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
 
   return (
@@ -10,15 +10,15 @@ const LoginPage: React.FC = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Accedi al HACCP Manager
+            Registrati al HACCP Manager
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Gestisci la sicurezza alimentare del tuo ristorante
+            Inizia a gestire la sicurezza alimentare del tuo ristorante
           </p>
         </div>
 
         <div className="mt-8">
-          <SignIn
+          <SignUp
             appearance={{
               elements: {
                 formButtonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white',
@@ -43,4 +43,4 @@ const LoginPage: React.FC = () => {
   )
 }
 
-export default LoginPage
+export default RegisterPage

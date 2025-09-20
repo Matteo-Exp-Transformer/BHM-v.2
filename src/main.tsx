@@ -46,7 +46,19 @@ const queryClient = new QueryClient({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+    <ClerkProvider
+      publishableKey={PUBLISHABLE_KEY}
+      appearance={{
+        baseTheme: undefined,
+        variables: {
+          colorPrimary: '#3b82f6',
+        },
+      }}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      afterSignInUrl="/"
+      afterSignUpUrl="/"
+    >
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <App />

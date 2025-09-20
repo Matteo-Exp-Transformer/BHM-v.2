@@ -12,6 +12,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 // Pages
 import HomePage from './features/auth/HomePage'
 import LoginPage from './features/auth/LoginPage'
+import RegisterPage from './features/auth/RegisterPage'
 import ManagementPage from './features/management/ManagementPage'
 import CalendarPage from './features/calendar/CalendarPage'
 import ConservationPage from './features/conservation/ConservationPage'
@@ -21,6 +22,8 @@ function App() {
     <>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/sign-in" element={<LoginPage />} />
+        <Route path="/sign-up" element={<RegisterPage />} />
         <Route
           path="/*"
           element={
