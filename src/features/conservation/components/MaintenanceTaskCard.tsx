@@ -32,7 +32,7 @@ export function MaintenanceTaskCard({
   showActions = true,
 }: MaintenanceTaskCardProps) {
   const taskType = MAINTENANCE_TASK_TYPES[task.kind]
-  const colors = MAINTENANCE_COLORS[status]
+  const colors = MAINTENANCE_COLORS[status] || MAINTENANCE_COLORS.pending
 
   const formatDateTime = (date: Date) => {
     return new Date(date).toLocaleDateString('it-IT', {

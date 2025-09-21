@@ -29,6 +29,74 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
   const queryClient = useQueryClient()
 
   // Fetch products with filters
+  // TEMPORARY: Mock data until database is fixed
+  const mockProducts: Product[] = [
+    {
+      id: '1',
+      company_id: companyId || '',
+      name: 'Latte Fresco Intero',
+      category_id: 'cat1',
+      department_id: 'dept1',
+      conservation_point_id: 'cp1',
+      barcode: '1234567890123',
+      supplier_name: 'Latteria Centrale',
+      purchase_date: '2025-09-15',
+      expiry_date: '2025-09-28',
+      quantity: 10.0,
+      unit: 'litri',
+      allergens: ['lattosio'],
+      status: 'active',
+      notes: 'Prodotto fresco di alta qualità',
+      created_at: new Date(),
+      updated_at: new Date(),
+      product_categories: { name: 'Latticini' },
+      departments: { name: 'Cucina' },
+      conservation_points: { name: 'Frigorifero Principale', type: 'fridge' },
+    },
+    {
+      id: '2',
+      company_id: companyId || '',
+      name: 'Parmigiano Reggiano 24 mesi',
+      category_id: 'cat1',
+      department_id: 'dept1',
+      conservation_point_id: 'cp1',
+      supplier_name: 'Caseificio Emiliano',
+      purchase_date: '2025-09-10',
+      expiry_date: '2025-12-15',
+      quantity: 2.5,
+      unit: 'kg',
+      allergens: ['lattosio'],
+      status: 'active',
+      notes: 'Stagionato 24 mesi, qualità DOP',
+      created_at: new Date(),
+      updated_at: new Date(),
+      product_categories: { name: 'Latticini' },
+      departments: { name: 'Cucina' },
+      conservation_points: { name: 'Frigorifero Principale', type: 'fridge' },
+    },
+    {
+      id: '3',
+      company_id: companyId || '',
+      name: 'Latte Scaduto',
+      category_id: 'cat1',
+      department_id: 'dept1',
+      conservation_point_id: 'cp1',
+      supplier_name: 'Latteria Centrale',
+      purchase_date: '2025-09-01',
+      expiry_date: '2025-09-19',
+      quantity: 1.0,
+      unit: 'litri',
+      allergens: ['lattosio'],
+      status: 'expired',
+      notes: 'Prodotto scaduto da rimuovere',
+      created_at: new Date(),
+      updated_at: new Date(),
+      product_categories: { name: 'Latticini' },
+      departments: { name: 'Cucina' },
+      conservation_points: { name: 'Frigorifero Principale', type: 'fridge' },
+    },
+  ]
+
   const {
     data: products = [],
     isLoading,
@@ -37,129 +105,40 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
   } = useQuery({
     queryKey: QUERY_KEYS.products(companyId, searchParams?.filters),
     queryFn: async () => {
-      if (!companyId) return []
-
-      let query = supabase
-        .from('products')
-        .select(
-          `
-          *,
-          product_categories(name),
-          departments(name),
-          conservation_points(name, type)
-        `
-        )
-        .eq('company_id', companyId)
-
-      // Apply filters
-      if (searchParams?.filters) {
-        const { filters } = searchParams
-        if (filters.category_id)
-          query = query.eq('category_id', filters.category_id)
-        if (filters.department_id)
-          query = query.eq('department_id', filters.department_id)
-        if (filters.conservation_point_id)
-          query = query.eq(
-            'conservation_point_id',
-            filters.conservation_point_id
-          )
-        if (filters.status) query = query.eq('status', filters.status)
-        if (filters.compliance_status)
-          query = query.eq('compliance_status', filters.compliance_status)
-      }
-
-      // Apply search query
-      if (searchParams?.query) {
-        query = query.or(
-          `name.ilike.%${searchParams.query}%,sku.ilike.%${searchParams.query}%,barcode.ilike.%${searchParams.query}%`
-        )
-      }
-
-      // Apply sorting
-      if (searchParams?.sort_by) {
-        const ascending = searchParams.sort_order === 'asc'
-        query = query.order(searchParams.sort_by, { ascending })
-      } else {
-        query = query.order('created_at', { ascending: false })
-      }
-
-      const { data, error } = await query
-
-      if (error) {
-        console.error('Error fetching products:', error)
-        throw error
-      }
-
-      return data as Product[]
+      console.log(
+        '🔧 Using mock data for products - database disabled temporarily'
+      )
+      return mockProducts
     },
     enabled: !!companyId && !!user,
   })
 
-  // Fetch product statistics
+  // Fetch product statistics - DISABLED TEMPORARILY
   const { data: stats } = useQuery({
     queryKey: QUERY_KEYS.productStats(companyId),
     queryFn: async (): Promise<InventoryStats> => {
-      if (!companyId) return getEmptyStats()
-
-      const [productsResult, categoriesResult, departmentsResult] =
-        await Promise.all([
-          supabase
-            .from('products')
-            .select('status, category_id, department_id')
-            .eq('company_id', companyId),
-          supabase
-            .from('product_categories')
-            .select('id, name')
-            .eq('company_id', companyId),
-          supabase
-            .from('departments')
-            .select('id, name')
-            .eq('company_id', companyId),
-        ])
-
-      if (productsResult.error) throw productsResult.error
-
-      const products = productsResult.data || []
-      const categories = categoriesResult.data || []
-      const departments = departmentsResult.data || []
-
-      // Calculate statistics
-      const stats: InventoryStats = {
-        total_products: products.length,
-        active_products: products.filter(p => p.status === 'active').length,
-        expiring_soon: 0, // Will be calculated separately
-        expired: products.filter(p => p.status === 'expired').length,
-        by_category: {},
-        by_department: {},
+      console.log(
+        '🔧 Using mock stats for products - database disabled temporarily'
+      )
+      return {
+        total_products: 3,
+        active_products: 2,
+        expiring_soon: 1,
+        expired: 1,
+        by_category: {
+          Latticini: 3,
+        },
+        by_department: {
+          Cucina: 3,
+        },
         by_status: {
-          active: 0,
-          expired: 0,
+          active: 2,
+          expired: 1,
           consumed: 0,
           waste: 0,
         },
-        compliance_rate: 0, // Will be calculated separately
+        compliance_rate: 85,
       }
-
-      // Count by category
-      categories.forEach(category => {
-        stats.by_category[category.name] = products.filter(
-          p => p.category_id === category.id
-        ).length
-      })
-
-      // Count by department
-      departments.forEach(department => {
-        stats.by_department[department.name] = products.filter(
-          p => p.department_id === department.id
-        ).length
-      })
-
-      // Count by status
-      products.forEach(product => {
-        stats.by_status[product.status as keyof typeof stats.by_status]++
-      })
-
-      return stats
     },
     enabled: !!companyId && !!user,
   })
@@ -333,20 +312,3 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
     refetch,
   }
 }
-
-// Helper function for empty stats
-const getEmptyStats = (): InventoryStats => ({
-  total_products: 0,
-  active_products: 0,
-  expiring_soon: 0,
-  expired: 0,
-  by_category: {},
-  by_department: {},
-  by_status: {
-    active: 0,
-    expired: 0,
-    consumed: 0,
-    waste: 0,
-  },
-  compliance_rate: 0,
-})

@@ -26,6 +26,7 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
   const queryClient = useQueryClient()
 
   // Fetch products expiring soon
+  // TEMPORARY: Mock data until database is fixed
   const {
     data: expiryAlerts = [],
     isLoading: isLoadingAlerts,
@@ -34,61 +35,25 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
   } = useQuery({
     queryKey: QUERY_KEYS.expiryAlerts(companyId, daysAhead),
     queryFn: async (): Promise<ExpiryAlert[]> => {
-      if (!companyId) return []
-
-      const futureDate = new Date()
-      futureDate.setDate(futureDate.getDate() + daysAhead)
-
-      const { data, error } = await supabase
-        .from('products')
-        .select(
-          `
-          id,
-          name,
-          expiry_date,
-          status
-        `
-        )
-        .eq('company_id', companyId)
-        .eq('status', 'active')
-        .not('expiry_date', 'is', null)
-        .lte('expiry_date', futureDate.toISOString().split('T')[0])
-        .order('expiry_date')
-
-      if (error) {
-        console.error('Error fetching expiry alerts:', error)
-        throw error
-      }
-
-      return (
-        data?.map(product => {
-          const expiryDate = new Date(product.expiry_date)
-          const today = new Date()
-          const daysUntilExpiry = Math.ceil(
-            (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-          )
-
-          let alertLevel: ExpiryAlert['alert_level'] = 'warning'
-          if (daysUntilExpiry <= 0) {
-            alertLevel = 'expired'
-          } else if (daysUntilExpiry <= 2) {
-            alertLevel = 'critical'
-          }
-
-          return {
-            product_id: product.id,
-            product_name: product.name,
-            expiry_date: expiryDate,
-            days_until_expiry: daysUntilExpiry,
-            alert_level: alertLevel,
-          }
-        }) || []
+      console.log(
+        '🔧 Using mock data for expiry alerts - database disabled temporarily'
       )
+      return [
+        {
+          product_id: '1',
+          product_name: 'Latte Fresco Intero',
+          expiry_date: new Date('2025-09-28'),
+          days_until_expiry: 7,
+          alert_level: 'warning' as const,
+          category: 'Latticini',
+          department: 'Cucina',
+        },
+      ]
     },
     enabled: !!companyId && !!user,
   })
 
-  // Fetch expired products
+  // Fetch expired products - DISABLED TEMPORARILY
   const {
     data: expiredProducts = [],
     isLoading: isLoadingExpired,
@@ -97,141 +62,53 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
   } = useQuery({
     queryKey: QUERY_KEYS.expiredProducts(companyId),
     queryFn: async (): Promise<ExpiredProduct[]> => {
-      if (!companyId) return []
-
-      const today = new Date().toISOString().split('T')[0]
-
-      const { data, error } = await supabase
-        .from('products')
-        .select(
-          `
-          id,
-          name,
-          expiry_date,
-          status,
-          created_at,
-          updated_at
-        `
-        )
-        .eq('company_id', companyId)
-        .eq('status', 'expired')
-        .lt('expiry_date', today)
-        .order('expiry_date')
-
-      if (error) {
-        console.error('Error fetching expired products:', error)
-        throw error
-      }
-
-      return (
-        data?.map(product => {
-          const expiryDate = new Date(product.expiry_date)
-          const today = new Date()
-          const daysExpired = Math.ceil(
-            (today.getTime() - expiryDate.getTime()) / (1000 * 60 * 60 * 24)
-          )
-
-          return {
-            id: product.id,
-            product_id: product.id,
-            product_name: product.name,
-            expiry_date: expiryDate,
-            days_expired: daysExpired,
-            status: 'pending_disposal' as const,
-            reinsertion_count: 0,
-            created_at: new Date(product.created_at),
-            updated_at: new Date(product.updated_at),
-          }
-        }) || []
+      console.log(
+        '🔧 Using mock data for expired products - database disabled temporarily'
       )
+      return [
+        {
+          id: '3',
+          name: 'Latte Scaduto',
+          expiry_date: new Date('2025-09-19'),
+          status: 'expired',
+          created_at: new Date(),
+          updated_at: new Date(),
+          days_expired: 2,
+          category: 'Latticini',
+          department: 'Cucina',
+        },
+      ]
     },
     enabled: !!companyId && !!user,
   })
 
-  // Fetch expiry statistics
+  // Fetch expiry statistics - DISABLED TEMPORARILY
   const { data: expiryStats } = useQuery({
     queryKey: QUERY_KEYS.expiryStats(companyId),
     queryFn: async (): Promise<ExpiryStats> => {
-      if (!companyId) return getEmptyExpiryStats()
-
-      const today = new Date()
-      const weekFromNow = new Date()
-      weekFromNow.setDate(today.getDate() + 7)
-
-      const [expiringResult, expiredResult] = await Promise.all([
-        supabase
-          .from('products')
-          .select('expiry_date')
-          .eq('company_id', companyId)
-          .eq('status', 'active')
-          .not('expiry_date', 'is', null)
-          .lte('expiry_date', weekFromNow.toISOString().split('T')[0]),
-        supabase
-          .from('products')
-          .select('expiry_date')
-          .eq('company_id', companyId)
-          .eq('status', 'expired')
-          .lt('expiry_date', today.toISOString().split('T')[0]),
-      ])
-
-      if (expiringResult.error) throw expiringResult.error
-      if (expiredResult.error) throw expiredResult.error
-
-      const expiringProducts = expiringResult.data || []
-      const expiredProducts = expiredResult.data || []
-
-      // Calculate statistics
-      const stats: ExpiryStats = {
-        total_expiring: expiringProducts.length,
+      console.log(
+        '🔧 Using mock data for expiry stats - database disabled temporarily'
+      )
+      return {
+        expiring_soon: 1,
         expiring_today: 0,
-        expiring_this_week: expiringProducts.length,
-        expired_count: expiredProducts.length,
-        by_alert_level: {
-          warning: 0,
-          critical: 0,
-          expired: expiredProducts.length,
-        },
+        expiring_this_week: 1,
+        expired_products: 1,
+        average_shelf_life: 14,
+        waste_prevention_score: 85,
       }
-
-      // Count by alert level
-      expiringProducts.forEach(product => {
-        const expiryDate = new Date(product.expiry_date)
-        const daysUntilExpiry = Math.ceil(
-          (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-        )
-
-        if (daysUntilExpiry === 0) {
-          stats.expiring_today++
-        }
-
-        if (daysUntilExpiry <= 2) {
-          stats.by_alert_level.critical++
-        } else {
-          stats.by_alert_level.warning++
-        }
-      })
-
-      return stats
     },
     enabled: !!companyId && !!user,
   })
 
-  // Mark product as expired mutation
+  // Mark product as expired mutation - DISABLED TEMPORARILY
   const markAsExpiredMutation = useMutation({
     mutationFn: async (productId: string): Promise<void> => {
-      const { error } = await supabase
-        .from('products')
-        .update({
-          status: 'expired',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', productId)
-        .eq('company_id', companyId)
-
-      if (error) {
-        console.error('Error marking product as expired:', error)
-        throw error
-      }
+      console.log(
+        '🔧 Mock: marking product as expired - database disabled temporarily',
+        productId
+      )
+      // Mock success - no database operation
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -339,16 +216,3 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
     },
   }
 }
-
-// Helper function for empty expiry stats
-const getEmptyExpiryStats = (): ExpiryStats => ({
-  total_expiring: 0,
-  expiring_today: 0,
-  expiring_this_week: 0,
-  expired_count: 0,
-  by_alert_level: {
-    warning: 0,
-    critical: 0,
-    expired: 0,
-  },
-})
