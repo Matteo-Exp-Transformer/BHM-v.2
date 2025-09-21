@@ -1,42 +1,78 @@
+import React from 'react'
 import { SignIn } from '@clerk/clerk-react'
+import { useNavigate } from 'react-router-dom'
 
-const LoginPage = () => {
+const LoginPage: React.FC = () => {
+  const navigate = useNavigate()
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="w-16 h-16 bg-primary-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">H</span>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-2xl flex flex-col items-center space-y-8">
+        <div className="text-center">
+          {/* Titolo con font Tangerine, in corsivo e blu */}
+          <h1
+            className="text-6xl font-bold text-blue-700 mb-4 whitespace-nowrap"
+            style={{
+              fontFamily: 'Tangerine, cursive',
+              fontStyle: 'italic',
+              letterSpacing: '0.02em',
+            }}
+          >
+            Business H<span className="lowercase">accp</span> Manager
+          </h1>
+
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">
+            Accedi al Sistema
+          </h2>
+
+          <p className="text-sm text-gray-600 leading-relaxed">
+            Gestisci la sicurezza alimentare del tuo ristorante con strumenti
+            professionali e intuitivi
+          </p>
+        </div>
+
+        <div className="w-full flex justify-center">
+          <div className="w-full max-w-md ml-12">
+            <SignIn
+              appearance={{
+                elements: {
+                  formButtonPrimary:
+                    'bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl',
+                  card: 'shadow-2xl border-0 rounded-2xl',
+                  headerTitle: 'text-gray-800 font-semibold',
+                  headerSubtitle: 'text-gray-600',
+                  socialButtonsBlockButton:
+                    'border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200',
+                  formFieldInput:
+                    'border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-lg',
+                  footerActionLink:
+                    'text-blue-600 hover:text-blue-700 font-medium',
+                },
+              }}
+            />
           </div>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-          HACCP Business Manager
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Accedi per gestire la sicurezza alimentare
-        </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <SignIn
-            path="/login"
-            routing="path"
-            signUpUrl="/register"
-            redirectUrl="/"
-            appearance={{
-              elements: {
-                formButtonPrimary: 'btn-primary',
-                card: 'shadow-none border-none',
-                headerTitle: 'text-xl font-semibold text-gray-900',
-                headerSubtitle: 'text-sm text-gray-600',
-                socialButtonsBlockButton:
-                  'border border-gray-300 hover:bg-gray-50',
-                formFieldInput: 'input-field',
-                footerActionLink: 'text-primary-600 hover:text-primary-500',
-              },
-            }}
-          />
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => navigate('/')}
+            className="text-gray-600 hover:text-blue-600 text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Torna alla home
+          </button>
         </div>
       </div>
     </div>

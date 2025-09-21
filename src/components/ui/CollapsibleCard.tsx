@@ -13,8 +13,11 @@ interface CollapsibleCardProps {
   error?: string | null
   emptyMessage?: string
   showEmpty?: boolean
+<<<<<<< HEAD
   isOpen?: boolean
   onToggle?: (isOpen: boolean) => void
+=======
+>>>>>>> Curs
 }
 
 export const CollapsibleCard = ({
@@ -29,6 +32,7 @@ export const CollapsibleCard = ({
   error = null,
   emptyMessage = 'Nessun elemento disponibile',
   showEmpty = false,
+<<<<<<< HEAD
   isOpen,
   onToggle,
 }: CollapsibleCardProps) => {
@@ -43,6 +47,13 @@ export const CollapsibleCard = ({
     } else {
       setIsExpanded(newState)
     }
+=======
+}: CollapsibleCardProps) => {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded)
+>>>>>>> Curs
   }
 
   return (
@@ -78,7 +89,11 @@ export const CollapsibleCard = ({
               toggleExpanded()
             }}
           >
+<<<<<<< HEAD
             {expanded ? (
+=======
+            {isExpanded ? (
+>>>>>>> Curs
               <ChevronUp className="h-4 w-4 text-gray-500" />
             ) : (
               <ChevronDown className="h-4 w-4 text-gray-500" />
@@ -88,7 +103,11 @@ export const CollapsibleCard = ({
       </div>
 
       {/* Content */}
+<<<<<<< HEAD
       {expanded && (
+=======
+      {isExpanded && (
+>>>>>>> Curs
         <div className="border-t border-gray-200">
           {loading && (
             <div className="p-6 text-center">

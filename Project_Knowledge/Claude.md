@@ -1155,6 +1155,7 @@ CREATE POLICY "Admin can manage departments" ON departments FOR ALL
 
 ---
 
+<<<<<<< HEAD
 ### **Session 10: Offline System v1 Implementation & Navigation Enhancement (January 2025)**
 
 **Date:** January 21, 2025
@@ -1290,6 +1291,8 @@ CREATE POLICY "Admin can manage departments" ON departments FOR ALL
 
 ---
 
+=======
+>>>>>>> Curs
 ### **Session 7: Console Errors Resolution & UI Polish (January 2025)**
 
 **Date:** January 19, 2025

@@ -30,6 +30,7 @@ export const testSupabaseConnection = async () => {
       console.log('✅ RLS test passed:', userProfiles)
     }
 
+<<<<<<< HEAD
     // Test 3: Test key tables accessibility (direct table queries)
     const tablesToTest = ['companies', 'user_profiles', 'departments', 'staff']
     const accessibleTables = []
@@ -50,6 +51,44 @@ export const testSupabaseConnection = async () => {
     }
 
     console.log('✅ Accessible tables:', accessibleTables)
+=======
+    // Test 3: Test specific tables that exist
+    const tableTests = [
+      {
+        name: 'companies',
+        test: () => supabase.from('companies').select('id').limit(1),
+      },
+      {
+        name: 'user_profiles',
+        test: () => supabase.from('user_profiles').select('id').limit(1),
+      },
+      {
+        name: 'departments',
+        test: () => supabase.from('departments').select('id').limit(1),
+      },
+      {
+        name: 'staff',
+        test: () => supabase.from('staff').select('id').limit(1),
+      },
+    ]
+
+    const existingTables = []
+    for (const table of tableTests) {
+      try {
+        const { error } = await table.test()
+        if (!error) {
+          existingTables.push(table.name)
+          console.log(`✅ Table ${table.name} exists`)
+        } else {
+          console.log(`⚠️ Table ${table.name} not accessible:`, error.message)
+        }
+      } catch (err) {
+        console.log(`❌ Table ${table.name} error:`, err)
+      }
+    }
+
+    console.log('✅ Available tables:', existingTables)
+>>>>>>> Curs
 
     console.log('🎉 Supabase connection test completed successfully!')
     return {
@@ -57,7 +96,11 @@ export const testSupabaseConnection = async () => {
       data: {
         healthCheck,
         userProfiles,
+<<<<<<< HEAD
         accessibleTables,
+=======
+        tables: existingTables,
+>>>>>>> Curs
       },
     }
   } catch (error) {
