@@ -9,6 +9,9 @@ import MainLayout from './components/layouts/MainLayout'
 // Pages
 import HomePage from './features/auth/HomePage'
 import LoginPage from './features/auth/LoginPage'
+import { Calendar } from './features/calendar/Calendar'
+import { ConservationManager } from './features/conservation/ConservationManager'
+import { OfflineConservationDemo } from './features/conservation/OfflineConservationDemo'
 
 function App() {
   return (
@@ -25,11 +28,11 @@ function App() {
                     <Route path="/" element={<HomePage />} />
                     <Route
                       path="/conservazione"
-                      element={<div>Conservazione - Coming Soon</div>}
+                      element={<OfflineConservationDemo />}
                     />
                     <Route
                       path="/attivita"
-                      element={<div>Attività e Mansioni - Coming Soon</div>}
+                      element={<Calendar />}
                     />
                     <Route
                       path="/inventario"

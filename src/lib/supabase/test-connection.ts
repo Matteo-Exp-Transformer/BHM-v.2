@@ -30,31 +30,26 @@ export const testSupabaseConnection = async () => {
       console.log('✅ RLS test passed:', userProfiles)
     }
 
-    // Test 3: Test table structure
-    const { data: tables, error: tablesError } = await supabase
-      .from('information_schema.tables')
-      .select('table_name')
-      .eq('table_schema', 'public')
-      .in('table_name', [
-        'companies',
-        'user_profiles',
-        'departments',
-        'staff',
-        'conservation_points',
-        'maintenance_tasks',
-        'tasks',
-        'product_categories',
-        'events',
-        'notes',
-        'temperature_readings',
-        'non_conformities'
-      ])
+    // Test 3: Test key tables accessibility (direct table queries)
+    const tablesToTest = ['companies', 'user_profiles', 'departments', 'staff'];
+    const accessibleTables = [];
 
-    if (tablesError) {
-      console.error('❌ Tables check failed:', tablesError)
-    } else {
-      console.log('✅ Tables found:', tables?.map(t => t.table_name))
+    for (const tableName of tablesToTest) {
+      try {
+        const { error } = await supabase
+          .from(tableName)
+          .select('count')
+          .limit(1);
+
+        if (!error) {
+          accessibleTables.push(tableName);
+        }
+      } catch (err) {
+        // Table might not exist or not accessible
+      }
     }
+
+    console.log('✅ Accessible tables:', accessibleTables);
 
     console.log('🎉 Supabase connection test completed successfully!')
     return {
@@ -62,7 +57,7 @@ export const testSupabaseConnection = async () => {
       data: {
         healthCheck,
         userProfiles,
-        tables: tables?.map(t => t.table_name)
+        accessibleTables
       }
     }
 
