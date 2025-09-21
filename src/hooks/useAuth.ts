@@ -1,6 +1,12 @@
 import { useUser } from '@clerk/clerk-react'
+import type { User } from '@clerk/clerk-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
+
+// Extended User with company_id
+interface ExtendedUser extends User {
+  company_id?: string
+}
 
 // Role types
 export type UserRole =
@@ -202,6 +208,12 @@ export const useAuth = () => {
   // Error handling
   const authError = profileError ? 'Failed to load user profile' : null
 
+  // Extended user with company_id
+  const extendedUser = user as ExtendedUser
+  if (extendedUser && userProfile?.company_id) {
+    extendedUser.company_id = userProfile.company_id
+  }
+
   return {
     // Loading states
     isLoading,
@@ -214,11 +226,12 @@ export const useAuth = () => {
     isAuthorized,
 
     // User data
-    user,
+    user: extendedUser,
     userProfile,
     userRole,
     permissions,
     displayName,
+    companyId: userProfile?.company_id,
 
     // Helper functions
     hasPermission,

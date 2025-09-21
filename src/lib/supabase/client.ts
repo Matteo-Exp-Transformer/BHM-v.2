@@ -294,7 +294,256 @@ export type Database = {
           updated_at?: string
         }
       }
-      // Add other tables as needed...
+      conservation_points: {
+        Row: {
+          id: string
+          company_id: string
+          department_id: string | null
+          name: string
+          description: string | null
+          setpoint_temp: number | null
+          temp_min: number | null
+          temp_max: number | null
+          point_type: string
+          is_blast_chiller: boolean
+          product_categories: string[] | null
+          status: string
+          last_maintenance: string | null
+          next_maintenance: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          department_id?: string | null
+          name: string
+          description?: string | null
+          setpoint_temp?: number | null
+          temp_min?: number | null
+          temp_max?: number | null
+          point_type: string
+          is_blast_chiller?: boolean
+          product_categories?: string[] | null
+          status?: string
+          last_maintenance?: string | null
+          next_maintenance?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          department_id?: string | null
+          name?: string
+          description?: string | null
+          setpoint_temp?: number | null
+          temp_min?: number | null
+          temp_max?: number | null
+          point_type?: string
+          is_blast_chiller?: boolean
+          product_categories?: string[] | null
+          status?: string
+          last_maintenance?: string | null
+          next_maintenance?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      temperature_readings: {
+        Row: {
+          id: string
+          company_id: string
+          conservation_point_id: string
+          reading_value: number
+          target_temp: number
+          tolerance_range: number
+          reading_time: string
+          recorded_by: string
+          notes: string | null
+          photo_evidence: string[] | null
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          conservation_point_id: string
+          reading_value: number
+          target_temp: number
+          tolerance_range: number
+          reading_time: string
+          recorded_by: string
+          notes?: string | null
+          photo_evidence?: string[] | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          conservation_point_id?: string
+          reading_value?: number
+          target_temp?: number
+          tolerance_range?: number
+          reading_time?: string
+          recorded_by?: string
+          notes?: string | null
+          photo_evidence?: string[] | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      maintenance_tasks: {
+        Row: {
+          id: string
+          company_id: string
+          conservation_point_id: string
+          task_name: string
+          description: string | null
+          frequency: string
+          kind: string
+          is_active: boolean
+          assigned_to: string
+          last_completed: string | null
+          next_due: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          conservation_point_id: string
+          task_name: string
+          description?: string | null
+          frequency: string
+          kind: string
+          is_active?: boolean
+          assigned_to: string
+          last_completed?: string | null
+          next_due?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          conservation_point_id?: string
+          task_name?: string
+          description?: string | null
+          frequency?: string
+          kind?: string
+          is_active?: boolean
+          assigned_to?: string
+          last_completed?: string | null
+          next_due?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      maintenance_completions: {
+        Row: {
+          id: string
+          company_id: string
+          maintenance_task_id: string
+          status: string
+          notes: string | null
+          completed_by: string
+          completed_at: string
+          photo_evidence: string[] | null
+          next_due_date: string | null
+          temperature_value: number | null
+          checklist_completed: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          maintenance_task_id: string
+          status: string
+          notes?: string | null
+          completed_by: string
+          completed_at: string
+          photo_evidence?: string[] | null
+          next_due_date?: string | null
+          temperature_value?: number | null
+          checklist_completed: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          maintenance_task_id?: string
+          status?: string
+          notes?: string | null
+          completed_by?: string
+          completed_at?: string
+          photo_evidence?: string[] | null
+          next_due_date?: string | null
+          temperature_value?: number | null
+          checklist_completed?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      calendar_events: {
+        Row: {
+          id: string
+          company_id: string
+          title: string
+          description: string | null
+          start_date: string
+          end_date: string | null
+          event_type: string
+          department_id: string | null
+          assigned_to: string | null
+          priority: string
+          status: string
+          is_recurring: boolean
+          recurrence_pattern: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          title: string
+          description?: string | null
+          start_date: string
+          end_date?: string | null
+          event_type: string
+          department_id?: string | null
+          assigned_to?: string | null
+          priority?: string
+          status?: string
+          is_recurring?: boolean
+          recurrence_pattern?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          title?: string
+          description?: string | null
+          start_date?: string
+          end_date?: string | null
+          event_type?: string
+          department_id?: string | null
+          assigned_to?: string | null
+          priority?: string
+          status?: string
+          is_recurring?: boolean
+          recurrence_pattern?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

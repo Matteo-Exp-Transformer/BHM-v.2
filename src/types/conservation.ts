@@ -219,7 +219,7 @@ export function getConservationStatus(
 // Temperature status calculation function
 export function getTemperatureStatus(
   temperature: number,
-  targetTemp: number,
+  _targetTemp: number,
   toleranceMin: number,
   toleranceMax: number
 ): TemperatureStatus {

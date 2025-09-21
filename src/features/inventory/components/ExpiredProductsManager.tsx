@@ -301,7 +301,7 @@ export const ExpiredProductsManager: React.FC<ExpiredProductsManagerProps> = ({
       <CollapsibleCard
         title="Prodotti Scaduti"
         icon={AlertTriangle}
-        count={0}
+        counter={0}
         defaultExpanded={true}
       >
         <div className="flex justify-center items-center py-8">
@@ -315,7 +315,7 @@ export const ExpiredProductsManager: React.FC<ExpiredProductsManagerProps> = ({
     <CollapsibleCard
       title="Prodotti Scaduti"
       icon={AlertTriangle}
-      count={expiredProducts.length}
+      counter={expiredProducts.length}
       defaultExpanded={true}
     >
       {expiredProducts.length === 0 ? (

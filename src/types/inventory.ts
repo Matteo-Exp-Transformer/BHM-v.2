@@ -100,13 +100,48 @@ export interface ShoppingList {
 
 export interface ExpiredProduct {
   id: string
-  product_id: string
-  product_name: string
+  company_id: string
+  name: string
+  category_id: string | null
+  category_name?: string
+  department_id: string | null
+  department_name?: string
+  conservation_point_id?: string | null
+  conservation_point_name?: string
+
+  // Identification
+  barcode?: string
+  sku?: string
+  supplier_name?: string
+
+  // Dates & Quantities
+  purchase_date?: Date
   expiry_date: Date
-  days_expired: number
-  status: 'pending_disposal' | 'reinserted' | 'disposed'
-  reinsertion_count: number
+  quantity: number
+  unit: string
+
+  // Safety & Compliance
+  allergens: AllergenType[]
+  temperature_requirements: {
+    min_temp: number
+    max_temp: number
+    storage_type: ConservationPointType
+  }
+
+  // Documentation
+  label_photo_url?: string
   notes?: string
+
+  // Expiry specific
+  expired_at: Date
+  reinsertion_count: number
+  previous_product_id?: string
+
+  // Status
+  status: 'expired'
+  compliance_status: 'non_compliant'
+
+  // Metadata
   created_at: Date
   updated_at: Date
 }

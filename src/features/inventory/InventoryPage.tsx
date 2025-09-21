@@ -259,8 +259,8 @@ export default function InventoryPage() {
         <CollapsibleCard
           title="Prodotti in Scadenza"
           icon={AlertTriangle}
-          count={expiryAlerts.length}
-          defaultOpen={true}
+          counter={expiryAlerts.length}
+          defaultExpanded={true}
         >
           <div className="space-y-3">
             {expiryAlerts.map(alert => (
@@ -278,7 +278,7 @@ export default function InventoryPage() {
       <CollapsibleCard
         title="Prodotti"
         icon={Package}
-        count={products.length}
+        counter={products.length}
         defaultOpen={true}
       >
         {isLoading ? (
@@ -326,8 +326,8 @@ export default function InventoryPage() {
       <CollapsibleCard
         title="Categorie Prodotti"
         icon={FileText}
-        count={categories.length}
-        defaultOpen={false}
+        counter={categories.length}
+        defaultExpanded={false}
       >
         {isLoadingCategories ? (
           <div className="flex justify-center items-center py-4">
