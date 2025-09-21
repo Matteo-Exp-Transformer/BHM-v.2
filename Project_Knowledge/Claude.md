@@ -1589,8 +1589,10 @@ C:\Users\matte.MIO\Documents\GitHub\
 **MILESTONE ASSEGNATE A CURSOR:**
 
 #### **PRIORITÀ 1: B.1.1.3 Staff Management System (Giorni 2-4)**
+
 - **Target**: Sistema CRUD completo per gestione staff
 - **Componenti da creare**:
+
   ```
   src/features/management/components/
   ├── StaffManagement.tsx         # Main staff section
@@ -1600,6 +1602,7 @@ C:\Users\matte.MIO\Documents\GitHub\
   ```
 
 - **Hook da implementare**:
+
   ```typescript
   src/features/management/hooks/useStaff.ts
   - Complete CRUD con tutti i campi staff
@@ -1609,14 +1612,15 @@ C:\Users\matte.MIO\Documents\GitHub\
   ```
 
 - **Campi Staff da gestire**:
+
   ```typescript
   interface Staff {
     id: string
     company_id: string
-    name: string          // Required
+    name: string // Required
     role: 'admin' | 'responsabile' | 'dipendente' | 'collaboratore'
-    category: string      // Multiple selection
-    email?: string        // Per auth system linking
+    category: string // Multiple selection
+    email?: string // Per auth system linking
     phone?: string
     haccp_certification?: {
       level: 'base' | 'advanced'
@@ -1635,8 +1639,10 @@ C:\Users\matte.MIO\Documents\GitHub\
   - Amministratore, Banconisti, Cuochi, Camerieri, Social & Media Manager
 
 #### **PRIORITÀ 2: B.3.3 Shopping Lists & PDF Generation (Giorni 10-11)**
+
 - **Target**: Sistema liste della spesa con export PDF
 - **Componenti da creare**:
+
   ```
   src/features/inventory/components/
   ├── ShoppingListManager.tsx    # Main shopping interface
@@ -1654,6 +1660,7 @@ C:\Users\matte.MIO\Documents\GitHub\
   - Lista history con persistenza (2 settimane)
 
 #### **PRIORITÀ 3: B.5.1 Settings System (Giorni 17-18)**
+
 - **Target**: Sistema configurazioni aziendali
 - **Componenti da creare**:
   ```
@@ -1666,8 +1673,10 @@ C:\Users\matte.MIO\Documents\GitHub\
   ```
 
 #### **PRIORITÀ 4: B.5.2 Dashboard & KPIs (Giorni 17-19)**
+
 - **Target**: Dashboard principale con metriche
 - **Componenti da creare**:
+
   ```
   src/features/dashboard/
   ├── DashboardPage.tsx          # Main dashboard
@@ -1681,14 +1690,15 @@ C:\Users\matte.MIO\Documents\GitHub\
 - **KPI da implementare**:
   ```typescript
   interface DashboardKPIs {
-    overall_compliance_score: { value: number, trend: 'up'|'down'|'stable' }
-    task_completion_rate: { total_tasks: number, completed_on_time: number }
-    temperature_compliance: { total_readings: number, compliance_rate: number }
-    inventory_metrics: { total_products: number, expiring_soon: number }
+    overall_compliance_score: { value: number; trend: 'up' | 'down' | 'stable' }
+    task_completion_rate: { total_tasks: number; completed_on_time: number }
+    temperature_compliance: { total_readings: number; compliance_rate: number }
+    inventory_metrics: { total_products: number; expiring_soon: number }
   }
   ```
 
 #### **PRIORITÀ 5: UI Polish & Component Library (Ongoing)**
+
 - **Target**: Miglioramento UI e accessibilità
 - **Tasks**:
   - Storybook setup per component library
@@ -1710,11 +1720,13 @@ C:\Users\matte.MIO\Documents\GitHub\
 ### **🔄 COORDINATION & SYNC POINTS**
 
 #### **📅 Sync Schedule**
+
 - **Weekly**: Merge delle branch per sincronizzazione
 - **After Major Milestones**: Integration testing completo
 - **Before Production**: Code review e testing E2E
 
 #### **🔗 Dependency Management**
+
 1. **Staff Management (Cursor) → Calendar Integration (Claude)**
    - Cursor completa Staff CRUD prima di Calendar integration
 2. **Dashboard (Cursor) ← Conservation System (Claude)**
@@ -1725,6 +1737,7 @@ C:\Users\matte.MIO\Documents\GitHub\
 #### **📁 File Ownership**
 
 **CURSOR FILES (Tu sei owner):**
+
 ```
 src/features/management/
 ├── components/Staff*.tsx       # Staff management components
@@ -1741,6 +1754,7 @@ src/components/forms/          # Form components
 ```
 
 **CLAUDE FILES (Claude è owner):**
+
 ```
 src/features/calendar/         # Calendario completo
 src/features/conservation/     # Conservation system
@@ -1750,6 +1764,7 @@ src/lib/supabase/            # Database schema (coordinazione)
 ```
 
 **SHARED FILES (Coordinazione richiesta):**
+
 ```
 src/hooks/useAuth.ts          # Auth system (già completato)
 src/lib/supabase/client.ts    # Database types (Claude lead)
@@ -1759,6 +1774,7 @@ src/types/*.ts               # Type definitions (coordinazione)
 ### **🛠️ CURSOR DEVELOPMENT WORKFLOW**
 
 #### **🚀 Startup Checklist (Ogni Sessione)**
+
 1. **Leggi PLANNING.md** - Architettura e tech stack
 2. **Controlla TASKS.md** - Task specifici e milestone
 3. **Verifica Claude.md** - Questo file per coordinazione
@@ -1766,12 +1782,14 @@ src/types/*.ts               # Type definitions (coordinazione)
 5. **Run `npm run dev`** - Porta 3000 per Cursor
 
 #### **📋 Task Management**
+
 - **TodoWrite tool**: Traccia progress per task complessi
 - **Mark completed**: Segna immediatamente task completati
 - **Update TASKS.md**: Aggiorna milestone progress
 - **Commit frequenti**: Salva progress regolarmente
 
 #### **🔧 Technical Standards**
+
 - **TypeScript**: Sempre per nuovi componenti
 - **Mobile-first**: Design responsive prioritario
 - **CollapsibleCard pattern**: Usa per sezioni principali
@@ -1782,16 +1800,19 @@ src/types/*.ts               # Type definitions (coordinazione)
 #### **⚠️ CRITICAL CONSTRAINTS**
 
 **Database Schema:**
+
 - **NON modificare** tabelle esistenti senza coordinazione
 - **Usa types esistenti** da `src/lib/supabase/client.ts`
 - **RLS policies**: Segui pattern esistenti per security
 
 **Authentication:**
+
 - **Sistema auth già completo** - non modificare `useAuth.ts`
 - **Role-based access**: Usa `ProtectedRoute` per route protection
 - **Permission system**: Rispetta permessi esistenti
 
 **Component Architecture:**
+
 - **CollapsibleCard**: Usa pattern esistente (prop: `counter`, `defaultExpanded`)
 - **Error handling**: Toast notifications con react-toastify
 - **Loading states**: Implementa sempre loading e error states
@@ -1799,12 +1820,14 @@ src/types/*.ts               # Type definitions (coordinazione)
 ### **📊 SUCCESS METRICS PER CURSOR**
 
 #### **Milestone Completion KPIs:**
+
 - **B.1.1.3 Staff Management**: Staff CRUD 100% funzionale con certificazioni HACCP
 - **B.3.3 Shopping Lists**: PDF generation working, template lists funzionali
 - **B.5.1 Settings**: Company settings e user management operativi
 - **B.5.2 Dashboard**: KPI dashboard con metriche real-time
 
 #### **Code Quality Standards:**
+
 - **TypeScript errors**: Zero per tutti i nuovi componenti
 - **Mobile responsive**: 100% responsive per tutte le UI
 - **Performance**: Lighthouse score >90 per nuove pages
@@ -1813,12 +1836,14 @@ src/types/*.ts               # Type definitions (coordinazione)
 ### **🆘 ESCALATION & SUPPORT**
 
 #### **Per Problemi Tecnici:**
+
 1. **Database/Schema issues**: Coordinazione con Claude richiesta
 2. **Auth/Permission issues**: Controlla `useAuth.ts` e `ProtectedRoute`
 3. **Architecture decisions**: Consulta PLANNING.md e Claude.md
 4. **HACCP compliance**: Controlla requirements in TASKS.md
 
 #### **Communication Protocol:**
+
 - **Branch merge**: Richiedi merge con Claude per sync
 - **Schema changes**: Coordinate database modifications
 - **Breaking changes**: Comunica modifiche che impattano shared files
@@ -1826,11 +1851,13 @@ src/types/*.ts               # Type definitions (coordinazione)
 ### **🎯 IMMEDIATE NEXT STEPS PER CURSOR**
 
 **📋 QUESTA SETTIMANA:**
+
 1. **Implementa B.1.1.3 Staff Management** (priorità assoluta)
 2. **Testa integrazione con auth system esistente**
 3. **Coordina con Claude per calendar integration dependencies**
 
 **📋 PROSSIMA SETTIMANA:**
+
 1. **B.3.3 Shopping Lists & PDF Generation**
 2. **B.5.1 Settings System implementation**
 
