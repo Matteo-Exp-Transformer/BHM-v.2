@@ -1,12 +1,25 @@
-import React, { useState } from 'react';
-import { X, Calendar, Clock, MapPin, User, AlertTriangle, CheckCircle, Edit, Trash2 } from 'lucide-react';
-import type { TypedCalendarEvent } from '@/types/calendar';
+import React, { useState } from 'react'
+import {
+  X,
+  Calendar,
+  Clock,
+  MapPin,
+  User,
+  AlertTriangle,
+  CheckCircle,
+  Edit,
+  Trash2,
+} from 'lucide-react'
+import type { TypedCalendarEvent } from '@/types/calendar'
 
 interface EventDetailsModalProps {
-  event: TypedCalendarEvent;
-  onClose: () => void;
-  onUpdate: (data: { eventId: string; updates: Partial<TypedCalendarEvent> }) => void;
-  onDelete: (eventId: string) => void;
+  event: TypedCalendarEvent
+  onClose: () => void
+  onUpdate: (data: {
+    eventId: string
+    updates: Partial<TypedCalendarEvent>
+  }) => void
+  onDelete: (eventId: string) => void
 }
 
 const sourceLabels = {
@@ -14,50 +27,55 @@ const sourceLabels = {
   task: 'Attività',
   training: 'Formazione',
   inventory: 'Inventario',
-  meeting: 'Riunione'
-};
+  meeting: 'Riunione',
+}
 
 const priorityLabels = {
   low: 'Bassa',
   medium: 'Media',
   high: 'Alta',
-  critical: 'Critica'
-};
+  critical: 'Critica',
+}
 
 const statusLabels = {
   scheduled: 'Programmato',
   in_progress: 'In Corso',
   completed: 'Completato',
   overdue: 'In Ritardo',
-  cancelled: 'Annullato'
-};
+  cancelled: 'Annullato',
+}
 
 const priorityColors = {
   low: 'bg-green-100 text-green-800',
   medium: 'bg-yellow-100 text-yellow-800',
   high: 'bg-orange-100 text-orange-800',
-  critical: 'bg-red-100 text-red-800'
-};
+  critical: 'bg-red-100 text-red-800',
+}
 
 const statusColors = {
   scheduled: 'bg-blue-100 text-blue-800',
   in_progress: 'bg-indigo-100 text-indigo-800',
   completed: 'bg-green-100 text-green-800',
   overdue: 'bg-red-100 text-red-800',
-  cancelled: 'bg-gray-100 text-gray-800'
-};
+  cancelled: 'bg-gray-100 text-gray-800',
+}
 
-export function EventDetailsModal({ event, onClose, onUpdate, onDelete }: EventDetailsModalProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+export function EventDetailsModal({
+  event,
+  onClose,
+  onUpdate,
+  onDelete,
+}: EventDetailsModalProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('it-IT', {
       dateStyle: 'full',
       timeStyle: 'short',
-      timeZone: 'Europe/Rome'
-    }).format(date);
-  };
+      timeZone: 'Europe/Rome',
+    }).format(date)
+  }
 
   const handleStatusChange = (newStatus: string) => {
     onUpdate({
@@ -66,32 +84,36 @@ export function EventDetailsModal({ event, onClose, onUpdate, onDelete }: EventD
         ...event,
         extendedProps: {
           ...event.extendedProps,
-          status: newStatus as any
-        }
-      }
-    });
-  };
+          status: newStatus as any,
+        },
+      },
+    })
+  }
 
   const handleDelete = () => {
-    onDelete(event.id);
-    onClose();
-  };
+    onDelete(event.id)
+    onClose()
+  }
 
   const renderMaintenanceDetails = () => {
-    if (event.source !== 'maintenance') return null;
-    const maintenanceEvent = event as any;
+    if (event.source !== 'maintenance') return null
+    const maintenanceEvent = event as any
 
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium text-gray-700">Tipo Manutenzione</label>
+            <label className="text-sm font-medium text-gray-700">
+              Tipo Manutenzione
+            </label>
             <div className="mt-1 text-gray-900 capitalize">
               {maintenanceEvent.extendedProps.maintenanceType}
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-700">Frequenza</label>
+            <label className="text-sm font-medium text-gray-700">
+              Frequenza
+            </label>
             <div className="mt-1 text-gray-900 capitalize">
               {maintenanceEvent.extendedProps.frequency}
             </div>
@@ -100,36 +122,48 @@ export function EventDetailsModal({ event, onClose, onUpdate, onDelete }: EventD
 
         {maintenanceEvent.extendedProps.conservationPointName && (
           <div>
-            <label className="text-sm font-medium text-gray-700">Punto di Conservazione</label>
+            <label className="text-sm font-medium text-gray-700">
+              Punto di Conservazione
+            </label>
             <div className="mt-1 text-gray-900">
               {maintenanceEvent.extendedProps.conservationPointName}
             </div>
           </div>
         )}
 
-        {maintenanceEvent.extendedProps.checklist && maintenanceEvent.extendedProps.checklist.length > 0 && (
-          <div>
-            <label className="text-sm font-medium text-gray-700">Checklist</label>
-            <ul className="mt-2 space-y-1">
-              {maintenanceEvent.extendedProps.checklist.map((item: string, index: number) => (
-                <li key={index} className="flex items-center gap-2 text-sm text-gray-600">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {maintenanceEvent.extendedProps.checklist &&
+          maintenanceEvent.extendedProps.checklist.length > 0 && (
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Checklist
+              </label>
+              <ul className="mt-2 space-y-1">
+                {maintenanceEvent.extendedProps.checklist.map(
+                  (item: string, index: number) => (
+                    <li
+                      key={index}
+                      className="flex items-center gap-2 text-sm text-gray-600"
+                    >
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      {item}
+                    </li>
+                  )
+                )}
+              </ul>
+            </div>
+          )}
 
         <div>
-          <label className="text-sm font-medium text-gray-700">Durata Stimata</label>
+          <label className="text-sm font-medium text-gray-700">
+            Durata Stimata
+          </label>
           <div className="mt-1 text-gray-900">
             {maintenanceEvent.extendedProps.estimatedDuration} minuti
           </div>
         </div>
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -137,12 +171,14 @@ export function EventDetailsModal({ event, onClose, onUpdate, onDelete }: EventD
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div 
-              className="w-4 h-4 rounded-full" 
+            <div
+              className="w-4 h-4 rounded-full"
               style={{ backgroundColor: event.extendedProps.color }}
             />
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">{event.title}</h2>
+              <h2 className="text-xl font-semibold text-gray-900">
+                {event.title}
+              </h2>
               <p className="text-sm text-gray-600">
                 {sourceLabels[event.source]} • {formatDate(event.start)}
               </p>
@@ -161,10 +197,14 @@ export function EventDetailsModal({ event, onClose, onUpdate, onDelete }: EventD
           {/* Status and Priority */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Priorità:</span>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                priorityColors[event.extendedProps.priority]
-              }`}>
+              <span className="text-sm font-medium text-gray-700">
+                Priorità:
+              </span>
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  priorityColors[event.extendedProps.priority]
+                }`}
+              >
                 {priorityLabels[event.extendedProps.priority]}
               </span>
             </div>
@@ -172,11 +212,13 @@ export function EventDetailsModal({ event, onClose, onUpdate, onDelete }: EventD
               <span className="text-sm font-medium text-gray-700">Stato:</span>
               <select
                 value={event.extendedProps.status}
-                onChange={(e) => handleStatusChange(e.target.value)}
+                onChange={e => handleStatusChange(e.target.value)}
                 className={`px-2 py-1 rounded-full text-xs font-medium border-0 ${statusColors[event.extendedProps.status]}`}
               >
                 {Object.entries(statusLabels).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -185,8 +227,12 @@ export function EventDetailsModal({ event, onClose, onUpdate, onDelete }: EventD
           {/* Description */}
           {event.extendedProps.description && (
             <div>
-              <label className="text-sm font-medium text-gray-700">Descrizione</label>
-              <p className="mt-1 text-gray-900">{event.extendedProps.description}</p>
+              <label className="text-sm font-medium text-gray-700">
+                Descrizione
+              </label>
+              <p className="mt-1 text-gray-900">
+                {event.extendedProps.description}
+              </p>
             </div>
           )}
 
@@ -195,7 +241,9 @@ export function EventDetailsModal({ event, onClose, onUpdate, onDelete }: EventD
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-gray-500" />
               <div>
-                <div className="text-sm font-medium text-gray-700">Data e Ora</div>
+                <div className="text-sm font-medium text-gray-700">
+                  Data e Ora
+                </div>
                 <div className="text-sm text-gray-900">
                   {formatDate(event.start)}
                   {event.end && ` - ${formatDate(event.end)}`}
@@ -207,27 +255,37 @@ export function EventDetailsModal({ event, onClose, onUpdate, onDelete }: EventD
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-gray-500" />
                 <div>
-                  <div className="text-sm font-medium text-gray-700">Posizione</div>
-                  <div className="text-sm text-gray-900">{event.extendedProps.location}</div>
+                  <div className="text-sm font-medium text-gray-700">
+                    Posizione
+                  </div>
+                  <div className="text-sm text-gray-900">
+                    {event.extendedProps.location}
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
           {/* Assigned Users */}
-          {event.extendedProps.assignedTo && event.extendedProps.assignedTo.length > 0 && (
-            <div>
-              <label className="text-sm font-medium text-gray-700">Assegnato a</label>
-              <div className="mt-1 flex flex-wrap gap-2">
-                {event.extendedProps.assignedTo.map((userId, index) => (
-                  <div key={index} className="flex items-center gap-1 bg-gray-100 rounded-full px-2 py-1">
-                    <User className="w-3 h-3 text-gray-500" />
-                    <span className="text-xs text-gray-700">{userId}</span>
-                  </div>
-                ))}
+          {event.extendedProps.assignedTo &&
+            event.extendedProps.assignedTo.length > 0 && (
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Assegnato a
+                </label>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  {event.extendedProps.assignedTo.map((userId, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-1 bg-gray-100 rounded-full px-2 py-1"
+                    >
+                      <User className="w-3 h-3 text-gray-500" />
+                      <span className="text-xs text-gray-700">{userId}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Source-specific details */}
           {renderMaintenanceDetails()}
@@ -249,7 +307,9 @@ export function EventDetailsModal({ event, onClose, onUpdate, onDelete }: EventD
             {event.extendedProps.status === 'overdue' && (
               <div className="flex items-center gap-2 text-red-600">
                 <AlertTriangle className="w-4 h-4" />
-                <span className="text-sm font-medium">Questo evento è in ritardo</span>
+                <span className="text-sm font-medium">
+                  Questo evento è in ritardo
+                </span>
               </div>
             )}
           </div>
@@ -262,7 +322,7 @@ export function EventDetailsModal({ event, onClose, onUpdate, onDelete }: EventD
               <Edit className="w-4 h-4" />
               Modifica
             </button>
-            
+
             <button
               onClick={() => setShowDeleteConfirm(true)}
               className="flex items-center gap-2 px-4 py-2 text-red-700 bg-red-100 rounded-lg hover:bg-red-200 transition-colors"
@@ -278,9 +338,12 @@ export function EventDetailsModal({ event, onClose, onUpdate, onDelete }: EventD
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-60">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Conferma Eliminazione</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Conferma Eliminazione
+            </h3>
             <p className="text-gray-600 mb-6">
-              Sei sicuro di voler eliminare questo evento? Questa azione non può essere annullata.
+              Sei sicuro di voler eliminare questo evento? Questa azione non può
+              essere annullata.
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -300,5 +363,5 @@ export function EventDetailsModal({ event, onClose, onUpdate, onDelete }: EventD
         </div>
       )}
     </div>
-  );
+  )
 }

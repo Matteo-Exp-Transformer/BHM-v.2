@@ -1,55 +1,58 @@
-import React from 'react';
-import { Clock, Globe, Bell, Palette } from 'lucide-react';
-import type { CalendarSettings as CalendarSettingsType } from '@/types/calendar';
+import React from 'react'
+import { Clock, Globe, Bell, Palette } from 'lucide-react'
+import type { CalendarSettings as CalendarSettingsType } from '@/types/calendar'
 
 interface CalendarSettingsProps {
-  settings: CalendarSettingsType;
-  onSettingsChange: (settings: Partial<CalendarSettingsType>) => void;
+  settings: CalendarSettingsType
+  onSettingsChange: (settings: Partial<CalendarSettingsType>) => void
 }
 
 const viewOptions = [
   { value: 'dayGridMonth', label: 'Vista Mese' },
   { value: 'timeGridWeek', label: 'Vista Settimana' },
-  { value: 'timeGridDay', label: 'Vista Giorno' }
-] as const;
+  { value: 'timeGridDay', label: 'Vista Giorno' },
+] as const
 
 const timeFormatOptions = [
   { value: '24h', label: '24 ore (14:30)' },
-  { value: '12h', label: '12 ore (2:30 PM)' }
-] as const;
+  { value: '12h', label: '12 ore (2:30 PM)' },
+] as const
 
 const weekStartOptions = [
   { value: 1, label: 'Lunedì' },
-  { value: 0, label: 'Domenica' }
-] as const;
+  { value: 0, label: 'Domenica' },
+] as const
 
-export function CalendarSettings({ settings, onSettingsChange }: CalendarSettingsProps) {
+export function CalendarSettings({
+  settings,
+  onSettingsChange,
+}: CalendarSettingsProps) {
   const updateBusinessHours = (field: string, value: any) => {
     onSettingsChange({
       businessHours: {
         ...settings.businessHours,
-        [field]: value
-      }
-    });
-  };
+        [field]: value,
+      },
+    })
+  }
 
   const updateColorScheme = (source: string, color: string) => {
     onSettingsChange({
       colorScheme: {
         ...settings.colorScheme,
-        [source]: color
-      }
-    });
-  };
+        [source]: color,
+      },
+    })
+  }
 
   const updateNotifications = (field: string, value: any) => {
     onSettingsChange({
       notifications: {
         ...settings.notifications,
-        [field]: value
-      }
-    });
-  };
+        [field]: value,
+      },
+    })
+  }
 
   return (
     <div className="space-y-8">
@@ -66,7 +69,9 @@ export function CalendarSettings({ settings, onSettingsChange }: CalendarSetting
             </label>
             <select
               value={settings.defaultView}
-              onChange={(e) => onSettingsChange({ defaultView: e.target.value as any })}
+              onChange={e =>
+                onSettingsChange({ defaultView: e.target.value as any })
+              }
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               {viewOptions.map(option => (
@@ -83,7 +88,9 @@ export function CalendarSettings({ settings, onSettingsChange }: CalendarSetting
             </label>
             <select
               value={settings.firstDayOfWeek}
-              onChange={(e) => onSettingsChange({ firstDayOfWeek: parseInt(e.target.value) })}
+              onChange={e =>
+                onSettingsChange({ firstDayOfWeek: parseInt(e.target.value) })
+              }
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               {weekStartOptions.map(option => (
@@ -109,7 +116,9 @@ export function CalendarSettings({ settings, onSettingsChange }: CalendarSetting
             </label>
             <select
               value={settings.timeFormat}
-              onChange={(e) => onSettingsChange({ timeFormat: e.target.value as any })}
+              onChange={e =>
+                onSettingsChange({ timeFormat: e.target.value as any })
+              }
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               {timeFormatOptions.map(option => (
@@ -127,7 +136,7 @@ export function CalendarSettings({ settings, onSettingsChange }: CalendarSetting
             <input
               type="time"
               value={settings.businessHours.startTime}
-              onChange={(e) => updateBusinessHours('startTime', e.target.value)}
+              onChange={e => updateBusinessHours('startTime', e.target.value)}
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -139,7 +148,7 @@ export function CalendarSettings({ settings, onSettingsChange }: CalendarSetting
             <input
               type="time"
               value={settings.businessHours.endTime}
-              onChange={(e) => updateBusinessHours('endTime', e.target.value)}
+              onChange={e => updateBusinessHours('endTime', e.target.value)}
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -158,10 +167,13 @@ export function CalendarSettings({ settings, onSettingsChange }: CalendarSetting
               type="checkbox"
               id="notifications-enabled"
               checked={settings.notifications.enabled}
-              onChange={(e) => updateNotifications('enabled', e.target.checked)}
+              onChange={e => updateNotifications('enabled', e.target.checked)}
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <label htmlFor="notifications-enabled" className="ml-2 text-sm text-gray-700">
+            <label
+              htmlFor="notifications-enabled"
+              className="ml-2 text-sm text-gray-700"
+            >
               Abilita notifiche per eventi del calendario
             </label>
           </div>
@@ -181,22 +193,22 @@ export function CalendarSettings({ settings, onSettingsChange }: CalendarSetting
               task: 'Attività',
               training: 'Formazione',
               inventory: 'Inventario',
-              meeting: 'Riunioni'
-            };
+              meeting: 'Riunioni',
+            }
 
             return (
               <div key={source} className="flex items-center gap-3">
                 <input
                   type="color"
                   value={color}
-                  onChange={(e) => updateColorScheme(source, e.target.value)}
+                  onChange={e => updateColorScheme(source, e.target.value)}
                   className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
                 />
                 <span className="text-sm text-gray-700">
                   {sourceLabels[source] || source}
                 </span>
               </div>
-            );
+            )
           })}
         </div>
       </div>
@@ -212,21 +224,21 @@ export function CalendarSettings({ settings, onSettingsChange }: CalendarSetting
               businessHours: {
                 daysOfWeek: [1, 2, 3, 4, 5],
                 startTime: '08:00',
-                endTime: '18:00'
+                endTime: '18:00',
               },
               notifications: {
                 enabled: true,
-                defaultTimings: ['minutes_before']
+                defaultTimings: ['minutes_before'],
               },
               colorScheme: {
                 maintenance: '#3B82F6',
                 task: '#10B981',
                 training: '#F59E0B',
                 inventory: '#8B5CF6',
-                meeting: '#EF4444'
-              }
-            };
-            onSettingsChange(defaultSettings);
+                meeting: '#EF4444',
+              },
+            }
+            onSettingsChange(defaultSettings)
           }}
           className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
         >
@@ -234,5 +246,5 @@ export function CalendarSettings({ settings, onSettingsChange }: CalendarSetting
         </button>
       </div>
     </div>
-  );
+  )
 }

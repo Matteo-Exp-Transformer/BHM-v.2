@@ -1,40 +1,47 @@
-import React, { useState } from 'react';
-import { X, Wrench, Plus, Clock, Calendar } from 'lucide-react';
-import type { ConservationPoint, CreateMaintenanceTaskRequest } from '@/types/conservation';
+import React, { useState } from 'react'
+import { X, Wrench, Plus, Clock, Calendar } from 'lucide-react'
+import type {
+  ConservationPoint,
+  CreateMaintenanceTaskRequest,
+} from '@/types/conservation'
 
 interface MaintenanceTaskModalProps {
-  conservationPoint: ConservationPoint;
-  onClose: () => void;
-  onCreate: (data: CreateMaintenanceTaskRequest) => void;
-  isCreating: boolean;
+  conservationPoint: ConservationPoint
+  onClose: () => void
+  onCreate: (data: CreateMaintenanceTaskRequest) => void
+  isCreating: boolean
 }
 
 const maintenanceKinds = [
   { value: 'temperature', label: 'Controllo Temperature', icon: '🌡️' },
   { value: 'sanitization', label: 'Sanificazione', icon: '🧽' },
-  { value: 'defrosting', label: 'Sbrinamento', icon: '❄️' }
-] as const;
+  { value: 'defrosting', label: 'Sbrinamento', icon: '❄️' },
+] as const
 
 const frequencies = [
   { value: 'daily', label: 'Giornaliera', description: 'Ogni giorno' },
   { value: 'weekly', label: 'Settimanale', description: 'Ogni settimana' },
   { value: 'monthly', label: 'Mensile', description: 'Ogni mese' },
-  { value: 'custom', label: 'Personalizzata', description: 'Frequenza specifica' }
-] as const;
+  {
+    value: 'custom',
+    label: 'Personalizzata',
+    description: 'Frequenza specifica',
+  },
+] as const
 
 const commonChecklists = {
   temperature: [
     'Verificare temperatura interna',
     'Controllare termostato',
     'Verificare guarnizioni porte',
-    'Controllare allarmi temperatura'
+    'Controllare allarmi temperatura',
   ],
   sanitization: [
     'Svuotare completamente il vano',
     'Pulire superfici interne con detergente',
     'Disinfettare con prodotto autorizzato',
     'Asciugare completamente',
-    'Riposizionare prodotti'
+    'Riposizionare prodotti',
   ],
   defrosting: [
     'Spegnere apparecchiatura',
@@ -42,29 +49,31 @@ const commonChecklists = {
     'Permettere sbrinamento naturale',
     'Pulire residui di ghiaccio',
     'Asciugare completamente',
-    'Riaccendere e verificare temperatura'
-  ]
-};
+    'Riaccendere e verificare temperatura',
+  ],
+}
 
 export function MaintenanceTaskModal({
   conservationPoint,
   onClose,
   onCreate,
-  isCreating
+  isCreating,
 }: MaintenanceTaskModalProps) {
   const [formData, setFormData] = useState({
     kind: 'temperature' as const,
     frequency: 'weekly' as const,
-    next_due_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16), // Tomorrow
+    next_due_date: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 16), // Tomorrow
     estimated_duration: 30,
     checklist: [] as string[],
-    assigned_to: ''
-  });
+    assigned_to: '',
+  })
 
-  const [newChecklistItem, setNewChecklistItem] = useState('');
+  const [newChecklistItem, setNewChecklistItem] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     onCreate({
       conservation_point_id: conservationPoint.id,
       kind: formData.kind,
@@ -72,41 +81,41 @@ export function MaintenanceTaskModal({
       next_due_date: new Date(formData.next_due_date),
       estimated_duration: formData.estimated_duration,
       checklist: formData.checklist.length > 0 ? formData.checklist : undefined,
-      assigned_to: formData.assigned_to || undefined
-    });
-  };
+      assigned_to: formData.assigned_to || undefined,
+    })
+  }
 
   const handleKindChange = (kind: typeof formData.kind) => {
     setFormData(prev => ({
       ...prev,
       kind,
-      checklist: commonChecklists[kind] || []
-    }));
-  };
+      checklist: commonChecklists[kind] || [],
+    }))
+  }
 
   const addChecklistItem = () => {
     if (newChecklistItem.trim()) {
       setFormData(prev => ({
         ...prev,
-        checklist: [...prev.checklist, newChecklistItem.trim()]
-      }));
-      setNewChecklistItem('');
+        checklist: [...prev.checklist, newChecklistItem.trim()],
+      }))
+      setNewChecklistItem('')
     }
-  };
+  }
 
   const removeChecklistItem = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      checklist: prev.checklist.filter((_, i) => i !== index)
-    }));
-  };
+      checklist: prev.checklist.filter((_, i) => i !== index),
+    }))
+  }
 
   const loadCommonChecklist = () => {
     setFormData(prev => ({
       ...prev,
-      checklist: commonChecklists[prev.kind] || []
-    }));
-  };
+      checklist: commonChecklists[prev.kind] || [],
+    }))
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -119,7 +128,9 @@ export function MaintenanceTaskModal({
                 <Wrench className="w-6 h-6 text-blue-600" />
                 Nuova Manutenzione
               </h2>
-              <p className="text-sm text-gray-600 mt-1">{conservationPoint.name}</p>
+              <p className="text-sm text-gray-600 mt-1">
+                {conservationPoint.name}
+              </p>
             </div>
             <button
               type="button"
@@ -164,7 +175,12 @@ export function MaintenanceTaskModal({
                 </label>
                 <select
                   value={formData.frequency}
-                  onChange={(e) => setFormData(prev => ({ ...prev, frequency: e.target.value as any }))}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      frequency: e.target.value as any,
+                    }))
+                  }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   {frequencies.map(freq => (
@@ -183,7 +199,12 @@ export function MaintenanceTaskModal({
                   type="datetime-local"
                   required
                   value={formData.next_due_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, next_due_date: e.target.value }))}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      next_due_date: e.target.value,
+                    }))
+                  }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -200,7 +221,12 @@ export function MaintenanceTaskModal({
                   min="5"
                   step="5"
                   value={formData.estimated_duration}
-                  onChange={(e) => setFormData(prev => ({ ...prev, estimated_duration: parseInt(e.target.value) || 30 }))}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      estimated_duration: parseInt(e.target.value) || 30,
+                    }))
+                  }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -211,7 +237,12 @@ export function MaintenanceTaskModal({
                 </label>
                 <select
                   value={formData.assigned_to}
-                  onChange={(e) => setFormData(prev => ({ ...prev, assigned_to: e.target.value }))}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      assigned_to: e.target.value,
+                    }))
+                  }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Assegnazione automatica...</option>
@@ -242,10 +273,13 @@ export function MaintenanceTaskModal({
                 <input
                   type="text"
                   value={newChecklistItem}
-                  onChange={(e) => setNewChecklistItem(e.target.value)}
+                  onChange={e => setNewChecklistItem(e.target.value)}
                   placeholder="Aggiungi attività alla checklist"
                   className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addChecklistItem())}
+                  onKeyPress={e =>
+                    e.key === 'Enter' &&
+                    (e.preventDefault(), addChecklistItem())
+                  }
                 />
                 <button
                   type="button"
@@ -260,7 +294,10 @@ export function MaintenanceTaskModal({
               {formData.checklist.length > 0 && (
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {formData.checklist.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                    >
                       <span className="text-sm text-gray-700">{item}</span>
                       <button
                         type="button"
@@ -278,7 +315,9 @@ export function MaintenanceTaskModal({
                 <div className="text-center py-6 text-gray-500">
                   <div className="text-4xl mb-2">📋</div>
                   <p className="text-sm">Nessuna attività in checklist</p>
-                  <p className="text-xs">Aggiungi attività o carica checklist standard</p>
+                  <p className="text-xs">
+                    Aggiungi attività o carica checklist standard
+                  </p>
                 </div>
               )}
             </div>
@@ -291,19 +330,23 @@ export function MaintenanceTaskModal({
               </h4>
               <div className="text-sm text-blue-800 space-y-1">
                 <div>
-                  <strong>Tipo:</strong> {maintenanceKinds.find(k => k.value === formData.kind)?.label}
+                  <strong>Tipo:</strong>{' '}
+                  {maintenanceKinds.find(k => k.value === formData.kind)?.label}
                 </div>
                 <div>
-                  <strong>Frequenza:</strong> {frequencies.find(f => f.value === formData.frequency)?.label}
+                  <strong>Frequenza:</strong>{' '}
+                  {frequencies.find(f => f.value === formData.frequency)?.label}
                 </div>
                 <div>
                   <strong>Durata:</strong> {formData.estimated_duration} minuti
                 </div>
                 <div>
-                  <strong>Prossima scadenza:</strong> {new Date(formData.next_due_date).toLocaleString('it-IT')}
+                  <strong>Prossima scadenza:</strong>{' '}
+                  {new Date(formData.next_due_date).toLocaleString('it-IT')}
                 </div>
                 <div>
-                  <strong>Attività checklist:</strong> {formData.checklist.length}
+                  <strong>Attività checklist:</strong>{' '}
+                  {formData.checklist.length}
                 </div>
               </div>
             </div>
@@ -332,5 +375,5 @@ export function MaintenanceTaskModal({
         </form>
       </div>
     </div>
-  );
+  )
 }

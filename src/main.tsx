@@ -20,28 +20,31 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', async () => {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/'
-      });
+        scope: '/',
+      })
 
-      console.log('SW registered: ', registration);
+      console.log('SW registered: ', registration)
 
       // Listen for SW updates
       registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
+        const newWorker = registration.installing
         if (newWorker) {
           newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            if (
+              newWorker.state === 'installed' &&
+              navigator.serviceWorker.controller
+            ) {
               // New content is available
-              console.log('New content available; please refresh.');
+              console.log('New content available; please refresh.')
               // You can show a notification to the user here
             }
-          });
+          })
         }
-      });
+      })
     } catch (error) {
-      console.log('SW registration failed: ', error);
+      console.log('SW registration failed: ', error)
     }
-  });
+  })
 }
 
 // Import your publishable key

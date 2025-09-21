@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
   Thermometer,
   Plus,
@@ -8,12 +8,12 @@ import {
   CheckCircle,
   Clock,
   TrendingUp,
-  Activity
-} from 'lucide-react';
+  Activity,
+} from 'lucide-react'
 
 export function ConservationManager() {
-  const [showFilters, setShowFilters] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showFilters, setShowFilters] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   return (
     <div className="p-6 space-y-6">
@@ -22,8 +22,12 @@ export function ConservationManager() {
         <div className="flex items-center gap-3">
           <Thermometer className="w-8 h-8 text-blue-600" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Sistema di Conservazione</h1>
-            <p className="text-gray-600">Monitoraggio temperature e punti di conservazione HACCP</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Sistema di Conservazione
+            </h1>
+            <p className="text-gray-600">
+              Monitoraggio temperature e punti di conservazione HACCP
+            </p>
           </div>
         </div>
 
@@ -63,15 +67,20 @@ export function ConservationManager() {
             Sistema di Conservazione
           </h3>
           <p className="text-gray-600 mb-6">
-            Il sistema di conservazione è in fase di implementazione. Le funzionalità complete saranno disponibili a breve.
+            Il sistema di conservazione è in fase di implementazione. Le
+            funzionalità complete saranno disponibili a breve.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-4 bg-blue-50 rounded-lg">
               <h4 className="font-medium text-blue-900">Punti Conservazione</h4>
-              <p className="text-sm text-blue-700">Gestione frigoriferi e congelatori</p>
+              <p className="text-sm text-blue-700">
+                Gestione frigoriferi e congelatori
+              </p>
             </div>
             <div className="p-4 bg-green-50 rounded-lg">
-              <h4 className="font-medium text-green-900">Letture Temperature</h4>
+              <h4 className="font-medium text-green-900">
+                Letture Temperature
+              </h4>
               <p className="text-sm text-green-700">Monitoraggio automatico</p>
             </div>
             <div className="p-4 bg-yellow-50 rounded-lg">
@@ -86,5 +95,5 @@ export function ConservationManager() {
         </div>
       </div>
     </div>
-  );
+  )
 }

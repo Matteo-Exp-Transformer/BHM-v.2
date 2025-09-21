@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 import {
   Wifi,
   WifiOff,
@@ -7,21 +7,21 @@ import {
   CheckCircle,
   Clock,
   Upload,
-  Download
-} from 'lucide-react';
-import { useOfflineSync } from '@/hooks/useOfflineSync';
-import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+  Download,
+} from 'lucide-react'
+import { useOfflineSync } from '@/hooks/useOfflineSync'
+import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 
 interface SyncStatusBarProps {
-  position?: 'top' | 'bottom';
-  showDetails?: boolean;
-  className?: string;
+  position?: 'top' | 'bottom'
+  showDetails?: boolean
+  className?: string
 }
 
 export function SyncStatusBar({
   position = 'bottom',
   showDetails = false,
-  className = ''
+  className = '',
 }: SyncStatusBarProps) {
   const {
     isOnline,
@@ -31,60 +31,61 @@ export function SyncStatusBar({
     syncErrors,
     syncPendingOperations,
     hasPendingOperations,
-    hasErrors
-  } = useOfflineSync();
+    hasErrors,
+  } = useOfflineSync()
 
-  const {
-    isSlowConnection,
-    connectionQuality,
-    effectiveType
-  } = useNetworkStatus();
+  const { isSlowConnection, connectionQuality, effectiveType } =
+    useNetworkStatus()
 
   if (!showDetails && isOnline && !hasPendingOperations && !hasErrors) {
-    return null; // Hide when everything is normal
+    return null // Hide when everything is normal
   }
 
   const getStatusColor = () => {
-    if (!isOnline) return 'bg-red-500';
-    if (hasErrors) return 'bg-red-500';
-    if (hasPendingOperations) return 'bg-yellow-500';
-    if (isSyncing) return 'bg-blue-500';
-    return 'bg-green-500';
-  };
+    if (!isOnline) return 'bg-red-500'
+    if (hasErrors) return 'bg-red-500'
+    if (hasPendingOperations) return 'bg-yellow-500'
+    if (isSyncing) return 'bg-blue-500'
+    return 'bg-green-500'
+  }
 
   const getStatusText = () => {
-    if (!isOnline) return 'Offline';
-    if (isSyncing) return 'Sincronizzazione...';
-    if (hasErrors) return `${syncErrors.length} errori di sync`;
-    if (hasPendingOperations) return `${pendingOperations.length} operazioni in coda`;
-    return 'Sincronizzato';
-  };
+    if (!isOnline) return 'Offline'
+    if (isSyncing) return 'Sincronizzazione...'
+    if (hasErrors) return `${syncErrors.length} errori di sync`
+    if (hasPendingOperations)
+      return `${pendingOperations.length} operazioni in coda`
+    return 'Sincronizzato'
+  }
 
   const getStatusIcon = () => {
-    if (!isOnline) return <WifiOff className="w-4 h-4" />;
-    if (isSyncing) return <RefreshCw className="w-4 h-4 animate-spin" />;
-    if (hasErrors) return <AlertCircle className="w-4 h-4" />;
-    if (hasPendingOperations) return <Upload className="w-4 h-4" />;
-    return <CheckCircle className="w-4 h-4" />;
-  };
+    if (!isOnline) return <WifiOff className="w-4 h-4" />
+    if (isSyncing) return <RefreshCw className="w-4 h-4 animate-spin" />
+    if (hasErrors) return <AlertCircle className="w-4 h-4" />
+    if (hasPendingOperations) return <Upload className="w-4 h-4" />
+    return <CheckCircle className="w-4 h-4" />
+  }
 
-  const positionClasses = position === 'top'
-    ? 'top-0 border-b'
-    : 'bottom-0 border-t';
+  const positionClasses =
+    position === 'top' ? 'top-0 border-b' : 'bottom-0 border-t'
 
   return (
-    <div className={`
+    <div
+      className={`
       fixed left-0 right-0 ${positionClasses} bg-white border-gray-200 z-40
       ${className}
-    `}>
+    `}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-2">
           {/* Status indicator */}
           <div className="flex items-center gap-3">
-            <div className={`
+            <div
+              className={`
               flex items-center gap-2 px-3 py-1 rounded-full text-white text-sm font-medium
               ${getStatusColor()}
-            `}>
+            `}
+            >
               {getStatusIcon()}
               <span>{getStatusText()}</span>
             </div>
@@ -110,7 +111,7 @@ export function SyncStatusBar({
                 <span>
                   {lastSyncTime.toLocaleTimeString('it-IT', {
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
                   })}
                 </span>
               </div>
@@ -123,7 +124,9 @@ export function SyncStatusBar({
                 disabled={isSyncing}
                 className="flex items-center gap-1 px-2 py-1 text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50"
               >
-                <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`}
+                />
                 Sync
               </button>
             )}
@@ -156,7 +159,9 @@ export function SyncStatusBar({
                   <WifiOff className="w-4 h-4 text-red-500" />
                 )}
                 <span className="text-gray-600">Connessione:</span>
-                <span className="font-medium capitalize">{connectionQuality}</span>
+                <span className="font-medium capitalize">
+                  {connectionQuality}
+                </span>
               </div>
             </div>
 
@@ -167,7 +172,7 @@ export function SyncStatusBar({
                   Operazioni in attesa:
                 </h4>
                 <div className="space-y-1">
-                  {pendingOperations.slice(0, 3).map((operation) => (
+                  {pendingOperations.slice(0, 3).map(operation => (
                     <div
                       key={operation.id}
                       className="flex items-center justify-between text-xs bg-gray-50 rounded px-2 py-1"
@@ -176,10 +181,13 @@ export function SyncStatusBar({
                         {operation.type} {operation.entity}
                       </span>
                       <span className="text-gray-500">
-                        {new Date(operation.timestamp).toLocaleTimeString('it-IT', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+                        {new Date(operation.timestamp).toLocaleTimeString(
+                          'it-IT',
+                          {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          }
+                        )}
                       </span>
                     </div>
                   ))}
@@ -207,9 +215,7 @@ export function SyncStatusBar({
                       <div className="font-medium">
                         {error.operation.type} {error.operation.entity}
                       </div>
-                      <div className="text-red-600 truncate">
-                        {error.error}
-                      </div>
+                      <div className="text-red-600 truncate">{error.error}</div>
                     </div>
                   ))}
                   {syncErrors.length > 2 && (
@@ -224,5 +230,5 @@ export function SyncStatusBar({
         )}
       </div>
     </div>
-  );
+  )
 }

@@ -31,25 +31,25 @@ export const testSupabaseConnection = async () => {
     }
 
     // Test 3: Test key tables accessibility (direct table queries)
-    const tablesToTest = ['companies', 'user_profiles', 'departments', 'staff'];
-    const accessibleTables = [];
+    const tablesToTest = ['companies', 'user_profiles', 'departments', 'staff']
+    const accessibleTables = []
 
     for (const tableName of tablesToTest) {
       try {
         const { error } = await supabase
           .from(tableName)
           .select('count')
-          .limit(1);
+          .limit(1)
 
         if (!error) {
-          accessibleTables.push(tableName);
+          accessibleTables.push(tableName)
         }
       } catch (err) {
         // Table might not exist or not accessible
       }
     }
 
-    console.log('✅ Accessible tables:', accessibleTables);
+    console.log('✅ Accessible tables:', accessibleTables)
 
     console.log('🎉 Supabase connection test completed successfully!')
     return {
@@ -57,10 +57,9 @@ export const testSupabaseConnection = async () => {
       data: {
         healthCheck,
         userProfiles,
-        accessibleTables
-      }
+        accessibleTables,
+      },
     }
-
   } catch (error) {
     console.error('❌ Connection test failed:', error)
     return { success: false, error }

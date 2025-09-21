@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { X, Calendar, Clock, MapPin, User, Plus } from 'lucide-react';
-import type { TypedCalendarEvent } from '@/types/calendar';
+import React, { useState } from 'react'
+import { X, Calendar, Clock, MapPin, User, Plus } from 'lucide-react'
+import type { TypedCalendarEvent } from '@/types/calendar'
 
 interface CreateEventModalProps {
-  selectedDate: Date | null;
-  onClose: () => void;
-  onCreate: (eventData: Partial<TypedCalendarEvent>) => void;
+  selectedDate: Date | null
+  onClose: () => void
+  onCreate: (eventData: Partial<TypedCalendarEvent>) => void
 }
 
 const eventTypes = [
@@ -13,22 +13,22 @@ const eventTypes = [
   { value: 'task', label: 'Attività', color: '#10B981' },
   { value: 'training', label: 'Formazione', color: '#F59E0B' },
   { value: 'inventory', label: 'Inventario', color: '#8B5CF6' },
-  { value: 'meeting', label: 'Riunione', color: '#EF4444' }
-];
+  { value: 'meeting', label: 'Riunione', color: '#EF4444' },
+]
 
 const priorities = [
   { value: 'low', label: 'Bassa', color: 'text-green-600' },
   { value: 'medium', label: 'Media', color: 'text-yellow-600' },
   { value: 'high', label: 'Alta', color: 'text-orange-600' },
-  { value: 'critical', label: 'Critica', color: 'text-red-600' }
-];
+  { value: 'critical', label: 'Critica', color: 'text-red-600' },
+]
 
 const maintenanceTypes = [
   { value: 'temperature', label: 'Controllo Temperatura' },
   { value: 'sanitization', label: 'Sanificazione' },
   { value: 'defrosting', label: 'Sbrinamento' },
-  { value: 'repair', label: 'Riparazione' }
-];
+  { value: 'repair', label: 'Riparazione' },
+]
 
 const frequencies = [
   { value: 'daily', label: 'Giornaliera' },
@@ -36,10 +36,14 @@ const frequencies = [
   { value: 'monthly', label: 'Mensile' },
   { value: 'quarterly', label: 'Trimestrale' },
   { value: 'yearly', label: 'Annuale' },
-  { value: 'custom', label: 'Personalizzata' }
-];
+  { value: 'custom', label: 'Personalizzata' },
+]
 
-export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEventModalProps) {
+export function CreateEventModal({
+  selectedDate,
+  onClose,
+  onCreate,
+}: CreateEventModalProps) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -68,14 +72,14 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
     trainingType: 'haccp' as const,
     instructor: '',
     maxParticipants: 10,
-    certificationRequired: false
-  });
+    certificationRequired: false,
+  })
 
-  const [checklistItem, setChecklistItem] = useState('');
-  const [assigneeEmail, setAssigneeEmail] = useState('');
+  const [checklistItem, setChecklistItem] = useState('')
+  const [assigneeEmail, setAssigneeEmail] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     const baseEvent = {
       title: formData.title,
@@ -91,32 +95,37 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
         assignedTo: formData.assignedTo,
         location: formData.location,
         category: getCategory(),
-        color: eventTypes.find(t => t.value === formData.source)?.color
-      }
-    };
+        color: eventTypes.find(t => t.value === formData.source)?.color,
+      },
+    }
 
-    const specificProps = getSourceSpecificProps();
+    const specificProps = getSourceSpecificProps()
     const eventData = {
       ...baseEvent,
       extendedProps: {
         ...baseEvent.extendedProps,
-        ...specificProps
-      }
-    };
+        ...specificProps,
+      },
+    }
 
-    onCreate(eventData);
-    onClose();
-  };
+    onCreate(eventData)
+    onClose()
+  }
 
   const getCategory = () => {
     switch (formData.source) {
-      case 'maintenance': return formData.maintenanceType;
-      case 'task': return formData.taskType;
-      case 'training': return formData.trainingType;
-      case 'meeting': return formData.meetingType;
-      default: return 'general';
+      case 'maintenance':
+        return formData.maintenanceType
+      case 'task':
+        return formData.taskType
+      case 'training':
+        return formData.trainingType
+      case 'meeting':
+        return formData.meetingType
+      default:
+        return 'general'
     }
-  };
+  }
 
   const getSourceSpecificProps = () => {
     switch (formData.source) {
@@ -126,66 +135,66 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
           frequency: formData.frequency,
           estimatedDuration: formData.estimatedDuration,
           checklist: formData.checklist,
-          conservationPointId: formData.conservationPointId || undefined
-        };
+          conservationPointId: formData.conservationPointId || undefined,
+        }
       case 'task':
         return {
           taskType: formData.taskType,
           departmentId: formData.departmentId || undefined,
-          estimatedDuration: formData.estimatedDuration
-        };
+          estimatedDuration: formData.estimatedDuration,
+        }
       case 'training':
         return {
           trainingType: formData.trainingType,
           instructor: formData.instructor,
           maxParticipants: formData.maxParticipants,
-          certificationRequired: formData.certificationRequired
-        };
+          certificationRequired: formData.certificationRequired,
+        }
       case 'meeting':
         return {
           meetingType: formData.meetingType,
           attendees: formData.attendees,
           isVirtual: formData.isVirtual,
-          meetingLink: formData.meetingLink || undefined
-        };
+          meetingLink: formData.meetingLink || undefined,
+        }
       default:
-        return {};
+        return {}
     }
-  };
+  }
 
   const addChecklistItem = () => {
     if (checklistItem.trim()) {
       setFormData(prev => ({
         ...prev,
-        checklist: [...prev.checklist, checklistItem.trim()]
-      }));
-      setChecklistItem('');
+        checklist: [...prev.checklist, checklistItem.trim()],
+      }))
+      setChecklistItem('')
     }
-  };
+  }
 
   const removeChecklistItem = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      checklist: prev.checklist.filter((_, i) => i !== index)
-    }));
-  };
+      checklist: prev.checklist.filter((_, i) => i !== index),
+    }))
+  }
 
   const addAssignee = () => {
     if (assigneeEmail.trim() && !formData.assignedTo.includes(assigneeEmail)) {
       setFormData(prev => ({
         ...prev,
-        assignedTo: [...prev.assignedTo, assigneeEmail.trim()]
-      }));
-      setAssigneeEmail('');
+        assignedTo: [...prev.assignedTo, assigneeEmail.trim()],
+      }))
+      setAssigneeEmail('')
     }
-  };
+  }
 
   const removeAssignee = (email: string) => {
     setFormData(prev => ({
       ...prev,
-      assignedTo: prev.assignedTo.filter(a => a !== email)
-    }));
-  };
+      assignedTo: prev.assignedTo.filter(a => a !== email),
+    }))
+  }
 
   const renderSourceSpecificFields = () => {
     switch (formData.source) {
@@ -199,11 +208,18 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                 </label>
                 <select
                   value={formData.maintenanceType}
-                  onChange={(e) => setFormData(prev => ({ ...prev, maintenanceType: e.target.value as any }))}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      maintenanceType: e.target.value as any,
+                    }))
+                  }
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   {maintenanceTypes.map(type => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -213,16 +229,23 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                 </label>
                 <select
                   value={formData.frequency}
-                  onChange={(e) => setFormData(prev => ({ ...prev, frequency: e.target.value as any }))}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      frequency: e.target.value as any,
+                    }))
+                  }
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   {frequencies.map(freq => (
-                    <option key={freq.value} value={freq.value}>{freq.label}</option>
+                    <option key={freq.value} value={freq.value}>
+                      {freq.label}
+                    </option>
                   ))}
                 </select>
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Durata Stimata (minuti)
@@ -230,7 +253,12 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
               <input
                 type="number"
                 value={formData.estimatedDuration}
-                onChange={(e) => setFormData(prev => ({ ...prev, estimatedDuration: parseInt(e.target.value) || 30 }))}
+                onChange={e =>
+                  setFormData(prev => ({
+                    ...prev,
+                    estimatedDuration: parseInt(e.target.value) || 30,
+                  }))
+                }
                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 min="5"
                 step="5"
@@ -245,10 +273,13 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                 <input
                   type="text"
                   value={checklistItem}
-                  onChange={(e) => setChecklistItem(e.target.value)}
+                  onChange={e => setChecklistItem(e.target.value)}
                   placeholder="Aggiungi elemento checklist"
                   className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addChecklistItem())}
+                  onKeyPress={e =>
+                    e.key === 'Enter' &&
+                    (e.preventDefault(), addChecklistItem())
+                  }
                 />
                 <button
                   type="button"
@@ -261,7 +292,10 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
               {formData.checklist.length > 0 && (
                 <ul className="space-y-1">
                   {formData.checklist.map((item, index) => (
-                    <li key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <li
+                      key={index}
+                      className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                    >
                       <span className="text-sm">{item}</span>
                       <button
                         type="button"
@@ -276,7 +310,7 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
               )}
             </div>
           </div>
-        );
+        )
 
       case 'training':
         return (
@@ -288,7 +322,12 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                 </label>
                 <select
                   value={formData.trainingType}
-                  onChange={(e) => setFormData(prev => ({ ...prev, trainingType: e.target.value as any }))}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      trainingType: e.target.value as any,
+                    }))
+                  }
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="haccp">HACCP</option>
@@ -305,13 +344,18 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                 <input
                   type="number"
                   value={formData.maxParticipants}
-                  onChange={(e) => setFormData(prev => ({ ...prev, maxParticipants: parseInt(e.target.value) || 10 }))}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      maxParticipants: parseInt(e.target.value) || 10,
+                    }))
+                  }
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   min="1"
                 />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Istruttore
@@ -319,7 +363,9 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
               <input
                 type="text"
                 value={formData.instructor}
-                onChange={(e) => setFormData(prev => ({ ...prev, instructor: e.target.value }))}
+                onChange={e =>
+                  setFormData(prev => ({ ...prev, instructor: e.target.value }))
+                }
                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Nome istruttore"
               />
@@ -330,15 +376,23 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                 type="checkbox"
                 id="certification-required"
                 checked={formData.certificationRequired}
-                onChange={(e) => setFormData(prev => ({ ...prev, certificationRequired: e.target.checked }))}
+                onChange={e =>
+                  setFormData(prev => ({
+                    ...prev,
+                    certificationRequired: e.target.checked,
+                  }))
+                }
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
-              <label htmlFor="certification-required" className="ml-2 text-sm text-gray-700">
+              <label
+                htmlFor="certification-required"
+                className="ml-2 text-sm text-gray-700"
+              >
                 Certificazione richiesta
               </label>
             </div>
           </div>
-        );
+        )
 
       case 'meeting':
         return (
@@ -349,7 +403,12 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
               </label>
               <select
                 value={formData.meetingType}
-                onChange={(e) => setFormData(prev => ({ ...prev, meetingType: e.target.value as any }))}
+                onChange={e =>
+                  setFormData(prev => ({
+                    ...prev,
+                    meetingType: e.target.value as any,
+                  }))
+                }
                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="team">Team</option>
@@ -365,10 +424,18 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                 type="checkbox"
                 id="is-virtual"
                 checked={formData.isVirtual}
-                onChange={(e) => setFormData(prev => ({ ...prev, isVirtual: e.target.checked }))}
+                onChange={e =>
+                  setFormData(prev => ({
+                    ...prev,
+                    isVirtual: e.target.checked,
+                  }))
+                }
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
-              <label htmlFor="is-virtual" className="ml-2 text-sm text-gray-700">
+              <label
+                htmlFor="is-virtual"
+                className="ml-2 text-sm text-gray-700"
+              >
                 Riunione virtuale
               </label>
             </div>
@@ -381,19 +448,24 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                 <input
                   type="url"
                   value={formData.meetingLink}
-                  onChange={(e) => setFormData(prev => ({ ...prev, meetingLink: e.target.value }))}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      meetingLink: e.target.value,
+                    }))
+                  }
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="https://..."
                 />
               </div>
             )}
           </div>
-        );
+        )
 
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -401,7 +473,9 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
         <form onSubmit={handleSubmit}>
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Nuovo Evento</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Nuovo Evento
+            </h2>
             <button
               type="button"
               onClick={onClose}
@@ -423,7 +497,9 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                   type="text"
                   required
                   value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={e =>
+                    setFormData(prev => ({ ...prev, title: e.target.value }))
+                  }
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Inserisci il titolo dell'evento"
                 />
@@ -438,7 +514,12 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                     <button
                       key={type.value}
                       type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, source: type.value as any }))}
+                      onClick={() =>
+                        setFormData(prev => ({
+                          ...prev,
+                          source: type.value as any,
+                        }))
+                      }
                       className={`p-3 border-2 rounded-lg text-sm font-medium transition-colors ${
                         formData.source === type.value
                           ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -446,8 +527,8 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
+                        <div
+                          className="w-3 h-3 rounded-full"
                           style={{ backgroundColor: type.color }}
                         />
                         {type.label}
@@ -463,7 +544,12 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                 </label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   rows={3}
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Aggiungi una descrizione dell'evento"
@@ -482,7 +568,9 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                     type="datetime-local"
                     required
                     value={formData.start}
-                    onChange={(e) => setFormData(prev => ({ ...prev, start: e.target.value }))}
+                    onChange={e =>
+                      setFormData(prev => ({ ...prev, start: e.target.value }))
+                    }
                     className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -493,7 +581,9 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                   <input
                     type="datetime-local"
                     value={formData.end}
-                    onChange={(e) => setFormData(prev => ({ ...prev, end: e.target.value }))}
+                    onChange={e =>
+                      setFormData(prev => ({ ...prev, end: e.target.value }))
+                    }
                     className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -504,7 +594,9 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                   type="checkbox"
                   id="all-day"
                   checked={formData.allDay}
-                  onChange={(e) => setFormData(prev => ({ ...prev, allDay: e.target.checked }))}
+                  onChange={e =>
+                    setFormData(prev => ({ ...prev, allDay: e.target.checked }))
+                  }
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <label htmlFor="all-day" className="ml-2 text-sm text-gray-700">
@@ -521,7 +613,12 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                 </label>
                 <select
                   value={formData.priority}
-                  onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value as any }))}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      priority: e.target.value as any,
+                    }))
+                  }
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   {priorities.map(priority => (
@@ -538,7 +635,9 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                 <input
                   type="text"
                   value={formData.location}
-                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                  onChange={e =>
+                    setFormData(prev => ({ ...prev, location: e.target.value }))
+                  }
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Dove si svolge l'evento"
                 />
@@ -554,10 +653,12 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
                 <input
                   type="email"
                   value={assigneeEmail}
-                  onChange={(e) => setAssigneeEmail(e.target.value)}
+                  onChange={e => setAssigneeEmail(e.target.value)}
                   placeholder="Email utente"
                   className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addAssignee())}
+                  onKeyPress={e =>
+                    e.key === 'Enter' && (e.preventDefault(), addAssignee())
+                  }
                 />
                 <button
                   type="button"
@@ -570,7 +671,10 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
               {formData.assignedTo.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {formData.assignedTo.map(email => (
-                    <div key={email} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
+                    <div
+                      key={email}
+                      className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm"
+                    >
                       <User className="w-3 h-3" />
                       {email}
                       <button
@@ -609,5 +713,5 @@ export function CreateEventModal({ selectedDate, onClose, onCreate }: CreateEven
         </form>
       </div>
     </div>
-  );
+  )
 }

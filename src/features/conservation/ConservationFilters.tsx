@@ -1,57 +1,65 @@
-import React from 'react';
-import { Check, X } from 'lucide-react';
-import type { ConservationPointsFilter } from '@/types/conservation';
+import React from 'react'
+import { Check, X } from 'lucide-react'
+import type { ConservationPointsFilter } from '@/types/conservation'
 
 interface ConservationFiltersProps {
-  filter: ConservationPointsFilter;
-  onFilterChange: (filter: Partial<ConservationPointsFilter>) => void;
-  totalPoints: number;
+  filter: ConservationPointsFilter
+  onFilterChange: (filter: Partial<ConservationPointsFilter>) => void
+  totalPoints: number
 }
 
 const typeLabels = {
   fridge: 'Frigoriferi',
   freezer: 'Congelatori',
   blast: 'Abbattitori',
-  ambient: 'Ambiente'
-};
+  ambient: 'Ambiente',
+}
 
 const statusLabels = {
   normal: 'Normale',
   warning: 'Attenzione',
-  critical: 'Critico'
-};
+  critical: 'Critico',
+}
 
 const statusColors = {
   normal: 'bg-green-100 text-green-800',
   warning: 'bg-yellow-100 text-yellow-800',
-  critical: 'bg-red-100 text-red-800'
-};
+  critical: 'bg-red-100 text-red-800',
+}
 
-export function ConservationFilters({ filter, onFilterChange, totalPoints }: ConservationFiltersProps) {
+export function ConservationFilters({
+  filter,
+  onFilterChange,
+  totalPoints,
+}: ConservationFiltersProps) {
   const toggleType = (type: keyof typeof typeLabels) => {
     const newTypes = filter.type?.includes(type)
       ? filter.type.filter(t => t !== type)
-      : [...(filter.type || []), type];
-    onFilterChange({ type: newTypes });
-  };
+      : [...(filter.type || []), type]
+    onFilterChange({ type: newTypes })
+  }
 
   const toggleStatus = (status: keyof typeof statusLabels) => {
     const newStatuses = filter.status?.includes(status)
       ? filter.status.filter(s => s !== status)
-      : [...(filter.status || []), status];
-    onFilterChange({ status: newStatuses });
-  };
+      : [...(filter.status || []), status]
+    onFilterChange({ status: newStatuses })
+  }
 
   const clearAllFilters = () => {
     onFilterChange({
       type: undefined,
       status: undefined,
       department_id: undefined,
-      has_maintenance_due: undefined
-    });
-  };
+      has_maintenance_due: undefined,
+    })
+  }
 
-  const hasActiveFilters = filter.type?.length || filter.status?.length || filter.department_id || filter.has_maintenance_due;
+  const hasActiveFilters =
+    filter.type?.length ||
+    filter.status?.length ||
+    filter.department_id ||
+    filter.has_maintenance_due
 
   return (
     <div className="space-y-6">
@@ -72,16 +80,18 @@ export function ConservationFilters({ filter, onFilterChange, totalPoints }: Con
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Type Filter */}
         <div>
-          <h3 className="text-sm font-medium text-gray-900 mb-3">Tipo Conservazione</h3>
+          <h3 className="text-sm font-medium text-gray-900 mb-3">
+            Tipo Conservazione
+          </h3>
           <div className="space-y-2">
             {Object.entries(typeLabels).map(([type, label]) => {
-              const isSelected = filter.type?.includes(type as any) || false;
+              const isSelected = filter.type?.includes(type as any) || false
               const typeIcons: Record<string, string> = {
                 fridge: '🧊',
                 freezer: '❄️',
                 blast: '💨',
-                ambient: '🌡️'
-              };
+                ambient: '🌡️',
+              }
 
               return (
                 <button
@@ -103,22 +113,26 @@ export function ConservationFilters({ filter, onFilterChange, totalPoints }: Con
                     <div className="w-4 h-4" />
                   )}
                 </button>
-              );
+              )
             })}
           </div>
         </div>
 
         {/* Status Filter */}
         <div>
-          <h3 className="text-sm font-medium text-gray-900 mb-3">Stato Operativo</h3>
+          <h3 className="text-sm font-medium text-gray-900 mb-3">
+            Stato Operativo
+          </h3>
           <div className="space-y-2">
             {Object.entries(statusLabels).map(([status, label]) => {
-              const isSelected = filter.status?.includes(status as any) || false;
-              
+              const isSelected = filter.status?.includes(status as any) || false
+
               return (
                 <button
                   key={status}
-                  onClick={() => toggleStatus(status as keyof typeof statusLabels)}
+                  onClick={() =>
+                    toggleStatus(status as keyof typeof statusLabels)
+                  }
                   className={`w-full flex items-center justify-between p-3 rounded-lg text-sm transition-colors ${
                     isSelected
                       ? `${statusColors[status as keyof typeof statusColors]} border`
@@ -132,17 +146,23 @@ export function ConservationFilters({ filter, onFilterChange, totalPoints }: Con
                     <div className="w-4 h-4" />
                   )}
                 </button>
-              );
+              )
             })}
           </div>
         </div>
 
         {/* Additional Filters */}
         <div>
-          <h3 className="text-sm font-medium text-gray-900 mb-3">Filtri Aggiuntivi</h3>
+          <h3 className="text-sm font-medium text-gray-900 mb-3">
+            Filtri Aggiuntivi
+          </h3>
           <div className="space-y-2">
             <button
-              onClick={() => onFilterChange({ has_maintenance_due: !filter.has_maintenance_due })}
+              onClick={() =>
+                onFilterChange({
+                  has_maintenance_due: !filter.has_maintenance_due,
+                })
+              }
               className={`w-full flex items-center justify-between p-3 rounded-lg text-sm transition-colors ${
                 filter.has_maintenance_due
                   ? 'bg-orange-50 text-orange-700 border border-orange-200'
@@ -166,7 +186,9 @@ export function ConservationFilters({ filter, onFilterChange, totalPoints }: Con
                 <span className="text-base">📍</span>
                 <span>Filtro Dipartimento</span>
               </div>
-              <div className="text-xs mt-1">Disponibile quando implementato</div>
+              <div className="text-xs mt-1">
+                Disponibile quando implementato
+              </div>
             </div>
           </div>
         </div>
@@ -191,7 +213,7 @@ export function ConservationFilters({ filter, onFilterChange, totalPoints }: Con
                 </button>
               </span>
             ))}
-            
+
             {filter.status?.map(status => (
               <span
                 key={status}
@@ -201,14 +223,16 @@ export function ConservationFilters({ filter, onFilterChange, totalPoints }: Con
               >
                 {statusLabels[status as keyof typeof statusLabels]}
                 <button
-                  onClick={() => toggleStatus(status as keyof typeof statusLabels)}
+                  onClick={() =>
+                    toggleStatus(status as keyof typeof statusLabels)
+                  }
                   className="hover:opacity-75 rounded-full p-0.5"
                 >
                   <X className="w-3 h-3" />
                 </button>
               </span>
             ))}
-            
+
             {filter.has_maintenance_due && (
               <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
                 Manutenzione Dovuta
@@ -224,5 +248,5 @@ export function ConservationFilters({ filter, onFilterChange, totalPoints }: Con
         </div>
       )}
     </div>
-  );
+  )
 }

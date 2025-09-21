@@ -30,10 +30,7 @@ function App() {
                       path="/conservazione"
                       element={<OfflineConservationDemo />}
                     />
-                    <Route
-                      path="/attivita"
-                      element={<Calendar />}
-                    />
+                    <Route path="/attivita" element={<Calendar />} />
                     <Route
                       path="/inventario"
                       element={<div>Inventario - Coming Soon</div>}

@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
-import { X, Thermometer, Plus } from 'lucide-react';
-import type { CreateConservationPointRequest } from '@/types/conservation';
+import React, { useState } from 'react'
+import { X, Thermometer, Plus } from 'lucide-react'
+import type { CreateConservationPointRequest } from '@/types/conservation'
 
 interface CreateConservationPointModalProps {
-  onClose: () => void;
-  onCreate: (data: CreateConservationPointRequest) => void;
-  isCreating: boolean;
+  onClose: () => void
+  onCreate: (data: CreateConservationPointRequest) => void
+  isCreating: boolean
 }
 
 const conservationTypes = [
   { value: 'fridge', label: 'Frigorifero', icon: '🧊', defaultTemp: 4 },
   { value: 'freezer', label: 'Congelatore', icon: '❄️', defaultTemp: -18 },
   { value: 'blast', label: 'Abbattitore', icon: '💨', defaultTemp: -40 },
-  { value: 'ambient', label: 'Ambiente', icon: '🌡️', defaultTemp: 20 }
-] as const;
+  { value: 'ambient', label: 'Ambiente', icon: '🌡️', defaultTemp: 20 },
+] as const
 
 const commonCategories = [
   'Latticini',
@@ -25,13 +25,13 @@ const commonCategories = [
   'Prodotti Cotti',
   'Salumi',
   'Formaggi',
-  'Bevande'
-];
+  'Bevande',
+]
 
 export function CreateConservationPointModal({
   onClose,
   onCreate,
-  isCreating
+  isCreating,
 }: CreateConservationPointModalProps) {
   const [formData, setFormData] = useState({
     name: '',
@@ -39,54 +39,54 @@ export function CreateConservationPointModal({
     type: 'fridge' as const,
     is_blast_chiller: false,
     product_categories: [] as string[],
-    department_id: ''
-  });
+    department_id: '',
+  })
 
-  const [newCategory, setNewCategory] = useState('');
+  const [newCategory, setNewCategory] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     onCreate({
       name: formData.name,
       setpoint_temp: formData.setpoint_temp,
       type: formData.type,
       is_blast_chiller: formData.is_blast_chiller,
       product_categories: formData.product_categories,
-      department_id: formData.department_id || undefined
-    });
-  };
+      department_id: formData.department_id || undefined,
+    })
+  }
 
   const handleTypeChange = (type: typeof formData.type) => {
-    const selectedType = conservationTypes.find(t => t.value === type);
+    const selectedType = conservationTypes.find(t => t.value === type)
     setFormData(prev => ({
       ...prev,
       type,
-      setpoint_temp: selectedType?.defaultTemp || prev.setpoint_temp
-    }));
-  };
+      setpoint_temp: selectedType?.defaultTemp || prev.setpoint_temp,
+    }))
+  }
 
   const addCategory = (category: string) => {
     if (category && !formData.product_categories.includes(category)) {
       setFormData(prev => ({
         ...prev,
-        product_categories: [...prev.product_categories, category]
-      }));
+        product_categories: [...prev.product_categories, category],
+      }))
     }
-  };
+  }
 
   const removeCategory = (category: string) => {
     setFormData(prev => ({
       ...prev,
-      product_categories: prev.product_categories.filter(c => c !== category)
-    }));
-  };
+      product_categories: prev.product_categories.filter(c => c !== category),
+    }))
+  }
 
   const addNewCategory = () => {
     if (newCategory.trim()) {
-      addCategory(newCategory.trim());
-      setNewCategory('');
+      addCategory(newCategory.trim())
+      setNewCategory('')
     }
-  };
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -119,7 +119,9 @@ export function CreateConservationPointModal({
                   type="text"
                   required
                   value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={e =>
+                    setFormData(prev => ({ ...prev, name: e.target.value }))
+                  }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="es. Frigorifero Cucina Principale"
                 />
@@ -147,7 +149,9 @@ export function CreateConservationPointModal({
                       <span className="text-2xl">{type.icon}</span>
                       <div>
                         <div className="font-medium">{type.label}</div>
-                        <div className="text-sm text-gray-500">{type.defaultTemp}°C</div>
+                        <div className="text-sm text-gray-500">
+                          {type.defaultTemp}°C
+                        </div>
                       </div>
                     </div>
                   </button>
@@ -166,7 +170,12 @@ export function CreateConservationPointModal({
                   step="0.1"
                   required
                   value={formData.setpoint_temp}
-                  onChange={(e) => setFormData(prev => ({ ...prev, setpoint_temp: parseFloat(e.target.value) || 0 }))}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      setpoint_temp: parseFloat(e.target.value) || 0,
+                    }))
+                  }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -176,10 +185,18 @@ export function CreateConservationPointModal({
                   type="checkbox"
                   id="is-blast-chiller"
                   checked={formData.is_blast_chiller}
-                  onChange={(e) => setFormData(prev => ({ ...prev, is_blast_chiller: e.target.checked }))}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      is_blast_chiller: e.target.checked,
+                    }))
+                  }
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <label htmlFor="is-blast-chiller" className="ml-2 text-sm text-gray-700">
+                <label
+                  htmlFor="is-blast-chiller"
+                  className="ml-2 text-sm text-gray-700"
+                >
                   È un abbattitore di temperatura
                 </label>
               </div>
@@ -190,10 +207,12 @@ export function CreateConservationPointModal({
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Categorie Prodotti
               </label>
-              
+
               {/* Common categories */}
               <div className="mb-4">
-                <div className="text-sm text-gray-600 mb-2">Categorie Comuni:</div>
+                <div className="text-sm text-gray-600 mb-2">
+                  Categorie Comuni:
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {commonCategories.map(category => (
                     <button
@@ -218,10 +237,12 @@ export function CreateConservationPointModal({
                 <input
                   type="text"
                   value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
+                  onChange={e => setNewCategory(e.target.value)}
                   placeholder="Aggiungi categoria personalizzata"
                   className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addNewCategory())}
+                  onKeyPress={e =>
+                    e.key === 'Enter' && (e.preventDefault(), addNewCategory())
+                  }
                 />
                 <button
                   type="button"
@@ -235,7 +256,9 @@ export function CreateConservationPointModal({
               {/* Selected categories */}
               {formData.product_categories.length > 0 && (
                 <div>
-                  <div className="text-sm text-gray-600 mb-2">Categorie Selezionate:</div>
+                  <div className="text-sm text-gray-600 mb-2">
+                    Categorie Selezionate:
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {formData.product_categories.map(category => (
                       <span
@@ -264,7 +287,12 @@ export function CreateConservationPointModal({
               </label>
               <select
                 value={formData.department_id}
-                onChange={(e) => setFormData(prev => ({ ...prev, department_id: e.target.value }))}
+                onChange={e =>
+                  setFormData(prev => ({
+                    ...prev,
+                    department_id: e.target.value,
+                  }))
+                }
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Seleziona dipartimento...</option>
@@ -302,5 +330,5 @@ export function CreateConservationPointModal({
         </form>
       </div>
     </div>
-  );
+  )
 }
