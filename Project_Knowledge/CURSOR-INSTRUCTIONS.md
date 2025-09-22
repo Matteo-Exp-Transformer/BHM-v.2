@@ -4,11 +4,31 @@
 **Last Updated:** September 22, 2025 - Post Claude B.7.1/B.7.2 Completion
 **Purpose:** Comprehensive instructions for Cursor AI development sessions
 
-## 🚨 **CRITICAL COORDINATION UPDATE**
+## 🚨 **CRITICAL COORDINATION UPDATE & SAFETY RULES**
 
-**✅ Claude Branch Status:** B.7.1 Offline System v1 + B.7.2 Advanced Export & Reporting COMPLETED
-**⚠️ Curs Branch Status:** TypeScript errors resolved but deleted Claude's B.7.1/B.7.2 work
-**🎯 Next Phase:** Cursor should focus on B.7.3 Mobile PWA Enhancement (NOT merge with Claude)
+**✅ Claude Branch Status:** B.7.1, B.7.2, B.7.6 Real-time System ALL COMPLETED (20,000+ lines)
+**⚠️ Previous Issue:** Cursor accidentally deleted Claude's work due to outdated task file
+**🎯 Next Phase:** Selective merge required - DO NOT delete existing services
+
+### **🛡️ SAFETY RULES - NEVER DELETE THESE:**
+
+**❌ NEVER DELETE THESE FOLDERS:**
+- `src/services/offline/` (Claude's B.7.1 Offline System)
+- `src/services/export/` (Claude's B.7.2 Export System)
+- `src/services/realtime/` (Claude's B.7.6 Real-time System)
+- `src/__tests__/integration/` (Claude's integration tests)
+- `src/__tests__/performance/` (Claude's performance tests)
+
+**❌ NEVER DELETE THESE FILES:**
+- `src/hooks/useRealtime.ts`
+- `src/hooks/useExportManager.ts`
+- `src/hooks/useOfflineSync.ts`
+- Any file with 15+ lines that you didn't create
+
+**✅ ALWAYS CHECK BEFORE LARGE DELETIONS:**
+- Run `git diff --stat` before committing
+- If you see >1000 lines deleted, STOP and check coordination
+- Read TASKS-ACTIVE.md for latest status before starting
 
 ### **📋 IMMEDIATE CURSOR TASKS (B.7.3 Mobile PWA Enhancement)**
 
@@ -230,6 +250,7 @@
 #### **🔄 Next Development Phase - B.7 Advanced Features**
 
 **✅ CLAUDE SYSTEMS COMPLETED (Session 18):**
+
 - **B.7.1 Offline System v1** ✅ - Complete offline functionality with conflict resolution
 - **B.7.2 Advanced Export & Reporting** ✅ - HACCP compliance reports and email scheduling
 
