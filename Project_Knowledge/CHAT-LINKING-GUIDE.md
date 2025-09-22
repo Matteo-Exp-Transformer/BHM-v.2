@@ -26,6 +26,7 @@ Cosa devo fare oggi?
 ```
 
 ### **File paths per copy-paste:**
+
 ```
 C:\Users\matte.MIO\Documents\GitHub\BHM-v.2-Claude\Project_Knowledge\TASKS-CORE.md
 C:\Users\matte.MIO\Documents\GitHub\BHM-v.2-Claude\Project_Knowledge\Claude.md
@@ -56,6 +57,7 @@ Inizia con BUG-001 (TypeScript User import missing).
 ```
 
 ### **File paths per copy-paste:**
+
 ```
 C:\Users\matte.MIO\Documents\GitHub\BHM-v.2-Cursor\Project_Knowledge\TASKS-CORE.md
 C:\Users\matte.MIO\Documents\GitHub\BHM-v.2-Cursor\Project_Knowledge\Bug_Reports\Istruzioni_Debug_Agente\CURSOR-INSTRUCTIONS.md
@@ -68,16 +70,19 @@ C:\Users\matte.MIO\Documents\GitHub\BHM-v.2-Cursor\Project_Knowledge\Bug_Reports
 ## ⏰ **QUANDO CHIEDERE MERGE/BACKUP**
 
 ### **🔥 MERGE IMMEDIATO** - Scrivi a Claude:
+
 ```
 "Claude, ho bisogno di un merge immediato perché [Cursor ha risolto bug critico / ho deployato database / breaking change]"
 ```
 
 ### **📅 MERGE PROGRAMMATO** - Ogni Venerdì:
+
 ```
 "Claude, facciamo il sync settimanale. Merge del lavoro di Cursor e backup completo."
 ```
 
 ### **💾 BACKUP MANUALE** - Quando serve:
+
 ```
 "Claude, crea backup di entrambi i branch prima di [nuova feature / merge / deploy]"
 ```
@@ -89,11 +94,13 @@ C:\Users\matte.MIO\Documents\GitHub\BHM-v.2-Cursor\Project_Knowledge\Bug_Reports
 ### **Verifica veloce prima di iniziare:**
 
 **Per Claude:**
+
 ```
 "Qual è lo status corrente? Ci sono modifiche di Cursor da syncronizzare?"
 ```
 
 **Per Cursor:**
+
 ```
 "Ci sono nuovi bug critici? Claude ha fatto modifiche che mi impattano?"
 ```
@@ -105,16 +112,19 @@ C:\Users\matte.MIO\Documents\GitHub\BHM-v.2-Cursor\Project_Knowledge\Bug_Reports
 ### **File di monitoraggio da controllare:**
 
 **Bug Status:**
+
 ```
 C:\Users\matte.MIO\Documents\GitHub\BHM-v.2-Cursor\Project_Knowledge\Bug_Reports\bug-tracking-index.md
 ```
 
 **Project Progress:**
+
 ```
 C:\Users\matte.MIO\Documents\GitHub\BHM-v.2-Claude\Project_Knowledge\TASKS-CORE.md
 ```
 
 **Coordination Status:**
+
 ```
 C:\Users\matte.MIO\Documents\GitHub\BHM-v.2-Claude\Project_Knowledge\Claude.md
 ```
@@ -124,16 +134,19 @@ C:\Users\matte.MIO\Documents\GitHub\BHM-v.2-Claude\Project_Knowledge\Claude.md
 ## 🚨 **EMERGENCY PROTOCOLS**
 
 ### **Se TypeScript esplode:**
+
 ```
 "EMERGENZA: TypeScript broken. Cursor, priorità assoluta su fix. Claude, aspetta sync."
 ```
 
 ### **Se database non funziona:**
+
 ```
 "EMERGENZA: Database broken. Claude, priorità assoluta su fix. Cursor, lavora su pure UI."
 ```
 
 ### **Se git conflicts:**
+
 ```
 "CONFLITTO GIT: Claude, risolvi conflitti e coordina merge. Stop development finché non risolto."
 ```

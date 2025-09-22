@@ -33,6 +33,7 @@ C:\Users\matte.MIO\Documents\GitHub\
 ## ✅ **CURRENT COMPLETED MILESTONES**
 
 ### **Major Systems Complete:**
+
 - **B.0 Authentication System** ✅ - Role-based access control
 - **B.1.1.2 Department Management** ✅ - CRUD operations with presets
 - **B.1.1.3 Staff Management** ✅ - Complete staff system (Cursor Session 13)
@@ -66,6 +67,7 @@ C:\Users\matte.MIO\Documents\GitHub\
 - [ ] Export and reporting tables
 
 **Next Actions:**
+
 ```sql
 -- Deploy these schemas in Supabase:
 1. settings-schema.sql - Company configuration tables
@@ -80,6 +82,7 @@ C:\Users\matte.MIO\Documents\GitHub\
 **Priority:** Critical
 
 **Current Blockers:**
+
 ```typescript
 // Critical errors blocking git push:
 1. useAuth.ts: Missing User type import from Clerk
@@ -90,6 +93,7 @@ C:\Users\matte.MIO\Documents\GitHub\
 ```
 
 **Resolution Plan:**
+
 - **Phase 1:** Fix Clerk User import (Claude responsibility)
 - **Phase 2:** Align CollapsibleCard props across codebase (Shared)
 - **Phase 3:** Update database types after schema deployment (Claude)
@@ -102,11 +106,13 @@ C:\Users\matte.MIO\Documents\GitHub\
 **Priority:** High
 
 **Current Status:**
+
 - Main branch: TypeScript errors blocking push
 - Claude branch: Shopping lists and calendar integration complete
 - Cursor branch: Staff management, settings, dashboard complete
 
 **Synchronization Plan:**
+
 1. Fix TypeScript errors across all branches
 2. Update documentation consistency
 3. Deploy missing database schemas
@@ -134,11 +140,13 @@ C:\Users\matte.MIO\Documents\GitHub\
 ### **Milestone C.1: Advanced CRUD & Workflows - ⏳ PLANNED**
 
 #### **C.1.1 Advanced Task Management**
+
 - **Owner:** Cursor
 - **Features:** Task dependencies, recurring tasks, team assignments
 - **Timeline:** Q1 2025
 
 #### **C.1.2 Inventory Optimization**
+
 - **Owner:** Claude
 - **Features:** Smart reorder points, supplier integration
 - **Timeline:** Q1 2025
@@ -146,11 +154,13 @@ C:\Users\matte.MIO\Documents\GitHub\
 ### **Milestone C.2: Export & Reporting System - ⏳ PLANNED**
 
 #### **C.2.1 HACCP Compliance Reports**
+
 - **Owner:** Claude
 - **Features:** Automated compliance scoring, audit trail exports
 - **Timeline:** Q1 2025
 
 #### **C.2.2 Business Intelligence Dashboard**
+
 - **Owner:** Cursor
 - **Features:** Advanced analytics, trend analysis
 - **Timeline:** Q2 2025
@@ -158,6 +168,7 @@ C:\Users\matte.MIO\Documents\GitHub\
 ### **Milestone C.3: Offline System v1 - ⏳ PLANNED**
 
 #### **C.3.1 Offline Data Management**
+
 - **Owner:** Claude
 - **Features:** IndexedDB sync, conflict resolution
 - **Timeline:** Q2 2025
@@ -167,11 +178,13 @@ C:\Users\matte.MIO\Documents\GitHub\
 ## 🚨 **IMMEDIATE PRIORITIES (Next 2 Weeks)**
 
 ### **Week 1: Critical Infrastructure**
+
 1. **TypeScript Error Resolution** - Shared responsibility
 2. **Database Schema Deployment** - Claude lead
 3. **Branch Synchronization** - Claude coordination
 
 ### **Week 2: System Stabilization**
+
 1. **Integration Testing** - Shared
 2. **Performance Optimization** - Cursor lead
 3. **Documentation Updates** - Shared
@@ -185,6 +198,7 @@ C:\Users\matte.MIO\Documents\GitHub\
 #### **Immediate (Week 1-2):**
 
 1. **TypeScript Error Resolution:**
+
    ```typescript
    // Fix these component-level errors:
    - CollapsibleCard props standardization
@@ -194,6 +208,7 @@ C:\Users\matte.MIO\Documents\GitHub\
    ```
 
 2. **UI Polish & Performance:**
+
    ```bash
    # Focus areas:
    - Bundle size optimization (<1MB target)
@@ -229,6 +244,7 @@ C:\Users\matte.MIO\Documents\GitHub\
 #### **Session Startup Checklist:**
 
 1. **📖 Read Required Files:**
+
    ```
    @Project_Knowledge\TASKS-ACTIVE.md     # This file - current tasks
    @Project_Knowledge\Claude.md           # Coordination status
@@ -269,6 +285,7 @@ C:\Users\matte.MIO\Documents\GitHub\
 **🐛 When You Fix a Bug:**
 
 1. **If Bug Originated in Cursor Worktree:**
+
    ```
    Location: BHM-v.2-Cursor/Project_Knowledge/Bug_Reports/[Severity]/
    Action: Create full bug report with solution
@@ -276,6 +293,7 @@ C:\Users\matte.MIO\Documents\GitHub\
    ```
 
 2. **If Bug Originated in Claude Worktree:**
+
    ```
    Location: BHM-v.2-Cursor/Project_Knowledge/Bug_Reports/Cross_References/
    Action: Create cross-reference with link to full report
@@ -334,18 +352,21 @@ C:\Users\matte.MIO\Documents\GitHub\
 ### **📊 Success Metrics for Cursor**
 
 #### **Code Quality:**
+
 - Component test coverage >80%
 - Accessibility score (WCAG 2.1 compliance)
 - Performance budget adherence
 - TypeScript strict mode compliance
 
 #### **User Experience:**
+
 - Mobile responsiveness (all screen sizes)
 - Loading time <3 seconds
 - Error recovery mechanisms
 - Intuitive navigation patterns
 
 #### **Technical Metrics:**
+
 - Bundle size optimization
 - Component reusability score
 - Code maintainability index
@@ -381,6 +402,7 @@ C:\Users\matte.MIO\Documents\GitHub\
 ## 📚 **QUICK REFERENCE**
 
 ### **Development Commands:**
+
 ```bash
 npm run dev          # Port 3000 (Cursor worktree)
 npm run build        # Production build
@@ -390,6 +412,7 @@ npm run test         # Run test suite
 ```
 
 ### **Critical File Locations:**
+
 ```
 src/hooks/useAuth.ts                    # Authentication (shared)
 src/components/CollapsibleCard.tsx      # UI component (shared)
@@ -401,6 +424,7 @@ Project_Knowledge/Cross_References/    # Cross-worktree bugs
 ```
 
 ### **Emergency Contacts:**
+
 - **TypeScript Errors:** Coordinate with Claude immediately
 - **Database Issues:** Escalate to Claude (schema owner)
 - **Authentication Problems:** Requires Claude architecture review

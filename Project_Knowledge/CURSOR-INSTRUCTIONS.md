@@ -18,6 +18,7 @@
 4. **📖 Bug Workflow**: `@Project_Knowledge/Bug_Reports/Cross_References/README.md`
 
 **Optional (if needed):**
+
 - `@Project_Knowledge/Claude.md` (for coordination)
 - `@PLANNING.md` (for architecture context)
 - `@.claude_rules` (for branch rules understanding)
@@ -37,6 +38,7 @@
 ### **🎨 Primary Ownership (Cursor Lead)**
 
 #### **1. UI/UX Implementation**
+
 ```
 ✅ Your Strengths - Focus Here:
 - Component styling and responsive design
@@ -47,6 +49,7 @@
 ```
 
 #### **2. CRUD Operations**
+
 ```
 ✅ Standard Operations - Your Domain:
 - Staff management interfaces
@@ -57,6 +60,7 @@
 ```
 
 #### **3. Performance & Polish**
+
 ```
 ✅ Optimization Tasks - High Priority:
 - Bundle size optimization (<1MB target)
@@ -69,6 +73,7 @@
 ### **🤝 Shared Responsibilities (Coordinate with Claude)**
 
 #### **1. Shared Components**
+
 ```
 ⚠️ COORDINATE BEFORE CHANGING:
 - src/hooks/useAuth.ts (authentication logic)
@@ -78,6 +83,7 @@
 ```
 
 #### **2. Testing & Quality**
+
 ```
 🔄 Shared Testing Responsibility:
 - Component unit tests (your focus)
@@ -93,6 +99,7 @@
 ### **🔥 Immediate Actions (Week 1-2)**
 
 #### **1. TypeScript Error Resolution (CRITICAL)**
+
 ```typescript
 // Fix these component-level errors immediately:
 
@@ -119,6 +126,7 @@
 ```
 
 #### **2. Bundle Optimization (HIGH)**
+
 ```bash
 # Current Status: 1.7MB (Target: <1MB)
 
@@ -131,6 +139,7 @@
 ```
 
 #### **3. Component Testing (MEDIUM)**
+
 ```bash
 # Setup comprehensive testing suite:
 
@@ -182,6 +191,7 @@
 ### **🔍 When You Discover a Bug**
 
 #### **1. Bug Classification**
+
 ```
 🚨 CRITICAL: Breaks core functionality, prevents user workflows
 🔴 HIGH: Significant impact on user experience
@@ -192,6 +202,7 @@
 #### **2. Bug Report Creation**
 
 **If Bug Originates in Cursor Worktree:**
+
 ```
 📍 Location: BHM-v.2-Cursor/Project_Knowledge/Bug_Reports/[Severity]/
 📝 File Name: YYYY-MM-DD_bug-description.md
@@ -200,6 +211,7 @@
 ```
 
 **If Bug Originates in Claude Worktree:**
+
 ```
 📍 Location: BHM-v.2-Cursor/Project_Knowledge/Bug_Reports/Cross_References/
 📝 File Name: YYYY-MM-DD_claude-bug-XXX.md
@@ -213,29 +225,37 @@
 # Required Bug Report Sections:
 
 ## 🐛 Bug Description
+
 [Clear description of the issue]
 
 ## 🔍 Steps to Reproduce
+
 1. [Step 1]
 2. [Step 2]
 3. [Expected vs Actual behavior]
 
 ## ✅ Solution Applied
+
 **Files Modified:**
+
 - [List all changed files]
 
 **Changes Made:**
+
 - [Describe the fix]
 
 **Testing Performed:**
+
 - [How you verified the fix]
 
 ## 📊 Impact Assessment
+
 **Performance Impact:** [None/Minor/Significant]
 **Breaking Changes:** [None/Yes - describe]
 **Side Effects:** [Any unintended consequences]
 
 ## 🤖 Signature
+
 **Fixed By:** Cursor AI
 **Date:** [YYYY-MM-DD]
 **Tested In:** [Both worktrees/Cursor only]
@@ -257,13 +277,16 @@
 
 ```markdown
 # Add entry format:
+
 | BUG-XXX | [Severity] | [Description] | [Status] | [Date] | [Link] |
 
 # Cross-worktree section:
+
 ### Cross-Worktree Fixes (Fixed by Other AI)
-| ID | Origin | Fixed By | Date | Description | Cross-Ref |
-|----|--------|----------|------|-------------|--------------|
-| BUG-001 | Claude | Cursor | 2025-01-22 | TypeScript error | Cross_References/2025-01-22_claude-bug-001.md |
+
+| ID      | Origin | Fixed By | Date       | Description      | Cross-Ref                                     |
+| ------- | ------ | -------- | ---------- | ---------------- | --------------------------------------------- |
+| BUG-001 | Claude | Cursor   | 2025-01-22 | TypeScript error | Cross_References/2025-01-22_claude-bug-001.md |
 ```
 
 ---
@@ -273,17 +296,20 @@
 ### **🤖 Communication Protocol**
 
 #### **Before Major Changes:**
+
 1. **Check Shared Files:** Review if changes affect useAuth.ts, CollapsibleCard.tsx, or database types
 2. **Breaking Changes:** Notify about any modifications that might impact Claude's work
 3. **Database Schema:** Never modify database schema - escalate to Claude
 4. **Authentication:** Coordinate any auth-related changes
 
 #### **During Development:**
+
 1. **Progress Updates:** Mark completed tasks in TASKS-ACTIVE.md immediately
 2. **New Issues:** Document any newly discovered bugs or technical debt
 3. **Performance Metrics:** Track bundle size, loading times, accessibility scores
 
 #### **After Task Completion:**
+
 1. **Documentation:** Update all relevant documentation files
 2. **Testing:** Verify changes work in Cursor worktree
 3. **Coordination:** Note any changes that need Claude testing
@@ -292,12 +318,14 @@
 ### **🚨 Emergency Escalation**
 
 **Immediate Claude Coordination Required:**
+
 - **TypeScript Explosion:** Compilation completely broken
 - **Authentication Issues:** User login/logout not working
 - **Database Connectivity:** Supabase connection problems
 - **Build Failures:** Production build completely broken
 
 **Communication Method:**
+
 - Update TASKS-ACTIVE.md with "🚨 CURSOR BLOCKED" status
 - Document the specific issue and attempted solutions
 - Claude will respond in next session
@@ -309,6 +337,7 @@
 ### **📝 Commit Guidelines**
 
 #### **Commit Frequency:**
+
 ```bash
 # Commit immediately after:
 ✅ Bug fix verified and tested
@@ -319,6 +348,7 @@
 ```
 
 #### **Commit Message Format:**
+
 ```bash
 # Use this exact format:
 git commit --no-verify -m "[type]: [description]
@@ -339,17 +369,20 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 #### **Merge Timing (READ PLANNING.md for current status):**
 
 **🔥 Immediate Merge Required:**
+
 - Critical bug fixes that block core functionality
 - Security vulnerabilities resolved
 - Breaking changes affecting shared components
 - Database schema updates (Claude handles)
 
 **📅 Scheduled Merges:**
+
 - Every Friday evening (weekly sync)
 - After completing major milestones
 - Before starting new complex features
 
 #### **Your Role in Merges:**
+
 1. **Preparation:** Ensure all your work is committed and tested
 2. **Readiness:** Confirm no critical issues in your worktree
 3. **Coordination:** Claude handles the actual merge process
@@ -425,6 +458,7 @@ export default MyComponent;
 ## 🛠️ **DEVELOPMENT ENVIRONMENT**
 
 ### **🔧 Commands Reference**
+
 ```bash
 # Cursor Development (Port 3000)
 npm run dev              # Start development server
@@ -438,6 +472,7 @@ cd "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2-Cursor"
 ```
 
 ### **📁 Critical File Locations**
+
 ```
 src/features/management/     # Staff & department management (Your domain)
 src/features/settings/       # Settings system (Your domain)
@@ -448,6 +483,7 @@ src/components/CollapsibleCard.tsx  # UI pattern (Shared - coordinate)
 ```
 
 ### **🚨 Environment Rules**
+
 ```bash
 # CRITICAL - Always verify:
 ✅ Working on "Curs" branch (not main)
@@ -461,6 +497,7 @@ src/components/CollapsibleCard.tsx  # UI pattern (Shared - coordinate)
 ## 📚 **QUICK REFERENCE CHEAT SHEET**
 
 ### **🔥 Daily Workflow**
+
 1. Link required files: TASKS-ACTIVE.md, CURSOR-INSTRUCTIONS.md, bug files
 2. Check PLANNING.md for merge alerts
 3. Focus on UI/UX, CRUD, performance tasks
@@ -470,12 +507,14 @@ src/components/CollapsibleCard.tsx  # UI pattern (Shared - coordinate)
 7. Update TASKS-ACTIVE.md progress
 
 ### **🆘 Emergency Contacts**
+
 - **TypeScript Errors:** Coordinate with Claude
 - **Database Issues:** Escalate to Claude (schema owner)
 - **Authentication:** Requires Claude architecture review
 - **Build Failures:** Check with Claude for shared component issues
 
 ### **📖 Key Documentation**
+
 - **Current Tasks:** TASKS-ACTIVE.md
 - **Architecture:** PLANNING.md
 - **Coordination:** Claude.md
@@ -504,4 +543,4 @@ src/components/CollapsibleCard.tsx  # UI pattern (Shared - coordinate)
 
 ---
 
-*This document contains everything Cursor needs for effective coordination with Claude. Always start sessions by reading this file along with TASKS-ACTIVE.md for current priorities.*
+_This document contains everything Cursor needs for effective coordination with Claude. Always start sessions by reading this file along with TASKS-ACTIVE.md for current priorities._

@@ -152,6 +152,7 @@ C:\Users\matte.MIO\Documents\GitHub\
 #### **B.0.1 Database Schema Enhancement - ✅ COMPLETED**
 
 - [x] Execute SQL updates on Supabase:
+
   ```sql
   -- Add authorization columns to user_profiles
   ALTER TABLE user_profiles
@@ -259,6 +260,7 @@ C:\Users\matte.MIO\Documents\GitHub\
 This archive contains the foundational work completed in the first development phase (Step A and early Step B). The infrastructure, authentication system, and basic architecture are fully functional and tested.
 
 **Key Achievements:**
+
 - Complete development environment setup
 - Robust authentication system with role-based access
 - Database schema with proper security policies
@@ -266,6 +268,7 @@ This archive contains the foundational work completed in the first development p
 - PWA architecture with offline capabilities
 
 **Current Status (at archival):**
+
 - All Step A milestones: ✅ COMPLETED
 - Authentication system: ✅ COMPLETED
 - Ready for core business logic implementation
