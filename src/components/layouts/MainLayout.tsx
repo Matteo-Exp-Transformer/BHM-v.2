@@ -8,7 +8,11 @@ import {
   Settings,
   Users,
 } from 'lucide-react'
+<<<<<<< HEAD
+import { SyncStatusBar } from '@/components/offline/SyncStatusBar'
+=======
 import { useAuth } from '@/hooks/useAuth'
+>>>>>>> Curs
 
 interface MainLayoutProps {
   children: ReactNode
@@ -72,6 +76,12 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   })
 
   return (
+<<<<<<< HEAD
+    <div className="min-h-screen bg-gray-50 pt-20">
+      {/* Top Navigation */}
+      <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 safe-area-top z-50">
+        <div className="grid grid-cols-6 h-16">
+=======
     <div className="min-h-screen bg-gray-50 pb-16">
       {/* Main Content */}
       <main className="safe-area-top">{children}</main>
@@ -89,6 +99,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                   : `grid-cols-${tabs.length}`
           }`}
         >
+>>>>>>> Curs
           {tabs.map(tab => {
             const Icon = tab.icon
             const isActive = location.pathname === tab.path
@@ -110,6 +121,12 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           })}
         </div>
       </nav>
+
+      {/* Main Content */}
+      <main className="min-h-screen">{children}</main>
+
+      {/* Offline Sync Status Bar */}
+      <SyncStatusBar position="bottom" />
     </div>
   )
 }
