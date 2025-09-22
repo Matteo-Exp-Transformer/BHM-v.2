@@ -193,6 +193,9 @@ export function CalendarSettings({
               training: 'Formazione',
               inventory: 'Inventario',
               meeting: 'Riunioni',
+              temperature_reading: 'Letture Temperatura',
+              general_task: 'Attività Generali',
+              custom: 'Personalizzato',
             }
 
             return (
@@ -235,6 +238,9 @@ export function CalendarSettings({
                 training: '#F59E0B',
                 inventory: '#8B5CF6',
                 meeting: '#EF4444',
+                temperature_reading: '#06B6D4',
+                general_task: '#6366F1',
+                custom: '#EC4899',
               },
             }
             onSettingsChange(defaultSettings)

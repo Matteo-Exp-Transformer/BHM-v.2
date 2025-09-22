@@ -1,16 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import type {
   CalendarEvent,
   CalendarFilter,
   CalendarSettings,
-  TypedCalendarEvent,
-  MaintenanceEvent,
-  TaskEvent,
-  TrainingEvent,
-  InventoryEvent,
-  MeetingEvent,
 } from '@/types/calendar'
 
 interface UseCalendarOptions {
@@ -58,6 +52,9 @@ export function useCalendar(options: UseCalendarOptions = {}) {
       training: '#F59E0B',
       inventory: '#8B5CF6',
       meeting: '#EF4444',
+      temperature_reading: '#06B6D4',
+      general_task: '#6366F1',
+      custom: '#EC4899',
     },
   })
 
@@ -125,15 +122,30 @@ export function useCalendar(options: UseCalendarOptions = {}) {
   })
 
   const transformToCalendarEvents = useCallback(
-    (data: CalendarData): TypedCalendarEvent[] => {
-      const events: TypedCalendarEvent[] = []
+    (data: CalendarData): CalendarEvent[] => {
+      const events: CalendarEvent[] = []
 
       if (filter.sources.includes('maintenance')) {
         data.maintenanceTasks.forEach(task => {
-          const event: MaintenanceEvent = {
+          const event: CalendarEvent = {
             id: `maintenance-${task.id}`,
             title: `Manutenzione: ${task.kind}`,
             start: new Date(task.next_due_date),
+            type: 'maintenance',
+            status: 'pending',
+            priority: 'medium',
+            assigned_to: task.assigned_to ? [task.assigned_to] : [],
+            department_id: task.department_id,
+            conservation_point_id: task.conservation_point_id,
+            backgroundColor: settings.colorScheme.maintenance,
+            borderColor: settings.colorScheme.maintenance,
+            textColor: '#ffffff',
+            recurring: false,
+            metadata: {},
+            created_by: 'temp-user',
+            company_id: 'temp-company',
+            created_at: new Date(),
+            updated_at: new Date(),
             source: 'maintenance',
             sourceId: task.id,
             extendedProps: {
@@ -144,12 +156,6 @@ export function useCalendar(options: UseCalendarOptions = {}) {
               location: task.conservation_point?.name,
               category: task.kind,
               color: settings.colorScheme.maintenance,
-              maintenanceType: task.kind,
-              conservationPointId: task.conservation_point_id,
-              conservationPointName: task.conservation_point?.name,
-              checklist: task.checklist || [],
-              estimatedDuration: task.estimated_duration || 30,
-              frequency: task.frequency,
             },
           }
           events.push(event)
@@ -158,10 +164,25 @@ export function useCalendar(options: UseCalendarOptions = {}) {
 
       if (filter.sources.includes('inventory')) {
         data.inventoryEvents.forEach(invEvent => {
-          const event: InventoryEvent = {
+          const event: CalendarEvent = {
             id: `inventory-${invEvent.id}`,
             title: `Inventario: ${invEvent.type}`,
             start: new Date(invEvent.scheduled_date),
+            type: 'general_task',
+            status: 'pending',
+            priority: 'medium',
+            assigned_to: invEvent.assigned_to ? [invEvent.assigned_to] : [],
+            department_id: invEvent.department_id,
+            conservation_point_id: invEvent.conservation_point_id,
+            backgroundColor: settings.colorScheme.inventory,
+            borderColor: settings.colorScheme.inventory,
+            textColor: '#ffffff',
+            recurring: false,
+            metadata: {},
+            created_by: 'temp-user',
+            company_id: 'temp-company',
+            created_at: new Date(),
+            updated_at: new Date(),
             source: 'inventory',
             sourceId: invEvent.id,
             extendedProps: {
@@ -174,10 +195,6 @@ export function useCalendar(options: UseCalendarOptions = {}) {
               location: invEvent.conservation_point?.name,
               category: invEvent.type,
               color: settings.colorScheme.inventory,
-              inventoryType: invEvent.type,
-              conservationPointId: invEvent.conservation_point_id,
-              expectedQuantity: invEvent.expected_quantity,
-              actualQuantity: invEvent.actual_quantity,
             },
           }
           events.push(event)
@@ -200,7 +217,7 @@ export function useCalendar(options: UseCalendarOptions = {}) {
   }, [calendarData, transformToCalendarEvents])
 
   const createEventMutation = useMutation({
-    mutationFn: async (eventData: Partial<TypedCalendarEvent>) => {
+    mutationFn: async (eventData: Partial<CalendarEvent>) => {
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -215,9 +232,9 @@ export function useCalendar(options: UseCalendarOptions = {}) {
                 kind: eventData.extendedProps?.category,
                 next_due_date: eventData.start,
                 estimated_duration:
-                  eventData.extendedProps?.estimatedDuration || 30,
+                  30,
                 conservation_point_id:
-                  eventData.extendedProps?.conservationPointId,
+                  '',
                 assigned_to: eventData.extendedProps?.assignedTo?.[0],
               })
               .select()
@@ -241,7 +258,7 @@ export function useCalendar(options: UseCalendarOptions = {}) {
       updates,
     }: {
       eventId: string
-      updates: Partial<TypedCalendarEvent>
+      updates: Partial<CalendarEvent>
     }) => {
       const [source, id] = eventId.split('-')
 
@@ -251,7 +268,7 @@ export function useCalendar(options: UseCalendarOptions = {}) {
             .from('maintenance_tasks')
             .update({
               next_due_date: updates.start,
-              estimated_duration: updates.extendedProps?.estimatedDuration,
+              estimated_duration: 30,
               assigned_to: updates.extendedProps?.assignedTo?.[0],
             })
             .eq('id', id)

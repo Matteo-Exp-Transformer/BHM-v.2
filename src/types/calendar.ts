@@ -52,8 +52,8 @@ export interface CalendarEvent {
   type: CalendarEventType
   status: CalendarEventStatus
   priority: CalendarEventPriority
-  source: 'maintenance' | 'task' | 'training' | 'inventory' | 'meeting'
-  sourceId: string
+  source?: 'maintenance' | 'task' | 'training' | 'inventory' | 'meeting' | 'temperature_reading' | 'general_task' | 'custom'
+  sourceId?: string
 
   // Assignment and organization
   assigned_to: string[] // Staff IDs
@@ -79,8 +79,8 @@ export interface CalendarEvent {
   // Extended metadata for FullCalendar compatibility
   extendedProps: {
     description?: string
-    priority: 'low' | 'medium' | 'high' | 'critical'
-    status: 'scheduled' | 'in_progress' | 'completed' | 'overdue' | 'cancelled'
+    priority?: 'low' | 'medium' | 'high' | 'critical'
+    status?: 'scheduled' | 'in_progress' | 'completed' | 'overdue' | 'cancelled'
     assignedTo?: string[]
     location?: string
     category?: string
@@ -213,7 +213,7 @@ export interface CalendarSettings {
   weekStartsOn: 0 | 1
   timeFormat: '12h' | '24h'
   firstDayOfWeek: number
-  colorScheme: Record<CalendarEvent['source'], string>
+  colorScheme: Record<NonNullable<CalendarEvent['source']>, string>
   businessHours: {
     daysOfWeek: number[]
     startTime: string
@@ -247,7 +247,7 @@ export interface CalendarViewConfig {
     enabled: boolean
     defaultTimings: CalendarNotification['timing'][]
   }
-  colorScheme: Record<CalendarEvent['source'], string>
+  colorScheme: Record<NonNullable<CalendarEvent['source']>, string>
 }
 
 // Event creation/editing interfaces

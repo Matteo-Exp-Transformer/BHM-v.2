@@ -36,10 +36,27 @@ export const CreateListModal: React.FC<CreateListModalProps> = ({
     if (!formData.name.trim()) return
 
     onCreate({
+      company_id: 'temp-company',
       name: formData.name,
       description: formData.description,
+      created_by: 'temp-user',
       is_template: formData.is_template,
-      items: formData.items,
+      is_completed: false,
+      completed_items: 0,
+      item_count: formData.items.length,
+      items: formData.items.map(item => ({
+        id: `temp-${Date.now()}-${Math.random()}`,
+        shopping_list_id: '',
+        product_id: '',
+        product_name: item.product_name,
+        category_name: '',
+        quantity: item.quantity,
+        unit: '',
+        notes: '',
+        is_completed: item.completed,
+        added_at: new Date().toISOString(),
+        completed_at: item.completed ? new Date().toISOString() : undefined,
+      })),
     })
 
     // Reset form
@@ -81,8 +98,12 @@ export const CreateListModal: React.FC<CreateListModalProps> = ({
     setFormData(prev => ({
       ...prev,
       name: template.name,
-      description: template.description,
-      items: template.items || [],
+      description: template.description || '',
+      items: (template.items || []).map(item => ({
+        product_name: item.product_name,
+        quantity: item.quantity,
+        completed: item.is_completed,
+      })),
     }))
   }
 

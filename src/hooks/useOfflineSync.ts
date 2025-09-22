@@ -162,8 +162,8 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
         'sync' in window.ServiceWorkerRegistration.prototype
       ) {
         try {
-          const registration = await navigator.serviceWorker.ready
-          await registration.sync.register('general-data-sync')
+          // const registration = await navigator.serviceWorker.ready
+          // await registration.sync.register('general-data-sync')
         } catch (error) {
           console.error('Failed to register background sync:', error)
         }

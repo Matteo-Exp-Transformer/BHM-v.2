@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react'
 import { ToastContainer } from 'react-toastify'
+import { Suspense, lazy } from 'react'
 import 'react-toastify/dist/ReactToastify.css'
 
 // Layout
@@ -8,23 +9,45 @@ import MainLayout from './components/layouts/MainLayout'
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute'
+import LoadingSpinner from './components/ui/LoadingSpinner'
 
-// Pages
-import HomePage from './features/auth/HomePage'
-import LoginPage from './features/auth/LoginPage'
-import RegisterPage from './features/auth/RegisterPage'
-import ManagementPage from './features/management/ManagementPage'
-import CalendarPage from './features/calendar/CalendarPage'
-import ConservationPage from './features/conservation/ConservationPage'
-import InventoryPage from './features/inventory/InventoryPage'
+// Lazy loaded pages for better performance
+const HomePage = lazy(() => import('./features/auth/HomePage'))
+const LoginPage = lazy(() => import('./features/auth/LoginPage'))
+const RegisterPage = lazy(() => import('./features/auth/RegisterPage'))
+const ManagementPage = lazy(() => import('./features/management/ManagementPage'))
+const CalendarPage = lazy(() => import('./features/calendar/CalendarPage'))
+const ConservationPage = lazy(() => import('./features/conservation/ConservationPage'))
+const InventoryPage = lazy(() => import('./features/inventory/InventoryPage'))
 
 function App() {
   return (
     <>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/sign-in" element={<LoginPage />} />
-        <Route path="/sign-up" element={<RegisterPage />} />
+        <Route 
+          path="/login" 
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <LoginPage />
+            </Suspense>
+          } 
+        />
+        <Route 
+          path="/sign-in" 
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <LoginPage />
+            </Suspense>
+          } 
+        />
+        <Route 
+          path="/sign-up" 
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <RegisterPage />
+            </Suspense>
+          } 
+        />
         <Route
           path="/*"
           element={
@@ -36,7 +59,9 @@ function App() {
                       path="/"
                       element={
                         <ProtectedRoute>
-                          <HomePage />
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <HomePage />
+                          </Suspense>
                         </ProtectedRoute>
                       }
                     />
@@ -44,7 +69,9 @@ function App() {
                       path="/conservazione"
                       element={
                         <ProtectedRoute>
-                          <ConservationPage />
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <ConservationPage />
+                          </Suspense>
                         </ProtectedRoute>
                       }
                     />
@@ -52,7 +79,9 @@ function App() {
                       path="/attivita"
                       element={
                         <ProtectedRoute>
-                          <CalendarPage />
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <CalendarPage />
+                          </Suspense>
                         </ProtectedRoute>
                       }
                     />
@@ -60,7 +89,9 @@ function App() {
                       path="/inventario"
                       element={
                         <ProtectedRoute>
-                          <InventoryPage />
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <InventoryPage />
+                          </Suspense>
                         </ProtectedRoute>
                       }
                     />
@@ -68,7 +99,9 @@ function App() {
                       path="/impostazioni"
                       element={
                         <ProtectedRoute requiredRole="admin">
-                          <div>Impostazioni - Coming Soon (Solo Admin)</div>
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <div>Impostazioni - Coming Soon (Solo Admin)</div>
+                          </Suspense>
                         </ProtectedRoute>
                       }
                     />
@@ -78,7 +111,9 @@ function App() {
                         <ProtectedRoute
                           requiredRole={['admin', 'responsabile']}
                         >
-                          <ManagementPage />
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <ManagementPage />
+                          </Suspense>
                         </ProtectedRoute>
                       }
                     />

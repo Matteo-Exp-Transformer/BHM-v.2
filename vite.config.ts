@@ -103,5 +103,44 @@ export default defineConfig({
   },
   build: {
     target: 'es2020',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks
+          'react-vendor': ['react', 'react-dom'],
+          'router-vendor': ['react-router-dom'],
+          'query-vendor': ['@tanstack/react-query'],
+          'auth-vendor': ['@clerk/clerk-react'],
+          'ui-vendor': ['lucide-react', 'react-toastify'],
+          'calendar-vendor': ['@fullcalendar/react', '@fullcalendar/core', '@fullcalendar/daygrid', '@fullcalendar/timegrid', '@fullcalendar/interaction'],
+          
+          // Feature chunks
+          'calendar-features': [
+            './src/features/calendar',
+            './src/hooks/useCalendar.ts'
+          ],
+          'inventory-features': [
+            './src/features/inventory',
+            './src/types/inventory.ts'
+          ],
+          'conservation-features': [
+            './src/features/conservation',
+            './src/hooks/useConservation.ts'
+          ],
+          'management-features': [
+            './src/features/management',
+            './src/hooks/useStaff.ts'
+          ],
+          'dashboard-features': [
+            './src/features/dashboard',
+            './src/hooks/useDashboardData.ts'
+          ],
+          'settings-features': [
+            './src/features/settings'
+          ]
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000,
   },
 })

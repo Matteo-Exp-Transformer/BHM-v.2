@@ -18,8 +18,6 @@ import type {
   TemperatureReadingsFilter,
   MaintenanceTasksFilter,
   ConservationStats,
-  TemperatureStats,
-  MaintenanceStats,
 } from '@/types/conservation'
 
 interface UseConservationOptions {
@@ -35,13 +33,11 @@ export function useConservation(options: UseConservationOptions = {}) {
   const { queueOperation } = useOfflineSync()
   const {
     store,
-    storeMany,
     getAll,
-    isOnline: storageOnline,
   } = useOfflineStorage()
   const { isOnline } = useNetworkStatus()
 
-  const [conservationFilter, setConservationFilter] =
+  const [conservationFilter] =
     useState<ConservationPointsFilter>({})
   const [temperatureFilter, setTemperatureFilter] =
     useState<TemperatureReadingsFilter>({})
@@ -99,7 +95,7 @@ export function useConservation(options: UseConservationOptions = {}) {
       if (error) throw error
 
       return (
-        data?.map(point => ({
+        data?.map((point: any) => ({
           ...point,
           created_at: new Date(point.created_at),
           updated_at: new Date(point.updated_at),
@@ -184,7 +180,7 @@ export function useConservation(options: UseConservationOptions = {}) {
       if (error) throw error
 
       return (
-        data?.map(reading => ({
+        data?.map((reading: any) => ({
           ...reading,
           recorded_at: new Date(reading.recorded_at),
           created_at: new Date(reading.created_at),
@@ -256,7 +252,7 @@ export function useConservation(options: UseConservationOptions = {}) {
       if (error) throw error
 
       return (
-        data?.map(task => ({
+        data?.map((task: any) => ({
           ...task,
           next_due_date: new Date(task.next_due_date),
           created_at: new Date(task.created_at),
@@ -429,7 +425,7 @@ export function useConservation(options: UseConservationOptions = {}) {
           // Get from offline storage
           const points = await getAll(OFFLINE_STORES.CONSERVATION_POINTS)
           conservationPoint = points.find(
-            p => p.id === data.conservation_point_id
+            (p: any) => p.id === data.conservation_point_id
           )
         }
       } catch (error) {
@@ -437,7 +433,7 @@ export function useConservation(options: UseConservationOptions = {}) {
         if (isOnline) {
           const points = await getAll(OFFLINE_STORES.CONSERVATION_POINTS)
           conservationPoint = points.find(
-            p => p.id === data.conservation_point_id
+            (p: any) => p.id === data.conservation_point_id
           )
         }
       }
@@ -449,17 +445,23 @@ export function useConservation(options: UseConservationOptions = {}) {
       const reading_data = {
         ...data,
         id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        company_id: 'temp-company',
         target_temperature,
+        tolerance_range: {
+          min: data.tolerance_range_min || target_temperature - tolerance,
+          max: data.tolerance_range_max || target_temperature + tolerance,
+        },
         tolerance_range_min:
           data.tolerance_range_min || target_temperature - tolerance,
         tolerance_range_max:
           data.tolerance_range_max || target_temperature + tolerance,
         status: determineTemperatureStatus(
           data.temperature,
-          target_temperature,
           target_temperature - tolerance,
           target_temperature + tolerance
         ),
+        recorded_by: 'temp-user',
+        validation_status: 'pending' as any,
         recorded_at: new Date(),
         created_at: new Date(),
       }
@@ -589,7 +591,6 @@ export function useConservation(options: UseConservationOptions = {}) {
 
   const determineTemperatureStatus = (
     temperature: number,
-    target: number,
     min: number,
     max: number
   ): TemperatureReading['status'] => {
@@ -599,10 +600,15 @@ export function useConservation(options: UseConservationOptions = {}) {
   }
 
   const updateFilters = useCallback(
-    {
-      conservation: setConservationFilter,
-      temperature: setTemperatureFilter,
-      maintenance: setMaintenanceFilter,
+    (filterType: string, filter: any) => {
+      switch (filterType) {
+        case 'temperature':
+          setTemperatureFilter(filter)
+          break
+        case 'maintenance':
+          setMaintenanceFilter(filter)
+          break
+      }
     },
     []
   )
