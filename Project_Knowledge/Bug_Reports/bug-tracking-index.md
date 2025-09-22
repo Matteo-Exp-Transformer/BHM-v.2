@@ -10,29 +10,30 @@
 
 ### 🔥 Open Bugs (Reduced Priority - Major Progress Made)
 
-| ID      | Date       | Severity | Description                                                         | Status | Assigned | Est. Time |
-| ------- | ---------- | -------- | ------------------------------------------------------------------- | ------ | -------- | --------- |
+| ID  | Date | Severity | Description | Status | Assigned | Est. Time |
+| --- | ---- | -------- | ----------- | ------ | -------- | --------- |
+
 ### ✅ Recently Fixed - Combined Success
 
-| ID      | Date Fixed | Severity | Description                                                         | Fix Summary                                                                 | Fixed By |
-| ------- | ---------- | -------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------- | -------- |
-| BUG-001 | 2025-01-22 | Critical | TypeScript User import missing in useAuth.ts                        | Fixed Clerk User import and type definitions                                | Cursor   |
-| BUG-002 | 2025-01-22 | High     | CollapsibleCard props inconsistency (isExpanded vs defaultExpanded) | Standardized props to use defaultExpanded and counter                       | Cursor   |
-| BUG-003 | 2025-01-22 | High     | Database types missing in Supabase client                           | Added missing table definitions and interface properties                    | Cursor   |
-| BUG-004 | 2025-01-22 | Medium   | Calendar components property mismatches                             | Fixed property type mismatches and interface alignment                     | Cursor   |
-| BUG-005 | 2025-01-22 | Medium   | Settings components React imports and prop types                    | Added proper React imports and corrected prop type definitions             | Cursor   |
-| BUG-006| 2025-01-22 | Critical | MainLayout UserRole array typing    | Added proper UserRole[] type annotations | Claude   |
-| BUG-007| 2025-01-22 | High     | Calendar component missing types    | Added CalendarSettings, Filter interfaces| Claude   |
-| BUG-008| 2025-01-22 | High     | Conservation API types missing      | Added all request/response interfaces    | Claude   |
-| BUG-009| 2025-01-22 | Medium   | Unused React imports                | Removed unused React imports             | Claude   |
-| BUG-010| 2025-01-22 | Medium   | QuickActions user role access       | Fixed userRole and userId destructuring | Claude   |
+| ID      | Date Fixed | Severity | Description                                                         | Fix Summary                                                    | Fixed By |
+| ------- | ---------- | -------- | ------------------------------------------------------------------- | -------------------------------------------------------------- | -------- |
+| BUG-001 | 2025-01-22 | Critical | TypeScript User import missing in useAuth.ts                        | Fixed Clerk User import and type definitions                   | Cursor   |
+| BUG-002 | 2025-01-22 | High     | CollapsibleCard props inconsistency (isExpanded vs defaultExpanded) | Standardized props to use defaultExpanded and counter          | Cursor   |
+| BUG-003 | 2025-01-22 | High     | Database types missing in Supabase client                           | Added missing table definitions and interface properties       | Cursor   |
+| BUG-004 | 2025-01-22 | Medium   | Calendar components property mismatches                             | Fixed property type mismatches and interface alignment         | Cursor   |
+| BUG-005 | 2025-01-22 | Medium   | Settings components React imports and prop types                    | Added proper React imports and corrected prop type definitions | Cursor   |
+| BUG-006 | 2025-01-22 | Critical | MainLayout UserRole array typing                                    | Added proper UserRole[] type annotations                       | Claude   |
+| BUG-007 | 2025-01-22 | High     | Calendar component missing types                                    | Added CalendarSettings, Filter interfaces                      | Claude   |
+| BUG-008 | 2025-01-22 | High     | Conservation API types missing                                      | Added all request/response interfaces                          | Claude   |
+| BUG-009 | 2025-01-22 | Medium   | Unused React imports                                                | Removed unused React imports                                   | Claude   |
+| BUG-010 | 2025-01-22 | Medium   | QuickActions user role access                                       | Fixed userRole and userId destructuring                        | Claude   |
 
 ### 🔥 Open Bugs (Minimal Remaining Issues)
 
-| ID      | Date       | Severity | Description                                                         | Status | Assigned | Est. Time |
-| ------- | ---------- | -------- | ------------------------------------------------------------------- | ------ | -------- | --------- |
-| BUG-011 | 2025-01-22 | Low      | TypeScript compilation (~70 errors remain, non-blocking)            | Open   | Future   | 1-2 hours |
-| BUG-012 | 2025-01-22 | Low      | Minor merge conflict cleanup needed                                 | Open   | Future   | 30 min    |
+| ID      | Date       | Severity | Description                                              | Status | Assigned | Est. Time |
+| ------- | ---------- | -------- | -------------------------------------------------------- | ------ | -------- | --------- |
+| BUG-011 | 2025-01-22 | Low      | TypeScript compilation (~70 errors remain, non-blocking) | Open   | Future   | 1-2 hours |
+| BUG-012 | 2025-01-22 | Low      | Minor merge conflict cleanup needed                      | Open   | Future   | 30 min    |
 
 ---
 
