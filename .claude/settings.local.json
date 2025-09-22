@@ -20,7 +20,8 @@
       "Bash(npm test)",
       "Bash(pkill:*)",
       "Bash(npm run test:*)",
-      "Bash(npm run test:coverage:*)"
+      "Bash(npm run test:coverage:*)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []
