@@ -1,29 +1,6 @@
 export interface ConservationPoint {
   id: string
   company_id: string
-<<<<<<< HEAD
-  department_id?: string
-  name: string
-  setpoint_temp: number
-  type: 'ambient' | 'fridge' | 'freezer' | 'blast'
-  product_categories?: string[]
-  status: 'normal' | 'warning' | 'critical'
-  is_blast_chiller: boolean
-  maintenance_due?: Date
-  created_at: Date
-  updated_at: Date
-
-  // Relazioni
-  department?: {
-    id: string
-    name: string
-  }
-  temperature_readings?: TemperatureReading[]
-  products?: Product[]
-  maintenance_tasks?: MaintenanceTask[]
-}
-
-=======
   department_id: string
   name: string
   setpoint_temp: number
@@ -41,13 +18,11 @@ export type ConservationPointType = 'ambient' | 'fridge' | 'freezer' | 'blast'
 
 export type ConservationStatus = 'normal' | 'warning' | 'critical'
 
->>>>>>> Curs
 export interface TemperatureReading {
   id: string
   company_id: string
   conservation_point_id: string
   temperature: number
-<<<<<<< HEAD
   target_temperature?: number
   tolerance_range_min?: number
   tolerance_range_max?: number
@@ -101,48 +76,42 @@ export interface ProductCategory {
   id: string
   company_id: string
   name: string
+  conservation_rules: ConservationRule[]
+  color: string
   description?: string
-  temperature_requirement_min?: number
-  temperature_requirement_max?: number
-  allergen_info?: string[]
   created_at: Date
   updated_at: Date
 }
-=======
-  target_temperature: number
-  tolerance_range: { min: number; max: number }
-  status: TemperatureStatus
-  recorded_by: string
-  recorded_at: Date
-  method: TemperatureMethod
-  notes?: string
-  photo_evidence?: string
-  validation_status: ValidationStatus
+
+export interface ConservationRule {
+  temp_min: number
+  temp_max: number
+  humidity_min?: number
+  humidity_max?: number
+  max_storage_days?: number
+  requires_blast_chilling?: boolean
 }
-
-export type TemperatureStatus = 'compliant' | 'warning' | 'critical'
-
-export type TemperatureMethod =
-  | 'manual'
-  | 'digital_thermometer'
-  | 'automatic_sensor'
-
-export type ValidationStatus = 'pending' | 'validated' | 'flagged'
->>>>>>> Curs
 
 export interface MaintenanceTask {
   id: string
   company_id: string
-<<<<<<< HEAD
-  conservation_point_id?: string
-  kind: 'temperature' | 'sanitization' | 'defrosting'
-  frequency: 'daily' | 'weekly' | 'monthly' | 'custom'
+  conservation_point_id: string
+  title: string
+  description?: string
+  type: MaintenanceType
+  frequency: MaintenanceFrequency
+  estimated_duration: number // minutes
+  last_completed?: Date
+  next_due: Date
   assigned_to?: string
-  assignment_type: 'user' | 'role' | 'category'
-  next_due_date: Date
-  estimated_duration: number
-  checklist?: string[]
-  is_active: boolean
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  status: 'scheduled' | 'in_progress' | 'completed' | 'overdue' | 'skipped'
+  instructions?: string[]
+  required_tools?: string[]
+  safety_notes?: string[]
+  completion_notes?: string
+  completed_by?: string
+  completed_at?: Date
   created_at: Date
   updated_at: Date
 
@@ -152,411 +121,220 @@ export interface MaintenanceTask {
     id: string
     name: string
   }
-  completions?: MaintenanceCompletion[]
-}
-
-=======
-  conservation_point_id: string
-  kind: MaintenanceType
-  frequency: MaintenanceFrequency
-  assigned_to: string
-  assignment_type: AssignmentType
-  next_due_date: Date
-  estimated_duration: number // minutes
-  checklist: string[]
-  is_active: boolean
-  created_at: Date
-  updated_at: Date
-  // Relations
-  conservation_point?: ConservationPoint
-  assigned_staff?: {
-    id: string
-    name: string
-    role: string
-  }
-}
-
-export type MaintenanceType = 'temperature' | 'sanitization' | 'defrosting'
-
-export type MaintenanceFrequency = 'daily' | 'weekly' | 'monthly' | 'custom'
-
-export type MaintenanceStatus =
-  | 'pending'
-  | 'in_progress'
-  | 'completed'
-  | 'overdue'
-  | 'skipped'
-
-export type AssignmentType = 'user' | 'role' | 'category'
-
->>>>>>> Curs
-export interface MaintenanceCompletion {
-  id: string
-  company_id: string
-  maintenance_task_id: string
-<<<<<<< HEAD
-  completed_by?: string
-  completed_at: Date
-  status: 'completed' | 'partial' | 'skipped'
-  notes?: string
-  temperature_value?: number
-  checklist_completed?: string[]
-  photo_evidence?: string[]
-  next_due_date?: Date
-
-  // Relazioni
-  maintenance_task?: MaintenanceTask
   completed_by_user?: {
     id: string
     name: string
   }
 }
 
-// DTOs per creazione/aggiornamento
-export interface CreateConservationPointRequest {
-  name: string
-  setpoint_temp: number
-  type: ConservationPoint['type']
-  department_id?: string
-  product_categories?: string[]
-  is_blast_chiller?: boolean
-}
+export type MaintenanceType =
+  | 'temperature_calibration'
+  | 'deep_cleaning'
+  | 'defrosting'
+  | 'filter_replacement'
+  | 'seal_inspection'
+  | 'compressor_check'
+  | 'general_inspection'
+  | 'other'
 
-export interface UpdateConservationPointRequest {
-  name?: string
-  setpoint_temp?: number
-  type?: ConservationPoint['type']
-  department_id?: string
-  product_categories?: string[]
-  status?: ConservationPoint['status']
-  is_blast_chiller?: boolean
-  maintenance_due?: Date
-}
+export type MaintenanceFrequency =
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'quarterly'
+  | 'biannually'
+  | 'annually'
+  | 'as_needed'
 
-export interface CreateTemperatureReadingRequest {
-  conservation_point_id: string
-  temperature: number
-  target_temperature?: number
-  tolerance_range_min?: number
-  tolerance_range_max?: number
-  method: TemperatureReading['method']
-  notes?: string
-  photo_evidence?: string
-}
-
-export interface CreateMaintenanceTaskRequest {
-  conservation_point_id?: string
-  kind: MaintenanceTask['kind']
-  frequency: MaintenanceTask['frequency']
-  assigned_to?: string
-  assignment_type?: MaintenanceTask['assignment_type']
-  next_due_date: Date
-  estimated_duration?: number
-  checklist?: string[]
-}
-
-export interface CreateMaintenanceCompletionRequest {
-  maintenance_task_id: string
-  status: MaintenanceCompletion['status']
-  notes?: string
-  temperature_value?: number
-  checklist_completed?: string[]
-  photo_evidence?: string[]
-  next_due_date?: Date
-}
-
-// Filtri e query
-export interface ConservationPointsFilter {
-  type?: ConservationPoint['type'][]
-  status?: ConservationPoint['status'][]
-  department_id?: string
-  has_maintenance_due?: boolean
-}
-
-export interface TemperatureReadingsFilter {
-  conservation_point_id?: string
-  status?: TemperatureReading['status'][]
-  method?: TemperatureReading['method'][]
-  date_range?: {
-    start: Date
-    end: Date
-  }
-  recorded_by?: string
-}
-
-export interface MaintenanceTasksFilter {
-  conservation_point_id?: string
-  kind?: MaintenanceTask['kind'][]
-  frequency?: MaintenanceTask['frequency'][]
-  assigned_to?: string
-  is_active?: boolean
-  overdue?: boolean
-}
-
-// Statistiche e metriche
-export interface ConservationStats {
-  total_points: number
-  by_type: Record<ConservationPoint['type'], number>
-  by_status: Record<ConservationPoint['status'], number>
-  temperature_compliance_rate: number
-  maintenance_compliance_rate: number
-  alerts_count: number
-}
-
-export interface TemperatureStats {
-  total_readings: number
-  compliance_rate: number
-  average_temperature: number
-  out_of_range_count: number
-  critical_alerts: number
-  trends: {
-    date: Date
-    average_temp: number
-    compliance_rate: number
-  }[]
-}
-
-export interface MaintenanceStats {
-  total_tasks: number
-  completed_rate: number
-  overdue_count: number
-  average_completion_time: number
-  upcoming_tasks: MaintenanceTask[]
-}
-
-// Configurazioni e impostazioni
-export interface ConservationSettings {
-  temperature_check_frequency: number // minutes
-  alert_thresholds: {
-    temperature_deviation: number // degrees
-    maintenance_overdue_hours: number
-  }
-  notification_settings: {
-    temperature_alerts: boolean
-    maintenance_reminders: boolean
-    email_notifications: boolean
-    sms_notifications: boolean
-  }
-  default_tolerance_ranges: Record<
-    ConservationPoint['type'],
-    {
-      min_offset: number
-      max_offset: number
-    }
-  >
-}
-
-// Tipi per UI e interazioni
-export interface ConservationPointCard {
-  point: ConservationPoint
-  latest_reading?: TemperatureReading
-  pending_maintenance?: MaintenanceTask[]
-  alerts_count: number
-  compliance_status: 'good' | 'warning' | 'critical'
-}
-
-export interface TemperatureChart {
-  conservation_point_id: string
-  readings: {
-    timestamp: Date
-    temperature: number
-    setpoint: number
-    status: TemperatureReading['status']
-  }[]
-  range: {
-    min: number
-    max: number
-  }
-}
-
-export interface MaintenanceCalendar {
-  date: Date
-  tasks: (MaintenanceTask & {
-    conservation_point_name?: string
-    priority: 'low' | 'medium' | 'high' | 'critical'
-  })[]
-}
-=======
-  completed_by: string
-  completed_at: Date
-  status: 'completed' | 'partial' | 'skipped'
-  notes?: string
-  temperature_value?: number // If it's a temperature maintenance
-  checklist_completed: string[]
-  photo_evidence?: string[]
-  next_due_date?: Date // For recurring tasks
-}
-
+// Maintenance task types configuration
 export const MAINTENANCE_TASK_TYPES = {
-  temperature: {
-    name: 'Controllo Temperature',
-    icon: '🌡️',
+  temperature_calibration: {
+    label: 'Calibrazione Termometro',
+    icon: 'thermometer',
     color: 'blue',
-    defaultDuration: 15,
-    defaultChecklist: [
-      'Verificare la temperatura del punto di conservazione',
-      'Registrare la lettura sul termometro',
-      'Confrontare con i valori target',
-      'Segnalare eventuali anomalie',
-    ],
+    defaultDuration: 30
   },
-  sanitization: {
-    name: 'Sanificazione',
-    icon: '🧼',
+  deep_cleaning: {
+    label: 'Pulizia Profonda',
+    icon: 'spray-can',
     color: 'green',
-    defaultDuration: 30,
-    defaultChecklist: [
-      'Svuotare completamente il contenuto',
-      'Pulire con detergente appropriato',
-      'Disinfettare tutte le superfici',
-      'Riempire con prodotti puliti',
-      "Documentare l'intervento",
-    ],
+    defaultDuration: 120
   },
   defrosting: {
-    name: 'Sbrinamento',
-    icon: '❄️',
+    label: 'Sbrinamento',
+    icon: 'snowflake',
     color: 'cyan',
-    defaultDuration: 45,
-    defaultChecklist: [
-      'Trasferire i prodotti in altro freezer',
-      "Spegnere l'apparecchiatura",
-      'Attendere lo sbrinamento completo',
-      'Pulire e asciugare',
-      'Riaccendere e verificare temperatura',
-      'Reinserire i prodotti',
-    ],
+    defaultDuration: 60
   },
+  filter_replacement: {
+    label: 'Sostituzione Filtri',
+    icon: 'filter',
+    color: 'yellow',
+    defaultDuration: 45
+  },
+  seal_inspection: {
+    label: 'Controllo Guarnizioni',
+    icon: 'search',
+    color: 'purple',
+    defaultDuration: 30
+  },
+  compressor_check: {
+    label: 'Controllo Compressore',
+    icon: 'wrench',
+    color: 'red',
+    defaultDuration: 90
+  },
+  general_inspection: {
+    label: 'Ispezione Generale',
+    icon: 'clipboard-check',
+    color: 'gray',
+    defaultDuration: 60
+  },
+  other: {
+    label: 'Altro',
+    icon: 'tool',
+    color: 'gray',
+    defaultDuration: 60
+  }
 } as const
 
-export const MAINTENANCE_COLORS = {
-  pending: {
-    bg: 'bg-yellow-50',
-    border: 'border-yellow-200',
-    text: 'text-yellow-900',
-    icon: 'text-yellow-600',
-  },
-  in_progress: {
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    text: 'text-blue-900',
-    icon: 'text-blue-600',
-  },
-  completed: {
-    bg: 'bg-green-50',
-    border: 'border-green-200',
-    text: 'text-green-900',
-    icon: 'text-green-600',
-  },
-  overdue: {
-    bg: 'bg-red-50',
-    border: 'border-red-200',
-    text: 'text-red-900',
-    icon: 'text-red-600',
-  },
-  skipped: {
-    bg: 'bg-gray-50',
-    border: 'border-gray-200',
-    text: 'text-gray-900',
-    icon: 'text-gray-600',
-  },
-  scheduled: {
-    bg: 'bg-green-50',
-    border: 'border-green-200',
-    text: 'text-green-900',
-    icon: 'text-green-600',
-  },
-} as const
-
-export function classifyConservationPoint(
-  temperature: number,
-  isBlastChiller: boolean
-): ConservationPointType {
-  if (isBlastChiller && temperature >= -99 && temperature <= -10) return 'blast'
-  if (temperature >= -90 && temperature <= 0) return 'freezer'
-  if (temperature >= 0 && temperature <= 9) return 'fridge'
-  return 'ambient'
+// Temperature monitoring utilities
+export const getTemperatureStatus = (
+  current: number,
+  target: number,
+  tolerance: number = 2
+): ConservationStatus => {
+  const diff = Math.abs(current - target)
+  if (diff <= tolerance) return 'normal'
+  if (diff <= tolerance * 2) return 'warning'
+  return 'critical'
 }
 
-export function getConservationStatus(
-  point: ConservationPoint
-): ConservationStatus {
+export const formatTemperature = (temp: number): string => {
+  return `${temp.toFixed(1)}°C`
+}
+
+// Classification function for conservation points
+export const classifyConservationPoint = (point: ConservationPoint): {
+  status: ConservationStatus
+  message: string
+  priority: number
+} => {
   const now = new Date()
 
-  // Check if maintenance is overdue
-  if (point.maintenance_due && point.maintenance_due < now) {
-    return 'critical'
+  // Check if maintenance is due
+  if (point.maintenance_due && point.maintenance_due <= now) {
+    return {
+      status: 'critical',
+      message: 'Manutenzione scaduta',
+      priority: 1
+    }
   }
 
-  // Check if maintenance is due within 2 days
+  // Check temperature status if available
+  if (point.last_temperature_reading) {
+    const reading = point.last_temperature_reading
+    const config = CONSERVATION_POINT_CONFIGS[point.type]
+    const { min, max } = config.tempRange
+
+    if (reading.temperature < min - 2 || reading.temperature > max + 2) {
+      return {
+        status: 'critical',
+        message: 'Temperatura fuori controllo',
+        priority: 1
+      }
+    }
+
+    if (reading.temperature < min || reading.temperature > max) {
+      return {
+        status: 'warning',
+        message: 'Temperatura al limite',
+        priority: 2
+      }
+    }
+  }
+
+  // Check if maintenance is due soon (within 7 days)
   if (point.maintenance_due) {
-    const daysUntilDue = Math.ceil(
-      (point.maintenance_due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-    )
-    if (daysUntilDue <= 2) {
-      return 'warning'
+    const daysUntilMaintenance = Math.ceil((point.maintenance_due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    if (daysUntilMaintenance <= 7) {
+      return {
+        status: 'warning',
+        message: `Manutenzione tra ${daysUntilMaintenance} giorni`,
+        priority: 2
+      }
     }
   }
 
-  // Check temperature reading status
-  if (point.last_temperature_reading?.status === 'critical') {
-    return 'critical'
+  return {
+    status: 'normal',
+    message: 'Tutto normale',
+    priority: 3
   }
-
-  if (point.last_temperature_reading?.status === 'warning') {
-    return 'warning'
-  }
-
-  return 'normal'
 }
 
-// Temperature status calculation function
-export function getTemperatureStatus(
-  temperature: number,
-  _targetTemp: number,
-  toleranceMin: number,
-  toleranceMax: number
-): TemperatureStatus {
-  if (temperature < toleranceMin || temperature > toleranceMax) {
-    // Critical if temperature is way outside tolerance
-    const criticalRangeMin = toleranceMin - 5
-    const criticalRangeMax = toleranceMax + 5
-
-    if (temperature < criticalRangeMin || temperature > criticalRangeMax) {
-      return 'critical'
-    }
-
-    return 'warning'
-  }
-
-  return 'compliant'
-}
-
-export const CONSERVATION_COLORS = {
+// Color coding for conservation statuses
+export const CONSERVATION_STATUS_COLORS = {
   normal: {
     bg: 'bg-green-100',
-    border: 'border-green-200',
     text: 'text-green-800',
-    icon: 'text-green-600',
+    border: 'border-green-200'
   },
   warning: {
     bg: 'bg-yellow-100',
-    border: 'border-yellow-200',
     text: 'text-yellow-800',
-    icon: 'text-yellow-600',
+    border: 'border-yellow-200'
   },
   critical: {
     bg: 'bg-red-100',
-    border: 'border-red-200',
     text: 'text-red-800',
-    icon: 'text-red-600',
-  },
+    border: 'border-red-200'
+  }
 } as const
 
-export const TEMPERATURE_RANGES = {
-  blast: { min: -99, max: -10, optimal: -18 },
-  freezer: { min: -90, max: 0, optimal: -18 },
-  fridge: { min: 0, max: 9, optimal: 4 },
-  ambient: { min: 10, max: 25, optimal: 18 },
+// Conservation point type configurations
+export const CONSERVATION_POINT_CONFIGS = {
+  ambient: {
+    label: 'Ambiente',
+    tempRange: { min: 15, max: 25 },
+    icon: 'thermometer',
+    color: 'blue'
+  },
+  fridge: {
+    label: 'Frigorifero',
+    tempRange: { min: 0, max: 8 },
+    icon: 'snowflake',
+    color: 'cyan'
+  },
+  freezer: {
+    label: 'Congelatore',
+    tempRange: { min: -25, max: -15 },
+    icon: 'snow',
+    color: 'indigo'
+  },
+  blast: {
+    label: 'Abbattitore',
+    tempRange: { min: -40, max: 3 },
+    icon: 'wind',
+    color: 'purple'
+  }
 } as const
->>>>>>> Curs
+
+// Additional constants that may be imported by components
+export const CONSERVATION_COLORS = CONSERVATION_STATUS_COLORS
+
+export const TEMPERATURE_RANGES = {
+  ambient: { min: 15, max: 25 },
+  fridge: { min: 0, max: 8 },
+  freezer: { min: -25, max: -15 },
+  blast: { min: -40, max: 3 }
+} as const
+
+// Maintenance colors mapping
+export const MAINTENANCE_COLORS = {
+  scheduled: 'bg-blue-100 text-blue-800 border-blue-200',
+  in_progress: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  completed: 'bg-green-100 text-green-800 border-green-200',
+  overdue: 'bg-red-100 text-red-800 border-red-200',
+  skipped: 'bg-gray-100 text-gray-800 border-gray-200'
+} as const
