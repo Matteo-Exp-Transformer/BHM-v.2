@@ -235,6 +235,7 @@ export const useAuth = () => {
 
     // User data
     user: extendedUser,
+    userId: clerkUser?.id || null,
     userProfile,
     userRole,
     permissions,

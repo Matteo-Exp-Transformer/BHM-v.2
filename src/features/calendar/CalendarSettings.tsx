@@ -217,9 +217,8 @@ export function CalendarSettings({
           onClick={() => {
             const defaultSettings: CalendarSettingsType = {
               defaultView: 'dayGridMonth',
-              weekStartsOn: 1,
+              weekStart: 1,
               timeFormat: '24h',
-              firstDayOfWeek: 1,
               businessHours: {
                 enabled: true,
                 daysOfWeek: [1, 2, 3, 4, 5],

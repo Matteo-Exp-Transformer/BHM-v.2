@@ -16,7 +16,11 @@
       "Read(//c/Users/matte.MIO/Documents/GitHub/BHM-v.2-Cursor/**)",
       "Bash(git pull:*)",
       "Bash(npm run type-check:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm test)",
+      "Bash(pkill:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run test:coverage:*)"
     ],
     "deny": [],
     "ask": []

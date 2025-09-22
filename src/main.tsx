@@ -56,14 +56,23 @@ if (!PUBLISHABLE_KEY) {
   throw new Error('Missing Publishable Key')
 }
 
-// Create a client
+// Create a client with optimized cache settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 3,
+      cacheTime: 10 * 60 * 1000, // 10 minutes - garbage collect after 10 minutes
+      retry: 2, // Reduced retries for better performance
+      refetchOnWindowFocus: false, // Prevent unnecessary refetches
+      refetchOnMount: true,
+      refetchOnReconnect: true,
+    },
+    mutations: {
+      retry: 1, // Less aggressive retries for mutations
     },
   },
+  // Configure garbage collection
+  gcTime: 10 * 60 * 1000, // 10 minutes for garbage collection
 })
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
