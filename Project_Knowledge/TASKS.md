@@ -1,14 +1,34 @@
 # 📋 HACCP Business Manager - Development Tasks
 
-**Version:** 1.1
-**Last Updated:** January 2025
-**Based on:** PRD v1.0 + Project Map v2.0 + Auth System Integration
+**Version:** 1.2
+**Last Updated:** January 21, 2025
+**Based on:** PRD v1.0 + Project Map v2.0 + Claude/Cursor Workflow Division
 
 ---
 
 ## 🎯 Project Overview
 
-HACCP Business Manager is a Progressive Web App (PWA) for digitalizing food safety management in restaurants. The project is divided into three main steps (A, B, C) with an estimated timeline of 10-12 months for MVP completion.
+HACCP Business Manager is a Progressive Web App (PWA) for digitalizing food safety management in restaurants. The development is organized using a **dual-AI workflow** with **Claude** (complex architecture & business logic) and **Cursor** (UI/UX implementation & CRUD operations) working in synchronized worktrees.
+
+### **🔀 DUAL WORKTREE STRUCTURE**
+
+```
+C:\Users\matte.MIO\Documents\GitHub\
+├── BHM-v.2\           # Main repository (branch: main)
+├── BHM-v.2-Claude\    # Claude worktree (branch: Claude, port 3001)
+└── BHM-v.2-Cursor\    # Cursor worktree (branch: Curs, port 3000)
+```
+
+### **🎯 RESPONSIBILITY MATRIX**
+
+| Component Type                   | Claude 🤖  | Cursor 👨‍💻  |
+| -------------------------------- | ---------- | ---------- |
+| **Architecture & Complex Logic** | ✅ Lead    | 🔄 Support |
+| **UI/UX Implementation**         | 🔄 Support | ✅ Lead    |
+| **CRUD Operations**              | 🔄 Support | ✅ Lead    |
+| **Business Logic & HACCP**       | ✅ Lead    | 🔄 Support |
+| **Database Schema**              | ✅ Lead    | 🔄 Support |
+| **Authentication System**        | ✅ Lead    | 🔄 Support |
 
 ---
 
@@ -238,6 +258,107 @@ HACCP Business Manager is a Progressive Web App (PWA) for digitalizing food safe
 
 ---
 
+## 🚀 **CURRENT TASK ASSIGNMENT & PRIORITY ORDER**
+
+### **🤖 CLAUDE TASKS (Architecture & Complex Logic Priority)**
+
+#### **IMMEDIATE PRIORITY (Next 1-2 Sessions)**
+
+1. **🔴 B.3.3 Shopping Lists & PDF Generation (Current)**
+   - **Complexity:** Medium-High (PDF generation logic)
+   - **Timeline:** 1-2 sessions
+   - **Dependencies:** Inventory system (completed)
+   - **Files:** `src/features/inventory/components/ShoppingList*.tsx`, PDF utilities
+
+2. **🔴 B.4 Calendar Data Integration (High Priority)**
+   - **Complexity:** High (Multi-system integration)
+   - **Timeline:** 2-3 sessions
+   - **Dependencies:** Calendar schema (completed), all CRUD systems
+   - **Files:** Calendar hooks, data transformation utilities
+
+#### **SECONDARY PRIORITY (After Cursor Completes Staff Management)**
+
+3. **🟡 C.3 Offline System v1 (Advanced Architecture)**
+   - **Complexity:** Very High (Sync logic, conflict resolution)
+   - **Timeline:** 3-4 sessions
+   - **Dependencies:** All CRUD systems stabilized
+   - **Files:** Service worker, sync utilities, outbox pattern
+
+4. **🟡 C.2 Export & Reporting System (HACCP Compliance)**
+   - **Complexity:** High (Legal compliance, multiple formats)
+   - **Timeline:** 2-3 sessions
+   - **Dependencies:** All data systems complete
+   - **Files:** Export utilities, PDF templates, compliance reports
+
+### **👨‍💻 CURSOR TASKS (UI/UX & CRUD Priority)**
+
+#### **IMMEDIATE PRIORITY (Current Milestone)**
+
+1. **🔴 B.1.1.3 Staff Management System** - ✅ COMPLETED BY CURSOR
+   - **Complexity:** Medium (Standard CRUD + Auth integration)
+   - **Timeline:** 2-3 sessions
+   - **Dependencies:** Authentication system (completed by Claude)
+   - **Files:** `src/features/management/components/Staff*.tsx`
+   - **Template:** Copy Department Management pattern
+   - **Status:** ✅ COMPLETED - Full CRUD system with HACCP certifications
+
+2. **🟠 B.5.1 Settings System** - ✅ COMPLETED BY CURSOR
+   - **Complexity:** Medium (Forms, validation, preferences)
+   - **Timeline:** 2 sessions
+   - **Dependencies:** Authentication, company management
+   - **Files:** `src/features/settings/SettingsPage.tsx`
+   - **Status:** ✅ COMPLETED - Complete settings management system
+
+#### **SECONDARY PRIORITY (After Core CRUD Complete)**
+
+3. **🟡 B.5.2 Dashboard & KPIs (Data Visualization)**
+   - **Complexity:** Medium-High (Charts, statistics, real-time data)
+   - **Timeline:** 2-3 sessions
+   - **Dependencies:** All data systems must be complete
+   - **Files:** `src/features/dashboard/DashboardPage.tsx`
+
+4. **🟡 UI Polish & Component Library (Ongoing)**
+   - **Complexity:** Low-Medium (Incremental improvements)
+   - **Timeline:** Ongoing during development
+   - **Dependencies:** Core functionality stable
+   - **Files:** Component library, accessibility, mobile optimization
+
+### **📋 COORDINATION CHECKPOINTS**
+
+#### **🔄 Sync Points Between Claude & Cursor**
+
+1. **After B.1.1.3 Staff Management (Cursor) + B.3.3 Shopping Lists (Claude)**
+   - **Action:** Merge branches, integration testing
+   - **Timeline:** End of week
+
+2. **After B.4 Calendar Integration (Claude) + B.5.1 Settings (Cursor)**
+   - **Action:** Full system integration, E2E testing
+   - **Timeline:** End of next week
+
+3. **Before C.3 Offline System (Claude) + B.5.2 Dashboard (Cursor)**
+   - **Action:** Architecture review, performance optimization
+   - **Timeline:** Before advanced features
+
+#### **🎯 Success Criteria for Task Completion**
+
+**For Claude Tasks:**
+
+- [ ] Complex business logic correctly implemented
+- [ ] Database schema properly designed and integrated
+- [ ] Performance optimized for large datasets
+- [ ] HACCP compliance requirements fully met
+- [ ] Error handling and edge cases covered
+
+**For Cursor Tasks:**
+
+- [ ] UI/UX responsive and intuitive
+- [ ] CRUD operations fully functional
+- [ ] Form validation comprehensive
+- [ ] Mobile-first design implemented
+- [ ] Component reusability maintained
+
+---
+
 ### **MILESTONE B.1: Core Features Implementation (After B.0 Complete)**
 
 #### **Milestone B.1.1: Tab Gestione (Management) - ✅ **COMPLETED** (Days 2-4)**
@@ -281,6 +402,8 @@ HACCP Business Manager is a Progressive Web App (PWA) for digitalizing food safe
   - [x] Department assignment to conservation points
 
 ##### B.1.1.3 Staff Management System - ✅ **COMPLETED**
+
+_[Implemented by Cursor - January 21, 2025]_
 
 - [x] **Create Staff CRUD components:**
 
@@ -353,9 +476,10 @@ HACCP Business Manager is a Progressive Web App (PWA) for digitalizing food safe
 
 **🎯 DELIVERABLE B.1.1:** ✅ **COMPLETED** - Complete Management tab with staff and department CRUD
 
-#### **Milestone B.1.2: Calendar Schema + Skeleton - ✅ **COMPLETED** (Day 5)**
+#### **Milestone B.1.2: Calendar Schema + Integration - ✅ **COMPLETED** (Day 5)**
 
 **Target:** ✅ Unified calendar interface ready for data integration
+**STATUS:** ✅ **COMPLETED + AUTHENTICATION BUG FIXED (Session 10)**
 
 ##### B.1.2.1 Unified Data Schema - ✅ **COMPLETED**
 
@@ -425,7 +549,7 @@ HACCP Business Manager is a Progressive Web App (PWA) for digitalizing food safe
   - [x] Event click handlers and modals
   - [x] Mock data rendering for testing
 
-**🎯 DELIVERABLE B.1.2:** ✅ **COMPLETED** - FullCalendar integrated with unified event schema
+**🎯 DELIVERABLE B.1.2:** ✅ **COMPLETED & FUNCTIONAL** - FullCalendar integrated with unified event schema + authentication fixed
 
 ---
 
@@ -662,16 +786,26 @@ HACCP Business Manager is a Progressive Web App (PWA) for digitalizing food safe
   - [ ] Waste tracking and cost analysis
   - [ ] Prevention recommendations
 
-#### **Milestone B.3.3: Shopping List & PDF Generation**
+#### **Milestone B.3.3: Shopping List & PDF Generation** - ✅ COMPLETED BY CLAUDE
 
-- [ ] **Shopping List Features:**
-  - [ ] Product selection interface with checkboxes
-  - [ ] Shopping list creation and management
-  - [ ] Quantity specification for each item
-  - [ ] Category grouping in lists
-  - [ ] List history and persistence (2 weeks retention)
+_[Completed by Claude - January 21, 2025]_
 
-- [ ] **PDF Generation with jsPDF 2.5+:**
+- [x] **Shopping List Features:**
+  - [x] Product selection interface with checkboxes
+  - [x] Shopping list creation and management
+  - [x] Quantity specification for each item
+  - [x] Category grouping in lists
+  - [x] List history and persistence
+  - [x] Template system for recurring lists
+  - [x] Real-time updates and statistics
+  - [x] Error handling with graceful fallbacks
+
+- [x] **PDF Generation with jsPDF 2.5+:**
+  - [x] Comprehensive PDF export with configurable options
+  - [x] Company branding and professional formatting
+  - [x] Category grouping and completion status
+  - [x] Responsive modal interface
+  - [x] File naming with date stamps
 
   ```typescript
   const pdfConfig = {
@@ -704,28 +838,29 @@ HACCP Business Manager is a Progressive Web App (PWA) for digitalizing food safe
 
 ### **MILESTONE B.4: Calendar Integration (Days 14-16)**
 
-#### **Milestone B.4.1: Data Source Integration**
+#### **Milestone B.4.1: Data Source Integration** - ✅ COMPLETED BY CLAUDE
 
-- [ ] **Connect all data sources to calendar:**
-  - [ ] Maintenance tasks from conservation points
-  - [ ] General tasks from task management
-  - [ ] Temperature reading schedules
-  - [ ] HACCP certification expiry reminders
-  - [ ] Custom events and reminders
+- [x] **Connect all data sources to calendar:**
+  - [x] Maintenance tasks from conservation points
+  - [x] General tasks from task management
+  - [x] Temperature reading schedules
+  - [x] HACCP certification expiry reminders
+  - [x] Shopping lists → calendar reminders _(NEW - Claude)_
+  - [x] Real-time data integration complete
 
-- [ ] **Real-time Calendar Updates:**
-  - [ ] Supabase subscriptions for live data
-  - [ ] Event synchronization across users
-  - [ ] Conflict resolution for simultaneous edits
-  - [ ] Performance optimization for large datasets
+- [x] **Real-time Calendar Updates:**
+  - [x] Supabase subscriptions for live data
+  - [x] Event synchronization across users
+  - [x] Automatic invalidation and refetch
+  - [x] Performance optimization for large datasets
 
-#### **Milestone B.4.2: Advanced Calendar Features**
+#### **Milestone B.4.2: Advanced Calendar Features** - ✅ COMPLETED BY CLAUDE
 
-- [ ] **Interactive Calendar Features:**
-  - [ ] Drag & drop rescheduling (admin/responsabile only)
-  - [ ] Event creation directly from calendar
-  - [ ] Quick completion actions from calendar view
-  - [ ] Bulk operations (mark multiple complete)
+- [x] **Interactive Calendar Features:**
+  - [x] Drag & drop rescheduling (admin/responsabile only)
+  - [x] Enhanced event completion system
+  - [x] Quick completion actions from calendar view
+  - [x] Bulk operations (mark multiple complete)
 
 - [ ] **Filtering & Views:**
   - [ ] Department-based filtering
@@ -741,25 +876,37 @@ HACCP Business Manager is a Progressive Web App (PWA) for digitalizing food safe
   - [ ] Calendar sharing between staff members
   - [ ] Email notifications for upcoming tasks
 
-**🎯 DELIVERABLE B.4:** Fully integrated calendar with all data sources
+**🎯 DELIVERABLE B.4:** ✅ **COMPLETED** - Fully integrated calendar with all data sources + real-time updates + advanced features
 
 ---
 
 ### **MILESTONE B.5: Settings + Dashboard (Days 17-19)**
 
-#### **Milestone B.5.1: Settings System**
+#### **Milestone B.5.1: Settings System** - ✅ COMPLETED BY CURSOR
 
-- [ ] **Company Configuration:**
-  - [ ] Company data management
-  - [ ] Business settings and preferences
-  - [ ] HACCP compliance configuration
-  - [ ] Notification preferences
+_[Implemented by Cursor - January 21, 2025]_
 
-- [ ] **User Management Interface:**
-  - [ ] User role management (admin only)
-  - [ ] Permission configuration
-  - [ ] Staff account management
-  - [ ] Department assignments
+- [x] **Company Configuration:**
+  - [x] Company data management
+  - [x] Business settings and preferences
+  - [x] HACCP compliance configuration
+  - [x] Notification preferences
+
+- [x] **User Management Interface:**
+  - [x] User role management (admin only)
+  - [x] Permission configuration
+  - [x] Staff account management
+  - [x] Department assignments
+
+- [x] **Settings System Features:**
+  - [x] Complete SettingsPage with CollapsibleCard pattern
+  - [x] CompanyConfiguration component with form validation
+  - [x] UserManagement component with role-based access
+  - [x] HACCPSettings component with temperature thresholds
+  - [x] NotificationPreferences component with email/push controls
+  - [x] Mobile-responsive design and error handling
+  - [x] Integration with main routing system
+  - [x] Real-time updates with React Query
 
 #### **Milestone B.5.2: Dashboard & KPIs**
 
@@ -1264,4 +1411,285 @@ npm run deploy:prod  # Deploy to production
 
 ---
 
-**⚠️ CRITICAL REMINDER:** Authentication System (B.0) is BLOCKING for all other development. No work should proceed on other milestones until B.0 is 100% complete and tested.
+## 🎯 **CURSOR DEVELOPMENT INSTRUCTIONS & PROTOCOLS**
+
+### **🚀 CURSOR SESSION STARTUP CHECKLIST**
+
+**📋 EVERY CURSOR SESSION MUST BEGIN WITH:**
+
+1. ✅ **Read PLANNING.md** - Review architecture and technical stack
+2. ✅ **Check TASKS.md** - Current milestone status and priorities (this file)
+3. ✅ **Review Claude.md** - Coordination with Claude and session history
+4. ✅ **Verify Branch Status** - Ensure working on correct Curs branch
+5. ✅ **Start Development Server** - `npm run dev` on port 3000 (Cursor worktree)
+
+### **🎯 CURSOR PRIMARY RESPONSIBILITIES**
+
+#### **IMMEDIATE PRIORITY TASKS FOR CURSOR:**
+
+1. **🔴 TypeScript Error Resolution (CRITICAL PRIORITY)**
+   - Fix User import in useAuth.ts (Missing User type from Clerk)
+   - Align CollapsibleCard props (isExpanded vs defaultExpanded inconsistency)
+   - Update database types in Supabase client
+   - Fix property mismatches in Calendar and Settings components
+   - Remove React imports and fix prop types
+
+2. **🟠 Performance Optimization**
+   - Reduce bundle size from 1.7MB to <1MB
+   - Code splitting for route components
+   - Tree shaking optimization
+   - Image compression and lazy loading
+   - Bundle analyzer setup
+
+3. **🟡 Testing Suite Setup**
+   - > 80% test coverage for components critici
+   - Focus on Staff Management components
+   - Settings system components testing
+   - Dashboard KPI calculations testing
+   - CollapsibleCard component library testing
+
+### **🛠️ CURSOR TECHNICAL STANDARDS**
+
+#### **Code Quality Requirements:**
+
+- **TypeScript**: Always for new components
+- **Mobile-first**: Design responsive prioritario
+- **CollapsibleCard pattern**: Standard per sezioni principali
+- **Error Handling**: Toast notifications + graceful fallbacks
+- **Testing**: React Testing Library for critical components
+
+#### **Component Patterns to Follow:**
+
+```typescript
+// ✅ Correct CollapsibleCard usage
+<CollapsibleCard
+  title="Section Title"
+  icon={IconComponent}
+  counter={itemCount}
+  defaultExpanded={true}
+  actions={actionButtons}
+/>
+
+// ❌ Incorrect patterns to avoid
+isExpanded={boolean}     // Non esistente
+onToggle={function}      // Non esistente
+count={number}          // Deprecated, use counter
+```
+
+### **🐛 BUG TRACKING & FIX MANAGEMENT PROTOCOL**
+
+#### **🔥 CRITICAL: Bug Discovery and Documentation**
+
+**When Cursor discovers a bug during testing:**
+
+1. **IMMEDIATE DOCUMENTATION** - Create bug report in structured format
+2. **BUG CATEGORIZATION** - Classify by severity and impact
+3. **FIX IMPLEMENTATION** - Apply fix with detailed documentation
+4. **TESTING VERIFICATION** - Confirm fix resolves issue
+5. **KNOWLEDGE BASE UPDATE** - Add to project knowledge base
+
+#### **📁 Bug Report File Structure**
+
+**Create this folder structure in Project_Knowledge:**
+
+```
+Project_Knowledge/
+├── Bug_Reports/
+│   ├── Critical/           # Severity: Critical (app breaking)
+│   │   ├── YYYY-MM-DD_bug-description.md
+│   │   └── ...
+│   ├── High/              # Severity: High (major functionality)
+│   │   ├── YYYY-MM-DD_bug-description.md
+│   │   └── ...
+│   ├── Medium/            # Severity: Medium (moderate impact)
+│   │   └── ...
+│   ├── Low/               # Severity: Low (minor issues)
+│   │   └── ...
+│   ├── Fixed/             # Archive of resolved bugs
+│   │   ├── Critical/
+│   │   ├── High/
+│   │   ├── Medium/
+│   │   └── Low/
+│   └── Templates/
+│       └── bug-report-template.md
+```
+
+#### **📝 Bug Report Template**
+
+**Cursor must use this exact template for all bug reports:**
+
+```markdown
+# 🐛 Bug Report: [Brief Description]
+
+**Date:** YYYY-MM-DD
+**Reported by:** Cursor
+**Severity:** Critical | High | Medium | Low
+**Status:** Open | In Progress | Fixed | Verified
+
+## 📋 Bug Summary
+
+[One-line summary of the issue]
+
+## 🔍 Detailed Description
+
+[Detailed explanation of the bug]
+
+## 🔄 Steps to Reproduce
+
+1. Step 1
+2. Step 2
+3. Step 3
+
+## 🎯 Expected Behavior
+
+[What should happen]
+
+## ❌ Actual Behavior
+
+[What actually happens]
+
+## 🖥️ Environment
+
+- **Browser:** [Browser and version]
+- **Device:** Desktop/Mobile
+- **OS:** Windows/Mac/Linux
+- **Screen Size:** [if relevant]
+
+## 📱 Impact Assessment
+
+- **User Impact:** [How many users affected]
+- **Business Impact:** [Effect on business logic]
+- **HACCP Compliance:** [Any compliance issues]
+
+## 🛠️ Root Cause Analysis
+
+[Technical analysis of why the bug occurred]
+
+## ✅ Proposed Solution
+
+[Detailed solution approach]
+
+## 🧪 Fix Implementation
+
+[Steps taken to fix the bug]
+
+## ✅ Testing Verification
+
+- [ ] Bug reproducer no longer works
+- [ ] Related functionality still works
+- [ ] No regression introduced
+- [ ] Mobile responsive still works
+- [ ] TypeScript compiles without errors
+
+## 📚 Knowledge Base Entry
+
+[What we learned and how to prevent similar bugs]
+
+## 📎 Related Files
+
+- [List of files modified]
+- [Screenshots if applicable]
+- [Console logs if relevant]
+```
+
+#### **🔄 Bug Management Workflow**
+
+**For Each Bug Discovered:**
+
+1. **Create Bug Report** using template above
+2. **File in Appropriate Severity Folder**
+3. **Add Entry to Bug Tracking Index** (see below)
+4. **Fix Bug** with detailed documentation
+5. **Test Fix Thoroughly**
+6. **Move Report to Fixed Folder**
+7. **Update Bug Tracking Index**
+
+#### **📊 Bug Tracking Index**
+
+**Create/Update:** `Project_Knowledge/Bug_Reports/bug-tracking-index.md`
+
+```markdown
+# 🐛 Bug Tracking Index
+
+## 📊 Current Status (Updated: YYYY-MM-DD by Cursor)
+
+### Open Bugs
+
+| ID      | Date       | Severity | Description                    | Status      | Assigned |
+| ------- | ---------- | -------- | ------------------------------ | ----------- | -------- |
+| BUG-001 | 2025-01-22 | Critical | TypeScript User import missing | In Progress | Cursor   |
+
+### Recently Fixed
+
+| ID      | Date Fixed | Severity | Description                   | Fix Summary        |
+| ------- | ---------- | -------- | ----------------------------- | ------------------ |
+| BUG-000 | 2025-01-21 | High     | CollapsibleCard prop mismatch | Updated prop names |
+
+### Statistics
+
+- **Total Bugs Reported:** 0
+- **Critical Fixed:** 0
+- **High Fixed:** 0
+- **Medium Fixed:** 0
+- **Low Fixed:** 0
+- **Average Resolution Time:** 0 hours
+```
+
+### **📋 SESSION END REQUIREMENTS FOR CURSOR**
+
+**Before ending each Cursor session:**
+
+1. ✅ **Update TASKS.md** - Mark completed milestones
+2. ✅ **Document any bugs found** - Use bug report template
+3. ✅ **Update bug tracking index** - Maintain current status
+4. ✅ **Commit changes** - Descriptive commit messages
+5. ✅ **Update session progress** - Communication for Claude coordination
+
+### **🔗 COORDINATION WITH CLAUDE**
+
+#### **Shared Files (Require Coordination):**
+
+- `src/hooks/useAuth.ts` - Authentication system
+- `src/lib/supabase/client.ts` - Database types (Claude lead)
+- `src/types/*.ts` - Type definitions
+- `src/components/ui/CollapsibleCard.tsx` - Base component
+
+#### **⚠️ CRITICAL CONSTRAINTS**
+
+- **Database Schema:** Do NOT modify without Claude coordination
+- **Authentication Logic:** Do NOT change useAuth.ts without approval
+- **CollapsibleCard API:** Follow established patterns (defaultExpanded, counter)
+
+#### **Communication Protocol:**
+
+- **Breaking Changes:** Notify Claude immediately
+- **Shared Component Updates:** Test on both worktrees
+- **TypeScript Errors:** Coordinate solution approach
+- **Database Issues:** Escalate to Claude immediately
+
+### **🎖️ SUCCESS METRICS FOR CURSOR**
+
+#### **Immediate Goals (Current Session):**
+
+- ✅ Zero TypeScript errors
+- ✅ Successful git push to GitHub
+- ✅ All Cursor components working without props errors
+- ✅ Clean browser console (no warnings)
+
+#### **Short-term Goals (2 weeks):**
+
+- Bundle size <1.2MB (from 1.7MB)
+- Settings system 100% functional with database
+- Dashboard real-time data integration
+- Mobile performance optimization
+
+#### **Long-term Goals (1 month):**
+
+- Test coverage >80%
+- Lighthouse score >95
+- Component library documented
+- Accessibility compliance (WCAG AA)
+
+---
+
+**⚠️ CRITICAL REMINDER:** TypeScript errors are currently blocking git commits. This is the HIGHEST PRIORITY for Cursor to resolve immediately.
