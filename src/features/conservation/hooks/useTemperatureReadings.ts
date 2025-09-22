@@ -17,7 +17,6 @@ export function useTemperatureReadings(conservationPointId?: string) {
       temperature: 4.2,
       target_temperature: 4.0,
       tolerance_range: { min: -2.0, max: 2.0 },
-      tolerance_range_max: 6.0,
       status: 'compliant',
       recorded_by: 'user1',
       recorded_at: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
@@ -32,7 +31,6 @@ export function useTemperatureReadings(conservationPointId?: string) {
       temperature: 6.5,
       target_temperature: 4.0,
       tolerance_range: { min: -2.0, max: 2.0 },
-      tolerance_range_max: 6.0,
       status: 'warning',
       recorded_by: 'user2',
       recorded_at: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
@@ -47,7 +45,6 @@ export function useTemperatureReadings(conservationPointId?: string) {
       temperature: -18.1,
       target_temperature: -18.0,
       tolerance_range: { min: -22.0, max: -18.0 },
-      tolerance_range_max: -16.0,
       status: 'compliant',
       recorded_by: 'user1',
       recorded_at: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
@@ -62,7 +59,6 @@ export function useTemperatureReadings(conservationPointId?: string) {
       temperature: 8.2,
       target_temperature: 6.0,
       tolerance_range: { min: 2.0, max: 6.0 },
-      tolerance_range_max: 8.0,
       status: 'warning',
       recorded_by: 'user3',
       recorded_at: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
@@ -77,7 +73,6 @@ export function useTemperatureReadings(conservationPointId?: string) {
       temperature: -32.0,
       target_temperature: -35.0,
       tolerance_range: { min: -42.0, max: -38.0 },
-      tolerance_range_max: -30.0,
       status: 'critical',
       recorded_by: 'user1',
       recorded_at: new Date(Date.now() - 10 * 60 * 1000), // 10 minutes ago

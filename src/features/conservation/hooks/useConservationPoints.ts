@@ -26,7 +26,7 @@ export function useConservationPoints() {
       is_blast_chiller: false,
       created_at: new Date(),
       updated_at: new Date(),
-      departments: { id: '1', name: 'Cucina' },
+      department: { id: '1', name: 'Cucina' },
       status: 'normal',
     },
     {
@@ -40,7 +40,7 @@ export function useConservationPoints() {
       is_blast_chiller: false,
       created_at: new Date(),
       updated_at: new Date(),
-      departments: { id: '1', name: 'Cucina' },
+      department: { id: '1', name: 'Cucina' },
       status: 'normal',
     },
     {
@@ -54,7 +54,7 @@ export function useConservationPoints() {
       is_blast_chiller: false,
       created_at: new Date(),
       updated_at: new Date(),
-      departments: { id: '2', name: 'Bancone' },
+      department: { id: '2', name: 'Bancone' },
       status: 'warning',
     },
     {
@@ -68,7 +68,7 @@ export function useConservationPoints() {
       is_blast_chiller: true,
       created_at: new Date(),
       updated_at: new Date(),
-      departments: { id: '1', name: 'Cucina' },
+      department: { id: '1', name: 'Cucina' },
       status: 'critical',
     },
   ]

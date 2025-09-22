@@ -8,6 +8,7 @@ import {
   Settings,
   Users,
 } from 'lucide-react'
+import { SyncStatusBar } from '@/components/offline/SyncStatusBar'
 import { useAuth, type UserRole } from '@/hooks/useAuth'
 
 interface MainLayoutProps {
