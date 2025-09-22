@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   X,
   Calendar,
@@ -9,15 +9,12 @@ import {
   Edit,
   Trash2,
 } from 'lucide-react'
-import type { TypedCalendarEvent } from '@/types/calendar'
+import type { CalendarEvent } from '@/types/calendar'
 
 interface EventDetailsModalProps {
-  event: TypedCalendarEvent
+  event: CalendarEvent
   onClose: () => void
-  onUpdate: (data: {
-    eventId: string
-    updates: Partial<TypedCalendarEvent>
-  }) => void
+  onUpdate: (data: { eventId: string; updates: Partial<CalendarEvent> }) => void
   onDelete: (eventId: string) => void
 }
 
@@ -65,7 +62,6 @@ export function EventDetailsModal({
   onUpdate,
   onDelete,
 }: EventDetailsModalProps) {
-  const [isEditing, setIsEditing] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const formatDate = (date: Date) => {
@@ -315,7 +311,9 @@ export function EventDetailsModal({
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setIsEditing(true)}
+              onClick={() => {
+                /* TODO: Implement editing mode */
+              }}
               className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
               <Edit className="w-4 h-4" />

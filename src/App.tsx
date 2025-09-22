@@ -29,6 +29,7 @@ const SettingsPage = lazy(() => import('./features/settings/SettingsPage'))
 function App() {
   return (
     <>
+<<<<<<< HEAD
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route
@@ -125,6 +126,79 @@ function App() {
           />
         </Routes>
       </Suspense>
+=======
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/sign-in" element={<LoginPage />} />
+        <Route path="/sign-up" element={<RegisterPage />} />
+        <Route
+          path="/*"
+          element={
+            <>
+              <SignedIn>
+                <MainLayout>
+                  <Routes>
+                    <Route
+                      path="/"
+                      element={
+                        <ProtectedRoute>
+                          <HomePage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/conservazione"
+                      element={
+                        <ProtectedRoute>
+                          <ConservationPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/attivita"
+                      element={
+                        <ProtectedRoute>
+                          <CalendarPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/inventario"
+                      element={
+                        <ProtectedRoute>
+                          <InventoryPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/impostazioni"
+                      element={
+                        <ProtectedRoute requiredRole="admin">
+                          <div>Impostazioni - Coming Soon (Solo Admin)</div>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/gestione"
+                      element={
+                        <ProtectedRoute
+                          requiredRole={['admin', 'responsabile']}
+                        >
+                          <ManagementPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Routes>
+                </MainLayout>
+              </SignedIn>
+              <SignedOut>
+                <RedirectToSignIn />
+              </SignedOut>
+            </>
+          }
+        />
+      </Routes>
+>>>>>>> origin/Curs
 
       <ToastContainer
         position="top-right"

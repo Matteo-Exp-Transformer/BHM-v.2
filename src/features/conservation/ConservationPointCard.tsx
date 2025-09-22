@@ -1,13 +1,10 @@
-import React from 'react'
 import {
   Thermometer,
   Clock,
   AlertTriangle,
   CheckCircle,
-  Plus,
   Wrench,
   TrendingUp,
-  Calendar,
 } from 'lucide-react'
 import type { ConservationPoint } from '@/types/conservation'
 

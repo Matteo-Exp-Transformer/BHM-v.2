@@ -45,7 +45,6 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
           expiry_date: new Date('2025-09-28'),
           days_until_expiry: 7,
           alert_level: 'warning' as const,
-          category: 'Latticini',
           department: 'Cucina',
         },
       ]
@@ -74,7 +73,6 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
           created_at: new Date(),
           updated_at: new Date(),
           days_expired: 2,
-          category: 'Latticini',
           department: 'Cucina',
         },
       ]
@@ -90,12 +88,15 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
         '🔧 Using mock data for expiry stats - database disabled temporarily'
       )
       return {
-        expiring_soon: 1,
+        total_expiring: 1,
         expiring_today: 0,
         expiring_this_week: 1,
-        expired_products: 1,
-        average_shelf_life: 14,
-        waste_prevention_score: 85,
+        expired_count: 1,
+        by_alert_level: {
+          critical: 0,
+          warning: 1,
+          info: 0,
+        },
       }
     },
     enabled: !!companyId && !!user,

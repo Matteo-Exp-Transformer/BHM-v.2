@@ -32,6 +32,17 @@ const defaultViewConfig: CalendarViewConfig = {
     startTime: '08:00',
     endTime: '22:00',
   },
+  notifications: {
+    enabled: true,
+    defaultTimings: ['minutes_before', 'hours_before'],
+  },
+  colorScheme: {
+    maintenance: '#F59E0B',
+    task: '#3B82F6',
+    training: '#10B981',
+    inventory: '#8B5CF6',
+    meeting: '#EF4444',
+  },
 }
 
 /**
@@ -95,10 +106,7 @@ export function useCalendar(config?: Partial<CalendarViewConfig>) {
 
   const handleEventUpdate = useCallback(
     (updatedEvent: CalendarEvent) => {
-      updateEvent({
-        id: updatedEvent.id,
-        ...updatedEvent,
-      })
+      updateEvent(updatedEvent)
       setSelectedEvent(null)
     },
     [updateEvent]

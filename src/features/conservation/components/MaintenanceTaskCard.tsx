@@ -158,15 +158,12 @@ export function MaintenanceTaskCard({
       <div className="flex items-center space-x-2 text-sm mb-3">
         <User className="w-4 h-4 text-gray-600" />
         <span className="text-gray-600">
-          Assegnato a:{' '}
-          <strong>{task.assigned_staff?.name || 'Non assegnato'}</strong>
+          Assegnato a: <strong>{task.assigned_to || 'Non assegnato'}</strong>
         </span>
-        {task.assigned_staff?.role && (
+        {task.assigned_to && (
           <>
             <span className="mx-1 text-gray-400">•</span>
-            <span className="text-gray-500 capitalize">
-              {task.assigned_staff.role}
-            </span>
+            <span className="text-gray-500 capitalize">{task.assigned_to}</span>
           </>
         )}
       </div>

@@ -30,10 +30,9 @@ export function useMaintenanceTasks(conservationPointId?: string) {
       is_active: true,
       created_at: new Date(),
       updated_at: new Date(),
-      assigned_staff: {
+      assigned_user: {
         id: 'user1',
         name: 'Matteo Cavallaro',
-        role: 'responsabile',
       },
     },
     {
@@ -50,10 +49,9 @@ export function useMaintenanceTasks(conservationPointId?: string) {
       is_active: true,
       created_at: new Date(),
       updated_at: new Date(),
-      assigned_staff: {
+      assigned_user: {
         id: 'user2',
         name: 'Fabrizio Dettori',
-        role: 'responsabile',
       },
     },
     {
@@ -70,10 +68,9 @@ export function useMaintenanceTasks(conservationPointId?: string) {
       is_active: true,
       created_at: new Date(),
       updated_at: new Date(),
-      assigned_staff: {
+      assigned_user: {
         id: 'user1',
         name: 'Matteo Cavallaro',
-        role: 'responsabile',
       },
     },
     {
@@ -90,10 +87,9 @@ export function useMaintenanceTasks(conservationPointId?: string) {
       is_active: true,
       created_at: new Date(),
       updated_at: new Date(),
-      assigned_staff: {
+      assigned_user: {
         id: 'user3',
         name: 'Elena Guaitoli',
-        role: 'dipendente',
       },
     },
   ]

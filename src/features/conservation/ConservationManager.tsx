@@ -1,14 +1,9 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Thermometer,
   Plus,
   Filter,
   Settings,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  TrendingUp,
-  Activity,
 } from 'lucide-react'
 
 export function ConservationManager() {

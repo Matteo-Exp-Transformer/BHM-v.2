@@ -182,7 +182,11 @@ export const CalendarPage = () => {
             onDateSelect={onDateSelect}
             config={viewConfig}
             loading={isLoading}
+<<<<<<< HEAD
             error={typeof error === 'string' ? error : error?.message || null}
+=======
+            error={error?.message || null}
+>>>>>>> origin/Curs
           />
         </div>
 

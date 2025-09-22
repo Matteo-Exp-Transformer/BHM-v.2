@@ -156,7 +156,7 @@ export default function ConservationPage() {
         completed_by: 'user1', // TODO: get from auth
         completed_at: new Date(),
         status: 'completed',
-        checklist_completed: task.checklist || [],
+        checklist_completed: Array.from(task.checklist || []),
         notes: 'Completato tramite interfaccia web',
       })
     }

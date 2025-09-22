@@ -1,19 +1,26 @@
 import React, { useState } from 'react'
 import { X, User, Plus } from 'lucide-react'
+<<<<<<< HEAD
 import type { TypedCalendarEvent } from '@/types/calendar'
+=======
+import type { CalendarEvent, CalendarEventType } from '@/types/calendar'
+>>>>>>> origin/Curs
 
 interface CreateEventModalProps {
   selectedDate: Date | null
   onClose: () => void
-  onCreate: (eventData: Partial<TypedCalendarEvent>) => void
+  onCreate: (eventData: Partial<CalendarEvent>) => void
 }
 
 const eventTypes = [
   { value: 'maintenance', label: 'Manutenzione', color: '#3B82F6' },
-  { value: 'task', label: 'Attività', color: '#10B981' },
-  { value: 'training', label: 'Formazione', color: '#F59E0B' },
-  { value: 'inventory', label: 'Inventario', color: '#8B5CF6' },
-  { value: 'meeting', label: 'Riunione', color: '#EF4444' },
+  { value: 'general_task', label: 'Attività', color: '#10B981' },
+  {
+    value: 'temperature_reading',
+    label: 'Lettura Temperatura',
+    color: '#F59E0B',
+  },
+  { value: 'custom', label: 'Personalizzato', color: '#8B5CF6' },
 ]
 
 const priorities = [
@@ -47,7 +54,7 @@ export function CreateEventModal({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    source: 'maintenance' as const,
+    type: 'maintenance' as CalendarEventType,
     start: selectedDate ? selectedDate.toISOString().slice(0, 16) : '',
     end: '',
     allDay: false,
@@ -63,16 +70,12 @@ export function CreateEventModal({
     // Task specific
     taskType: 'haccp_check' as const,
     departmentId: '',
-    // Meeting specific
-    meetingType: 'team' as const,
-    attendees: [] as string[],
-    isVirtual: false,
-    meetingLink: '',
-    // Training specific
-    trainingType: 'haccp' as const,
-    instructor: '',
-    maxParticipants: 10,
-    certificationRequired: false,
+    // Temperature reading specific
+    temperatureType: 'daily' as const,
+    targetTemperature: 0,
+    // Custom specific
+    customType: 'general' as const,
+    customData: '',
   })
 
   const [checklistItem, setChecklistItem] = useState('')
@@ -86,49 +89,37 @@ export function CreateEventModal({
       start: new Date(formData.start),
       end: formData.end ? new Date(formData.end) : undefined,
       allDay: formData.allDay,
-      source: formData.source,
-      sourceId: 'temp-' + Date.now(),
-      extendedProps: {
-        description: formData.description,
-        priority: formData.priority,
-        status: 'scheduled' as const,
-        assignedTo: formData.assignedTo,
-        location: formData.location,
-        category: getCategory(),
-        color: eventTypes.find(t => t.value === formData.source)?.color,
-      },
+      type: formData.type,
+      description: formData.description,
+      priority: formData.priority,
+      status: 'pending' as const,
+      assigned_to: formData.assignedTo,
+      department_id: formData.departmentId,
+      recurring: false,
+      backgroundColor:
+        eventTypes.find(t => t.value === formData.type)?.color || '#3B82F6',
+      borderColor:
+        eventTypes.find(t => t.value === formData.type)?.color || '#3B82F6',
+      textColor: '#FFFFFF',
+      metadata: {},
+      created_at: new Date(),
+      updated_at: new Date(),
+      created_by: 'current-user',
+      company_id: 'default-company',
     }
 
     const specificProps = getSourceSpecificProps()
     const eventData = {
       ...baseEvent,
-      extendedProps: {
-        ...baseEvent.extendedProps,
-        ...specificProps,
-      },
+      ...specificProps,
     }
 
     onCreate(eventData)
     onClose()
   }
 
-  const getCategory = () => {
-    switch (formData.source) {
-      case 'maintenance':
-        return formData.maintenanceType
-      case 'task':
-        return formData.taskType
-      case 'training':
-        return formData.trainingType
-      case 'meeting':
-        return formData.meetingType
-      default:
-        return 'general'
-    }
-  }
-
   const getSourceSpecificProps = () => {
-    switch (formData.source) {
+    switch (formData.type) {
       case 'maintenance':
         return {
           maintenanceType: formData.maintenanceType,
@@ -137,25 +128,22 @@ export function CreateEventModal({
           checklist: formData.checklist,
           conservationPointId: formData.conservationPointId || undefined,
         }
-      case 'task':
+      case 'general_task':
         return {
           taskType: formData.taskType,
           departmentId: formData.departmentId || undefined,
           estimatedDuration: formData.estimatedDuration,
         }
-      case 'training':
+      case 'temperature_reading':
         return {
-          trainingType: formData.trainingType,
-          instructor: formData.instructor,
-          maxParticipants: formData.maxParticipants,
-          certificationRequired: formData.certificationRequired,
+          temperatureType: formData.temperatureType,
+          conservationPointId: formData.conservationPointId || undefined,
+          targetTemperature: formData.targetTemperature,
         }
-      case 'meeting':
+      case 'custom':
         return {
-          meetingType: formData.meetingType,
-          attendees: formData.attendees,
-          isVirtual: formData.isVirtual,
-          meetingLink: formData.meetingLink || undefined,
+          customType: formData.customType,
+          customData: formData.customData,
         }
       default:
         return {}
@@ -197,7 +185,7 @@ export function CreateEventModal({
   }
 
   const renderSourceSpecificFields = () => {
-    switch (formData.source) {
+    switch (formData.type) {
       case 'maintenance':
         return (
           <div className="space-y-4">
@@ -312,153 +300,109 @@ export function CreateEventModal({
           </div>
         )
 
-      case 'training':
+      case 'temperature_reading':
         return (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo Formazione
+                  Tipo Lettura Temperatura
                 </label>
                 <select
-                  value={formData.trainingType}
+                  value={formData.temperatureType}
                   onChange={e =>
                     setFormData(prev => ({
                       ...prev,
-                      trainingType: e.target.value as any,
+                      temperatureType: e.target.value as any,
                     }))
                   }
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="haccp">HACCP</option>
-                  <option value="safety">Sicurezza</option>
-                  <option value="hygiene">Igiene</option>
-                  <option value="equipment">Attrezzature</option>
-                  <option value="procedures">Procedure</option>
+                  <option value="daily">Giornaliera</option>
+                  <option value="weekly">Settimanale</option>
+                  <option value="monthly">Mensile</option>
+                  <option value="quarterly">Trimestrale</option>
+                  <option value="yearly">Annuale</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Max Partecipanti
+                  Temperatura Target
                 </label>
                 <input
                   type="number"
-                  value={formData.maxParticipants}
+                  value={formData.targetTemperature}
                   onChange={e =>
                     setFormData(prev => ({
                       ...prev,
-                      maxParticipants: parseInt(e.target.value) || 10,
+                      targetTemperature: parseFloat(e.target.value) || 0,
                     }))
                   }
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  min="1"
+                  step="0.1"
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Istruttore
+                Punto di Conservazione
               </label>
               <input
                 type="text"
-                value={formData.instructor}
-                onChange={e =>
-                  setFormData(prev => ({ ...prev, instructor: e.target.value }))
-                }
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Nome istruttore"
-              />
-            </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="certification-required"
-                checked={formData.certificationRequired}
+                value={formData.conservationPointId}
                 onChange={e =>
                   setFormData(prev => ({
                     ...prev,
-                    certificationRequired: e.target.checked,
+                    conservationPointId: e.target.value,
                   }))
                 }
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="ID punto di conservazione"
               />
-              <label
-                htmlFor="certification-required"
-                className="ml-2 text-sm text-gray-700"
-              >
-                Certificazione richiesta
-              </label>
             </div>
           </div>
         )
 
-      case 'meeting':
+      case 'custom':
         return (
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo Riunione
+                Tipo Personalizzato
               </label>
               <select
-                value={formData.meetingType}
+                value={formData.customType}
                 onChange={e =>
                   setFormData(prev => ({
                     ...prev,
-                    meetingType: e.target.value as any,
+                    customType: e.target.value as any,
                   }))
                 }
                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="team">Team</option>
-                <option value="training">Formazione</option>
-                <option value="audit">Audit</option>
-                <option value="review">Revisione</option>
+                <option value="general">Generale</option>
+                <option value="special">Speciale</option>
+                <option value="urgent">Urgente</option>
+                <option value="routine">Routine</option>
                 <option value="emergency">Emergenza</option>
               </select>
             </div>
 
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="is-virtual"
-                checked={formData.isVirtual}
-                onChange={e =>
-                  setFormData(prev => ({
-                    ...prev,
-                    isVirtual: e.target.checked,
-                  }))
-                }
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label
-                htmlFor="is-virtual"
-                className="ml-2 text-sm text-gray-700"
-              >
-                Riunione virtuale
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Dati Personalizzati
               </label>
+              <textarea
+                value={formData.customData}
+                onChange={e =>
+                  setFormData(prev => ({ ...prev, customData: e.target.value }))
+                }
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Inserisci dati personalizzati..."
+                rows={3}
+              />
             </div>
-
-            {formData.isVirtual && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Link Riunione
-                </label>
-                <input
-                  type="url"
-                  value={formData.meetingLink}
-                  onChange={e =>
-                    setFormData(prev => ({
-                      ...prev,
-                      meetingLink: e.target.value,
-                    }))
-                  }
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="https://..."
-                />
-              </div>
-            )}
           </div>
         )
 
@@ -517,11 +461,11 @@ export function CreateEventModal({
                       onClick={() =>
                         setFormData(prev => ({
                           ...prev,
-                          source: type.value as any,
+                          type: type.value as CalendarEventType,
                         }))
                       }
                       className={`p-3 border-2 rounded-lg text-sm font-medium transition-colors ${
-                        formData.source === type.value
+                        formData.type === type.value
                           ? 'border-blue-500 bg-blue-50 text-blue-700'
                           : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                       }`}

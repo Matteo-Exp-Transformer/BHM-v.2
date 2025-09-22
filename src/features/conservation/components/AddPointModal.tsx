@@ -72,7 +72,7 @@ export function AddPointModal({
     if (point) {
       setFormData({
         name: point.name,
-        department_id: point.department_id,
+        department_id: point.department_id || '',
         setpoint_temp: point.setpoint_temp,
         is_blast_chiller: point.is_blast_chiller,
         product_categories: point.product_categories || [],
