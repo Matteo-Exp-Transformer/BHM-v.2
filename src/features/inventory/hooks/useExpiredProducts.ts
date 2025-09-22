@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'react-toastify'
-import { ExpiredProduct, WasteStats } from '@/types/inventory'
+import { ExpiredProduct, WasteStats, AllergenType } from '@/types/inventory'
 
 // Query keys
 const QUERY_KEYS = {
@@ -44,7 +44,7 @@ export const useExpiredProducts = () => {
           quantity: 1.0,
           unit: 'litri',
           allergens: [AllergenType.LATTOSIO],
-          temperature_requirements: { min_temp: 0, max_temp: 4 },
+          temperature_requirements: { min_temp: 0, max_temp: 4, storage_type: 'fridge' },
           label_photo_url: undefined,
           status: 'expired',
           notes: 'Prodotto scaduto da rimuovere',

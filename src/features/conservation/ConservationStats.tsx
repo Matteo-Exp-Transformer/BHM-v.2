@@ -1,10 +1,7 @@
-import React from 'react'
 import {
   Thermometer,
   AlertTriangle,
   CheckCircle,
-  Clock,
-  TrendingUp,
   Activity,
   Target,
   Wrench,
@@ -16,11 +13,6 @@ interface ConservationStatsProps {
 }
 
 export function ConservationStats({ stats }: ConservationStatsProps) {
-  const getComplianceColor = (rate: number) => {
-    if (rate >= 95) return 'text-green-600'
-    if (rate >= 85) return 'text-yellow-600'
-    return 'text-red-600'
-  }
 
   const getComplianceBadge = (rate: number) => {
     if (rate >= 95) return 'bg-green-100 text-green-800'
@@ -104,14 +96,14 @@ export function ConservationStats({ stats }: ConservationStatsProps) {
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className={`h-2 rounded-full transition-all ${
-                      parseFloat(stat.value) >= 95
+                      parseFloat(String(stat.value)) >= 95
                         ? 'bg-green-500'
-                        : parseFloat(stat.value) >= 85
+                        : parseFloat(String(stat.value)) >= 85
                           ? 'bg-yellow-500'
                           : 'bg-red-500'
                     }`}
                     style={{
-                      width: `${Math.min(parseFloat(stat.value), 100)}%`,
+                      width: `${Math.min(parseFloat(String(stat.value)), 100)}%`,
                     }}
                   ></div>
                 </div>

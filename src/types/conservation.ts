@@ -423,11 +423,12 @@ export function getConservationStatus(
   }
 
   // Check temperature reading status
-  if (point.last_temperature_reading?.status === 'critical') {
+  const latestReading = point.temperature_readings?.[0] // Assuming readings are sorted by date desc
+  if (latestReading?.status === 'critical') {
     return 'critical'
   }
 
-  if (point.last_temperature_reading?.status === 'warning') {
+  if (latestReading?.status === 'warning') {
     return 'warning'
   }
 

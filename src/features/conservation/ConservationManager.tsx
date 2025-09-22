@@ -8,6 +8,7 @@ import {
 
 export function ConservationManager() {
   const [showFilters, setShowFilters] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   return (
     <div className="p-6 space-y-6">

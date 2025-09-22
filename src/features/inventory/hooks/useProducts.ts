@@ -8,6 +8,7 @@ import {
   ProductSearchParams,
   InventoryStats,
   ProductFilters,
+  AllergenType,
 } from '@/types/inventory'
 
 // Query keys
@@ -49,7 +50,7 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
       notes: 'Prodotto fresco di alta qualità',
       created_at: new Date(),
       updated_at: new Date(),
-      product_categories: { name: 'Latticini' },
+      category: 'Latticini',
       departments: { name: 'Cucina' },
       conservation_points: { name: 'Frigorifero Principale', type: 'fridge' },
     },
@@ -70,7 +71,7 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
       notes: 'Stagionato 24 mesi, qualità DOP',
       created_at: new Date(),
       updated_at: new Date(),
-      product_categories: { name: 'Latticini' },
+      category: 'Latticini',
       departments: { name: 'Cucina' },
       conservation_points: { name: 'Frigorifero Principale', type: 'fridge' },
     },
@@ -91,7 +92,7 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
       notes: 'Prodotto scaduto da rimuovere',
       created_at: new Date(),
       updated_at: new Date(),
-      product_categories: { name: 'Latticini' },
+      category: 'Latticini',
       departments: { name: 'Cucina' },
       conservation_points: { name: 'Frigorifero Principale', type: 'fridge' },
     },

@@ -239,6 +239,7 @@ export const useAuth = () => {
 
     // User data
     user: extendedUser,
+    userId: clerkUser?.id,
     userProfile,
     userRole,
     permissions,
