@@ -11,6 +11,7 @@
 HACCP Business Manager è una PWA per digitalizzare la sicurezza alimentare nei ristoranti.
 
 **Milestones Completati:**
+
 - ✅ Authentication System (B.0)
 - ✅ Staff & Department Management (B.1.1)
 - ✅ Calendar Integration (B.1.2)
@@ -51,7 +52,7 @@ HACCP Business Manager è una PWA per digitalizzare la sicurezza alimentare nei 
    - Bundle analyzer setup
 
 3. **🟡 Testing Suite Setup**
-   - >80% test coverage for components critici
+   - > 80% test coverage for components critici
    - Focus on Staff Management components
    - Settings system components testing
    - Dashboard KPI calculations testing
@@ -60,6 +61,7 @@ HACCP Business Manager è una PWA per digitalizzare la sicurezza alimentare nei 
 ## 🛠️ **CURSOR TECHNICAL STANDARDS**
 
 ### **Code Quality Requirements:**
+
 - **TypeScript**: Always for new components
 - **Mobile-first**: Design responsive prioritario
 - **CollapsibleCard pattern**: Standard per sezioni principali
@@ -67,6 +69,7 @@ HACCP Business Manager è una PWA per digitalizzare la sicurezza alimentare nei 
 - **Testing**: React Testing Library for critical components
 
 ### **Component Patterns to Follow:**
+
 ```typescript
 // ✅ Correct CollapsibleCard usage
 <CollapsibleCard
@@ -144,17 +147,20 @@ Project_Knowledge/
 ## 🔗 **COORDINATION WITH CLAUDE**
 
 ### **Shared Files (Require Coordination):**
+
 - `src/hooks/useAuth.ts` - Authentication system
 - `src/lib/supabase/client.ts` - Database types (Claude lead)
 - `src/types/*.ts` - Type definitions
 - `src/components/ui/CollapsibleCard.tsx` - Base component
 
 ### **⚠️ CRITICAL CONSTRAINTS**
+
 - **Database Schema:** Do NOT modify without Claude coordination
 - **Authentication Logic:** Do NOT change useAuth.ts without approval
 - **CollapsibleCard API:** Follow established patterns (defaultExpanded, counter)
 
 ### **Communication Protocol:**
+
 - **Breaking Changes:** Notify Claude immediately
 - **Shared Component Updates:** Test on both worktrees
 - **TypeScript Errors:** Coordinate solution approach
@@ -163,18 +169,21 @@ Project_Knowledge/
 ## 🎖️ **SUCCESS METRICS FOR CURSOR**
 
 ### **Immediate Goals (Current Session):**
+
 - ✅ Zero TypeScript errors
 - ✅ Successful git push to GitHub
 - ✅ All Cursor components working without props errors
 - ✅ Clean browser console (no warnings)
 
 ### **Short-term Goals (2 weeks):**
+
 - Bundle size <1.2MB (from 1.7MB)
 - Settings system 100% functional with database
 - Dashboard real-time data integration
 - Mobile performance optimization
 
 ### **Long-term Goals (1 month):**
+
 - Test coverage >80%
 - Lighthouse score >95
 - Component library documented
