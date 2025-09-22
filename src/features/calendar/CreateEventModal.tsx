@@ -11,7 +11,11 @@ interface CreateEventModalProps {
 const eventTypes = [
   { value: 'maintenance', label: 'Manutenzione', color: '#3B82F6' },
   { value: 'general_task', label: 'Attività', color: '#10B981' },
-  { value: 'temperature_reading', label: 'Lettura Temperatura', color: '#F59E0B' },
+  {
+    value: 'temperature_reading',
+    label: 'Lettura Temperatura',
+    color: '#F59E0B',
+  },
   { value: 'custom', label: 'Personalizzato', color: '#8B5CF6' },
 ]
 
@@ -88,8 +92,10 @@ export function CreateEventModal({
       assigned_to: formData.assignedTo,
       department_id: formData.departmentId,
       recurring: false,
-      backgroundColor: eventTypes.find(t => t.value === formData.type)?.color || '#3B82F6',
-      borderColor: eventTypes.find(t => t.value === formData.type)?.color || '#3B82F6',
+      backgroundColor:
+        eventTypes.find(t => t.value === formData.type)?.color || '#3B82F6',
+      borderColor:
+        eventTypes.find(t => t.value === formData.type)?.color || '#3B82F6',
       textColor: '#FFFFFF',
       metadata: {},
       created_at: new Date(),
@@ -107,7 +113,6 @@ export function CreateEventModal({
     onCreate(eventData)
     onClose()
   }
-
 
   const getSourceSpecificProps = () => {
     switch (formData.type) {
@@ -343,7 +348,10 @@ export function CreateEventModal({
                 type="text"
                 value={formData.conservationPointId}
                 onChange={e =>
-                  setFormData(prev => ({ ...prev, conservationPointId: e.target.value }))
+                  setFormData(prev => ({
+                    ...prev,
+                    conservationPointId: e.target.value,
+                  }))
                 }
                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="ID punto di conservazione"

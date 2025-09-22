@@ -93,7 +93,7 @@ export function ConservationPointCard({
             <h3 className={`font-semibold ${colors.text}`}>{point.name}</h3>
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <MapPin className="w-4 h-4" />
-              <span>{point.departments?.name || 'Reparto non assegnato'}</span>
+              <span>{point.department?.name || 'Reparto non assegnato'}</span>
               <span className="mx-1">•</span>
               <span>{getTypeName()}</span>
             </div>
@@ -143,7 +143,7 @@ export function ConservationPointCard({
       </div>
 
       {/* Last Temperature Reading */}
-      {point.last_temperature_reading && (
+      {point.temperature_readings && point.temperature_readings.length > 0 && (
         <div
           className={`rounded-md ${colors.bg} border ${colors.border} p-3 mb-3`}
         >
@@ -151,12 +151,19 @@ export function ConservationPointCard({
             <div>
               <div className="text-sm text-gray-600">Ultima lettura</div>
               <div className={`font-semibold ${colors.text}`}>
-                {point.last_temperature_reading.temperature}°C
+                {
+                  point.temperature_readings[
+                    point.temperature_readings.length - 1
+                  ].temperature
+                }
+                °C
               </div>
             </div>
             <div className="text-xs text-gray-500">
               {new Date(
-                point.last_temperature_reading.recorded_at
+                point.temperature_readings[
+                  point.temperature_readings.length - 1
+                ].recorded_at
               ).toLocaleDateString('it-IT', {
                 day: '2-digit',
                 month: '2-digit',

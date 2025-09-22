@@ -1,4 +1,3 @@
-
 export interface CalendarNotification {
   id: string
   type: 'email' | 'push' | 'sms' | 'in_app'
@@ -6,7 +5,6 @@ export interface CalendarNotification {
   value?: number
   enabled: boolean
 }
-
 
 export interface CalendarFilter {
   sources: CalendarEvent['source'][]
