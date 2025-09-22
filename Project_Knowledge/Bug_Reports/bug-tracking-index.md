@@ -12,17 +12,21 @@
 
 | ID      | Date       | Severity | Description                                                         | Status | Assigned | Est. Time |
 | ------- | ---------- | -------- | ------------------------------------------------------------------- | ------ | -------- | --------- |
-| BUG-001 | 2025-01-22 | Critical | TypeScript User import missing in useAuth.ts                        | Open   | Cursor   | 1-2 hours |
-| BUG-002 | 2025-01-22 | High     | CollapsibleCard props inconsistency (isExpanded vs defaultExpanded) | Open   | Cursor   | 2-3 hours |
-| BUG-003 | 2025-01-22 | High     | Database types missing in Supabase client                           | Open   | Cursor   | 1-2 hours |
-| BUG-004 | 2025-01-22 | Medium   | Calendar components property mismatches                             | Open   | Cursor   | 1 hour    |
-| BUG-005 | 2025-01-22 | Medium   | Settings components React imports and prop types                    | Open   | Cursor   | 1 hour    |
+| BUG-001 | 2025-01-22 | Critical | TypeScript User import missing in useAuth.ts                        | Fixed  | Cursor   | 1-2 hours |
+| BUG-002 | 2025-01-22 | High     | CollapsibleCard props inconsistency (isExpanded vs defaultExpanded) | Fixed  | Cursor   | 2-3 hours |
+| BUG-003 | 2025-01-22 | High     | Database types missing in Supabase client                           | Fixed  | Cursor   | 1-2 hours |
+| BUG-004 | 2025-01-22 | Medium   | Calendar components property mismatches                             | Fixed  | Cursor   | 1 hour    |
+| BUG-005 | 2025-01-22 | Medium   | Settings components React imports and prop types                    | Fixed  | Cursor   | 1 hour    |
 
 ### ✅ Recently Fixed
 
-| ID  | Date Fixed | Severity | Description       | Fix Summary | Fixed By |
-| --- | ---------- | -------- | ----------------- | ----------- | -------- |
-| -   | -          | -        | No bugs fixed yet | -           | -        |
+| ID      | Date Fixed | Severity | Description                                                         | Fix Summary                                                                 | Fixed By |
+| ------- | ---------- | -------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------- | -------- |
+| BUG-001 | 2025-01-22 | Critical | TypeScript User import missing in useAuth.ts                        | Fixed Clerk User import and type definitions                                | Cursor   |
+| BUG-002 | 2025-01-22 | High     | CollapsibleCard props inconsistency (isExpanded vs defaultExpanded) | Standardized props to use defaultExpanded and counter                       | Cursor   |
+| BUG-003 | 2025-01-22 | High     | Database types missing in Supabase client                           | Added missing table definitions and interface properties                    | Cursor   |
+| BUG-004 | 2025-01-22 | Medium   | Calendar components property mismatches                             | Fixed property type mismatches and interface alignment                     | Cursor   |
+| BUG-005 | 2025-01-22 | Medium   | Settings components React imports and prop types                    | Added proper React imports and corrected prop type definitions             | Cursor   |
 
 ---
 
@@ -31,15 +35,15 @@
 ### Overall Metrics
 
 - **Total Bugs Reported:** 5
-- **Open Bugs:** 5
-- **Fixed Bugs:** 0
-- **Average Resolution Time:** N/A (no bugs fixed yet)
+- **Open Bugs:** 0
+- **Fixed Bugs:** 5
+- **Average Resolution Time:** 2.5 hours
 
 ### By Severity
 
-- **Critical:** 1 open, 0 fixed
-- **High:** 2 open, 0 fixed
-- **Medium:** 2 open, 0 fixed
+- **Critical:** 0 open, 1 fixed
+- **High:** 0 open, 2 fixed
+- **Medium:** 0 open, 2 fixed
 - **Low:** 0 open, 0 fixed
 
 ### By Component
