@@ -1,5 +1,16 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import {
+  backgroundSyncService,
+  type SyncResult,
+  type SyncProgress,
+} from '@/services/offline/BackgroundSync'
+import { indexedDBManager } from '@/services/offline/IndexedDBManager'
+import {
+  conflictResolver,
+  type ConflictData,
+} from '@/services/offline/ConflictResolver'
+import { useAuth } from './useAuth'
 
 interface SyncOperation {
   id: string
