@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Calendar, Clock, MapPin, User, Plus } from 'lucide-react'
+import { X, User, Plus } from 'lucide-react'
 import type { TypedCalendarEvent } from '@/types/calendar'
 
 interface CreateEventModalProps {

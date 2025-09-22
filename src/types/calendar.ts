@@ -176,6 +176,40 @@ export interface CalendarFilters {
   }
 }
 
+// Legacy filter interface for existing components
+export interface CalendarFilter {
+  sources: string[]
+  priorities: string[]
+  statuses: string[]
+}
+
+// Additional event type interfaces for legacy support
+export type TaskEvent = CalendarEvent & { type: 'general_task' }
+export type TrainingEvent = CalendarEvent & { type: 'custom', metadata: { training_type?: string } }
+export type InventoryEvent = CalendarEvent & { type: 'custom', metadata: { inventory_type?: string } }
+export type MeetingEvent = CalendarEvent & { type: 'custom', metadata: { meeting_type?: string } }
+export type TypedCalendarEvent = CalendarEvent
+
+// Calendar settings interface
+export interface CalendarSettings {
+  defaultView: 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay'
+  timeFormat: '24h' | '12h'
+  weekStart: 0 | 1 // 0 = Sunday, 1 = Monday
+  businessHours: {
+    enabled: boolean
+    startTime: string
+    endTime: string
+    daysOfWeek: number[]
+  }
+  colorScheme: Record<string, string>
+  notifications: {
+    enabled: boolean
+    reminderMinutes: number[]
+    emailNotifications: boolean
+    pushNotifications: boolean
+  }
+}
+
 // Calendar view configuration
 export interface CalendarViewConfig {
   defaultView: 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listWeek'

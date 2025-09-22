@@ -8,7 +8,7 @@ import {
   Settings,
   Users,
 } from 'lucide-react'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth, type UserRole } from '@/hooks/useAuth'
 
 interface MainLayoutProps {
   children: ReactNode
@@ -47,7 +47,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       icon: Settings,
       path: '/impostazioni',
       requiresAuth: true,
-      requiredRole: ['admin'],
+      requiredRole: ['admin'] as UserRole[],
     },
     {
       id: 'management',
@@ -55,7 +55,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       icon: Users,
       path: '/gestione',
       requiresAuth: true,
-      requiredRole: ['admin', 'responsabile'],
+      requiredRole: ['admin', 'responsabile'] as UserRole[],
     },
   ]
 

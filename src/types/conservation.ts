@@ -338,3 +338,108 @@ export const MAINTENANCE_COLORS = {
   overdue: 'bg-red-100 text-red-800 border-red-200',
   skipped: 'bg-gray-100 text-gray-800 border-gray-200'
 } as const
+
+// Request/Response types for API operations
+export interface MaintenanceCompletion {
+  id: string
+  maintenance_task_id: string
+  completed_by: string
+  completed_at: Date
+  notes?: string
+  photos?: string[]
+  next_due_date?: Date
+  created_at: Date
+}
+
+export interface CreateConservationPointRequest {
+  name: string
+  department_id: string
+  setpoint_temp: number
+  type: ConservationPointType
+  product_categories?: string[]
+  is_blast_chiller?: boolean
+}
+
+export interface UpdateConservationPointRequest extends Partial<CreateConservationPointRequest> {
+  id: string
+  status?: ConservationStatus
+}
+
+export interface CreateTemperatureReadingRequest {
+  conservation_point_id: string
+  temperature: number
+  method: 'manual' | 'digital_thermometer' | 'automatic_sensor'
+  notes?: string
+  photo_evidence?: string
+}
+
+export interface CreateMaintenanceTaskRequest {
+  conservation_point_id: string
+  name: string
+  description?: string
+  type: MaintenanceType
+  frequency: MaintenanceFrequency
+  estimated_duration: number
+  next_due: Date
+  assigned_to?: string
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  instructions?: string[]
+  required_tools?: string[]
+  safety_notes?: string[]
+}
+
+export interface CreateMaintenanceCompletionRequest {
+  maintenance_task_id: string
+  notes?: string
+  photos?: string[]
+  next_due_date?: Date
+}
+
+// Filter interfaces
+export interface ConservationPointsFilter {
+  department_id?: string
+  type?: ConservationPointType
+  status?: ConservationStatus
+  search?: string
+}
+
+export interface TemperatureReadingsFilter {
+  conservation_point_id?: string
+  date_from?: Date
+  date_to?: Date
+  status?: 'compliant' | 'warning' | 'critical'
+}
+
+export interface MaintenanceTasksFilter {
+  conservation_point_id?: string
+  assigned_to?: string
+  status?: 'scheduled' | 'in_progress' | 'completed' | 'overdue' | 'skipped'
+  type?: MaintenanceType
+  priority?: 'low' | 'medium' | 'high' | 'critical'
+}
+
+// Statistics interfaces
+export interface ConservationStats {
+  total_points: number
+  points_by_status: Record<ConservationStatus, number>
+  points_by_type: Record<ConservationPointType, number>
+  temperature_compliance_rate: number
+  maintenance_compliance_rate: number
+}
+
+export interface TemperatureStats {
+  total_readings: number
+  compliance_rate: number
+  readings_by_status: Record<'compliant' | 'warning' | 'critical', number>
+  average_temperature: number
+  temperature_trend: 'rising' | 'falling' | 'stable'
+}
+
+export interface MaintenanceStats {
+  total_tasks: number
+  completed_tasks: number
+  overdue_tasks: number
+  completion_rate: number
+  tasks_by_type: Record<MaintenanceType, number>
+  average_completion_time: number
+}

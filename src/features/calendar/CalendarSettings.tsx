@@ -1,4 +1,3 @@
-import React from 'react'
 import { Clock, Globe, Bell, Palette } from 'lucide-react'
 import type { CalendarSettings as CalendarSettingsType } from '@/types/calendar'
 
@@ -87,9 +86,9 @@ export function CalendarSettings({
               Inizio Settimana
             </label>
             <select
-              value={settings.firstDayOfWeek}
+              value={settings.weekStart}
               onChange={e =>
-                onSettingsChange({ firstDayOfWeek: parseInt(e.target.value) })
+                onSettingsChange({ weekStart: parseInt(e.target.value) as 0 | 1 })
               }
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -222,13 +221,16 @@ export function CalendarSettings({
               timeFormat: '24h',
               firstDayOfWeek: 1,
               businessHours: {
+                enabled: true,
                 daysOfWeek: [1, 2, 3, 4, 5],
                 startTime: '08:00',
                 endTime: '18:00',
               },
               notifications: {
                 enabled: true,
-                defaultTimings: ['minutes_before'],
+                reminderMinutes: [15, 30],
+                emailNotifications: true,
+                pushNotifications: true,
               },
               colorScheme: {
                 maintenance: '#3B82F6',

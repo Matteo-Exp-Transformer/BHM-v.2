@@ -15,7 +15,8 @@
       "Bash(git fetch:*)",
       "Read(//c/Users/matte.MIO/Documents/GitHub/BHM-v.2-Cursor/**)",
       "Bash(git pull:*)",
-      "Bash(npm run type-check:*)"
+      "Bash(npm run type-check:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

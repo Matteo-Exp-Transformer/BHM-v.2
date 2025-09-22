@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import {
   X,
   Calendar,
-  Clock,
   MapPin,
   User,
   AlertTriangle,
