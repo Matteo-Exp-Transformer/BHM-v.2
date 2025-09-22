@@ -211,7 +211,7 @@ export interface CalendarFilters {
 }
 
 export interface CalendarSettings {
-  defaultView: CalendarView['type']
+  defaultView: 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listWeek'
   weekStartsOn: 0 | 1
   timeFormat: '12h' | '24h'
   firstDayOfWeek: number

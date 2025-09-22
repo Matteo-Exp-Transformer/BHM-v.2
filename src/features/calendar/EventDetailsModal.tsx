@@ -65,7 +65,6 @@ export function EventDetailsModal({
   onUpdate,
   onDelete,
 }: EventDetailsModalProps) {
-  const [isEditing, setIsEditing] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const formatDate = (date: Date) => {

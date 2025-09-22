@@ -43,7 +43,7 @@ export const useExpiredProducts = () => {
           expiry_date: new Date('2025-09-19'),
           quantity: 1.0,
           unit: 'litri',
-          allergens: ['lattosio'],
+          allergens: [AllergenType.LATTOSIO],
           temperature_requirements: { min_temp: 0, max_temp: 4 },
           label_photo_url: undefined,
           status: 'expired',

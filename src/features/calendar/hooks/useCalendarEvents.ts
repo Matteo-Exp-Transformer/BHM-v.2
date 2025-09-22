@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   CalendarEvent,
+  CalendarEventType,
   CreateCalendarEventInput,
   UpdateCalendarEventInput,
 } from '@/types/calendar'
@@ -41,6 +42,9 @@ const MOCK_EVENTS: CalendarEvent[] = [
       conservation_point_id: 'fridge1',
       notes: 'Controllo giornaliero temperatura',
     },
+    source: 'temperature_reading',
+    sourceId: 'temp1',
+    extendedProps: {},
     created_at: new Date(),
     updated_at: new Date(),
     created_by: 'user1',
@@ -72,6 +76,9 @@ const MOCK_EVENTS: CalendarEvent[] = [
       conservation_point_id: 'blast1',
       notes: 'Manutenzione settimanale programmata',
     },
+    source: 'maintenance',
+    sourceId: 'maint1',
+    extendedProps: {},
     created_at: new Date(),
     updated_at: new Date(),
     created_by: 'user1',
@@ -96,6 +103,9 @@ const MOCK_EVENTS: CalendarEvent[] = [
     metadata: {
       notes: 'Formazione obbligatoria nuovo personale',
     },
+    source: 'general_task',
+    sourceId: 'task1',
+    extendedProps: {},
     created_at: new Date(),
     updated_at: new Date(),
     created_by: 'user1',
@@ -124,6 +134,9 @@ const MOCK_EVENTS: CalendarEvent[] = [
     metadata: {
       notes: 'Controllo urgente prodotti in scadenza',
     },
+    source: 'general_task',
+    sourceId: 'task2',
+    extendedProps: {},
     created_at: new Date(),
     updated_at: new Date(),
     created_by: 'user1',
@@ -193,6 +206,9 @@ export function useCalendarEvents() {
         borderColor: colors.borderColor,
         textColor: colors.textColor,
         metadata: input.metadata || {},
+        source: input.type,
+        sourceId: `temp-${Date.now()}`,
+        extendedProps: {},
         created_at: new Date(),
         updated_at: new Date(),
         created_by: user?.id || 'unknown',

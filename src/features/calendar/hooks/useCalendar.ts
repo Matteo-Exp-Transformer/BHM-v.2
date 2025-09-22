@@ -106,10 +106,7 @@ export function useCalendar(config?: Partial<CalendarViewConfig>) {
 
   const handleEventUpdate = useCallback(
     (updatedEvent: CalendarEvent) => {
-      updateEvent({
-        id: updatedEvent.id,
-        ...updatedEvent,
-      })
+      updateEvent(updatedEvent)
       setSelectedEvent(null)
     },
     [updateEvent]

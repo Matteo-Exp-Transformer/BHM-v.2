@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { X, User, Plus } from 'lucide-react'
-import type { CalendarEvent } from '@/types/calendar'
+import type { CalendarEvent, CalendarEventType } from '@/types/calendar'
 
 interface CreateEventModalProps {
   selectedDate: Date | null
@@ -46,7 +46,7 @@ export function CreateEventModal({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    type: 'maintenance' as const,
+    type: 'maintenance' as CalendarEventType,
     start: selectedDate ? selectedDate.toISOString().slice(0, 16) : '',
     end: '',
     allDay: false,
@@ -449,7 +449,7 @@ export function CreateEventModal({
                       onClick={() =>
                         setFormData(prev => ({
                           ...prev,
-                          type: type.value as any,
+                          type: type.value as CalendarEventType,
                         }))
                       }
                       className={`p-3 border-2 rounded-lg text-sm font-medium transition-colors ${
