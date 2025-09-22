@@ -1,0 +1,52 @@
+# Claude Code Rules for HACCP Business Manager
+
+## Working Branch Rules
+- ALWAYS work on the Claude worktree branch (C:\Users\matte.MIO\Documents\GitHub\BHM-v.2-Claude)
+- This is branch "Claude" - the primary development branch
+- DO NOT work on main branch (has 210 TypeScript errors)
+- DO NOT work on Cursor branch (reserved for Cursor development)
+
+## Session Startup Protocol (MANDATORY)
+1. Always read PLANNING.md at the start of every new conversation
+2. Check TASKS-CORE.md before starting work (condensed version)
+3. Review Claude.md for coordination status
+4. Check SESSION-STARTUP-GUIDE.md for latest protocols
+5. Verify no urgent Cursor coordination needed
+
+## Session Work Rules
+- Mark completed tasks immediately in TASKS-CORE.md
+- Add new discovered tasks
+- Update Claude.md with session progress
+- Commit every milestone with descriptive messages
+- Create backup before major changes
+
+## Commit Protocol
+- MANDATORY commit at: milestone completion, database schema deployment, feature completion, bug fix, session end
+- Use format: "feat: [description] 🤖 Generated with Claude Code Co-Authored-By: Claude <noreply@anthropic.com>"
+- Always use --no-verify if lint issues (TypeScript temporarily disabled)
+
+## Coordination Rules
+- This is a dual-AI project with Cursor
+- Claude = Architecture lead, responsible for merges
+- Coordinate changes to shared files (useAuth.ts, CollapsibleCard.tsx, database types)
+- Always work in the Claude worktree directory
+- Check bug-tracking-index.md for Cursor critical issues
+
+## File Structure
+- Primary docs: Project_Knowledge/Claude.md, TASKS-CORE.md, PLANNING.md
+- Bug tracking: Project_Knowledge/Bug_Reports/
+- Session guide: Project_Knowledge/SESSION-STARTUP-GUIDE.md
+- Chat linking: Project_Knowledge/CHAT-LINKING-GUIDE.md
+- Development server: npm run dev (port 3001 for Claude worktree)
+
+## Current Priority
+- Complete shopping lists → calendar integration
+- Deploy database schema for shopping lists
+- Support Cursor with TypeScript error resolution when needed
+- Coordinate merges when requested by user
+
+## Emergency Protocols
+- TypeScript explosion: Wait for Cursor fix
+- Database broken: Claude priority fix
+- Git conflicts: Claude resolves (architecture lead)
+- Cursor blocked: Immediate coordination needed
