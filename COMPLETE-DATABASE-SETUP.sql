@@ -28,7 +28,7 @@ $$ LANGUAGE SQL SECURITY DEFINER;
 -- STEP 3: Create all missing tables in correct order
 -- =============================================
 
--- Conservation points table (if not exists)
+-- Conservation points table (ensure it exists and has all columns)
 CREATE TABLE IF NOT EXISTS conservation_points (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -36,16 +36,61 @@ CREATE TABLE IF NOT EXISTS conservation_points (
   name VARCHAR(255) NOT NULL,
   setpoint_temp DECIMAL(5,2) NOT NULL,
   type VARCHAR(20) NOT NULL,
-  product_categories TEXT[] DEFAULT '{}',
-  status VARCHAR(20) DEFAULT 'normal',
-  is_blast_chiller BOOLEAN DEFAULT false,
-  maintenance_due TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  CONSTRAINT conservation_type_check CHECK (type IN ('ambient', 'fridge', 'freezer', 'blast')),
-  CONSTRAINT conservation_status_check CHECK (status IN ('normal', 'warning', 'critical')),
   UNIQUE(company_id, name)
 );
+
+-- Add missing columns to conservation_points if they don't exist
+DO $$
+BEGIN
+  -- Add product_categories column
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'conservation_points' AND column_name = 'product_categories'
+  ) THEN
+    ALTER TABLE conservation_points ADD COLUMN product_categories TEXT[] DEFAULT '{}';
+  END IF;
+
+  -- Add status column
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'conservation_points' AND column_name = 'status'
+  ) THEN
+    ALTER TABLE conservation_points ADD COLUMN status VARCHAR(20) DEFAULT 'normal';
+  END IF;
+
+  -- Add is_blast_chiller column
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'conservation_points' AND column_name = 'is_blast_chiller'
+  ) THEN
+    ALTER TABLE conservation_points ADD COLUMN is_blast_chiller BOOLEAN DEFAULT false;
+  END IF;
+
+  -- Add maintenance_due column
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'conservation_points' AND column_name = 'maintenance_due'
+  ) THEN
+    ALTER TABLE conservation_points ADD COLUMN maintenance_due TIMESTAMP WITH TIME ZONE;
+  END IF;
+
+  -- Add constraints if they don't exist (ignore errors if they already exist)
+  BEGIN
+    ALTER TABLE conservation_points ADD CONSTRAINT conservation_type_check
+      CHECK (type IN ('ambient', 'fridge', 'freezer', 'blast'));
+  EXCEPTION
+    WHEN duplicate_object THEN NULL;
+  END;
+
+  BEGIN
+    ALTER TABLE conservation_points ADD CONSTRAINT conservation_status_check
+      CHECK (status IN ('normal', 'warning', 'critical'));
+  EXCEPTION
+    WHEN duplicate_object THEN NULL;
+  END;
+END $$;
 
 -- Product categories table (ensure it exists)
 CREATE TABLE IF NOT EXISTS product_categories (
@@ -162,6 +207,57 @@ CREATE TABLE maintenance_completions (
   CONSTRAINT completion_status_check CHECK (status IN ('completed', 'partial', 'skipped'))
 );
 
+-- Shopping lists table
+CREATE TABLE IF NOT EXISTS shopping_lists (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  company_id UUID NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  created_by UUID NOT NULL,
+  is_template BOOLEAN DEFAULT FALSE,
+  is_completed BOOLEAN DEFAULT FALSE,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+
+  -- Foreign key constraints
+  CONSTRAINT fk_shopping_lists_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  CONSTRAINT fk_shopping_lists_created_by FOREIGN KEY (created_by) REFERENCES user_profiles(id) ON DELETE RESTRICT,
+  CONSTRAINT shopping_lists_name_not_empty CHECK (LENGTH(TRIM(name)) > 0),
+  CONSTRAINT shopping_lists_completed_at_check CHECK (
+    (is_completed = TRUE AND completed_at IS NOT NULL) OR
+    (is_completed = FALSE AND completed_at IS NULL)
+  )
+);
+
+-- Shopping list items table
+CREATE TABLE IF NOT EXISTS shopping_list_items (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  shopping_list_id UUID NOT NULL,
+  product_id UUID,
+  product_name VARCHAR(255) NOT NULL,
+  category_name VARCHAR(255) NOT NULL,
+  quantity DECIMAL(10,3) NOT NULL DEFAULT 1,
+  unit VARCHAR(50),
+  notes TEXT,
+  is_completed BOOLEAN DEFAULT FALSE,
+  added_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  completed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+
+  -- Foreign key constraints
+  CONSTRAINT fk_shopping_list_items_list FOREIGN KEY (shopping_list_id) REFERENCES shopping_lists(id) ON DELETE CASCADE,
+  CONSTRAINT fk_shopping_list_items_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL,
+  CONSTRAINT shopping_list_items_quantity_positive CHECK (quantity > 0),
+  CONSTRAINT shopping_list_items_product_name_not_empty CHECK (LENGTH(TRIM(product_name)) > 0),
+  CONSTRAINT shopping_list_items_category_name_not_empty CHECK (LENGTH(TRIM(category_name)) > 0),
+  CONSTRAINT shopping_list_items_completed_at_check CHECK (
+    (is_completed = TRUE AND completed_at IS NOT NULL) OR
+    (is_completed = FALSE AND completed_at IS NULL)
+  )
+);
+
 -- =============================================
 -- STEP 4: Enable RLS on all new tables
 -- =============================================
@@ -171,6 +267,8 @@ ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE temperature_readings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE maintenance_tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE maintenance_completions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shopping_lists ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shopping_list_items ENABLE ROW LEVEL SECURITY;
 
 -- =============================================
 -- STEP 5: Create RLS policies
@@ -230,6 +328,28 @@ DROP POLICY IF EXISTS "Users can manage company maintenance completions" ON main
 CREATE POLICY "Users can manage company maintenance completions" ON maintenance_completions FOR ALL
   USING (company_id = get_user_company_id());
 
+-- Shopping lists policies
+DROP POLICY IF EXISTS "Users can view company shopping lists" ON shopping_lists;
+CREATE POLICY "Users can view company shopping lists" ON shopping_lists FOR SELECT
+  USING (company_id = get_user_company_id());
+
+DROP POLICY IF EXISTS "Users can manage company shopping lists" ON shopping_lists;
+CREATE POLICY "Users can manage company shopping lists" ON shopping_lists FOR ALL
+  USING (company_id = get_user_company_id());
+
+-- Shopping list items policies
+DROP POLICY IF EXISTS "Users can view company shopping list items" ON shopping_list_items;
+CREATE POLICY "Users can view company shopping list items" ON shopping_list_items FOR SELECT
+  USING (shopping_list_id IN (
+    SELECT id FROM shopping_lists WHERE company_id = get_user_company_id()
+  ));
+
+DROP POLICY IF EXISTS "Users can manage company shopping list items" ON shopping_list_items;
+CREATE POLICY "Users can manage company shopping list items" ON shopping_list_items FOR ALL
+  USING (shopping_list_id IN (
+    SELECT id FROM shopping_lists WHERE company_id = get_user_company_id()
+  ));
+
 -- =============================================
 -- STEP 6: Create performance indexes
 -- =============================================
@@ -264,6 +384,19 @@ CREATE INDEX IF NOT EXISTS idx_maintenance_completions_company_id ON maintenance
 CREATE INDEX IF NOT EXISTS idx_maintenance_completions_task_id ON maintenance_completions(maintenance_task_id);
 CREATE INDEX IF NOT EXISTS idx_maintenance_completions_completed_at ON maintenance_completions(completed_at);
 
+-- Shopping lists indexes
+CREATE INDEX IF NOT EXISTS idx_shopping_lists_company_id ON shopping_lists(company_id);
+CREATE INDEX IF NOT EXISTS idx_shopping_lists_created_by ON shopping_lists(created_by);
+CREATE INDEX IF NOT EXISTS idx_shopping_lists_is_template ON shopping_lists(is_template);
+CREATE INDEX IF NOT EXISTS idx_shopping_lists_is_completed ON shopping_lists(is_completed);
+CREATE INDEX IF NOT EXISTS idx_shopping_lists_created_at ON shopping_lists(created_at);
+
+-- Shopping list items indexes
+CREATE INDEX IF NOT EXISTS idx_shopping_list_items_shopping_list_id ON shopping_list_items(shopping_list_id);
+CREATE INDEX IF NOT EXISTS idx_shopping_list_items_product_id ON shopping_list_items(product_id);
+CREATE INDEX IF NOT EXISTS idx_shopping_list_items_is_completed ON shopping_list_items(is_completed);
+CREATE INDEX IF NOT EXISTS idx_shopping_list_items_added_at ON shopping_list_items(added_at);
+
 -- =============================================
 -- STEP 7: Insert test data
 -- =============================================
@@ -283,12 +416,15 @@ BEGIN
         -- Get a department
         SELECT id INTO test_department_id FROM departments WHERE company_id = test_company_id LIMIT 1;
 
-        -- Insert a conservation point
+        -- Insert a conservation point (only if it doesn't exist)
         INSERT INTO conservation_points (
             company_id, department_id, name, setpoint_temp, type, is_blast_chiller
-        ) VALUES (
-            test_company_id, test_department_id, 'Frigorifero Principale', 4.0, 'fridge', false
-        ) ON CONFLICT (company_id, name) DO NOTHING;
+        )
+        SELECT test_company_id, test_department_id, 'Frigorifero Principale', 4.0, 'fridge', false
+        WHERE NOT EXISTS (
+            SELECT 1 FROM conservation_points
+            WHERE company_id = test_company_id AND name = 'Frigorifero Principale'
+        );
 
         SELECT id INTO test_conservation_point_id FROM conservation_points
         WHERE company_id = test_company_id AND name = 'Frigorifero Principale' LIMIT 1;
@@ -316,6 +452,37 @@ BEGIN
          'active', 2.5, 'kg', CURRENT_DATE + INTERVAL '30 days', 'Formaggio stagionato 24 mesi'),
         (test_company_id, 'Latte Scaduto Test', test_category_id, test_department_id, test_conservation_point_id,
          'expired', 1.0, 'litri', CURRENT_DATE - INTERVAL '2 days', 'Prodotto scaduto per test');
+
+        -- Insert test shopping lists
+        INSERT INTO shopping_lists (
+            company_id, name, description, created_by, is_template, is_completed
+        )
+        SELECT
+            test_company_id,
+            'Lista Spesa Settimanale',
+            'Lista della spesa per rifornimento settimanale',
+            up.id,
+            false,
+            false
+        FROM user_profiles up
+        WHERE up.company_id = test_company_id
+        LIMIT 1
+        ON CONFLICT DO NOTHING;
+
+        -- Insert test shopping list items
+        INSERT INTO shopping_list_items (
+            shopping_list_id, product_name, category_name, quantity, unit, notes
+        )
+        SELECT
+            sl.id,
+            'Latte Fresco',
+            'Latticini',
+            2,
+            'litri',
+            'Per colazione'
+        FROM shopping_lists sl
+        WHERE sl.company_id = test_company_id AND sl.name = 'Lista Spesa Settimanale'
+        ON CONFLICT DO NOTHING;
     END IF;
 END $$;
 
