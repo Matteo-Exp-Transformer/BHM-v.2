@@ -1,7 +1,6 @@
 export interface ConservationPoint {
   id: string
   company_id: string
-<<<<<<< HEAD
   department_id?: string
   name: string
   setpoint_temp: number
@@ -23,49 +22,10 @@ export interface ConservationPoint {
   maintenance_tasks?: MaintenanceTask[]
 }
 
-=======
-  department_id: string
-  name: string
-  setpoint_temp: number
-  type: ConservationPointType
-  product_categories: string[]
-  status: ConservationStatus
-  last_temperature_reading?: TemperatureReading
-  maintenance_due?: Date
-  is_blast_chiller: boolean
-  created_at: Date
-  updated_at: Date
-}
-
 export type ConservationPointType = 'ambient' | 'fridge' | 'freezer' | 'blast'
 
 export type ConservationStatus = 'normal' | 'warning' | 'critical'
 
->>>>>>> Curs
-export interface TemperatureReading {
-  id: string
-  company_id: string
-  conservation_point_id: string
-  temperature: number
-<<<<<<< HEAD
-  target_temperature?: number
-  tolerance_range_min?: number
-  tolerance_range_max?: number
-  status: 'compliant' | 'warning' | 'critical'
-  recorded_by?: string
-  recorded_at: Date
-  method: 'manual' | 'digital_thermometer' | 'automatic_sensor'
-  notes?: string
-  photo_evidence?: string
-  created_at: Date
-
-  // Relazioni
-  conservation_point?: ConservationPoint
-  recorded_by_user?: {
-    id: string
-    name: string
-  }
-}
 
 export interface Product {
   id: string
@@ -108,7 +68,12 @@ export interface ProductCategory {
   created_at: Date
   updated_at: Date
 }
-=======
+
+export interface TemperatureReading {
+  id: string
+  company_id: string
+  conservation_point_id: string
+  temperature: number
   target_temperature: number
   tolerance_range: { min: number; max: number }
   status: TemperatureStatus
@@ -128,12 +93,10 @@ export type TemperatureMethod =
   | 'automatic_sensor'
 
 export type ValidationStatus = 'pending' | 'validated' | 'flagged'
->>>>>>> Curs
 
 export interface MaintenanceTask {
   id: string
   company_id: string
-<<<<<<< HEAD
   conservation_point_id?: string
   kind: 'temperature' | 'sanitization' | 'defrosting'
   frequency: 'daily' | 'weekly' | 'monthly' | 'custom'
@@ -141,7 +104,7 @@ export interface MaintenanceTask {
   assignment_type: 'user' | 'role' | 'category'
   next_due_date: Date
   estimated_duration: number
-  checklist?: string[]
+  checklist?: readonly string[]
   is_active: boolean
   created_at: Date
   updated_at: Date
@@ -153,27 +116,6 @@ export interface MaintenanceTask {
     name: string
   }
   completions?: MaintenanceCompletion[]
-}
-
-=======
-  conservation_point_id: string
-  kind: MaintenanceType
-  frequency: MaintenanceFrequency
-  assigned_to: string
-  assignment_type: AssignmentType
-  next_due_date: Date
-  estimated_duration: number // minutes
-  checklist: string[]
-  is_active: boolean
-  created_at: Date
-  updated_at: Date
-  // Relations
-  conservation_point?: ConservationPoint
-  assigned_staff?: {
-    id: string
-    name: string
-    role: string
-  }
 }
 
 export type MaintenanceType = 'temperature' | 'sanitization' | 'defrosting'
@@ -189,28 +131,6 @@ export type MaintenanceStatus =
 
 export type AssignmentType = 'user' | 'role' | 'category'
 
->>>>>>> Curs
-export interface MaintenanceCompletion {
-  id: string
-  company_id: string
-  maintenance_task_id: string
-<<<<<<< HEAD
-  completed_by?: string
-  completed_at: Date
-  status: 'completed' | 'partial' | 'skipped'
-  notes?: string
-  temperature_value?: number
-  checklist_completed?: string[]
-  photo_evidence?: string[]
-  next_due_date?: Date
-
-  // Relazioni
-  maintenance_task?: MaintenanceTask
-  completed_by_user?: {
-    id: string
-    name: string
-  }
-}
 
 // DTOs per creazione/aggiornamento
 export interface CreateConservationPointRequest {
@@ -252,7 +172,7 @@ export interface CreateMaintenanceTaskRequest {
   assignment_type?: MaintenanceTask['assignment_type']
   next_due_date: Date
   estimated_duration?: number
-  checklist?: string[]
+  checklist?: readonly string[]
 }
 
 export interface CreateMaintenanceCompletionRequest {
@@ -376,7 +296,11 @@ export interface MaintenanceCalendar {
     priority: 'low' | 'medium' | 'high' | 'critical'
   })[]
 }
-=======
+
+export interface MaintenanceCompletion {
+  id: string
+  company_id: string
+  maintenance_task_id: string
   completed_by: string
   completed_at: Date
   status: 'completed' | 'partial' | 'skipped'
@@ -559,4 +483,3 @@ export const TEMPERATURE_RANGES = {
   fridge: { min: 0, max: 9, optimal: 4 },
   ambient: { min: 10, max: 25, optimal: 18 },
 } as const
->>>>>>> Curs

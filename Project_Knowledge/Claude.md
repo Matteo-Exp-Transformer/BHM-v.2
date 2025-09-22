@@ -28,7 +28,10 @@
 
 - **Sincronizzazione Branch**: Merge e coordinazione tra branch Claude/Curs
 - **Database Setup**: Implementazione schema database per funzionalità complete
-- **Type Safety**: Ripristino controllo TypeScript completo
+
+**✅ COMPLETATO:**
+
+- **Type Safety**: ✅ Ripristino controllo TypeScript completo (Cursor - Session corrente)
 
 **⏳ PROSSIMI TASKS:**
 
@@ -117,15 +120,15 @@ src/types/*.ts               # Type definitions
 
 ## 🔧 **TECHNICAL DEBT & ISSUES CRITICI**
 
-### **🚨 Problemi TypeScript (Da Risolvere)**
+### **✅ Problemi TypeScript (RISOLTI)**
 
 ```typescript
-// Errori principali da sistemare:
-1. useAuth.ts: Missing User type from Clerk
-2. CollapsibleCard: Props inconsistency (isExpanded vs defaultExpanded)
-3. Database types: Missing table definitions in Supabase client
-4. Calendar components: Property mismatches
-5. Settings components: React imports and prop types
+// ✅ Tutti gli errori principali risolti:
+1. ✅ useAuth.ts: Creato interfaccia ClerkUser personalizzata
+2. ✅ CollapsibleCard: Allineate props (defaultExpanded)
+3. ✅ Database types: Semplificato client Supabase per risolvere errori
+4. ✅ Calendar components: Risolti conflitti di merge
+5. ✅ Settings components: Corretti import React e prop types
 ```
 
 ### **🗄️ Database Schema Status**
@@ -145,7 +148,7 @@ src/types/*.ts               # Type definitions
 ### **📊 Performance Issues**
 
 - **Bundle Size**: 1.6-1.7MB (target: <1MB)
-- **TypeScript**: Temporaneamente disabilitato per commit
+- **TypeScript**: ✅ Riabilitato e funzionante
 - **Memory**: Ottimizzazione React Query cache needed
 
 ---
@@ -197,6 +200,18 @@ src/types/*.ts               # Type definitions
 - Real-time Supabase subscriptions
 - Advanced calendar features (reschedule, bulk complete)
 - Performance optimization <500ms response times
+
+### **Session 16 (Cursor): Critical TypeScript Fixes**
+
+**✅ Achievements:**
+
+- **BUG-001:** Resolved User type import by creating custom ClerkUser interface
+- **BUG-002:** Fixed CollapsibleCard props inconsistency and resolved merge conflicts
+- **BUG-003:** Simplified Supabase client types to resolve database type errors
+- **BUG-004:** Resolved Calendar component property mismatches from merge conflicts
+- **BUG-005:** Fixed Settings components React imports and prop types
+- **Commit:** Successfully committed all fixes with proper message format
+- **Documentation:** Updated TASKS-CORE.md and bug tracking index
 
 ### **Session 13 (Cursor): Staff Management System**
 

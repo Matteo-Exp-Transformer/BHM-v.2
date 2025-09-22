@@ -1,26 +1,3 @@
-<<<<<<< HEAD
-export interface CalendarEvent {
-  id: string
-  title: string
-  start: Date
-  end?: Date
-  allDay?: boolean
-  source: 'maintenance' | 'task' | 'training' | 'inventory' | 'meeting'
-  sourceId: string
-  extendedProps: {
-    description?: string
-    priority: 'low' | 'medium' | 'high' | 'critical'
-    status: 'scheduled' | 'in_progress' | 'completed' | 'overdue' | 'cancelled'
-    assignedTo?: string[]
-    location?: string
-    category?: string
-    color?: string
-    isRecurring?: boolean
-    recurrenceRule?: string
-    notifications?: CalendarNotification[]
-    metadata?: Record<string, any>
-  }
-}
 
 export interface CalendarNotification {
   id: string
@@ -136,7 +113,8 @@ export interface CalendarFilter {
   priorities: CalendarEvent['extendedProps']['priority'][]
   statuses: CalendarEvent['extendedProps']['status'][]
   assignedTo?: string[]
-=======
+}
+
 // Calendar Event Types for HACCP Business Manager
 // Unified schema for tasks, maintenances, and custom events
 
@@ -170,12 +148,14 @@ export interface CalendarEvent {
   description?: string
   start: Date
   end?: Date
-  allDay: boolean
+  allDay?: boolean
 
   // Event classification
   type: CalendarEventType
   status: CalendarEventStatus
   priority: CalendarEventPriority
+  source: 'maintenance' | 'task' | 'training' | 'inventory' | 'meeting'
+  sourceId: string
 
   // Assignment and organization
   assigned_to: string[] // Staff IDs
@@ -197,6 +177,21 @@ export interface CalendarEvent {
   backgroundColor: string
   borderColor: string
   textColor: string
+
+  // Extended metadata for FullCalendar compatibility
+  extendedProps: {
+    description?: string
+    priority: 'low' | 'medium' | 'high' | 'critical'
+    status: 'scheduled' | 'in_progress' | 'completed' | 'overdue' | 'cancelled'
+    assignedTo?: string[]
+    location?: string
+    category?: string
+    color?: string
+    isRecurring?: boolean
+    recurrenceRule?: string
+    notifications?: CalendarNotification[]
+    metadata?: Record<string, any>
+  }
 
   // Extended metadata
   metadata: CalendarEventMetadata
@@ -309,20 +304,20 @@ export interface CalendarFilters {
   priorities: CalendarEventPriority[]
   departments: string[]
   assignees: string[]
->>>>>>> Curs
   dateRange?: {
     start: Date
     end: Date
   }
 }
 
-<<<<<<< HEAD
 export interface CalendarSettings {
   defaultView: CalendarView['type']
   weekStartsOn: 0 | 1
   timeFormat: '12h' | '24h'
   firstDayOfWeek: number
-=======
+  colorScheme: Record<CalendarEvent['source'], string>
+}
+
 // Calendar view configuration
 export interface CalendarViewConfig {
   defaultView: 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listWeek'
@@ -336,20 +331,16 @@ export interface CalendarViewConfig {
   firstDay: number // 0 = Sunday, 1 = Monday
   slotMinTime: string
   slotMaxTime: string
->>>>>>> Curs
   businessHours: {
     daysOfWeek: number[]
     startTime: string
     endTime: string
   }
-<<<<<<< HEAD
   notifications: {
     enabled: boolean
     defaultTimings: CalendarNotification['timing'][]
   }
   colorScheme: Record<CalendarEvent['source'], string>
-}
-=======
 }
 
 // Event creation/editing interfaces
@@ -456,4 +447,3 @@ export const DEFAULT_QUICK_ACTIONS: QuickActionConfig[] = [
     },
   },
 ]
->>>>>>> Curs

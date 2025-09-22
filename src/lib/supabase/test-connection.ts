@@ -30,7 +30,6 @@ export const testSupabaseConnection = async () => {
       console.log('✅ RLS test passed:', userProfiles)
     }
 
-<<<<<<< HEAD
     // Test 3: Test key tables accessibility (direct table queries)
     const tablesToTest = ['companies', 'user_profiles', 'departments', 'staff']
     const accessibleTables = []
@@ -51,7 +50,6 @@ export const testSupabaseConnection = async () => {
     }
 
     console.log('✅ Accessible tables:', accessibleTables)
-=======
     // Test 3: Test specific tables that exist
     const tableTests = [
       {
@@ -88,7 +86,6 @@ export const testSupabaseConnection = async () => {
     }
 
     console.log('✅ Available tables:', existingTables)
->>>>>>> Curs
 
     console.log('🎉 Supabase connection test completed successfully!')
     return {
@@ -96,11 +93,8 @@ export const testSupabaseConnection = async () => {
       data: {
         healthCheck,
         userProfiles,
-<<<<<<< HEAD
         accessibleTables,
-=======
         tables: existingTables,
->>>>>>> Curs
       },
     }
   } catch (error) {

@@ -103,8 +103,8 @@ export function TemperatureReadingCard({
   const validationInfo = getValidationInfo()
 
   const isOutOfRange =
-    reading.temperature < reading.tolerance_range_min! ||
-    reading.temperature > reading.tolerance_range_max!
+    reading.temperature < reading.tolerance_range.min! ||
+    reading.temperature > reading.tolerance_range.max!
 
   return (
     <div
@@ -154,7 +154,7 @@ export function TemperatureReadingCard({
         <div>
           <div className="text-xs text-gray-600">Range tolleranza</div>
           <div className="text-sm font-medium">
-            {reading.tolerance_range_min}°C - {reading.tolerance_range_max}°C
+            {reading.tolerance_range.min}°C - {reading.tolerance_range.max}°C
           </div>
         </div>
         <div>

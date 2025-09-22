@@ -12,17 +12,11 @@ import ProtectedRoute from './components/ProtectedRoute'
 // Pages
 import HomePage from './features/auth/HomePage'
 import LoginPage from './features/auth/LoginPage'
-<<<<<<< HEAD
-import { Calendar } from './features/calendar/Calendar'
-import { ConservationManager } from './features/conservation/ConservationManager'
-import { OfflineConservationDemo } from './features/conservation/OfflineConservationDemo'
-=======
 import RegisterPage from './features/auth/RegisterPage'
 import ManagementPage from './features/management/ManagementPage'
 import CalendarPage from './features/calendar/CalendarPage'
 import ConservationPage from './features/conservation/ConservationPage'
 import InventoryPage from './features/inventory/InventoryPage'
->>>>>>> Curs
 
 function App() {
   return (
@@ -48,9 +42,6 @@ function App() {
                     />
                     <Route
                       path="/conservazione"
-<<<<<<< HEAD
-                      element={<OfflineConservationDemo />}
-=======
                       element={
                         <ProtectedRoute>
                           <ConservationPage />
@@ -64,7 +55,6 @@ function App() {
                           <CalendarPage />
                         </ProtectedRoute>
                       }
->>>>>>> Curs
                     />
                     <Route path="/attivita" element={<Calendar />} />
                     <Route
