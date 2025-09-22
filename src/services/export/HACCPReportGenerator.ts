@@ -86,7 +86,7 @@ class HACCPReportGenerator {
       status: 'Stato',
       completed: 'Completato',
       pending: 'In Sospeso',
-      overdue: 'Scaduto'
+      overdue: 'Scaduto',
     },
     en: {
       title: 'HACCP REPORT - FOOD SAFETY MANAGEMENT SYSTEM',
@@ -107,8 +107,8 @@ class HACCPReportGenerator {
       status: 'Status',
       completed: 'Completed',
       pending: 'Pending',
-      overdue: 'Overdue'
-    }
+      overdue: 'Overdue',
+    },
   }
 
   async generateReport(config: HACCPReportConfig): Promise<Blob> {
@@ -121,7 +121,7 @@ class HACCPReportGenerator {
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
-      format: 'a4'
+      format: 'a4',
     })
 
     await this.buildReport(pdf, data, config)
@@ -133,7 +133,9 @@ class HACCPReportGenerator {
     return pdfBlob
   }
 
-  private async fetchReportData(config: HACCPReportConfig): Promise<HACCPReportData> {
+  private async fetchReportData(
+    config: HACCPReportConfig
+  ): Promise<HACCPReportData> {
     const { companyId, dateRange } = config
 
     // Fetch company info
@@ -146,13 +148,15 @@ class HACCPReportGenerator {
     // Fetch temperature readings
     const { data: temperatureReadings } = await supabase
       .from('temperature_readings')
-      .select(`
+      .select(
+        `
         recorded_at,
         temperature,
         notes,
         conservation_points(name),
         staff(name)
-      `)
+      `
+      )
       .eq('company_id', companyId)
       .gte('recorded_at', dateRange.start.toISOString())
       .lte('recorded_at', dateRange.end.toISOString())
@@ -161,14 +165,16 @@ class HACCPReportGenerator {
     // Fetch maintenance tasks
     const { data: maintenanceTasks } = await supabase
       .from('tasks')
-      .select(`
+      .select(
+        `
         created_at,
         title,
         description,
         status,
         conservation_points(name),
         staff(name)
-      `)
+      `
+      )
       .eq('company_id', companyId)
       .eq('type', 'maintenance')
       .gte('created_at', dateRange.start.toISOString())
@@ -178,13 +184,15 @@ class HACCPReportGenerator {
     // Fetch critical control points data
     const { data: conservationPoints } = await supabase
       .from('conservation_points')
-      .select(`
+      .select(
+        `
         name,
         temperature_min,
         temperature_max,
         tolerance_range,
         temperature_readings(temperature, recorded_at)
-      `)
+      `
+      )
       .eq('company_id', companyId)
 
     // Process and structure data
@@ -193,35 +201,49 @@ class HACCPReportGenerator {
         name: company?.name || 'N/A',
         address: company?.address || 'N/A',
         licenseNumber: company?.license_number || 'N/A',
-        responsiblePerson: company?.responsible_person || 'N/A'
+        responsiblePerson: company?.responsible_person || 'N/A',
       },
-      temperatureReadings: temperatureReadings?.map(reading => ({
-        date: new Date(reading.recorded_at).toLocaleDateString('it-IT'),
-        location: reading.conservation_points?.name || 'N/A',
-        temperature: reading.temperature,
-        operator: reading.staff?.name || 'N/A',
-        compliance: this.checkTemperatureCompliance(reading, conservationPoints)
-      })) || [],
-      maintenanceTasks: maintenanceTasks?.map(task => ({
-        date: new Date(task.created_at).toLocaleDateString('it-IT'),
-        task: task.title,
-        equipment: task.conservation_points?.name || 'N/A',
-        operator: task.staff?.name || 'N/A',
-        status: task.status
-      })) || [],
-      criticalControlPoints: conservationPoints?.map(point => ({
-        ccp: point.name,
-        criticalLimits: `${point.temperature_min}°C - ${point.temperature_max}°C`,
-        monitoringProcedure: 'Controllo temperatura ogni 4 ore',
-        complianceRate: this.calculateComplianceRate(point.temperature_readings, point)
-      })) || [],
+      temperatureReadings:
+        temperatureReadings?.map(reading => ({
+          date: new Date(reading.recorded_at).toLocaleDateString('it-IT'),
+          location: reading.conservation_points?.name || 'N/A',
+          temperature: reading.temperature,
+          operator: reading.staff?.name || 'N/A',
+          compliance: this.checkTemperatureCompliance(
+            reading,
+            conservationPoints
+          ),
+        })) || [],
+      maintenanceTasks:
+        maintenanceTasks?.map(task => ({
+          date: new Date(task.created_at).toLocaleDateString('it-IT'),
+          task: task.title,
+          equipment: task.conservation_points?.name || 'N/A',
+          operator: task.staff?.name || 'N/A',
+          status: task.status,
+        })) || [],
+      criticalControlPoints:
+        conservationPoints?.map(point => ({
+          ccp: point.name,
+          criticalLimits: `${point.temperature_min}°C - ${point.temperature_max}°C`,
+          monitoringProcedure: 'Controllo temperatura ogni 4 ore',
+          complianceRate: this.calculateComplianceRate(
+            point.temperature_readings,
+            point
+          ),
+        })) || [],
       correctiveActions: [], // TODO: Implement corrective actions tracking
-      staffTraining: [] // TODO: Implement staff training tracking
+      staffTraining: [], // TODO: Implement staff training tracking
     }
   }
 
-  private checkTemperatureCompliance(reading: any, conservationPoints: any[]): boolean {
-    const point = conservationPoints?.find(p => p.name === reading.conservation_points?.name)
+  private checkTemperatureCompliance(
+    reading: any,
+    conservationPoints: any[]
+  ): boolean {
+    const point = conservationPoints?.find(
+      p => p.name === reading.conservation_points?.name
+    )
     if (!point) return false
 
     const temp = reading.temperature
@@ -231,15 +253,20 @@ class HACCPReportGenerator {
   private calculateComplianceRate(readings: any[], point: any): number {
     if (!readings || readings.length === 0) return 0
 
-    const compliantReadings = readings.filter(reading =>
-      reading.temperature >= point.temperature_min &&
-      reading.temperature <= point.temperature_max
+    const compliantReadings = readings.filter(
+      reading =>
+        reading.temperature >= point.temperature_min &&
+        reading.temperature <= point.temperature_max
     )
 
     return Math.round((compliantReadings.length / readings.length) * 100)
   }
 
-  private async buildReport(pdf: jsPDF, data: HACCPReportData, config: HACCPReportConfig): Promise<void> {
+  private async buildReport(
+    pdf: jsPDF,
+    data: HACCPReportData,
+    config: HACCPReportConfig
+  ): Promise<void> {
     const t = this.translations[config.language]
     let currentY = 20
 
@@ -262,29 +289,59 @@ class HACCPReportGenerator {
     currentY += 15
 
     // Period
-    pdf.text(`${t.period}: ${config.dateRange.start.toLocaleDateString('it-IT')} - ${config.dateRange.end.toLocaleDateString('it-IT')}`, 20, currentY)
+    pdf.text(
+      `${t.period}: ${config.dateRange.start.toLocaleDateString('it-IT')} - ${config.dateRange.end.toLocaleDateString('it-IT')}`,
+      20,
+      currentY
+    )
     currentY += 20
 
     // Temperature Readings Section
-    if (config.sections.temperatureReadings && data.temperatureReadings.length > 0) {
-      currentY = await this.addTemperatureSection(pdf, data.temperatureReadings, t, currentY)
+    if (
+      config.sections.temperatureReadings &&
+      data.temperatureReadings.length > 0
+    ) {
+      currentY = await this.addTemperatureSection(
+        pdf,
+        data.temperatureReadings,
+        t,
+        currentY
+      )
     }
 
     // Maintenance Tasks Section
     if (config.sections.maintenanceTasks && data.maintenanceTasks.length > 0) {
-      currentY = await this.addMaintenanceSection(pdf, data.maintenanceTasks, t, currentY)
+      currentY = await this.addMaintenanceSection(
+        pdf,
+        data.maintenanceTasks,
+        t,
+        currentY
+      )
     }
 
     // Critical Control Points Section
-    if (config.sections.criticalControlPoints && data.criticalControlPoints.length > 0) {
-      currentY = await this.addCriticalControlPointsSection(pdf, data.criticalControlPoints, t, currentY)
+    if (
+      config.sections.criticalControlPoints &&
+      data.criticalControlPoints.length > 0
+    ) {
+      currentY = await this.addCriticalControlPointsSection(
+        pdf,
+        data.criticalControlPoints,
+        t,
+        currentY
+      )
     }
 
     // Footer with signatures
     this.addFooter(pdf, data.company.responsiblePerson, config.dateRange.end)
   }
 
-  private async addTemperatureSection(pdf: jsPDF, readings: any[], t: any, startY: number): Promise<number> {
+  private async addTemperatureSection(
+    pdf: jsPDF,
+    readings: any[],
+    t: any,
+    startY: number
+  ): Promise<number> {
     let currentY = startY
 
     // Section title
@@ -305,8 +362,10 @@ class HACCPReportGenerator {
 
     // Table data
     pdf.setFont('helvetica', 'normal')
-    for (const reading of readings.slice(0, 20)) { // Limit to 20 entries per page
-      if (currentY > 270) { // New page if needed
+    for (const reading of readings.slice(0, 20)) {
+      // Limit to 20 entries per page
+      if (currentY > 270) {
+        // New page if needed
         pdf.addPage()
         currentY = 20
       }
@@ -332,7 +391,12 @@ class HACCPReportGenerator {
     return currentY + 15
   }
 
-  private async addMaintenanceSection(pdf: jsPDF, tasks: any[], t: any, startY: number): Promise<number> {
+  private async addMaintenanceSection(
+    pdf: jsPDF,
+    tasks: any[],
+    t: any,
+    startY: number
+  ): Promise<number> {
     let currentY = startY
 
     // Section title
@@ -385,7 +449,12 @@ class HACCPReportGenerator {
     return currentY + 15
   }
 
-  private async addCriticalControlPointsSection(pdf: jsPDF, ccps: any[], t: any, startY: number): Promise<number> {
+  private async addCriticalControlPointsSection(
+    pdf: jsPDF,
+    ccps: any[],
+    t: any,
+    startY: number
+  ): Promise<number> {
     let currentY = startY
 
     // Section title
@@ -431,7 +500,11 @@ class HACCPReportGenerator {
     return currentY + 15
   }
 
-  private addFooter(pdf: jsPDF, responsiblePerson: string, reportDate: Date): void {
+  private addFooter(
+    pdf: jsPDF,
+    responsiblePerson: string,
+    reportDate: Date
+  ): void {
     const pageHeight = pdf.internal.pageSize.height
     const y = pageHeight - 40
 
@@ -439,7 +512,11 @@ class HACCPReportGenerator {
     pdf.setFont('helvetica', 'normal')
 
     // Report generation info
-    pdf.text(`Rapporto generato il: ${reportDate.toLocaleDateString('it-IT')}`, 20, y)
+    pdf.text(
+      `Rapporto generato il: ${reportDate.toLocaleDateString('it-IT')}`,
+      20,
+      y
+    )
     pdf.text(`Sistema: HACCP Business Manager`, 20, y + 7)
 
     // Signature area
@@ -448,12 +525,15 @@ class HACCPReportGenerator {
     pdf.line(80, y + 22, 150, y + 22) // Signature line
   }
 
-  async generateInspectionReport(companyId: string, inspectionDate: Date): Promise<Blob> {
+  async generateInspectionReport(
+    companyId: string,
+    inspectionDate: Date
+  ): Promise<Blob> {
     const config: HACCPReportConfig = {
       companyId,
       dateRange: {
         start: new Date(inspectionDate.getTime() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
-        end: inspectionDate
+        end: inspectionDate,
       },
       reportType: 'inspection',
       includeCharts: true,
@@ -463,14 +543,18 @@ class HACCPReportGenerator {
         maintenanceTasks: true,
         staffTraining: true,
         correctiveActions: true,
-        criticalControlPoints: true
-      }
+        criticalControlPoints: true,
+      },
     }
 
     return this.generateReport(config)
   }
 
-  async generateMonthlyReport(companyId: string, month: number, year: number): Promise<Blob> {
+  async generateMonthlyReport(
+    companyId: string,
+    month: number,
+    year: number
+  ): Promise<Blob> {
     const start = new Date(year, month - 1, 1)
     const end = new Date(year, month, 0)
 
@@ -485,8 +569,8 @@ class HACCPReportGenerator {
         maintenanceTasks: true,
         staffTraining: false,
         correctiveActions: true,
-        criticalControlPoints: true
-      }
+        criticalControlPoints: true,
+      },
     }
 
     return this.generateReport(config)
