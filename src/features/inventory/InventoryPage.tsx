@@ -279,7 +279,7 @@ export default function InventoryPage() {
         title="Prodotti"
         icon={Package}
         counter={products.length}
-        defaultOpen={true}
+        defaultExpanded={true}
       >
         {isLoading ? (
           <div className="flex justify-center items-center py-8">

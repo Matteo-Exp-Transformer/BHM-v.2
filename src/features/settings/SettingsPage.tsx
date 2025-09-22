@@ -1,4 +1,3 @@
-import React, { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 import { Settings, Building2, Users, Shield, Bell } from 'lucide-react'
@@ -9,21 +8,6 @@ import { NotificationPreferences } from './components/NotificationPreferences'
 
 export default function SettingsPage() {
   const { isLoading, hasRole, displayName } = useAuth()
-  const [expandedSections, setExpandedSections] = useState<
-    Record<string, boolean>
-  >({
-    company: true,
-    users: false,
-    haccp: false,
-    notifications: false,
-  })
-
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section],
-    }))
-  }
 
   if (isLoading) {
     return (
@@ -94,8 +78,7 @@ export default function SettingsPage() {
           <CollapsibleCard
             title="Configurazione Azienda"
             icon={Building2}
-            isExpanded={expandedSections.company}
-            onToggle={() => toggleSection('company')}
+            defaultExpanded={true}
             className="bg-white"
           >
             <CompanyConfiguration />
@@ -105,8 +88,7 @@ export default function SettingsPage() {
           <CollapsibleCard
             title="Gestione Utenti"
             icon={Users}
-            isExpanded={expandedSections.users}
-            onToggle={() => toggleSection('users')}
+            defaultExpanded={false}
             className="bg-white"
           >
             <UserManagement />
@@ -116,8 +98,7 @@ export default function SettingsPage() {
           <CollapsibleCard
             title="Impostazioni HACCP"
             icon={Shield}
-            isExpanded={expandedSections.haccp}
-            onToggle={() => toggleSection('haccp')}
+            defaultExpanded={false}
             className="bg-white"
           >
             <HACCPSettings />
@@ -127,8 +108,7 @@ export default function SettingsPage() {
           <CollapsibleCard
             title="Preferenze Notifiche"
             icon={Bell}
-            isExpanded={expandedSections.notifications}
-            onToggle={() => toggleSection('notifications')}
+            defaultExpanded={false}
             className="bg-white"
           >
             <NotificationPreferences />

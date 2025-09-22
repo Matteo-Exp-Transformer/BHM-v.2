@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React from 'react'
 import {
   Calendar as CalendarIcon,
   Activity,
@@ -10,8 +10,6 @@ import { useCalendar } from './hooks/useCalendar'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 
 export const CalendarPage = () => {
-  const [showStatsPanel, setShowStatsPanel] = useState(true)
-
   const {
     events,
     isLoading,
@@ -67,114 +65,112 @@ export const CalendarPage = () => {
 
       <div className="px-4 py-6">
         {/* Stats Panel */}
-        {showStatsPanel && (
-          <div className="mb-6">
-            <CollapsibleCard
-              title="Statistiche"
-              icon={TrendingUp}
-              counter={stats.total}
-              className="mb-4"
-              onToggle={() => setShowStatsPanel(!showStatsPanel)}
-            >
-              <div className="p-4">
-                {/* Overview Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">
-                      {stats.total}
-                    </div>
-                    <div className="text-sm text-gray-500">Eventi Totali</div>
+        <div className="mb-6">
+          <CollapsibleCard
+            title="Statistiche"
+            icon={TrendingUp}
+            counter={stats.total}
+            className="mb-4"
+            defaultExpanded={true}
+          >
+            <div className="p-4">
+              {/* Overview Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900">
+                    {stats.total}
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      {stats.completed}
-                    </div>
-                    <div className="text-sm text-gray-500">Completati</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-yellow-600">
-                      {stats.pending}
-                    </div>
-                    <div className="text-sm text-gray-500">In Attesa</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-red-600">
-                      {stats.overdue}
-                    </div>
-                    <div className="text-sm text-gray-500">In Ritardo</div>
-                  </div>
+                  <div className="text-sm text-gray-500">Eventi Totali</div>
                 </div>
-
-                {/* Completion Rate */}
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">
-                      Tasso di Completamento
-                    </span>
-                    <span className="text-sm text-gray-600">
-                      {stats.completionRate.toFixed(1)}%
-                    </span>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {stats.completed}
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${Math.min(stats.completionRate, 100)}%`,
-                      }}
-                    />
-                  </div>
+                  <div className="text-sm text-gray-500">Completati</div>
                 </div>
-
-                {/* Event Types Breakdown */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">
-                      Per Tipologia
-                    </h4>
-                    <div className="space-y-2">
-                      {Object.entries(stats.byType).map(([type, events]) => (
-                        <div
-                          key={type}
-                          className="flex items-center justify-between text-sm"
-                        >
-                          <span className="text-gray-600">
-                            {type === 'maintenance' && '🔧 Manutenzioni'}
-                            {type === 'general_task' && '📋 Mansioni'}
-                            {type === 'temperature_reading' && '🌡️ Temperature'}
-                            {type === 'custom' && '📌 Personalizzati'}
-                          </span>
-                          <span className="font-medium">{events.length}</span>
-                        </div>
-                      ))}
-                    </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {stats.pending}
                   </div>
+                  <div className="text-sm text-gray-500">In Attesa</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-600">
+                    {stats.overdue}
+                  </div>
+                  <div className="text-sm text-gray-500">In Ritardo</div>
+                </div>
+              </div>
 
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">
-                      Urgenti
-                    </h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm text-red-600">
-                        <AlertCircle className="h-4 w-4 mr-2" />
-                        <span>{overdueEvents.length} eventi in ritardo</span>
-                      </div>
-                      <div className="flex items-center text-sm text-yellow-600">
-                        <CalendarIcon className="h-4 w-4 mr-2" />
-                        <span>
-                          {upcomingEvents.length} eventi prossimi (7 giorni)
+              {/* Completion Rate */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">
+                    Tasso di Completamento
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    {stats.completionRate.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${Math.min(stats.completionRate, 100)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Event Types Breakdown */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">
+                    Per Tipologia
+                  </h4>
+                  <div className="space-y-2">
+                    {Object.entries(stats.byType).map(([type, events]) => (
+                      <div
+                        key={type}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <span className="text-gray-600">
+                          {type === 'maintenance' && '🔧 Manutenzioni'}
+                          {type === 'general_task' && '📋 Mansioni'}
+                          {type === 'temperature_reading' && '🌡️ Temperature'}
+                          {type === 'custom' && '📌 Personalizzati'}
                         </span>
+                        <span className="font-medium">{events.length}</span>
                       </div>
-                      <div className="flex items-center text-sm text-blue-600">
-                        <Activity className="h-4 w-4 mr-2" />
-                        <span>{todayEvents.length} eventi oggi</span>
-                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">
+                    Urgenti
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center text-sm text-red-600">
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                      <span>{overdueEvents.length} eventi in ritardo</span>
+                    </div>
+                    <div className="flex items-center text-sm text-yellow-600">
+                      <CalendarIcon className="h-4 w-4 mr-2" />
+                      <span>
+                        {upcomingEvents.length} eventi prossimi (7 giorni)
+                      </span>
+                    </div>
+                    <div className="flex items-center text-sm text-blue-600">
+                      <Activity className="h-4 w-4 mr-2" />
+                      <span>{todayEvents.length} eventi oggi</span>
                     </div>
                   </div>
                 </div>
               </div>
-            </CollapsibleCard>
-          </div>
-        )}
+            </div>
+          </CollapsibleCard>
+        </div>
 
         {/* Main Calendar */}
         <div className="mb-6">
