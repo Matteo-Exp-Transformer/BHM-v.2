@@ -1,8 +1,7 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   X,
   Calendar,
-  Clock,
   MapPin,
   User,
   AlertTriangle,
@@ -10,14 +9,14 @@ import {
   Edit,
   Trash2,
 } from 'lucide-react'
-import type { TypedCalendarEvent } from '@/types/calendar'
+import type { CalendarEvent } from '@/types/calendar'
 
 interface EventDetailsModalProps {
-  event: TypedCalendarEvent
+  event: CalendarEvent
   onClose: () => void
   onUpdate: (data: {
     eventId: string
-    updates: Partial<TypedCalendarEvent>
+    updates: Partial<CalendarEvent>
   }) => void
   onDelete: (eventId: string) => void
 }

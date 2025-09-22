@@ -1,19 +1,13 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Thermometer,
   Plus,
   Filter,
   Settings,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  TrendingUp,
-  Activity,
 } from 'lucide-react'
 
 export function ConservationManager() {
   const [showFilters, setShowFilters] = useState(false)
-  const [showCreateModal, setShowCreateModal] = useState(false)
 
   return (
     <div className="p-6 space-y-6">

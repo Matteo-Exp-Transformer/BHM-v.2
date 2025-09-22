@@ -7,106 +7,6 @@ export interface CalendarNotification {
   enabled: boolean
 }
 
-export interface MaintenanceEvent
-  extends Omit<CalendarEvent, 'source' | 'extendedProps'> {
-  source: 'maintenance'
-  extendedProps: CalendarEvent['extendedProps'] & {
-    maintenanceType: 'temperature' | 'sanitization' | 'defrosting' | 'repair'
-    conservationPointId?: string
-    conservationPointName?: string
-    checklist?: string[]
-    estimatedDuration: number
-    requiredTools?: string[]
-    safetyRequirements?: string[]
-    lastCompletedDate?: Date
-    frequency:
-      | 'daily'
-      | 'weekly'
-      | 'monthly'
-      | 'quarterly'
-      | 'yearly'
-      | 'custom'
-  }
-}
-
-export interface TaskEvent
-  extends Omit<CalendarEvent, 'source' | 'extendedProps'> {
-  source: 'task'
-  extendedProps: CalendarEvent['extendedProps'] & {
-    taskType:
-      | 'haccp_check'
-      | 'inventory_count'
-      | 'quality_control'
-      | 'admin'
-      | 'other'
-    departmentId?: string
-    departmentName?: string
-    estimatedDuration: number
-    dependencies?: string[]
-    completionCriteria?: string[]
-  }
-}
-
-export interface TrainingEvent
-  extends Omit<CalendarEvent, 'source' | 'extendedProps'> {
-  source: 'training'
-  extendedProps: CalendarEvent['extendedProps'] & {
-    trainingType: 'haccp' | 'safety' | 'hygiene' | 'equipment' | 'procedures'
-    instructor?: string
-    maxParticipants?: number
-    currentParticipants?: number
-    materialIds?: string[]
-    certificationRequired: boolean
-    certificationLevel?: 'base' | 'advanced'
-  }
-}
-
-export interface InventoryEvent
-  extends Omit<CalendarEvent, 'source' | 'extendedProps'> {
-  source: 'inventory'
-  extendedProps: CalendarEvent['extendedProps'] & {
-    inventoryType:
-      | 'expiry_check'
-      | 'stock_count'
-      | 'delivery'
-      | 'order'
-      | 'waste_disposal'
-    productIds?: string[]
-    supplierId?: string
-    expectedQuantity?: number
-    actualQuantity?: number
-    variance?: number
-    conservationPointId?: string
-  }
-}
-
-export interface MeetingEvent
-  extends Omit<CalendarEvent, 'source' | 'extendedProps'> {
-  source: 'meeting'
-  extendedProps: CalendarEvent['extendedProps'] & {
-    meetingType: 'team' | 'training' | 'audit' | 'review' | 'emergency'
-    attendees: string[]
-    optionalAttendees?: string[]
-    agenda?: string[]
-    meetingLink?: string
-    roomId?: string
-    roomName?: string
-    isVirtual: boolean
-  }
-}
-
-export type TypedCalendarEvent =
-  | MaintenanceEvent
-  | TaskEvent
-  | TrainingEvent
-  | InventoryEvent
-  | MeetingEvent
-
-export interface CalendarView {
-  type: 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listWeek'
-  title: string
-  buttonText: string
-}
 
 export interface CalendarFilter {
   sources: CalendarEvent['source'][]
@@ -316,6 +216,15 @@ export interface CalendarSettings {
   timeFormat: '12h' | '24h'
   firstDayOfWeek: number
   colorScheme: Record<CalendarEvent['source'], string>
+  businessHours: {
+    daysOfWeek: number[]
+    startTime: string
+    endTime: string
+  }
+  notifications: {
+    enabled: boolean
+    defaultTimings: CalendarNotification['timing'][]
+  }
 }
 
 // Calendar view configuration

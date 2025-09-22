@@ -9,7 +9,7 @@ import {
   Users,
 } from 'lucide-react'
 import { SyncStatusBar } from '@/components/offline/SyncStatusBar'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth, UserRole } from '@/hooks/useAuth'
 
 interface MainLayoutProps {
   children: ReactNode
@@ -48,7 +48,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       icon: Settings,
       path: '/impostazioni',
       requiresAuth: true,
-      requiredRole: ['admin'],
+      requiredRole: ['admin'] as UserRole[],
     },
     {
       id: 'management',
@@ -56,7 +56,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       icon: Users,
       path: '/gestione',
       requiresAuth: true,
-      requiredRole: ['admin', 'responsabile'],
+      requiredRole: ['admin', 'responsabile'] as UserRole[],
     },
   ]
 

@@ -1,4 +1,3 @@
-import React from 'react'
 import { Clock, Globe, Bell, Palette } from 'lucide-react'
 import type { CalendarSettings as CalendarSettingsType } from '@/types/calendar'
 

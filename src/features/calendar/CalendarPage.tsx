@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   Calendar as CalendarIcon,
   Activity,
@@ -183,7 +182,7 @@ export const CalendarPage = () => {
             onDateSelect={onDateSelect}
             config={viewConfig}
             loading={isLoading}
-            error={error}
+            error={error?.message || null}
           />
         </div>
 

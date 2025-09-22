@@ -10,9 +10,10 @@ interface ClerkUser {
   emailAddresses?: Array<{ emailAddress: string }>
 }
 
-// Extended User with company_id
+// Extended User with company_id and role
 interface ExtendedUser extends ClerkUser {
   company_id?: string
+  role?: UserRole
 }
 
 // Role types
@@ -216,10 +217,13 @@ export const useAuth = () => {
   // Error handling
   const authError = profileError ? 'Failed to load user profile' : null
 
-  // Extended user with company_id
+  // Extended user with company_id and role
   const extendedUser = clerkUser as ExtendedUser
   if (extendedUser && userProfile?.company_id) {
     extendedUser.company_id = userProfile.company_id
+  }
+  if (extendedUser && userProfile?.role) {
+    extendedUser.role = userProfile.role
   }
 
   return {

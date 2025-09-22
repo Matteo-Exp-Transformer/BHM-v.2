@@ -56,7 +56,6 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
-                    <Route path="/attivita" element={<Calendar />} />
                     <Route
                       path="/inventario"
                       element={

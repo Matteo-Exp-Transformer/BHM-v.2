@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 
 interface CollapsibleCardProps {
   title: string
+  subtitle?: string
   icon?: React.ComponentType<{ className?: string }>
   children: ReactNode
   defaultExpanded?: boolean
@@ -17,6 +18,7 @@ interface CollapsibleCardProps {
 
 export const CollapsibleCard = ({
   title,
+  subtitle,
   icon: Icon,
   children,
   defaultExpanded = true,
@@ -45,12 +47,17 @@ export const CollapsibleCard = ({
       >
         <div className="flex items-center space-x-3">
           {Icon && <Icon className="h-5 w-5 text-gray-500" />}
-          <div className="flex items-center space-x-2">
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-            {counter !== undefined && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                {counter}
-              </span>
+          <div className="flex flex-col space-y-1">
+            <div className="flex items-center space-x-2">
+              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+              {counter !== undefined && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {counter}
+                </span>
+              )}
+            </div>
+            {subtitle && (
+              <p className="text-sm text-gray-500">{subtitle}</p>
             )}
           </div>
         </div>
