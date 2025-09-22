@@ -1,8 +1,45 @@
 # 👨‍💻 CURSOR - Complete Development Instructions
 
-**Version:** 2.0
-**Last Updated:** January 22, 2025
+**Version:** 2.1
+**Last Updated:** September 22, 2025 - Post Claude B.7.1/B.7.2 Completion
 **Purpose:** Comprehensive instructions for Cursor AI development sessions
+
+## 🚨 **CRITICAL COORDINATION UPDATE**
+
+**✅ Claude Branch Status:** B.7.1 Offline System v1 + B.7.2 Advanced Export & Reporting COMPLETED
+**⚠️ Curs Branch Status:** TypeScript errors resolved but deleted Claude's B.7.1/B.7.2 work
+**🎯 Next Phase:** Cursor should focus on B.7.3 Mobile PWA Enhancement (NOT merge with Claude)
+
+### **📋 IMMEDIATE CURSOR TASKS (B.7.3 Mobile PWA Enhancement)**
+
+**🎯 Focus Priority: Mobile-First Experience**
+
+1. **Touch Interface Optimization**
+   - Implement touch-friendly button sizes (44px minimum)
+   - Add swipe gestures for navigation
+   - Optimize scroll performance on mobile devices
+
+2. **Responsive Design Improvements**
+   - Fix mobile layout issues in dashboard
+   - Optimize forms for mobile input
+   - Implement mobile-specific navigation patterns
+
+3. **PWA Features Enhancement**
+   - Update manifest.json for better mobile experience
+   - Add iOS-specific meta tags and icons
+   - Implement app-like navigation (no browser chrome)
+
+4. **Performance Optimization**
+   - Reduce bundle size to <1MB (currently 1.6-1.7MB)
+   - Implement lazy loading for mobile components
+   - Optimize images and assets for mobile networks
+
+5. **Testing Suite Completion**
+   - Complete the testing files that were partially removed
+   - Add mobile-specific tests for touch interactions
+   - Implement performance testing for mobile devices
+
+**⚠️ DO NOT:** Try to merge with Claude branch - it will cause massive conflicts and lose work
 
 ---
 
