@@ -11,7 +11,10 @@
       "Bash(git commit:*)",
       "Bash(npm run lint)",
       "Bash(git push:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(git fetch:*)",
+      "Read(//c/Users/matte.MIO/Documents/GitHub/BHM-v.2-Cursor/**)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []
