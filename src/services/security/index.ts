@@ -8,7 +8,7 @@ export {
   type SecurityConfig,
   type SecurityEvent,
   type ThreatLevel,
-  type SecurityAudit
+  type SecurityAudit,
 } from './SecurityManager'
 
 export {
@@ -16,7 +16,7 @@ export {
   type AuditLog,
   type AuditEvent,
   type AuditFilter,
-  type ComplianceReport
+  type ComplianceReport,
 } from './AuditLogger'
 
 export {
@@ -24,14 +24,14 @@ export {
   type ComplianceStandard,
   type ComplianceCheck,
   type ComplianceResult,
-  type ComplianceSchedule
+  type ComplianceSchedule,
 } from './ComplianceMonitor'
 
 export {
   securityDashboard,
   type SecurityMetric,
   type SecurityAlert,
-  type SecurityDashboardData
+  type SecurityDashboardData,
 } from './SecurityDashboard'
 
 /**
@@ -61,7 +61,7 @@ class EnterpriseSecurityManager {
       await securityManager.initialize({
         enableRealTimeMonitoring: true,
         enableThreatDetection: this.securityLevel !== 'basic',
-        enableAdvancedAudit: this.securityLevel === 'enterprise'
+        enableAdvancedAudit: this.securityLevel === 'enterprise',
       })
 
       // Initialize audit logging
@@ -69,14 +69,15 @@ class EnterpriseSecurityManager {
         companyId: config.companyId,
         userId: config.userId,
         logLevel: this.securityLevel === 'enterprise' ? 'verbose' : 'standard',
-        retentionDays: this.securityLevel === 'enterprise' ? 2555 : 365 // 7 years for enterprise
+        retentionDays: this.securityLevel === 'enterprise' ? 2555 : 365, // 7 years for enterprise
       })
 
       // Initialize compliance monitoring
       await complianceMonitor.initialize({
         standards: ['HACCP', 'ISO22000', 'FDA', 'EU_REGULATION'],
         automaticChecks: true,
-        reportingFrequency: this.securityLevel === 'enterprise' ? 'daily' : 'weekly'
+        reportingFrequency:
+          this.securityLevel === 'enterprise' ? 'daily' : 'weekly',
       })
 
       this.initialized = true
@@ -88,9 +89,8 @@ class EnterpriseSecurityManager {
         severity: 'INFO',
         description: `Enterprise security initialized at level: ${this.securityLevel}`,
         userId: config.userId,
-        companyId: config.companyId
+        companyId: config.companyId,
       })
-
     } catch (error) {
       console.error('❌ Failed to initialize enterprise security:', error)
       await auditLogger.logEvent({
@@ -98,7 +98,7 @@ class EnterpriseSecurityManager {
         severity: 'CRITICAL',
         description: `Security initialization failed: ${error}`,
         userId: config.userId,
-        companyId: config.companyId
+        companyId: config.companyId,
       })
       throw error
     }
@@ -108,21 +108,31 @@ class EnterpriseSecurityManager {
    * Perform comprehensive security health check
    */
   public async performSecurityHealthCheck(): Promise<{
-    overall: 'secure' | 'warning' | 'critical'
+    overall: 'HEALTHY' | 'WARNING' | 'CRITICAL'
     score: number
-    vulnerabilities: any[]
+    vulnerabilities: Array<{
+      type: string
+      severity: string
+      description: string
+    }>
     recommendations: string[]
   }> {
     console.log('🔍 Running comprehensive security health check...')
 
-    const [securityMetrics, auditResults, complianceStatus] = await Promise.all([
-      securityManager.getSecurityMetrics(),
-      auditLogger.getRecentAudits(24), // Last 24 hours
-      complianceMonitor.runComplianceCheck()
-    ])
+    const [securityMetrics, auditResults, complianceStatus] = await Promise.all(
+      [
+        securityManager.getSecurityMetrics(),
+        auditLogger.getRecentAudits(24), // Last 24 hours
+        complianceMonitor.runComplianceCheck(),
+      ]
+    )
 
     let score = 100
-    const vulnerabilities: any[] = []
+    const vulnerabilities: Array<{
+      type: string
+      severity: string
+      description: string
+    }> = []
     const recommendations: string[] = []
 
     // Analyze security metrics
@@ -131,19 +141,21 @@ class EnterpriseSecurityManager {
       vulnerabilities.push({
         type: 'AUTHENTICATION',
         severity: 'HIGH',
-        description: `${securityMetrics.failedLogins} failed login attempts detected`
+        description: `${securityMetrics.failedLogins} failed login attempts detected`,
       })
       recommendations.push('Enable account lockout after failed attempts')
     }
 
     // Analyze audit logs for suspicious activity
-    const criticalEvents = auditResults.filter(audit => audit.severity === 'CRITICAL')
+    const criticalEvents = auditResults.filter(
+      audit => audit.severity === 'CRITICAL'
+    )
     if (criticalEvents.length > 0) {
       score -= 20
       vulnerabilities.push({
         type: 'AUDIT',
         severity: 'CRITICAL',
-        description: `${criticalEvents.length} critical security events in last 24h`
+        description: `${criticalEvents.length} critical security events in last 24h`,
       })
       recommendations.push('Review critical security events immediately')
     }
@@ -154,21 +166,21 @@ class EnterpriseSecurityManager {
       vulnerabilities.push({
         type: 'COMPLIANCE',
         severity: 'MEDIUM',
-        description: `Compliance score below threshold: ${complianceStatus.overallScore}%`
+        description: `Compliance score below threshold: ${complianceStatus.overallScore}%`,
       })
       recommendations.push('Address compliance gaps to meet HACCP standards')
     }
 
-    let overall: 'secure' | 'warning' | 'critical'
-    if (score >= 85) overall = 'secure'
-    else if (score >= 70) overall = 'warning'
-    else overall = 'critical'
+    let overall: 'HEALTHY' | 'WARNING' | 'CRITICAL'
+    if (score >= 85) overall = 'HEALTHY'
+    else if (score >= 70) overall = 'WARNING'
+    else overall = 'CRITICAL'
 
     return {
       overall,
       score,
       vulnerabilities,
-      recommendations
+      recommendations,
     }
   }
 
@@ -229,8 +241,8 @@ class EnterpriseSecurityManager {
         security: true,
         audit: true,
         compliance: true,
-        dashboard: true
-      }
+        dashboard: true,
+      },
     }
   }
 }
@@ -239,12 +251,7 @@ class EnterpriseSecurityManager {
 export const enterpriseSecurityManager = new EnterpriseSecurityManager()
 
 // Export individual services for direct access
-export {
-  securityManager,
-  auditLogger,
-  complianceMonitor,
-  securityDashboard
-}
+export { securityManager, auditLogger, complianceMonitor, securityDashboard }
 
 // Auto-initialize in production mode with security focus
 if (import.meta.env?.PROD) {

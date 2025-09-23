@@ -124,7 +124,7 @@ class AuditLoggerService {
     userId: '',
     logLevel: 'standard',
     retentionDays: 365,
-    enableRealTimeCompliance: true
+    enableRealTimeCompliance: true,
   }
 
   /**
@@ -140,7 +140,9 @@ class AuditLoggerService {
     this.config = { ...this.config, ...config }
 
     console.log('📋 Initializing Enterprise Audit Logger...')
-    console.log(`📊 Log level: ${this.config.logLevel}, Retention: ${this.config.retentionDays} days`)
+    console.log(
+      `📊 Log level: ${this.config.logLevel}, Retention: ${this.config.retentionDays} days`
+    )
 
     // Start automatic cleanup
     this.startAutomaticCleanup()
@@ -151,7 +153,10 @@ class AuditLoggerService {
       event: 'SYSTEM_CONFIG_CHANGED',
       severity: 'INFO',
       description: 'Audit logger initialized',
-      metadata: { logLevel: this.config.logLevel, retentionDays: this.config.retentionDays }
+      metadata: {
+        logLevel: this.config.logLevel,
+        retentionDays: this.config.retentionDays,
+      },
     })
 
     console.log('✅ Audit Logger initialized successfully')
@@ -174,7 +179,6 @@ class AuditLoggerService {
     metadata?: Record<string, any>
     complianceStandards?: string[]
   }): Promise<string> {
-
     const auditLog: AuditLog = {
       id: crypto.randomUUID(),
       timestamp: new Date(),
@@ -192,7 +196,9 @@ class AuditLoggerService {
       oldValue: params.oldValue,
       newValue: params.newValue,
       metadata: params.metadata || {},
-      complianceStandards: params.complianceStandards || this.determineComplianceStandards(params.type, params.event)
+      complianceStandards:
+        params.complianceStandards ||
+        this.determineComplianceStandards(params.type, params.event),
     }
 
     this.logs.push(auditLog)
@@ -202,7 +208,7 @@ class AuditLoggerService {
       INFO: '📘',
       WARNING: '⚠️',
       ERROR: '❌',
-      CRITICAL: '🚨'
+      CRITICAL: '🚨',
     }
 
     console.log(
@@ -217,7 +223,9 @@ class AuditLoggerService {
     // Store in persistent storage (in production, this would be a database)
     if (typeof localStorage !== 'undefined') {
       try {
-        const existingLogs = JSON.parse(localStorage.getItem('audit_logs') || '[]')
+        const existingLogs = JSON.parse(
+          localStorage.getItem('audit_logs') || '[]'
+        )
         existingLogs.push(auditLog)
         localStorage.setItem('audit_logs', JSON.stringify(existingLogs))
       } catch (error) {
@@ -236,11 +244,15 @@ class AuditLoggerService {
 
     // Apply filters
     if (filter.startDate) {
-      filteredLogs = filteredLogs.filter(log => log.timestamp >= filter.startDate!)
+      filteredLogs = filteredLogs.filter(
+        log => log.timestamp >= filter.startDate!
+      )
     }
 
     if (filter.endDate) {
-      filteredLogs = filteredLogs.filter(log => log.timestamp <= filter.endDate!)
+      filteredLogs = filteredLogs.filter(
+        log => log.timestamp <= filter.endDate!
+      )
     }
 
     if (filter.userId) {
@@ -248,11 +260,15 @@ class AuditLoggerService {
     }
 
     if (filter.companyId) {
-      filteredLogs = filteredLogs.filter(log => log.companyId === filter.companyId)
+      filteredLogs = filteredLogs.filter(
+        log => log.companyId === filter.companyId
+      )
     }
 
     if (filter.category) {
-      filteredLogs = filteredLogs.filter(log => log.category === filter.category)
+      filteredLogs = filteredLogs.filter(
+        log => log.category === filter.category
+      )
     }
 
     if (filter.event) {
@@ -260,15 +276,21 @@ class AuditLoggerService {
     }
 
     if (filter.severity) {
-      filteredLogs = filteredLogs.filter(log => filter.severity!.includes(log.severity))
+      filteredLogs = filteredLogs.filter(log =>
+        filter.severity!.includes(log.severity)
+      )
     }
 
     if (filter.entityType) {
-      filteredLogs = filteredLogs.filter(log => log.entityType === filter.entityType)
+      filteredLogs = filteredLogs.filter(
+        log => log.entityType === filter.entityType
+      )
     }
 
     if (filter.ipAddress) {
-      filteredLogs = filteredLogs.filter(log => log.ipAddress === filter.ipAddress)
+      filteredLogs = filteredLogs.filter(
+        log => log.ipAddress === filter.ipAddress
+      )
     }
 
     // Sort by timestamp (newest first)
@@ -303,8 +325,10 @@ class AuditLoggerService {
     periodEnd: Date,
     generatedBy: string
   ): Promise<ComplianceReport> {
-
-    const logs = await this.getAuditLogs({ startDate: periodStart, endDate: periodEnd })
+    const logs = await this.getAuditLogs({
+      startDate: periodStart,
+      endDate: periodEnd,
+    })
     const relevantLogs = logs.filter(log =>
       log.complianceStandards.includes(reportType)
     )
@@ -313,16 +337,27 @@ class AuditLoggerService {
     const violations = this.analyzeViolations(relevantLogs, reportType)
 
     // Calculate compliance score
-    const complianceScore = this.calculateComplianceScore(relevantLogs, violations)
+    const complianceScore = this.calculateComplianceScore(
+      relevantLogs,
+      violations
+    )
 
     // Generate summary
     const summary = {
-      criticalEvents: relevantLogs.filter(log => log.severity === 'CRITICAL').length,
-      warningEvents: relevantLogs.filter(log => log.severity === 'WARNING').length,
+      criticalEvents: relevantLogs.filter(log => log.severity === 'CRITICAL')
+        .length,
+      warningEvents: relevantLogs.filter(log => log.severity === 'WARNING')
+        .length,
       infoEvents: relevantLogs.filter(log => log.severity === 'INFO').length,
-      dataIntegrityChecks: relevantLogs.filter(log => log.category === 'DATA_MANAGEMENT').length,
-      temperatureViolations: relevantLogs.filter(log => log.event === 'TEMPERATURE_ALERT').length,
-      maintenanceEvents: relevantLogs.filter(log => log.category === 'MAINTENANCE').length
+      dataIntegrityChecks: relevantLogs.filter(
+        log => log.category === 'DATA_MANAGEMENT'
+      ).length,
+      temperatureViolations: relevantLogs.filter(
+        log => log.event === 'TEMPERATURE_ALERT'
+      ).length,
+      maintenanceEvents: relevantLogs.filter(
+        log => log.category === 'MAINTENANCE'
+      ).length,
     }
 
     // Generate recommendations
@@ -341,7 +376,7 @@ class AuditLoggerService {
       violations,
       recommendations,
       summary,
-      exportFormat: 'JSON'
+      exportFormat: 'JSON',
     }
 
     // Log report generation
@@ -350,7 +385,7 @@ class AuditLoggerService {
       event: 'AUDIT_TRAIL_ACCESSED',
       severity: 'INFO',
       description: `Generated ${reportType} compliance report`,
-      metadata: { reportId: report.id, eventsAnalyzed: relevantLogs.length }
+      metadata: { reportId: report.id, eventsAnalyzed: relevantLogs.length },
     })
 
     return report
@@ -366,7 +401,7 @@ class AuditLoggerService {
       event: 'SYSTEM_CONFIG_CHANGED',
       severity: 'INFO',
       description: 'Verbose logging enabled',
-      metadata: { previousLevel: 'standard', newLevel: 'verbose' }
+      metadata: { previousLevel: 'standard', newLevel: 'verbose' },
     })
   }
 
@@ -384,7 +419,7 @@ class AuditLoggerService {
       event: 'DATA_EXPORTED',
       severity: 'INFO',
       description: `Exported ${logs.length} audit logs in ${format} format`,
-      metadata: { format, recordCount: logs.length, filter }
+      metadata: { format, recordCount: logs.length, filter },
     })
 
     switch (format) {
@@ -403,7 +438,9 @@ class AuditLoggerService {
    * Cleanup old logs
    */
   public cleanupOldLogs(): void {
-    const cutoffDate = new Date(Date.now() - this.config.retentionDays * 24 * 60 * 60 * 1000)
+    const cutoffDate = new Date(
+      Date.now() - this.config.retentionDays * 24 * 60 * 60 * 1000
+    )
     const beforeCount = this.logs.length
     this.logs = this.logs.filter(log => log.timestamp >= cutoffDate)
     const afterCount = this.logs.length
@@ -423,11 +460,17 @@ class AuditLoggerService {
     return '127.0.0.1' // Placeholder for development
   }
 
-  private determineComplianceStandards(category: AuditCategory, event: AuditEvent): string[] {
+  private determineComplianceStandards(
+    category: AuditCategory,
+    event: AuditEvent
+  ): string[] {
     const standards: string[] = []
 
     // All HACCP operations require HACCP compliance
-    if (category === 'HACCP_OPERATIONS' || category === 'TEMPERATURE_MONITORING') {
+    if (
+      category === 'HACCP_OPERATIONS' ||
+      category === 'TEMPERATURE_MONITORING'
+    ) {
       standards.push('HACCP', 'ISO22000')
     }
 
@@ -451,16 +494,26 @@ class AuditLoggerService {
 
   private async checkRealTimeCompliance(log: AuditLog): Promise<void> {
     // Real-time compliance checks
-    if (log.severity === 'CRITICAL' && log.category === 'TEMPERATURE_MONITORING') {
-      console.warn('🚨 CRITICAL TEMPERATURE VIOLATION - Immediate action required for HACCP compliance')
+    if (
+      log.severity === 'CRITICAL' &&
+      log.category === 'TEMPERATURE_MONITORING'
+    ) {
+      console.warn(
+        '🚨 CRITICAL TEMPERATURE VIOLATION - Immediate action required for HACCP compliance'
+      )
     }
 
     if (log.event === 'SECURITY_VIOLATION') {
-      console.warn('🔒 SECURITY VIOLATION - Review required for compliance standards')
+      console.warn(
+        '🔒 SECURITY VIOLATION - Review required for compliance standards'
+      )
     }
   }
 
-  private analyzeViolations(logs: AuditLog[], reportType: string): AuditViolation[] {
+  private analyzeViolations(
+    logs: AuditLog[],
+    reportType: string
+  ): AuditViolation[] {
     const violations: AuditViolation[] = []
 
     // Analyze critical events
@@ -474,14 +527,16 @@ class AuditLoggerService {
         description: event.description,
         affectedStandards: event.complianceStandards,
         correctionRequired: true,
-        timeline: 'Immediate'
+        timeline: 'Immediate',
       })
     }
 
     return violations
   }
 
-  private mapCategoryToViolationType(category: AuditCategory): AuditViolation['type'] {
+  private mapCategoryToViolationType(
+    category: AuditCategory
+  ): AuditViolation['type'] {
     switch (category) {
       case 'TEMPERATURE_MONITORING':
         return 'TEMPERATURE'
@@ -498,12 +553,19 @@ class AuditLoggerService {
     }
   }
 
-  private calculateComplianceScore(logs: AuditLog[], violations: AuditViolation[]): number {
+  private calculateComplianceScore(
+    logs: AuditLog[],
+    violations: AuditViolation[]
+  ): number {
     if (logs.length === 0) return 100
 
-    const criticalViolations = violations.filter(v => v.severity === 'CRITICAL').length
+    const criticalViolations = violations.filter(
+      v => v.severity === 'CRITICAL'
+    ).length
     const highViolations = violations.filter(v => v.severity === 'HIGH').length
-    const mediumViolations = violations.filter(v => v.severity === 'MEDIUM').length
+    const mediumViolations = violations.filter(
+      v => v.severity === 'MEDIUM'
+    ).length
 
     // Start with 100 and deduct points
     let score = 100
@@ -514,30 +576,50 @@ class AuditLoggerService {
     return Math.max(0, score)
   }
 
-  private generateRecommendations(violations: AuditViolation[], summary: any): string[] {
+  private generateRecommendations(
+    violations: AuditViolation[],
+    summary: any
+  ): string[] {
     const recommendations: string[] = []
 
     if (summary.criticalEvents > 0) {
-      recommendations.push('Address all critical violations immediately to maintain HACCP compliance')
+      recommendations.push(
+        'Address all critical violations immediately to maintain HACCP compliance'
+      )
     }
 
     if (summary.temperatureViolations > 5) {
-      recommendations.push('Review temperature monitoring procedures and equipment calibration')
+      recommendations.push(
+        'Review temperature monitoring procedures and equipment calibration'
+      )
     }
 
     if (summary.dataIntegrityChecks < summary.criticalEvents) {
-      recommendations.push('Implement additional data integrity verification procedures')
+      recommendations.push(
+        'Implement additional data integrity verification procedures'
+      )
     }
 
     if (violations.length === 0) {
-      recommendations.push('Continue current compliance procedures - all standards met')
+      recommendations.push(
+        'Continue current compliance procedures - all standards met'
+      )
     }
 
     return recommendations
   }
 
   private convertToCSV(logs: AuditLog[]): string {
-    const headers = ['ID', 'Timestamp', 'Category', 'Event', 'Severity', 'Description', 'User ID', 'Company ID']
+    const headers = [
+      'ID',
+      'Timestamp',
+      'Category',
+      'Event',
+      'Severity',
+      'Description',
+      'User ID',
+      'Company ID',
+    ]
     const rows = logs.map(log => [
       log.id,
       log.timestamp.toISOString(),
@@ -546,7 +628,7 @@ class AuditLoggerService {
       log.severity,
       log.description,
       log.userId || '',
-      log.companyId
+      log.companyId,
     ])
 
     return [headers, ...rows].map(row => row.join(',')).join('\n')
@@ -559,9 +641,12 @@ class AuditLoggerService {
 
   private startAutomaticCleanup(): void {
     // Run cleanup daily
-    setInterval(() => {
-      this.cleanupOldLogs()
-    }, 24 * 60 * 60 * 1000)
+    setInterval(
+      () => {
+        this.cleanupOldLogs()
+      },
+      24 * 60 * 60 * 1000
+    )
   }
 }
 

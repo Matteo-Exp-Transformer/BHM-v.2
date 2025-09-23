@@ -78,7 +78,7 @@ class SecurityManagerService {
     maxFailedAttempts: 5,
     sessionTimeout: 480, // 8 hours
     enableMFA: false,
-    enableIPWhitelist: false
+    enableIPWhitelist: false,
   }
 
   private events: SecurityEvent[] = []
@@ -114,12 +114,14 @@ class SecurityManagerService {
   /**
    * Log security event
    */
-  public async logSecurityEvent(event: Omit<SecurityEvent, 'id' | 'timestamp' | 'resolved'>): Promise<void> {
+  public async logSecurityEvent(
+    event: Omit<SecurityEvent, 'id' | 'timestamp' | 'resolved'>
+  ): Promise<void> {
     const securityEvent: SecurityEvent = {
       ...event,
       id: crypto.randomUUID(),
       timestamp: new Date(),
-      resolved: false
+      resolved: false,
     }
 
     this.events.push(securityEvent)
@@ -134,7 +136,7 @@ class SecurityManagerService {
       LOW: '🟢',
       MEDIUM: '🟡',
       HIGH: '🟠',
-      CRITICAL: '🔴'
+      CRITICAL: '🔴',
     }
 
     console.log(
@@ -157,7 +159,6 @@ class SecurityManagerService {
     userAgent: string,
     companyId: string
   ): Promise<{ allowed: boolean; reason?: string }> {
-
     // Check if IP is blocked
     if (this.blockedIPs.has(ipAddress)) {
       await this.logSecurityEvent({
@@ -168,9 +169,12 @@ class SecurityManagerService {
         companyId,
         ipAddress,
         userAgent,
-        metadata: { blocked: true }
+        metadata: { blocked: true },
       })
-      return { allowed: false, reason: 'IP address blocked due to suspicious activity' }
+      return {
+        allowed: false,
+        reason: 'IP address blocked due to suspicious activity',
+      }
     }
 
     // Check IP whitelist if enabled
@@ -184,7 +188,7 @@ class SecurityManagerService {
           companyId,
           ipAddress,
           userAgent,
-          metadata: { whitelist_violation: true }
+          metadata: { whitelist_violation: true },
         })
         return { allowed: false, reason: 'IP address not in whitelist' }
       }
@@ -203,7 +207,7 @@ class SecurityManagerService {
         companyId,
         ipAddress,
         userAgent,
-        metadata: { success: true }
+        metadata: { success: true },
       })
 
       return { allowed: true }
@@ -220,7 +224,7 @@ class SecurityManagerService {
         companyId,
         ipAddress,
         userAgent,
-        metadata: { attempts, threshold: this.config.maxFailedAttempts }
+        metadata: { attempts, threshold: this.config.maxFailedAttempts },
       })
 
       // Block IP after max attempts
@@ -235,10 +239,13 @@ class SecurityManagerService {
           companyId,
           ipAddress,
           userAgent,
-          metadata: { blocked: true, attempts }
+          metadata: { blocked: true, attempts },
         })
 
-        return { allowed: false, reason: `IP blocked after ${attempts} failed attempts` }
+        return {
+          allowed: false,
+          reason: `IP blocked after ${attempts} failed attempts`,
+        }
       }
 
       return { allowed: true }
@@ -271,13 +278,16 @@ class SecurityManagerService {
     const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
     const recentEvents = this.events.filter(event => event.timestamp >= last24h)
-    const failedLogins = recentEvents.filter(event => event.type === 'LOGIN_FAILURE').length
+    const failedLogins = recentEvents.filter(
+      event => event.type === 'LOGIN_FAILURE'
+    ).length
 
     // Calculate current threat level
     let threatLevel: ThreatLevel = 'LOW'
     if (failedLogins > 50 || this.blockedIPs.size > 10) threatLevel = 'CRITICAL'
     else if (failedLogins > 20 || this.blockedIPs.size > 5) threatLevel = 'HIGH'
-    else if (failedLogins > 10 || this.blockedIPs.size > 2) threatLevel = 'MEDIUM'
+    else if (failedLogins > 10 || this.blockedIPs.size > 2)
+      threatLevel = 'MEDIUM'
 
     return {
       totalEvents: recentEvents.length,
@@ -286,7 +296,7 @@ class SecurityManagerService {
       activeSessions: this.activeSessions.size,
       threatLevel,
       lastSecurityCheck: now,
-      uptime: performance.now()
+      uptime: performance.now(),
     }
   }
 
@@ -303,17 +313,29 @@ class SecurityManagerService {
       checkType: 'SESSION_MANAGEMENT',
       result: this.activeSessions.size < 100 ? 'PASS' : 'WARNING',
       details: `${this.activeSessions.size} active sessions`,
-      recommendations: this.activeSessions.size >= 100 ? ['Consider session cleanup'] : undefined
+      recommendations:
+        this.activeSessions.size >= 100
+          ? ['Consider session cleanup']
+          : undefined,
     })
 
     // Check failed login attempts
-    const totalFailedAttempts = Array.from(this.failedAttempts.values()).reduce((a, b) => a + b, 0)
+    const totalFailedAttempts = Array.from(this.failedAttempts.values()).reduce(
+      (a, b) => a + b,
+      0
+    )
     audits.push({
       timestamp: now,
       checkType: 'AUTHENTICATION_SECURITY',
       result: totalFailedAttempts < 50 ? 'PASS' : 'FAIL',
       details: `${totalFailedAttempts} failed login attempts in monitoring period`,
-      recommendations: totalFailedAttempts >= 50 ? ['Enable additional authentication measures', 'Review IP blocking policies'] : undefined
+      recommendations:
+        totalFailedAttempts >= 50
+          ? [
+              'Enable additional authentication measures',
+              'Review IP blocking policies',
+            ]
+          : undefined,
     })
 
     // Check blocked IPs
@@ -322,7 +344,10 @@ class SecurityManagerService {
       checkType: 'IP_BLOCKING',
       result: this.blockedIPs.size < 20 ? 'PASS' : 'WARNING',
       details: `${this.blockedIPs.size} IP addresses currently blocked`,
-      recommendations: this.blockedIPs.size >= 20 ? ['Review and cleanup blocked IP list'] : undefined
+      recommendations:
+        this.blockedIPs.size >= 20
+          ? ['Review and cleanup blocked IP list']
+          : undefined,
     })
 
     return audits
@@ -360,7 +385,9 @@ class SecurityManagerService {
       const metrics = await this.getSecurityMetrics()
 
       if (metrics.threatLevel === 'CRITICAL') {
-        console.warn('🚨 CRITICAL THREAT LEVEL DETECTED - Security response activated')
+        console.warn(
+          '🚨 CRITICAL THREAT LEVEL DETECTED - Security response activated'
+        )
       }
     }, 60000) // Check every minute
   }
@@ -371,8 +398,8 @@ class SecurityManagerService {
   private async analyzeThreat(event: SecurityEvent): Promise<void> {
     // Pattern detection for suspicious activities
     const recentEvents = this.getRecentEvents(1) // Last hour
-    const similarEvents = recentEvents.filter(e =>
-      e.type === event.type && e.ipAddress === event.ipAddress
+    const similarEvents = recentEvents.filter(
+      e => e.type === event.type && e.ipAddress === event.ipAddress
     )
 
     if (similarEvents.length > 10) {
@@ -383,7 +410,10 @@ class SecurityManagerService {
         companyId: event.companyId,
         ipAddress: event.ipAddress,
         userAgent: event.userAgent,
-        metadata: { pattern_count: similarEvents.length, pattern_type: event.type }
+        metadata: {
+          pattern_count: similarEvents.length,
+          pattern_type: event.type,
+        },
       })
     }
   }

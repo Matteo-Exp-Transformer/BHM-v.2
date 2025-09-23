@@ -21,7 +21,7 @@ export async function testSecurityIntegration(): Promise<void> {
     await enterpriseSecurityManager.initialize({
       securityLevel: 'enterprise',
       companyId: 'test-company-001',
-      userId: 'test-user-001'
+      userId: 'test-user-001',
     })
     console.log('✅ Enterprise Security Manager initialized successfully')
 
@@ -60,7 +60,7 @@ export async function testSecurityIntegration(): Promise<void> {
       description: 'Temperature recorded for freezer unit FZ-001',
       entityType: 'conservation_point',
       entityId: 'cp-001',
-      metadata: { temperature: -18, unit: 'celsius', location: 'Main Kitchen' }
+      metadata: { temperature: -18, unit: 'celsius', location: 'Main Kitchen' },
     })
 
     await auditLogger.logEvent({
@@ -69,7 +69,7 @@ export async function testSecurityIntegration(): Promise<void> {
       severity: 'WARNING',
       description: 'User attempted to access restricted area',
       userId: 'test-user-002',
-      metadata: { attempted_resource: '/admin/settings', ip: '192.168.1.200' }
+      metadata: { attempted_resource: '/admin/settings', ip: '192.168.1.200' },
     })
 
     console.log('✅ Audit events logged successfully')
@@ -78,24 +78,29 @@ export async function testSecurityIntegration(): Promise<void> {
     console.log('\n📊 Test 4: Test Compliance Monitor - Run Compliance Checks')
 
     const complianceResult = await complianceMonitor.runComplianceCheck()
-    console.log(`✅ Compliance check completed: ${complianceResult.overallScore.toFixed(1)}% (${complianceResult.complianceLevel})`)
+    console.log(
+      `✅ Compliance check completed: ${complianceResult.overallScore.toFixed(1)}% (${complianceResult.complianceLevel})`
+    )
     console.log(`   - Standards checked: ${complianceResult.standardsChecked}`)
-    console.log(`   - Total requirements: ${complianceResult.totalRequirements}`)
+    console.log(
+      `   - Total requirements: ${complianceResult.totalRequirements}`
+    )
     console.log(`   - Critical findings: ${complianceResult.criticalFindings}`)
 
     // Test 5: Generate Compliance Report
     console.log('\n📄 Test 5: Generate Compliance Report')
 
-    const haccpReport = await complianceMonitor.generateReport(
-      'HACCP',
-      {
-        start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-        end: new Date()
-      }
+    const haccpReport = await complianceMonitor.generateReport('HACCP', {
+      start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+      end: new Date(),
+    })
+    console.log(
+      `✅ HACCP compliance report generated: ${haccpReport.summary.complianceScore.toFixed(1)}%`
     )
-    console.log(`✅ HACCP compliance report generated: ${haccpReport.summary.complianceScore.toFixed(1)}%`)
     console.log(`   - Total checks: ${haccpReport.summary.totalChecks}`)
-    console.log(`   - Critical findings: ${haccpReport.summary.criticalFindings}`)
+    console.log(
+      `   - Critical findings: ${haccpReport.summary.criticalFindings}`
+    )
 
     // Test 6: Test Security Dashboard
     console.log('\n📈 Test 6: Test Security Dashboard - Get Dashboard Data')
@@ -103,7 +108,9 @@ export async function testSecurityIntegration(): Promise<void> {
     const dashboardData = await securityDashboard.getDashboardData()
     console.log(`✅ Security dashboard data generated:`)
     console.log(`   - Security score: ${dashboardData.overview.securityScore}%`)
-    console.log(`   - Compliance score: ${dashboardData.overview.complianceScore}%`)
+    console.log(
+      `   - Compliance score: ${dashboardData.overview.complianceScore}%`
+    )
     console.log(`   - Threat level: ${dashboardData.overview.threatLevel}`)
     console.log(`   - Active alerts: ${dashboardData.overview.activeAlerts}`)
     console.log(`   - Metrics tracked: ${dashboardData.metrics.length}`)
@@ -117,28 +124,39 @@ export async function testSecurityIntegration(): Promise<void> {
       title: 'Suspicious Activity Detected',
       description: 'Multiple failed login attempts from same IP address',
       source: 'SecurityManager',
-      metadata: { ip: '10.0.0.100', attempts: 5, timeframe: '5 minutes' }
+      metadata: { ip: '10.0.0.100', attempts: 5, timeframe: '5 minutes' },
     })
     console.log(`✅ Security alert created: ${alertId}`)
 
     await securityDashboard.acknowledgeAlert(alertId, 'security-admin-001')
     console.log('✅ Alert acknowledged by security admin')
 
-    await securityDashboard.resolveAlert(alertId, 'security-admin-001', 'IP address blocked and investigated')
+    await securityDashboard.resolveAlert(
+      alertId,
+      'security-admin-001',
+      'IP address blocked and investigated'
+    )
     console.log('✅ Alert resolved')
 
     // Test 8: Test Enterprise Health Check
     console.log('\n🏥 Test 8: Test Enterprise Security Health Check')
 
-    const healthCheck = await enterpriseSecurityManager.performSecurityHealthCheck()
-    console.log(`✅ Security health check completed: ${healthCheck.overall} (${healthCheck.score}/100)`)
-    console.log(`   - Vulnerabilities found: ${healthCheck.vulnerabilities.length}`)
+    const healthCheck =
+      await enterpriseSecurityManager.performSecurityHealthCheck()
+    console.log(
+      `✅ Security health check completed: ${healthCheck.overall} (${healthCheck.score}/100)`
+    )
+    console.log(
+      `   - Vulnerabilities found: ${healthCheck.vulnerabilities.length}`
+    )
     console.log(`   - Recommendations: ${healthCheck.recommendations.length}`)
 
     if (healthCheck.vulnerabilities.length > 0) {
       console.log('   🔍 Vulnerabilities:')
       healthCheck.vulnerabilities.forEach(vuln => {
-        console.log(`     - ${vuln.type}: ${vuln.description} (${vuln.severity})`)
+        console.log(
+          `     - ${vuln.type}: ${vuln.description} (${vuln.severity})`
+        )
       })
     }
 
@@ -159,7 +177,9 @@ export async function testSecurityIntegration(): Promise<void> {
     console.log(`✅ Audit logs exported: ${auditExport.length} characters`)
 
     const securityReport = await securityDashboard.exportSecurityReport('JSON')
-    console.log(`✅ Security report exported: ${securityReport.length} characters`)
+    console.log(
+      `✅ Security report exported: ${securityReport.length} characters`
+    )
 
     // Test 10: Test Real-time Metrics
     console.log('\n⏱️ Test 10: Test Real-time Metrics')
@@ -184,25 +204,30 @@ export async function testSecurityIntegration(): Promise<void> {
         description: `User login for company ${companyId}`,
         companyId,
         userId: `user-${companyId}`,
-        metadata: { loginMethod: 'password', mfa: false }
+        metadata: { loginMethod: 'password', mfa: false },
       })
     }
     console.log('✅ Multi-tenant security events logged')
 
     // Final Integration Test Summary
-    console.log('\n🎉 B.9.1 ENTERPRISE SECURITY INTEGRATION TEST COMPLETED SUCCESSFULLY!')
+    console.log(
+      '\n🎉 B.9.1 ENTERPRISE SECURITY INTEGRATION TEST COMPLETED SUCCESSFULLY!'
+    )
     console.log('📊 INTEGRATION SUMMARY:')
-    console.log('   ✅ SecurityManager - Real-time threat detection and response')
+    console.log(
+      '   ✅ SecurityManager - Real-time threat detection and response'
+    )
     console.log('   ✅ AuditLogger - Comprehensive compliance audit logging')
     console.log('   ✅ ComplianceMonitor - Automated HACCP compliance checking')
     console.log('   ✅ SecurityDashboard - Real-time security visualization')
-    console.log('   ✅ EnterpriseSecurityManager - Unified security coordination')
+    console.log(
+      '   ✅ EnterpriseSecurityManager - Unified security coordination'
+    )
     console.log('   ✅ Multi-tenant security isolation')
     console.log('   ✅ Export and reporting functionality')
     console.log('   ✅ Real-time monitoring and alerting')
 
     console.log('\n🔒 B.9.1 ENTERPRISE SECURITY READY FOR PRODUCTION!')
-
   } catch (error) {
     console.error('❌ Security integration test failed:', error)
     throw error
@@ -211,5 +236,7 @@ export async function testSecurityIntegration(): Promise<void> {
 
 // Auto-run test in development mode
 if (import.meta.env?.DEV) {
-  console.log('🧪 B.9.1 Enterprise Security Integration Test ready for execution')
+  console.log(
+    '🧪 B.9.1 Enterprise Security Integration Test ready for execution'
+  )
 }

@@ -10,7 +10,12 @@ import { complianceMonitor } from './ComplianceMonitor'
 export interface SecurityMetric {
   id: string
   name: string
-  category: 'AUTHENTICATION' | 'AUTHORIZATION' | 'THREATS' | 'COMPLIANCE' | 'AUDIT'
+  category:
+    | 'AUTHENTICATION'
+    | 'AUTHORIZATION'
+    | 'THREATS'
+    | 'COMPLIANCE'
+    | 'AUDIT'
   value: number
   unit: string
   trend: 'INCREASING' | 'DECREASING' | 'STABLE'
@@ -24,7 +29,11 @@ export interface SecurityMetric {
 
 export interface SecurityAlert {
   id: string
-  type: 'SECURITY_INCIDENT' | 'COMPLIANCE_VIOLATION' | 'SYSTEM_ANOMALY' | 'THREAT_DETECTED'
+  type:
+    | 'SECURITY_INCIDENT'
+    | 'COMPLIANCE_VIOLATION'
+    | 'SYSTEM_ANOMALY'
+    | 'THREAT_DETECTED'
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   title: string
   description: string
@@ -57,11 +66,14 @@ export interface SecurityDashboardData {
   }
   compliance: {
     overallStatus: 'COMPLIANT' | 'NON_COMPLIANT' | 'NEEDS_ATTENTION'
-    standardsStatus: Record<string, {
-      score: number
-      status: 'COMPLIANT' | 'NON_COMPLIANT' | 'PARTIALLY_COMPLIANT'
-      lastCheck: Date
-    }>
+    standardsStatus: Record<
+      string,
+      {
+        score: number
+        status: 'COMPLIANT' | 'NON_COMPLIANT' | 'PARTIALLY_COMPLIANT'
+        lastCheck: Date
+      }
+    >
     criticalFindings: number
     nextAudit: Date
   }
@@ -91,11 +103,14 @@ class SecurityDashboardService {
     const [securityMetrics, complianceResult, auditLogs] = await Promise.all([
       securityManager.getSecurityMetrics(),
       complianceMonitor.runComplianceCheck(),
-      auditLogger.getRecentAudits(24)
+      auditLogger.getRecentAudits(24),
     ])
 
     // Calculate security score
-    const securityScore = this.calculateSecurityScore(securityMetrics, auditLogs)
+    const securityScore = this.calculateSecurityScore(
+      securityMetrics,
+      auditLogs
+    )
 
     // Update metrics
     await this.updateMetrics(securityMetrics, complianceResult, auditLogs)
@@ -112,7 +127,7 @@ class SecurityDashboardService {
         complianceScore: complianceResult.overallScore,
         threatLevel: securityMetrics.threatLevel,
         activeAlerts: this.alerts.filter(alert => !alert.resolved).length,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       },
       metrics: this.metrics,
       alerts: this.alerts.slice(0, 10), // Latest 10 alerts
@@ -120,19 +135,25 @@ class SecurityDashboardService {
         logins: auditLogs.filter(log => log.event === 'USER_LOGIN').length,
         failedAttempts: securityMetrics.failedLogins,
         blockedIPs: securityMetrics.blockedIPs,
-        auditEvents: auditLogs.length
+        auditEvents: auditLogs.length,
       },
       compliance: {
-        overallStatus: this.mapComplianceLevelToStatus(complianceResult.complianceLevel),
-        standardsStatus: this.formatStandardsStatus(complianceResult.standardResults),
+        overallStatus: this.mapComplianceLevelToStatus(
+          complianceResult.complianceLevel
+        ),
+        standardsStatus: this.formatStandardsStatus(
+          complianceResult.standardResults
+        ),
         criticalFindings: complianceResult.criticalFindings,
-        nextAudit: complianceResult.nextScheduledCheck
+        nextAudit: complianceResult.nextScheduledCheck,
       },
-      trends
+      trends,
     }
 
     this.lastUpdateTime = new Date()
-    console.log(`📈 Dashboard updated: Security ${securityScore}%, Compliance ${complianceResult.overallScore}%`)
+    console.log(
+      `📈 Dashboard updated: Security ${securityScore}%, Compliance ${complianceResult.overallScore}%`
+    )
 
     return dashboardData
   }
@@ -147,7 +168,10 @@ class SecurityDashboardService {
   /**
    * Acknowledge security alert
    */
-  public async acknowledgeAlert(alertId: string, acknowledgedBy: string): Promise<void> {
+  public async acknowledgeAlert(
+    alertId: string,
+    acknowledgedBy: string
+  ): Promise<void> {
     const alert = this.alerts.find(a => a.id === alertId)
     if (alert) {
       alert.acknowledged = true
@@ -163,7 +187,7 @@ class SecurityDashboardService {
         severity: 'INFO',
         description: `Security alert acknowledged: ${alert.title}`,
         userId: acknowledgedBy,
-        metadata: { alertId, alertType: alert.type }
+        metadata: { alertId, alertType: alert.type },
       })
     }
   }
@@ -171,7 +195,11 @@ class SecurityDashboardService {
   /**
    * Resolve security alert
    */
-  public async resolveAlert(alertId: string, resolvedBy: string, resolution: string): Promise<void> {
+  public async resolveAlert(
+    alertId: string,
+    resolvedBy: string,
+    resolution: string
+  ): Promise<void> {
     const alert = this.alerts.find(a => a.id === alertId)
     if (alert) {
       alert.resolved = true
@@ -188,7 +216,7 @@ class SecurityDashboardService {
         severity: 'INFO',
         description: `Security alert resolved: ${alert.title}`,
         userId: resolvedBy,
-        metadata: { alertId, alertType: alert.type, resolution }
+        metadata: { alertId, alertType: alert.type, resolution },
       })
     }
   }
@@ -196,13 +224,15 @@ class SecurityDashboardService {
   /**
    * Add custom security alert
    */
-  public async addAlert(alert: Omit<SecurityAlert, 'id' | 'timestamp' | 'acknowledged' | 'resolved'>): Promise<string> {
+  public async addAlert(
+    alert: Omit<SecurityAlert, 'id' | 'timestamp' | 'acknowledged' | 'resolved'>
+  ): Promise<string> {
     const newAlert: SecurityAlert = {
       ...alert,
       id: crypto.randomUUID(),
       timestamp: new Date(),
       acknowledged: false,
-      resolved: false
+      resolved: false,
     }
 
     this.alerts.unshift(newAlert) // Add to beginning
@@ -220,7 +250,7 @@ class SecurityDashboardService {
       event: 'SECURITY_VIOLATION',
       severity: alert.severity === 'CRITICAL' ? 'CRITICAL' : 'WARNING',
       description: `Security alert created: ${alert.title}`,
-      metadata: { alertId: newAlert.id, alertType: alert.type }
+      metadata: { alertId: newAlert.id, alertType: alert.type },
     })
 
     return newAlert.id
@@ -229,18 +259,23 @@ class SecurityDashboardService {
   /**
    * Get security metrics history
    */
-  public async getMetricsHistory(metricId: string, days: number = 30): Promise<{ date: Date; value: number }[]> {
+  public async getMetricsHistory(
+    metricId: string,
+    days: number = 30
+  ): Promise<{ date: Date; value: number }[]> {
     // In production, this would fetch from persistent storage
     return Array.from({ length: days }, (_, i) => ({
       date: new Date(Date.now() - (days - 1 - i) * 24 * 60 * 60 * 1000),
-      value: Math.random() * 100
+      value: Math.random() * 100,
     }))
   }
 
   /**
    * Export security report
    */
-  public async exportSecurityReport(format: 'PDF' | 'CSV' | 'JSON'): Promise<string> {
+  public async exportSecurityReport(
+    format: 'PDF' | 'CSV' | 'JSON'
+  ): Promise<string> {
     const dashboardData = await this.getDashboardData()
 
     await auditLogger.logEvent({
@@ -248,7 +283,7 @@ class SecurityDashboardService {
       event: 'DATA_EXPORTED',
       severity: 'INFO',
       description: `Security report exported in ${format} format`,
-      metadata: { format, reportType: 'security_dashboard' }
+      metadata: { format, reportType: 'security_dashboard' },
     })
 
     switch (format) {
@@ -266,7 +301,10 @@ class SecurityDashboardService {
   /**
    * Private helper methods
    */
-  private calculateSecurityScore(securityMetrics: any, auditLogs: any[]): number {
+  private calculateSecurityScore(
+    securityMetrics: any,
+    auditLogs: any[]
+  ): number {
     let score = 100
 
     // Deduct points for security issues
@@ -284,13 +322,19 @@ class SecurityDashboardService {
     else if (securityMetrics.blockedIPs > 5) score -= 5
 
     // Deduct points for critical audit events
-    const criticalEvents = auditLogs.filter(log => log.severity === 'CRITICAL').length
+    const criticalEvents = auditLogs.filter(
+      log => log.severity === 'CRITICAL'
+    ).length
     score -= criticalEvents * 5
 
     return Math.max(0, score)
   }
 
-  private async updateMetrics(securityMetrics: any, complianceResult: any, auditLogs: any[]): Promise<void> {
+  private async updateMetrics(
+    securityMetrics: any,
+    complianceResult: any,
+    auditLogs: any[]
+  ): Promise<void> {
     const newMetrics: SecurityMetric[] = [
       {
         id: 'failed_logins',
@@ -301,8 +345,12 @@ class SecurityDashboardService {
         trend: 'STABLE',
         threshold: { warning: 10, critical: 20 },
         lastUpdated: new Date(),
-        status: securityMetrics.failedLogins > 20 ? 'CRITICAL' :
-                securityMetrics.failedLogins > 10 ? 'WARNING' : 'NORMAL'
+        status:
+          securityMetrics.failedLogins > 20
+            ? 'CRITICAL'
+            : securityMetrics.failedLogins > 10
+              ? 'WARNING'
+              : 'NORMAL',
       },
       {
         id: 'blocked_ips',
@@ -313,8 +361,12 @@ class SecurityDashboardService {
         trend: 'STABLE',
         threshold: { warning: 5, critical: 10 },
         lastUpdated: new Date(),
-        status: securityMetrics.blockedIPs > 10 ? 'CRITICAL' :
-                securityMetrics.blockedIPs > 5 ? 'WARNING' : 'NORMAL'
+        status:
+          securityMetrics.blockedIPs > 10
+            ? 'CRITICAL'
+            : securityMetrics.blockedIPs > 5
+              ? 'WARNING'
+              : 'NORMAL',
       },
       {
         id: 'active_sessions',
@@ -325,8 +377,12 @@ class SecurityDashboardService {
         trend: 'STABLE',
         threshold: { warning: 50, critical: 100 },
         lastUpdated: new Date(),
-        status: securityMetrics.activeSessions > 100 ? 'CRITICAL' :
-                securityMetrics.activeSessions > 50 ? 'WARNING' : 'NORMAL'
+        status:
+          securityMetrics.activeSessions > 100
+            ? 'CRITICAL'
+            : securityMetrics.activeSessions > 50
+              ? 'WARNING'
+              : 'NORMAL',
       },
       {
         id: 'compliance_score',
@@ -337,8 +393,12 @@ class SecurityDashboardService {
         trend: 'STABLE',
         threshold: { warning: 80, critical: 70 },
         lastUpdated: new Date(),
-        status: complianceResult.overallScore < 70 ? 'CRITICAL' :
-                complianceResult.overallScore < 80 ? 'WARNING' : 'NORMAL'
+        status:
+          complianceResult.overallScore < 70
+            ? 'CRITICAL'
+            : complianceResult.overallScore < 80
+              ? 'WARNING'
+              : 'NORMAL',
       },
       {
         id: 'audit_events',
@@ -349,22 +409,31 @@ class SecurityDashboardService {
         trend: 'STABLE',
         threshold: { warning: 1000, critical: 2000 },
         lastUpdated: new Date(),
-        status: auditLogs.length > 2000 ? 'CRITICAL' :
-                auditLogs.length > 1000 ? 'WARNING' : 'NORMAL'
-      }
+        status:
+          auditLogs.length > 2000
+            ? 'CRITICAL'
+            : auditLogs.length > 1000
+              ? 'WARNING'
+              : 'NORMAL',
+      },
     ]
 
     this.metrics = newMetrics
   }
 
-  private async generateAlerts(securityMetrics: any, complianceResult: any, auditLogs: any[]): Promise<void> {
+  private async generateAlerts(
+    securityMetrics: any,
+    complianceResult: any,
+    auditLogs: any[]
+  ): Promise<void> {
     // Generate alerts based on current security state
     const currentAlerts = this.alerts.filter(alert => !alert.resolved)
 
     // Check for new security threats
     if (securityMetrics.threatLevel === 'CRITICAL') {
-      const existingThreatAlert = currentAlerts.find(alert =>
-        alert.type === 'THREAT_DETECTED' && alert.severity === 'CRITICAL'
+      const existingThreatAlert = currentAlerts.find(
+        alert =>
+          alert.type === 'THREAT_DETECTED' && alert.severity === 'CRITICAL'
       )
 
       if (!existingThreatAlert) {
@@ -374,15 +443,18 @@ class SecurityDashboardService {
           title: 'Critical Security Threat Detected',
           description: `System threat level elevated to CRITICAL. Failed logins: ${securityMetrics.failedLogins}, Blocked IPs: ${securityMetrics.blockedIPs}`,
           source: 'SecurityManager',
-          metadata: { threatLevel: securityMetrics.threatLevel, failedLogins: securityMetrics.failedLogins }
+          metadata: {
+            threatLevel: securityMetrics.threatLevel,
+            failedLogins: securityMetrics.failedLogins,
+          },
         })
       }
     }
 
     // Check for compliance violations
     if (complianceResult.overallScore < 70) {
-      const existingComplianceAlert = currentAlerts.find(alert =>
-        alert.type === 'COMPLIANCE_VIOLATION'
+      const existingComplianceAlert = currentAlerts.find(
+        alert => alert.type === 'COMPLIANCE_VIOLATION'
       )
 
       if (!existingComplianceAlert) {
@@ -392,16 +464,23 @@ class SecurityDashboardService {
           title: 'Compliance Score Below Threshold',
           description: `Overall compliance score dropped to ${complianceResult.overallScore}%. Critical findings: ${complianceResult.criticalFindings}`,
           source: 'ComplianceMonitor',
-          metadata: { score: complianceResult.overallScore, criticalFindings: complianceResult.criticalFindings }
+          metadata: {
+            score: complianceResult.overallScore,
+            criticalFindings: complianceResult.criticalFindings,
+          },
         })
       }
     }
 
     // Check for critical audit events
-    const criticalAuditEvents = auditLogs.filter(log => log.severity === 'CRITICAL')
+    const criticalAuditEvents = auditLogs.filter(
+      log => log.severity === 'CRITICAL'
+    )
     if (criticalAuditEvents.length > 5) {
-      const existingAuditAlert = currentAlerts.find(alert =>
-        alert.type === 'SYSTEM_ANOMALY' && alert.description.includes('critical audit events')
+      const existingAuditAlert = currentAlerts.find(
+        alert =>
+          alert.type === 'SYSTEM_ANOMALY' &&
+          alert.description.includes('critical audit events')
       )
 
       if (!existingAuditAlert) {
@@ -411,7 +490,10 @@ class SecurityDashboardService {
           title: 'High Volume of Critical Events',
           description: `${criticalAuditEvents.length} critical audit events detected in the last 24 hours`,
           source: 'AuditLogger',
-          metadata: { eventCount: criticalAuditEvents.length, timeframe: '24h' }
+          metadata: {
+            eventCount: criticalAuditEvents.length,
+            timeframe: '24h',
+          },
         })
       }
     }
@@ -423,23 +505,29 @@ class SecurityDashboardService {
       securityScore: this.generateTrendData(30, 70, 100),
       complianceScore: this.generateTrendData(30, 80, 100),
       threatEvents: this.generateTrendData(30, 0, 10),
-      auditEvents: this.generateTrendData(30, 50, 200)
+      auditEvents: this.generateTrendData(30, 50, 200),
     }
   }
 
-  private generateTrendData(days: number, min: number, max: number): { date: Date; score?: number; count?: number }[] {
+  private generateTrendData(
+    days: number,
+    min: number,
+    max: number
+  ): { date: Date; score?: number; count?: number }[] {
     return Array.from({ length: days }, (_, i) => {
       const value = min + Math.random() * (max - min)
       const date = new Date(Date.now() - (days - 1 - i) * 24 * 60 * 60 * 1000)
 
       return {
         date,
-        ...(max > 50 ? { score: value } : { count: Math.floor(value) })
+        ...(max > 50 ? { score: value } : { count: Math.floor(value) }),
       }
     })
   }
 
-  private mapComplianceLevelToStatus(level: string): 'COMPLIANT' | 'NON_COMPLIANT' | 'NEEDS_ATTENTION' {
+  private mapComplianceLevelToStatus(
+    level: string
+  ): 'COMPLIANT' | 'NON_COMPLIANT' | 'NEEDS_ATTENTION' {
     switch (level) {
       case 'EXCELLENT':
       case 'GOOD':
@@ -461,7 +549,7 @@ class SecurityDashboardService {
       formattedStatus[standardId] = {
         score: (result as any).score,
         status: (result as any).status,
-        lastCheck: new Date()
+        lastCheck: new Date(),
       }
     }
 
@@ -474,7 +562,7 @@ class SecurityDashboardService {
       metric.name,
       `${metric.value} ${metric.unit}`,
       metric.status,
-      metric.lastUpdated.toISOString()
+      metric.lastUpdated.toISOString(),
     ])
 
     return [headers, ...rows].map(row => row.join(',')).join('\n')

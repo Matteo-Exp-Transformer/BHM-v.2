@@ -19,7 +19,12 @@ export interface ComplianceRequirement {
   standardId: string
   title: string
   description: string
-  checkType: 'TEMPERATURE' | 'DOCUMENTATION' | 'TRAINING' | 'MAINTENANCE' | 'ACCESS_CONTROL'
+  checkType:
+    | 'TEMPERATURE'
+    | 'DOCUMENTATION'
+    | 'TRAINING'
+    | 'MAINTENANCE'
+    | 'ACCESS_CONTROL'
   criticalLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   automatable: boolean
   checkFrequency: string
@@ -65,11 +70,14 @@ export interface ComplianceResult {
   lastCheckDate: Date
   nextScheduledCheck: Date
   complianceLevel: 'EXCELLENT' | 'GOOD' | 'ACCEPTABLE' | 'POOR' | 'CRITICAL'
-  standardResults: Record<string, {
-    score: number
-    status: 'COMPLIANT' | 'NON_COMPLIANT' | 'PARTIALLY_COMPLIANT'
-    criticalIssues: number
-  }>
+  standardResults: Record<
+    string,
+    {
+      score: number
+      status: 'COMPLIANT' | 'NON_COMPLIANT' | 'PARTIALLY_COMPLIANT'
+      criticalIssues: number
+    }
+  >
 }
 
 export interface ComplianceSchedule {
@@ -117,7 +125,9 @@ class ComplianceMonitorService {
     // Setup reporting
     this.setupReporting(config.reportingFrequency)
 
-    console.log(`✅ Compliance Monitor initialized with ${config.standards.length} standards`)
+    console.log(
+      `✅ Compliance Monitor initialized with ${config.standards.length} standards`
+    )
   }
 
   /**
@@ -136,19 +146,30 @@ class ComplianceMonitorService {
       allChecks.push(...standardChecks)
 
       // Calculate standard-specific results
-      const passedChecks = standardChecks.filter(check => check.result === 'PASS').length
-      const failedChecks = standardChecks.filter(check => check.result === 'FAIL').length
-      const warningChecks = standardChecks.filter(check => check.result === 'WARNING').length
+      const passedChecks = standardChecks.filter(
+        check => check.result === 'PASS'
+      ).length
+      const failedChecks = standardChecks.filter(
+        check => check.result === 'FAIL'
+      ).length
+      const warningChecks = standardChecks.filter(
+        check => check.result === 'WARNING'
+      ).length
       const totalChecks = standardChecks.length
 
       const score = totalChecks > 0 ? (passedChecks / totalChecks) * 100 : 0
-      const criticalIssues = standardChecks.reduce((count, check) =>
-        count + check.findings.filter(finding => finding.severity === 'CRITICAL').length, 0
+      const criticalIssues = standardChecks.reduce(
+        (count, check) =>
+          count +
+          check.findings.filter(finding => finding.severity === 'CRITICAL')
+            .length,
+        0
       )
 
       let status: 'COMPLIANT' | 'NON_COMPLIANT' | 'PARTIALLY_COMPLIANT'
       if (score >= 95 && criticalIssues === 0) status = 'COMPLIANT'
-      else if (score >= 70 && criticalIssues === 0) status = 'PARTIALLY_COMPLIANT'
+      else if (score >= 70 && criticalIssues === 0)
+        status = 'PARTIALLY_COMPLIANT'
       else status = 'NON_COMPLIANT'
 
       standardResults[standardId] = { score, status, criticalIssues }
@@ -156,19 +177,33 @@ class ComplianceMonitorService {
 
     // Calculate overall results
     const totalRequirements = allChecks.length
-    const passedChecks = allChecks.filter(check => check.result === 'PASS').length
-    const failedChecks = allChecks.filter(check => check.result === 'FAIL').length
-    const warningChecks = allChecks.filter(check => check.result === 'WARNING').length
+    const passedChecks = allChecks.filter(
+      check => check.result === 'PASS'
+    ).length
+    const failedChecks = allChecks.filter(
+      check => check.result === 'FAIL'
+    ).length
+    const warningChecks = allChecks.filter(
+      check => check.result === 'WARNING'
+    ).length
 
-    const overallScore = totalRequirements > 0 ? (passedChecks / totalRequirements) * 100 : 0
-    const criticalFindings = allChecks.reduce((count, check) =>
-      count + check.findings.filter(finding => finding.severity === 'CRITICAL').length, 0
+    const overallScore =
+      totalRequirements > 0 ? (passedChecks / totalRequirements) * 100 : 0
+    const criticalFindings = allChecks.reduce(
+      (count, check) =>
+        count +
+        check.findings.filter(finding => finding.severity === 'CRITICAL')
+          .length,
+      0
     )
 
     let complianceLevel: ComplianceResult['complianceLevel']
-    if (overallScore >= 95 && criticalFindings === 0) complianceLevel = 'EXCELLENT'
-    else if (overallScore >= 85 && criticalFindings === 0) complianceLevel = 'GOOD'
-    else if (overallScore >= 70 && criticalFindings <= 2) complianceLevel = 'ACCEPTABLE'
+    if (overallScore >= 95 && criticalFindings === 0)
+      complianceLevel = 'EXCELLENT'
+    else if (overallScore >= 85 && criticalFindings === 0)
+      complianceLevel = 'GOOD'
+    else if (overallScore >= 70 && criticalFindings <= 2)
+      complianceLevel = 'ACCEPTABLE'
     else if (overallScore >= 50) complianceLevel = 'POOR'
     else complianceLevel = 'CRITICAL'
 
@@ -183,12 +218,14 @@ class ComplianceMonitorService {
       lastCheckDate: new Date(),
       nextScheduledCheck: this.getNextScheduledCheck(),
       complianceLevel,
-      standardResults
+      standardResults,
     }
 
     this.checks.push(...allChecks)
 
-    console.log(`📊 Compliance check completed: ${overallScore.toFixed(1)}% (${complianceLevel})`)
+    console.log(
+      `📊 Compliance check completed: ${overallScore.toFixed(1)}% (${complianceLevel})`
+    )
     return result
   }
 
@@ -219,20 +256,28 @@ class ComplianceMonitorService {
       certificationBody: string
     }
   }> {
-
-    const relevantChecks = this.checks.filter(check =>
-      check.standardId === standard &&
-      check.executedAt >= dateRange.start &&
-      check.executedAt <= dateRange.end
+    const relevantChecks = this.checks.filter(
+      check =>
+        check.standardId === standard &&
+        check.executedAt >= dateRange.start &&
+        check.executedAt <= dateRange.end
     )
 
     const findings = relevantChecks.flatMap(check => check.findings)
-    const criticalFindings = findings.filter(finding => finding.severity === 'CRITICAL').length
-    const passedChecks = relevantChecks.filter(check => check.result === 'PASS').length
-    const failedChecks = relevantChecks.filter(check => check.result === 'FAIL').length
+    const criticalFindings = findings.filter(
+      finding => finding.severity === 'CRITICAL'
+    ).length
+    const passedChecks = relevantChecks.filter(
+      check => check.result === 'PASS'
+    ).length
+    const failedChecks = relevantChecks.filter(
+      check => check.result === 'FAIL'
+    ).length
 
-    const complianceScore = relevantChecks.length > 0 ?
-      (passedChecks / relevantChecks.length) * 100 : 0
+    const complianceScore =
+      relevantChecks.length > 0
+        ? (passedChecks / relevantChecks.length) * 100
+        : 0
 
     // Generate recommendations based on findings
     const recommendations = this.generateRecommendations(findings, standard)
@@ -247,28 +292,33 @@ class ComplianceMonitorService {
         passedChecks,
         failedChecks,
         criticalFindings,
-        complianceScore
+        complianceScore,
       },
       details: relevantChecks,
       findings,
       recommendations,
-      ...(complianceScore >= 95 && criticalFindings === 0 && {
-        certificateData: {
-          issued: new Date(),
-          validUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
-          certificationBody: 'Internal Compliance System'
-        }
-      })
+      ...(complianceScore >= 95 &&
+        criticalFindings === 0 && {
+          certificateData: {
+            issued: new Date(),
+            validUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+            certificationBody: 'Internal Compliance System',
+          },
+        }),
     }
 
-    console.log(`📄 Generated ${standard} compliance report: ${complianceScore.toFixed(1)}% compliance`)
+    console.log(
+      `📄 Generated ${standard} compliance report: ${complianceScore.toFixed(1)}% compliance`
+    )
     return report
   }
 
   /**
    * Check specific requirement
    */
-  public async checkRequirement(requirementId: string): Promise<ComplianceCheck> {
+  public async checkRequirement(
+    requirementId: string
+  ): Promise<ComplianceCheck> {
     const requirement = this.findRequirement(requirementId)
     if (!requirement) {
       throw new Error(`Requirement not found: ${requirementId}`)
@@ -287,7 +337,7 @@ class ComplianceMonitorService {
       findings: [],
       recommendations: [],
       nextCheckDue: this.calculateNextCheckDue(requirement.checkFrequency),
-      evidenceFiles: []
+      evidenceFiles: [],
     }
 
     // Perform specific checks based on requirement type
@@ -329,23 +379,36 @@ class ComplianceMonitorService {
       findingsTrend: { date: Date; count: number }[]
     }
   }> {
-
     const recentChecks = this.checks
-      .filter(check => check.executedAt >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
+      .filter(
+        check =>
+          check.executedAt >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      )
       .slice(0, 10)
 
-    const openFindings = this.findings.filter(finding => finding.status !== 'RESOLVED')
+    const openFindings = this.findings.filter(
+      finding => finding.status !== 'RESOLVED'
+    )
 
     const upcomingChecks = this.schedule
-      .filter(schedule => schedule.nextDueDate <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
+      .filter(
+        schedule =>
+          schedule.nextDueDate <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      )
       .sort((a, b) => a.nextDueDate.getTime() - b.nextDueDate.getTime())
       .slice(0, 5)
 
-    const avgScore = recentChecks.length > 0 ?
-      recentChecks.reduce((sum, check) => sum + check.score, 0) / recentChecks.length : 0
+    const avgScore =
+      recentChecks.length > 0
+        ? recentChecks.reduce((sum, check) => sum + check.score, 0) /
+          recentChecks.length
+        : 0
 
     let overallStatus: 'COMPLIANT' | 'NON_COMPLIANT' | 'NEEDS_ATTENTION'
-    if (avgScore >= 95 && openFindings.filter(f => f.severity === 'CRITICAL').length === 0) {
+    if (
+      avgScore >= 95 &&
+      openFindings.filter(f => f.severity === 'CRITICAL').length === 0
+    ) {
       overallStatus = 'COMPLIANT'
     } else if (avgScore >= 70) {
       overallStatus = 'NEEDS_ATTENTION'
@@ -361,8 +424,8 @@ class ComplianceMonitorService {
       upcomingChecks,
       trends: {
         scoreHistory: this.generateScoreHistory(),
-        findingsTrend: this.generateFindingsTrend()
-      }
+        findingsTrend: this.generateFindingsTrend(),
+      },
     }
   }
 
@@ -393,9 +456,13 @@ class ComplianceMonitorService {
           version: '2023',
           description: 'Food safety management system',
           requirements: this.getHACCPRequirements(),
-          criticalControlPoints: ['Temperature Control', 'Contamination Prevention', 'Documentation'],
+          criticalControlPoints: [
+            'Temperature Control',
+            'Contamination Prevention',
+            'Documentation',
+          ],
           monitoringFrequency: 'real-time',
-          mandatory: true
+          mandatory: true,
         }
       case 'ISO22000':
         return {
@@ -404,9 +471,13 @@ class ComplianceMonitorService {
           version: '2018',
           description: 'International standard for food safety',
           requirements: this.getISO22000Requirements(),
-          criticalControlPoints: ['Food Safety Policy', 'Risk Assessment', 'Traceability'],
+          criticalControlPoints: [
+            'Food Safety Policy',
+            'Risk Assessment',
+            'Traceability',
+          ],
           monitoringFrequency: 'daily',
-          mandatory: false
+          mandatory: false,
         }
       case 'FDA':
         return {
@@ -415,9 +486,13 @@ class ComplianceMonitorService {
           version: '2023',
           description: 'US FDA food safety regulations',
           requirements: this.getFDARequirements(),
-          criticalControlPoints: ['Preventive Controls', 'Supplier Verification', 'Recall Procedures'],
+          criticalControlPoints: [
+            'Preventive Controls',
+            'Supplier Verification',
+            'Recall Procedures',
+          ],
           monitoringFrequency: 'daily',
-          mandatory: false
+          mandatory: false,
         }
       case 'EU_REGULATION':
         return {
@@ -426,9 +501,13 @@ class ComplianceMonitorService {
           version: '2023',
           description: 'European Union food safety standards',
           requirements: this.getEURequirements(),
-          criticalControlPoints: ['Traceability', 'HACCP Implementation', 'Hygiene Standards'],
+          criticalControlPoints: [
+            'Traceability',
+            'HACCP Implementation',
+            'Hygiene Standards',
+          ],
           monitoringFrequency: 'daily',
-          mandatory: false
+          mandatory: false,
         }
       default:
         throw new Error(`Unknown standard: ${standardId}`)
@@ -447,7 +526,11 @@ class ComplianceMonitorService {
         automatable: true,
         checkFrequency: 'real-time',
         acceptanceCriteria: { temperatureRange: { min: -18, max: 4 } },
-        remedialActions: ['Adjust equipment', 'Move products', 'Document incident']
+        remedialActions: [
+          'Adjust equipment',
+          'Move products',
+          'Document incident',
+        ],
       },
       {
         id: 'HACCP_002',
@@ -459,8 +542,8 @@ class ComplianceMonitorService {
         automatable: true,
         checkFrequency: 'daily',
         acceptanceCriteria: { completeness: 100 },
-        remedialActions: ['Complete missing records', 'Update procedures']
-      }
+        remedialActions: ['Complete missing records', 'Update procedures'],
+      },
     ]
   }
 
@@ -476,8 +559,8 @@ class ComplianceMonitorService {
         automatable: false,
         checkFrequency: 'monthly',
         acceptanceCriteria: { reviewFrequency: 'monthly' },
-        remedialActions: ['Schedule review', 'Document findings']
-      }
+        remedialActions: ['Schedule review', 'Document findings'],
+      },
     ]
   }
 
@@ -493,8 +576,8 @@ class ComplianceMonitorService {
         automatable: true,
         checkFrequency: 'weekly',
         acceptanceCriteria: { verificationRate: 100 },
-        remedialActions: ['Update controls', 'Retrain staff']
-      }
+        remedialActions: ['Update controls', 'Retrain staff'],
+      },
     ]
   }
 
@@ -510,12 +593,14 @@ class ComplianceMonitorService {
         automatable: true,
         checkFrequency: 'daily',
         acceptanceCriteria: { traceabilityCompleteness: 100 },
-        remedialActions: ['Update traceability records', 'System verification']
-      }
+        remedialActions: ['Update traceability records', 'System verification'],
+      },
     ]
   }
 
-  private async checkStandardCompliance(standardId: string): Promise<ComplianceCheck[]> {
+  private async checkStandardCompliance(
+    standardId: string
+  ): Promise<ComplianceCheck[]> {
     const standard = this.standards.get(standardId)
     if (!standard) return []
 
@@ -529,13 +614,20 @@ class ComplianceMonitorService {
     return checks
   }
 
-  private async checkTemperatureCompliance(check: ComplianceCheck, requirement: ComplianceRequirement): Promise<void> {
+  private async checkTemperatureCompliance(
+    check: ComplianceCheck,
+    requirement: ComplianceRequirement
+  ): Promise<void> {
     // Simulate temperature compliance check
     // In production, this would check actual temperature data
     const mockTemperatureData = { current: 2, min: -1, max: 5 }
 
-    if (mockTemperatureData.current < requirement.acceptanceCriteria.temperatureRange.min ||
-        mockTemperatureData.current > requirement.acceptanceCriteria.temperatureRange.max) {
+    if (
+      mockTemperatureData.current <
+        requirement.acceptanceCriteria.temperatureRange.min ||
+      mockTemperatureData.current >
+        requirement.acceptanceCriteria.temperatureRange.max
+    ) {
       check.result = 'FAIL'
       check.findings.push({
         id: crypto.randomUUID(),
@@ -545,14 +637,17 @@ class ComplianceMonitorService {
         timestamp: new Date(),
         correctionRequired: true,
         timeToCorrect: 'Immediate',
-        status: 'OPEN'
+        status: 'OPEN',
       })
     } else {
       check.result = 'PASS'
     }
   }
 
-  private async checkDocumentationCompliance(check: ComplianceCheck, requirement: ComplianceRequirement): Promise<void> {
+  private async checkDocumentationCompliance(
+    check: ComplianceCheck,
+    requirement: ComplianceRequirement
+  ): Promise<void> {
     // Simulate documentation check
     const mockCompleteness = Math.random() * 100
 
@@ -566,22 +661,31 @@ class ComplianceMonitorService {
         timestamp: new Date(),
         correctionRequired: true,
         timeToCorrect: '24 hours',
-        status: 'OPEN'
+        status: 'OPEN',
       })
     } else {
       check.result = 'PASS'
     }
   }
 
-  private async checkTrainingCompliance(check: ComplianceCheck, requirement: ComplianceRequirement): Promise<void> {
+  private async checkTrainingCompliance(
+    check: ComplianceCheck,
+    requirement: ComplianceRequirement
+  ): Promise<void> {
     check.result = 'PASS' // Simplified for demo
   }
 
-  private async checkMaintenanceCompliance(check: ComplianceCheck, requirement: ComplianceRequirement): Promise<void> {
+  private async checkMaintenanceCompliance(
+    check: ComplianceCheck,
+    requirement: ComplianceRequirement
+  ): Promise<void> {
     check.result = 'PASS' // Simplified for demo
   }
 
-  private async checkAccessControlCompliance(check: ComplianceCheck, requirement: ComplianceRequirement): Promise<void> {
+  private async checkAccessControlCompliance(
+    check: ComplianceCheck,
+    requirement: ComplianceRequirement
+  ): Promise<void> {
     check.result = 'PASS' // Simplified for demo
   }
 
@@ -589,15 +693,21 @@ class ComplianceMonitorService {
     if (check.result === 'PASS') return 100
     if (check.result === 'WARNING') return 75
     if (check.result === 'FAIL') {
-      const criticalFindings = check.findings.filter(f => f.severity === 'CRITICAL').length
-      return Math.max(0, 50 - (criticalFindings * 25))
+      const criticalFindings = check.findings.filter(
+        f => f.severity === 'CRITICAL'
+      ).length
+      return Math.max(0, 50 - criticalFindings * 25)
     }
     return 0
   }
 
-  private findRequirement(requirementId: string): ComplianceRequirement | undefined {
+  private findRequirement(
+    requirementId: string
+  ): ComplianceRequirement | undefined {
     for (const standard of this.standards.values()) {
-      const requirement = standard.requirements.find(req => req.id === requirementId)
+      const requirement = standard.requirements.find(
+        req => req.id === requirementId
+      )
       if (requirement) return requirement
     }
     return undefined
@@ -623,21 +733,32 @@ class ComplianceMonitorService {
     return new Date(Date.now() + 24 * 60 * 60 * 1000) // Tomorrow
   }
 
-  private generateRecommendations(findings: ComplianceFinding[], standard: string): string[] {
+  private generateRecommendations(
+    findings: ComplianceFinding[],
+    standard: string
+  ): string[] {
     const recommendations: string[] = []
 
     const criticalFindings = findings.filter(f => f.severity === 'CRITICAL')
     if (criticalFindings.length > 0) {
-      recommendations.push(`Address ${criticalFindings.length} critical findings immediately`)
+      recommendations.push(
+        `Address ${criticalFindings.length} critical findings immediately`
+      )
     }
 
-    const temperatureFindings = findings.filter(f => f.description.toLowerCase().includes('temperature'))
+    const temperatureFindings = findings.filter(f =>
+      f.description.toLowerCase().includes('temperature')
+    )
     if (temperatureFindings.length > 0) {
-      recommendations.push('Review temperature monitoring procedures and equipment calibration')
+      recommendations.push(
+        'Review temperature monitoring procedures and equipment calibration'
+      )
     }
 
     if (standard === 'HACCP' && findings.length > 0) {
-      recommendations.push('Update HACCP plan documentation to address identified gaps')
+      recommendations.push(
+        'Update HACCP plan documentation to address identified gaps'
+      )
     }
 
     return recommendations
@@ -647,7 +768,7 @@ class ComplianceMonitorService {
     // Generate mock data for demo
     return Array.from({ length: 30 }, (_, i) => ({
       date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000),
-      score: 80 + Math.random() * 20
+      score: 80 + Math.random() * 20,
     }))
   }
 
@@ -655,7 +776,7 @@ class ComplianceMonitorService {
     // Generate mock data for demo
     return Array.from({ length: 30 }, (_, i) => ({
       date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000),
-      count: Math.floor(Math.random() * 5)
+      count: Math.floor(Math.random() * 5),
     }))
   }
 
