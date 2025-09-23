@@ -31,6 +31,26 @@ export * from './performance/MobilePerformanceOptimizer'
 // Integration Services (B.10.4 Session 2) - 🚀 IN PROGRESS
 export * from './integration/MobileIntegrationTester'
 
+// Automation Services (B.10.4 Session 1-2) - ✅ COMPLETED
+export * from './automation'
+
+// Performance Services (B.10.4 Session 4) - 🚀 IN PROGRESS
+export * from './performance'
+
+// Accessibility Services (B.10.4 Session 4) - 🚀 IN PROGRESS
+export * from './accessibility'
+
+// Testing Services (B.10.4 Session 4) - 🚀 IN PROGRESS
+export * from './testing'
+
+// Optimization Services (B.10.4 Session 4) - 🚀 IN PROGRESS
+export * from './optimization'
+
+// Advanced Mobile Services (B.10.4 Session 4) - 🚀 IN PROGRESS
+export * from './gestures'
+export * from './voice'
+export * from './haptic'
+
 /**
  * Mobile Services Manager
  * Central coordinator for all mobile functionality
@@ -43,6 +63,14 @@ class MobileServicesManager {
   private multiLocationInitialized = false
   private performanceOptimizerInitialized = false
   private integrationTesterInitialized = false
+  private automationServicesInitialized = false
+  private performanceServicesInitialized = false
+  private accessibilityServicesInitialized = false
+  private testingServicesInitialized = false
+  private optimizationServicesInitialized = false
+  private gestureServicesInitialized = false
+  private voiceServicesInitialized = false
+  private hapticServicesInitialized = false
 
   /**
    * Initialize mobile services (B.10.4)
@@ -157,6 +185,114 @@ class MobileServicesManager {
       console.warn('⚠️ Integration tester initialization failed:', error)
     }
 
+    try {
+      // Initialize automation services (B.10.4 Session 1-2 - ✅ COMPLETED)
+      const { mobileAutomationServices } = await import('./automation')
+      await mobileAutomationServices.initialize()
+      this.automationServicesInitialized = true
+      console.log(
+        '🤖📱 Mobile automation services initialized - B.10.4 Session 1-2 COMPLETED'
+      )
+    } catch (error) {
+      console.warn(
+        '⚠️ Mobile automation services initialization failed:',
+        error
+      )
+    }
+
+    try {
+      // Initialize performance services (B.10.4 Session 4 - 🚀 IN PROGRESS)
+      const { mobilePerformanceServices } = await import('./performance')
+      await mobilePerformanceServices.initialize()
+      this.performanceServicesInitialized = true
+      console.log(
+        '⚡📱 Mobile performance services initialized - B.10.4 Session 4 IN PROGRESS'
+      )
+    } catch (error) {
+      console.warn(
+        '⚠️ Mobile performance services initialization failed:',
+        error
+      )
+    }
+
+    try {
+      // Initialize accessibility services (B.10.4 Session 4 - 🚀 IN PROGRESS)
+      const { mobileAccessibilityServices } = await import('./accessibility')
+      await mobileAccessibilityServices.initialize()
+      this.accessibilityServicesInitialized = true
+      console.log(
+        '♿📱 Mobile accessibility services initialized - B.10.4 Session 4 IN PROGRESS'
+      )
+    } catch (error) {
+      console.warn(
+        '⚠️ Mobile accessibility services initialization failed:',
+        error
+      )
+    }
+
+    try {
+      // Initialize testing services (B.10.4 Session 4 - 🚀 IN PROGRESS)
+      const { mobileTestingServices } = await import('./testing')
+      await mobileTestingServices.initialize()
+      this.testingServicesInitialized = true
+      console.log(
+        '🧪📱 Mobile testing services initialized - B.10.4 Session 4 IN PROGRESS'
+      )
+    } catch (error) {
+      console.warn('⚠️ Mobile testing services initialization failed:', error)
+    }
+
+    try {
+      // Initialize optimization services (B.10.4 Session 4 - 🚀 IN PROGRESS)
+      const { mobileOptimizationServices } = await import('./optimization')
+      await mobileOptimizationServices.initialize()
+      this.optimizationServicesInitialized = true
+      console.log(
+        '📦📱 Mobile optimization services initialized - B.10.4 Session 4 IN PROGRESS'
+      )
+    } catch (error) {
+      console.warn(
+        '⚠️ Mobile optimization services initialization failed:',
+        error
+      )
+    }
+
+    try {
+      // Initialize gesture services (B.10.4 Session 4 - 🚀 IN PROGRESS)
+      const { mobileGestureServices } = await import('./gestures')
+      await mobileGestureServices.initialize()
+      this.gestureServicesInitialized = true
+      console.log(
+        '👆📱 Mobile gesture services initialized - B.10.4 Session 4 IN PROGRESS'
+      )
+    } catch (error) {
+      console.warn('⚠️ Mobile gesture services initialization failed:', error)
+    }
+
+    try {
+      // Initialize voice services (B.10.4 Session 4 - 🚀 IN PROGRESS)
+      const { mobileVoiceServices } = await import('./voice')
+      await mobileVoiceServices.initialize()
+      this.voiceServicesInitialized = true
+      console.log(
+        '🎤📱 Mobile voice services initialized - B.10.4 Session 4 IN PROGRESS'
+      )
+    } catch (error) {
+      console.warn('⚠️ Mobile voice services initialization failed:', error)
+    }
+
+    try {
+      // Initialize haptic services (B.10.4 Session 4 - 🚀 IN PROGRESS)
+      const { mobileHapticServices } = await import('./haptic')
+      await mobileHapticServices.initialize()
+      this.hapticServicesInitialized = true
+      console.log(
+        '📳📱 Mobile haptic services initialized - B.10.4 Session 4 IN PROGRESS'
+      )
+    } catch (error) {
+      console.warn('⚠️ Mobile haptic services initialization failed:', error)
+    }
+
     console.log('📱 Mobile Services initialized - B.10.4 Advanced Mobile & PWA')
     this.initialized = true
   }
@@ -198,6 +334,14 @@ class MobileServicesManager {
       multiLocationInitialized: this.multiLocationInitialized, // B.10.4 Session 2
       performanceOptimizerInitialized: this.performanceOptimizerInitialized, // B.10.4 Session 2
       integrationTesterInitialized: this.integrationTesterInitialized, // B.10.4 Session 2
+      automationServicesInitialized: this.automationServicesInitialized, // B.10.4 Session 1-2
+      performanceServicesInitialized: this.performanceServicesInitialized, // B.10.4 Session 4
+      accessibilityServicesInitialized: this.accessibilityServicesInitialized, // B.10.4 Session 4
+      testingServicesInitialized: this.testingServicesInitialized, // B.10.4 Session 4
+      optimizationServicesInitialized: this.optimizationServicesInitialized, // B.10.4 Session 4
+      gestureServicesInitialized: this.gestureServicesInitialized, // B.10.4 Session 4
+      voiceServicesInitialized: this.voiceServicesInitialized, // B.10.4 Session 4
+      hapticServicesInitialized: this.hapticServicesInitialized, // B.10.4 Session 4
     }
   }
 }

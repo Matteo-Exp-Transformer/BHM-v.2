@@ -23,13 +23,24 @@ export {
   InstallPromptManager,
 } from './InstallPromptManager'
 
+// Advanced PWA Services (B.10.4 Session 3) - 🚀 IN PROGRESS
+export {
+  automationServiceWorker,
+  AutomationServiceWorker,
+} from './AutomationServiceWorker'
+export {
+  automationCacheManager,
+  AutomationCacheManager,
+} from './AutomationCacheManager'
+export { updateManager, UpdateManager } from './UpdateManager'
+
 export const appUpdateManager = {
-  // Will be implemented in current session
+  // Now implemented in B.10.4 Session 3
   checkForUpdates: async () => {
-    throw new Error('App updates not implemented - planned B.10.4')
+    return await updateManager.checkForUpdates()
   },
   applyUpdate: async () => {
-    throw new Error('Update application not implemented - planned B.10.4')
+    return await updateManager.installUpdate()
   },
 }
 
