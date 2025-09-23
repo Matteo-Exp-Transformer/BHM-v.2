@@ -69,3 +69,8 @@ ehthumbs.db
 supabase/.branches
 supabase/.temp
 .vercel
+
+# Worktrees
+BHM-v.2-Cursor/
+BHM-v.2-Gemini/
+BHM-v.2-Claude/
