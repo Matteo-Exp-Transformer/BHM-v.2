@@ -7,7 +7,7 @@
 import { cameraService, PhotoMetadata, CameraOptions } from './CameraService'
 import { gpsService, LocationData } from '../location/GPSService'
 import { backgroundSyncService } from '../pwa/BackgroundSyncService'
-import { pushNotificationService } from '../pwa/PushNotificationService'
+// import { pushNotificationService } from '../pwa/PushNotificationService'
 
 export interface InventoryPhotoMetadata extends PhotoMetadata {
   inventoryContext: {
@@ -64,8 +64,8 @@ export interface QualityAnalysisResult {
 export class InventoryCameraService {
   private static instance: InventoryCameraService
   private inventoryPhotos: InventoryPhotoMetadata[] = []
-  private barcodeScanner: any = null
-  private qualityAnalyzer: any = null
+  private barcodeScanner: unknown = null
+  private qualityAnalyzer: unknown = null
 
   private constructor() {}
 

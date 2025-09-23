@@ -101,7 +101,7 @@ export class MobilePerformanceOptimizer {
   private metrics: PerformanceMetrics[] = []
   private config: OptimizationConfig
   private isOptimizing = false
-  private optimizationInterval: NodeJS.Timeout | null = null
+  private optimizationInterval: number | null = null
   private currentOptimizations: OptimizationResult | null = null
 
   private constructor() {
@@ -157,7 +157,7 @@ export class MobilePerformanceOptimizer {
       await this.measurePerformance()
 
       // Set up continuous monitoring
-      this.optimizationInterval = setInterval(async () => {
+      this.optimizationInterval = window.setInterval(async () => {
         await this.measurePerformance()
         await this.checkAndOptimize()
       }, 30000) // Every 30 seconds
@@ -173,7 +173,7 @@ export class MobilePerformanceOptimizer {
    */
   public stopPerformanceMonitoring(): void {
     if (this.optimizationInterval) {
-      clearInterval(this.optimizationInterval)
+      window.clearInterval(this.optimizationInterval)
       this.optimizationInterval = null
       console.log('⚡ Performance monitoring stopped')
     }

@@ -55,7 +55,7 @@ export class BackgroundSyncService {
   private syncQueue: Map<string, SyncItem> = new Map()
   private isOnline: boolean = navigator.onLine
   private isSyncing: boolean = false
-  private syncInterval: NodeJS.Timeout | null = null
+  private syncInterval: number | null = null
   private config: SyncConfig = {
     maxRetries: 3,
     retryDelayMs: 1000,
@@ -418,7 +418,7 @@ export class BackgroundSyncService {
 
     // Restart periodic sync if interval changed
     if (newConfig.syncIntervalMs && this.syncInterval) {
-      clearInterval(this.syncInterval)
+      window.clearInterval(this.syncInterval)
       this.startPeriodicSync()
     }
   }
@@ -448,10 +448,10 @@ export class BackgroundSyncService {
    */
   private startPeriodicSync(): void {
     if (this.syncInterval) {
-      clearInterval(this.syncInterval)
+      window.clearInterval(this.syncInterval)
     }
 
-    this.syncInterval = setInterval(() => {
+    this.syncInterval = window.setInterval(() => {
       if (this.isOnline && !this.isSyncing && this.syncQueue.size > 0) {
         this.triggerSync()
       }
@@ -463,7 +463,7 @@ export class BackgroundSyncService {
    */
   private stopPeriodicSync(): void {
     if (this.syncInterval) {
-      clearInterval(this.syncInterval)
+      window.clearInterval(this.syncInterval)
       this.syncInterval = null
     }
   }

@@ -69,8 +69,8 @@ export class InstallPromptManager {
 
   private deferredPrompt: InstallPromptEvent | null = null
   private interactionCount: number = 0
-  private engagementTimer: NodeJS.Timeout | null = null
-  private promptTimer: NodeJS.Timeout | null = null
+  private engagementTimer: number | null = null
+  private promptTimer: number | null = null
 
   /**
    * Initialize install prompt manager

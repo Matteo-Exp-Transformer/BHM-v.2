@@ -7,7 +7,6 @@
 import {
   gpsService,
   LocationData,
-  ConservationPointLocation,
 } from './GPSService'
 import { backgroundSyncService } from '../pwa/BackgroundSyncService'
 import { pushNotificationService } from '../pwa/PushNotificationService'
@@ -269,7 +268,7 @@ export class MultiLocationService {
   /**
    * Handle location updates for transition detection
    */
-  private async handleLocationUpdate(location: LocationData): Promise<void> {
+  private async handleLocationUpdate(_location: LocationData): Promise<void> {
     try {
       const newFacility = await this.detectCurrentFacility()
 
