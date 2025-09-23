@@ -11,7 +11,7 @@ export { dataAggregator, DataAggregator } from './DataAggregator'
 export { scheduleManager, ScheduleManager } from './ScheduleManager'
 
 // Export types
-export type { 
+export type {
   Report,
   ReportComponent,
   ComponentConfig,
@@ -22,20 +22,20 @@ export type {
   TableColumn,
   ReportLayoutConfig,
   ReportMetadata,
-  ReportTemplate
+  ReportTemplate,
 } from './ReportBuilder'
 
-export type { 
+export type {
   AggregationConfig,
   AggregationRule,
   FilterRule,
   SortRule,
   AggregatedData,
   DataSource,
-  QueryResult
+  QueryResult,
 } from './DataAggregator'
 
-export type { 
+export type {
   ScheduleConfig,
   ScheduleFrequency,
   RecipientConfig,
@@ -43,7 +43,9 @@ export type {
   ScheduleCondition,
   ScheduleExecution,
   DeliveryStatus,
-  ScheduleStats
+  ScheduleStats,
 } from './ScheduleManager'
 
-console.log('📊 Reporting services implemented - B.10.2 Advanced Analytics & Reporting COMPLETED')
+console.log(
+  '📊 Reporting services implemented - B.10.2 Advanced Analytics & Reporting COMPLETED'
+)

@@ -21,14 +21,14 @@ import {
   Calendar,
   RefreshCw,
   Download,
-  Settings
+  Settings,
 } from 'lucide-react'
 
-import { 
+import {
   analyticsProcessor,
   ProcessedAnalytics,
   AnalyticsInsight,
-  AnalyticsAlert 
+  AnalyticsAlert,
 } from '@/services/analytics'
 
 interface PredictiveDashboardProps {
@@ -40,9 +40,11 @@ interface PredictiveDashboardProps {
 export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
   companyId,
   onInsightClick,
-  onAlertClick
+  onAlertClick,
 }) => {
-  const [dashboardData, setDashboardData] = useState<ProcessedAnalytics | null>(null)
+  const [dashboardData, setDashboardData] = useState<ProcessedAnalytics | null>(
+    null
+  )
   const [insights, setInsights] = useState<AnalyticsInsight[]>([])
   const [alerts, setAlerts] = useState<AnalyticsAlert[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,7 +53,7 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
 
   useEffect(() => {
     loadDashboardData()
-    
+
     // Set up auto-refresh every 5 minutes
     const interval = setInterval(loadDashboardData, 5 * 60 * 1000)
     return () => clearInterval(interval)
@@ -68,7 +70,9 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
       setAlerts(data.alerts)
       setLastUpdated(new Date())
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
+      setError(
+        err instanceof Error ? err.message : 'Failed to load dashboard data'
+      )
     } finally {
       setLoading(false)
     }
@@ -76,28 +80,40 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'destructive'
-      case 'warning': return 'default'
-      case 'info': return 'secondary'
-      default: return 'outline'
+      case 'critical':
+        return 'destructive'
+      case 'warning':
+        return 'default'
+      case 'info':
+        return 'secondary'
+      default:
+        return 'outline'
     }
   }
 
   const getTrendIcon = (direction: string) => {
     switch (direction) {
-      case 'increasing': return <TrendingUp className="h-4 w-4 text-green-500" />
-      case 'decreasing': return <TrendingDown className="h-4 w-4 text-red-500" />
-      default: return <Activity className="h-4 w-4 text-blue-500" />
+      case 'increasing':
+        return <TrendingUp className="h-4 w-4 text-green-500" />
+      case 'decreasing':
+        return <TrendingDown className="h-4 w-4 text-red-500" />
+      default:
+        return <Activity className="h-4 w-4 text-blue-500" />
     }
   }
 
   const getRiskLevelColor = (riskLevel: string) => {
     switch (riskLevel) {
-      case 'critical': return 'bg-red-100 text-red-800 border-red-200'
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200'
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'low': return 'bg-green-100 text-green-800 border-green-200'
-      default: return 'bg-gray-100 text-gray-800 border-gray-200'
+      case 'critical':
+        return 'bg-red-100 text-red-800 border-red-200'
+      case 'high':
+        return 'bg-orange-100 text-orange-800 border-orange-200'
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'low':
+        return 'bg-green-100 text-green-800 border-green-200'
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200'
     }
   }
 
@@ -116,9 +132,9 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
           {error}
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={loadDashboardData}
             className="ml-2"
           >
@@ -166,7 +182,8 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            {alerts.filter(alert => alert.severity === 'critical').length} critical alerts require immediate attention
+            {alerts.filter(alert => alert.severity === 'critical').length}{' '}
+            critical alerts require immediate attention
           </AlertDescription>
         </Alert>
       )}
@@ -187,7 +204,9 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
             {/* Key Metrics Cards */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Overall Risk Score</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Overall Risk Score
+                </CardTitle>
                 <Target className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -195,14 +214,18 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
                   {dashboardData?.risks[0]?.overallScore.toFixed(1) || 'N/A'}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Risk Level: {dashboardData?.risks[0]?.riskLevel.toUpperCase() || 'UNKNOWN'}
+                  Risk Level:{' '}
+                  {dashboardData?.risks[0]?.riskLevel.toUpperCase() ||
+                    'UNKNOWN'}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Predictions</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Active Predictions
+                </CardTitle>
                 <Brain className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -210,14 +233,18 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
                   {dashboardData?.predictions.length || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  High confidence: {dashboardData?.predictions.filter(p => p.confidence > 0.8).length || 0}
+                  High confidence:{' '}
+                  {dashboardData?.predictions.filter(p => p.confidence > 0.8)
+                    .length || 0}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Trend Analysis</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Trend Analysis
+                </CardTitle>
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -225,22 +252,25 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
                   {dashboardData?.trends.length || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Strong trends: {dashboardData?.trends.filter(t => t.strength === 'strong').length || 0}
+                  Strong trends:{' '}
+                  {dashboardData?.trends.filter(t => t.strength === 'strong')
+                    .length || 0}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Alerts</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Active Alerts
+                </CardTitle>
                 <Zap className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {alerts.length}
-                </div>
+                <div className="text-2xl font-bold">{alerts.length}</div>
                 <p className="text-xs text-muted-foreground">
-                  Critical: {alerts.filter(a => a.severity === 'critical').length}
+                  Critical:{' '}
+                  {alerts.filter(a => a.severity === 'critical').length}
                 </p>
               </CardContent>
             </Card>
@@ -253,8 +283,8 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {insights.slice(0, 5).map((insight) => (
-                  <div 
+                {insights.slice(0, 5).map(insight => (
+                  <div
                     key={insight.id}
                     className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer"
                     onClick={() => onInsightClick?.(insight)}
@@ -270,7 +300,9 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-sm font-medium">{insight.title}</h4>
-                      <p className="text-sm text-muted-foreground">{insight.description}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {insight.description}
+                      </p>
                       <div className="flex items-center mt-1 space-x-2">
                         <Badge variant={getSeverityColor(insight.severity)}>
                           {insight.type}
@@ -290,12 +322,16 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
         {/* Predictions Tab */}
         <TabsContent value="predictions" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {dashboardData?.predictions.map((prediction) => (
+            {dashboardData?.predictions.map(prediction => (
               <Card key={prediction.type}>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Brain className="h-5 w-5" />
-                    <span>{prediction.type.charAt(0).toUpperCase() + prediction.type.slice(1)} Prediction</span>
+                    <span>
+                      {prediction.type.charAt(0).toUpperCase() +
+                        prediction.type.slice(1)}{' '}
+                      Prediction
+                    </span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -307,9 +343,7 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
                       <Badge variant="outline">
                         {Math.round(prediction.confidence * 100)}% confidence
                       </Badge>
-                      <Badge variant="secondary">
-                        {prediction.timeframe}
-                      </Badge>
+                      <Badge variant="secondary">{prediction.timeframe}</Badge>
                     </div>
                     {prediction.recommendation && (
                       <p className="text-sm text-muted-foreground">
@@ -317,10 +351,16 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
                       </p>
                     )}
                     <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">Key Factors:</p>
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Key Factors:
+                      </p>
                       <div className="flex flex-wrap gap-1">
                         {prediction.factors.map((factor, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {factor}
                           </Badge>
                         ))}
@@ -336,7 +376,7 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
         {/* Trends Tab */}
         <TabsContent value="trends" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {dashboardData?.trends.map((trend) => (
+            {dashboardData?.trends.map(trend => (
               <Card key={trend.id}>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
@@ -347,35 +387,41 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2">
-                      <Badge variant="outline">
-                        {trend.direction}
-                      </Badge>
-                      <Badge variant="secondary">
-                        {trend.strength}
-                      </Badge>
+                      <Badge variant="outline">{trend.direction}</Badge>
+                      <Badge variant="secondary">{trend.strength}</Badge>
                       <Badge variant="outline">
                         {Math.round(trend.confidence * 100)}% confidence
                       </Badge>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>R² Score:</span>
-                        <span className="font-medium">{trend.rSquared.toFixed(3)}</span>
+                        <span className="font-medium">
+                          {trend.rSquared.toFixed(3)}
+                        </span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Slope:</span>
-                        <span className="font-medium">{trend.slope.toFixed(3)}</span>
+                        <span className="font-medium">
+                          {trend.slope.toFixed(3)}
+                        </span>
                       </div>
                     </div>
 
                     {trend.recommendations.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-xs font-medium text-muted-foreground">Recommendations:</p>
+                        <p className="text-xs font-medium text-muted-foreground">
+                          Recommendations:
+                        </p>
                         <ul className="text-xs space-y-1">
-                          {trend.recommendations.slice(0, 3).map((rec, index) => (
-                            <li key={index} className="text-muted-foreground">• {rec}</li>
-                          ))}
+                          {trend.recommendations
+                            .slice(0, 3)
+                            .map((rec, index) => (
+                              <li key={index} className="text-muted-foreground">
+                                • {rec}
+                              </li>
+                            ))}
                         </ul>
                       </div>
                     )}
@@ -389,7 +435,7 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
         {/* Risk Assessment Tab */}
         <TabsContent value="risks" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {dashboardData?.risks.map((risk) => (
+            {dashboardData?.risks.map(risk => (
               <Card key={risk.id}>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
@@ -404,17 +450,26 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
                     <div className="text-3xl font-bold">
                       {risk.overallScore.toFixed(1)}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <p className="text-sm font-medium">Risk Factors:</p>
                       <div className="space-y-2">
-                        {risk.factors.map((factor) => (
-                          <div key={factor.id} className="flex items-center justify-between">
+                        {risk.factors.map(factor => (
+                          <div
+                            key={factor.id}
+                            className="flex items-center justify-between"
+                          >
                             <span className="text-sm">{factor.name}</span>
                             <div className="flex items-center space-x-2">
-                              <span className="text-sm font-medium">{factor.score.toFixed(1)}</span>
-                              <Badge 
-                                variant={factor.status === 'critical' ? 'destructive' : 'secondary'}
+                              <span className="text-sm font-medium">
+                                {factor.score.toFixed(1)}
+                              </span>
+                              <Badge
+                                variant={
+                                  factor.status === 'critical'
+                                    ? 'destructive'
+                                    : 'secondary'
+                                }
                                 className="text-xs"
                               >
                                 {factor.status}
@@ -429,10 +484,15 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
                       <div className="space-y-2">
                         <p className="text-sm font-medium">Recommendations:</p>
                         <div className="space-y-1">
-                          {risk.recommendations.slice(0, 3).map((rec) => (
-                            <div key={rec.id} className="text-xs p-2 bg-muted rounded">
+                          {risk.recommendations.slice(0, 3).map(rec => (
+                            <div
+                              key={rec.id}
+                              className="text-xs p-2 bg-muted rounded"
+                            >
                               <div className="font-medium">{rec.title}</div>
-                              <div className="text-muted-foreground">{rec.description}</div>
+                              <div className="text-muted-foreground">
+                                {rec.description}
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -448,8 +508,8 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
         {/* AI Insights Tab */}
         <TabsContent value="insights" className="space-y-4">
           <div className="space-y-4">
-            {insights.map((insight) => (
-              <Card 
+            {insights.map(insight => (
+              <Card
                 key={insight.id}
                 className="cursor-pointer hover:shadow-md transition-shadow"
                 onClick={() => onInsightClick?.(insight)}
@@ -475,19 +535,25 @@ export const PredictiveDashboard: React.FC<PredictiveDashboardProps> = ({
                           {Math.round(insight.confidence * 100)}% confidence
                         </Badge>
                       </div>
-                      <p className="text-muted-foreground mb-3">{insight.description}</p>
-                      
+                      <p className="text-muted-foreground mb-3">
+                        {insight.description}
+                      </p>
+
                       {insight.recommendations.length > 0 && (
                         <div className="space-y-2">
-                          <p className="text-sm font-medium">Recommendations:</p>
+                          <p className="text-sm font-medium">
+                            Recommendations:
+                          </p>
                           <ul className="text-sm space-y-1">
                             {insight.recommendations.map((rec, index) => (
-                              <li key={index} className="text-muted-foreground">• {rec}</li>
+                              <li key={index} className="text-muted-foreground">
+                                • {rec}
+                              </li>
                             ))}
                           </ul>
                         </div>
                       )}
-                      
+
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center space-x-2">
                           <Calendar className="h-4 w-4 text-muted-foreground" />

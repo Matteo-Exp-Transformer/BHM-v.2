@@ -18,7 +18,7 @@ import {
   Clock,
   RefreshCw,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
 } from 'lucide-react'
 
 // Import B.10.2 components
@@ -34,7 +34,7 @@ interface AdvancedAnalyticsPageProps {
 }
 
 export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
-  companyId = 'default'
+  companyId = 'default',
 }) => {
   const [activeTab, setActiveTab] = useState('overview')
   const [integrationStatus, setIntegrationStatus] = useState<any>(null)
@@ -52,14 +52,18 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
 
       // Initialize integration service
       await advancedAnalyticsIntegration.initialize()
-      
+
       // Get integration status
       const status = advancedAnalyticsIntegration.getIntegrationHealth()
       setIntegrationStatus(status)
 
       console.log('✅ Advanced Analytics initialized successfully')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to initialize advanced analytics')
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to initialize advanced analytics'
+      )
     } finally {
       setIsLoading(false)
     }
@@ -67,19 +71,27 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
 
   const getIntegrationStatusColor = (status: string) => {
     switch (status) {
-      case 'connected': return 'text-green-600 bg-green-100 border-green-200'
-      case 'disconnected': return 'text-orange-600 bg-orange-100 border-orange-200'
-      case 'error': return 'text-red-600 bg-red-100 border-red-200'
-      default: return 'text-gray-600 bg-gray-100 border-gray-200'
+      case 'connected':
+        return 'text-green-600 bg-green-100 border-green-200'
+      case 'disconnected':
+        return 'text-orange-600 bg-orange-100 border-orange-200'
+      case 'error':
+        return 'text-red-600 bg-red-100 border-red-200'
+      default:
+        return 'text-gray-600 bg-gray-100 border-gray-200'
     }
   }
 
   const getIntegrationStatusIcon = (status: string) => {
     switch (status) {
-      case 'connected': return <CheckCircle className="h-4 w-4 text-green-500" />
-      case 'disconnected': return <Clock className="h-4 w-4 text-orange-500" />
-      case 'error': return <AlertTriangle className="h-4 w-4 text-red-500" />
-      default: return <Clock className="h-4 w-4 text-gray-500" />
+      case 'connected':
+        return <CheckCircle className="h-4 w-4 text-green-500" />
+      case 'disconnected':
+        return <Clock className="h-4 w-4 text-orange-500" />
+      case 'error':
+        return <AlertTriangle className="h-4 w-4 text-red-500" />
+      default:
+        return <Clock className="h-4 w-4 text-gray-500" />
     }
   }
 
@@ -98,9 +110,9 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
           {error}
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={initializeAdvancedAnalytics}
             className="ml-2"
           >
@@ -119,7 +131,8 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
         <div>
           <h1 className="text-3xl font-bold">Advanced Analytics & Reporting</h1>
           <p className="text-muted-foreground">
-            B.10.2 - AI-powered analytics, custom reporting, and business intelligence
+            B.10.2 - AI-powered analytics, custom reporting, and business
+            intelligence
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -127,7 +140,11 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
             <CheckCircle className="h-3 w-3 text-green-500" />
             <span>B.10.2 Active</span>
           </Badge>
-          <Button variant="outline" size="sm" onClick={initializeAdvancedAnalytics}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={initializeAdvancedAnalytics}
+          >
             <RefreshCw className="h-4 w-4 mr-1" />
             Refresh
           </Button>
@@ -155,7 +172,9 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
                 <div className="text-2xl font-bold text-orange-600">
                   {integrationStatus.disconnectedServices}
                 </div>
-                <div className="text-xs text-muted-foreground">Disconnected</div>
+                <div className="text-xs text-muted-foreground">
+                  Disconnected
+                </div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-red-600">
@@ -167,7 +186,9 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
                 <div className="text-2xl font-bold text-blue-600">
                   {integrationStatus.averageResponseTime}ms
                 </div>
-                <div className="text-xs text-muted-foreground">Avg Response</div>
+                <div className="text-xs text-muted-foreground">
+                  Avg Response
+                </div>
               </div>
             </div>
           </CardContent>
@@ -175,7 +196,11 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
       )}
 
       {/* Main Analytics Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="predictive">Predictive</TabsTrigger>
@@ -190,7 +215,9 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
             {/* Feature Cards */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Predictive Analytics</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Predictive Analytics
+                </CardTitle>
                 <Brain className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -203,7 +230,9 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Custom Reporting</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Custom Reporting
+                </CardTitle>
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -216,7 +245,9 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Executive BI</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Executive BI
+                </CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -229,7 +260,9 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">System Integration</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  System Integration
+                </CardTitle>
                 <Shield className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -244,7 +277,9 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
           {/* B.10.2 Features Summary */}
           <Card>
             <CardHeader>
-              <CardTitle>B.10.2 Advanced Analytics & Reporting Features</CardTitle>
+              <CardTitle>
+                B.10.2 Advanced Analytics & Reporting Features
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -293,12 +328,12 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
 
         {/* Predictive Analytics Tab */}
         <TabsContent value="predictive" className="space-y-4">
-          <PredictiveDashboard 
+          <PredictiveDashboard
             companyId={companyId}
-            onInsightClick={(insight) => {
+            onInsightClick={insight => {
               console.log('Insight clicked:', insight)
             }}
-            onAlertClick={(alert) => {
+            onAlertClick={alert => {
               console.log('Alert clicked:', alert)
             }}
           />
@@ -307,10 +342,10 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
         {/* Reporting Tab */}
         <TabsContent value="reporting" className="space-y-4">
           <ReportDesigner
-            onSave={(report) => {
+            onSave={report => {
               console.log('Report saved:', report)
             }}
-            onPreview={(report) => {
+            onPreview={report => {
               console.log('Report preview:', report)
             }}
             onExport={(report, format) => {
@@ -323,10 +358,10 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
         <TabsContent value="executive" className="space-y-4">
           <ExecutiveOverview
             companyIds={[companyId]}
-            onCompanyClick={(companyId) => {
+            onCompanyClick={companyId => {
               console.log('Company clicked:', companyId)
             }}
-            onInsightClick={(insight) => {
+            onInsightClick={insight => {
               console.log('Executive insight clicked:', insight)
             }}
           />
@@ -374,7 +409,9 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
                 </div>
 
                 <div>
-                  <h4 className="font-semibold mb-2">Integration Capabilities</h4>
+                  <h4 className="font-semibold mb-2">
+                    Integration Capabilities
+                  </h4>
                   <ul className="text-sm space-y-1 text-muted-foreground">
                     <li>• Cross-system data synchronization</li>
                     <li>• Unified analytics processing</li>
@@ -385,7 +422,7 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
                 </div>
 
                 <div className="flex space-x-2">
-                  <Button 
+                  <Button
                     variant="outline"
                     onClick={async () => {
                       await advancedAnalyticsIntegration.syncDataAcrossSystems()
@@ -394,10 +431,11 @@ export const AdvancedAnalyticsPage: React.FC<AdvancedAnalyticsPageProps> = ({
                     <RefreshCw className="h-4 w-4 mr-1" />
                     Sync Data
                   </Button>
-                  <Button 
+                  <Button
                     variant="outline"
                     onClick={async () => {
-                      const data = await advancedAnalyticsIntegration.getCrossSystemDashboardData()
+                      const data =
+                        await advancedAnalyticsIntegration.getCrossSystemDashboardData()
                       console.log('Cross-system data:', data)
                     }}
                   >

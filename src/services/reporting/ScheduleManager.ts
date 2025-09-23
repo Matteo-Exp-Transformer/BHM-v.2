@@ -99,7 +99,7 @@ export class ScheduleManager {
   private executions: Map<string, ScheduleExecution> = new Map()
   private executionQueue: string[] = []
   private isInitialized = false
-  private schedulerInterval: NodeJS.Timeout | null = null
+  private schedulerInterval: ReturnType<typeof setInterval> | null = null
 
   /**
    * Initialize the schedule manager
@@ -147,7 +147,7 @@ export class ScheduleManager {
       errorCount: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
-      createdBy
+      createdBy,
     }
 
     this.schedules.set(schedule.id, schedule)
@@ -170,12 +170,15 @@ export class ScheduleManager {
     const updatedSchedule = {
       ...schedule,
       ...updates,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     }
 
     // Recalculate next run if frequency changed
     if (updates.frequency) {
-      updatedSchedule.nextRun = this.calculateNextRun(updates.frequency, updatedSchedule.timezone)
+      updatedSchedule.nextRun = this.calculateNextRun(
+        updates.frequency,
+        updatedSchedule.timezone
+      )
     }
 
     this.schedules.set(scheduleId, updatedSchedule)
@@ -207,8 +210,10 @@ export class ScheduleManager {
 
     schedule.enabled = enabled
     schedule.updatedAt = new Date()
-    
-    console.log(`⏰ ${enabled ? 'Enabled' : 'Disabled'} schedule: ${schedule.name}`)
+
+    console.log(
+      `⏰ ${enabled ? 'Enabled' : 'Disabled'} schedule: ${schedule.name}`
+    )
   }
 
   /**
@@ -225,7 +230,7 @@ export class ScheduleManager {
 
     const newRecipient: RecipientConfig = {
       id: this.generateRecipientId(),
-      ...recipient
+      ...recipient,
     }
 
     schedule.recipients.push(newRecipient)
@@ -244,7 +249,9 @@ export class ScheduleManager {
       throw new Error(`Schedule not found: ${scheduleId}`)
     }
 
-    const recipientIndex = schedule.recipients.findIndex(r => r.id === recipientId)
+    const recipientIndex = schedule.recipients.findIndex(
+      r => r.id === recipientId
+    )
     if (recipientIndex === -1) {
       throw new Error(`Recipient not found: ${recipientId}`)
     }
@@ -270,7 +277,7 @@ export class ScheduleManager {
       startTime: new Date(),
       status: 'pending',
       deliveryStatus: [],
-      metadata: {}
+      metadata: {},
     }
 
     this.executions.set(execution.id, execution)
@@ -283,7 +290,10 @@ export class ScheduleManager {
   /**
    * Get schedule execution history
    */
-  public getExecutionHistory(scheduleId: string, limit: number = 50): ScheduleExecution[] {
+  public getExecutionHistory(
+    scheduleId: string,
+    limit: number = 50
+  ): ScheduleExecution[] {
     const executions = Array.from(this.executions.values())
       .filter(exec => exec.scheduleId === scheduleId)
       .sort((a, b) => b.startTime.getTime() - a.startTime.getTime())
@@ -310,7 +320,9 @@ export class ScheduleManager {
    * Get schedules for a report
    */
   public getSchedulesForReport(reportId: string): ScheduleConfig[] {
-    return Array.from(this.schedules.values()).filter(s => s.reportId === reportId)
+    return Array.from(this.schedules.values()).filter(
+      s => s.reportId === reportId
+    )
   }
 
   /**
@@ -321,13 +333,21 @@ export class ScheduleManager {
     const executions = Array.from(this.executions.values())
 
     const totalExecutions = executions.length
-    const successfulExecutions = executions.filter(e => e.status === 'completed').length
-    const failedExecutions = executions.filter(e => e.status === 'failed').length
-    const averageExecutionTime = executions.length > 0 
-      ? executions
-          .filter(e => e.endTime)
-          .reduce((sum, e) => sum + (e.endTime!.getTime() - e.startTime.getTime()), 0) / executions.length
-      : 0
+    const successfulExecutions = executions.filter(
+      e => e.status === 'completed'
+    ).length
+    const failedExecutions = executions.filter(
+      e => e.status === 'failed'
+    ).length
+    const averageExecutionTime =
+      executions.length > 0
+        ? executions
+            .filter(e => e.endTime)
+            .reduce(
+              (sum, e) => sum + (e.endTime!.getTime() - e.startTime.getTime()),
+              0
+            ) / executions.length
+        : 0
 
     const lastExecution = executions
       .filter(e => e.endTime)
@@ -340,7 +360,7 @@ export class ScheduleManager {
       successfulExecutions,
       failedExecutions,
       averageExecutionTime,
-      lastExecutionTime: lastExecution?.endTime
+      lastExecutionTime: lastExecution?.endTime,
     }
   }
 
@@ -382,11 +402,17 @@ export class ScheduleManager {
         errors.push('Schedule time is required')
       }
 
-      if (schedule.frequency.type === 'weekly' && schedule.frequency.dayOfWeek === undefined) {
+      if (
+        schedule.frequency.type === 'weekly' &&
+        schedule.frequency.dayOfWeek === undefined
+      ) {
         errors.push('Day of week is required for weekly frequency')
       }
 
-      if (schedule.frequency.type === 'monthly' && schedule.frequency.dayOfMonth === undefined) {
+      if (
+        schedule.frequency.type === 'monthly' &&
+        schedule.frequency.dayOfMonth === undefined
+      ) {
         errors.push('Day of month is required for monthly frequency')
       }
     }
@@ -402,7 +428,10 @@ export class ScheduleManager {
           errors.push(`Recipient ${index + 1} address is required`)
         }
 
-        if (recipient.type === 'email' && !this.isValidEmail(recipient.address)) {
+        if (
+          recipient.type === 'email' &&
+          !this.isValidEmail(recipient.address)
+        ) {
           errors.push(`Recipient ${index + 1} has invalid email address`)
         }
       })
@@ -411,7 +440,7 @@ export class ScheduleManager {
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     }
   }
 
@@ -433,11 +462,9 @@ export class ScheduleManager {
 
   private checkScheduledExecutions(): void {
     const now = new Date()
-    const dueSchedules = Array.from(this.schedules.values())
-      .filter(schedule => 
-        schedule.enabled && 
-        schedule.nextRun <= now
-      )
+    const dueSchedules = Array.from(this.schedules.values()).filter(
+      schedule => schedule.enabled && schedule.nextRun <= now
+    )
 
     dueSchedules.forEach(schedule => {
       this.executeSchedule(schedule.id)
@@ -453,12 +480,18 @@ export class ScheduleManager {
     const schedule = this.schedules.get(scheduleId)
     if (!schedule) return
 
-    schedule.nextRun = this.calculateNextRun(schedule.frequency, schedule.timezone)
+    schedule.nextRun = this.calculateNextRun(
+      schedule.frequency,
+      schedule.timezone
+    )
     schedule.runCount++
     schedule.updatedAt = new Date()
   }
 
-  private calculateNextRun(frequency: ScheduleFrequency, timezone: string): Date {
+  private calculateNextRun(
+    frequency: ScheduleFrequency,
+    timezone: string
+  ): Date {
     const now = new Date()
     const nextRun = new Date(now)
 
@@ -466,7 +499,7 @@ export class ScheduleManager {
       case 'once':
         // For one-time schedules, set to a past date to prevent execution
         return new Date(0)
-      
+
       case 'daily':
         const dailyTime = this.parseTime(frequency.time)
         nextRun.setHours(dailyTime.hours, dailyTime.minutes, 0, 0)
@@ -474,47 +507,47 @@ export class ScheduleManager {
           nextRun.setDate(nextRun.getDate() + 1)
         }
         break
-      
+
       case 'weekly':
         const weeklyTime = this.parseTime(frequency.time)
         const dayOfWeek = frequency.dayOfWeek || 0
         const currentDayOfWeek = nextRun.getDay()
         const daysUntilNext = (dayOfWeek - currentDayOfWeek + 7) % 7
-        
+
         nextRun.setDate(nextRun.getDate() + daysUntilNext)
         nextRun.setHours(weeklyTime.hours, weeklyTime.minutes, 0, 0)
-        
+
         if (nextRun <= now) {
           nextRun.setDate(nextRun.getDate() + 7)
         }
         break
-      
+
       case 'monthly':
         const monthlyTime = this.parseTime(frequency.time)
         const dayOfMonth = frequency.dayOfMonth || 1
-        
+
         nextRun.setDate(dayOfMonth)
         nextRun.setHours(monthlyTime.hours, monthlyTime.minutes, 0, 0)
-        
+
         if (nextRun <= now) {
           nextRun.setMonth(nextRun.getMonth() + 1)
         }
         break
-      
+
       case 'yearly':
         const yearlyTime = this.parseTime(frequency.time)
         const month = frequency.month || 0
         const dayOfMonth = frequency.dayOfMonth || 1
-        
+
         nextRun.setMonth(month)
         nextRun.setDate(dayOfMonth)
         nextRun.setHours(yearlyTime.hours, yearlyTime.minutes, 0, 0)
-        
+
         if (nextRun <= now) {
           nextRun.setFullYear(nextRun.getFullYear() + 1)
         }
         break
-      
+
       case 'custom':
         // For custom frequency, use interval in minutes
         const interval = frequency.interval || 60

@@ -40,7 +40,13 @@ export interface DataSourceConfig {
 export interface FilterConfig {
   id: string
   field: string
-  operator: 'equals' | 'contains' | 'greater_than' | 'less_than' | 'between' | 'in'
+  operator:
+    | 'equals'
+    | 'contains'
+    | 'greater_than'
+    | 'less_than'
+    | 'between'
+    | 'in'
   value: any
   label: string
 }
@@ -163,18 +169,18 @@ export class ReportBuilder {
         gridSize: 20,
         autoLayout: true,
         backgroundColor: '#ffffff',
-        padding: 20
+        padding: 20,
       },
       metadata: {
         tags: [],
         version: '1.0.0',
         generationCount: 0,
-        averageGenerationTime: 0
+        averageGenerationTime: 0,
       },
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy,
-      isPublic: false
+      isPublic: false,
     }
 
     this.reports.set(report.id, report)
@@ -196,13 +202,15 @@ export class ReportBuilder {
 
     const newComponent: ReportComponent = {
       id: this.generateComponentId(),
-      ...component
+      ...component,
     }
 
     report.components.push(newComponent)
     report.updatedAt = new Date()
 
-    console.log(`📊 Added ${component.type} component to report: ${report.name}`)
+    console.log(
+      `📊 Added ${component.type} component to report: ${report.name}`
+    )
     return newComponent
   }
 
@@ -219,14 +227,16 @@ export class ReportBuilder {
       throw new Error(`Report not found: ${reportId}`)
     }
 
-    const componentIndex = report.components.findIndex(c => c.id === componentId)
+    const componentIndex = report.components.findIndex(
+      c => c.id === componentId
+    )
     if (componentIndex === -1) {
       throw new Error(`Component not found: ${componentId}`)
     }
 
     report.components[componentIndex] = {
       ...report.components[componentIndex],
-      ...updates
+      ...updates,
     }
     report.updatedAt = new Date()
 
@@ -243,7 +253,9 @@ export class ReportBuilder {
       throw new Error(`Report not found: ${reportId}`)
     }
 
-    const componentIndex = report.components.findIndex(c => c.id === componentId)
+    const componentIndex = report.components.findIndex(
+      c => c.id === componentId
+    )
     if (componentIndex === -1) {
       throw new Error(`Component not found: ${componentId}`)
     }
@@ -251,7 +263,9 @@ export class ReportBuilder {
     report.components.splice(componentIndex, 1)
     report.updatedAt = new Date()
 
-    console.log(`📊 Removed component ${componentId} from report: ${report.name}`)
+    console.log(
+      `📊 Removed component ${componentId} from report: ${report.name}`
+    )
   }
 
   /**
@@ -268,7 +282,7 @@ export class ReportBuilder {
 
     const newFilter: FilterConfig = {
       id: this.generateFilterId(),
-      ...filter
+      ...filter,
     }
 
     report.globalFilters.push(newFilter)
@@ -320,8 +334,8 @@ export class ReportBuilder {
         ...originalReport.metadata,
         version: '1.0.0',
         generationCount: 0,
-        averageGenerationTime: 0
-      }
+        averageGenerationTime: 0,
+      },
     }
 
     this.reports.set(duplicatedReport.id, duplicatedReport)
@@ -343,7 +357,7 @@ export class ReportBuilder {
     }
 
     const report = this.duplicateReport(template.template.id, name, createdBy)
-    
+
     // Update template usage count
     template.usageCount++
 
@@ -371,7 +385,7 @@ export class ReportBuilder {
       category: report.category,
       template: { ...report },
       isSystem,
-      usageCount: 0
+      usageCount: 0,
     }
 
     this.templates.set(template.id, template)
@@ -397,7 +411,9 @@ export class ReportBuilder {
    * Get reports by category
    */
   public getReportsByCategory(category: string): Report[] {
-    return Array.from(this.reports.values()).filter(r => r.category === category)
+    return Array.from(this.reports.values()).filter(
+      r => r.category === category
+    )
   }
 
   /**
@@ -411,7 +427,9 @@ export class ReportBuilder {
    * Get templates by category
    */
   public getTemplatesByCategory(category: string): ReportTemplate[] {
-    return Array.from(this.templates.values()).filter(t => t.category === category)
+    return Array.from(this.templates.values()).filter(
+      t => t.category === category
+    )
   }
 
   /**
@@ -440,7 +458,7 @@ export class ReportBuilder {
       return {
         isValid: false,
         errors: ['Report not found'],
-        warnings: []
+        warnings: [],
       }
     }
 
@@ -462,8 +480,14 @@ export class ReportBuilder {
         errors.push(`Chart component ${index + 1} must specify chart type`)
       }
 
-      if (component.type === 'table' && (!component.config.tableColumns || component.config.tableColumns.length === 0)) {
-        errors.push(`Table component ${index + 1} must have at least one column`)
+      if (
+        component.type === 'table' &&
+        (!component.config.tableColumns ||
+          component.config.tableColumns.length === 0)
+      ) {
+        errors.push(
+          `Table component ${index + 1} must have at least one column`
+        )
       }
 
       if (!component.dataSource.source) {
@@ -472,15 +496,19 @@ export class ReportBuilder {
     })
 
     // Check for layout issues
-    const overlappingComponents = this.checkOverlappingComponents(report.components)
+    const overlappingComponents = this.checkOverlappingComponents(
+      report.components
+    )
     if (overlappingComponents.length > 0) {
-      warnings.push(`${overlappingComponents.length} components have overlapping layouts`)
+      warnings.push(
+        `${overlappingComponents.length} components have overlapping layouts`
+      )
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     }
   }
 
@@ -496,7 +524,7 @@ export class ReportBuilder {
         category: 'compliance',
         template: this.createComplianceDashboardTemplate(),
         isSystem: true,
-        usageCount: 0
+        usageCount: 0,
       },
       {
         id: 'template_temperature_report',
@@ -505,7 +533,7 @@ export class ReportBuilder {
         category: 'temperature',
         template: this.createTemperatureReportTemplate(),
         isSystem: true,
-        usageCount: 0
+        usageCount: 0,
       },
       {
         id: 'template_executive_summary',
@@ -514,8 +542,8 @@ export class ReportBuilder {
         category: 'executive',
         template: this.createExecutiveSummaryTemplate(),
         isSystem: true,
-        usageCount: 0
-      }
+        usageCount: 0,
+      },
     ]
 
     systemTemplates.forEach(template => {
@@ -540,15 +568,15 @@ export class ReportBuilder {
         title: 'Overall Compliance Score',
         metricValue: 85,
         metricUnit: '%',
-        kpiTarget: 90
+        kpiTarget: 90,
       },
       dataSource: {
         source: 'database',
-        query: 'SELECT AVG(compliance_score) FROM compliance_metrics'
+        query: 'SELECT AVG(compliance_score) FROM compliance_metrics',
       },
       filters: [],
       layout: { x: 0, y: 0, width: 300, height: 150, zIndex: 1 },
-      styling: {}
+      styling: {},
     })
 
     // Add chart component
@@ -558,15 +586,16 @@ export class ReportBuilder {
         title: 'Compliance Trend',
         chartType: 'line',
         showLegend: true,
-        showGrid: true
+        showGrid: true,
       },
       dataSource: {
         source: 'database',
-        query: 'SELECT date, compliance_score FROM compliance_metrics ORDER BY date'
+        query:
+          'SELECT date, compliance_score FROM compliance_metrics ORDER BY date',
       },
       filters: [],
       layout: { x: 320, y: 0, width: 600, height: 300, zIndex: 1 },
-      styling: {}
+      styling: {},
     })
 
     return report
@@ -586,15 +615,15 @@ export class ReportBuilder {
       config: {
         title: 'Average Temperature',
         metricValue: 4.2,
-        metricUnit: '°C'
+        metricUnit: '°C',
       },
       dataSource: {
         source: 'database',
-        query: 'SELECT AVG(temperature) FROM temperature_readings'
+        query: 'SELECT AVG(temperature) FROM temperature_readings',
       },
       filters: [],
       layout: { x: 0, y: 0, width: 200, height: 100, zIndex: 1 },
-      styling: {}
+      styling: {},
     })
 
     return report
@@ -613,14 +642,15 @@ export class ReportBuilder {
       type: 'text',
       config: {
         title: 'Executive Summary',
-        textContent: 'This report provides a high-level overview of HACCP compliance and performance metrics.'
+        textContent:
+          'This report provides a high-level overview of HACCP compliance and performance metrics.',
       },
       dataSource: {
-        source: 'manual'
+        source: 'manual',
       },
       filters: [],
       layout: { x: 0, y: 0, width: 800, height: 200, zIndex: 1 },
-      styling: {}
+      styling: {},
     })
 
     return report
@@ -628,22 +658,25 @@ export class ReportBuilder {
 
   private checkOverlappingComponents(components: ReportComponent[]): string[] {
     const overlapping: string[] = []
-    
+
     for (let i = 0; i < components.length; i++) {
       for (let j = i + 1; j < components.length; j++) {
         const comp1 = components[i]
         const comp2 = components[j]
-        
+
         if (this.componentsOverlap(comp1.layout, comp2.layout)) {
           overlapping.push(`${comp1.id} and ${comp2.id}`)
         }
       }
     }
-    
+
     return overlapping
   }
 
-  private componentsOverlap(layout1: LayoutConfig, layout2: LayoutConfig): boolean {
+  private componentsOverlap(
+    layout1: LayoutConfig,
+    layout2: LayoutConfig
+  ): boolean {
     return !(
       layout1.x + layout1.width <= layout2.x ||
       layout2.x + layout2.width <= layout1.x ||

@@ -14,13 +14,32 @@ export interface AggregationConfig {
 
 export interface AggregationRule {
   field: string
-  operation: 'sum' | 'avg' | 'count' | 'min' | 'max' | 'median' | 'stddev' | 'variance'
+  operation:
+    | 'sum'
+    | 'avg'
+    | 'count'
+    | 'min'
+    | 'max'
+    | 'median'
+    | 'stddev'
+    | 'variance'
   alias?: string
 }
 
 export interface FilterRule {
   field: string
-  operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than' | 'between' | 'in' | 'not_in' | 'is_null' | 'is_not_null'
+  operator:
+    | 'equals'
+    | 'not_equals'
+    | 'contains'
+    | 'not_contains'
+    | 'greater_than'
+    | 'less_than'
+    | 'between'
+    | 'in'
+    | 'not_in'
+    | 'is_null'
+    | 'is_not_null'
   value: any
   logicalOperator?: 'AND' | 'OR'
 }
@@ -92,27 +111,37 @@ export class DataAggregator {
     try {
       // Get data from source
       const rawData = await this.getDataFromSource(dataSourceId, config)
-      
+
       // Apply filters
       const filteredData = this.applyFilters(rawData, config.filters)
-      
+
       // Group data
       const groupedData = this.groupData(filteredData, config.groupBy)
-      
+
       // Apply aggregations
-      const aggregatedGroups = this.applyAggregations(groupedData, config.aggregations)
-      
+      const aggregatedGroups = this.applyAggregations(
+        groupedData,
+        config.aggregations
+      )
+
       // Sort results
       const sortedData = this.sortData(aggregatedGroups, config.sortBy)
-      
+
       // Apply limit and offset
-      const limitedData = this.applyLimitOffset(sortedData, config.limit, config.offset)
-      
+      const limitedData = this.applyLimitOffset(
+        sortedData,
+        config.limit,
+        config.offset
+      )
+
       // Calculate summary statistics
-      const summary = this.calculateSummary(aggregatedGroups, config.aggregations)
-      
+      const summary = this.calculateSummary(
+        aggregatedGroups,
+        config.aggregations
+      )
+
       const processingTime = Date.now() - startTime
-      
+
       return {
         groups: limitedData,
         summary,
@@ -120,10 +149,9 @@ export class DataAggregator {
           totalRecords: rawData.length,
           processingTime,
           appliedFilters: config.filters.length,
-          generatedAt: new Date()
-        }
+          generatedAt: new Date(),
+        },
       }
-      
     } catch (error) {
       console.error('Failed to aggregate data:', error)
       throw error
@@ -139,7 +167,7 @@ export class DataAggregator {
     parameters?: Record<string, any>
   ): Promise<QueryResult> {
     const startTime = Date.now()
-    
+
     try {
       const dataSource = this.dataSources.get(dataSourceId)
       if (!dataSource) {
@@ -147,10 +175,14 @@ export class DataAggregator {
       }
 
       let result: any[]
-      
+
       switch (dataSource.type) {
         case 'database':
-          result = await this.executeDatabaseQuery(dataSource, query, parameters)
+          result = await this.executeDatabaseQuery(
+            dataSource,
+            query,
+            parameters
+          )
           break
         case 'api':
           result = await this.executeApiQuery(dataSource, query, parameters)
@@ -169,9 +201,8 @@ export class DataAggregator {
         data: result,
         columns,
         rowCount: result.length,
-        executionTime
+        executionTime,
       }
-      
     } catch (error) {
       console.error('Failed to execute query:', error)
       return {
@@ -179,7 +210,7 @@ export class DataAggregator {
         columns: [],
         rowCount: 0,
         executionTime: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       }
     }
   }
@@ -187,7 +218,9 @@ export class DataAggregator {
   /**
    * Get data schema for a data source
    */
-  public async getDataSourceSchema(dataSourceId: string): Promise<Record<string, any>> {
+  public async getDataSourceSchema(
+    dataSourceId: string
+  ): Promise<Record<string, any>> {
     const dataSource = this.dataSources.get(dataSourceId)
     if (!dataSource) {
       throw new Error(`Data source not found: ${dataSourceId}`)
@@ -226,7 +259,7 @@ export class DataAggregator {
     responseTime: number
   }> {
     const startTime = Date.now()
-    
+
     try {
       const dataSource = this.dataSources.get(dataSourceId)
       if (!dataSource) {
@@ -252,15 +285,14 @@ export class DataAggregator {
       return {
         success: true,
         message: 'Connection successful',
-        responseTime
+        responseTime,
       }
-      
     } catch (error) {
       const responseTime = Date.now() - startTime
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Unknown error',
-        responseTime
+        responseTime,
       }
     }
   }
@@ -283,7 +315,7 @@ export class DataAggregator {
     }>
   }> {
     const aggregatedData = await this.aggregateData(dataSourceId, config)
-    
+
     switch (chartType) {
       case 'line':
       case 'bar':
@@ -307,28 +339,32 @@ export class DataAggregator {
         id: 'haccp_database',
         name: 'HACCP Database',
         type: 'database',
-        connection: { type: 'postgresql', host: 'localhost', database: 'haccp' },
+        connection: {
+          type: 'postgresql',
+          host: 'localhost',
+          database: 'haccp',
+        },
         schema: {
           temperature_readings: {
             id: 'string',
             timestamp: 'datetime',
             temperature: 'number',
-            conservation_point_id: 'string'
+            conservation_point_id: 'string',
           },
           compliance_metrics: {
             id: 'string',
             date: 'date',
             compliance_score: 'number',
-            company_id: 'string'
-          }
-        }
+            company_id: 'string',
+          },
+        },
       },
       {
         id: 'api_external',
         name: 'External API',
         type: 'api',
-        connection: { url: 'https://api.example.com', auth: 'bearer' }
-      }
+        connection: { url: 'https://api.example.com', auth: 'bearer' },
+      },
     ]
 
     defaultSources.forEach(source => {
@@ -349,7 +385,7 @@ export class DataAggregator {
   private generateMockData(count: number): any[] {
     const data: any[] = []
     const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 days ago
-    
+
     for (let i = 0; i < count; i++) {
       data.push({
         id: `record_${i}`,
@@ -358,10 +394,10 @@ export class DataAggregator {
         conservation_point_id: `CP${String(Math.floor(i / 10) + 1).padStart(3, '0')}`,
         compliance_score: 75 + Math.sin(i / 15) * 15 + Math.random() * 10,
         company_id: `COMPANY_${Math.floor(i / 50) + 1}`,
-        department_id: `DEPT_${Math.floor(i / 25) + 1}`
+        department_id: `DEPT_${Math.floor(i / 25) + 1}`,
       })
     }
-    
+
     return data
   }
 
@@ -376,22 +412,33 @@ export class DataAggregator {
     })
   }
 
-  private evaluateFilter(value: any, operator: string, filterValue: any): boolean {
+  private evaluateFilter(
+    value: any,
+    operator: string,
+    filterValue: any
+  ): boolean {
     switch (operator) {
       case 'equals':
         return value === filterValue
       case 'not_equals':
         return value !== filterValue
       case 'contains':
-        return String(value).toLowerCase().includes(String(filterValue).toLowerCase())
+        return String(value)
+          .toLowerCase()
+          .includes(String(filterValue).toLowerCase())
       case 'not_contains':
-        return !String(value).toLowerCase().includes(String(filterValue).toLowerCase())
+        return !String(value)
+          .toLowerCase()
+          .includes(String(filterValue).toLowerCase())
       case 'greater_than':
         return Number(value) > Number(filterValue)
       case 'less_than':
         return Number(value) < Number(filterValue)
       case 'between':
-        return Number(value) >= Number(filterValue[0]) && Number(value) <= Number(filterValue[1])
+        return (
+          Number(value) >= Number(filterValue[0]) &&
+          Number(value) <= Number(filterValue[1])
+        )
       case 'in':
         return Array.isArray(filterValue) && filterValue.includes(value)
       case 'not_in':
@@ -407,16 +454,18 @@ export class DataAggregator {
 
   private groupData(data: any[], groupBy: string[]): Map<string, any[]> {
     const groups = new Map<string, any[]>()
-    
+
     data.forEach(item => {
-      const groupKey = groupBy.map(field => this.getNestedValue(item, field)).join('|')
-      
+      const groupKey = groupBy
+        .map(field => this.getNestedValue(item, field))
+        .join('|')
+
       if (!groups.has(groupKey)) {
         groups.set(groupKey, [])
       }
       groups.get(groupKey)!.push(item)
     })
-    
+
     return groups
   }
 
@@ -425,39 +474,49 @@ export class DataAggregator {
     aggregations: AggregationRule[]
   ): Record<string, any>[] {
     const result: Record<string, any>[] = []
-    
+
     groupedData.forEach((items, groupKey) => {
       const groupValues = groupKey.split('|')
       const groupByFields = this.getGroupByFields(aggregations)
-      
+
       const record: Record<string, any> = {}
-      
+
       // Add group values
       groupByFields.forEach((field, index) => {
         record[field] = groupValues[index]
       })
-      
+
       // Add aggregated values
       aggregations.forEach(aggregation => {
-        const values = items.map(item => this.getNestedValue(item, aggregation.field))
-        const aggregatedValue = this.performAggregation(values, aggregation.operation)
-        record[aggregation.alias || `${aggregation.field}_${aggregation.operation}`] = aggregatedValue
+        const values = items.map(item =>
+          this.getNestedValue(item, aggregation.field)
+        )
+        const aggregatedValue = this.performAggregation(
+          values,
+          aggregation.operation
+        )
+        record[
+          aggregation.alias || `${aggregation.field}_${aggregation.operation}`
+        ] = aggregatedValue
       })
-      
+
       result.push(record)
     })
-    
+
     return result
   }
 
   private performAggregation(values: any[], operation: string): number {
     const numericValues = values.map(v => Number(v)).filter(v => !isNaN(v))
-    
+
     switch (operation) {
       case 'sum':
         return numericValues.reduce((sum, val) => sum + val, 0)
       case 'avg':
-        return numericValues.length > 0 ? numericValues.reduce((sum, val) => sum + val, 0) / numericValues.length : 0
+        return numericValues.length > 0
+          ? numericValues.reduce((sum, val) => sum + val, 0) /
+              numericValues.length
+          : 0
       case 'count':
         return values.length
       case 'min':
@@ -478,30 +537,40 @@ export class DataAggregator {
   private calculateMedian(values: number[]): number {
     const sorted = [...values].sort((a, b) => a - b)
     const mid = Math.floor(sorted.length / 2)
-    return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
+    return sorted.length % 2 === 0
+      ? (sorted[mid - 1] + sorted[mid]) / 2
+      : sorted[mid]
   }
 
   private calculateStandardDeviation(values: number[]): number {
     if (values.length === 0) return 0
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length
-    const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length
+    const variance =
+      values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+      values.length
     return Math.sqrt(variance)
   }
 
   private calculateVariance(values: number[]): number {
     if (values.length === 0) return 0
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length
-    return values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length
+    return (
+      values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+      values.length
+    )
   }
 
-  private sortData(data: Record<string, any>[], sortBy: SortRule[]): Record<string, any>[] {
+  private sortData(
+    data: Record<string, any>[],
+    sortBy: SortRule[]
+  ): Record<string, any>[] {
     if (sortBy.length === 0) return data
 
     return [...data].sort((a, b) => {
       for (const sort of sortBy) {
         const aVal = this.getNestedValue(a, sort.field)
         const bVal = this.getNestedValue(b, sort.field)
-        
+
         if (aVal < bVal) return sort.direction === 'asc' ? -1 : 1
         if (aVal > bVal) return sort.direction === 'asc' ? 1 : -1
       }
@@ -509,7 +578,11 @@ export class DataAggregator {
     })
   }
 
-  private applyLimitOffset(data: any[], limit?: number, offset?: number): any[] {
+  private applyLimitOffset(
+    data: any[],
+    limit?: number,
+    offset?: number
+  ): any[] {
     const start = offset || 0
     const end = limit ? start + limit : data.length
     return data.slice(start, end)
@@ -520,19 +593,23 @@ export class DataAggregator {
     aggregations: AggregationRule[]
   ): Record<string, number> {
     const summary: Record<string, number> = {}
-    
+
     aggregations.forEach(aggregation => {
-      const alias = aggregation.alias || `${aggregation.field}_${aggregation.operation}`
-      const values = data.map(item => item[alias]).filter(v => typeof v === 'number')
-      
+      const alias =
+        aggregation.alias || `${aggregation.field}_${aggregation.operation}`
+      const values = data
+        .map(item => item[alias])
+        .filter(v => typeof v === 'number')
+
       if (values.length > 0) {
         summary[`total_${alias}`] = values.reduce((sum, val) => sum + val, 0)
-        summary[`avg_${alias}`] = values.reduce((sum, val) => sum + val, 0) / values.length
+        summary[`avg_${alias}`] =
+          values.reduce((sum, val) => sum + val, 0) / values.length
         summary[`min_${alias}`] = Math.min(...values)
         summary[`max_${alias}`] = Math.max(...values)
       }
     })
-    
+
     return summary
   }
 
@@ -572,21 +649,24 @@ export class DataAggregator {
     return this.generateMockData(30)
   }
 
-  private async getSampleData(dataSourceId: string, limit: number): Promise<any[]> {
+  private async getSampleData(
+    dataSourceId: string,
+    limit: number
+  ): Promise<any[]> {
     return this.generateMockData(limit)
   }
 
   private generateSchemaFromData(data: any[]): Record<string, any> {
     if (data.length === 0) return {}
-    
+
     const schema: Record<string, any> = {}
     const firstItem = data[0]
-    
+
     Object.keys(firstItem).forEach(key => {
       const value = firstItem[key]
       schema[key] = this.inferType(value)
     })
-    
+
     return schema
   }
 
@@ -615,52 +695,71 @@ export class DataAggregator {
   private createLineBarAreaDataset(
     aggregatedData: AggregatedData,
     chartType: string
-  ): { labels: string[], datasets: any[] } {
+  ): { labels: string[]; datasets: any[] } {
     const labels = aggregatedData.groups.map(item => item.timestamp || item.id)
-    const datasets = [{
-      label: 'Data',
-      data: aggregatedData.groups.map(item => Object.values(item).find(v => typeof v === 'number') || 0),
-      backgroundColor: chartType === 'bar' ? 'rgba(54, 162, 235, 0.6)' : undefined,
-      borderColor: 'rgba(54, 162, 235, 1)',
-      fill: chartType === 'area'
-    }]
-    
+    const datasets = [
+      {
+        label: 'Data',
+        data: aggregatedData.groups.map(
+          item => Object.values(item).find(v => typeof v === 'number') || 0
+        ),
+        backgroundColor:
+          chartType === 'bar' ? 'rgba(54, 162, 235, 0.6)' : undefined,
+        borderColor: 'rgba(54, 162, 235, 1)',
+        fill: chartType === 'area',
+      },
+    ]
+
     return { labels, datasets }
   }
 
-  private createPieDataset(aggregatedData: AggregatedData): { labels: string[], datasets: any[] } {
-    const labels = aggregatedData.groups.map(item => item.conservation_point_id || item.id)
-    const data = aggregatedData.groups.map(item => Object.values(item).find(v => typeof v === 'number') || 0)
-    
+  private createPieDataset(aggregatedData: AggregatedData): {
+    labels: string[]
+    datasets: any[]
+  } {
+    const labels = aggregatedData.groups.map(
+      item => item.conservation_point_id || item.id
+    )
+    const data = aggregatedData.groups.map(
+      item => Object.values(item).find(v => typeof v === 'number') || 0
+    )
+
     return {
       labels,
-      datasets: [{
-        data,
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.6)',
-          'rgba(54, 162, 235, 0.6)',
-          'rgba(255, 205, 86, 0.6)',
-          'rgba(75, 192, 192, 0.6)',
-          'rgba(153, 102, 255, 0.6)'
-        ]
-      }]
+      datasets: [
+        {
+          data,
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.6)',
+            'rgba(54, 162, 235, 0.6)',
+            'rgba(255, 205, 86, 0.6)',
+            'rgba(75, 192, 192, 0.6)',
+            'rgba(153, 102, 255, 0.6)',
+          ],
+        },
+      ],
     }
   }
 
-  private createScatterDataset(aggregatedData: AggregatedData): { labels: string[], datasets: any[] } {
+  private createScatterDataset(aggregatedData: AggregatedData): {
+    labels: string[]
+    datasets: any[]
+  } {
     const data = aggregatedData.groups.map(item => ({
       x: Object.values(item)[0] || 0,
-      y: Object.values(item)[1] || 0
+      y: Object.values(item)[1] || 0,
     }))
-    
+
     return {
       labels: [],
-      datasets: [{
-        label: 'Scatter Data',
-        data,
-        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-        borderColor: 'rgba(255, 99, 132, 1)'
-      }]
+      datasets: [
+        {
+          label: 'Scatter Data',
+          data,
+          backgroundColor: 'rgba(255, 99, 132, 0.6)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+        },
+      ],
     }
   }
 }

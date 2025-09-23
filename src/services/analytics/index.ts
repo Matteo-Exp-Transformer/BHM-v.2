@@ -12,33 +12,35 @@ export { riskAssessment, RiskAssessment } from './RiskAssessment'
 export { analyticsProcessor, AnalyticsProcessor } from './AnalyticsProcessor'
 
 // Export types
-export type { 
-  TemperatureReading, 
-  PredictionResult, 
-  ModelMetrics 
+export type {
+  TemperatureReading,
+  PredictionResult,
+  ModelMetrics,
 } from './PredictiveModels'
 
-export type { 
-  TrendDataPoint, 
-  TrendAnalysis, 
-  SeasonalPattern, 
-  TrendComparison 
+export type {
+  TrendDataPoint,
+  TrendAnalysis,
+  SeasonalPattern,
+  TrendComparison,
 } from './TrendAnalyzer'
 
-export type { 
-  RiskFactor, 
-  RiskAssessment, 
-  RiskRecommendation, 
-  RiskThreshold, 
-  RiskHistory 
+export type {
+  RiskFactor,
+  RiskAssessment,
+  RiskRecommendation,
+  RiskThreshold,
+  RiskHistory,
 } from './RiskAssessment'
 
-export type { 
-  AnalyticsData, 
-  ProcessedAnalytics, 
-  AnalyticsInsight, 
-  AnalyticsAlert, 
-  ProcessingConfig 
+export type {
+  AnalyticsData,
+  ProcessedAnalytics,
+  AnalyticsInsight,
+  AnalyticsAlert,
+  ProcessingConfig,
 } from './AnalyticsProcessor'
 
-console.log('📊 Analytics services implemented - B.10.2 Advanced Analytics & Reporting COMPLETED')
+console.log(
+  '📊 Analytics services implemented - B.10.2 Advanced Analytics & Reporting COMPLETED'
+)

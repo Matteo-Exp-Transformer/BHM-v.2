@@ -23,10 +23,14 @@ import {
   Settings,
   BarChart3,
   PieChart,
-  Activity
+  Activity,
 } from 'lucide-react'
 
-import { RiskAssessment, RiskFactor, RiskRecommendation } from '@/services/analytics'
+import {
+  RiskAssessment,
+  RiskFactor,
+  RiskRecommendation,
+} from '@/services/analytics'
 
 interface RiskIndicatorProps {
   riskAssessment: RiskAssessment
@@ -43,7 +47,7 @@ export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
   showHistory = false,
   onRecommendationClick,
   onFactorClick,
-  onUpdateAssessment
+  onUpdateAssessment,
 }) => {
   const [selectedTab, setSelectedTab] = useState('overview')
   const [expandedFactors, setExpandedFactors] = useState<Set<string>>(new Set())
@@ -55,35 +59,35 @@ export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
           bg: 'bg-red-500',
           text: 'text-red-600',
           border: 'border-red-200',
-          bgLight: 'bg-red-50'
+          bgLight: 'bg-red-50',
         }
       case 'high':
         return {
           bg: 'bg-orange-500',
           text: 'text-orange-600',
           border: 'border-orange-200',
-          bgLight: 'bg-orange-50'
+          bgLight: 'bg-orange-50',
         }
       case 'medium':
         return {
           bg: 'bg-yellow-500',
           text: 'text-yellow-600',
           border: 'border-yellow-200',
-          bgLight: 'bg-yellow-50'
+          bgLight: 'bg-yellow-50',
         }
       case 'low':
         return {
           bg: 'bg-green-500',
           text: 'text-green-600',
           border: 'border-green-200',
-          bgLight: 'bg-green-50'
+          bgLight: 'bg-green-50',
         }
       default:
         return {
           bg: 'bg-gray-500',
           text: 'text-gray-600',
           border: 'border-gray-200',
-          bgLight: 'bg-gray-50'
+          bgLight: 'bg-gray-50',
         }
     }
   }
@@ -158,14 +162,12 @@ export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
             <span>Risk Assessment</span>
           </CardTitle>
           <div className="flex items-center space-x-2">
-            <Badge className={`${riskColors.text} ${riskColors.bgLight} ${riskColors.border} border`}>
+            <Badge
+              className={`${riskColors.text} ${riskColors.bgLight} ${riskColors.border} border`}
+            >
               {riskAssessment.riskLevel.toUpperCase()}
             </Badge>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onUpdateAssessment}
-            >
+            <Button variant="outline" size="sm" onClick={onUpdateAssessment}>
               <Settings className="h-4 w-4 mr-1" />
               Update
             </Button>
@@ -188,11 +190,10 @@ export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
               <div className={`text-4xl font-bold ${riskColors.text}`}>
                 {riskAssessment.overallScore.toFixed(1)}
               </div>
-              <div className="text-sm text-muted-foreground">Overall Risk Score</div>
-              <Progress 
-                value={riskAssessment.overallScore} 
-                className="h-2"
-              />
+              <div className="text-sm text-muted-foreground">
+                Overall Risk Score
+              </div>
+              <Progress value={riskAssessment.overallScore} className="h-2" />
             </div>
 
             {/* Risk Trend */}
@@ -213,7 +214,8 @@ export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
                 </div>
               </div>
               <div className="text-xs text-muted-foreground">
-                Confidence: {Math.round(riskAssessment.trends.confidence * 100)}%
+                Confidence: {Math.round(riskAssessment.trends.confidence * 100)}
+                %
               </div>
             </div>
 
@@ -247,7 +249,8 @@ export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  High risk level detected. Review recommendations and take action.
+                  High risk level detected. Review recommendations and take
+                  action.
                 </AlertDescription>
               </Alert>
             )}
@@ -256,13 +259,15 @@ export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
           {/* Risk Factors Tab */}
           <TabsContent value="factors" className="space-y-4">
             <div className="space-y-3">
-              {riskAssessment.factors.map((factor) => (
-                <Card 
+              {riskAssessment.factors.map(factor => (
+                <Card
                   key={factor.id}
                   className={`cursor-pointer transition-all hover:shadow-md ${
-                    factor.status === 'critical' ? 'border-red-200 bg-red-50' :
-                    factor.status === 'warning' ? 'border-orange-200 bg-orange-50' :
-                    'border-gray-200'
+                    factor.status === 'critical'
+                      ? 'border-red-200 bg-red-50'
+                      : factor.status === 'warning'
+                        ? 'border-orange-200 bg-orange-50'
+                        : 'border-gray-200'
                   }`}
                   onClick={() => onFactorClick?.(factor)}
                 >
@@ -279,7 +284,7 @@ export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center space-x-3">
                         <div className="text-right">
                           <div className="font-bold text-lg">
@@ -289,11 +294,14 @@ export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
                             Weight: {Math.round(factor.weight * 100)}%
                           </div>
                         </div>
-                        
-                        <Badge 
+
+                        <Badge
                           variant={
-                            factor.status === 'critical' ? 'destructive' :
-                            factor.status === 'warning' ? 'default' : 'secondary'
+                            factor.status === 'critical'
+                              ? 'destructive'
+                              : factor.status === 'warning'
+                                ? 'default'
+                                : 'secondary'
                           }
                         >
                           {factor.status}
@@ -331,12 +339,14 @@ export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
                       variant="ghost"
                       size="sm"
                       className="mt-2 w-full"
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation()
                         toggleFactorExpansion(factor.id)
                       }}
                     >
-                      {expandedFactors.has(factor.id) ? 'Show Less' : 'Show More'}
+                      {expandedFactors.has(factor.id)
+                        ? 'Show Less'
+                        : 'Show More'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -350,19 +360,33 @@ export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-red-600">
-                      {riskAssessment.factors.filter(f => f.status === 'critical').length}
+                      {
+                        riskAssessment.factors.filter(
+                          f => f.status === 'critical'
+                        ).length
+                      }
                     </div>
-                    <div className="text-xs text-muted-foreground">Critical</div>
+                    <div className="text-xs text-muted-foreground">
+                      Critical
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-orange-600">
-                      {riskAssessment.factors.filter(f => f.status === 'warning').length}
+                      {
+                        riskAssessment.factors.filter(
+                          f => f.status === 'warning'
+                        ).length
+                      }
                     </div>
                     <div className="text-xs text-muted-foreground">Warning</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600">
-                      {riskAssessment.factors.filter(f => f.status === 'normal').length}
+                      {
+                        riskAssessment.factors.filter(
+                          f => f.status === 'normal'
+                        ).length
+                      }
                     </div>
                     <div className="text-xs text-muted-foreground">Normal</div>
                   </div>
@@ -380,8 +404,8 @@ export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
           {/* Recommendations Tab */}
           <TabsContent value="recommendations" className="space-y-4">
             <div className="space-y-3">
-              {riskAssessment.recommendations.map((recommendation) => (
-                <Card 
+              {riskAssessment.recommendations.map(recommendation => (
+                <Card
                   key={recommendation.id}
                   className="cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => onRecommendationClick?.(recommendation)}
@@ -390,30 +414,40 @@ export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-2">
-                          <h4 className="font-medium">{recommendation.title}</h4>
-                          <Badge variant={getPriorityColor(recommendation.priority)}>
+                          <h4 className="font-medium">
+                            {recommendation.title}
+                          </h4>
+                          <Badge
+                            variant={getPriorityColor(recommendation.priority)}
+                          >
                             {recommendation.priority}
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mb-3">
                           {recommendation.description}
                         </p>
-                        
+
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                           <div>
-                            <span className="text-muted-foreground">Impact:</span>
+                            <span className="text-muted-foreground">
+                              Impact:
+                            </span>
                             <div className="font-medium capitalize">
                               {recommendation.impact}
                             </div>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Effort:</span>
+                            <span className="text-muted-foreground">
+                              Effort:
+                            </span>
                             <div className="font-medium capitalize">
                               {recommendation.effort}
                             </div>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Timeline:</span>
+                            <span className="text-muted-foreground">
+                              Timeline:
+                            </span>
                             <div className="font-medium">
                               {recommendation.timeline}
                             </div>
@@ -439,25 +473,41 @@ export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-red-600">
-                      {riskAssessment.recommendations.filter(r => r.priority === 'urgent').length}
+                      {
+                        riskAssessment.recommendations.filter(
+                          r => r.priority === 'urgent'
+                        ).length
+                      }
                     </div>
                     <div className="text-xs text-muted-foreground">Urgent</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-orange-600">
-                      {riskAssessment.recommendations.filter(r => r.priority === 'high').length}
+                      {
+                        riskAssessment.recommendations.filter(
+                          r => r.priority === 'high'
+                        ).length
+                      }
                     </div>
                     <div className="text-xs text-muted-foreground">High</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-blue-600">
-                      {riskAssessment.recommendations.filter(r => r.priority === 'medium').length}
+                      {
+                        riskAssessment.recommendations.filter(
+                          r => r.priority === 'medium'
+                        ).length
+                      }
                     </div>
                     <div className="text-xs text-muted-foreground">Medium</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-gray-600">
-                      {riskAssessment.recommendations.filter(r => r.priority === 'low').length}
+                      {
+                        riskAssessment.recommendations.filter(
+                          r => r.priority === 'low'
+                        ).length
+                      }
                     </div>
                     <div className="text-xs text-muted-foreground">Low</div>
                   </div>

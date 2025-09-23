@@ -7,7 +7,13 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   TrendingUp,
   TrendingDown,
@@ -18,7 +24,7 @@ import {
   Calendar,
   BarChart3,
   LineChart,
-  PieChart
+  PieChart,
 } from 'lucide-react'
 
 import { TrendAnalysis, TrendDataPoint } from '@/services/analytics'
@@ -40,7 +46,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({
   showForecast = true,
   showAnomalies = true,
   onDataPointClick,
-  onExport
+  onExport,
 }) => {
   const [selectedChartType, setSelectedChartType] = useState(chartType)
   const [selectedTimeRange, setSelectedTimeRange] = useState(timeRange)
@@ -56,11 +62,11 @@ export const TrendChart: React.FC<TrendChartProps> = ({
     if (!chartRef.current) return
 
     setIsLoading(true)
-    
+
     try {
       // Clear previous chart
       chartRef.current.innerHTML = ''
-      
+
       // Create mock chart data (in real implementation, would use D3.js or Chart.js)
       const chartElement = createMockChart()
       chartRef.current.appendChild(chartElement)
@@ -73,12 +79,18 @@ export const TrendChart: React.FC<TrendChartProps> = ({
 
   const createMockChart = (): HTMLElement => {
     const container = document.createElement('div')
-    container.className = 'w-full h-80 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center'
-    
+    container.className =
+      'w-full h-80 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center'
+
     const chartContent = document.createElement('div')
     chartContent.className = 'text-center space-y-4'
-    
-    const icon = selectedChartType === 'line' ? '📈' : selectedChartType === 'bar' ? '📊' : '📉'
+
+    const icon =
+      selectedChartType === 'line'
+        ? '📈'
+        : selectedChartType === 'bar'
+          ? '📊'
+          : '📉'
     chartContent.innerHTML = `
       <div class="text-6xl">${icon}</div>
       <div class="text-lg font-semibold text-gray-700">${trendAnalysis.name}</div>
@@ -89,7 +101,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({
         R² = ${trendAnalysis.rSquared.toFixed(3)} • Slope = ${trendAnalysis.slope.toFixed(3)}
       </div>
     `
-    
+
     container.appendChild(chartContent)
     return container
   }
@@ -150,22 +162,23 @@ export const TrendChart: React.FC<TrendChartProps> = ({
             <span>{trendAnalysis.name}</span>
           </CardTitle>
           <div className="flex items-center space-x-2">
-            <Badge className={getTrendColor()}>
-              {trendAnalysis.direction}
-            </Badge>
+            <Badge className={getTrendColor()}>{trendAnalysis.direction}</Badge>
             <Badge className={getStrengthColor()}>
               {trendAnalysis.strength}
             </Badge>
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* Controls */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             {/* Chart Type Selector */}
-            <Select value={selectedChartType} onValueChange={setSelectedChartType}>
+            <Select
+              value={selectedChartType}
+              onValueChange={setSelectedChartType}
+            >
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
@@ -192,7 +205,10 @@ export const TrendChart: React.FC<TrendChartProps> = ({
             </Select>
 
             {/* Time Range Selector */}
-            <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
+            <Select
+              value={selectedTimeRange}
+              onValueChange={setSelectedTimeRange}
+            >
               <SelectTrigger className="w-24">
                 <SelectValue />
               </SelectTrigger>
@@ -354,14 +370,17 @@ export const TrendChart: React.FC<TrendChartProps> = ({
           <div className="space-y-2">
             <h4 className="text-sm font-medium">Recommendations</h4>
             <div className="space-y-1">
-              {trendAnalysis.recommendations.slice(0, 3).map((recommendation, index) => (
-                <div key={index} className="text-sm text-muted-foreground">
-                  • {recommendation}
-                </div>
-              ))}
+              {trendAnalysis.recommendations
+                .slice(0, 3)
+                .map((recommendation, index) => (
+                  <div key={index} className="text-sm text-muted-foreground">
+                    • {recommendation}
+                  </div>
+                ))}
               {trendAnalysis.recommendations.length > 3 && (
                 <div className="text-xs text-muted-foreground">
-                  +{trendAnalysis.recommendations.length - 3} more recommendations
+                  +{trendAnalysis.recommendations.length - 3} more
+                  recommendations
                 </div>
               )}
             </div>

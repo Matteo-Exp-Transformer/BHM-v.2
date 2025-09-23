@@ -8,4 +8,6 @@
 // Export all business intelligence components
 export { default as ExecutiveOverview } from './ExecutiveOverview'
 
-console.log('📊 Business Intelligence components implemented - B.10.2 Advanced Analytics & Reporting COMPLETED')
+console.log(
+  '📊 Business Intelligence components implemented - B.10.2 Advanced Analytics & Reporting COMPLETED'
+)

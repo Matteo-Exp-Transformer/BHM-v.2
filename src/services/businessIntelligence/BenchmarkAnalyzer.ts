@@ -98,7 +98,9 @@ export class BenchmarkAnalyzer {
 
     try {
       await this.loadBenchmarkData()
-      console.log('📊 Benchmark analyzer initialized - B.10.2 Advanced Analytics')
+      console.log(
+        '📊 Benchmark analyzer initialized - B.10.2 Advanced Analytics'
+      )
       this.isInitialized = true
     } catch (error) {
       console.error('Failed to initialize benchmark analyzer:', error)
@@ -117,21 +119,31 @@ export class BenchmarkAnalyzer {
     try {
       // Get our performance data
       const ourData = await this.getOurPerformanceData(startDate, endDate)
-      
+
       // Generate industry comparisons
-      const industryComparisons = await this.generateIndustryComparisons(ourData, industries)
-      
+      const industryComparisons = await this.generateIndustryComparisons(
+        ourData,
+        industries
+      )
+
       // Generate competitive analysis
-      const competitiveAnalysis = await this.generateCompetitiveAnalysis(ourData)
-      
+      const competitiveAnalysis =
+        await this.generateCompetitiveAnalysis(ourData)
+
       // Generate insights
-      const insights = await this.generateBenchmarkInsights(ourData, industryComparisons)
-      
+      const insights = await this.generateBenchmarkInsights(
+        ourData,
+        industryComparisons
+      )
+
       // Calculate summary statistics
       const summary = this.calculateSummaryStatistics(industryComparisons)
-      
+
       // Generate recommendations
-      const recommendations = this.generateRecommendations(insights, industryComparisons)
+      const recommendations = this.generateRecommendations(
+        insights,
+        industryComparisons
+      )
 
       const report: BenchmarkReport = {
         period: { start: startDate, end: endDate },
@@ -140,12 +152,11 @@ export class BenchmarkAnalyzer {
         competitiveAnalysis,
         insights,
         recommendations,
-        nextReviewDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) // 90 days from now
+        nextReviewDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
       }
 
       console.log('📊 Generated comprehensive benchmark report')
       return report
-      
     } catch (error) {
       console.error('Failed to generate benchmark report:', error)
       throw error
@@ -162,24 +173,26 @@ export class BenchmarkAnalyzer {
     try {
       const benchmarkData = this.benchmarkData.get(industry) || []
       const ourData = await this.getOurPerformanceData()
-      
-      const filteredMetrics = benchmarkData.filter(data => metrics.includes(data.metric))
-      
+
+      const filteredMetrics = benchmarkData.filter(data =>
+        metrics.includes(data.metric)
+      )
+
       // Calculate overall score
       const overallScore = this.calculateOverallScore(filteredMetrics)
-      
+
       // Determine ranking
       const ranking = this.calculateIndustryRanking(industry, overallScore)
-      
+
       // Identify strengths and weaknesses
       const strengths = filteredMetrics
         .filter(m => m.percentile >= 75)
         .map(m => m.metric)
-      
+
       const weaknesses = filteredMetrics
         .filter(m => m.percentile < 50)
         .map(m => m.metric)
-      
+
       // Identify opportunities
       const opportunities = filteredMetrics
         .filter(m => m.percentile >= 50 && m.percentile < 75)
@@ -194,9 +207,8 @@ export class BenchmarkAnalyzer {
         ourRanking: ranking,
         strengths,
         weaknesses,
-        opportunities
+        opportunities,
       }
-      
     } catch (error) {
       console.error('Failed to get industry comparison:', error)
       throw error
@@ -215,12 +227,12 @@ export class BenchmarkAnalyzer {
 
       for (const competitor of competitors) {
         const competitorData = await this.getCompetitorData(competitor)
-        
+
         const analysis: CompetitiveAnalysis = {
           competitor,
           metrics: {},
           overallGap: 0,
-          competitivePosition: 'average'
+          competitivePosition: 'average',
         }
 
         // Compare each metric
@@ -236,7 +248,7 @@ export class BenchmarkAnalyzer {
             theirValue,
             ourValue,
             gap,
-            advantage: gap > 0 ? 'us' : gap < 0 ? 'them' : 'neutral'
+            advantage: gap > 0 ? 'us' : gap < 0 ? 'them' : 'neutral',
           }
 
           totalGap += gap
@@ -244,14 +256,17 @@ export class BenchmarkAnalyzer {
         })
 
         analysis.overallGap = metricCount > 0 ? totalGap / metricCount : 0
-        analysis.competitivePosition = this.determineCompetitivePosition(analysis.overallGap)
+        analysis.competitivePosition = this.determineCompetitivePosition(
+          analysis.overallGap
+        )
 
         competitiveAnalysis.push(analysis)
       }
 
-      console.log(`📊 Generated competitive analysis for ${competitors.length} competitors`)
+      console.log(
+        `📊 Generated competitive analysis for ${competitors.length} competitors`
+      )
       return competitiveAnalysis
-      
     } catch (error) {
       console.error('Failed to get competitive analysis:', error)
       throw error
@@ -270,7 +285,9 @@ export class BenchmarkAnalyzer {
       const ourData = await this.getOurPerformanceData()
       const insights: BenchmarkInsight[] = []
 
-      const filteredData = benchmarkData.filter(data => metrics.includes(data.metric))
+      const filteredData = benchmarkData.filter(data =>
+        metrics.includes(data.metric)
+      )
 
       filteredData.forEach(data => {
         // Identify opportunities (below average but achievable)
@@ -286,7 +303,7 @@ export class BenchmarkAnalyzer {
             recommendation: `Focus on improving ${data.metric} to reach industry average.`,
             timeline: 'Within 6 months',
             confidence: 0.8,
-            affectedAreas: this.getAffectedAreas(data.metric)
+            affectedAreas: this.getAffectedAreas(data.metric),
           })
         }
 
@@ -303,7 +320,7 @@ export class BenchmarkAnalyzer {
             recommendation: `Immediate action required to improve ${data.metric}.`,
             timeline: 'Within 3 months',
             confidence: 0.9,
-            affectedAreas: this.getAffectedAreas(data.metric)
+            affectedAreas: this.getAffectedAreas(data.metric),
           })
         }
 
@@ -320,7 +337,7 @@ export class BenchmarkAnalyzer {
             recommendation: `Maintain excellence in ${data.metric} and share best practices.`,
             timeline: 'Ongoing',
             confidence: 0.85,
-            affectedAreas: this.getAffectedAreas(data.metric)
+            affectedAreas: this.getAffectedAreas(data.metric),
           })
         }
       })
@@ -328,14 +345,14 @@ export class BenchmarkAnalyzer {
       // Sort by priority and impact
       insights.sort((a, b) => {
         const priorityOrder = { high: 3, medium: 2, low: 1 }
-        const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority]
+        const priorityDiff =
+          priorityOrder[b.priority] - priorityOrder[a.priority]
         if (priorityDiff !== 0) return priorityDiff
         return b.impact - a.impact
       })
 
       console.log(`📊 Generated ${insights.length} benchmark insights`)
       return insights.slice(0, 15) // Return top 15 insights
-      
     } catch (error) {
       console.error('Failed to get benchmark insights:', error)
       throw error
@@ -375,7 +392,7 @@ export class BenchmarkAnalyzer {
         lastUpdated: new Date(),
         dataSource: data.dataSource || 'internal',
         confidence: data.confidence || 0.8,
-        ...data
+        ...data,
       }
       industryData.push(newData)
     }
@@ -389,7 +406,7 @@ export class BenchmarkAnalyzer {
   private async loadBenchmarkData(): Promise<void> {
     // Load industry benchmark data
     const industries = ['Food Safety', 'HACCP Management', 'Quality Assurance']
-    
+
     industries.forEach(industry => {
       const data: BenchmarkData[] = this.generateMockBenchmarkData(industry)
       this.benchmarkData.set(industry, data)
@@ -400,20 +417,64 @@ export class BenchmarkAnalyzer {
 
   private generateMockBenchmarkData(industry: string): BenchmarkData[] {
     const metrics = [
-      { name: 'Compliance Score', category: 'compliance' as const, avg: 78, range: 20 },
-      { name: 'Violation Rate', category: 'compliance' as const, avg: 12, range: 15 },
-      { name: 'Response Time', category: 'performance' as const, avg: 24, range: 18 },
-      { name: 'Training Completion', category: 'performance' as const, avg: 75, range: 25 },
-      { name: 'Documentation Score', category: 'quality' as const, avg: 82, range: 20 },
-      { name: 'Audit Success Rate', category: 'quality' as const, avg: 88, range: 15 },
-      { name: 'Cost per Compliance', category: 'cost' as const, avg: 1500, range: 500 },
-      { name: 'Efficiency Index', category: 'efficiency' as const, avg: 72, range: 20 }
+      {
+        name: 'Compliance Score',
+        category: 'compliance' as const,
+        avg: 78,
+        range: 20,
+      },
+      {
+        name: 'Violation Rate',
+        category: 'compliance' as const,
+        avg: 12,
+        range: 15,
+      },
+      {
+        name: 'Response Time',
+        category: 'performance' as const,
+        avg: 24,
+        range: 18,
+      },
+      {
+        name: 'Training Completion',
+        category: 'performance' as const,
+        avg: 75,
+        range: 25,
+      },
+      {
+        name: 'Documentation Score',
+        category: 'quality' as const,
+        avg: 82,
+        range: 20,
+      },
+      {
+        name: 'Audit Success Rate',
+        category: 'quality' as const,
+        avg: 88,
+        range: 15,
+      },
+      {
+        name: 'Cost per Compliance',
+        category: 'cost' as const,
+        avg: 1500,
+        range: 500,
+      },
+      {
+        name: 'Efficiency Index',
+        category: 'efficiency' as const,
+        avg: 72,
+        range: 20,
+      },
     ]
 
     return metrics.map(metric => {
       const ourValue = metric.avg + (Math.random() - 0.5) * metric.range
       const variance = ourValue - metric.avg
-      const percentile = this.calculatePercentile(ourValue, metric.avg, metric.range)
+      const percentile = this.calculatePercentile(
+        ourValue,
+        metric.avg,
+        metric.range
+      )
 
       return {
         id: `${industry}_${metric.name}`,
@@ -433,14 +494,18 @@ export class BenchmarkAnalyzer {
         trendPeriod: '30 days',
         lastUpdated: new Date(),
         dataSource: 'industry_survey',
-        confidence: 0.8 + Math.random() * 0.2
+        confidence: 0.8 + Math.random() * 0.2,
       }
     })
   }
 
-  private calculatePercentile(ourValue: number, average: number, range: number): number {
+  private calculatePercentile(
+    ourValue: number,
+    average: number,
+    range: number
+  ): number {
     const deviation = (ourValue - average) / (range / 2)
-    const percentile = 50 + (deviation * 25) // Convert to percentile
+    const percentile = 50 + deviation * 25 // Convert to percentile
     return Math.max(0, Math.min(100, percentile))
   }
 
@@ -454,11 +519,14 @@ export class BenchmarkAnalyzer {
       'Documentation Score': 88,
       'Audit Success Rate': 92,
       'Cost per Compliance': 1450,
-      'Efficiency Index': 78
+      'Efficiency Index': 78,
     }
   }
 
-  private async getOurPerformanceData(startDate: Date, endDate: Date): Promise<Record<string, number>> {
+  private async getOurPerformanceData(
+    startDate: Date,
+    endDate: Date
+  ): Promise<Record<string, number>> {
     // Mock implementation with time-based data
     return this.getOurPerformanceData()
   }
@@ -471,17 +539,18 @@ export class BenchmarkAnalyzer {
 
     for (const industry of industries) {
       const benchmarkData = this.benchmarkData.get(industry) || []
-      
+
       // Update our values in benchmark data
       const updatedData = benchmarkData.map(data => ({
         ...data,
         ourValue: ourData[data.metric] || data.ourValue,
-        variance: (ourData[data.metric] || data.ourValue) - data.industryAverage,
+        variance:
+          (ourData[data.metric] || data.ourValue) - data.industryAverage,
         percentile: this.calculatePercentile(
           ourData[data.metric] || data.ourValue,
           data.industryAverage,
           data.topQuartile - data.bottomQuartile
-        )
+        ),
       }))
 
       const overallScore = this.calculateOverallScore(updatedData)
@@ -490,11 +559,11 @@ export class BenchmarkAnalyzer {
       const strengths = updatedData
         .filter(d => d.percentile >= 75)
         .map(d => d.metric)
-      
+
       const weaknesses = updatedData
         .filter(d => d.percentile < 50)
         .map(d => d.metric)
-      
+
       const opportunities = updatedData
         .filter(d => d.percentile >= 50 && d.percentile < 75)
         .map(d => d.metric)
@@ -508,14 +577,16 @@ export class BenchmarkAnalyzer {
         ourRanking: ranking,
         strengths,
         weaknesses,
-        opportunities
+        opportunities,
       })
     }
 
     return comparisons
   }
 
-  private async generateCompetitiveAnalysis(ourData: Record<string, number>): Promise<CompetitiveAnalysis[]> {
+  private async generateCompetitiveAnalysis(
+    ourData: Record<string, number>
+  ): Promise<CompetitiveAnalysis[]> {
     // Mock competitor data
     const competitors = ['Competitor A', 'Competitor B', 'Competitor C']
     const analysis: CompetitiveAnalysis[] = []
@@ -528,7 +599,8 @@ export class BenchmarkAnalyzer {
       Object.keys(ourData).forEach(metric => {
         const ourValue = ourData[metric]
         // Generate competitor value with some variation
-        const competitorValue = ourValue + (Math.random() - 0.5) * ourValue * 0.2
+        const competitorValue =
+          ourValue + (Math.random() - 0.5) * ourValue * 0.2
         const gap = ourValue - competitorValue
 
         competitorData[metric] = competitorValue
@@ -538,21 +610,26 @@ export class BenchmarkAnalyzer {
 
       analysis.push({
         competitor,
-        metrics: Object.keys(ourData).reduce((acc, metric) => {
-          const ourValue = ourData[metric]
-          const theirValue = competitorData[metric]
-          const gap = ourValue - theirValue
+        metrics: Object.keys(ourData).reduce(
+          (acc, metric) => {
+            const ourValue = ourData[metric]
+            const theirValue = competitorData[metric]
+            const gap = ourValue - theirValue
 
-          acc[metric] = {
-            theirValue,
-            ourValue,
-            gap,
-            advantage: gap > 0 ? 'us' : gap < 0 ? 'them' : 'neutral'
-          }
-          return acc
-        }, {} as CompetitiveAnalysis['metrics']),
+            acc[metric] = {
+              theirValue,
+              ourValue,
+              gap,
+              advantage: gap > 0 ? 'us' : gap < 0 ? 'them' : 'neutral',
+            }
+            return acc
+          },
+          {} as CompetitiveAnalysis['metrics']
+        ),
         overallGap: metricCount > 0 ? totalGap / metricCount : 0,
-        competitivePosition: this.determineCompetitivePosition(totalGap / metricCount)
+        competitivePosition: this.determineCompetitivePosition(
+          totalGap / metricCount
+        ),
       })
     })
 
@@ -577,9 +654,10 @@ export class BenchmarkAnalyzer {
             metric: data.metric,
             impact: Math.abs(data.variance) * 0.1,
             recommendation: `Improve ${data.metric} to reach industry standards.`,
-            timeline: data.percentile < 25 ? 'Within 3 months' : 'Within 6 months',
+            timeline:
+              data.percentile < 25 ? 'Within 3 months' : 'Within 6 months',
             confidence: 0.8,
-            affectedAreas: this.getAffectedAreas(data.metric)
+            affectedAreas: this.getAffectedAreas(data.metric),
           })
         }
       })
@@ -604,19 +682,24 @@ export class BenchmarkAnalyzer {
     return Math.floor(Math.random() * 100) + 50
   }
 
-  private async getCompetitorData(competitor: string): Promise<Record<string, number>> {
+  private async getCompetitorData(
+    competitor: string
+  ): Promise<Record<string, number>> {
     // Mock competitor data
     const baseData = await this.getOurPerformanceData()
     const competitorData: Record<string, number> = {}
 
     Object.keys(baseData).forEach(metric => {
-      competitorData[metric] = baseData[metric] + (Math.random() - 0.5) * baseData[metric] * 0.3
+      competitorData[metric] =
+        baseData[metric] + (Math.random() - 0.5) * baseData[metric] * 0.3
     })
 
     return competitorData
   }
 
-  private determineCompetitivePosition(overallGap: number): CompetitiveAnalysis['competitivePosition'] {
+  private determineCompetitivePosition(
+    overallGap: number
+  ): CompetitiveAnalysis['competitivePosition'] {
     if (overallGap > 10) return 'leader'
     if (overallGap > 5) return 'strong'
     if (overallGap > -5) return 'average'
@@ -624,14 +707,21 @@ export class BenchmarkAnalyzer {
     return 'laggard'
   }
 
-  private calculateSummaryStatistics(industryComparisons: IndustryComparison[]): BenchmarkReport['summary'] {
-    const totalMetrics = industryComparisons.reduce((sum, c) => sum + c.metrics.length, 0)
-    const aboveAverage = industryComparisons.reduce((sum, c) => 
-      sum + c.metrics.filter(m => m.percentile > 50).length, 0
+  private calculateSummaryStatistics(
+    industryComparisons: IndustryComparison[]
+  ): BenchmarkReport['summary'] {
+    const totalMetrics = industryComparisons.reduce(
+      (sum, c) => sum + c.metrics.length,
+      0
+    )
+    const aboveAverage = industryComparisons.reduce(
+      (sum, c) => sum + c.metrics.filter(m => m.percentile > 50).length,
+      0
     )
     const belowAverage = totalMetrics - aboveAverage
-    const topPerformers = industryComparisons.reduce((sum, c) => 
-      sum + c.metrics.filter(m => m.percentile >= 75).length, 0
+    const topPerformers = industryComparisons.reduce(
+      (sum, c) => sum + c.metrics.filter(m => m.percentile >= 75).length,
+      0
     )
 
     return {
@@ -639,7 +729,7 @@ export class BenchmarkAnalyzer {
       aboveAverage,
       belowAverage,
       topPerformers,
-      improvementAreas: belowAverage
+      improvementAreas: belowAverage,
     }
   }
 
@@ -652,16 +742,22 @@ export class BenchmarkAnalyzer {
     // High priority insights
     const highPriorityInsights = insights.filter(i => i.priority === 'high')
     if (highPriorityInsights.length > 0) {
-      recommendations.push(`Address ${highPriorityInsights.length} high-priority performance gaps immediately`)
+      recommendations.push(
+        `Address ${highPriorityInsights.length} high-priority performance gaps immediately`
+      )
     }
 
     // Industry-specific recommendations
     industryComparisons.forEach(comparison => {
       if (comparison.weaknesses.length > 0) {
-        recommendations.push(`Focus on ${comparison.industry} weaknesses: ${comparison.weaknesses.join(', ')}`)
+        recommendations.push(
+          `Focus on ${comparison.industry} weaknesses: ${comparison.weaknesses.join(', ')}`
+        )
       }
       if (comparison.strengths.length > 0) {
-        recommendations.push(`Leverage ${comparison.industry} strengths: ${comparison.strengths.join(', ')}`)
+        recommendations.push(
+          `Leverage ${comparison.industry} strengths: ${comparison.strengths.join(', ')}`
+        )
       }
     })
 
@@ -683,7 +779,7 @@ export class BenchmarkAnalyzer {
       'Documentation Score': ['Quality', 'Documentation', 'Compliance'],
       'Audit Success Rate': ['Quality', 'Compliance', 'Operations'],
       'Cost per Compliance': ['Finance', 'Operations', 'Compliance'],
-      'Efficiency Index': ['Operations', 'Management', 'Systems']
+      'Efficiency Index': ['Operations', 'Management', 'Systems'],
     }
 
     return areaMap[metric] || ['Operations']

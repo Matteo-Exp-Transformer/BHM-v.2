@@ -3,7 +3,7 @@
  * Predictive forecast display widget with confidence indicators
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -11,17 +11,13 @@ import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   Brain,
-  TrendingUp,
-  TrendingDown,
-  Activity,
   Clock,
   Target,
   AlertTriangle,
   CheckCircle,
-  Zap,
   Calendar,
   BarChart3,
-  RefreshCw
+  RefreshCw,
 } from 'lucide-react'
 
 import { PredictionResult } from '@/services/analytics'
@@ -41,7 +37,7 @@ export const ForecastWidget: React.FC<ForecastWidgetProps> = ({
   showConfidence = true,
   showFactors = true,
   onRefresh,
-  onExport
+  onExport,
 }) => {
   const [isLoading, setIsLoading] = useState(false)
 
@@ -65,24 +61,34 @@ export const ForecastWidget: React.FC<ForecastWidgetProps> = ({
   const getPredictionColor = () => {
     switch (prediction.type) {
       case 'temperature':
-        if (prediction.prediction > 8) return 'text-red-600 bg-red-50 border-red-200'
-        if (prediction.prediction > 5) return 'text-orange-600 bg-orange-50 border-orange-200'
+        if (prediction.prediction > 8)
+          return 'text-red-600 bg-red-50 border-red-200'
+        if (prediction.prediction > 5)
+          return 'text-orange-600 bg-orange-50 border-orange-200'
         return 'text-green-600 bg-green-50 border-green-200'
       case 'compliance':
-        if (prediction.prediction < 60) return 'text-red-600 bg-red-50 border-red-200'
-        if (prediction.prediction < 80) return 'text-orange-600 bg-orange-50 border-orange-200'
+        if (prediction.prediction < 60)
+          return 'text-red-600 bg-red-50 border-red-200'
+        if (prediction.prediction < 80)
+          return 'text-orange-600 bg-orange-50 border-orange-200'
         return 'text-green-600 bg-green-50 border-green-200'
       case 'expiry':
-        if (prediction.prediction < 3) return 'text-red-600 bg-red-50 border-red-200'
-        if (prediction.prediction < 7) return 'text-orange-600 bg-orange-50 border-orange-200'
+        if (prediction.prediction < 3)
+          return 'text-red-600 bg-red-50 border-red-200'
+        if (prediction.prediction < 7)
+          return 'text-orange-600 bg-orange-50 border-orange-200'
         return 'text-green-600 bg-green-50 border-green-200'
       case 'performance':
-        if (prediction.prediction < 60) return 'text-red-600 bg-red-50 border-red-200'
-        if (prediction.prediction < 80) return 'text-orange-600 bg-orange-50 border-orange-200'
+        if (prediction.prediction < 60)
+          return 'text-red-600 bg-red-50 border-red-200'
+        if (prediction.prediction < 80)
+          return 'text-orange-600 bg-orange-50 border-orange-200'
         return 'text-green-600 bg-green-50 border-green-200'
       case 'risk':
-        if (prediction.prediction > 80) return 'text-red-600 bg-red-50 border-red-200'
-        if (prediction.prediction > 60) return 'text-orange-600 bg-orange-50 border-orange-200'
+        if (prediction.prediction > 80)
+          return 'text-red-600 bg-red-50 border-red-200'
+        if (prediction.prediction > 60)
+          return 'text-orange-600 bg-orange-50 border-orange-200'
         return 'text-green-600 bg-green-50 border-green-200'
       default:
         return 'text-blue-600 bg-blue-50 border-blue-200'
@@ -104,20 +110,32 @@ export const ForecastWidget: React.FC<ForecastWidgetProps> = ({
   }
 
   const getRecommendationIcon = () => {
-    if (prediction.recommendation?.includes('Critical') || prediction.recommendation?.includes('Immediate')) {
+    if (
+      prediction.recommendation?.includes('Critical') ||
+      prediction.recommendation?.includes('Immediate')
+    ) {
       return <AlertTriangle className="h-4 w-4 text-red-500" />
     }
-    if (prediction.recommendation?.includes('Warning') || prediction.recommendation?.includes('Monitor')) {
+    if (
+      prediction.recommendation?.includes('Warning') ||
+      prediction.recommendation?.includes('Monitor')
+    ) {
       return <AlertTriangle className="h-4 w-4 text-orange-500" />
     }
     return <CheckCircle className="h-4 w-4 text-green-500" />
   }
 
   const getRecommendationColor = () => {
-    if (prediction.recommendation?.includes('Critical') || prediction.recommendation?.includes('Immediate')) {
+    if (
+      prediction.recommendation?.includes('Critical') ||
+      prediction.recommendation?.includes('Immediate')
+    ) {
       return 'border-red-200 bg-red-50'
     }
-    if (prediction.recommendation?.includes('Warning') || prediction.recommendation?.includes('Monitor')) {
+    if (
+      prediction.recommendation?.includes('Warning') ||
+      prediction.recommendation?.includes('Monitor')
+    ) {
       return 'border-orange-200 bg-orange-50'
     }
     return 'border-green-200 bg-green-50'
@@ -140,22 +158,6 @@ export const ForecastWidget: React.FC<ForecastWidgetProps> = ({
     }
   }
 
-  const getPredictionUnit = () => {
-    switch (prediction.type) {
-      case 'temperature':
-        return '°C'
-      case 'compliance':
-        return '%'
-      case 'expiry':
-        return 'days'
-      case 'performance':
-        return '%'
-      case 'risk':
-        return '%'
-      default:
-        return ''
-    }
-  }
 
   const handleRefresh = async () => {
     if (onRefresh) {
@@ -169,7 +171,9 @@ export const ForecastWidget: React.FC<ForecastWidgetProps> = ({
   }
 
   return (
-    <Card className={`w-full transition-all hover:shadow-md ${getPredictionColor()} border`}>
+    <Card
+      className={`w-full transition-all hover:shadow-md ${getPredictionColor()} border`}
+    >
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
@@ -184,15 +188,13 @@ export const ForecastWidget: React.FC<ForecastWidgetProps> = ({
                 onClick={handleRefresh}
                 disabled={isLoading}
               >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
+                />
               </Button>
             )}
             {onExport && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onExport}
-              >
+              <Button variant="outline" size="sm" onClick={onExport}>
                 <BarChart3 className="h-4 w-4" />
               </Button>
             )}
@@ -203,9 +205,7 @@ export const ForecastWidget: React.FC<ForecastWidgetProps> = ({
       <CardContent className="space-y-4">
         {/* Main Prediction Value */}
         <div className="text-center space-y-2">
-          <div className="text-4xl font-bold">
-            {formatPredictionValue()}
-          </div>
+          <div className="text-4xl font-bold">{formatPredictionValue()}</div>
           <div className="text-sm text-muted-foreground">
             Predicted for {prediction.timeframe}
           </div>
@@ -217,7 +217,8 @@ export const ForecastWidget: React.FC<ForecastWidgetProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Confidence Level</span>
               <Badge className={getConfidenceColor(prediction.confidence)}>
-                {Math.round(prediction.confidence * 100)}% {getConfidenceLabel(prediction.confidence)}
+                {Math.round(prediction.confidence * 100)}%{' '}
+                {getConfidenceLabel(prediction.confidence)}
               </Badge>
             </div>
             <Progress value={prediction.confidence * 100} className="h-2" />

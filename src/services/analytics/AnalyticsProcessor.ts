@@ -5,12 +5,20 @@
 
 import { predictiveModels, PredictionResult } from './PredictiveModels'
 import { trendAnalyzer, TrendAnalysis } from './TrendAnalyzer'
-import { riskAssessment, RiskAssessment as RiskAssessmentType } from './RiskAssessment'
+import {
+  riskAssessment,
+  RiskAssessment as RiskAssessmentType,
+} from './RiskAssessment'
 
 export interface AnalyticsData {
   id: string
   timestamp: Date
-  source: 'temperature' | 'compliance' | 'performance' | 'inventory' | 'user_activity'
+  source:
+    | 'temperature'
+    | 'compliance'
+    | 'performance'
+    | 'inventory'
+    | 'user_activity'
   entityId: string
   entityType: string
   metrics: Record<string, number>
@@ -44,7 +52,11 @@ export interface AnalyticsInsight {
 
 export interface AnalyticsAlert {
   id: string
-  type: 'temperature_violation' | 'compliance_risk' | 'performance_decline' | 'equipment_failure'
+  type:
+    | 'temperature_violation'
+    | 'compliance_risk'
+    | 'performance_decline'
+    | 'equipment_failure'
   severity: 'low' | 'medium' | 'high' | 'critical'
   title: string
   message: string
@@ -71,7 +83,7 @@ export class AnalyticsProcessor {
   private isInitialized = false
   private processingQueue: AnalyticsData[] = []
   private processingConfig: ProcessingConfig
-  private processingInterval: NodeJS.Timeout | null = null
+  private processingInterval: ReturnType<typeof setInterval> | null = null
   private isProcessing = false
 
   constructor() {
@@ -84,8 +96,8 @@ export class AnalyticsProcessor {
       alertThresholds: {
         temperature_violation: 8.0,
         compliance_risk: 75,
-        performance_decline: 20
-      }
+        performance_decline: 20,
+      },
     }
   }
 
@@ -104,7 +116,9 @@ export class AnalyticsProcessor {
       // Start processing pipeline
       this.startProcessingPipeline()
 
-      console.log('⚡ Analytics processor initialized - B.10.2 Advanced Analytics')
+      console.log(
+        '⚡ Analytics processor initialized - B.10.2 Advanced Analytics'
+      )
       this.isInitialized = true
     } catch (error) {
       console.error('Failed to initialize analytics processor:', error)
@@ -119,9 +133,9 @@ export class AnalyticsProcessor {
     try {
       const dataArray = Array.isArray(data) ? data : [data]
       this.processingQueue.push(...dataArray)
-      
+
       console.log(`📊 Added ${dataArray.length} data points to analytics queue`)
-      
+
       // Trigger immediate processing if queue is getting large
       if (this.processingQueue.length >= this.processingConfig.batchSize) {
         this.processQueue()
@@ -142,31 +156,42 @@ export class AnalyticsProcessor {
     try {
       // Get raw data for the entity
       const rawData = await this.getEntityData(entityId, entityType, timeRange)
-      
+
       // Process predictions
       const predictions: PredictionResult[] = []
       if (this.processingConfig.enablePredictions) {
-        predictions.push(...await this.generatePredictions(rawData, entityId, entityType))
+        predictions.push(
+          ...(await this.generatePredictions(rawData, entityId, entityType))
+        )
       }
-      
+
       // Process trends
       const trends: TrendAnalysis[] = []
       if (this.processingConfig.enableTrendAnalysis) {
-        trends.push(...await this.generateTrends(rawData, entityId, entityType))
+        trends.push(
+          ...(await this.generateTrends(rawData, entityId, entityType))
+        )
       }
-      
+
       // Process risk assessments
       const risks: RiskAssessmentType[] = []
       if (this.processingConfig.enableRiskAssessment) {
-        risks.push(...await this.generateRiskAssessments(entityId, entityType))
+        risks.push(
+          ...(await this.generateRiskAssessments(entityId, entityType))
+        )
       }
-      
+
       // Generate insights
-      const insights = this.generateInsights(predictions, trends, risks, rawData)
-      
+      const insights = this.generateInsights(
+        predictions,
+        trends,
+        risks,
+        rawData
+      )
+
       // Generate alerts
       const alerts = this.generateAlerts(insights, entityId, entityType)
-      
+
       const processed: ProcessedAnalytics = {
         id: `analytics_${entityId}_${Date.now()}`,
         timestamp: new Date(),
@@ -177,12 +202,11 @@ export class AnalyticsProcessor {
         risks,
         insights,
         alerts,
-        processedAt: new Date()
+        processedAt: new Date(),
       }
-      
+
       console.log(`📈 Processed analytics for ${entityType} ${entityId}`)
       return processed
-      
     } catch (error) {
       console.error('Failed to process entity analytics:', error)
       throw error
@@ -192,9 +216,7 @@ export class AnalyticsProcessor {
   /**
    * Get real-time analytics dashboard data
    */
-  public async getDashboardAnalytics(
-    companyId: string
-  ): Promise<{
+  public async getDashboardAnalytics(companyId: string): Promise<{
     overview: ProcessedAnalytics
     conservationPoints: ProcessedAnalytics[]
     departments: ProcessedAnalytics[]
@@ -204,49 +226,56 @@ export class AnalyticsProcessor {
     try {
       const timeRange = {
         start: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
-        end: new Date()
+        end: new Date(),
       }
 
       // Process company-level analytics
-      const overview = await this.processEntityAnalytics(companyId, 'company', timeRange)
-      
+      const overview = await this.processEntityAnalytics(
+        companyId,
+        'company',
+        timeRange
+      )
+
       // Get conservation points analytics
       const conservationPointIds = await this.getConservationPointIds(companyId)
       const conservationPoints = await Promise.all(
-        conservationPointIds.map(id => 
+        conservationPointIds.map(id =>
           this.processEntityAnalytics(id, 'conservation_point', timeRange)
         )
       )
-      
+
       // Get departments analytics
       const departmentIds = await this.getDepartmentIds(companyId)
       const departments = await Promise.all(
-        departmentIds.map(id => 
+        departmentIds.map(id =>
           this.processEntityAnalytics(id, 'department', timeRange)
         )
       )
-      
+
       // Collect all alerts and insights
       const allAlerts = [
         ...overview.alerts,
         ...conservationPoints.flatMap(cp => cp.alerts),
-        ...departments.flatMap(dept => dept.alerts)
+        ...departments.flatMap(dept => dept.alerts),
       ]
-      
+
       const allInsights = [
         ...overview.insights,
         ...conservationPoints.flatMap(cp => cp.insights),
-        ...departments.flatMap(dept => dept.insights)
+        ...departments.flatMap(dept => dept.insights),
       ]
-      
+
       return {
         overview,
         conservationPoints,
         departments,
-        alerts: allAlerts.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()),
-        insights: allInsights.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+        alerts: allAlerts.sort(
+          (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+        ),
+        insights: allInsights.sort(
+          (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+        ),
       }
-      
     } catch (error) {
       console.error('Failed to get dashboard analytics:', error)
       throw error
@@ -258,13 +287,13 @@ export class AnalyticsProcessor {
    */
   public updateConfig(config: Partial<ProcessingConfig>): void {
     this.processingConfig = { ...this.processingConfig, ...config }
-    
+
     // Restart processing pipeline with new interval
     if (config.processingInterval && this.processingInterval) {
       clearInterval(this.processingInterval)
       this.startProcessingPipeline()
     }
-    
+
     console.log('⚙️ Analytics processing configuration updated')
   }
 
@@ -281,7 +310,7 @@ export class AnalyticsProcessor {
       queueSize: this.processingQueue.length,
       isProcessing: this.isProcessing,
       lastProcessed: this.getLastProcessedTime(),
-      processingRate: this.calculateProcessingRate()
+      processingRate: this.calculateProcessingRate(),
     }
   }
 
@@ -291,13 +320,13 @@ export class AnalyticsProcessor {
     if (this.processingInterval) {
       clearInterval(this.processingInterval)
     }
-    
+
     this.processingInterval = setInterval(() => {
       if (this.processingQueue.length > 0) {
         this.processQueue()
       }
     }, this.processingConfig.processingInterval)
-    
+
     console.log('🔄 Analytics processing pipeline started')
   }
 
@@ -305,24 +334,26 @@ export class AnalyticsProcessor {
     if (this.isProcessing || this.processingQueue.length === 0) {
       return
     }
-    
+
     this.isProcessing = true
-    
+
     try {
       // Process data in batches
-      const batch = this.processingQueue.splice(0, this.processingConfig.batchSize)
-      
+      const batch = this.processingQueue.splice(
+        0,
+        this.processingConfig.batchSize
+      )
+
       // Group data by entity
       const groupedData = this.groupDataByEntity(batch)
-      
+
       // Process each entity's data
       for (const [entityKey, entityData] of groupedData.entries()) {
         const [entityId, entityType] = entityKey.split('|')
         await this.processEntityBatch(entityId, entityType, entityData)
       }
-      
+
       console.log(`📊 Processed ${batch.length} analytics data points`)
-      
     } catch (error) {
       console.error('Failed to process analytics queue:', error)
     } finally {
@@ -330,9 +361,11 @@ export class AnalyticsProcessor {
     }
   }
 
-  private groupDataByEntity(data: AnalyticsData[]): Map<string, AnalyticsData[]> {
+  private groupDataByEntity(
+    data: AnalyticsData[]
+  ): Map<string, AnalyticsData[]> {
     const grouped = new Map<string, AnalyticsData[]>()
-    
+
     data.forEach(item => {
       const key = `${item.entityId}|${item.entityType}`
       if (!grouped.has(key)) {
@@ -340,7 +373,7 @@ export class AnalyticsProcessor {
       }
       grouped.get(key)!.push(item)
     })
-    
+
     return grouped
   }
 
@@ -352,15 +385,17 @@ export class AnalyticsProcessor {
     try {
       // Sort data by timestamp
       data.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-      
+
       // Update real-time analytics for this entity
       await this.updateRealTimeAnalytics(entityId, entityType, data)
-      
+
       // Check for alerts
       await this.checkForAlerts(entityId, entityType, data)
-      
     } catch (error) {
-      console.error(`Failed to process batch for ${entityType} ${entityId}:`, error)
+      console.error(
+        `Failed to process batch for ${entityType} ${entityId}:`,
+        error
+      )
     }
   }
 
@@ -372,10 +407,10 @@ export class AnalyticsProcessor {
     // Mock implementation - would fetch from database
     const data: AnalyticsData[] = []
     const interval = (timeRange.end.getTime() - timeRange.start.getTime()) / 100
-    
+
     for (let i = 0; i < 100; i++) {
       const timestamp = new Date(timeRange.start.getTime() + i * interval)
-      
+
       data.push({
         id: `data_${entityId}_${i}`,
         timestamp,
@@ -385,12 +420,12 @@ export class AnalyticsProcessor {
         metrics: {
           temperature: 4.0 + Math.sin(i / 10) * 2 + Math.random() * 0.5,
           humidity: 60 + Math.random() * 10,
-          pressure: 1013 + Math.random() * 20
+          pressure: 1013 + Math.random() * 20,
         },
-        metadata: { sensorId: `sensor_${i}` }
+        metadata: { sensorId: `sensor_${i}` },
       })
     }
-    
+
     return data
   }
 
@@ -400,25 +435,28 @@ export class AnalyticsProcessor {
     entityType: string
   ): Promise<PredictionResult[]> {
     const predictions: PredictionResult[] = []
-    
+
     try {
       if (entityType === 'conservation_point') {
         // Generate temperature predictions
-        const tempPrediction = await predictiveModels.predictTemperatureTrend(entityId, 24)
+        const tempPrediction = await predictiveModels.predictTemperatureTrend(
+          entityId,
+          24
+        )
         predictions.push(tempPrediction)
       }
-      
+
       if (entityType === 'company') {
         // Generate compliance risk predictions
         const complianceData = { complianceScore: 75 }
-        const riskPrediction = await predictiveModels.predictComplianceRisk(complianceData)
+        const riskPrediction =
+          await predictiveModels.predictComplianceRisk(complianceData)
         predictions.push(riskPrediction)
       }
-      
     } catch (error) {
       console.error('Failed to generate predictions:', error)
     }
-    
+
     return predictions
   }
 
@@ -428,32 +466,40 @@ export class AnalyticsProcessor {
     entityType: string
   ): Promise<TrendAnalysis[]> {
     const trends: TrendAnalysis[] = []
-    
+
     try {
       const timeRange = {
         start: data[0]?.timestamp || new Date(Date.now() - 24 * 60 * 60 * 1000),
-        end: data[data.length - 1]?.timestamp || new Date()
+        end: data[data.length - 1]?.timestamp || new Date(),
       }
-      
+
       if (entityType === 'conservation_point') {
-        const tempTrend = await trendAnalyzer.analyzeTemperatureTrends(entityId, timeRange)
+        const tempTrend = await trendAnalyzer.analyzeTemperatureTrends(
+          entityId,
+          timeRange
+        )
         trends.push(tempTrend)
       }
-      
+
       if (entityType === 'company') {
-        const complianceTrend = await trendAnalyzer.analyzeComplianceTrend(entityId, timeRange)
+        const complianceTrend = await trendAnalyzer.analyzeComplianceTrend(
+          entityId,
+          timeRange
+        )
         trends.push(complianceTrend)
       }
-      
+
       if (entityType === 'department') {
-        const performanceTrend = await trendAnalyzer.analyzePerformanceTrend(entityId, timeRange)
+        const performanceTrend = await trendAnalyzer.analyzePerformanceTrend(
+          entityId,
+          timeRange
+        )
         trends.push(performanceTrend)
       }
-      
     } catch (error) {
       console.error('Failed to generate trends:', error)
     }
-    
+
     return trends
   }
 
@@ -462,27 +508,31 @@ export class AnalyticsProcessor {
     entityType: string
   ): Promise<RiskAssessmentType[]> {
     const risks: RiskAssessmentType[] = []
-    
+
     try {
       switch (entityType) {
-        case 'conservation_point':
-          const conservationRisk = await riskAssessment.assessConservationPointRisk(entityId)
+        case 'conservation_point': {
+          const conservationRisk =
+            await riskAssessment.assessConservationPointRisk(entityId)
           risks.push(conservationRisk)
           break
-        case 'company':
+        }
+        case 'company': {
           const companyRisk = await riskAssessment.assessCompanyRisk(entityId)
           risks.push(companyRisk)
           break
-        case 'department':
-          const departmentRisk = await riskAssessment.assessDepartmentRisk(entityId)
+        }
+        case 'department': {
+          const departmentRisk =
+            await riskAssessment.assessDepartmentRisk(entityId)
           risks.push(departmentRisk)
           break
+        }
       }
-      
     } catch (error) {
       console.error('Failed to generate risk assessments:', error)
     }
-    
+
     return risks
   }
 
@@ -490,10 +540,10 @@ export class AnalyticsProcessor {
     predictions: PredictionResult[],
     trends: TrendAnalysis[],
     risks: RiskAssessmentType[],
-    data: AnalyticsData[]
+    _data: AnalyticsData[]
   ): AnalyticsInsight[] {
     const insights: AnalyticsInsight[] = []
-    
+
     // Generate insights from predictions
     predictions.forEach(prediction => {
       if (prediction.confidence > 0.8) {
@@ -504,13 +554,15 @@ export class AnalyticsProcessor {
           title: `High Confidence ${prediction.type} Prediction`,
           description: `Predicted ${prediction.type} with ${Math.round(prediction.confidence * 100)}% confidence`,
           confidence: prediction.confidence,
-          recommendations: prediction.recommendation ? [prediction.recommendation] : [],
+          recommendations: prediction.recommendation
+            ? [prediction.recommendation]
+            : [],
           affectedEntities: [],
-          timestamp: new Date()
+          timestamp: new Date(),
         })
       }
     })
-    
+
     // Generate insights from trends
     trends.forEach(trend => {
       if (trend.strength === 'strong' && trend.confidence > 0.7) {
@@ -523,11 +575,11 @@ export class AnalyticsProcessor {
           confidence: trend.confidence,
           recommendations: trend.recommendations,
           affectedEntities: [],
-          timestamp: new Date()
+          timestamp: new Date(),
         })
       }
     })
-    
+
     // Generate insights from risks
     risks.forEach(risk => {
       if (risk.riskLevel === 'high' || risk.riskLevel === 'critical') {
@@ -540,11 +592,11 @@ export class AnalyticsProcessor {
           confidence: risk.trends.confidence,
           recommendations: risk.recommendations.map(r => r.title),
           affectedEntities: [risk.entityId],
-          timestamp: new Date()
+          timestamp: new Date(),
         })
       }
     })
-    
+
     return insights
   }
 
@@ -554,7 +606,7 @@ export class AnalyticsProcessor {
     entityType: string
   ): AnalyticsAlert[] {
     const alerts: AnalyticsAlert[] = []
-    
+
     insights.forEach(insight => {
       if (insight.severity === 'critical' || insight.severity === 'warning') {
         alerts.push({
@@ -567,11 +619,11 @@ export class AnalyticsProcessor {
           entityType,
           actions: insight.recommendations,
           timestamp: new Date(),
-          acknowledged: false
+          acknowledged: false,
         })
       }
     })
-    
+
     return alerts
   }
 
@@ -589,9 +641,9 @@ export class AnalyticsProcessor {
   }
 
   private async updateRealTimeAnalytics(
-    entityId: string,
+    _entityId: string,
     entityType: string,
-    data: AnalyticsData[]
+    _data: AnalyticsData[]
   ): Promise<void> {
     // Update real-time analytics cache
     console.log(`📊 Updated real-time analytics for ${entityType} ${entityId}`)
@@ -604,18 +656,24 @@ export class AnalyticsProcessor {
   ): Promise<void> {
     // Check for alert conditions
     data.forEach(item => {
-      if (item.source === 'temperature' && item.metrics.temperature > this.processingConfig.alertThresholds.temperature_violation) {
-        console.log(`🚨 Temperature violation alert for ${entityId}: ${item.metrics.temperature}°C`)
+      if (
+        item.source === 'temperature' &&
+        item.metrics.temperature >
+          this.processingConfig.alertThresholds.temperature_violation
+      ) {
+        console.log(
+          `🚨 Temperature violation alert for ${entityId}: ${item.metrics.temperature}°C`
+        )
       }
     })
   }
 
-  private async getConservationPointIds(companyId: string): Promise<string[]> {
+  private async getConservationPointIds(_companyId: string): Promise<string[]> {
     // Mock implementation - would fetch from database
     return ['CP001', 'CP002', 'CP003']
   }
 
-  private async getDepartmentIds(companyId: string): Promise<string[]> {
+  private async getDepartmentIds(_companyId: string): Promise<string[]> {
     // Mock implementation - would fetch from database
     return ['DEPT001', 'DEPT002']
   }

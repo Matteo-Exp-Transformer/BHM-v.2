@@ -74,24 +74,30 @@ export class TrendAnalyzer {
   ): Promise<TrendAnalysis> {
     try {
       // Get temperature data for the conservation point
-      const temperatureData = await this.getTemperatureData(conservationPointId, timeRange)
-      
+      const temperatureData = await this.getTemperatureData(
+        conservationPointId,
+        timeRange
+      )
+
       if (temperatureData.length < 10) {
         throw new Error('Insufficient data for trend analysis')
       }
 
       // Perform trend analysis
       const trend = this.calculateTrend(temperatureData, 'temperature')
-      
+
       // Detect anomalies
       const anomalies = this.detectAnomalies(temperatureData, trend)
-      
+
       // Generate forecast
       const forecast = this.generateForecast(temperatureData, trend, 24) // 24 hours ahead
-      
+
       // Generate insights and recommendations
       const insights = this.generateTemperatureInsights(trend, anomalies)
-      const recommendations = this.generateTemperatureRecommendations(trend, anomalies)
+      const recommendations = this.generateTemperatureRecommendations(
+        trend,
+        anomalies
+      )
 
       return {
         id: `temperature_${conservationPointId}`,
@@ -105,9 +111,8 @@ export class TrendAnalyzer {
         forecast,
         anomalies,
         insights,
-        recommendations
+        recommendations,
       }
-      
     } catch (error) {
       console.error('Failed to analyze temperature trends:', error)
       throw error
@@ -123,7 +128,7 @@ export class TrendAnalyzer {
   ): Promise<TrendAnalysis> {
     try {
       const complianceData = await this.getComplianceData(companyId, timeRange)
-      
+
       if (complianceData.length < 5) {
         throw new Error('Insufficient compliance data for trend analysis')
       }
@@ -131,9 +136,12 @@ export class TrendAnalyzer {
       const trend = this.calculateTrend(complianceData, 'compliance')
       const anomalies = this.detectAnomalies(complianceData, trend)
       const forecast = this.generateForecast(complianceData, trend, 30) // 30 days ahead
-      
+
       const insights = this.generateComplianceInsights(trend, anomalies)
-      const recommendations = this.generateComplianceRecommendations(trend, anomalies)
+      const recommendations = this.generateComplianceRecommendations(
+        trend,
+        anomalies
+      )
 
       return {
         id: `compliance_${companyId}`,
@@ -147,9 +155,8 @@ export class TrendAnalyzer {
         forecast,
         anomalies,
         insights,
-        recommendations
+        recommendations,
       }
-      
     } catch (error) {
       console.error('Failed to analyze compliance trend:', error)
       throw error
@@ -164,14 +171,20 @@ export class TrendAnalyzer {
     timeRange: { start: Date; end: Date }
   ): Promise<TrendAnalysis> {
     try {
-      const performanceData = await this.getPerformanceData(departmentId, timeRange)
-      
+      const performanceData = await this.getPerformanceData(
+        departmentId,
+        timeRange
+      )
+
       const trend = this.calculateTrend(performanceData, 'performance')
       const anomalies = this.detectAnomalies(performanceData, trend)
       const forecast = this.generateForecast(performanceData, trend, 14) // 14 days ahead
-      
+
       const insights = this.generatePerformanceInsights(trend, anomalies)
-      const recommendations = this.generatePerformanceRecommendations(trend, anomalies)
+      const recommendations = this.generatePerformanceRecommendations(
+        trend,
+        anomalies
+      )
 
       return {
         id: `performance_${departmentId}`,
@@ -185,9 +198,8 @@ export class TrendAnalyzer {
         forecast,
         anomalies,
         insights,
-        recommendations
+        recommendations,
       }
-      
     } catch (error) {
       console.error('Failed to analyze performance trend:', error)
       throw error
@@ -204,17 +216,16 @@ export class TrendAnalyzer {
     try {
       // Group data by period
       const groupedData = this.groupDataByPeriod(data, period)
-      
+
       // Calculate seasonal amplitude and phase
       const seasonalAnalysis = this.calculateSeasonalComponents(groupedData)
-      
+
       return {
         period,
         amplitude: seasonalAnalysis.amplitude,
         phase: seasonalAnalysis.phase,
-        confidence: seasonalAnalysis.confidence
+        confidence: seasonalAnalysis.confidence,
       }
-      
     } catch (error) {
       console.error('Failed to detect seasonal patterns:', error)
       throw error
@@ -232,14 +243,14 @@ export class TrendAnalyzer {
     try {
       const currentTrend = this.calculateTrend(currentData, 'comparison')
       const previousTrend = this.calculateTrend(previousData, 'comparison')
-      
+
       let benchmarkTrend: TrendAnalysis | undefined
       if (benchmarkData) {
         benchmarkTrend = this.calculateTrend(benchmarkData, 'comparison')
       }
 
       // Calculate performance relative to benchmark
-      const performance = benchmarkTrend 
+      const performance = benchmarkTrend
         ? this.calculatePerformance(currentTrend, benchmarkTrend)
         : 'at'
 
@@ -251,9 +262,8 @@ export class TrendAnalyzer {
         previous: previousTrend,
         benchmark: benchmarkTrend || currentTrend,
         performance,
-        improvement
+        improvement,
       }
-      
     } catch (error) {
       console.error('Failed to compare trends:', error)
       throw error
@@ -270,7 +280,7 @@ export class TrendAnalyzer {
     try {
       const timeRange = {
         start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-        end: new Date()
+        end: new Date(),
       }
 
       const trends: TrendAnalysis[] = []
@@ -288,7 +298,6 @@ export class TrendAnalyzer {
       }
 
       return trends
-      
     } catch (error) {
       console.error('Failed to get trend summary:', error)
       throw error
@@ -311,12 +320,12 @@ export class TrendAnalyzer {
       const timestamp = new Date(startTime + i * interval)
       const baseTemp = 4.0
       const variation = Math.sin(i / 10) * 2 + Math.random() * 0.5
-      
+
       data.push({
         timestamp,
         value: baseTemp + variation,
         category: 'temperature',
-        metadata: { conservationPointId }
+        metadata: { conservationPointId },
       })
     }
 
@@ -338,12 +347,12 @@ export class TrendAnalyzer {
       const baseScore = 85
       const improvement = i * 0.5 // Gradual improvement
       const variation = Math.random() * 5
-      
+
       data.push({
         timestamp,
         value: Math.min(100, baseScore + improvement + variation),
         category: 'compliance',
-        metadata: { companyId }
+        metadata: { companyId },
       })
     }
 
@@ -365,22 +374,19 @@ export class TrendAnalyzer {
       const basePerformance = 75
       const trend = Math.sin(i / 7) * 10 // Weekly pattern
       const variation = Math.random() * 8
-      
+
       data.push({
         timestamp,
         value: Math.max(0, Math.min(100, basePerformance + trend + variation)),
         category: 'performance',
-        metadata: { departmentId }
+        metadata: { departmentId },
       })
     }
 
     return data
   }
 
-  private calculateTrend(
-    data: TrendDataPoint[],
-    type: string
-  ): TrendAnalysis {
+  private calculateTrend(data: TrendDataPoint[], type: string): TrendAnalysis {
     if (data.length < 2) {
       throw new Error('Insufficient data for trend calculation')
     }
@@ -406,12 +412,18 @@ export class TrendAnalyzer {
       return sum + Math.pow(y - predicted, 2)
     }, 0)
     const ssTot = yValues.reduce((sum, y) => sum + Math.pow(y - yMean, 2), 0)
-    const rSquared = 1 - (ssRes / ssTot)
+    const rSquared = 1 - ssRes / ssTot
 
     // Determine trend direction and strength
-    const direction = slope > 0.1 ? 'increasing' : slope < -0.1 ? 'decreasing' : 'stable'
-    const strength = Math.abs(slope) > 0.5 ? 'strong' : Math.abs(slope) > 0.2 ? 'moderate' : 'weak'
-    
+    const direction =
+      slope > 0.1 ? 'increasing' : slope < -0.1 ? 'decreasing' : 'stable'
+    const strength =
+      Math.abs(slope) > 0.5
+        ? 'strong'
+        : Math.abs(slope) > 0.2
+          ? 'moderate'
+          : 'weak'
+
     // Calculate confidence based on R-squared and data quality
     const confidence = Math.min(0.95, Math.max(0.5, rSquared * 0.9 + 0.1))
 
@@ -427,7 +439,7 @@ export class TrendAnalyzer {
       forecast: [],
       anomalies: [],
       insights: [],
-      recommendations: []
+      recommendations: [],
     }
   }
 
@@ -442,7 +454,7 @@ export class TrendAnalyzer {
 
     // Detect outliers using 2-sigma rule
     const threshold = 2 * dataStd
-    
+
     data.forEach(point => {
       const deviation = Math.abs(point.value - dataMean)
       if (deviation > threshold) {
@@ -460,19 +472,22 @@ export class TrendAnalyzer {
   ): TrendDataPoint[] {
     const forecast: TrendDataPoint[] = []
     const lastPoint = data[data.length - 1]
-    const timeInterval = data.length > 1 
-      ? data[1].timestamp.getTime() - data[0].timestamp.getTime()
-      : 24 * 60 * 60 * 1000 // Default to 24 hours
+    const timeInterval =
+      data.length > 1
+        ? data[1].timestamp.getTime() - data[0].timestamp.getTime()
+        : 24 * 60 * 60 * 1000 // Default to 24 hours
 
     for (let i = 1; i <= periods; i++) {
-      const futureTime = new Date(lastPoint.timestamp.getTime() + i * timeInterval)
-      const predictedValue = lastPoint.value + (trend.slope * i)
-      
+      const futureTime = new Date(
+        lastPoint.timestamp.getTime() + i * timeInterval
+      )
+      const predictedValue = lastPoint.value + trend.slope * i
+
       forecast.push({
         timestamp: futureTime,
         value: predictedValue,
         category: lastPoint.category,
-        metadata: { ...lastPoint.metadata, forecast: true }
+        metadata: { ...lastPoint.metadata, forecast: true },
       })
     }
 
@@ -484,10 +499,10 @@ export class TrendAnalyzer {
     period: 'daily' | 'weekly' | 'monthly'
   ): Map<string, TrendDataPoint[]> {
     const grouped = new Map<string, TrendDataPoint[]>()
-    
+
     data.forEach(point => {
       let key: string
-      
+
       switch (period) {
         case 'daily':
           key = point.timestamp.toISOString().split('T')[0]
@@ -501,13 +516,13 @@ export class TrendAnalyzer {
           key = `${point.timestamp.getFullYear()}-${String(point.timestamp.getMonth() + 1).padStart(2, '0')}`
           break
       }
-      
+
       if (!grouped.has(key)) {
         grouped.set(key, [])
       }
       grouped.get(key)!.push(point)
     })
-    
+
     return grouped
   }
 
@@ -517,14 +532,16 @@ export class TrendAnalyzer {
     const averages = Array.from(groupedData.values()).map(
       points => mean(points.map(p => p.value)) || 0
     )
-    
+
     const overallMean = mean(averages) || 0
-    const maxDeviation = Math.max(...averages.map(a => Math.abs(a - overallMean)))
-    
+    const maxDeviation = Math.max(
+      ...averages.map(a => Math.abs(a - overallMean))
+    )
+
     return {
       amplitude: maxDeviation,
       phase: 0, // Simplified - would calculate actual phase
-      confidence: Math.min(0.9, averages.length / 12) // Based on number of periods
+      confidence: Math.min(0.9, averages.length / 12), // Based on number of periods
     }
   }
 
@@ -548,21 +565,29 @@ export class TrendAnalyzer {
     anomalies: TrendDataPoint[]
   ): string[] {
     const insights: string[] = []
-    
+
     if (trend.direction === 'increasing') {
-      insights.push('Temperature is trending upward, indicating potential cooling issues')
+      insights.push(
+        'Temperature is trending upward, indicating potential cooling issues'
+      )
     } else if (trend.direction === 'decreasing') {
-      insights.push('Temperature is trending downward, showing improved cooling efficiency')
+      insights.push(
+        'Temperature is trending downward, showing improved cooling efficiency'
+      )
     }
-    
+
     if (anomalies.length > 0) {
-      insights.push(`${anomalies.length} temperature anomalies detected in the analysis period`)
+      insights.push(
+        `${anomalies.length} temperature anomalies detected in the analysis period`
+      )
     }
-    
+
     if (trend.confidence > 0.8) {
-      insights.push('High confidence trend analysis with reliable forecasting capability')
+      insights.push(
+        'High confidence trend analysis with reliable forecasting capability'
+      )
     }
-    
+
     return insights
   }
 
@@ -571,19 +596,25 @@ export class TrendAnalyzer {
     anomalies: TrendDataPoint[]
   ): string[] {
     const recommendations: string[] = []
-    
+
     if (trend.direction === 'increasing' && trend.strength === 'strong') {
-      recommendations.push('Schedule immediate maintenance check on cooling systems')
+      recommendations.push(
+        'Schedule immediate maintenance check on cooling systems'
+      )
     }
-    
+
     if (anomalies.length > 5) {
-      recommendations.push('Investigate causes of frequent temperature anomalies')
+      recommendations.push(
+        'Investigate causes of frequent temperature anomalies'
+      )
     }
-    
+
     if (trend.confidence < 0.6) {
-      recommendations.push('Collect more temperature data to improve trend analysis accuracy')
+      recommendations.push(
+        'Collect more temperature data to improve trend analysis accuracy'
+      )
     }
-    
+
     return recommendations
   }
 
@@ -592,13 +623,13 @@ export class TrendAnalyzer {
     anomalies: TrendDataPoint[]
   ): string[] {
     const insights: string[] = []
-    
+
     if (trend.direction === 'increasing') {
       insights.push('Compliance scores are improving over time')
     } else if (trend.direction === 'decreasing') {
       insights.push('Compliance scores are declining and require attention')
     }
-    
+
     return insights
   }
 
@@ -607,12 +638,12 @@ export class TrendAnalyzer {
     anomalies: TrendDataPoint[]
   ): string[] {
     const recommendations: string[] = []
-    
+
     if (trend.direction === 'decreasing') {
       recommendations.push('Implement additional compliance training for staff')
       recommendations.push('Review and update compliance procedures')
     }
-    
+
     return recommendations
   }
 
@@ -621,11 +652,11 @@ export class TrendAnalyzer {
     anomalies: TrendDataPoint[]
   ): string[] {
     const insights: string[] = []
-    
+
     if (trend.direction === 'increasing') {
       insights.push('Department performance is improving')
     }
-    
+
     return insights
   }
 
@@ -634,11 +665,13 @@ export class TrendAnalyzer {
     anomalies: TrendDataPoint[]
   ): string[] {
     const recommendations: string[] = []
-    
+
     if (trend.direction === 'decreasing') {
-      recommendations.push('Consider additional training or resource allocation')
+      recommendations.push(
+        'Consider additional training or resource allocation'
+      )
     }
-    
+
     return recommendations
   }
 }

@@ -8,7 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -31,17 +37,17 @@ import {
   Database,
   Filter,
   Layout,
-  RefreshCw
+  RefreshCw,
 } from 'lucide-react'
 
-import { 
+import {
   reportBuilder,
   Report,
   ReportComponent,
   ComponentConfig,
   DataSourceConfig,
   FilterConfig,
-  LayoutConfig
+  LayoutConfig,
 } from '@/services/reporting'
 
 interface ReportDesignerProps {
@@ -55,15 +61,16 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
   reportId,
   onSave,
   onPreview,
-  onExport
+  onExport,
 }) => {
   const [report, setReport] = useState<Report | null>(null)
-  const [selectedComponent, setSelectedComponent] = useState<ReportComponent | null>(null)
+  const [selectedComponent, setSelectedComponent] =
+    useState<ReportComponent | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
   const [activeTab, setActiveTab] = useState('components')
   const [dragOver, setDragOver] = useState(false)
-  
+
   const canvasRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -98,7 +105,7 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
       dataSource: getDefaultDataSourceConfig(type),
       filters: [],
       layout: getDefaultLayoutConfig(report.components.length),
-      styling: {}
+      styling: {},
     }
 
     const component = reportBuilder.addComponent(report.id, newComponent)
@@ -107,13 +114,22 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
     setIsDirty(true)
   }
 
-  const handleUpdateComponent = (componentId: string, updates: Partial<ReportComponent>) => {
+  const handleUpdateComponent = (
+    componentId: string,
+    updates: Partial<ReportComponent>
+  ) => {
     if (!report) return
 
-    const updatedComponent = reportBuilder.updateComponent(report.id, componentId, updates)
+    const updatedComponent = reportBuilder.updateComponent(
+      report.id,
+      componentId,
+      updates
+    )
     setReport({
       ...report,
-      components: report.components.map(c => c.id === componentId ? updatedComponent : c)
+      components: report.components.map(c =>
+        c.id === componentId ? updatedComponent : c
+      ),
     })
     setSelectedComponent(updatedComponent)
     setIsDirty(true)
@@ -125,7 +141,7 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
     reportBuilder.removeComponent(report.id, componentId)
     setReport({
       ...report,
-      components: report.components.filter(c => c.id !== componentId)
+      components: report.components.filter(c => c.id !== componentId),
     })
     setSelectedComponent(null)
     setIsDirty(true)
@@ -163,55 +179,65 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
     onExport?.(report, format)
   }
 
-  const getDefaultComponentConfig = (type: ReportComponent['type']): ComponentConfig => {
+  const getDefaultComponentConfig = (
+    type: ReportComponent['type']
+  ): ComponentConfig => {
     switch (type) {
       case 'chart':
         return {
           title: 'New Chart',
           chartType: 'line',
           showLegend: true,
-          showGrid: true
+          showGrid: true,
         }
       case 'table':
         return {
           title: 'New Table',
           tableColumns: [
-            { id: 'col1', header: 'Column 1', field: 'field1', type: 'string', sortable: true }
-          ]
+            {
+              id: 'col1',
+              header: 'Column 1',
+              field: 'field1',
+              type: 'string',
+              sortable: true,
+            },
+          ],
         }
       case 'metric':
         return {
           title: 'New Metric',
           metricValue: 0,
-          metricUnit: ''
+          metricUnit: '',
         }
       case 'kpi':
         return {
           title: 'New KPI',
           metricValue: 0,
           metricUnit: '%',
-          kpiTarget: 100
+          kpiTarget: 100,
         }
       case 'text':
         return {
           title: 'New Text Block',
-          textContent: 'Enter your text content here...'
+          textContent: 'Enter your text content here...',
         }
       case 'image':
         return {
           title: 'New Image',
-          imageUrl: ''
+          imageUrl: '',
         }
       default:
         return { title: 'New Component' }
     }
   }
 
-  const getDefaultDataSourceConfig = (type: ReportComponent['type']): DataSourceConfig => {
+  const getDefaultDataSourceConfig = (
+    type: ReportComponent['type']
+  ): DataSourceConfig => {
     return {
       source: 'database',
       query: 'SELECT * FROM sample_data LIMIT 100',
-      refreshInterval: 300000 // 5 minutes
+      refreshInterval: 300000, // 5 minutes
     }
   }
 
@@ -221,7 +247,7 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
       y: Math.floor(index / 2) * 200,
       width: 280,
       height: 180,
-      zIndex: index + 1
+      zIndex: index + 1,
     }
   }
 
@@ -285,13 +311,17 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
             <Eye className="h-4 w-4 mr-1" />
             Preview
           </Button>
-          <Button variant="outline" size="sm" onClick={() => handleExport('pdf')}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleExport('pdf')}
+          >
             <Download className="h-4 w-4 mr-1" />
             Export PDF
           </Button>
-          <Button 
-            variant="default" 
-            size="sm" 
+          <Button
+            variant="default"
+            size="sm"
             onClick={handleSave}
             disabled={isLoading}
           >
@@ -312,7 +342,7 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
               { type: 'metric' as const, label: 'Metric' },
               { type: 'kpi' as const, label: 'KPI' },
               { type: 'text' as const, label: 'Text' },
-              { type: 'image' as const, label: 'Image' }
+              { type: 'image' as const, label: 'Image' },
             ].map(({ type, label }) => (
               <Button
                 key={type}
@@ -329,11 +359,19 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
           <div className="pt-4 border-t">
             <h4 className="font-medium mb-2">Data Sources</h4>
             <div className="space-y-1">
-              <Button variant="ghost" size="sm" className="w-full justify-start">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start"
+              >
                 <Database className="h-4 w-4 mr-2" />
                 Database
               </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start"
+              >
                 <Database className="h-4 w-4 mr-2" />
                 API
               </Button>
@@ -343,7 +381,11 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
 
         {/* Main Canvas */}
         <div className="flex-1 flex flex-col">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="flex-1 flex flex-col"
+          >
             <TabsList className="w-full justify-start">
               <TabsTrigger value="design">Design</TabsTrigger>
               <TabsTrigger value="data">Data</TabsTrigger>
@@ -357,12 +399,12 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
                 className="relative w-full h-full bg-white border-2 border-dashed border-gray-300 rounded-lg overflow-auto"
                 style={{ minHeight: '600px' }}
               >
-                {report.components.map((component) => (
+                {report.components.map(component => (
                   <Card
                     key={component.id}
                     className={`absolute border-2 cursor-pointer transition-all hover:shadow-lg ${
-                      selectedComponent?.id === component.id 
-                        ? 'border-blue-500 shadow-lg' 
+                      selectedComponent?.id === component.id
+                        ? 'border-blue-500 shadow-lg'
                         : 'border-gray-200'
                     }`}
                     style={{
@@ -370,7 +412,7 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
                       top: component.layout.y,
                       width: component.layout.width,
                       height: component.layout.height,
-                      zIndex: component.layout.zIndex
+                      zIndex: component.layout.zIndex,
                     }}
                     onClick={() => setSelectedComponent(component)}
                   >
@@ -387,10 +429,10 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
                           <Button size="sm" variant="ghost">
                             <Copy className="h-3 w-3" />
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="ghost"
-                            onClick={(e) => {
+                            onClick={e => {
                               e.stopPropagation()
                               handleRemoveComponent(component.id)
                             }}
@@ -403,7 +445,8 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
                     <CardContent className="pt-0">
                       <div className="w-full h-full bg-gray-50 rounded flex items-center justify-center">
                         <span className="text-gray-400 text-sm">
-                          {component.type.charAt(0).toUpperCase() + component.type.slice(1)}
+                          {component.type.charAt(0).toUpperCase() +
+                            component.type.slice(1)}
                         </span>
                       </div>
                     </CardContent>
@@ -480,7 +523,9 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
                       <Input
                         id="reportName"
                         value={report.name}
-                        onChange={(e) => setReport({ ...report, name: e.target.value })}
+                        onChange={e =>
+                          setReport({ ...report, name: e.target.value })
+                        }
                       />
                     </div>
                     <div>
@@ -488,7 +533,9 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
                       <Textarea
                         id="reportDescription"
                         value={report.description}
-                        onChange={(e) => setReport({ ...report, description: e.target.value })}
+                        onChange={e =>
+                          setReport({ ...report, description: e.target.value })
+                        }
                         rows={3}
                       />
                     </div>
@@ -496,7 +543,9 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
                       <Switch
                         id="isPublic"
                         checked={report.isPublic}
-                        onCheckedChange={(checked) => setReport({ ...report, isPublic: checked })}
+                        onCheckedChange={checked =>
+                          setReport({ ...report, isPublic: checked })
+                        }
                       />
                       <Label htmlFor="isPublic">Make report public</Label>
                     </div>
@@ -514,18 +563,28 @@ export const ReportDesigner: React.FC<ReportDesignerProps> = ({
                         <Input
                           id="componentTitle"
                           value={selectedComponent.config.title}
-                          onChange={(e) => handleUpdateComponent(selectedComponent.id, {
-                            config: { ...selectedComponent.config, title: e.target.value }
-                          })}
+                          onChange={e =>
+                            handleUpdateComponent(selectedComponent.id, {
+                              config: {
+                                ...selectedComponent.config,
+                                title: e.target.value,
+                              },
+                            })
+                          }
                         />
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch
                           id="showLegend"
                           checked={selectedComponent.config.showLegend || false}
-                          onCheckedChange={(checked) => handleUpdateComponent(selectedComponent.id, {
-                            config: { ...selectedComponent.config, showLegend: checked }
-                          })}
+                          onCheckedChange={checked =>
+                            handleUpdateComponent(selectedComponent.id, {
+                              config: {
+                                ...selectedComponent.config,
+                                showLegend: checked,
+                              },
+                            })
+                          }
                         />
                         <Label htmlFor="showLegend">Show Legend</Label>
                       </div>

@@ -11,7 +11,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
@@ -27,7 +33,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Save,
-  TestTube
+  TestTube,
 } from 'lucide-react'
 
 import {
@@ -35,7 +41,7 @@ import {
   ScheduleConfig,
   ScheduleFrequency,
   RecipientConfig,
-  DeliveryOptions
+  DeliveryOptions,
 } from '@/services/reporting'
 
 interface ScheduleConfigProps {
@@ -49,7 +55,7 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
   reportId,
   scheduleId,
   onSave,
-  onTest
+  onTest,
 }) => {
   const [schedule, setSchedule] = useState<ScheduleConfig | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -80,7 +86,7 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
         description: '',
         frequency: {
           type: 'daily',
-          time: '09:00'
+          time: '09:00',
         },
         timezone: 'UTC',
         enabled: true,
@@ -91,7 +97,7 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
           includeCharts: true,
           includeData: true,
           pageSize: 'A4',
-          orientation: 'portrait'
+          orientation: 'portrait',
         },
         conditions: [],
         nextRun: new Date(),
@@ -99,7 +105,7 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
         errorCount: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
-        createdBy: 'current_user'
+        createdBy: 'current_user',
       }
       setSchedule(newSchedule)
     }
@@ -159,25 +165,28 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
       type: 'email',
       address: '',
       name: '',
-      enabled: true
+      enabled: true,
     }
 
     setSchedule({
       ...schedule,
-      recipients: [...schedule.recipients, newRecipient]
+      recipients: [...schedule.recipients, newRecipient],
     })
     setIsDirty(true)
   }
 
-  const handleUpdateRecipient = (index: number, updates: Partial<RecipientConfig>) => {
+  const handleUpdateRecipient = (
+    index: number,
+    updates: Partial<RecipientConfig>
+  ) => {
     if (!schedule) return
 
     const updatedRecipients = [...schedule.recipients]
     updatedRecipients[index] = { ...updatedRecipients[index], ...updates }
-    
+
     setSchedule({
       ...schedule,
-      recipients: updatedRecipients
+      recipients: updatedRecipients,
     })
     setIsDirty(true)
   }
@@ -188,7 +197,7 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
     const updatedRecipients = schedule.recipients.filter((_, i) => i !== index)
     setSchedule({
       ...schedule,
-      recipients: updatedRecipients
+      recipients: updatedRecipients,
     })
     setIsDirty(true)
   }
@@ -198,7 +207,7 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
 
     setSchedule({
       ...schedule,
-      enabled: !schedule.enabled
+      enabled: !schedule.enabled,
     })
     setIsDirty(true)
   }
@@ -208,7 +217,7 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
 
     setSchedule({
       ...schedule,
-      ...updates
+      ...updates,
     })
     setIsDirty(true)
   }
@@ -220,13 +229,33 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
       case 'daily':
         return `Daily at ${frequency.time}`
       case 'weekly':
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        const days = [
+          'Sunday',
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+        ]
         return `Weekly on ${days[frequency.dayOfWeek || 0]} at ${frequency.time}`
       case 'monthly':
         return `Monthly on day ${frequency.dayOfMonth} at ${frequency.time}`
       case 'yearly':
-        const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                       'July', 'August', 'September', 'October', 'November', 'December']
+        const months = [
+          'January',
+          'February',
+          'March',
+          'April',
+          'May',
+          'June',
+          'July',
+          'August',
+          'September',
+          'October',
+          'November',
+          'December',
+        ]
         return `Yearly on ${months[frequency.month || 0]} ${frequency.dayOfMonth} at ${frequency.time}`
       case 'custom':
         return `Every ${frequency.interval} minutes`
@@ -259,11 +288,7 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
             <TestTube className="h-4 w-4 mr-1" />
             Test
           </Button>
-          <Button 
-            variant="default" 
-            onClick={handleSave}
-            disabled={isLoading}
-          >
+          <Button variant="default" onClick={handleSave} disabled={isLoading}>
             <Save className="h-4 w-4 mr-1" />
             {isLoading ? 'Saving...' : 'Save'}
           </Button>
@@ -326,7 +351,7 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                   <Input
                     id="scheduleName"
                     value={schedule.name}
-                    onChange={(e) => updateSchedule({ name: e.target.value })}
+                    onChange={e => updateSchedule({ name: e.target.value })}
                     placeholder="Enter schedule name"
                   />
                 </div>
@@ -334,17 +359,25 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                   <Label htmlFor="timezone">Timezone</Label>
                   <Select
                     value={schedule.timezone}
-                    onValueChange={(value) => updateSchedule({ timezone: value })}
+                    onValueChange={value => updateSchedule({ timezone: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="UTC">UTC</SelectItem>
-                      <SelectItem value="America/New_York">Eastern Time</SelectItem>
-                      <SelectItem value="America/Chicago">Central Time</SelectItem>
-                      <SelectItem value="America/Denver">Mountain Time</SelectItem>
-                      <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
+                      <SelectItem value="America/New_York">
+                        Eastern Time
+                      </SelectItem>
+                      <SelectItem value="America/Chicago">
+                        Central Time
+                      </SelectItem>
+                      <SelectItem value="America/Denver">
+                        Mountain Time
+                      </SelectItem>
+                      <SelectItem value="America/Los_Angeles">
+                        Pacific Time
+                      </SelectItem>
                       <SelectItem value="Europe/London">London</SelectItem>
                       <SelectItem value="Europe/Paris">Paris</SelectItem>
                       <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
@@ -358,7 +391,9 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                 <Textarea
                   id="description"
                   value={schedule.description}
-                  onChange={(e) => updateSchedule({ description: e.target.value })}
+                  onChange={e =>
+                    updateSchedule({ description: e.target.value })
+                  }
                   placeholder="Enter schedule description"
                   rows={3}
                 />
@@ -370,9 +405,7 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                   checked={schedule.enabled}
                   onCheckedChange={handleToggleSchedule}
                 />
-                <Label htmlFor="enabled">
-                  Enable this schedule
-                </Label>
+                <Label htmlFor="enabled">Enable this schedule</Label>
               </div>
 
               {schedule.nextRun && (
@@ -402,9 +435,11 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                   <Label htmlFor="frequency">Frequency</Label>
                   <Select
                     value={schedule.frequency.type}
-                    onValueChange={(value: any) => updateSchedule({
-                      frequency: { ...schedule.frequency, type: value }
-                    })}
+                    onValueChange={(value: any) =>
+                      updateSchedule({
+                        frequency: { ...schedule.frequency, type: value },
+                      })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -426,9 +461,14 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                     id="time"
                     type="time"
                     value={schedule.frequency.time}
-                    onChange={(e) => updateSchedule({
-                      frequency: { ...schedule.frequency, time: e.target.value }
-                    })}
+                    onChange={e =>
+                      updateSchedule({
+                        frequency: {
+                          ...schedule.frequency,
+                          time: e.target.value,
+                        },
+                      })
+                    }
                   />
                 </div>
               </div>
@@ -438,9 +478,14 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                   <Label htmlFor="dayOfWeek">Day of Week</Label>
                   <Select
                     value={String(schedule.frequency.dayOfWeek || 0)}
-                    onValueChange={(value) => updateSchedule({
-                      frequency: { ...schedule.frequency, dayOfWeek: parseInt(value) }
-                    })}
+                    onValueChange={value =>
+                      updateSchedule({
+                        frequency: {
+                          ...schedule.frequency,
+                          dayOfWeek: parseInt(value),
+                        },
+                      })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -467,9 +512,14 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                     min="1"
                     max="31"
                     value={schedule.frequency.dayOfMonth || 1}
-                    onChange={(e) => updateSchedule({
-                      frequency: { ...schedule.frequency, dayOfMonth: parseInt(e.target.value) }
-                    })}
+                    onChange={e =>
+                      updateSchedule({
+                        frequency: {
+                          ...schedule.frequency,
+                          dayOfMonth: parseInt(e.target.value),
+                        },
+                      })
+                    }
                   />
                 </div>
               )}
@@ -480,17 +530,32 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                     <Label htmlFor="month">Month</Label>
                     <Select
                       value={String(schedule.frequency.month || 0)}
-                      onValueChange={(value) => updateSchedule({
-                        frequency: { ...schedule.frequency, month: parseInt(value) }
-                      })}
+                      onValueChange={value =>
+                        updateSchedule({
+                          frequency: {
+                            ...schedule.frequency,
+                            month: parseInt(value),
+                          },
+                        })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {[
-                          'January', 'February', 'March', 'April', 'May', 'June',
-                          'July', 'August', 'September', 'October', 'November', 'December'
+                          'January',
+                          'February',
+                          'March',
+                          'April',
+                          'May',
+                          'June',
+                          'July',
+                          'August',
+                          'September',
+                          'October',
+                          'November',
+                          'December',
                         ].map((month, index) => (
                           <SelectItem key={index} value={String(index)}>
                             {month}
@@ -507,9 +572,14 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                       min="1"
                       max="31"
                       value={schedule.frequency.dayOfMonth || 1}
-                      onChange={(e) => updateSchedule({
-                        frequency: { ...schedule.frequency, dayOfMonth: parseInt(e.target.value) }
-                      })}
+                      onChange={e =>
+                        updateSchedule({
+                          frequency: {
+                            ...schedule.frequency,
+                            dayOfMonth: parseInt(e.target.value),
+                          },
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -523,9 +593,14 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                     type="number"
                     min="1"
                     value={schedule.frequency.interval || 60}
-                    onChange={(e) => updateSchedule({
-                      frequency: { ...schedule.frequency, interval: parseInt(e.target.value) }
-                    })}
+                    onChange={e =>
+                      updateSchedule({
+                        frequency: {
+                          ...schedule.frequency,
+                          interval: parseInt(e.target.value),
+                        },
+                      })
+                    }
                   />
                 </div>
               )}
@@ -548,7 +623,11 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Recipients</CardTitle>
-                <Button variant="outline" size="sm" onClick={handleAddRecipient}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddRecipient}
+                >
                   <Plus className="h-4 w-4 mr-1" />
                   Add Recipient
                 </Button>
@@ -557,13 +636,18 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
             <CardContent>
               <div className="space-y-4">
                 {schedule.recipients.map((recipient, index) => (
-                  <div key={index} className="flex items-center space-x-4 p-3 border rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center space-x-4 p-3 border rounded-lg"
+                  >
                     <div className="flex-1 grid grid-cols-4 gap-4">
                       <div>
                         <Label>Type</Label>
                         <Select
                           value={recipient.type}
-                          onValueChange={(value: any) => handleUpdateRecipient(index, { type: value })}
+                          onValueChange={(value: any) =>
+                            handleUpdateRecipient(index, { type: value })
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -580,22 +664,36 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                         <Label>Address/URL</Label>
                         <Input
                           value={recipient.address}
-                          onChange={(e) => handleUpdateRecipient(index, { address: e.target.value })}
-                          placeholder={recipient.type === 'email' ? 'email@example.com' : 'https://...'}
+                          onChange={e =>
+                            handleUpdateRecipient(index, {
+                              address: e.target.value,
+                            })
+                          }
+                          placeholder={
+                            recipient.type === 'email'
+                              ? 'email@example.com'
+                              : 'https://...'
+                          }
                         />
                       </div>
                       <div>
                         <Label>Name (Optional)</Label>
                         <Input
                           value={recipient.name || ''}
-                          onChange={(e) => handleUpdateRecipient(index, { name: e.target.value })}
+                          onChange={e =>
+                            handleUpdateRecipient(index, {
+                              name: e.target.value,
+                            })
+                          }
                           placeholder="Recipient name"
                         />
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch
                           checked={recipient.enabled}
-                          onCheckedChange={(checked) => handleUpdateRecipient(index, { enabled: checked })}
+                          onCheckedChange={checked =>
+                            handleUpdateRecipient(index, { enabled: checked })
+                          }
                         />
                         <Label>Enabled</Label>
                       </div>
@@ -614,7 +712,9 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                   <div className="text-center py-8 text-muted-foreground">
                     <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>No recipients configured</p>
-                    <p className="text-sm">Add recipients to receive scheduled reports</p>
+                    <p className="text-sm">
+                      Add recipients to receive scheduled reports
+                    </p>
                   </div>
                 )}
               </div>
@@ -634,9 +734,14 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                   <Label htmlFor="format">Format</Label>
                   <Select
                     value={schedule.deliveryOptions.format}
-                    onValueChange={(value: any) => updateSchedule({
-                      deliveryOptions: { ...schedule.deliveryOptions, format: value }
-                    })}
+                    onValueChange={(value: any) =>
+                      updateSchedule({
+                        deliveryOptions: {
+                          ...schedule.deliveryOptions,
+                          format: value,
+                        },
+                      })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -655,9 +760,14 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                   <Label htmlFor="pageSize">Page Size</Label>
                   <Select
                     value={schedule.deliveryOptions.pageSize}
-                    onValueChange={(value: any) => updateSchedule({
-                      deliveryOptions: { ...schedule.deliveryOptions, pageSize: value }
-                    })}
+                    onValueChange={(value: any) =>
+                      updateSchedule({
+                        deliveryOptions: {
+                          ...schedule.deliveryOptions,
+                          pageSize: value,
+                        },
+                      })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -675,9 +785,14 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                 <Label htmlFor="orientation">Orientation</Label>
                 <Select
                   value={schedule.deliveryOptions.orientation}
-                  onValueChange={(value: any) => updateSchedule({
-                    deliveryOptions: { ...schedule.deliveryOptions, orientation: value }
-                  })}
+                  onValueChange={(value: any) =>
+                    updateSchedule({
+                      deliveryOptions: {
+                        ...schedule.deliveryOptions,
+                        orientation: value,
+                      },
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -694,9 +809,14 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                   <Switch
                     id="compression"
                     checked={schedule.deliveryOptions.compression}
-                    onCheckedChange={(checked) => updateSchedule({
-                      deliveryOptions: { ...schedule.deliveryOptions, compression: checked }
-                    })}
+                    onCheckedChange={checked =>
+                      updateSchedule({
+                        deliveryOptions: {
+                          ...schedule.deliveryOptions,
+                          compression: checked,
+                        },
+                      })
+                    }
                   />
                   <Label htmlFor="compression">Enable compression</Label>
                 </div>
@@ -705,9 +825,14 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                   <Switch
                     id="includeCharts"
                     checked={schedule.deliveryOptions.includeCharts}
-                    onCheckedChange={(checked) => updateSchedule({
-                      deliveryOptions: { ...schedule.deliveryOptions, includeCharts: checked }
-                    })}
+                    onCheckedChange={checked =>
+                      updateSchedule({
+                        deliveryOptions: {
+                          ...schedule.deliveryOptions,
+                          includeCharts: checked,
+                        },
+                      })
+                    }
                   />
                   <Label htmlFor="includeCharts">Include charts</Label>
                 </div>
@@ -716,9 +841,14 @@ export const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                   <Switch
                     id="includeData"
                     checked={schedule.deliveryOptions.includeData}
-                    onCheckedChange={(checked) => updateSchedule({
-                      deliveryOptions: { ...schedule.deliveryOptions, includeData: checked }
-                    })}
+                    onCheckedChange={checked =>
+                      updateSchedule({
+                        deliveryOptions: {
+                          ...schedule.deliveryOptions,
+                          includeData: checked,
+                        },
+                      })
+                    }
                   />
                   <Label htmlFor="includeData">Include raw data</Label>
                 </div>

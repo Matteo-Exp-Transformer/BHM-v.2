@@ -88,7 +88,9 @@ export class ExecutiveDashboard {
     if (this.isInitialized) return
 
     try {
-      console.log('👔 Executive dashboard initialized - B.10.2 Advanced Analytics')
+      console.log(
+        '👔 Executive dashboard initialized - B.10.2 Advanced Analytics'
+      )
       this.isInitialized = true
     } catch (error) {
       console.error('Failed to initialize executive dashboard:', error)
@@ -107,18 +109,28 @@ export class ExecutiveDashboard {
     try {
       // Get company performance data
       const companies = await this.getCompanyPerformanceData(companyIds)
-      
+
       // Calculate key metrics
-      const keyMetrics = await this.calculateKeyMetrics(companies, startDate, endDate)
-      
+      const keyMetrics = await this.calculateKeyMetrics(
+        companies,
+        startDate,
+        endDate
+      )
+
       // Get insights
-      const insights = await this.generateExecutiveInsights(companies, startDate, endDate)
-      
+      const insights = await this.generateExecutiveInsights(
+        companies,
+        startDate,
+        endDate
+      )
+
       // Get industry benchmarks
       const benchmarks = await this.getIndustryBenchmarks(companies)
-      
+
       // Identify top and bottom performers
-      const sortedCompanies = companies.sort((a, b) => b.overallScore - a.overallScore)
+      const sortedCompanies = companies.sort(
+        (a, b) => b.overallScore - a.overallScore
+      )
       const topPerformers = sortedCompanies.slice(0, 5)
       const bottomPerformers = sortedCompanies.slice(-5).reverse()
 
@@ -131,12 +143,11 @@ export class ExecutiveDashboard {
         bottomPerformers,
         criticalAlerts: this.countCriticalAlerts(companies),
         insights,
-        benchmarks
+        benchmarks,
       }
 
       console.log('👔 Generated executive summary')
       return summary
-      
     } catch (error) {
       console.error('Failed to get executive summary:', error)
       throw error
@@ -156,21 +167,20 @@ export class ExecutiveDashboard {
 
       // Aggregate KPIs across companies
       const aggregatedKpis = this.aggregateKPIsAcrossCompanies(companies)
-      
+
       // Filter by categories if specified
-      const filteredKpis = categories 
+      const filteredKpis = categories
         ? aggregatedKpis.filter(kpi => categories.includes(kpi.category))
         : aggregatedKpis
 
       // Add calculated KPIs
       kpis.push(...filteredKpis)
-      
+
       // Add derived KPIs
       kpis.push(...this.calculateDerivedKPIs(companies))
 
       console.log(`👔 Generated ${kpis.length} executive KPIs`)
       return kpis
-      
     } catch (error) {
       console.error('Failed to get executive KPIs:', error)
       throw error
@@ -190,7 +200,7 @@ export class ExecutiveDashboard {
   }> {
     try {
       const companies = await this.getCompanyPerformanceData(companyIds)
-      
+
       // Calculate comparison matrix
       const comparison: Record<string, Record<string, number>> = {}
       const rankings: Record<string, number> = {}
@@ -205,10 +215,12 @@ export class ExecutiveDashboard {
 
       // Calculate rankings for each metric
       metrics.forEach(metric => {
-        const values = companies.map(c => {
-          const kpi = c.kpis.find(k => k.name === metric)
-          return { companyId: c.companyId, value: kpi?.value || 0 }
-        }).sort((a, b) => b.value - a.value)
+        const values = companies
+          .map(c => {
+            const kpi = c.kpis.find(k => k.name === metric)
+            return { companyId: c.companyId, value: kpi?.value || 0 }
+          })
+          .sort((a, b) => b.value - a.value)
 
         values.forEach((item, index) => {
           if (!rankings[item.companyId]) {
@@ -221,9 +233,8 @@ export class ExecutiveDashboard {
       return {
         companies,
         comparison,
-        rankings
+        rankings,
       }
-      
     } catch (error) {
       console.error('Failed to get company performance comparison:', error)
       throw error
@@ -242,26 +253,58 @@ export class ExecutiveDashboard {
       // Mock industry benchmark data
       const industryData = {
         'Food Safety': {
-          'Compliance Score': { average: 78, median: 80, topQuartile: 90, bottomQuartile: 65 },
-          'Violation Rate': { average: 12, median: 8, topQuartile: 5, bottomQuartile: 20 },
-          'Response Time': { average: 24, median: 18, topQuartile: 12, bottomQuartile: 48 }
+          'Compliance Score': {
+            average: 78,
+            median: 80,
+            topQuartile: 90,
+            bottomQuartile: 65,
+          },
+          'Violation Rate': {
+            average: 12,
+            median: 8,
+            topQuartile: 5,
+            bottomQuartile: 20,
+          },
+          'Response Time': {
+            average: 24,
+            median: 18,
+            topQuartile: 12,
+            bottomQuartile: 48,
+          },
         },
         'HACCP Management': {
-          'Documentation Score': { average: 82, median: 85, topQuartile: 95, bottomQuartile: 70 },
-          'Training Completion': { average: 75, median: 80, topQuartile: 95, bottomQuartile: 60 },
-          'Audit Success Rate': { average: 88, median: 90, topQuartile: 98, bottomQuartile: 75 }
-        }
+          'Documentation Score': {
+            average: 82,
+            median: 85,
+            topQuartile: 95,
+            bottomQuartile: 70,
+          },
+          'Training Completion': {
+            average: 75,
+            median: 80,
+            topQuartile: 95,
+            bottomQuartile: 60,
+          },
+          'Audit Success Rate': {
+            average: 88,
+            median: 90,
+            topQuartile: 98,
+            bottomQuartile: 75,
+          },
+        },
       }
 
       // Calculate our values from company data
-      const ourValues = companies ? this.calculateOurIndustryValues(companies) : {}
+      const ourValues = companies
+        ? this.calculateOurIndustryValues(companies)
+        : {}
 
       // Generate benchmarks
       Object.entries(industryData).forEach(([industry, metrics]) => {
         Object.entries(metrics).forEach(([metric, values]) => {
           const ourValue = ourValues[metric] || values.average
           const percentile = this.calculatePercentile(ourValue, values)
-          
+
           benchmarks.push({
             industry,
             metric,
@@ -271,14 +314,13 @@ export class ExecutiveDashboard {
             bottomQuartile: values.bottomQuartile,
             ourValue,
             percentile,
-            lastUpdated: new Date()
+            lastUpdated: new Date(),
           })
         })
       })
 
       console.log(`👔 Generated ${benchmarks.length} industry benchmarks`)
       return benchmarks
-      
     } catch (error) {
       console.error('Failed to get industry benchmarks:', error)
       throw error
@@ -315,14 +357,14 @@ export class ExecutiveDashboard {
       // Sort by priority and confidence
       insights.sort((a, b) => {
         const priorityOrder = { high: 3, medium: 2, low: 1 }
-        const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority]
+        const priorityDiff =
+          priorityOrder[b.priority] - priorityOrder[a.priority]
         if (priorityDiff !== 0) return priorityDiff
         return b.confidence - a.confidence
       })
 
       console.log(`👔 Generated ${insights.length} executive insights`)
       return insights.slice(0, 10) // Return top 10 insights
-      
     } catch (error) {
       console.error('Failed to generate executive insights:', error)
       throw error
@@ -348,10 +390,11 @@ export class ExecutiveDashboard {
             description: `${company.companyName} has critical compliance issues requiring immediate attention.`,
             impact: 'negative',
             affectedCompanies: [company.companyId],
-            recommendation: 'Schedule immediate compliance review and implement corrective actions.',
+            recommendation:
+              'Schedule immediate compliance review and implement corrective actions.',
             timeline: 'Within 24 hours',
             confidence: 0.95,
-            createdAt: new Date()
+            createdAt: new Date(),
           })
         }
 
@@ -365,17 +408,17 @@ export class ExecutiveDashboard {
             description: `${company.companyName} shows significant performance decline (${company.growthRate.toFixed(1)}%).`,
             impact: 'negative',
             affectedCompanies: [company.companyId],
-            recommendation: 'Review operational processes and implement improvement initiatives.',
+            recommendation:
+              'Review operational processes and implement improvement initiatives.',
             timeline: 'Within 7 days',
             confidence: 0.85,
-            createdAt: new Date()
+            createdAt: new Date(),
           })
         }
       })
 
       console.log(`👔 Generated ${alerts.length} executive alerts`)
       return alerts
-      
     } catch (error) {
       console.error('Failed to get executive alerts:', error)
       throw error
@@ -384,7 +427,9 @@ export class ExecutiveDashboard {
 
   // Private helper methods
 
-  private async getCompanyPerformanceData(companyIds?: string[]): Promise<CompanyPerformance[]> {
+  private async getCompanyPerformanceData(
+    companyIds?: string[]
+  ): Promise<CompanyPerformance[]> {
     // Mock implementation - would fetch from database
     const companies: CompanyPerformance[] = []
     const companyCount = companyIds?.length || 10
@@ -392,16 +437,18 @@ export class ExecutiveDashboard {
     for (let i = 0; i < companyCount; i++) {
       const companyId = companyIds?.[i] || `COMPANY_${i + 1}`
       const baseScore = 75 + Math.sin(i / 5) * 15 + Math.random() * 10
-      
+
       companies.push({
         companyId,
         companyName: `Company ${i + 1}`,
         overallScore: Math.max(0, Math.min(100, baseScore)),
         kpis: this.generateCompanyKPIs(companyId),
         ranking: i + 1,
-        lastAssessment: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
+        lastAssessment: new Date(
+          Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000
+        ),
         growthRate: -5 + Math.random() * 20,
-        riskLevel: this.determineRiskLevel(baseScore)
+        riskLevel: this.determineRiskLevel(baseScore),
       })
     }
 
@@ -422,7 +469,7 @@ export class ExecutiveDashboard {
         trendPeriod: '30 days',
         status: 'good',
         lastUpdated: new Date(),
-        description: 'Overall HACCP compliance score'
+        description: 'Overall HACCP compliance score',
       },
       {
         id: `violations_${companyId}`,
@@ -436,7 +483,7 @@ export class ExecutiveDashboard {
         trendPeriod: '30 days',
         status: 'warning',
         lastUpdated: new Date(),
-        description: 'Number of critical compliance violations'
+        description: 'Number of critical compliance violations',
       },
       {
         id: `response_time_${companyId}`,
@@ -450,7 +497,7 @@ export class ExecutiveDashboard {
         trendPeriod: '30 days',
         status: 'good',
         lastUpdated: new Date(),
-        description: 'Average time to respond to compliance issues'
+        description: 'Average time to respond to compliance issues',
       },
       {
         id: `training_${companyId}`,
@@ -464,25 +511,29 @@ export class ExecutiveDashboard {
         trendPeriod: '30 days',
         status: 'good',
         lastUpdated: new Date(),
-        description: 'Percentage of staff completing required training'
-      }
+        description: 'Percentage of staff completing required training',
+      },
     ]
   }
 
-  private determineRiskLevel(score: number): 'low' | 'medium' | 'high' | 'critical' {
+  private determineRiskLevel(
+    score: number
+  ): 'low' | 'medium' | 'high' | 'critical' {
     if (score >= 90) return 'low'
     if (score >= 80) return 'medium'
     if (score >= 70) return 'high'
     return 'critical'
   }
 
-  private aggregateKPIsAcrossCompanies(companies: CompanyPerformance[]): ExecutiveKPI[] {
+  private aggregateKPIsAcrossCompanies(
+    companies: CompanyPerformance[]
+  ): ExecutiveKPI[] {
     const kpiMap = new Map<string, ExecutiveKPI>()
 
     companies.forEach(company => {
       company.kpis.forEach(kpi => {
         const key = `${kpi.category}_${kpi.name}`
-        
+
         if (kpiMap.has(key)) {
           const existing = kpiMap.get(key)!
           existing.value = (existing.value + kpi.value) / 2
@@ -496,11 +547,15 @@ export class ExecutiveDashboard {
     return Array.from(kpiMap.values())
   }
 
-  private calculateDerivedKPIs(companies: CompanyPerformance[]): ExecutiveKPI[] {
+  private calculateDerivedKPIs(
+    companies: CompanyPerformance[]
+  ): ExecutiveKPI[] {
     const totalCompanies = companies.length
     const totalScore = companies.reduce((sum, c) => sum + c.overallScore, 0)
     const averageScore = totalScore / totalCompanies
-    const criticalCompanies = companies.filter(c => c.riskLevel === 'critical').length
+    const criticalCompanies = companies.filter(
+      c => c.riskLevel === 'critical'
+    ).length
 
     return [
       {
@@ -513,9 +568,14 @@ export class ExecutiveDashboard {
         trend: 'up',
         trendValue: 2.5,
         trendPeriod: '30 days',
-        status: averageScore >= 85 ? 'excellent' : averageScore >= 75 ? 'good' : 'warning',
+        status:
+          averageScore >= 85
+            ? 'excellent'
+            : averageScore >= 75
+              ? 'good'
+              : 'warning',
         lastUpdated: new Date(),
-        description: 'Average compliance score across all companies'
+        description: 'Average compliance score across all companies',
       },
       {
         id: 'critical_risk_companies',
@@ -529,8 +589,8 @@ export class ExecutiveDashboard {
         trendPeriod: '30 days',
         status: criticalCompanies === 0 ? 'excellent' : 'critical',
         lastUpdated: new Date(),
-        description: 'Number of companies with critical risk levels'
-      }
+        description: 'Number of companies with critical risk levels',
+      },
     ]
   }
 
@@ -539,38 +599,46 @@ export class ExecutiveDashboard {
     startDate: Date,
     endDate: Date
   ): Promise<ExecutiveSummary['keyMetrics']> {
-    const averageCompliance = companies.reduce((sum, c) => sum + c.overallScore, 0) / companies.length
+    const averageCompliance =
+      companies.reduce((sum, c) => sum + c.overallScore, 0) / companies.length
     const totalViolations = companies.reduce((sum, c) => {
       const violationsKpi = c.kpis.find(k => k.name === 'Critical Violations')
       return sum + (violationsKpi?.value || 0)
     }, 0)
-    
+
     return {
       averageCompliance,
       totalViolations,
       resolvedIssues: Math.floor(totalViolations * 0.7),
-      pendingActions: Math.floor(totalViolations * 0.3)
+      pendingActions: Math.floor(totalViolations * 0.3),
     }
   }
 
   private calculateOverallCompliance(companies: CompanyPerformance[]): number {
-    return companies.reduce((sum, c) => sum + c.overallScore, 0) / companies.length
+    return (
+      companies.reduce((sum, c) => sum + c.overallScore, 0) / companies.length
+    )
   }
 
   private countCriticalAlerts(companies: CompanyPerformance[]): number {
     return companies.filter(c => c.riskLevel === 'critical').length
   }
 
-  private calculateOurIndustryValues(companies: CompanyPerformance[]): Record<string, number> {
-    const averageCompliance = companies.reduce((sum, c) => sum + c.overallScore, 0) / companies.length
-    const averageViolations = companies.reduce((sum, c) => {
-      const violationsKpi = c.kpis.find(k => k.name === 'Critical Violations')
-      return sum + (violationsKpi?.value || 0)
-    }, 0) / companies.length
-    const averageResponseTime = companies.reduce((sum, c) => {
-      const responseKpi = c.kpis.find(k => k.name === 'Average Response Time')
-      return sum + (responseKpi?.value || 0)
-    }, 0) / companies.length
+  private calculateOurIndustryValues(
+    companies: CompanyPerformance[]
+  ): Record<string, number> {
+    const averageCompliance =
+      companies.reduce((sum, c) => sum + c.overallScore, 0) / companies.length
+    const averageViolations =
+      companies.reduce((sum, c) => {
+        const violationsKpi = c.kpis.find(k => k.name === 'Critical Violations')
+        return sum + (violationsKpi?.value || 0)
+      }, 0) / companies.length
+    const averageResponseTime =
+      companies.reduce((sum, c) => {
+        const responseKpi = c.kpis.find(k => k.name === 'Average Response Time')
+        return sum + (responseKpi?.value || 0)
+      }, 0) / companies.length
 
     return {
       'Compliance Score': averageCompliance,
@@ -578,11 +646,19 @@ export class ExecutiveDashboard {
       'Response Time': averageResponseTime,
       'Documentation Score': averageCompliance * 1.05,
       'Training Completion': averageCompliance * 0.95,
-      'Audit Success Rate': averageCompliance * 1.1
+      'Audit Success Rate': averageCompliance * 1.1,
     }
   }
 
-  private calculatePercentile(ourValue: number, benchmark: { average: number; median: number; topQuartile: number; bottomQuartile: number }): number {
+  private calculatePercentile(
+    ourValue: number,
+    benchmark: {
+      average: number
+      median: number
+      topQuartile: number
+      bottomQuartile: number
+    }
+  ): number {
     if (ourValue >= benchmark.topQuartile) return 90
     if (ourValue >= benchmark.median) return 75
     if (ourValue >= benchmark.average) return 50
@@ -590,7 +666,9 @@ export class ExecutiveDashboard {
     return 10
   }
 
-  private analyzePerformanceTrends(companies: CompanyPerformance[]): ExecutiveInsight[] {
+  private analyzePerformanceTrends(
+    companies: CompanyPerformance[]
+  ): ExecutiveInsight[] {
     const insights: ExecutiveInsight[] = []
     const improvingCompanies = companies.filter(c => c.growthRate > 5)
     const decliningCompanies = companies.filter(c => c.growthRate < -5)
@@ -604,10 +682,11 @@ export class ExecutiveDashboard {
         description: `${improvingCompanies.length} companies showing significant performance improvement.`,
         impact: 'positive',
         affectedCompanies: improvingCompanies.map(c => c.companyId),
-        recommendation: 'Analyze best practices from top performers and share across portfolio.',
+        recommendation:
+          'Analyze best practices from top performers and share across portfolio.',
         timeline: 'Ongoing',
         confidence: 0.8,
-        createdAt: new Date()
+        createdAt: new Date(),
       })
     }
 
@@ -620,17 +699,20 @@ export class ExecutiveDashboard {
         description: `${decliningCompanies.length} companies showing performance decline.`,
         impact: 'negative',
         affectedCompanies: decliningCompanies.map(c => c.companyId),
-        recommendation: 'Implement immediate intervention programs for underperforming companies.',
+        recommendation:
+          'Implement immediate intervention programs for underperforming companies.',
         timeline: 'Within 2 weeks',
         confidence: 0.85,
-        createdAt: new Date()
+        createdAt: new Date(),
       })
     }
 
     return insights
   }
 
-  private analyzeComplianceIssues(companies: CompanyPerformance[]): ExecutiveInsight[] {
+  private analyzeComplianceIssues(
+    companies: CompanyPerformance[]
+  ): ExecutiveInsight[] {
     const insights: ExecutiveInsight[] = []
     const criticalCompanies = companies.filter(c => c.riskLevel === 'critical')
 
@@ -643,17 +725,20 @@ export class ExecutiveDashboard {
         description: `${criticalCompanies.length} companies have critical compliance issues requiring immediate attention.`,
         impact: 'negative',
         affectedCompanies: criticalCompanies.map(c => c.companyId),
-        recommendation: 'Deploy compliance support team and implement emergency corrective measures.',
+        recommendation:
+          'Deploy compliance support team and implement emergency corrective measures.',
         timeline: 'Within 48 hours',
         confidence: 0.95,
-        createdAt: new Date()
+        createdAt: new Date(),
       })
     }
 
     return insights
   }
 
-  private identifyOpportunities(companies: CompanyPerformance[]): ExecutiveInsight[] {
+  private identifyOpportunities(
+    companies: CompanyPerformance[]
+  ): ExecutiveInsight[] {
     const insights: ExecutiveInsight[] = []
     const highPerformers = companies.filter(c => c.overallScore >= 90)
 
@@ -666,19 +751,23 @@ export class ExecutiveDashboard {
         description: `${highPerformers.length} companies are exceeding compliance targets.`,
         impact: 'positive',
         affectedCompanies: highPerformers.map(c => c.companyId),
-        recommendation: 'Create best practice documentation and knowledge sharing sessions.',
+        recommendation:
+          'Create best practice documentation and knowledge sharing sessions.',
         timeline: 'Within 30 days',
         confidence: 0.75,
-        createdAt: new Date()
+        createdAt: new Date(),
       })
     }
 
     return insights
   }
 
-  private generateStrategicRecommendations(companies: CompanyPerformance[]): ExecutiveInsight[] {
+  private generateStrategicRecommendations(
+    companies: CompanyPerformance[]
+  ): ExecutiveInsight[] {
     const insights: ExecutiveInsight[] = []
-    const averageCompliance = companies.reduce((sum, c) => sum + c.overallScore, 0) / companies.length
+    const averageCompliance =
+      companies.reduce((sum, c) => sum + c.overallScore, 0) / companies.length
 
     if (averageCompliance < 80) {
       insights.push({
@@ -686,13 +775,15 @@ export class ExecutiveDashboard {
         type: 'achievement',
         priority: 'high',
         title: 'Portfolio-wide Compliance Improvement',
-        description: 'Overall portfolio compliance is below target. Strategic intervention needed.',
+        description:
+          'Overall portfolio compliance is below target. Strategic intervention needed.',
         impact: 'neutral',
         affectedCompanies: companies.map(c => c.companyId),
-        recommendation: 'Implement portfolio-wide compliance improvement program with dedicated resources.',
+        recommendation:
+          'Implement portfolio-wide compliance improvement program with dedicated resources.',
         timeline: 'Within 90 days',
         confidence: 0.9,
-        createdAt: new Date()
+        createdAt: new Date(),
       })
     }
 

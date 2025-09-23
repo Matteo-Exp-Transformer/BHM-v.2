@@ -11,4 +11,6 @@ export { default as TrendChart } from './TrendChart'
 export { default as RiskIndicator } from './RiskIndicator'
 export { default as ForecastWidget } from './ForecastWidget'
 
-console.log('📊 Analytics components implemented - B.10.2 Advanced Analytics & Reporting COMPLETED')
+console.log(
+  '📊 Analytics components implemented - B.10.2 Advanced Analytics & Reporting COMPLETED'
+)

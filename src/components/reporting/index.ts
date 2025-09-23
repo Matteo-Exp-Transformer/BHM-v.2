@@ -9,4 +9,6 @@
 export { default as ReportDesigner } from './ReportDesigner'
 export { default as ScheduleConfig } from './ScheduleConfig'
 
-console.log('📊 Reporting components implemented - B.10.2 Advanced Analytics & Reporting COMPLETED')
+console.log(
+  '📊 Reporting components implemented - B.10.2 Advanced Analytics & Reporting COMPLETED'
+)

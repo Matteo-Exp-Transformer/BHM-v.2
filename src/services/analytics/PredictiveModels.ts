@@ -49,12 +49,14 @@ export class PredictiveModels {
     try {
       // Initialize TensorFlow.js backend
       await tf.ready()
-      
+
       // Load or create base models
       await this.loadBaseModels()
-      
+
       this.isInitialized = true
-      console.log('🤖 Predictive models initialized - B.10.2 Advanced Analytics')
+      console.log(
+        '🤖 Predictive models initialized - B.10.2 Advanced Analytics'
+      )
     } catch (error) {
       console.error('Failed to initialize predictive models:', error)
       throw error
@@ -71,12 +73,12 @@ export class PredictiveModels {
     try {
       // Prepare training data
       const trainingData = this.prepareTemperatureData(historicalData)
-      
+
       // Create and train model
       const model = this.createTemperatureModel()
-      
+
       const { inputs, labels } = this.formatDataForTraining(trainingData)
-      
+
       // Train the model
       await model.fit(inputs, labels, {
         epochs: 100,
@@ -87,19 +89,20 @@ export class PredictiveModels {
             if (epoch % 20 === 0) {
               console.log(`Epoch ${epoch}: loss = ${logs?.loss?.toFixed(4)}`)
             }
-          }
-        }
+          },
+        },
       })
 
       // Store the trained model
       this.models.set(`temperature_${conservationPointId}`, model)
-      
+
       // Calculate metrics
       const metrics = await this.calculateModelMetrics(model, inputs, labels)
-      
-      console.log(`🌡️ Temperature forecast model trained for ${conservationPointId}`)
+
+      console.log(
+        `🌡️ Temperature forecast model trained for ${conservationPointId}`
+      )
       return metrics
-      
     } catch (error) {
       console.error('Failed to train temperature forecast model:', error)
       throw error
@@ -116,33 +119,38 @@ export class PredictiveModels {
     try {
       const model = this.models.get(`temperature_${conservationPointId}`)
       if (!model) {
-        throw new Error(`No trained model found for conservation point ${conservationPointId}`)
+        throw new Error(
+          `No trained model found for conservation point ${conservationPointId}`
+        )
       }
 
       // Get recent data for prediction
-      const recentData = await this.getRecentTemperatureData(conservationPointId)
+      const recentData =
+        await this.getRecentTemperatureData(conservationPointId)
       const inputData = this.preparePredictionInput(recentData, hoursAhead)
-      
+
       // Make prediction
       const prediction = model.predict(inputData) as tf.Tensor
       const predictionValue = await prediction.data()
-      
+
       // Calculate confidence based on model performance
       const confidence = this.calculatePredictionConfidence(model, recentData)
-      
+
       // Clean up tensors
       inputData.dispose()
       prediction.dispose()
-      
+
       return {
         type: 'temperature',
         prediction: predictionValue[0],
         confidence,
         timeframe: `${hoursAhead} hours`,
         factors: ['historical_temperature', 'time_of_day', 'seasonal_patterns'],
-        recommendation: this.getTemperatureRecommendation(predictionValue[0], confidence)
+        recommendation: this.getTemperatureRecommendation(
+          predictionValue[0],
+          confidence
+        ),
       }
-      
     } catch (error) {
       console.error('Failed to predict temperature trend:', error)
       throw error
@@ -158,22 +166,24 @@ export class PredictiveModels {
     try {
       // Prepare compliance training data
       const trainingData = this.prepareComplianceData(complianceData)
-      
+
       // Create regression model for risk scoring
       const regressionModel = new SimpleLinearRegression(
         trainingData.features,
         trainingData.labels
       )
-      
+
       // Store the model
       this.regressionModels.set('compliance_risk', regressionModel)
-      
+
       // Calculate metrics
-      const metrics = await this.calculateRegressionMetrics(regressionModel, trainingData)
-      
+      const metrics = await this.calculateRegressionMetrics(
+        regressionModel,
+        trainingData
+      )
+
       console.log('🛡️ Compliance risk model trained')
       return metrics
-      
     } catch (error) {
       console.error('Failed to train compliance risk model:', error)
       throw error
@@ -194,20 +204,24 @@ export class PredictiveModels {
 
       // Extract features for prediction
       const features = this.extractComplianceFeatures(companyData)
-      
+
       // Make prediction
       const riskScore = model.predict(features)
       const confidence = this.calculateRiskConfidence(model, features)
-      
+
       return {
         type: 'risk',
         prediction: Math.max(0, Math.min(100, riskScore)), // Clamp to 0-100
         confidence,
         timeframe: 'current',
-        factors: ['compliance_history', 'staff_training', 'equipment_status', 'audit_results'],
-        recommendation: this.getRiskRecommendation(riskScore, confidence)
+        factors: [
+          'compliance_history',
+          'staff_training',
+          'equipment_status',
+          'audit_results',
+        ],
+        recommendation: this.getRiskRecommendation(riskScore, confidence),
       }
-      
     } catch (error) {
       console.error('Failed to predict compliance risk:', error)
       throw error
@@ -222,23 +236,22 @@ export class PredictiveModels {
   ): Promise<PredictionResult[]> {
     try {
       const predictions: PredictionResult[] = []
-      
+
       for (const product of productData) {
         // Use historical expiry patterns
         const expiryPrediction = this.calculateExpiryPrediction(product)
-        
+
         predictions.push({
           type: 'expiry',
           prediction: expiryPrediction.days,
           confidence: expiryPrediction.confidence,
           timeframe: 'days',
           factors: ['product_type', 'storage_conditions', 'historical_data'],
-          recommendation: this.getExpiryRecommendation(expiryPrediction.days)
+          recommendation: this.getExpiryRecommendation(expiryPrediction.days),
         })
       }
-      
+
       return predictions
-      
     } catch (error) {
       console.error('Failed to predict product expiry:', error)
       throw error
@@ -255,7 +268,7 @@ export class PredictiveModels {
       precision: 0.85,
       recall: 0.89,
       f1Score: 0.87,
-      lastTrained: new Date()
+      lastTrained: new Date(),
     }
   }
 
@@ -274,7 +287,7 @@ export class PredictiveModels {
         default:
           console.warn(`Unknown model type for retraining: ${modelType}`)
       }
-      
+
       console.log(`🔄 Models retrained with new data: ${modelType}`)
     } catch (error) {
       console.error('Failed to retrain models:', error)
@@ -294,7 +307,7 @@ export class PredictiveModels {
       timestamp: reading.timestamp.getTime(),
       temperature: reading.temperature,
       hour: reading.timestamp.getHours(),
-      dayOfWeek: reading.timestamp.getDay()
+      dayOfWeek: reading.timestamp.getDay(),
     }))
   }
 
@@ -304,30 +317,31 @@ export class PredictiveModels {
         tf.layers.dense({
           inputShape: [4], // timestamp, temperature, hour, dayOfWeek
           units: 64,
-          activation: 'relu'
+          activation: 'relu',
         }),
         tf.layers.dropout({ rate: 0.2 }),
         tf.layers.dense({
           units: 32,
-          activation: 'relu'
+          activation: 'relu',
         }),
         tf.layers.dense({
           units: 1,
-          activation: 'linear'
-        })
-      ]
+          activation: 'linear',
+        }),
+      ],
     })
   }
 
-  private formatDataForTraining(data: any[]): { inputs: tf.Tensor, labels: tf.Tensor } {
+  private formatDataForTraining(data: any[]): {
+    inputs: tf.Tensor
+    labels: tf.Tensor
+  } {
     const inputs = tf.tensor2d(
       data.map(d => [d.timestamp, d.temperature, d.hour, d.dayOfWeek])
     )
-    
-    const labels = tf.tensor2d(
-      data.map(d => [d.temperature])
-    )
-    
+
+    const labels = tf.tensor2d(data.map(d => [d.temperature]))
+
     return { inputs, labels }
   }
 
@@ -340,7 +354,7 @@ export class PredictiveModels {
     const predictions = model.predict(inputs) as tf.Tensor
     const predictionsArray = await predictions.data()
     const labelsArray = await labels.data()
-    
+
     // Calculate accuracy metrics
     let correct = 0
     for (let i = 0; i < predictionsArray.length; i++) {
@@ -348,22 +362,24 @@ export class PredictiveModels {
         correct++
       }
     }
-    
+
     const accuracy = correct / predictionsArray.length
-    
+
     // Clean up tensors
     predictions.dispose()
-    
+
     return {
       accuracy,
       precision: accuracy * 0.95,
       recall: accuracy * 0.93,
       f1Score: accuracy * 0.94,
-      lastTrained: new Date()
+      lastTrained: new Date(),
     }
   }
 
-  private async getRecentTemperatureData(conservationPointId: string): Promise<TemperatureReading[]> {
+  private async getRecentTemperatureData(
+    conservationPointId: string
+  ): Promise<TemperatureReading[]> {
     // Mock implementation - would fetch from database
     return [
       {
@@ -372,29 +388,42 @@ export class PredictiveModels {
         temperature: 4.2,
         conservationPointId,
         location: 'Cooler A',
-        productType: 'Dairy'
-      }
+        productType: 'Dairy',
+      },
     ]
   }
 
-  private preparePredictionInput(data: TemperatureReading[], hoursAhead: number): tf.Tensor {
+  private preparePredictionInput(
+    data: TemperatureReading[],
+    hoursAhead: number
+  ): tf.Tensor {
     const latest = data[data.length - 1]
-    const futureTime = new Date(latest.timestamp.getTime() + hoursAhead * 3600000)
-    
-    return tf.tensor2d([[
-      futureTime.getTime(),
-      latest.temperature,
-      futureTime.getHours(),
-      futureTime.getDay()
-    ]])
+    const futureTime = new Date(
+      latest.timestamp.getTime() + hoursAhead * 3600000
+    )
+
+    return tf.tensor2d([
+      [
+        futureTime.getTime(),
+        latest.temperature,
+        futureTime.getHours(),
+        futureTime.getDay(),
+      ],
+    ])
   }
 
-  private calculatePredictionConfidence(model: tf.LayersModel, data: TemperatureReading[]): number {
+  private calculatePredictionConfidence(
+    model: tf.LayersModel,
+    data: TemperatureReading[]
+  ): number {
     // Calculate confidence based on data quality and model performance
-    return Math.min(0.95, Math.max(0.6, 0.8 + (data.length / 100)))
+    return Math.min(0.95, Math.max(0.6, 0.8 + data.length / 100))
   }
 
-  private getTemperatureRecommendation(temperature: number, confidence: number): string {
+  private getTemperatureRecommendation(
+    temperature: number,
+    confidence: number
+  ): string {
     if (temperature > 8) {
       return 'Critical: Temperature too high. Check cooling system immediately.'
     } else if (temperature > 5) {
@@ -404,41 +433,45 @@ export class PredictiveModels {
     }
   }
 
-  private prepareComplianceData(data: any[]): { features: number[][], labels: number[] } {
+  private prepareComplianceData(data: any[]): {
+    features: number[][]
+    labels: number[]
+  } {
     return {
       features: data.map(d => [
         d.complianceScore || 0,
         d.staffTrainingHours || 0,
         d.equipmentAge || 0,
-        d.auditFailures || 0
+        d.auditFailures || 0,
       ]),
-      labels: data.map(d => d.riskScore || 0)
+      labels: data.map(d => d.riskScore || 0),
     }
   }
 
   private async calculateRegressionMetrics(
     model: SimpleLinearRegression,
-    data: { features: number[][], labels: number[] }
+    data: { features: number[][]; labels: number[] }
   ): Promise<ModelMetrics> {
     // Calculate regression model metrics
     const predictions = data.features.map(f => model.predict(f))
     const actual = data.labels
-    
+
     let correct = 0
     for (let i = 0; i < predictions.length; i++) {
-      if (Math.abs(predictions[i] - actual[i]) < 5) { // Within 5 points
+      if (Math.abs(predictions[i] - actual[i]) < 5) {
+        // Within 5 points
         correct++
       }
     }
-    
+
     const accuracy = correct / predictions.length
-    
+
     return {
       accuracy,
       precision: accuracy * 0.92,
       recall: accuracy * 0.88,
-      f1Score: accuracy * 0.90,
-      lastTrained: new Date()
+      f1Score: accuracy * 0.9,
+      lastTrained: new Date(),
     }
   }
 
@@ -447,7 +480,10 @@ export class PredictiveModels {
     return companyData.complianceScore || 0
   }
 
-  private calculateRiskConfidence(model: SimpleLinearRegression, features: number): number {
+  private calculateRiskConfidence(
+    model: SimpleLinearRegression,
+    features: number
+  ): number {
     // Calculate confidence based on feature values and model performance
     return Math.min(0.9, Math.max(0.7, 0.8))
   }
@@ -462,14 +498,17 @@ export class PredictiveModels {
     }
   }
 
-  private calculateExpiryPrediction(product: any): { days: number, confidence: number } {
+  private calculateExpiryPrediction(product: any): {
+    days: number
+    confidence: number
+  } {
     // Mock implementation for expiry prediction
     const baseExpiry = product.type === 'dairy' ? 7 : 14
     const storageFactor = product.storageTemp < 4 ? 1.2 : 0.8
-    
+
     return {
       days: Math.round(baseExpiry * storageFactor),
-      confidence: 0.85
+      confidence: 0.85,
     }
   }
 
