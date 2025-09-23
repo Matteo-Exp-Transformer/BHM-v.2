@@ -158,7 +158,6 @@ export const ForecastWidget: React.FC<ForecastWidgetProps> = ({
     }
   }
 
-
   const handleRefresh = async () => {
     if (onRefresh) {
       setIsLoading(true)

@@ -24,7 +24,12 @@
       "Bash(npm test:*)",
       "Bash(git log:*)",
       "Bash(git merge-base:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(git reset:*)",
+      "Bash(git worktree:*)",
+      "Read(//c/Users/matte.MIO/Documents/GitHub/BHM-v.2/**)",
+      "Bash(npx tsx:*)",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []
