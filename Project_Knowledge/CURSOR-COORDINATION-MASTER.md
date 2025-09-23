@@ -133,7 +133,7 @@ const unsubscribe = dashboardRealtime.subscribe((updates) => {
 
 ### **⏳ PIANIFICATO:**
 
-- **B.8.4** Advanced Mobile Features (Cursor - Prossimo dopo B.8.2)
+- **B.8.4** Advanced Mobile Features (Cursor - SPECIFICHE PRONTE)
 - **B.8.5** AI-Powered Insights (Shared)
 - **B.9.1** Enterprise Security & Compliance (Claude)
 - **B.9.2** Advanced PWA & Offline (Cursor)
@@ -234,18 +234,21 @@ Aggiorna questo file quando:
 **Dopo che completi B.8.2:**
 
 1. **Commit con messaggio:** "feat: complete B.8.2 Advanced Dashboard Analytics 🎉"
-2. **Notifica status:** User richiederà merge e planning B.8.4/B.8.5
+2. **Notifica status:** User richiederà merge B.8.2+B.8.3
 3. **Backup automatico:** Claude creerà backup prima del merge
 4. **Merge coordinato:** Integrazione sistemi multi-tenant + dashboard analytics
-5. **Nuove istruzioni:** Claude preparerà B.8.4 Advanced Mobile Features per te
+5. **Inizia B.8.4:** Specifiche già pronte in questo file, puoi iniziare subito
 
-**📋 MERGE CHECKLIST (Claude preparerà):**
+**📋 MERGE CHECKLIST B.8.2:**
 
-- ✅ B.8.2 Dashboard completato e testato
-- ✅ B.8.3 Multi-tenant system integrato
-- ✅ Performance targets raggiunti
+- ✅ B.8.2 Dashboard completato e testato con Chart.js/recharts
+- ✅ B.8.3 Multi-tenant integration verificata
+- ✅ Performance targets raggiunti (<1.5s load, <200ms updates)
 - ✅ Testing framework validazioni complete
-- ✅ Mobile optimizations verificate
+- ✅ Mobile responsiveness 100%
+
+**🚀 TRANSIZIONE B.8.2 → B.8.4:**
+Dopo merge B.8.2+B.8.3, potrai iniziare immediatamente B.8.4 Advanced Mobile Features usando le specifiche complete sopra. Tutte le dependencies e architettura sono già pianificate.
 
 ---
 
@@ -300,3 +303,190 @@ Aggiorna questo file quando:
 ---
 
 🚀 **READY TO START B.8.2 ADVANCED DASHBOARD ANALYTICS!** 🚀
+
+---
+
+## 📱 **B.8.4 ADVANCED MOBILE FEATURES - LE TUE PROSSIME ISTRUZIONI**
+
+**🚨 IMPORTANTE:** Inizia B.8.4 SOLO dopo aver completato B.8.2 completamente
+
+### **🎯 OBIETTIVI B.8.4 - 6 SESSIONI PIANIFICATE:**
+
+**SESSIONE 1-2: Camera & Photo Management**
+- [ ] Advanced camera integration con controlli manuali
+- [ ] Photo compression e storage optimization
+- [ ] Image annotation e markup tools
+- [ ] QR/Barcode scanning per product identification
+- [ ] Photo gallery con search e filtering
+
+**SESSIONE 3-4: GPS & Location Features**
+- [ ] GPS-based conservation point mapping
+- [ ] Geofencing per temperature monitoring zones
+- [ ] Location-based task assignments
+- [ ] Route optimization per inspection rounds
+- [ ] Offline map caching per remote locations
+
+**SESSIONE 5-6: Advanced Touch & Gesture + PWA**
+- [ ] Multi-touch gesture controls per charts e dashboards
+- [ ] Voice commands per hands-free operation
+- [ ] Haptic feedback per critical alerts
+- [ ] Advanced service worker per offline functionality
+- [ ] Push notification campaigns e scheduling
+
+### **🛠️ ARCHITETTURA B.8.4 - STRUCTURE DA CREARE:**
+
+```typescript
+src/services/mobile/
+├── camera/
+│   ├── CameraService.ts           // Advanced camera controls
+│   ├── PhotoProcessor.ts          // Compression, filters, annotation
+│   ├── BarcodeScanner.ts          // QR/Barcode recognition
+│   ├── ImageUpload.ts             // Cloud storage integration
+│   └── PhotoGallery.ts            // Gallery management with search
+├── location/
+│   ├── GPSService.ts              // High-precision location tracking
+│   ├── GeofenceManager.ts         // Zone monitoring e alerts
+│   ├── OfflineMapCache.ts         // Map caching per offline
+│   ├── RouteOptimizer.ts          // Path planning per inspections
+│   └── LocationHistory.ts         // Track user locations
+├── interaction/
+│   ├── GestureRecognizer.ts       // Multi-touch gestures
+│   ├── VoiceCommands.ts           // Speech recognition
+│   ├── HapticFeedback.ts          // Touch feedback
+│   ├── AccessibilityManager.ts   // A11y enhancements
+│   └── TouchOptimizer.ts          // Touch target optimization
+└── pwa/
+    ├── ServiceWorkerManager.ts    // Advanced SW con background sync
+    ├── BackgroundSync.ts          // Offline data sync
+    ├── PushNotificationManager.ts // Advanced notifications
+    ├── AppUpdateManager.ts        // App versioning e updates
+    └── InstallPromptManager.ts    // PWA install optimization
+
+src/components/mobile/
+├── camera/
+│   ├── CameraCapture.tsx          // Camera interface
+│   ├── PhotoAnnotation.tsx        // Image markup tools
+│   ├── BarcodeScanner.tsx         // Scanner interface
+│   └── PhotoGalleryView.tsx       // Gallery component
+├── location/
+│   ├── MapView.tsx                // Interactive map
+│   ├── LocationPicker.tsx         // Location selection
+│   ├── GeofenceVisualizer.tsx     // Zone visualization
+│   └── RouteDisplay.tsx           // Route planning UI
+├── gestures/
+│   ├── TouchGestureArea.tsx       // Gesture detection zone
+│   ├── SwipeNavigation.tsx        // Swipe controls
+│   ├── PinchZoomChart.tsx         // Zoomable charts
+│   └── VoiceCommandButton.tsx     // Voice activation
+└── pwa/
+    ├── InstallPrompt.tsx          // PWA install UI
+    ├── OfflineIndicator.tsx       // Connection status
+    ├── SyncStatusBanner.tsx       // Sync progress
+    └── UpdateNotification.tsx     // App update prompts
+```
+
+### **📦 DIPENDENZE B.8.4 - INSTALLA QUANDO PRONTO:**
+
+```json
+{
+  "dependencies": {
+    "@capacitor/camera": "^5.0.7",
+    "@capacitor/geolocation": "^5.0.6",
+    "@capacitor/haptics": "^5.0.6",
+    "@capacitor/device": "^5.0.6",
+    "tesseract.js": "^4.1.4",
+    "jsqr": "^1.4.0",
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^4.2.1",
+    "@use-gesture/react": "^10.3.0",
+    "react-spring": "^9.7.3",
+    "workbox-webpack-plugin": "^7.0.0",
+    "workbox-strategies": "^7.0.0",
+    "web-push": "^3.6.6"
+  }
+}
+```
+
+### **🔧 INTEGRAZIONE CON SISTEMI CLAUDE B.8.4:**
+
+```typescript
+// Usa testing framework di Claude per mobile
+import { testingServices } from '@/services/testing'
+import { multiTenantDashboard } from '@/services/dashboard'
+
+// Mobile optimization integration
+await testingServices.mobileOptimizer.applyOptimizations()
+const deviceInfo = testingServices.mobileOptimizer.detectDevice()
+
+// Dashboard data for mobile
+const mobileData = await multiTenantDashboard.getMobileOptimizedData()
+
+// Performance monitoring per mobile
+testingServices.performanceMonitor.trackMobileMetrics()
+```
+
+### **🎯 SUCCESS CRITERIA B.8.4:**
+
+**Performance Targets:**
+- Camera capture: <500ms
+- GPS accuracy: <5m precision
+- Touch response: <50ms
+- Voice recognition: <2s processing
+- Offline capability: 48+ hours
+
+**Feature Completeness:**
+- [ ] Camera with QR/barcode scanning
+- [ ] GPS mapping with geofencing
+- [ ] Multi-touch gesture controls
+- [ ] Voice command recognition
+- [ ] Advanced PWA features
+- [ ] Offline map caching
+- [ ] Background sync capability
+- [ ] Push notification campaigns
+
+**Quality Gates:**
+- [ ] Mobile Lighthouse score >95
+- [ ] Touch accessibility 100%
+- [ ] Offline functionality verified
+- [ ] Cross-platform compatibility
+- [ ] Performance targets met
+
+### **💡 TIPS SVILUPPO B.8.4:**
+
+**Camera Best Practices:**
+- Implementa progressive image loading
+- Usa compression algorithms per storage
+- Provide fallbacks per device senza camera
+- Integrate con gallery existing del device
+
+**GPS Best Practices:**
+- Implement battery-aware location tracking
+- Cache location data per offline usage
+- Provide manual location input fallback
+- Use geofencing responsibly per battery
+
+**Performance Mobile:**
+- Lazy load mobile-specific components
+- Use React.memo per gesture components
+- Implement touch event debouncing
+- Optimize bundle size per mobile
+
+**PWA Optimization:**
+- Implement intelligent caching strategies
+- Use background sync per critical data
+- Provide offline-first experience
+- Optimize install prompts per engagement
+
+### **🔄 COORDINAMENTO B.8.4:**
+
+**Durante sviluppo B.8.4:**
+- Usa `testingServices.mobileOptimizer` per ogni componente
+- Integra con `multiTenantDashboard` per mobile data
+- Test performance su Claude's framework
+- Coordina PWA features con offline system
+
+**Fine B.8.4:**
+- Commit: "feat: complete B.8.4 Advanced Mobile Features 🎉"
+- Test complete mobile workflow
+- Verify integration con tutti sistemi Claude
+- Prepara handoff per B.8.5 AI Insights
