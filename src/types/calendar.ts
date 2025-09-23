@@ -191,12 +191,7 @@ export interface CalendarFilters {
   }
 }
 
-// Legacy filter interface for existing components
-export interface CalendarFilter {
-  sources: string[]
-  priorities: string[]
-  statuses: string[]
-}
+// Legacy CalendarFilter definition removed - use CalendarFilters instead
 
 // Additional event type interfaces for legacy support
 export type TaskEvent = CalendarEvent & { type: 'general_task' }
