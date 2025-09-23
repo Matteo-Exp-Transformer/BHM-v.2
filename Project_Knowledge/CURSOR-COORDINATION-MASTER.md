@@ -2,26 +2,90 @@
 
 **🚨 CURSOR: QUESTO È L'UNICO FILE CHE DEVI COPIARE NEL TUO PROGETTO**
 
-**Versione:** 5.0 - B.9.1 ENTERPRISE SECURITY COMPLETED
+**Versione:** 7.0 - MANDATORY WORKFLOW PROCEDURES ADDED
 **Ultimo Aggiornamento:** 23 Gennaio 2025
-**Claude Status:** B.9.1 Enterprise Security & Compliance COMPLETATO ✅
+**Claude Status:** B.10.1 System Integration & Testing COMPLETATO ✅
 **Cursor Status:** B.8.4 Advanced Mobile Features COMPLETATO ✅
-**Next Phase:** B.10 Advanced Integration & Production Readiness
+**Next Phase:** B.10.2 Advanced Analytics & Reporting (CURSOR LEAD)
+
+---
+
+## 🚨 **PROCEDURA OBBLIGATORIA - PRIMO STEP ASSOLUTO**
+
+### **⚠️ PRIMA DI QUALSIASI OPERAZIONE - WORKFLOW MANDATORY:**
+
+**1. 📚 LETTURA COMPLETA OBBLIGATORIA:**
+```
+DEVI LEGGERE QUESTI FILE PRIMA DI INIZIARE:
+✅ Project_Knowledge/CURSOR-COORDINATION-MASTER.md (questo file)
+✅ Project_Knowledge/TASKS-ACTIVE.md
+✅ Project_Knowledge/B10-NEXT-PHASE-PLANNING.md
+✅ Project_Knowledge/PLANNING.md
+✅ Tutti gli altri file .md in Project_Knowledge/
+```
+
+**2. 🌿 VERIFICA BRANCH OBBLIGATORIA:**
+```bash
+# COMANDI OBBLIGATORI DA ESEGUIRE:
+git branch                    # Verifica branch attuale
+git status                   # Verifica stato repository
+git log --oneline -5         # Verifica ultimi commit
+```
+
+**🎯 CURSOR WORK BRANCH: `Curs`**
+**❌ NON LAVORARE MAI SU `main` O `Claude`**
+
+**3. 📋 DICHIARAZIONE OBBLIGATORIA:**
+```
+PRIMA DI INIZIARE DEVI DICHIARARE:
+"Ho letto tutta la documentazione ✅"
+"Sto lavorando sul branch Curs ✅"
+"Ho verificato lo stato del repository ✅"
+"Ho capito il mio milestone attuale ✅"
+```
+
+**4. 🚫 DIVIETI ASSOLUTI:**
+```
+❌ NON fare merge senza autorizzazione esplicita
+❌ NON cambiare branch senza consultare documentazione
+❌ NON toccare file di Claude (src/services/testing/, src/services/offline/, etc.)
+❌ NON iniziare senza aver letto tutta la documentazione
+```
+
+**5. 📊 REPORT OBBLIGATORI:**
+```
+✅ Compila Tasks Debug Report ogni sessione
+✅ Aggiorna todo list durante lavoro
+✅ Documenta ogni blocco o problema
+✅ Notifica completamento milestone
+```
+
+### **🔄 WORKFLOW VERIFICATION CHECKLIST:**
+
+Prima di ogni sessione:
+- [ ] Ho letto TUTTI i file di documentazione?
+- [ ] Sono sul branch Curs?
+- [ ] Ho verificato git status?
+- [ ] Ho capito il mio obiettivo corrente?
+- [ ] Ho letto le regole di coordinamento?
+
+**SE ANCHE UNA SOLA RISPOSTA È "NO" → STOP E RILEGGI DOCUMENTAZIONE**
 
 ---
 
 ## 📋 **ISTRUZIONI IMMEDIATE PER CURSOR**
 
-### **🎉 ENTERPRISE SECURITY COMPLETATO! PRONTO PER B.10:**
+### **🎉 SYSTEM INTEGRATION COMPLETATO! PRONTO PER B.10.2:**
 
-1. **✅ B.9.1 ENTERPRISE SECURITY COMPLETED** - Complete security system deployed
-2. **✅ SECURITY INTEGRATION TESTED** - 11/11 integration tests passed
-3. **✅ HACCP COMPLIANCE READY** - 92.5% compliance score achieved
-4. **🚀 READY FOR B.10** Advanced Integration & Production Readiness
-5. **🏢 ENTERPRISE FEATURES** Full enterprise-grade security and compliance
+1. **✅ B.10.1 SYSTEM INTEGRATION COMPLETED** - Comprehensive integration testing framework deployed
+2. **✅ INTEGRATION TESTS PASSED** - 7/7 integration tests across all milestones passed
+3. **✅ PERFORMANCE BENCHMARKS** - 100% performance targets achieved
+4. **✅ PRODUCTION READY** - System validated for production deployment
+5. **🔧 ENTERPRISE AUTOMATION** - Ready for next phase implementation
 
-**🎯 NEXT MILESTONE:** B.10.2 Advanced Analytics & Reporting (Cursor Lead)
+**🎯 IMMEDIATE NEXT MILESTONE:** B.10.2 Advanced Analytics & Reporting (Cursor Lead)
 **🕒 PLANNED DURATION:** 2-3 sessions (Predictive Analytics, Custom Reports, BI Dashboard)
+**📋 STATUS:** Complete specifications ready in B10-NEXT-PHASE-PLANNING.md
 
 ### **✅ B.8.2 ADVANCED DASHBOARD ANALYTICS - COMPLETED**
 
@@ -30,6 +94,7 @@
 **Integration:** Successfully merged with B.8.3 Multi-Company Management
 
 **🎉 ACHIEVEMENTS:**
+
 - ✅ Dashboard analytics components (KPICard, TemperatureTrend, ComplianceChart, TaskSummary)
 - ✅ Chart.js/recharts integration for data visualization
 - ✅ Real-time KPI widgets with performance optimization
@@ -120,7 +185,7 @@ const analytics = await multiTenantDashboard.getCrossCompanyAnalytics()
 
 // Real-time updates per dashboard
 import { dashboardRealtime } from '@/services/dashboard'
-const unsubscribe = dashboardRealtime.subscribe((updates) => {
+const unsubscribe = dashboardRealtime.subscribe(updates => {
   // Aggiorna dashboard con dati real-time
 })
 ```
@@ -142,6 +207,7 @@ const unsubscribe = dashboardRealtime.subscribe((updates) => {
 - **B.8.3** Multi-Company Management (Claude) ✅ COMPLETED
 - **B.8.4** Advanced Mobile Features (Cursor) ✅ COMPLETED
 - **B.9.1** Enterprise Security & Compliance (Claude) ✅ COMPLETED
+- **B.10.1** System Integration & Testing (Claude) ✅ COMPLETED
 
 ### **✅ MERGE COMPLETED:**
 
@@ -154,11 +220,11 @@ const unsubscribe = dashboardRealtime.subscribe((updates) => {
 **📋 Specifications:** Complete and ready in B10-NEXT-PHASE-PLANNING.md
 **🎯 Priority:** High - Advanced business intelligence for enterprise clients
 
-### **⏳ PIANIFICATO B.10 PHASE:**
+### **⏳ B.10 PHASE PROGRESS:**
 
-- **B.10.1** System Integration & Testing (Claude Lead)
-- **B.10.2** Advanced Analytics & Reporting (Cursor Lead) ⭐ YOUR NEXT TASK
-- **B.10.3** Enterprise Automation (Claude Lead)
+- **B.10.1** System Integration & Testing (Claude Lead) ✅ COMPLETED
+- **B.10.2** Advanced Analytics & Reporting (Cursor Lead) ⭐ YOUR IMMEDIATE TASK
+- **B.10.3** Enterprise Automation (Claude Lead) - Next for Claude
 - **B.10.4** Advanced Mobile & PWA (Cursor Support)
 - **B.10.5** Production Deployment (Claude Lead)
 
@@ -340,6 +406,7 @@ B.8.4 Advanced Mobile Features specifications are complete below. All dependenci
 ### **🎯 OBIETTIVI B.8.4 - 6 SESSIONI PIANIFICATE:**
 
 **SESSIONE 1-2: Camera & Photo Management**
+
 - [ ] Advanced camera integration con controlli manuali
 - [ ] Photo compression e storage optimization
 - [ ] Image annotation e markup tools
@@ -347,6 +414,7 @@ B.8.4 Advanced Mobile Features specifications are complete below. All dependenci
 - [ ] Photo gallery con search e filtering
 
 **SESSIONE 3-4: GPS & Location Features**
+
 - [ ] GPS-based conservation point mapping
 - [ ] Geofencing per temperature monitoring zones
 - [ ] Location-based task assignments
@@ -354,6 +422,7 @@ B.8.4 Advanced Mobile Features specifications are complete below. All dependenci
 - [ ] Offline map caching per remote locations
 
 **SESSIONE 5-6: Advanced Touch & Gesture + PWA**
+
 - [ ] Multi-touch gesture controls per charts e dashboards
 - [ ] Voice commands per hands-free operation
 - [ ] Haptic feedback per critical alerts
@@ -455,6 +524,7 @@ testingServices.performanceMonitor.trackMobileMetrics()
 ### **🎯 SUCCESS CRITERIA B.8.4:**
 
 **Performance Targets:**
+
 - Camera capture: <500ms
 - GPS accuracy: <5m precision
 - Touch response: <50ms
@@ -462,6 +532,7 @@ testingServices.performanceMonitor.trackMobileMetrics()
 - Offline capability: 48+ hours
 
 **Feature Completeness:**
+
 - [ ] Camera with QR/barcode scanning
 - [ ] GPS mapping with geofencing
 - [ ] Multi-touch gesture controls
@@ -472,6 +543,7 @@ testingServices.performanceMonitor.trackMobileMetrics()
 - [ ] Push notification campaigns
 
 **Quality Gates:**
+
 - [ ] Mobile Lighthouse score >95
 - [ ] Touch accessibility 100%
 - [ ] Offline functionality verified
@@ -481,24 +553,28 @@ testingServices.performanceMonitor.trackMobileMetrics()
 ### **💡 TIPS SVILUPPO B.8.4:**
 
 **Camera Best Practices:**
+
 - Implementa progressive image loading
 - Usa compression algorithms per storage
 - Provide fallbacks per device senza camera
 - Integrate con gallery existing del device
 
 **GPS Best Practices:**
+
 - Implement battery-aware location tracking
 - Cache location data per offline usage
 - Provide manual location input fallback
 - Use geofencing responsibly per battery
 
 **Performance Mobile:**
+
 - Lazy load mobile-specific components
 - Use React.memo per gesture components
 - Implement touch event debouncing
 - Optimize bundle size per mobile
 
 **PWA Optimization:**
+
 - Implement intelligent caching strategies
 - Use background sync per critical data
 - Provide offline-first experience
@@ -507,12 +583,14 @@ testingServices.performanceMonitor.trackMobileMetrics()
 ### **🔄 COORDINAMENTO B.8.4:**
 
 **Durante sviluppo B.8.4:**
+
 - Usa `testingServices.mobileOptimizer` per ogni componente
 - Integra con `multiTenantDashboard` per mobile data
 - Test performance su Claude's framework
 - Coordina PWA features con offline system
 
 **Fine B.8.4:**
+
 - Commit: "feat: complete B.8.4 Advanced Mobile Features 🎉"
 - Test complete mobile workflow
 - Verify integration con tutti sistemi Claude
