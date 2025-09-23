@@ -17,9 +17,12 @@ export const LocationPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Mobile Location</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Mobile Location
+              </h1>
               <p className="text-gray-600 mt-1">
-                GPS tracking, geofencing, and route optimization for HACCP field work
+                GPS tracking, geofencing, and route optimization for HACCP field
+                work
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -48,7 +51,9 @@ export const LocationPage: React.FC = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-3">
-                <h3 className="font-semibold text-blue-700">🗺️ GPS & Mapping</h3>
+                <h3 className="font-semibold text-blue-700">
+                  🗺️ GPS & Mapping
+                </h3>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• High-precision location tracking</li>
                   <li>• Conservation point mapping</li>
@@ -58,7 +63,7 @@ export const LocationPage: React.FC = () => {
                   <li>• Location history tracking</li>
                 </ul>
               </div>
-              
+
               <div className="space-y-3">
                 <h3 className="font-semibold text-green-700">🚧 Geofencing</h3>
                 <ul className="text-sm text-gray-600 space-y-1">
@@ -70,9 +75,11 @@ export const LocationPage: React.FC = () => {
                   <li>• Event and alert system</li>
                 </ul>
               </div>
-              
+
               <div className="space-y-3">
-                <h3 className="font-semibold text-purple-700">🛣️ Route Optimization</h3>
+                <h3 className="font-semibold text-purple-700">
+                  🛣️ Route Optimization
+                </h3>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• Multiple optimization algorithms</li>
                   <li>• Inspection route planning</li>

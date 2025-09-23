@@ -4,17 +4,22 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { geofenceManager, Geofence, GeofenceEvent, GeofenceAlert } from '@/services/mobile/location'
+import {
+  geofenceManager,
+  Geofence,
+  GeofenceEvent,
+  GeofenceAlert,
+} from '@/services/mobile/location'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { 
-  Shield, 
-  MapPin, 
-  AlertTriangle, 
+import {
+  Shield,
+  MapPin,
+  AlertTriangle,
   CheckCircle,
   Clock,
   Thermometer,
@@ -25,7 +30,7 @@ import {
   Eye,
   EyeOff,
   Bell,
-  BellOff
+  BellOff,
 } from 'lucide-react'
 
 interface GeofenceVisualizerProps {
@@ -50,7 +55,7 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
   onGeofenceCreate,
   onGeofenceUpdate,
   onGeofenceDelete,
-  className = ''
+  className = '',
 }) => {
   const [geofences, setGeofences] = useState<Geofence[]>([])
   const [events, setEvents] = useState<GeofenceEvent[]>([])
@@ -61,9 +66,11 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
     inactive: 0,
     maintenance: 0,
     recentEvents: 0,
-    unacknowledgedAlerts: 0
+    unacknowledgedAlerts: 0,
   })
-  const [selectedGeofence, setSelectedGeofence] = useState<Geofence | null>(null)
+  const [selectedGeofence, setSelectedGeofence] = useState<Geofence | null>(
+    null
+  )
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [showInactive, setShowInactive] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -80,18 +87,18 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
       onEnter: true,
       onExit: true,
       onTemperatureViolation: true,
-      onInspectionDue: true
+      onInspectionDue: true,
     },
     criticalTemperature: {
       min: 0,
       max: 4,
-      unit: 'celsius'
+      unit: 'celsius',
     },
     metadata: {
       created: new Date(),
       updated: new Date(),
-      priority: 'medium'
-    }
+      priority: 'medium',
+    },
   })
 
   useEffect(() => {
@@ -102,7 +109,7 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
     try {
       setIsLoading(true)
       await geofenceManager.initialize()
-      
+
       // Load geofences
       const loadedGeofences = geofenceManager.getGeofences()
       setGeofences(loadedGeofences)
@@ -117,26 +124,29 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
       calculateStats(loadedGeofences, loadedEvents, loadedAlerts)
 
       // Subscribe to events and alerts
-      geofenceManager.onEvent((event) => {
+      geofenceManager.onEvent(event => {
         setEvents(prev => [event, ...prev])
         calculateStats(geofences, [event, ...events], alerts)
       })
 
-      geofenceManager.onAlert((alert) => {
+      geofenceManager.onAlert(alert => {
         setAlerts(prev => [alert, ...prev])
         calculateStats(geofences, events, [alert, ...alerts])
       })
-
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to initialize geofences')
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to initialize geofences'
+      )
     } finally {
       setIsLoading(false)
     }
   }
 
   const calculateStats = (
-    geofencesList: Geofence[], 
-    eventsList: GeofenceEvent[], 
+    geofencesList: Geofence[],
+    eventsList: GeofenceEvent[],
     alertsList: GeofenceAlert[]
   ) => {
     const stats: GeofenceStats = {
@@ -144,10 +154,10 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
       active: geofencesList.filter(g => g.status === 'active').length,
       inactive: geofencesList.filter(g => g.status === 'inactive').length,
       maintenance: geofencesList.filter(g => g.status === 'maintenance').length,
-      recentEvents: eventsList.filter(e => 
-        Date.now() - e.timestamp.getTime() < 24 * 60 * 60 * 1000 // Last 24 hours
+      recentEvents: eventsList.filter(
+        e => Date.now() - e.timestamp.getTime() < 24 * 60 * 60 * 1000 // Last 24 hours
       ).length,
-      unacknowledgedAlerts: alertsList.filter(a => !a.acknowledged).length
+      unacknowledgedAlerts: alertsList.filter(a => !a.acknowledged).length,
     }
     setStats(stats)
   }
@@ -175,12 +185,12 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
         onEnter: true,
         onExit: true,
         onTemperatureViolation: true,
-        onInspectionDue: true
-      }
+        onInspectionDue: true,
+      },
     }
 
     onGeofenceCreate?.(geofenceData)
-    
+
     // Reset form
     setNewGeofence({
       name: '',
@@ -193,18 +203,18 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
         onEnter: true,
         onExit: true,
         onTemperatureViolation: true,
-        onInspectionDue: true
+        onInspectionDue: true,
       },
       criticalTemperature: {
         min: 0,
         max: 4,
-        unit: 'celsius'
+        unit: 'celsius',
       },
       metadata: {
         created: new Date(),
         updated: new Date(),
-        priority: 'medium'
-      }
+        priority: 'medium',
+      },
     })
     setShowCreateForm(false)
     setError(null)
@@ -220,44 +230,58 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
 
   const handleAcknowledgeEvent = (eventId: string) => {
     geofenceManager.acknowledgeEvent(eventId, 'user')
-    setEvents(prev => prev.map(e => 
-      e.id === eventId ? { ...e, acknowledged: true } : e
-    ))
+    setEvents(prev =>
+      prev.map(e => (e.id === eventId ? { ...e, acknowledged: true } : e))
+    )
   }
 
   const handleAcknowledgeAlert = (alertId: string) => {
     geofenceManager.acknowledgeAlert(alertId)
-    setAlerts(prev => prev.map(a => 
-      a.id === alertId ? { ...a, acknowledged: true } : a
-    ))
+    setAlerts(prev =>
+      prev.map(a => (a.id === alertId ? { ...a, acknowledged: true } : a))
+    )
   }
 
   const getGeofenceStatusColor = (status: Geofence['status']) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800'
-      case 'inactive': return 'bg-gray-100 text-gray-800'
-      case 'maintenance': return 'bg-yellow-100 text-yellow-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'active':
+        return 'bg-green-100 text-green-800'
+      case 'inactive':
+        return 'bg-gray-100 text-gray-800'
+      case 'maintenance':
+        return 'bg-yellow-100 text-yellow-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
     }
   }
 
   const getGeofenceTypeIcon = (type: Geofence['type']) => {
     switch (type) {
-      case 'conservation_point': return <MapPin className="h-4 w-4" />
-      case 'inspection_route': return <Shield className="h-4 w-4" />
-      case 'restricted_area': return <AlertTriangle className="h-4 w-4" />
-      case 'temperature_zone': return <Thermometer className="h-4 w-4" />
-      default: return <MapPin className="h-4 w-4" />
+      case 'conservation_point':
+        return <MapPin className="h-4 w-4" />
+      case 'inspection_route':
+        return <Shield className="h-4 w-4" />
+      case 'restricted_area':
+        return <AlertTriangle className="h-4 w-4" />
+      case 'temperature_zone':
+        return <Thermometer className="h-4 w-4" />
+      default:
+        return <MapPin className="h-4 w-4" />
     }
   }
 
   const getEventSeverityColor = (severity: GeofenceEvent['severity']) => {
     switch (severity) {
-      case 'info': return 'bg-blue-100 text-blue-800'
-      case 'warning': return 'bg-yellow-100 text-yellow-800'
-      case 'error': return 'bg-red-100 text-red-800'
-      case 'critical': return 'bg-red-200 text-red-900'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'info':
+        return 'bg-blue-100 text-blue-800'
+      case 'warning':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'error':
+        return 'bg-red-100 text-red-800'
+      case 'critical':
+        return 'bg-red-200 text-red-900'
+      default:
+        return 'bg-gray-100 text-gray-800'
     }
   }
 
@@ -266,8 +290,8 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
     return `${temp.min}°${temp.unit === 'celsius' ? 'C' : 'F'} - ${temp.max}°${temp.unit === 'celsius' ? 'C' : 'F'}`
   }
 
-  const filteredGeofences = geofences.filter(geofence => 
-    showInactive || geofence.status !== 'inactive'
+  const filteredGeofences = geofences.filter(
+    geofence => showInactive || geofence.status !== 'inactive'
   )
 
   if (isLoading) {
@@ -294,19 +318,27 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.total}
+              </div>
               <div className="text-sm text-blue-700">Total Zones</div>
             </div>
             <div className="text-center p-3 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.active}
+              </div>
               <div className="text-sm text-green-700">Active</div>
             </div>
             <div className="text-center p-3 bg-orange-50 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">{stats.recentEvents}</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {stats.recentEvents}
+              </div>
               <div className="text-sm text-orange-700">Recent Events</div>
             </div>
             <div className="text-center p-3 bg-red-50 rounded-lg">
-              <div className="text-2xl font-bold text-red-600">{stats.unacknowledgedAlerts}</div>
+              <div className="text-2xl font-bold text-red-600">
+                {stats.unacknowledgedAlerts}
+              </div>
               <div className="text-sm text-red-700">Active Alerts</div>
             </div>
           </div>
@@ -324,21 +356,21 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
               <Plus className="h-4 w-4 mr-1" />
               Create Geofence
             </Button>
-            
+
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowInactive(!showInactive)}
             >
-              {showInactive ? <EyeOff className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
+              {showInactive ? (
+                <EyeOff className="h-4 w-4 mr-1" />
+              ) : (
+                <Eye className="h-4 w-4 mr-1" />
+              )}
               {showInactive ? 'Hide' : 'Show'} Inactive
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={initializeGeofences}
-            >
+            <Button variant="outline" size="sm" onClick={initializeGeofences}>
               <RefreshCw className="h-4 w-4 mr-1" />
               Refresh
             </Button>
@@ -367,7 +399,9 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
                   id="geofence-name"
                   placeholder="e.g., Main Refrigeration Zone"
                   value={newGeofence.name || ''}
-                  onChange={(e) => setNewGeofence(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={e =>
+                    setNewGeofence(prev => ({ ...prev, name: e.target.value }))
+                  }
                 />
               </div>
 
@@ -377,10 +411,12 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
                   id="geofence-type"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={newGeofence.type || 'temperature_zone'}
-                  onChange={(e) => setNewGeofence(prev => ({ 
-                    ...prev, 
-                    type: e.target.value as Geofence['type'] 
-                  }))}
+                  onChange={e =>
+                    setNewGeofence(prev => ({
+                      ...prev,
+                      type: e.target.value as Geofence['type'],
+                    }))
+                  }
                 >
                   <option value="conservation_point">Conservation Point</option>
                   <option value="inspection_route">Inspection Route</option>
@@ -397,10 +433,12 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
                   step="any"
                   placeholder="45.4642"
                   value={newGeofence.latitude || ''}
-                  onChange={(e) => setNewGeofence(prev => ({ 
-                    ...prev, 
-                    latitude: parseFloat(e.target.value) || 0 
-                  }))}
+                  onChange={e =>
+                    setNewGeofence(prev => ({
+                      ...prev,
+                      latitude: parseFloat(e.target.value) || 0,
+                    }))
+                  }
                 />
               </div>
 
@@ -412,10 +450,12 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
                   step="any"
                   placeholder="9.1900"
                   value={newGeofence.longitude || ''}
-                  onChange={(e) => setNewGeofence(prev => ({ 
-                    ...prev, 
-                    longitude: parseFloat(e.target.value) || 0 
-                  }))}
+                  onChange={e =>
+                    setNewGeofence(prev => ({
+                      ...prev,
+                      longitude: parseFloat(e.target.value) || 0,
+                    }))
+                  }
                 />
               </div>
 
@@ -427,10 +467,12 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
                   min="5"
                   max="1000"
                   value={newGeofence.radius || 50}
-                  onChange={(e) => setNewGeofence(prev => ({ 
-                    ...prev, 
-                    radius: parseInt(e.target.value) || 50 
-                  }))}
+                  onChange={e =>
+                    setNewGeofence(prev => ({
+                      ...prev,
+                      radius: parseInt(e.target.value) || 50,
+                    }))
+                  }
                 />
               </div>
 
@@ -440,13 +482,19 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
                   id="geofence-priority"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={newGeofence.metadata?.priority || 'medium'}
-                  onChange={(e) => setNewGeofence(prev => ({ 
-                    ...prev, 
-                    metadata: {
-                      ...prev.metadata!,
-                      priority: e.target.value as 'low' | 'medium' | 'high' | 'critical'
-                    }
-                  }))}
+                  onChange={e =>
+                    setNewGeofence(prev => ({
+                      ...prev,
+                      metadata: {
+                        ...prev.metadata!,
+                        priority: e.target.value as
+                          | 'low'
+                          | 'medium'
+                          | 'high'
+                          | 'critical',
+                      },
+                    }))
+                  }
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -461,7 +509,10 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
                 <Plus className="h-4 w-4 mr-2" />
                 Create Geofence
               </Button>
-              <Button variant="outline" onClick={() => setShowCreateForm(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setShowCreateForm(false)}
+              >
                 Cancel
               </Button>
             </div>
@@ -476,11 +527,13 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {filteredGeofences.map((geofence) => (
+            {filteredGeofences.map(geofence => (
               <div
                 key={geofence.id}
                 className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                  selectedGeofence?.id === geofence.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                  selectedGeofence?.id === geofence.id
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
                 }`}
                 onClick={() => handleGeofenceSelect(geofence)}
               >
@@ -492,12 +545,12 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
                       {geofence.status}
                     </Badge>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation()
                         onGeofenceUpdate?.(geofence)
                       }}
@@ -507,7 +560,7 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation()
                         handleDeleteGeofence(geofence.id)
                       }}
@@ -520,7 +573,10 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                   <div>
                     <span className="font-medium">Location:</span>
-                    <p>{geofence.latitude.toFixed(6)}, {geofence.longitude.toFixed(6)}</p>
+                    <p>
+                      {geofence.latitude.toFixed(6)},{' '}
+                      {geofence.longitude.toFixed(6)}
+                    </p>
                   </div>
                   <div>
                     <span className="font-medium">Radius:</span>
@@ -538,19 +594,27 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
 
                 <div className="flex flex-wrap gap-2 mt-3">
                   <div className="flex items-center gap-1">
-                    <Bell className={`h-4 w-4 ${geofence.alerts.onEnter ? 'text-green-600' : 'text-gray-400'}`} />
+                    <Bell
+                      className={`h-4 w-4 ${geofence.alerts.onEnter ? 'text-green-600' : 'text-gray-400'}`}
+                    />
                     <span className="text-xs">Enter</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <BellOff className={`h-4 w-4 ${geofence.alerts.onExit ? 'text-green-600' : 'text-gray-400'}`} />
+                    <BellOff
+                      className={`h-4 w-4 ${geofence.alerts.onExit ? 'text-green-600' : 'text-gray-400'}`}
+                    />
                     <span className="text-xs">Exit</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Thermometer className={`h-4 w-4 ${geofence.alerts.onTemperatureViolation ? 'text-green-600' : 'text-gray-400'}`} />
+                    <Thermometer
+                      className={`h-4 w-4 ${geofence.alerts.onTemperatureViolation ? 'text-green-600' : 'text-gray-400'}`}
+                    />
                     <span className="text-xs">Temperature</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Clock className={`h-4 w-4 ${geofence.alerts.onInspectionDue ? 'text-green-600' : 'text-gray-400'}`} />
+                    <Clock
+                      className={`h-4 w-4 ${geofence.alerts.onInspectionDue ? 'text-green-600' : 'text-gray-400'}`}
+                    />
                     <span className="text-xs">Inspection</span>
                   </div>
                 </div>
@@ -567,8 +631,11 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {events.slice(0, 5).map((event) => (
-              <div key={event.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+            {events.slice(0, 5).map(event => (
+              <div
+                key={event.id}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded"
+              >
                 <div className="flex items-center gap-3">
                   <Badge className={getEventSeverityColor(event.severity)}>
                     {event.type}
@@ -580,7 +647,7 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
                     </p>
                   </div>
                 </div>
-                
+
                 {!event.acknowledged && (
                   <Button
                     size="sm"
@@ -604,26 +671,34 @@ export const GeofenceVisualizer: React.FC<GeofenceVisualizerProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {alerts.filter(a => !a.acknowledged).slice(0, 5).map((alert) => (
-              <div key={alert.id} className="flex items-center justify-between p-3 bg-red-50 rounded">
-                <div className="flex items-center gap-3">
-                  <AlertTriangle className="h-4 w-4 text-red-600" />
-                  <div>
-                    <p className="text-sm font-medium text-red-800">{alert.title}</p>
-                    <p className="text-xs text-red-600">{alert.message}</p>
-                  </div>
-                </div>
-                
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleAcknowledgeAlert(alert.id)}
+            {alerts
+              .filter(a => !a.acknowledged)
+              .slice(0, 5)
+              .map(alert => (
+                <div
+                  key={alert.id}
+                  className="flex items-center justify-between p-3 bg-red-50 rounded"
                 >
-                  <CheckCircle className="h-4 w-4 mr-1" />
-                  Acknowledge
-                </Button>
-              </div>
-            ))}
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                    <div>
+                      <p className="text-sm font-medium text-red-800">
+                        {alert.title}
+                      </p>
+                      <p className="text-xs text-red-600">{alert.message}</p>
+                    </div>
+                  </div>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleAcknowledgeAlert(alert.id)}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Acknowledge
+                  </Button>
+                </div>
+              ))}
           </div>
         </CardContent>
       </Card>

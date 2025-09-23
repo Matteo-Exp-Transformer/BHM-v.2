@@ -4,17 +4,29 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline, useMap } from 'react-leaflet'
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Circle,
+  Polyline,
+  useMap,
+} from 'react-leaflet'
 import L from 'leaflet'
-import { gpsService, LocationData, ConservationPointLocation } from '@/services/mobile/location'
+import {
+  gpsService,
+  LocationData,
+  ConservationPointLocation,
+} from '@/services/mobile/location'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  MapPin, 
-  Navigation, 
-  Target, 
+import {
+  MapPin,
+  Navigation,
+  Target,
   Thermometer,
   Clock,
   AlertCircle,
@@ -22,15 +34,18 @@ import {
   RefreshCw,
   Layers,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
 } from 'lucide-react'
 
 // Fix for default markers in React Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconRetinaUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 })
 
 interface MapViewProps {
@@ -58,21 +73,25 @@ export const MapView: React.FC<MapViewProps> = ({
   showGeofences = false,
   showRoutes = false,
   className = '',
-  height = '400px'
+  height = '400px',
 }) => {
-  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null)
-  const [conservationPoints, setConservationPoints] = useState<ConservationPointLocation[]>([])
+  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(
+    null
+  )
+  const [conservationPoints, setConservationPoints] = useState<
+    ConservationPointLocation[]
+  >([])
   const [mapCenter, setMapCenter] = useState<MapCenter>({
     lat: 45.4642,
-    lng: 9.1900,
-    zoom: 15
+    lng: 9.19,
+    zoom: 15,
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [mapLayers, setMapLayers] = useState({
     showSatellite: false,
     showTraffic: false,
-    showTemperature: false
+    showTemperature: false,
   })
 
   const mapRef = useRef<L.Map | null>(null)
@@ -85,7 +104,7 @@ export const MapView: React.FC<MapViewProps> = ({
     try {
       setIsLoading(true)
       await gpsService.initialize()
-      
+
       // Load conservation points
       const points = gpsService.getConservationPoints()
       setConservationPoints(points)
@@ -98,14 +117,16 @@ export const MapView: React.FC<MapViewProps> = ({
           setMapCenter({
             lat: location.latitude,
             lng: location.longitude,
-            zoom: 16
+            zoom: 16,
           })
         } catch (error) {
           console.warn('Could not get current location:', error)
         }
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to initialize map')
+      setError(
+        error instanceof Error ? error.message : 'Failed to initialize map'
+      )
     } finally {
       setIsLoading(false)
     }
@@ -128,7 +149,7 @@ export const MapView: React.FC<MapViewProps> = ({
       setMapCenter({
         lat: location.latitude,
         lng: location.longitude,
-        zoom: 16
+        zoom: 16,
       })
     } catch (error) {
       setError('Could not get current location')
@@ -163,33 +184,51 @@ export const MapView: React.FC<MapViewProps> = ({
       `,
       className: 'custom-div-icon',
       iconSize: [30, 30],
-      iconAnchor: [15, 15]
+      iconAnchor: [15, 15],
     })
   }
 
-  const getConservationPointColor = (point: ConservationPointLocation): string => {
+  const getConservationPointColor = (
+    point: ConservationPointLocation
+  ): string => {
     switch (point.type) {
-      case 'refrigeration': return '#3B82F6' // Blue
-      case 'freezer': return '#1E40AF' // Dark Blue
-      case 'preparation': return '#10B981' // Green
-      case 'storage': return '#F59E0B' // Yellow
-      case 'delivery': return '#EF4444' // Red
-      default: return '#6B7280' // Gray
+      case 'refrigeration':
+        return '#3B82F6' // Blue
+      case 'freezer':
+        return '#1E40AF' // Dark Blue
+      case 'preparation':
+        return '#10B981' // Green
+      case 'storage':
+        return '#F59E0B' // Yellow
+      case 'delivery':
+        return '#EF4444' // Red
+      default:
+        return '#6B7280' // Gray
     }
   }
 
-  const getConservationPointIconText = (type: ConservationPointLocation['type']): string => {
+  const getConservationPointIconText = (
+    type: ConservationPointLocation['type']
+  ): string => {
     switch (type) {
-      case 'refrigeration': return '❄️'
-      case 'freezer': return '🧊'
-      case 'preparation': return '👨‍🍳'
-      case 'storage': return '📦'
-      case 'delivery': return '🚚'
-      default: return '📍'
+      case 'refrigeration':
+        return '❄️'
+      case 'freezer':
+        return '🧊'
+      case 'preparation':
+        return '👨‍🍳'
+      case 'storage':
+        return '📦'
+      case 'delivery':
+        return '🚚'
+      default:
+        return '📍'
     }
   }
 
-  const formatTemperature = (temp: ConservationPointLocation['criticalTemperature']) => {
+  const formatTemperature = (
+    temp: ConservationPointLocation['criticalTemperature']
+  ) => {
     if (!temp) return 'N/A'
     return `${temp.min}°${temp.unit === 'celsius' ? 'C' : 'F'} - ${temp.max}°${temp.unit === 'celsius' ? 'C' : 'F'}`
   }
@@ -211,9 +250,7 @@ export const MapView: React.FC<MapViewProps> = ({
         <CardContent className="p-6">
           <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {error}
-            </AlertDescription>
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
           <Button onClick={initializeMap} className="mt-4">
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -245,11 +282,16 @@ export const MapView: React.FC<MapViewProps> = ({
               <Navigation className="h-4 w-4 mr-1" />
               Current Location
             </Button>
-            
+
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setMapLayers(prev => ({ ...prev, showSatellite: !prev.showSatellite }))}
+              onClick={() =>
+                setMapLayers(prev => ({
+                  ...prev,
+                  showSatellite: !prev.showSatellite,
+                }))
+              }
             >
               <Layers className="h-4 w-4 mr-1" />
               {mapLayers.showSatellite ? 'Street' : 'Satellite'}
@@ -258,7 +300,12 @@ export const MapView: React.FC<MapViewProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setMapLayers(prev => ({ ...prev, showTemperature: !prev.showTemperature }))}
+              onClick={() =>
+                setMapLayers(prev => ({
+                  ...prev,
+                  showTemperature: !prev.showTemperature,
+                }))
+              }
             >
               <Thermometer className="h-4 w-4 mr-1" />
               Temperature
@@ -314,7 +361,10 @@ export const MapView: React.FC<MapViewProps> = ({
               {/* Current Location Marker */}
               {showCurrentLocation && currentLocation && (
                 <Marker
-                  position={[currentLocation.latitude, currentLocation.longitude]}
+                  position={[
+                    currentLocation.latitude,
+                    currentLocation.longitude,
+                  ]}
                   icon={L.divIcon({
                     html: `
                       <div style="
@@ -328,7 +378,7 @@ export const MapView: React.FC<MapViewProps> = ({
                     `,
                     className: 'custom-div-icon',
                     iconSize: [20, 20],
-                    iconAnchor: [10, 10]
+                    iconAnchor: [10, 10],
                   })}
                 >
                   <Popup>
@@ -346,74 +396,85 @@ export const MapView: React.FC<MapViewProps> = ({
               )}
 
               {/* Conservation Points */}
-              {showConservationPoints && conservationPoints.map((point) => (
-                <React.Fragment key={point.id}>
-                  <Marker
-                    position={[point.latitude, point.longitude]}
-                    icon={getConservationPointIcon(point)}
-                    eventHandlers={{
-                      click: () => handleMarkerClick(point)
-                    }}
-                  >
-                    <Popup>
-                      <div className="p-2 min-w-64">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-semibold">{point.name}</h4>
-                          <Badge 
-                            variant={point.status === 'active' ? 'default' : 'secondary'}
-                            className="text-xs"
-                          >
-                            {point.status}
-                          </Badge>
-                        </div>
-                        
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Target className="h-4 w-4 text-gray-500" />
-                            <span>ID: {point.id}</span>
+              {showConservationPoints &&
+                conservationPoints.map(point => (
+                  <React.Fragment key={point.id}>
+                    <Marker
+                      position={[point.latitude, point.longitude]}
+                      icon={getConservationPointIcon(point)}
+                      eventHandlers={{
+                        click: () => handleMarkerClick(point),
+                      }}
+                    >
+                      <Popup>
+                        <div className="p-2 min-w-64">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-semibold">{point.name}</h4>
+                            <Badge
+                              variant={
+                                point.status === 'active'
+                                  ? 'default'
+                                  : 'secondary'
+                              }
+                              className="text-xs"
+                            >
+                              {point.status}
+                            </Badge>
                           </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-gray-500" />
-                            <span>Type: {point.type}</span>
-                          </div>
-                          
-                          {point.criticalTemperature && (
-                            <div className="flex items-center gap-2">
-                              <Thermometer className="h-4 w-4 text-gray-500" />
-                              <span>Range: {formatTemperature(point.criticalTemperature)}</span>
-                            </div>
-                          )}
-                          
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-gray-500" />
-                            <span>Radius: {point.radius}m</span>
-                          </div>
-                          
-                          {point.lastInspection && (
-                            <div className="flex items-center gap-2">
-                              <CheckCircle className="h-4 w-4 text-green-500" />
-                              <span>Last inspection: {point.lastInspection.toLocaleDateString()}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </Popup>
-                  </Marker>
 
-                  {/* Conservation Point Radius Circle */}
-                  <Circle
-                    center={[point.latitude, point.longitude]}
-                    radius={point.radius}
-                    pathOptions={{
-                      color: getConservationPointColor(point),
-                      fillColor: getConservationPointColor(point),
-                      fillOpacity: 0.1,
-                      weight: 2
-                    }}
-                  />
-                </React.Fragment>
-              ))}
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Target className="h-4 w-4 text-gray-500" />
+                              <span>ID: {point.id}</span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-gray-500" />
+                              <span>Type: {point.type}</span>
+                            </div>
+
+                            {point.criticalTemperature && (
+                              <div className="flex items-center gap-2">
+                                <Thermometer className="h-4 w-4 text-gray-500" />
+                                <span>
+                                  Range:{' '}
+                                  {formatTemperature(point.criticalTemperature)}
+                                </span>
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-gray-500" />
+                              <span>Radius: {point.radius}m</span>
+                            </div>
+
+                            {point.lastInspection && (
+                              <div className="flex items-center gap-2">
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                <span>
+                                  Last inspection:{' '}
+                                  {point.lastInspection.toLocaleDateString()}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </Popup>
+                    </Marker>
+
+                    {/* Conservation Point Radius Circle */}
+                    <Circle
+                      center={[point.latitude, point.longitude]}
+                      radius={point.radius}
+                      pathOptions={{
+                        color: getConservationPointColor(point),
+                        fillColor: getConservationPointColor(point),
+                        fillOpacity: 0.1,
+                        weight: 2,
+                      }}
+                    />
+                  </React.Fragment>
+                ))}
             </MapContainer>
 
             {/* Map Zoom Controls */}

@@ -3,7 +3,7 @@
  * High-precision location tracking for HACCP conservation point mapping
  */
 
-import { Geolocation, Position } from '@capacitor/geolocation'
+import { Geolocation } from '@capacitor/geolocation'
 
 export interface LocationData {
   id: string
@@ -20,7 +20,11 @@ export interface LocationData {
     conservationPointId?: string
     taskId?: string
     inspectionId?: string
-    locationType?: 'conservation_point' | 'inspection_route' | 'emergency' | 'custom'
+    locationType?:
+      | 'conservation_point'
+      | 'inspection_route'
+      | 'emergency'
+      | 'custom'
     notes?: string
   }
 }
@@ -98,7 +102,7 @@ export class GPSService {
         supportsHeading: true,
         supportsSpeed: true,
         maxAccuracy: 1, // 1 meter accuracy
-        minUpdateInterval: 1000 // 1 second minimum
+        minUpdateInterval: 1000, // 1 second minimum
       }
 
       // Load conservation points
@@ -114,21 +118,23 @@ export class GPSService {
   /**
    * Get current location with high precision
    */
-  public async getCurrentLocation(options: LocationOptions = {}): Promise<LocationData> {
+  public async getCurrentLocation(
+    options: LocationOptions = {}
+  ): Promise<LocationData> {
     if (!this.capabilities?.hasGeolocation) {
       throw new Error('Geolocation not available')
     }
 
     try {
-      const defaultOptions: PositionOptions = {
+      const defaultOptions = {
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 60000,
-        ...options
+        ...options,
       }
 
       const position = await Geolocation.getCurrentPosition(defaultOptions)
-      
+
       const locationData: LocationData = {
         id: this.generateLocationId(),
         timestamp: new Date(),
@@ -139,12 +145,12 @@ export class GPSService {
         altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
         heading: position.coords.heading || undefined,
         speed: position.coords.speed || undefined,
-        source: options.enableHighAccuracy ? 'gps' : 'network'
+        source: options.enableHighAccuracy ? 'gps' : 'network',
       }
 
       this.currentLocation = locationData
       this.locationHistory.push(locationData)
-      
+
       return locationData
     } catch (error) {
       console.error('❌ Location retrieval failed:', error)
@@ -165,11 +171,11 @@ export class GPSService {
     }
 
     try {
-      const defaultOptions: PositionOptions = {
+      const defaultOptions = {
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 5000,
-        ...options
+        ...options,
       }
 
       this.watchId = await Geolocation.watchPosition(
@@ -190,12 +196,12 @@ export class GPSService {
             altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
             heading: position.coords.heading || undefined,
             speed: position.coords.speed || undefined,
-            source: options.enableHighAccuracy ? 'gps' : 'network'
+            source: options.enableHighAccuracy ? 'gps' : 'network',
           }
 
           this.currentLocation = locationData
           this.locationHistory.push(locationData)
-          
+
           onLocationUpdate?.(locationData)
         }
       )
@@ -243,10 +249,12 @@ export class GPSService {
   /**
    * Get location by HACCP context
    */
-  public getLocationsByContext(context: Partial<LocationData['haccpContext']>): LocationData[] {
+  public getLocationsByContext(
+    context: Partial<LocationData['haccpContext']>
+  ): LocationData[] {
     return this.locationHistory.filter(location => {
       if (!location.haccpContext || !context) return false
-      
+
       return Object.keys(context).every(key => {
         const contextKey = key as keyof LocationData['haccpContext']
         return location.haccpContext?.[contextKey] === context[contextKey]
@@ -258,21 +266,21 @@ export class GPSService {
    * Calculate distance between two points (Haversine formula)
    */
   public calculateDistance(
-    lat1: number, 
-    lon1: number, 
-    lat2: number, 
+    lat1: number,
+    lon1: number,
+    lat2: number,
     lon2: number
   ): number {
     const R = 6371e3 // Earth's radius in meters
-    const φ1 = lat1 * Math.PI / 180
-    const φ2 = lat2 * Math.PI / 180
-    const Δφ = (lat2 - lat1) * Math.PI / 180
-    const Δλ = (lon2 - lon1) * Math.PI / 180
+    const φ1 = (lat1 * Math.PI) / 180
+    const φ2 = (lat2 * Math.PI) / 180
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180
 
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 
     return R * c // Distance in meters
   }
@@ -281,8 +289,8 @@ export class GPSService {
    * Check if location is near conservation point
    */
   public isNearConservationPoint(
-    location: LocationData, 
-    pointId: string, 
+    location: LocationData,
+    pointId: string,
     threshold: number = 50
   ): boolean {
     const point = this.conservationPoints.get(pointId)
@@ -295,13 +303,15 @@ export class GPSService {
       point.longitude
     )
 
-    return distance <= (point.radius + threshold)
+    return distance <= point.radius + threshold
   }
 
   /**
    * Get nearest conservation point
    */
-  public getNearestConservationPoint(location: LocationData): ConservationPointLocation | null {
+  public getNearestConservationPoint(
+    location: LocationData
+  ): ConservationPointLocation | null {
     let nearest: ConservationPointLocation | null = null
     let minDistance = Infinity
 
@@ -393,11 +403,11 @@ export class GPSService {
         id: 'CP001',
         name: 'Main Refrigeration Unit',
         latitude: 45.4642,
-        longitude: 9.1900,
+        longitude: 9.19,
         radius: 25,
         type: 'refrigeration',
         criticalTemperature: { min: 0, max: 4, unit: 'celsius' },
-        status: 'active'
+        status: 'active',
       },
       {
         id: 'CP002',
@@ -407,18 +417,18 @@ export class GPSService {
         radius: 15,
         type: 'freezer',
         criticalTemperature: { min: -25, max: -18, unit: 'celsius' },
-        status: 'active'
+        status: 'active',
       },
       {
         id: 'CP003',
         name: 'Preparation Area',
-        latitude: 45.4640,
+        latitude: 45.464,
         longitude: 9.1895,
         radius: 20,
         type: 'preparation',
         criticalTemperature: { min: 15, max: 25, unit: 'celsius' },
-        status: 'active'
-      }
+        status: 'active',
+      },
     ]
 
     samplePoints.forEach(point => {

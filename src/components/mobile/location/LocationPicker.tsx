@@ -4,29 +4,39 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { gpsService, LocationData, ConservationPointLocation } from '@/services/mobile/location'
+import {
+  gpsService,
+  LocationData,
+  ConservationPointLocation,
+} from '@/services/mobile/location'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  MapPin, 
-  Navigation, 
-  Target, 
+import {
+  MapPin,
+  Navigation,
+  Target,
   Search,
   Plus,
   CheckCircle,
   AlertCircle,
   RefreshCw,
   Edit3,
-  Trash2
+  Trash2,
 } from 'lucide-react'
 
 interface LocationPickerProps {
-  onLocationSelect?: (location: { latitude: number; longitude: number; name?: string }) => void
-  onConservationPointCreate?: (point: Omit<ConservationPointLocation, 'id'>) => void
+  onLocationSelect?: (location: {
+    latitude: number
+    longitude: number
+    name?: string
+  }) => void
+  onConservationPointCreate?: (
+    point: Omit<ConservationPointLocation, 'id'>
+  ) => void
   selectedLocation?: { latitude: number; longitude: number; name?: string }
   mode?: 'select' | 'create' | 'edit'
   className?: string
@@ -45,9 +55,11 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   onConservationPointCreate,
   selectedLocation,
   mode = 'select',
-  className = ''
+  className = '',
 }) => {
-  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null)
+  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(
+    null
+  )
   const [selectedLocationState, setSelectedLocationState] = useState<{
     latitude: number
     longitude: number
@@ -57,9 +69,11 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [manualCoordinates, setManualCoordinates] = useState({
     latitude: '',
-    longitude: ''
+    longitude: '',
   })
-  const [newConservationPoint, setNewConservationPoint] = useState<Partial<ConservationPointLocation>>({
+  const [newConservationPoint, setNewConservationPoint] = useState<
+    Partial<ConservationPointLocation>
+  >({
     name: '',
     type: 'storage',
     radius: 25,
@@ -67,8 +81,8 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     criticalTemperature: {
       min: 0,
       max: 4,
-      unit: 'celsius'
-    }
+      unit: 'celsius',
+    },
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -87,22 +101,26 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     try {
       setIsLoading(true)
       await gpsService.initialize()
-      
+
       // Get current location
       const location = await gpsService.getCurrentLocation()
       setCurrentLocation(location)
-      
+
       // Load existing conservation points for search
       const points = gpsService.getConservationPoints()
       const searchResults: SearchResult[] = points.map(point => ({
         name: point.name,
         latitude: point.latitude,
         longitude: point.longitude,
-        type: 'conservation_point'
+        type: 'conservation_point',
       }))
       setSearchResults(searchResults)
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to initialize location services')
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to initialize location services'
+      )
     } finally {
       setIsLoading(false)
     }
@@ -113,13 +131,13 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       setIsLoading(true)
       const location = await gpsService.getCurrentLocation()
       setCurrentLocation(location)
-      
+
       const locationData = {
         latitude: location.latitude,
         longitude: location.longitude,
-        name: 'Current Location'
+        name: 'Current Location',
       }
-      
+
       setSelectedLocationState(locationData)
       onLocationSelect?.(locationData)
     } catch (error) {
@@ -131,7 +149,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
-    
+
     if (!query.trim()) {
       setSearchResults([])
       return
@@ -140,15 +158,16 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     // Search in conservation points
     const points = gpsService.getConservationPoints()
     const filtered = points
-      .filter(point => 
-        point.name.toLowerCase().includes(query.toLowerCase()) ||
-        point.id.toLowerCase().includes(query.toLowerCase())
+      .filter(
+        point =>
+          point.name.toLowerCase().includes(query.toLowerCase()) ||
+          point.id.toLowerCase().includes(query.toLowerCase())
       )
       .map(point => ({
         name: point.name,
         latitude: point.latitude,
         longitude: point.longitude,
-        type: 'conservation_point' as const
+        type: 'conservation_point' as const,
       }))
 
     setSearchResults(filtered)
@@ -158,9 +177,9 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     const locationData = {
       latitude: result.latitude,
       longitude: result.longitude,
-      name: result.name
+      name: result.name,
     }
-    
+
     setSelectedLocationState(locationData)
     onLocationSelect?.(locationData)
     setSearchQuery('')
@@ -170,12 +189,12 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const handleManualCoordinatesSubmit = () => {
     const lat = parseFloat(manualCoordinates.latitude)
     const lng = parseFloat(manualCoordinates.longitude)
-    
+
     if (isNaN(lat) || isNaN(lng)) {
       setError('Invalid coordinates')
       return
     }
-    
+
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
       setError('Coordinates out of range')
       return
@@ -184,9 +203,9 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     const locationData = {
       latitude: lat,
       longitude: lng,
-      name: `Manual: ${lat.toFixed(6)}, ${lng.toFixed(6)}`
+      name: `Manual: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
     }
-    
+
     setSelectedLocationState(locationData)
     onLocationSelect?.(locationData)
     setError(null)
@@ -205,11 +224,11 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       radius: newConservationPoint.radius || 25,
       type: newConservationPoint.type || 'storage',
       status: newConservationPoint.status || 'active',
-      criticalTemperature: newConservationPoint.criticalTemperature
+      criticalTemperature: newConservationPoint.criticalTemperature,
     }
 
     onConservationPointCreate?.(point)
-    
+
     // Reset form
     setNewConservationPoint({
       name: '',
@@ -219,8 +238,8 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       criticalTemperature: {
         min: 0,
         max: 4,
-        unit: 'celsius'
-      }
+        unit: 'celsius',
+      },
     })
     setSelectedLocationState(null)
     setError(null)
@@ -240,8 +259,11 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
-            {mode === 'create' ? 'Create Conservation Point' : 
-             mode === 'edit' ? 'Edit Location' : 'Select Location'}
+            {mode === 'create'
+              ? 'Create Conservation Point'
+              : mode === 'edit'
+                ? 'Edit Location'
+                : 'Select Location'}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -260,7 +282,10 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-green-800">
-                      {formatCoordinates(currentLocation.latitude, currentLocation.longitude)}
+                      {formatCoordinates(
+                        currentLocation.latitude,
+                        currentLocation.longitude
+                      )}
                     </p>
                     <p className="text-sm text-green-600">
                       Accuracy: {getLocationAccuracy(currentLocation)}
@@ -305,11 +330,11 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
               <Input
                 placeholder="Search by name or ID..."
                 value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
+                onChange={e => handleSearch(e.target.value)}
                 className="pl-10"
               />
             </div>
-            
+
             {searchResults.length > 0 && (
               <div className="space-y-1 max-h-40 overflow-y-auto">
                 {searchResults.map((result, index) => (
@@ -340,21 +365,35 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
             <Label>Manual Coordinates</Label>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label htmlFor="latitude" className="text-xs">Latitude</Label>
+                <Label htmlFor="latitude" className="text-xs">
+                  Latitude
+                </Label>
                 <Input
                   id="latitude"
                   placeholder="45.4642"
                   value={manualCoordinates.latitude}
-                  onChange={(e) => setManualCoordinates(prev => ({ ...prev, latitude: e.target.value }))}
+                  onChange={e =>
+                    setManualCoordinates(prev => ({
+                      ...prev,
+                      latitude: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div>
-                <Label htmlFor="longitude" className="text-xs">Longitude</Label>
+                <Label htmlFor="longitude" className="text-xs">
+                  Longitude
+                </Label>
                 <Input
                   id="longitude"
                   placeholder="9.1900"
                   value={manualCoordinates.longitude}
-                  onChange={(e) => setManualCoordinates(prev => ({ ...prev, longitude: e.target.value }))}
+                  onChange={e =>
+                    setManualCoordinates(prev => ({
+                      ...prev,
+                      longitude: e.target.value,
+                    }))
+                  }
                 />
               </div>
             </div>
@@ -362,7 +401,9 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
               onClick={handleManualCoordinatesSubmit}
               variant="outline"
               className="w-full"
-              disabled={!manualCoordinates.latitude || !manualCoordinates.longitude}
+              disabled={
+                !manualCoordinates.latitude || !manualCoordinates.longitude
+              }
             >
               <Target className="h-4 w-4 mr-2" />
               Use Manual Coordinates
@@ -374,14 +415,19 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
             <div className="p-3 bg-blue-50 rounded-md">
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle className="h-4 w-4 text-blue-600" />
-                <span className="font-medium text-blue-800">Selected Location</span>
+                <span className="font-medium text-blue-800">
+                  Selected Location
+                </span>
               </div>
               <div className="space-y-1">
                 {selectedLocationState.name && (
                   <p className="font-medium">{selectedLocationState.name}</p>
                 )}
                 <p className="text-sm text-blue-600">
-                  {formatCoordinates(selectedLocationState.latitude, selectedLocationState.longitude)}
+                  {formatCoordinates(
+                    selectedLocationState.latitude,
+                    selectedLocationState.longitude
+                  )}
                 </p>
               </div>
             </div>
@@ -391,7 +437,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
           {mode === 'create' && selectedLocationState && (
             <div className="space-y-4 p-4 bg-gray-50 rounded-md">
               <h4 className="font-medium">Conservation Point Details</h4>
-              
+
               <div className="space-y-3">
                 <div>
                   <Label htmlFor="point-name">Name</Label>
@@ -399,7 +445,12 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                     id="point-name"
                     placeholder="e.g., Main Refrigeration Unit"
                     value={newConservationPoint.name || ''}
-                    onChange={(e) => setNewConservationPoint(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={e =>
+                      setNewConservationPoint(prev => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
                   />
                 </div>
 
@@ -409,10 +460,13 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                     id="point-type"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={newConservationPoint.type || 'storage'}
-                    onChange={(e) => setNewConservationPoint(prev => ({ 
-                      ...prev, 
-                      type: e.target.value as ConservationPointLocation['type'] 
-                    }))}
+                    onChange={e =>
+                      setNewConservationPoint(prev => ({
+                        ...prev,
+                        type: e.target
+                          .value as ConservationPointLocation['type'],
+                      }))
+                    }
                   >
                     <option value="refrigeration">Refrigeration</option>
                     <option value="freezer">Freezer</option>
@@ -430,10 +484,12 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                     min="5"
                     max="100"
                     value={newConservationPoint.radius || 25}
-                    onChange={(e) => setNewConservationPoint(prev => ({ 
-                      ...prev, 
-                      radius: parseInt(e.target.value) || 25 
-                    }))}
+                    onChange={e =>
+                      setNewConservationPoint(prev => ({
+                        ...prev,
+                        radius: parseInt(e.target.value) || 25,
+                      }))
+                    }
                   />
                 </div>
 
@@ -444,16 +500,20 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                       id="temp-min"
                       type="number"
                       placeholder="0"
-                      value={newConservationPoint.criticalTemperature?.min || ''}
-                      onChange={(e) => setNewConservationPoint(prev => ({ 
-                        ...prev, 
-                        criticalTemperature: {
-                          ...prev.criticalTemperature,
-                          min: parseFloat(e.target.value) || 0,
-                          max: prev.criticalTemperature?.max || 4,
-                          unit: prev.criticalTemperature?.unit || 'celsius'
-                        }
-                      }))}
+                      value={
+                        newConservationPoint.criticalTemperature?.min || ''
+                      }
+                      onChange={e =>
+                        setNewConservationPoint(prev => ({
+                          ...prev,
+                          criticalTemperature: {
+                            ...prev.criticalTemperature,
+                            min: parseFloat(e.target.value) || 0,
+                            max: prev.criticalTemperature?.max || 4,
+                            unit: prev.criticalTemperature?.unit || 'celsius',
+                          },
+                        }))
+                      }
                     />
                   </div>
                   <div>
@@ -462,16 +522,20 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                       id="temp-max"
                       type="number"
                       placeholder="4"
-                      value={newConservationPoint.criticalTemperature?.max || ''}
-                      onChange={(e) => setNewConservationPoint(prev => ({ 
-                        ...prev, 
-                        criticalTemperature: {
-                          ...prev.criticalTemperature,
-                          min: prev.criticalTemperature?.min || 0,
-                          max: parseFloat(e.target.value) || 4,
-                          unit: prev.criticalTemperature?.unit || 'celsius'
-                        }
-                      }))}
+                      value={
+                        newConservationPoint.criticalTemperature?.max || ''
+                      }
+                      onChange={e =>
+                        setNewConservationPoint(prev => ({
+                          ...prev,
+                          criticalTemperature: {
+                            ...prev.criticalTemperature,
+                            min: prev.criticalTemperature?.min || 0,
+                            max: parseFloat(e.target.value) || 4,
+                            unit: prev.criticalTemperature?.unit || 'celsius',
+                          },
+                        }))
+                      }
                     />
                   </div>
                 </div>

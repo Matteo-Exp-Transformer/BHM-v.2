@@ -70,7 +70,7 @@ export class PhotoProcessor {
   private initializeCanvas(): void {
     this.canvas = document.createElement('canvas')
     this.ctx = this.canvas.getContext('2d')
-    
+
     if (!this.ctx) {
       throw new Error('Canvas context not available')
     }
@@ -85,14 +85,14 @@ export class PhotoProcessor {
   ): Promise<string> {
     return new Promise((resolve, reject) => {
       const img = new Image()
-      
+
       img.onload = () => {
         try {
           const {
             maxWidth = 1920,
             maxHeight = 1080,
             quality = 85,
-            format = 'jpeg'
+            format = 'jpeg',
           } = options
 
           // Calculate new dimensions maintaining aspect ratio
@@ -109,10 +109,13 @@ export class PhotoProcessor {
 
           // Draw and compress
           this.ctx!.drawImage(img, 0, 0, width, height)
-          
+
           const mimeType = `image/${format}`
-          const compressedDataUrl = this.canvas!.toDataURL(mimeType, quality / 100)
-          
+          const compressedDataUrl = this.canvas!.toDataURL(
+            mimeType,
+            quality / 100
+          )
+
           resolve(compressedDataUrl)
         } catch (error) {
           reject(error)
@@ -133,7 +136,7 @@ export class PhotoProcessor {
   ): Promise<string> {
     return new Promise((resolve, reject) => {
       const img = new Image()
-      
+
       img.onload = () => {
         try {
           this.canvas!.width = img.width
@@ -142,9 +145,9 @@ export class PhotoProcessor {
           // Apply filters using CSS filters
           const filterString = this.buildFilterString(filters)
           this.ctx!.filter = filterString
-          
+
           this.ctx!.drawImage(img, 0, 0)
-          
+
           const filteredDataUrl = this.canvas!.toDataURL('image/jpeg', 0.9)
           resolve(filteredDataUrl)
         } catch (error) {
@@ -166,7 +169,7 @@ export class PhotoProcessor {
   ): Promise<string> {
     return new Promise((resolve, reject) => {
       const img = new Image()
-      
+
       img.onload = () => {
         try {
           this.canvas!.width = img.width
@@ -179,7 +182,7 @@ export class PhotoProcessor {
           annotations.forEach(annotation => {
             this.drawAnnotation(annotation, img.width, img.height)
           })
-          
+
           const annotatedDataUrl = this.canvas!.toDataURL('image/jpeg', 0.9)
           resolve(annotatedDataUrl)
         } catch (error) {
@@ -209,23 +212,33 @@ export class PhotoProcessor {
 
       // Apply compression
       if (options.compression) {
-        processedDataUrl = await this.compressPhoto(processedDataUrl, options.compression)
+        processedDataUrl = await this.compressPhoto(
+          processedDataUrl,
+          options.compression
+        )
       }
 
       // Apply filters
       if (options.filters) {
-        processedDataUrl = await this.applyFilters(processedDataUrl, options.filters)
+        processedDataUrl = await this.applyFilters(
+          processedDataUrl,
+          options.filters
+        )
       }
 
       // Add annotations
       if (options.annotations && options.annotations.length > 0) {
-        processedDataUrl = await this.addAnnotations(processedDataUrl, options.annotations)
+        processedDataUrl = await this.addAnnotations(
+          processedDataUrl,
+          options.annotations
+        )
       }
 
       // Calculate file sizes
       const originalSize = this.calculateDataUrlSize(originalDataUrl)
       const processedSize = this.calculateDataUrlSize(processedDataUrl)
-      const compressionRatio = originalSize > 0 ? processedSize / originalSize : 1
+      const compressionRatio =
+        originalSize > 0 ? processedSize / originalSize : 1
 
       return {
         id: `processed_${metadata.id}`,
@@ -236,8 +249,8 @@ export class PhotoProcessor {
         fileSize: {
           original: originalSize,
           processed: processedSize,
-          compressionRatio
-        }
+          compressionRatio,
+        },
       }
     } catch (error) {
       console.error('❌ Photo processing failed:', error)
@@ -316,7 +329,7 @@ export class PhotoProcessor {
       fontSize = 16,
       color = '#ffffff',
       backgroundColor = '#000000',
-      opacity = 0.8
+      opacity = 0.8,
     } = annotation
 
     // Set font
@@ -327,8 +340,8 @@ export class PhotoProcessor {
     // Draw background rectangle
     const textMetrics = this.ctx!.measureText(annotation.text)
     const padding = 8
-    const rectWidth = textMetrics.width + (padding * 2)
-    const rectHeight = fontSize + (padding * 2)
+    const rectWidth = textMetrics.width + padding * 2
+    const rectHeight = fontSize + padding * 2
 
     this.ctx!.fillStyle = backgroundColor
     this.ctx!.fillRect(
@@ -361,7 +374,9 @@ export class PhotoProcessor {
   /**
    * Generate HACCP-specific annotations
    */
-  public generateHACCPAnnotations(metadata: PhotoMetadata): AnnotationOptions[] {
+  public generateHACCPAnnotations(
+    metadata: PhotoMetadata
+  ): AnnotationOptions[] {
     const annotations: AnnotationOptions[] = []
 
     // Add timestamp
@@ -371,7 +386,7 @@ export class PhotoProcessor {
       fontSize: 14,
       color: '#ffffff',
       backgroundColor: '#000000',
-      opacity: 0.8
+      opacity: 0.8,
     })
 
     // Add HACCP context if available
@@ -383,7 +398,7 @@ export class PhotoProcessor {
           fontSize: 12,
           color: '#ffffff',
           backgroundColor: '#0066cc',
-          opacity: 0.8
+          opacity: 0.8,
         })
       }
 
@@ -394,7 +409,7 @@ export class PhotoProcessor {
           fontSize: 12,
           color: '#ffffff',
           backgroundColor: '#009900',
-          opacity: 0.8
+          opacity: 0.8,
         })
       }
 
@@ -405,7 +420,7 @@ export class PhotoProcessor {
           fontSize: 12,
           color: '#ffffff',
           backgroundColor: '#cc6600',
-          opacity: 0.8
+          opacity: 0.8,
         })
       }
     }

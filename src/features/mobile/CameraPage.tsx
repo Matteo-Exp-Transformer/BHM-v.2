@@ -17,7 +17,9 @@ export const CameraPage: React.FC = () => {
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Mobile Camera</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Mobile Camera
+              </h1>
               <p className="text-gray-600 mt-1">
                 Advanced photo documentation for HACCP inspections
               </p>
@@ -48,7 +50,9 @@ export const CameraPage: React.FC = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-3">
-                <h3 className="font-semibold text-blue-700">📷 Photo Capture</h3>
+                <h3 className="font-semibold text-blue-700">
+                  📷 Photo Capture
+                </h3>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• Advanced camera controls</li>
                   <li>• Quality settings (60-95%)</li>
@@ -57,9 +61,11 @@ export const CameraPage: React.FC = () => {
                   <li>• Gallery integration</li>
                 </ul>
               </div>
-              
+
               <div className="space-y-3">
-                <h3 className="font-semibold text-green-700">🎨 Photo Processing</h3>
+                <h3 className="font-semibold text-green-700">
+                  🎨 Photo Processing
+                </h3>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• Image compression</li>
                   <li>• Filter effects</li>
@@ -68,9 +74,11 @@ export const CameraPage: React.FC = () => {
                   <li>• Undo/redo support</li>
                 </ul>
               </div>
-              
+
               <div className="space-y-3">
-                <h3 className="font-semibold text-purple-700">📱 Barcode Scanning</h3>
+                <h3 className="font-semibold text-purple-700">
+                  📱 Barcode Scanning
+                </h3>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• QR code recognition</li>
                   <li>• Barcode scanning</li>

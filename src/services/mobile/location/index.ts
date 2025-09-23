@@ -13,39 +13,35 @@ export { routeOptimizer, RouteOptimizer } from './RouteOptimizer'
 export { locationHistory, LocationHistory } from './LocationHistory'
 
 // Export types
-export type { 
-  LocationData, 
-  LocationOptions, 
-  LocationCapabilities, 
-  ConservationPointLocation 
+export type {
+  LocationData,
+  LocationOptions,
+  LocationCapabilities,
+  ConservationPointLocation,
 } from './GPSService'
 
-export type { 
-  Geofence, 
-  GeofenceEvent, 
-  GeofenceAlert 
-} from './GeofenceManager'
+export type { Geofence, GeofenceEvent, GeofenceAlert } from './GeofenceManager'
 
-export type { 
-  MapTile, 
-  MapRegion, 
-  CacheOptions, 
-  DownloadProgress 
+export type {
+  MapTile,
+  MapRegion,
+  CacheOptions,
+  DownloadProgress,
 } from './OfflineMapCache'
 
-export type { 
-  RoutePoint, 
-  Route, 
-  OptimizationOptions, 
-  OptimizationResult, 
-  RouteProgress 
+export type {
+  RoutePoint,
+  Route,
+  OptimizationOptions,
+  OptimizationResult,
+  RouteProgress,
 } from './RouteOptimizer'
 
-export type { 
-  LocationHistoryEntry, 
-  LocationHistoryFilter, 
-  LocationHistoryStats, 
-  LocationCluster 
+export type {
+  LocationHistoryEntry,
+  LocationHistoryFilter,
+  LocationHistoryStats,
+  LocationCluster,
 } from './LocationHistory'
 
 console.log('🗺️ Location services implemented - B.8.4 Session 3-4 COMPLETED')

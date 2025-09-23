@@ -4,16 +4,28 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { routeOptimizer, Route, RoutePoint, OptimizationOptions, RouteProgress } from '@/services/mobile/location'
+import {
+  routeOptimizer,
+  Route,
+  RoutePoint,
+  OptimizationOptions,
+  RouteProgress,
+} from '@/services/mobile/location'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { 
-  Route as RouteIcon, 
-  Navigation, 
-  Clock, 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Route as RouteIcon,
+  Navigation,
+  Clock,
   MapPin,
   Play,
   Pause,
@@ -24,7 +36,7 @@ import {
   AlertCircle,
   TrendingUp,
   Target,
-  Plus
+  Plus,
 } from 'lucide-react'
 
 interface RouteDisplayProps {
@@ -47,7 +59,7 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
   onRouteSelect,
   onRouteStart,
   onRouteComplete,
-  className = ''
+  className = '',
 }) => {
   const [routes, setRoutes] = useState<Route[]>([])
   const [activeRoutes, setActiveRoutes] = useState<RouteProgress[]>([])
@@ -58,14 +70,15 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
     completedRoutes: 0,
     averageEfficiency: 0,
     totalDistance: 0,
-    totalDuration: 0
+    totalDuration: 0,
   })
-  const [optimizationOptions, setOptimizationOptions] = useState<OptimizationOptions>({
-    algorithm: 'nearest_neighbor',
-    respectTimeWindows: true,
-    respectDependencies: true,
-    minimizeDistance: true
-  })
+  const [optimizationOptions, setOptimizationOptions] =
+    useState<OptimizationOptions>({
+      algorithm: 'nearest_neighbor',
+      respectTimeWindows: true,
+      respectDependencies: true,
+      minimizeDistance: true,
+    })
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -78,7 +91,7 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
     try {
       setIsLoading(true)
       await routeOptimizer.initialize()
-      
+
       // Load routes
       const loadedRoutes = routeOptimizer.getRoutes()
       setRoutes(loadedRoutes)
@@ -89,23 +102,38 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
 
       // Calculate stats
       calculateStats(loadedRoutes, loadedActiveRoutes)
-
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to initialize routes')
+      setError(
+        error instanceof Error ? error.message : 'Failed to initialize routes'
+      )
     } finally {
       setIsLoading(false)
     }
   }
 
-  const calculateStats = (routesList: Route[], activeRoutesList: RouteProgress[]) => {
+  const calculateStats = (
+    routesList: Route[],
+    activeRoutesList: RouteProgress[]
+  ) => {
     const totalRoutes = routesList.length
     const activeRoutes = activeRoutesList.length
-    const completedRoutes = routesList.filter(r => r.status === 'completed').length
-    
-    const totalDistance = routesList.reduce((sum, route) => sum + route.totalDistance, 0)
-    const totalDuration = routesList.reduce((sum, route) => sum + route.totalDuration, 0)
-    const averageEfficiency = routesList.length > 0 ? 
-      routesList.reduce((sum, route) => sum + route.efficiency, 0) / routesList.length : 0
+    const completedRoutes = routesList.filter(
+      r => r.status === 'completed'
+    ).length
+
+    const totalDistance = routesList.reduce(
+      (sum, route) => sum + route.totalDistance,
+      0
+    )
+    const totalDuration = routesList.reduce(
+      (sum, route) => sum + route.totalDuration,
+      0
+    )
+    const averageEfficiency =
+      routesList.length > 0
+        ? routesList.reduce((sum, route) => sum + route.efficiency, 0) /
+          routesList.length
+        : 0
 
     setStats({
       totalRoutes,
@@ -113,7 +141,7 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
       completedRoutes,
       averageEfficiency,
       totalDistance,
-      totalDuration
+      totalDuration,
     })
   }
 
@@ -125,10 +153,15 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
   const handleOptimizeRoute = async (route: Route) => {
     try {
       setIsOptimizing(true)
-      const result = await routeOptimizer.optimizeRoute(route.id, optimizationOptions)
-      
+      const result = await routeOptimizer.optimizeRoute(
+        route.id,
+        optimizationOptions
+      )
+
       if (result.success && result.route) {
-        setRoutes(prev => prev.map(r => r.id === route.id ? result.route! : r))
+        setRoutes(prev =>
+          prev.map(r => (r.id === route.id ? result.route! : r))
+        )
         setSelectedRoute(result.route)
         calculateStats(routes, activeRoutes)
       } else {
@@ -153,32 +186,47 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
     const success = routeOptimizer.completeRoute(routeId)
     if (success) {
       setActiveRoutes(prev => prev.filter(r => r.routeId !== routeId))
-      setRoutes(prev => prev.map(r => r.id === routeId ? { ...r, status: 'completed' } : r))
+      setRoutes(prev =>
+        prev.map(r => (r.id === routeId ? { ...r, status: 'completed' } : r))
+      )
       const route = routes.find(r => r.id === routeId)
       if (route) {
         onRouteComplete?.(route)
       }
-      calculateStats(routes, activeRoutes.filter(r => r.routeId !== routeId))
+      calculateStats(
+        routes,
+        activeRoutes.filter(r => r.routeId !== routeId)
+      )
     }
   }
 
   const getRouteStatusColor = (status: Route['status']) => {
     switch (status) {
-      case 'draft': return 'bg-gray-100 text-gray-800'
-      case 'active': return 'bg-blue-100 text-blue-800'
-      case 'completed': return 'bg-green-100 text-green-800'
-      case 'cancelled': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'draft':
+        return 'bg-gray-100 text-gray-800'
+      case 'active':
+        return 'bg-blue-100 text-blue-800'
+      case 'completed':
+        return 'bg-green-100 text-green-800'
+      case 'cancelled':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
     }
   }
 
   const getRoutePriorityColor = (priority: RoutePoint['priority']) => {
     switch (priority) {
-      case 'low': return 'bg-green-100 text-green-800'
-      case 'medium': return 'bg-yellow-100 text-yellow-800'
-      case 'high': return 'bg-orange-100 text-orange-800'
-      case 'critical': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'low':
+        return 'bg-green-100 text-green-800'
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'high':
+        return 'bg-orange-100 text-orange-800'
+      case 'critical':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
     }
   }
 
@@ -222,19 +270,27 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{stats.totalRoutes}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.totalRoutes}
+              </div>
               <div className="text-sm text-blue-700">Total Routes</div>
             </div>
             <div className="text-center p-3 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">{stats.activeRoutes}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.activeRoutes}
+              </div>
               <div className="text-sm text-green-700">Active</div>
             </div>
             <div className="text-center p-3 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">{stats.averageEfficiency.toFixed(1)}%</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {stats.averageEfficiency.toFixed(1)}%
+              </div>
               <div className="text-sm text-purple-700">Avg Efficiency</div>
             </div>
             <div className="text-center p-3 bg-orange-50 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">{formatDistance(stats.totalDistance)}</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {formatDistance(stats.totalDistance)}
+              </div>
               <div className="text-sm text-orange-700">Total Distance</div>
             </div>
           </div>
@@ -252,21 +308,29 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Algorithm</label>
+              <label className="block text-sm font-medium mb-2">
+                Algorithm
+              </label>
               <Select
                 value={optimizationOptions.algorithm}
-                onValueChange={(value) => setOptimizationOptions(prev => ({ 
-                  ...prev, 
-                  algorithm: value as OptimizationOptions['algorithm'] 
-                }))}
+                onValueChange={value =>
+                  setOptimizationOptions(prev => ({
+                    ...prev,
+                    algorithm: value as OptimizationOptions['algorithm'],
+                  }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="nearest_neighbor">Nearest Neighbor</SelectItem>
+                  <SelectItem value="nearest_neighbor">
+                    Nearest Neighbor
+                  </SelectItem>
                   <SelectItem value="genetic">Genetic Algorithm</SelectItem>
-                  <SelectItem value="simulated_annealing">Simulated Annealing</SelectItem>
+                  <SelectItem value="simulated_annealing">
+                    Simulated Annealing
+                  </SelectItem>
                   <SelectItem value="tsp_exact">Exact TSP</SelectItem>
                 </SelectContent>
               </Select>
@@ -277,10 +341,12 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
                 <input
                   type="checkbox"
                   checked={optimizationOptions.minimizeDistance || false}
-                  onChange={(e) => setOptimizationOptions(prev => ({ 
-                    ...prev, 
-                    minimizeDistance: e.target.checked 
-                  }))}
+                  onChange={e =>
+                    setOptimizationOptions(prev => ({
+                      ...prev,
+                      minimizeDistance: e.target.checked,
+                    }))
+                  }
                 />
                 <span className="text-sm">Minimize Distance</span>
               </label>
@@ -291,10 +357,12 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
                 <input
                   type="checkbox"
                   checked={optimizationOptions.respectTimeWindows || false}
-                  onChange={(e) => setOptimizationOptions(prev => ({ 
-                    ...prev, 
-                    respectTimeWindows: e.target.checked 
-                  }))}
+                  onChange={e =>
+                    setOptimizationOptions(prev => ({
+                      ...prev,
+                      respectTimeWindows: e.target.checked,
+                    }))
+                  }
                 />
                 <span className="text-sm">Time Windows</span>
               </label>
@@ -317,13 +385,15 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {routes.map((route) => {
+            {routes.map(route => {
               const progress = getRouteProgress(route.id)
               return (
                 <div
                   key={route.id}
                   className={`p-4 border rounded-lg transition-all ${
-                    selectedRoute?.id === route.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                    selectedRoute?.id === route.id
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
                   }`}
                   onClick={() => handleRouteSelect(route)}
                 >
@@ -332,19 +402,21 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
                       <RouteIcon className="h-5 w-5 text-blue-600" />
                       <div>
                         <h4 className="font-medium">{route.name}</h4>
-                        <p className="text-sm text-gray-600">{route.description}</p>
+                        <p className="text-sm text-gray-600">
+                          {route.description}
+                        </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <Badge className={getRouteStatusColor(route.status)}>
                         {route.status}
                       </Badge>
-                      
+
                       {route.status === 'draft' && (
                         <Button
                           size="sm"
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation()
                             handleOptimizeRoute(route)
                           }}
@@ -358,12 +430,12 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
                           Optimize
                         </Button>
                       )}
-                      
+
                       {route.status === 'active' && (
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation()
                             handleCompleteRoute(route.id)
                           }}
@@ -372,11 +444,11 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
                           Complete
                         </Button>
                       )}
-                      
+
                       {route.status === 'draft' && !progress && (
                         <Button
                           size="sm"
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation()
                             handleStartRoute(route)
                           }}
@@ -433,8 +505,8 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
                     <div className="flex flex-wrap gap-2">
                       {route.optimizedOrder.slice(0, 5).map((point, index) => (
                         <div key={point.id} className="flex items-center gap-1">
-                          <Badge 
-                            variant="outline" 
+                          <Badge
+                            variant="outline"
                             className={`text-xs ${getRoutePriorityColor(point.priority)}`}
                           >
                             {index + 1}. {point.name}
@@ -474,15 +546,21 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Distance</p>
-                  <p className="font-medium">{formatDistance(selectedRoute.totalDistance)}</p>
+                  <p className="font-medium">
+                    {formatDistance(selectedRoute.totalDistance)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Duration</p>
-                  <p className="font-medium">{formatDuration(selectedRoute.totalDuration)}</p>
+                  <p className="font-medium">
+                    {formatDuration(selectedRoute.totalDuration)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Efficiency</p>
-                  <p className="font-medium">{selectedRoute.efficiency.toFixed(1)}%</p>
+                  <p className="font-medium">
+                    {selectedRoute.efficiency.toFixed(1)}%
+                  </p>
                 </div>
               </div>
 
@@ -491,23 +569,30 @@ export const RouteDisplay: React.FC<RouteDisplayProps> = ({
                 <h5 className="font-medium mb-3">Route Points</h5>
                 <div className="space-y-2">
                   {selectedRoute.optimizedOrder.map((point, index) => (
-                    <div key={point.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
+                    <div
+                      key={point.id}
+                      className="flex items-center gap-3 p-2 bg-gray-50 rounded"
+                    >
                       <div className="flex items-center justify-center w-6 h-6 bg-blue-600 text-white rounded-full text-xs font-bold">
                         {index + 1}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{point.name}</span>
-                          <Badge className={getRoutePriorityColor(point.priority)}>
+                          <Badge
+                            className={getRoutePriorityColor(point.priority)}
+                          >
                             {point.priority}
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-600">
-                          {point.type} • {formatDuration(point.estimatedDuration)}
+                          {point.type} •{' '}
+                          {formatDuration(point.estimatedDuration)}
                         </p>
                       </div>
                       <div className="text-sm text-gray-500">
-                        {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
+                        {point.latitude.toFixed(4)},{' '}
+                        {point.longitude.toFixed(4)}
                       </div>
                     </div>
                   ))}

@@ -4,20 +4,23 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react'
-import { barcodeScanner, ScanResult, ProductInfo } from '@/services/mobile/camera'
+import {
+  barcodeScanner,
+  ScanResult,
+  ProductInfo,
+} from '@/services/mobile/camera'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  QrCode, 
-  Package, 
-  Search, 
-  CheckCircle, 
-  AlertCircle,
+import {
+  QrCode,
+  Package,
+  Search,
+  CheckCircle,
   Camera,
   RefreshCw,
-  Info
+  Info,
 } from 'lucide-react'
 
 interface BarcodeScannerProps {
@@ -31,7 +34,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   onScanComplete,
   onProductFound,
   onError,
-  className = ''
+  className = '',
 }) => {
   const [isScanning, setIsScanning] = useState(false)
   const [lastScanResult, setLastScanResult] = useState<ScanResult | null>(null)
@@ -51,14 +54,16 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
     setScanHistory(history)
   }
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0]
     if (!file) return
 
     setIsScanning(true)
     try {
       const dataUrl = await fileToDataUrl(file)
-      
+
       // Create mock metadata for scanning
       const mockMetadata = {
         id: `scan_${Date.now()}`,
@@ -66,17 +71,17 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
         deviceInfo: {
           platform: 'web',
           model: 'browser',
-          osVersion: 'unknown'
+          osVersion: 'unknown',
         },
         cameraSettings: {
           quality: 85,
           resolution: { width: 1920, height: 1080 },
-          flashUsed: false
-        }
+          flashUsed: false,
+        },
       }
 
       const results = await barcodeScanner.scanAll(dataUrl, mockMetadata)
-      
+
       if (results.length > 0) {
         const result = results[0]
         setLastScanResult(result)
@@ -84,7 +89,9 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
 
         // Check if product exists in database
         if (result.haccpContext?.productId) {
-          const product = barcodeScanner.getProductInfo(result.haccpContext.productId)
+          const product = barcodeScanner.getProductInfo(
+            result.haccpContext.productId
+          )
           if (product) {
             setFoundProduct(product)
             onProductFound?.(product)
@@ -114,7 +121,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
         topLeftCorner: { x: 0, y: 0 },
         topRightCorner: { x: 100, y: 0 },
         bottomLeftCorner: { x: 0, y: 100 },
-        bottomRightCorner: { x: 100, y: 100 }
+        bottomRightCorner: { x: 100, y: 100 },
       },
       metadata: {
         id: `manual_${Date.now()}`,
@@ -122,14 +129,14 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
         deviceInfo: {
           platform: 'web',
           model: 'browser',
-          osVersion: 'unknown'
+          osVersion: 'unknown',
         },
         cameraSettings: {
           quality: 85,
           resolution: { width: 1920, height: 1080 },
-          flashUsed: false
-        }
-      }
+          flashUsed: false,
+        },
+      },
     }
 
     setLastScanResult(mockResult)
@@ -257,7 +264,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
                 <input
                   type="text"
                   value={manualCode}
-                  onChange={(e) => setManualCode(e.target.value)}
+                  onChange={e => setManualCode(e.target.value)}
                   placeholder="Enter product code manually..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -296,7 +303,9 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
             </div>
 
             <div className="bg-gray-50 p-3 rounded-md">
-              <p className="text-sm font-mono break-all">{lastScanResult.data}</p>
+              <p className="text-sm font-mono break-all">
+                {lastScanResult.data}
+              </p>
             </div>
 
             <div className="text-xs text-gray-500">
@@ -339,7 +348,9 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
               {foundProduct.expirationDate && (
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Expires:</span>
-                  <span>{foundProduct.expirationDate.toLocaleDateString()}</span>
+                  <span>
+                    {foundProduct.expirationDate.toLocaleDateString()}
+                  </span>
                 </div>
               )}
             </div>
@@ -348,7 +359,14 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  Temperature: {foundProduct.temperatureRequirements.min}°{foundProduct.temperatureRequirements.unit === 'celsius' ? 'C' : 'F'} - {foundProduct.temperatureRequirements.max}°{foundProduct.temperatureRequirements.unit === 'celsius' ? 'C' : 'F'}
+                  Temperature: {foundProduct.temperatureRequirements.min}°
+                  {foundProduct.temperatureRequirements.unit === 'celsius'
+                    ? 'C'
+                    : 'F'}{' '}
+                  - {foundProduct.temperatureRequirements.max}°
+                  {foundProduct.temperatureRequirements.unit === 'celsius'
+                    ? 'C'
+                    : 'F'}
                 </AlertDescription>
               </Alert>
             )}
@@ -373,28 +391,32 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
           <CardHeader>
             <CardTitle className="text-sm flex items-center justify-between">
               <span>Recent Scans ({scanHistory.length})</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={loadScanHistory}
-              >
+              <Button variant="ghost" size="sm" onClick={loadScanHistory}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-40 overflow-y-auto">
-              {scanHistory.slice(-5).reverse().map((scan, index) => (
-                <div key={scan.id} className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
-                  <div className="flex items-center gap-2">
-                    {getFormatIcon(scan.format)}
-                    <span className="font-mono truncate max-w-32">{scan.data}</span>
+              {scanHistory
+                .slice(-5)
+                .reverse()
+                .map((scan, index) => (
+                  <div
+                    key={scan.id}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      {getFormatIcon(scan.format)}
+                      <span className="font-mono truncate max-w-32">
+                        {scan.data}
+                      </span>
+                    </div>
+                    <span className="text-gray-500 text-xs">
+                      {scan.timestamp.toLocaleTimeString()}
+                    </span>
                   </div>
-                  <span className="text-gray-500 text-xs">
-                    {scan.timestamp.toLocaleTimeString()}
-                  </span>
-                </div>
-              ))}
+                ))}
             </div>
           </CardContent>
         </Card>

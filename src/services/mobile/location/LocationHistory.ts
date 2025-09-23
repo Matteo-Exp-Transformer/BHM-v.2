@@ -178,8 +178,8 @@ export class LocationHistory {
       metadata: {
         deviceInfo: locationData.deviceInfo,
         appState: additionalData?.appState || 'foreground',
-        networkType: additionalData?.networkType
-      }
+        networkType: additionalData?.networkType,
+      },
     }
 
     this.entries.push(entry)
@@ -204,40 +204,51 @@ export class LocationHistory {
 
     if (filter) {
       if (filter.dateRange) {
-        filteredEntries = filteredEntries.filter(entry => 
-          entry.timestamp >= filter.dateRange!.start && 
-          entry.timestamp <= filter.dateRange!.end
+        filteredEntries = filteredEntries.filter(
+          entry =>
+            entry.timestamp >= filter.dateRange!.start &&
+            entry.timestamp <= filter.dateRange!.end
         )
       }
 
       if (filter.haccpContext) {
         filteredEntries = filteredEntries.filter(entry => {
           if (!entry.haccpContext || !filter.haccpContext) return false
-          
+
           return Object.keys(filter.haccpContext).every(key => {
             const contextKey = key as keyof LocationHistoryEntry['haccpContext']
-            return entry.haccpContext?.[contextKey] === filter.haccpContext![contextKey]
+            return (
+              entry.haccpContext?.[contextKey] ===
+              filter.haccpContext![contextKey]
+            )
           })
         })
       }
 
       if (filter.activity) {
-        filteredEntries = filteredEntries.filter(entry => entry.activity === filter.activity)
+        filteredEntries = filteredEntries.filter(
+          entry => entry.activity === filter.activity
+        )
       }
 
       if (filter.accuracy) {
-        filteredEntries = filteredEntries.filter(entry => 
-          entry.accuracy >= filter.accuracy!.min && 
-          entry.accuracy <= filter.accuracy!.max
+        filteredEntries = filteredEntries.filter(
+          entry =>
+            entry.accuracy >= filter.accuracy!.min &&
+            entry.accuracy <= filter.accuracy!.max
         )
       }
 
       if (filter.source) {
-        filteredEntries = filteredEntries.filter(entry => entry.source === filter.source)
+        filteredEntries = filteredEntries.filter(
+          entry => entry.source === filter.source
+        )
       }
     }
 
-    return filteredEntries.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+    return filteredEntries.sort(
+      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+    )
   }
 
   /**
@@ -245,7 +256,7 @@ export class LocationHistory {
    */
   public getStats(filter?: LocationHistoryFilter): LocationHistoryStats {
     const entries = this.getHistory(filter)
-    
+
     let totalDistance = 0
     let totalDuration = 0
     const entriesByDay: Record<string, number> = {}
@@ -261,7 +272,7 @@ export class LocationHistory {
 
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i]
-      
+
       // Calculate distance
       if (i > 0) {
         const distance = this.calculateDistance(
@@ -314,13 +325,21 @@ export class LocationHistory {
 
     // Calculate total duration
     if (entries.length > 1) {
-      totalDuration = (entries[0].timestamp.getTime() - entries[entries.length - 1].timestamp.getTime()) / (1000 * 60)
+      totalDuration =
+        (entries[0].timestamp.getTime() -
+          entries[entries.length - 1].timestamp.getTime()) /
+        (1000 * 60)
     }
 
     // Calculate compliance score
-    const totalHaccpEntries = inspectionEntries + travelEntries + emergencyEntries
-    const complianceScore = totalHaccpEntries > 0 ? 
-      ((inspectionEntries * 2 + travelEntries + emergencyEntries * 3) / (totalHaccpEntries * 3)) * 100 : 0
+    const totalHaccpEntries =
+      inspectionEntries + travelEntries + emergencyEntries
+    const complianceScore =
+      totalHaccpEntries > 0
+        ? ((inspectionEntries * 2 + travelEntries + emergencyEntries * 3) /
+            (totalHaccpEntries * 3)) *
+          100
+        : 0
 
     return {
       totalEntries: entries.length,
@@ -331,16 +350,20 @@ export class LocationHistory {
       entriesBySource,
       averageAccuracy: entries.length > 0 ? totalAccuracy / entries.length : 0,
       batteryUsage: {
-        totalDrain: batteryLevelCount > 0 ? (100 - (totalBatteryLevel / batteryLevelCount)) : 0,
-        averageLevel: batteryLevelCount > 0 ? totalBatteryLevel / batteryLevelCount : 0,
-        lowBatteryEvents
+        totalDrain:
+          batteryLevelCount > 0
+            ? 100 - totalBatteryLevel / batteryLevelCount
+            : 0,
+        averageLevel:
+          batteryLevelCount > 0 ? totalBatteryLevel / batteryLevelCount : 0,
+        lowBatteryEvents,
       },
       haccpCompliance: {
         inspectionEntries,
         travelEntries,
         emergencyEntries,
-        complianceScore: Math.round(complianceScore)
-      }
+        complianceScore: Math.round(complianceScore),
+      },
     }
   }
 
@@ -361,7 +384,7 @@ export class LocationHistory {
         id: this.generateClusterId(),
         center: {
           latitude: entry.latitude,
-          longitude: entry.longitude
+          longitude: entry.longitude,
         },
         radius: 0,
         entryCount: 1,
@@ -369,7 +392,7 @@ export class LocationHistory {
         firstEntry: entry.timestamp,
         lastEntry: entry.timestamp,
         dominantActivity: entry.activity || 'unknown',
-        haccpContext: entry.haccpContext
+        haccpContext: entry.haccpContext,
       }
 
       processedEntries.add(entry.id)
@@ -387,9 +410,11 @@ export class LocationHistory {
 
         if (distance <= maxDistance) {
           cluster.entryCount++
-          cluster.center.latitude = (cluster.center.latitude + otherEntry.latitude) / 2
-          cluster.center.longitude = (cluster.center.longitude + otherEntry.longitude) / 2
-          
+          cluster.center.latitude =
+            (cluster.center.latitude + otherEntry.latitude) / 2
+          cluster.center.longitude =
+            (cluster.center.longitude + otherEntry.longitude) / 2
+
           if (otherEntry.timestamp < cluster.firstEntry) {
             cluster.firstEntry = otherEntry.timestamp
           }
@@ -403,7 +428,9 @@ export class LocationHistory {
 
       // Calculate cluster properties
       if (cluster.entryCount >= minEntries) {
-        cluster.timeSpent = (cluster.lastEntry.getTime() - cluster.firstEntry.getTime()) / (1000 * 60)
+        cluster.timeSpent =
+          (cluster.lastEntry.getTime() - cluster.firstEntry.getTime()) /
+          (1000 * 60)
         clusters.push(cluster)
       }
     }
@@ -433,11 +460,15 @@ export class LocationHistory {
     if (format === 'csv') {
       return this.exportToCSV()
     } else {
-      return JSON.stringify({
-        entries: this.entries,
-        exportedAt: new Date(),
-        totalEntries: this.entries.length
-      }, null, 2)
+      return JSON.stringify(
+        {
+          entries: this.entries,
+          exportedAt: new Date(),
+          totalEntries: this.entries.length,
+        },
+        null,
+        2
+      )
     }
   }
 
@@ -448,7 +479,7 @@ export class LocationHistory {
     try {
       const parsed = JSON.parse(data)
       const importedEntries = parsed.entries || []
-      
+
       let importedCount = 0
       for (const entry of importedEntries) {
         if (this.validateEntry(entry)) {
@@ -480,7 +511,8 @@ export class LocationHistory {
       locationData.longitude
     )
 
-    const timeDiff = locationData.timestamp.getTime() - this.lastEntry.timestamp.getTime()
+    const timeDiff =
+      locationData.timestamp.getTime() - this.lastEntry.timestamp.getTime()
 
     if (distance < 5 && timeDiff < 30000) {
       return true
@@ -497,7 +529,9 @@ export class LocationHistory {
   /**
    * Detect activity based on location data
    */
-  private detectActivity(locationData: LocationData): LocationHistoryEntry['activity'] {
+  private detectActivity(
+    locationData: LocationData
+  ): LocationHistoryEntry['activity'] {
     if (!this.lastEntry) return 'unknown'
 
     const distance = this.calculateDistance(
@@ -507,13 +541,14 @@ export class LocationHistory {
       locationData.longitude
     )
 
-    const timeDiff = locationData.timestamp.getTime() - this.lastEntry.timestamp.getTime()
+    const timeDiff =
+      locationData.timestamp.getTime() - this.lastEntry.timestamp.getTime()
     const speed = distance / (timeDiff / 1000) // meters per second
 
     if (speed < 0.5) return 'stationary'
     if (speed < 2) return 'walking'
     if (speed < 15) return 'driving'
-    
+
     return 'unknown'
   }
 
@@ -525,16 +560,19 @@ export class LocationHistory {
 
     // Keep only the most recent 80% of entries
     const keepCount = Math.floor(this.maxEntries * 0.8)
-    const entriesToRemove = this.entries.slice(0, this.entries.length - keepCount)
-    
+    const entriesToRemove = this.entries.slice(
+      0,
+      this.entries.length - keepCount
+    )
+
     // Remove from memory
     this.entries = this.entries.slice(-keepCount)
-    
+
     // Remove from IndexedDB
     if (this.db) {
       const transaction = this.db.transaction(['entries'], 'readwrite')
       const store = transaction.objectStore('entries')
-      
+
       for (const entry of entriesToRemove) {
         await store.delete(entry.id)
       }
@@ -546,17 +584,22 @@ export class LocationHistory {
   /**
    * Calculate distance between two points
    */
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number {
     const R = 6371e3 // Earth's radius in meters
-    const φ1 = lat1 * Math.PI / 180
-    const φ2 = lat2 * Math.PI / 180
-    const Δφ = (lat2 - lat1) * Math.PI / 180
-    const Δλ = (lon2 - lon1) * Math.PI / 180
+    const φ1 = (lat1 * Math.PI) / 180
+    const φ2 = (lat2 * Math.PI) / 180
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180
 
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 
     return R * c // Distance in meters
   }
@@ -583,7 +626,7 @@ export class LocationHistory {
       'model',
       'osVersion',
       'appState',
-      'networkType'
+      'networkType',
     ]
 
     const rows = this.entries.map(entry => [
@@ -604,7 +647,7 @@ export class LocationHistory {
       entry.metadata.deviceInfo.model,
       entry.metadata.deviceInfo.osVersion,
       entry.metadata.appState,
-      entry.metadata.networkType || ''
+      entry.metadata.networkType || '',
     ])
 
     return [headers, ...rows].map(row => row.join(',')).join('\n')
@@ -637,13 +680,17 @@ export class LocationHistory {
         resolve()
       }
 
-      request.onupgradeneeded = (event) => {
+      request.onupgradeneeded = event => {
         const db = (event.target as IDBOpenDBRequest).result
 
         if (!db.objectStoreNames.contains('entries')) {
           const store = db.createObjectStore('entries', { keyPath: 'id' })
           store.createIndex('timestamp', 'timestamp', { unique: false })
-          store.createIndex('haccpContext', 'haccpContext.conservationPointId', { unique: false })
+          store.createIndex(
+            'haccpContext',
+            'haccpContext.conservationPointId',
+            { unique: false }
+          )
           store.createIndex('activity', 'activity', { unique: false })
         }
       }
@@ -660,11 +707,11 @@ export class LocationHistory {
     const store = transaction.objectStore('entries')
     const index = store.index('timestamp')
     const request = index.openCursor(null, 'prev')
-    
+
     const entries: LocationHistoryEntry[] = []
-    
+
     return new Promise((resolve, reject) => {
-      request.onsuccess = (event) => {
+      request.onsuccess = event => {
         const cursor = (event.target as IDBRequest).result
         if (cursor && entries.length < this.maxEntries) {
           entries.push(cursor.value)

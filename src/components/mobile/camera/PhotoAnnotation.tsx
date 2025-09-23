@@ -10,17 +10,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
-import { 
-  Type, 
-  Circle, 
-  Square, 
-  ArrowRight, 
-  X, 
-  Save, 
-  Undo, 
+import {
+  Type,
+  Circle,
+  Square,
+  ArrowRight,
+  X,
+  Save,
+  Undo,
   Redo,
   Palette,
-  Move
+  Move,
 } from 'lucide-react'
 
 interface PhotoAnnotationProps {
@@ -49,16 +49,18 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
   photoDataUrl,
   onAnnotationComplete,
   onCancel,
-  className = ''
+  className = '',
 }) => {
   const [annotations, setAnnotations] = useState<AnnotationOptions[]>([])
-  const [currentAnnotation, setCurrentAnnotation] = useState<Partial<AnnotationOptions>>({
+  const [currentAnnotation, setCurrentAnnotation] = useState<
+    Partial<AnnotationOptions>
+  >({
     text: '',
     position: { x: 50, y: 50 },
     fontSize: 16,
     color: '#ffffff',
     backgroundColor: '#000000',
-    opacity: 0.8
+    opacity: 0.8,
   })
   const [activeTool, setActiveTool] = useState<AnnotationTool['type']>('text')
   const [drawingState, setDrawingState] = useState<DrawingState | null>(null)
@@ -71,8 +73,12 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
   const tools: AnnotationTool[] = [
     { type: 'text', icon: <Type className="h-4 w-4" />, label: 'Text' },
     { type: 'circle', icon: <Circle className="h-4 w-4" />, label: 'Circle' },
-    { type: 'rectangle', icon: <Square className="h-4 w-4" />, label: 'Rectangle' },
-    { type: 'arrow', icon: <ArrowRight className="h-4 w-4" />, label: 'Arrow' }
+    {
+      type: 'rectangle',
+      icon: <Square className="h-4 w-4" />,
+      label: 'Rectangle',
+    },
+    { type: 'arrow', icon: <ArrowRight className="h-4 w-4" />, label: 'Arrow' },
   ]
 
   useEffect(() => {
@@ -114,14 +120,21 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
     }
   }
 
-  const drawAnnotation = (ctx: CanvasRenderingContext2D, annotation: AnnotationOptions) => {
+  const drawAnnotation = (
+    ctx: CanvasRenderingContext2D,
+    annotation: AnnotationOptions
+  ) => {
     if (annotation.text) {
       drawTextAnnotation(ctx, annotation)
     }
   }
 
-  const drawTextAnnotation = (ctx: CanvasRenderingContext2D, annotation: AnnotationOptions) => {
-    const { text, position, fontSize, color, backgroundColor, opacity } = annotation
+  const drawTextAnnotation = (
+    ctx: CanvasRenderingContext2D,
+    annotation: AnnotationOptions
+  ) => {
+    const { text, position, fontSize, color, backgroundColor, opacity } =
+      annotation
     if (!text || !position) return
 
     ctx.save()
@@ -131,8 +144,8 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
     ctx.font = `${fontSize || 16}px Arial`
     const textMetrics = ctx.measureText(text)
     const padding = 8
-    const rectWidth = textMetrics.width + (padding * 2)
-    const rectHeight = (fontSize || 16) + (padding * 2)
+    const rectWidth = textMetrics.width + padding * 2
+    const rectHeight = (fontSize || 16) + padding * 2
 
     ctx.fillStyle = backgroundColor || '#000000'
     ctx.fillRect(
@@ -149,7 +162,10 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
     ctx.restore()
   }
 
-  const drawCurrentShape = (ctx: CanvasRenderingContext2D, state: DrawingState) => {
+  const drawCurrentShape = (
+    ctx: CanvasRenderingContext2D,
+    state: DrawingState
+  ) => {
     ctx.save()
     ctx.strokeStyle = currentAnnotation.color || '#ff0000'
     ctx.lineWidth = 2
@@ -159,7 +175,9 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
 
     switch (tool) {
       case 'circle':
-        const radius = Math.sqrt(Math.pow(currentX - startX, 2) + Math.pow(currentY - startY, 2))
+        const radius = Math.sqrt(
+          Math.pow(currentX - startX, 2) + Math.pow(currentY - startY, 2)
+        )
         ctx.beginPath()
         ctx.arc(startX, startY, radius, 0, 2 * Math.PI)
         ctx.stroke()
@@ -177,7 +195,13 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
     ctx.restore()
   }
 
-  const drawArrow = (ctx: CanvasRenderingContext2D, fromX: number, fromY: number, toX: number, toY: number) => {
+  const drawArrow = (
+    ctx: CanvasRenderingContext2D,
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number
+  ) => {
     const headLength = 20
     const angle = Math.atan2(toY - fromY, toX - fromX)
 
@@ -213,7 +237,7 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
     if (activeTool === 'text') {
       setCurrentAnnotation(prev => ({
         ...prev,
-        position: { x, y }
+        position: { x, y },
       }))
     } else {
       setDrawingState({
@@ -222,7 +246,7 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
         startY: y,
         currentX: x,
         currentY: y,
-        tool: activeTool
+        tool: activeTool,
       })
     }
   }
@@ -237,7 +261,9 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
     const x = (e.clientX - rect.left) * (canvas.width / rect.width)
     const y = (e.clientY - rect.top) * (canvas.height / rect.height)
 
-    setDrawingState(prev => prev ? { ...prev, currentX: x, currentY: y } : null)
+    setDrawingState(prev =>
+      prev ? { ...prev, currentX: x, currentY: y } : null
+    )
     redrawCanvas()
   }
 
@@ -247,7 +273,7 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
     // Add completed shape to annotations
     const newAnnotation: AnnotationOptions = {
       ...currentAnnotation,
-      position: { x: drawingState.startX, y: drawingState.startY }
+      position: { x: drawingState.startX, y: drawingState.startY },
     }
 
     addAnnotation(newAnnotation)
@@ -263,7 +289,7 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
       fontSize: 16,
       color: '#ffffff',
       backgroundColor: '#000000',
-      opacity: 0.8
+      opacity: 0.8,
     })
     redrawCanvas()
   }
@@ -301,7 +327,7 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
     try {
       // Import photoProcessor dynamically to avoid circular dependencies
       const { photoProcessor } = await import('@/services/mobile/camera')
-      
+
       // Create a mock PhotoMetadata for processing
       const mockMetadata = {
         id: `annotation_${Date.now()}`,
@@ -309,13 +335,16 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
         deviceInfo: {
           platform: 'web',
           model: 'browser',
-          osVersion: 'unknown'
+          osVersion: 'unknown',
         },
         cameraSettings: {
           quality: 85,
-          resolution: { width: canvasRef.current?.width || 1920, height: canvasRef.current?.height || 1080 },
-          flashUsed: false
-        }
+          resolution: {
+            width: canvasRef.current?.width || 1920,
+            height: canvasRef.current?.height || 1080,
+          },
+          flashUsed: false,
+        },
       }
 
       const processedPhoto = await photoProcessor.processPhoto(
@@ -371,7 +400,9 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
             {/* Tools Panel */}
             <div className="space-y-4">
               <div>
-                <Label className="text-sm font-medium mb-2 block">Annotation Tools</Label>
+                <Label className="text-sm font-medium mb-2 block">
+                  Annotation Tools
+                </Label>
                 <div className="grid grid-cols-2 gap-2">
                   {tools.map(tool => (
                     <Button
@@ -396,20 +427,32 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
                     <Input
                       id="annotation-text"
                       value={currentAnnotation.text || ''}
-                      onChange={(e) => setCurrentAnnotation(prev => ({ ...prev, text: e.target.value }))}
+                      onChange={e =>
+                        setCurrentAnnotation(prev => ({
+                          ...prev,
+                          text: e.target.value,
+                        }))
+                      }
                       placeholder="Enter annotation text..."
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="font-size">Font Size: {currentAnnotation.fontSize}</Label>
+                    <Label htmlFor="font-size">
+                      Font Size: {currentAnnotation.fontSize}
+                    </Label>
                     <Slider
                       id="font-size"
                       min={12}
                       max={32}
                       step={2}
                       value={[currentAnnotation.fontSize || 16]}
-                      onValueChange={([value]) => setCurrentAnnotation(prev => ({ ...prev, fontSize: value }))}
+                      onValueChange={([value]) =>
+                        setCurrentAnnotation(prev => ({
+                          ...prev,
+                          fontSize: value,
+                        }))
+                      }
                     />
                   </div>
 
@@ -420,12 +463,22 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
                         id="text-color"
                         type="color"
                         value={currentAnnotation.color || '#ffffff'}
-                        onChange={(e) => setCurrentAnnotation(prev => ({ ...prev, color: e.target.value }))}
+                        onChange={e =>
+                          setCurrentAnnotation(prev => ({
+                            ...prev,
+                            color: e.target.value,
+                          }))
+                        }
                         className="w-12 h-8 p-1"
                       />
                       <Input
                         value={currentAnnotation.color || '#ffffff'}
-                        onChange={(e) => setCurrentAnnotation(prev => ({ ...prev, color: e.target.value }))}
+                        onChange={e =>
+                          setCurrentAnnotation(prev => ({
+                            ...prev,
+                            color: e.target.value,
+                          }))
+                        }
                         className="flex-1"
                       />
                     </div>
@@ -438,31 +491,51 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
                         id="bg-color"
                         type="color"
                         value={currentAnnotation.backgroundColor || '#000000'}
-                        onChange={(e) => setCurrentAnnotation(prev => ({ ...prev, backgroundColor: e.target.value }))}
+                        onChange={e =>
+                          setCurrentAnnotation(prev => ({
+                            ...prev,
+                            backgroundColor: e.target.value,
+                          }))
+                        }
                         className="w-12 h-8 p-1"
                       />
                       <Input
                         value={currentAnnotation.backgroundColor || '#000000'}
-                        onChange={(e) => setCurrentAnnotation(prev => ({ ...prev, backgroundColor: e.target.value }))}
+                        onChange={e =>
+                          setCurrentAnnotation(prev => ({
+                            ...prev,
+                            backgroundColor: e.target.value,
+                          }))
+                        }
                         className="flex-1"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="opacity">Opacity: {Math.round((currentAnnotation.opacity || 0.8) * 100)}%</Label>
+                    <Label htmlFor="opacity">
+                      Opacity:{' '}
+                      {Math.round((currentAnnotation.opacity || 0.8) * 100)}%
+                    </Label>
                     <Slider
                       id="opacity"
                       min={0.1}
                       max={1}
                       step={0.1}
                       value={[currentAnnotation.opacity || 0.8]}
-                      onValueChange={([value]) => setCurrentAnnotation(prev => ({ ...prev, opacity: value }))}
+                      onValueChange={([value]) =>
+                        setCurrentAnnotation(prev => ({
+                          ...prev,
+                          opacity: value,
+                        }))
+                      }
                     />
                   </div>
 
                   <Button
-                    onClick={() => addAnnotation(currentAnnotation as AnnotationOptions)}
+                    onClick={() =>
+                      addAnnotation(currentAnnotation as AnnotationOptions)
+                    }
                     disabled={!currentAnnotation.text}
                     className="w-full"
                   >
@@ -473,12 +546,18 @@ export const PhotoAnnotation: React.FC<PhotoAnnotationProps> = ({
 
               {/* Current Annotations */}
               <div>
-                <Label className="text-sm font-medium mb-2 block">Current Annotations ({annotations.length})</Label>
+                <Label className="text-sm font-medium mb-2 block">
+                  Current Annotations ({annotations.length})
+                </Label>
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {annotations.map((annotation, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                    >
                       <span className="text-sm truncate">
-                        {annotation.text || `${annotation.position?.x}, ${annotation.position?.y}`}
+                        {annotation.text ||
+                          `${annotation.position?.x}, ${annotation.position?.y}`}
                       </span>
                       <Button
                         variant="ghost"

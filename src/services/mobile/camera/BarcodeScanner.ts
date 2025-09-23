@@ -10,7 +10,15 @@ export interface ScanResult {
   id: string
   timestamp: Date
   data: string
-  format: 'QR_CODE' | 'CODE_128' | 'CODE_39' | 'EAN_13' | 'EAN_8' | 'UPC_A' | 'UPC_E' | 'UNKNOWN'
+  format:
+    | 'QR_CODE'
+    | 'CODE_128'
+    | 'CODE_39'
+    | 'EAN_13'
+    | 'EAN_8'
+    | 'UPC_A'
+    | 'UPC_E'
+    | 'UNKNOWN'
   confidence: number
   location: {
     topLeftCorner: { x: number; y: number }
@@ -80,7 +88,7 @@ export class BarcodeScanner {
         expirationDate: new Date('2025-01-30'),
         supplier: 'Premium Meat Co.',
         haccpCriticalPoints: ['Temperature Control', 'Cross Contamination'],
-        temperatureRequirements: { min: 0, max: 4, unit: 'celsius' }
+        temperatureRequirements: { min: 0, max: 4, unit: 'celsius' },
       },
       {
         productId: 'DAIRY002',
@@ -90,7 +98,7 @@ export class BarcodeScanner {
         expirationDate: new Date('2025-01-27'),
         supplier: 'Green Dairy Farm',
         haccpCriticalPoints: ['Temperature Control', 'Pasteurization'],
-        temperatureRequirements: { min: 2, max: 6, unit: 'celsius' }
+        temperatureRequirements: { min: 2, max: 6, unit: 'celsius' },
       },
       {
         productId: 'VEG003',
@@ -100,8 +108,8 @@ export class BarcodeScanner {
         expirationDate: new Date('2025-01-25'),
         supplier: 'Fresh Garden Co.',
         haccpCriticalPoints: ['Washing', 'Cross Contamination'],
-        temperatureRequirements: { min: 1, max: 5, unit: 'celsius' }
-      }
+        temperatureRequirements: { min: 1, max: 5, unit: 'celsius' },
+      },
     ]
 
     sampleProducts.forEach(product => {
@@ -132,12 +140,24 @@ export class BarcodeScanner {
         format: 'QR_CODE',
         confidence: 1.0, // jsQR doesn't provide confidence, assume high
         location: {
-          topLeftCorner: { x: qrCode.location.topLeftCorner.x, y: qrCode.location.topLeftCorner.y },
-          topRightCorner: { x: qrCode.location.topRightCorner.x, y: qrCode.location.topRightCorner.y },
-          bottomLeftCorner: { x: qrCode.location.bottomLeftCorner.x, y: qrCode.location.bottomLeftCorner.y },
-          bottomRightCorner: { x: qrCode.location.bottomRightCorner.x, y: qrCode.location.bottomRightCorner.y }
+          topLeftCorner: {
+            x: qrCode.location.topLeftCorner.x,
+            y: qrCode.location.topLeftCorner.y,
+          },
+          topRightCorner: {
+            x: qrCode.location.topRightCorner.x,
+            y: qrCode.location.topRightCorner.y,
+          },
+          bottomLeftCorner: {
+            x: qrCode.location.bottomLeftCorner.x,
+            y: qrCode.location.bottomLeftCorner.y,
+          },
+          bottomRightCorner: {
+            x: qrCode.location.bottomRightCorner.x,
+            y: qrCode.location.bottomRightCorner.y,
+          },
         },
-        metadata
+        metadata,
       }
 
       // Try to parse product information
@@ -169,11 +189,11 @@ export class BarcodeScanner {
 
       // Try to extract barcode data from image
       const imageData = await this.dataUrlToImageData(dataUrl)
-      
+
       // This is a placeholder - real barcode scanning would require additional libraries
       // For now, we'll simulate finding a barcode
       const simulatedBarcode = this.simulateBarcodeDetection(imageData)
-      
+
       if (simulatedBarcode) {
         const result: ScanResult = {
           id: this.generateScanId(),
@@ -182,7 +202,7 @@ export class BarcodeScanner {
           format: simulatedBarcode.format,
           confidence: simulatedBarcode.confidence,
           location: simulatedBarcode.location,
-          metadata
+          metadata,
         }
 
         // Try to parse product information
@@ -240,10 +260,12 @@ export class BarcodeScanner {
   /**
    * Get scans by HACCP context
    */
-  public getScansByContext(context: Partial<ScanResult['haccpContext']>): ScanResult[] {
+  public getScansByContext(
+    context: Partial<ScanResult['haccpContext']>
+  ): ScanResult[] {
     return this.scanHistory.filter(scan => {
       if (!scan.haccpContext || !context) return false
-      
+
       return Object.keys(context).every(key => {
         const contextKey = key as keyof ScanResult['haccpContext']
         return scan.haccpContext?.[contextKey] === context[contextKey]
@@ -278,12 +300,12 @@ export class BarcodeScanner {
   private async dataUrlToImageData(dataUrl: string): Promise<ImageData> {
     return new Promise((resolve, reject) => {
       const img = new Image()
-      
+
       img.onload = () => {
         try {
           const canvas = document.createElement('canvas')
           const ctx = canvas.getContext('2d')
-          
+
           if (!ctx) {
             reject(new Error('Canvas context not available'))
             return
@@ -292,7 +314,7 @@ export class BarcodeScanner {
           canvas.width = img.width
           canvas.height = img.height
           ctx.drawImage(img, 0, 0)
-          
+
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
           resolve(imageData)
         } catch (error) {
@@ -317,7 +339,7 @@ export class BarcodeScanner {
           productId: parsed.productId,
           batchNumber: parsed.batchNumber,
           expirationDate: parsed.expirationDate,
-          supplierId: parsed.supplierId
+          supplierId: parsed.supplierId,
         }
       }
     } catch {
@@ -328,7 +350,7 @@ export class BarcodeScanner {
           productId: product.productId,
           batchNumber: product.batchNumber,
           expirationDate: product.expirationDate?.toISOString(),
-          supplierId: product.supplier
+          supplierId: product.supplier,
         }
       }
     }
@@ -339,7 +361,9 @@ export class BarcodeScanner {
   /**
    * Simulate barcode detection (placeholder for real implementation)
    */
-  private simulateBarcodeDetection(imageData: ImageData): Partial<ScanResult> | null {
+  private simulateBarcodeDetection(
+    imageData: ImageData
+  ): Partial<ScanResult> | null {
     // This is a placeholder - real implementation would use barcode libraries
     // For demo purposes, we'll return null to indicate no barcode found
     return null

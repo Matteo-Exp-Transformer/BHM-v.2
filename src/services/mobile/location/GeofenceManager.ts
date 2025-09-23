@@ -11,7 +11,11 @@ export interface Geofence {
   latitude: number
   longitude: number
   radius: number // meters
-  type: 'conservation_point' | 'inspection_route' | 'restricted_area' | 'temperature_zone'
+  type:
+    | 'conservation_point'
+    | 'inspection_route'
+    | 'restricted_area'
+    | 'temperature_zone'
   status: 'active' | 'inactive' | 'maintenance'
   criticalTemperature?: {
     min: number
@@ -35,7 +39,12 @@ export interface Geofence {
 
 export interface GeofenceEvent {
   id: string
-  type: 'enter' | 'exit' | 'temperature_violation' | 'inspection_due' | 'maintenance_required'
+  type:
+    | 'enter'
+    | 'exit'
+    | 'temperature_violation'
+    | 'inspection_due'
+    | 'maintenance_required'
   geofenceId: string
   timestamp: Date
   location: LocationData
@@ -169,7 +178,9 @@ export class GeofenceManager {
    * Get active geofences
    */
   public getActiveGeofences(): Geofence[] {
-    return Array.from(this.geofences.values()).filter(g => g.status === 'active')
+    return Array.from(this.geofences.values()).filter(
+      g => g.status === 'active'
+    )
   }
 
   /**
@@ -230,9 +241,10 @@ export class GeofenceManager {
         events = events.filter(e => e.acknowledged === filter.acknowledged)
       }
       if (filter.dateRange) {
-        events = events.filter(e => 
-          e.timestamp >= filter.dateRange!.start && 
-          e.timestamp <= filter.dateRange!.end
+        events = events.filter(
+          e =>
+            e.timestamp >= filter.dateRange!.start &&
+            e.timestamp <= filter.dateRange!.end
         )
       }
     }
@@ -334,9 +346,14 @@ export class GeofenceManager {
   /**
    * Check geofence events based on location changes
    */
-  private checkGeofenceEvents(current: LocationData, previous: LocationData | null): void {
+  private checkGeofenceEvents(
+    current: LocationData,
+    previous: LocationData | null
+  ): void {
     const currentGeofences = this.getGeofencesContaining(current)
-    const previousGeofences = previous ? this.getGeofencesContaining(previous) : []
+    const previousGeofences = previous
+      ? this.getGeofencesContaining(previous)
+      : []
 
     // Check for enter events
     currentGeofences.forEach(geofence => {
@@ -348,7 +365,7 @@ export class GeofenceManager {
           location: current,
           severity: 'info',
           message: `Entered ${geofence.name}`,
-          data: { geofence }
+          data: { geofence },
         })
       }
     })
@@ -363,7 +380,7 @@ export class GeofenceManager {
           location: current,
           severity: 'info',
           message: `Exited ${geofence.name}`,
-          data: { geofence }
+          data: { geofence },
         })
       }
     })
@@ -377,7 +394,7 @@ export class GeofenceManager {
           location: current,
           severity: 'warning',
           message: `Inspection due for ${geofence.name}`,
-          data: { geofence }
+          data: { geofence },
         })
       }
     })
@@ -387,25 +404,31 @@ export class GeofenceManager {
    * Check if inspection is due for geofence
    */
   private isInspectionDue(geofence: Geofence): boolean {
-    if (!geofence.metadata.lastInspection || !geofence.metadata.inspectionFrequency) {
+    if (
+      !geofence.metadata.lastInspection ||
+      !geofence.metadata.inspectionFrequency
+    ) {
       return false
     }
 
-    const hoursSinceLastInspection = 
-      (Date.now() - geofence.metadata.lastInspection.getTime()) / (1000 * 60 * 60)
-    
+    const hoursSinceLastInspection =
+      (Date.now() - geofence.metadata.lastInspection.getTime()) /
+      (1000 * 60 * 60)
+
     return hoursSinceLastInspection >= geofence.metadata.inspectionFrequency
   }
 
   /**
    * Create geofence event
    */
-  private createEvent(eventData: Omit<GeofenceEvent, 'id' | 'timestamp' | 'acknowledged'>): void {
+  private createEvent(
+    eventData: Omit<GeofenceEvent, 'id' | 'timestamp' | 'acknowledged'>
+  ): void {
     const event: GeofenceEvent = {
       id: this.generateEventId(),
       timestamp: new Date(),
       acknowledged: false,
-      ...eventData
+      ...eventData,
     }
 
     this.events.push(event)
@@ -438,7 +461,7 @@ export class GeofenceManager {
       timestamp: new Date(),
       acknowledged: false,
       geofenceId: event.geofenceId,
-      eventId: event.id
+      eventId: event.id,
     }
 
     this.alerts.push(alert)
@@ -457,7 +480,11 @@ export class GeofenceManager {
    * Check if alert should be created for event
    */
   private shouldCreateAlert(event: GeofenceEvent): boolean {
-    return event.severity === 'warning' || event.severity === 'error' || event.severity === 'critical'
+    return (
+      event.severity === 'warning' ||
+      event.severity === 'error' ||
+      event.severity === 'critical'
+    )
   }
 
   /**
@@ -489,7 +516,7 @@ export class GeofenceManager {
         id: 'GF001',
         name: 'Main Refrigeration Zone',
         latitude: 45.4642,
-        longitude: 9.1900,
+        longitude: 9.19,
         radius: 25,
         type: 'temperature_zone',
         status: 'active',
@@ -498,15 +525,15 @@ export class GeofenceManager {
           onEnter: true,
           onExit: true,
           onTemperatureViolation: true,
-          onInspectionDue: true
+          onInspectionDue: true,
         },
         metadata: {
           created: new Date(),
           updated: new Date(),
           lastInspection: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
           inspectionFrequency: 8, // 8 hours
-          priority: 'high'
-        }
+          priority: 'high',
+        },
       },
       {
         id: 'GF002',
@@ -521,16 +548,16 @@ export class GeofenceManager {
           onEnter: true,
           onExit: true,
           onTemperatureViolation: true,
-          onInspectionDue: true
+          onInspectionDue: true,
         },
         metadata: {
           created: new Date(),
           updated: new Date(),
           lastInspection: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
           inspectionFrequency: 4, // 4 hours
-          priority: 'critical'
-        }
-      }
+          priority: 'critical',
+        },
+      },
     ]
 
     defaultGeofences.forEach(geofence => {
@@ -541,17 +568,22 @@ export class GeofenceManager {
   /**
    * Calculate distance between two points
    */
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number {
     const R = 6371e3 // Earth's radius in meters
-    const φ1 = lat1 * Math.PI / 180
-    const φ2 = lat2 * Math.PI / 180
-    const Δφ = (lat2 - lat1) * Math.PI / 180
-    const Δλ = (lon2 - lon1) * Math.PI / 180
+    const φ1 = (lat1 * Math.PI) / 180
+    const φ2 = (lat2 * Math.PI) / 180
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180
 
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 
     return R * c // Distance in meters
   }

@@ -8,19 +8,24 @@ import { CameraCapture } from './CameraCapture'
 import { PhotoAnnotation } from './PhotoAnnotation'
 import { BarcodeScanner } from './BarcodeScanner'
 import { PhotoGalleryView } from './PhotoGalleryView'
-import { PhotoMetadata, ProcessedPhoto, ScanResult, ProductInfo } from '@/services/mobile/camera'
+import {
+  PhotoMetadata,
+  ProcessedPhoto,
+  ScanResult,
+  ProductInfo,
+} from '@/services/mobile/camera'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Camera, 
-  Image as ImageIcon, 
-  QrCode, 
+import {
+  Camera,
+  Image as ImageIcon,
+  QrCode,
   Gallery,
   CheckCircle,
   AlertCircle,
-  Info
+  Info,
 } from 'lucide-react'
 
 export const CameraDemo: React.FC = () => {
@@ -34,7 +39,7 @@ export const CameraDemo: React.FC = () => {
     photosCaptured: 0,
     photosProcessed: 0,
     scansCompleted: 0,
-    productsFound: 0
+    productsFound: 0,
   })
 
   const handlePhotoCaptured = (metadata: PhotoMetadata) => {
@@ -46,7 +51,10 @@ export const CameraDemo: React.FC = () => {
 
   const handlePhotoProcessed = (processedPhoto: ProcessedPhoto) => {
     setProcessedPhotos(prev => [...prev, processedPhoto])
-    setDemoStats(prev => ({ ...prev, photosProcessed: prev.photosProcessed + 1 }))
+    setDemoStats(prev => ({
+      ...prev,
+      photosProcessed: prev.photosProcessed + 1,
+    }))
     setActiveTab('gallery')
   }
 
@@ -67,7 +75,7 @@ export const CameraDemo: React.FC = () => {
 
   const getSelectedPhotoDataUrl = (): string | null => {
     if (!selectedPhoto) return null
-    
+
     const photo = capturedPhotos.find(p => p.id === selectedPhoto)
     if (!photo) return null
 
@@ -90,7 +98,7 @@ export const CameraDemo: React.FC = () => {
     conservationPointId: 'CP001',
     taskId: 'TASK_DAILY_INSPECTION',
     inspectionId: 'INSP_20250123_001',
-    notes: 'Temperature check - Cold storage unit'
+    notes: 'Temperature check - Cold storage unit',
   }
 
   return (
@@ -105,26 +113,35 @@ export const CameraDemo: React.FC = () => {
         </CardHeader>
         <CardContent>
           <p className="text-gray-600 mb-4">
-            This demo showcases the camera services for HACCP photo documentation, 
-            including photo capture, annotation, barcode scanning, and gallery management.
+            This demo showcases the camera services for HACCP photo
+            documentation, including photo capture, annotation, barcode
+            scanning, and gallery management.
           </p>
-          
+
           {/* Demo Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{demoStats.photosCaptured}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {demoStats.photosCaptured}
+              </div>
               <div className="text-sm text-blue-700">Photos Captured</div>
             </div>
             <div className="text-center p-3 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">{demoStats.photosProcessed}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {demoStats.photosProcessed}
+              </div>
               <div className="text-sm text-green-700">Photos Processed</div>
             </div>
             <div className="text-center p-3 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">{demoStats.scansCompleted}</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {demoStats.scansCompleted}
+              </div>
               <div className="text-sm text-purple-700">Scans Completed</div>
             </div>
             <div className="text-center p-3 bg-orange-50 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">{demoStats.productsFound}</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {demoStats.productsFound}
+              </div>
               <div className="text-sm text-orange-700">Products Found</div>
             </div>
           </div>
@@ -160,7 +177,7 @@ export const CameraDemo: React.FC = () => {
               onError={handleError}
               haccpContext={sampleHACCPContext}
             />
-            
+
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm">HACCP Context</CardTitle>
@@ -168,12 +185,21 @@ export const CameraDemo: React.FC = () => {
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary">CP: {sampleHACCPContext.conservationPointId}</Badge>
-                    <Badge variant="secondary">Task: {sampleHACCPContext.taskId}</Badge>
+                    <Badge variant="secondary">
+                      CP: {sampleHACCPContext.conservationPointId}
+                    </Badge>
+                    <Badge variant="secondary">
+                      Task: {sampleHACCPContext.taskId}
+                    </Badge>
                   </div>
                   <div className="text-sm text-gray-600">
-                    <p><strong>Inspection:</strong> {sampleHACCPContext.inspectionId}</p>
-                    <p><strong>Notes:</strong> {sampleHACCPContext.notes}</p>
+                    <p>
+                      <strong>Inspection:</strong>{' '}
+                      {sampleHACCPContext.inspectionId}
+                    </p>
+                    <p>
+                      <strong>Notes:</strong> {sampleHACCPContext.notes}
+                    </p>
                   </div>
                   <div className="p-3 bg-blue-50 rounded-md">
                     <div className="flex items-center gap-2 text-blue-700">
@@ -181,8 +207,9 @@ export const CameraDemo: React.FC = () => {
                       <span className="text-sm font-medium">Demo Mode</span>
                     </div>
                     <p className="text-xs text-blue-600 mt-1">
-                      This demo uses sample HACCP context. In production, this would be 
-                      dynamically set based on the current inspection or task.
+                      This demo uses sample HACCP context. In production, this
+                      would be dynamically set based on the current inspection
+                      or task.
                     </p>
                   </div>
                 </div>
@@ -203,7 +230,9 @@ export const CameraDemo: React.FC = () => {
             <Card>
               <CardContent className="p-6 text-center">
                 <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-4">No photo selected for annotation</p>
+                <p className="text-gray-600 mb-4">
+                  No photo selected for annotation
+                </p>
                 <Button onClick={() => setActiveTab('capture')}>
                   Go to Capture Tab
                 </Button>
@@ -220,7 +249,7 @@ export const CameraDemo: React.FC = () => {
               onProductFound={handleProductFound}
               onError={handleError}
             />
-            
+
             {/* Recent Scans */}
             <Card>
               <CardHeader>
@@ -231,19 +260,27 @@ export const CameraDemo: React.FC = () => {
                   <p className="text-gray-500 text-sm">No scans yet</p>
                 ) : (
                   <div className="space-y-2">
-                    {scanResults.slice(-3).reverse().map((scan, index) => (
-                      <div key={scan.id} className="p-2 bg-gray-50 rounded text-sm">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="outline" className="text-xs">
-                            {scan.format}
-                          </Badge>
-                          <span className="text-gray-500">
-                            {scan.timestamp.toLocaleTimeString()}
-                          </span>
+                    {scanResults
+                      .slice(-3)
+                      .reverse()
+                      .map((scan, index) => (
+                        <div
+                          key={scan.id}
+                          className="p-2 bg-gray-50 rounded text-sm"
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline" className="text-xs">
+                              {scan.format}
+                            </Badge>
+                            <span className="text-gray-500">
+                              {scan.timestamp.toLocaleTimeString()}
+                            </span>
+                          </div>
+                          <p className="font-mono text-xs truncate">
+                            {scan.data}
+                          </p>
                         </div>
-                        <p className="font-mono text-xs truncate">{scan.data}</p>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 )}
               </CardContent>
@@ -254,10 +291,10 @@ export const CameraDemo: React.FC = () => {
         {/* Gallery Tab */}
         <TabsContent value="gallery" className="mt-6">
           <PhotoGalleryView
-            onItemSelect={(item) => {
+            onItemSelect={item => {
               console.log('Gallery item selected:', item)
             }}
-            onItemDelete={(itemId) => {
+            onItemDelete={itemId => {
               console.log('Gallery item deleted:', itemId)
             }}
           />
@@ -265,7 +302,9 @@ export const CameraDemo: React.FC = () => {
       </Tabs>
 
       {/* Recent Activity */}
-      {(capturedPhotos.length > 0 || processedPhotos.length > 0 || scanResults.length > 0) && (
+      {(capturedPhotos.length > 0 ||
+        processedPhotos.length > 0 ||
+        scanResults.length > 0) && (
         <Card className="mt-6">
           <CardHeader>
             <CardTitle className="text-sm">Recent Activity</CardTitle>
@@ -273,7 +312,10 @@ export const CameraDemo: React.FC = () => {
           <CardContent>
             <div className="space-y-2">
               {capturedPhotos.slice(-2).map(photo => (
-                <div key={photo.id} className="flex items-center gap-2 p-2 bg-blue-50 rounded text-sm">
+                <div
+                  key={photo.id}
+                  className="flex items-center gap-2 p-2 bg-blue-50 rounded text-sm"
+                >
                   <CheckCircle className="h-4 w-4 text-blue-600" />
                   <span>Photo captured: {photo.id.slice(-8)}</span>
                   <span className="text-gray-500 text-xs">
@@ -282,7 +324,10 @@ export const CameraDemo: React.FC = () => {
                 </div>
               ))}
               {processedPhotos.slice(-2).map(photo => (
-                <div key={photo.id} className="flex items-center gap-2 p-2 bg-green-50 rounded text-sm">
+                <div
+                  key={photo.id}
+                  className="flex items-center gap-2 p-2 bg-green-50 rounded text-sm"
+                >
                   <CheckCircle className="h-4 w-4 text-green-600" />
                   <span>Photo processed: {photo.id.slice(-8)}</span>
                   <span className="text-gray-500 text-xs">
@@ -291,7 +336,10 @@ export const CameraDemo: React.FC = () => {
                 </div>
               ))}
               {scanResults.slice(-2).map(scan => (
-                <div key={scan.id} className="flex items-center gap-2 p-2 bg-purple-50 rounded text-sm">
+                <div
+                  key={scan.id}
+                  className="flex items-center gap-2 p-2 bg-purple-50 rounded text-sm"
+                >
                   <CheckCircle className="h-4 w-4 text-purple-600" />
                   <span>Scan completed: {scan.format}</span>
                   <span className="text-gray-500 text-xs">

@@ -36,7 +36,13 @@ export interface GallerySort {
 
 export interface GallerySearch {
   query: string
-  fields: ('notes' | 'conservationPointId' | 'taskId' | 'inspectionId' | 'deviceModel')[]
+  fields: (
+    | 'notes'
+    | 'conservationPointId'
+    | 'taskId'
+    | 'inspectionId'
+    | 'deviceModel'
+  )[]
   caseSensitive?: boolean
 }
 
@@ -92,7 +98,7 @@ export class PhotoGallery {
       thumbnail: thumbnail || this.generateThumbnail(metadata),
       tags: this.generateTags(metadata),
       createdAt: metadata.timestamp,
-      updatedAt: metadata.timestamp
+      updatedAt: metadata.timestamp,
     }
 
     this.items.set(item.id, item)
@@ -102,7 +108,10 @@ export class PhotoGallery {
   /**
    * Add processed photo to gallery
    */
-  public addProcessedPhoto(processedPhoto: ProcessedPhoto, thumbnail?: string): string {
+  public addProcessedPhoto(
+    processedPhoto: ProcessedPhoto,
+    thumbnail?: string
+  ): string {
     const item: GalleryItem = {
       id: processedPhoto.id,
       type: 'processed',
@@ -110,7 +119,7 @@ export class PhotoGallery {
       thumbnail: thumbnail || this.generateThumbnail(processedPhoto.metadata),
       tags: this.generateTags(processedPhoto.metadata),
       createdAt: processedPhoto.metadata.timestamp,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     }
 
     this.items.set(item.id, item)
@@ -128,7 +137,7 @@ export class PhotoGallery {
       thumbnail: thumbnail || this.generateThumbnail(scanResult.metadata),
       tags: this.generateTags(scanResult.metadata),
       createdAt: scanResult.timestamp,
-      updatedAt: scanResult.timestamp
+      updatedAt: scanResult.timestamp,
     }
 
     this.items.set(item.id, item)
@@ -189,20 +198,26 @@ export class PhotoGallery {
       itemsByType: {
         photos: 0,
         processed: 0,
-        scans: 0
+        scans: 0,
       },
       itemsByDate: {
         today: 0,
         thisWeek: 0,
-        thisMonth: 0
+        thisMonth: 0,
       },
       itemsByDevice: {},
-      itemsByHACCPContext: {}
+      itemsByHACCPContext: {},
     }
 
     items.forEach(item => {
       // Count by type
-      stats.itemsByType[item.type === 'photo' ? 'photos' : item.type === 'processed' ? 'processed' : 'scans']++
+      stats.itemsByType[
+        item.type === 'photo'
+          ? 'photos'
+          : item.type === 'processed'
+            ? 'processed'
+            : 'scans'
+      ]++
 
       // Count by date
       const itemDate = item.createdAt
@@ -216,8 +231,10 @@ export class PhotoGallery {
 
       // Count by HACCP context
       if (item.data.haccpContext) {
-        const contextKey = item.data.haccpContext.conservationPointId || 'Unknown'
-        stats.itemsByHACCPContext[contextKey] = (stats.itemsByHACCPContext[contextKey] || 0) + 1
+        const contextKey =
+          item.data.haccpContext.conservationPointId || 'Unknown'
+        stats.itemsByHACCPContext[contextKey] =
+          (stats.itemsByHACCPContext[contextKey] || 0) + 1
       }
 
       // Calculate total size
@@ -266,7 +283,7 @@ export class PhotoGallery {
     return {
       items: Array.from(this.items.values()),
       stats: this.getStats(),
-      exportDate: new Date()
+      exportDate: new Date(),
     }
   }
 
@@ -282,7 +299,10 @@ export class PhotoGallery {
   /**
    * Apply search to items
    */
-  private applySearch(items: GalleryItem[], search: GallerySearch): GalleryItem[] {
+  private applySearch(
+    items: GalleryItem[],
+    search: GallerySearch
+  ): GalleryItem[] {
     const { query, fields, caseSensitive = false } = search
     const searchQuery = caseSensitive ? query : query.toLowerCase()
 
@@ -317,12 +337,18 @@ export class PhotoGallery {
   /**
    * Apply filter to items
    */
-  private applyFilter(items: GalleryItem[], filter: GalleryFilter): GalleryItem[] {
+  private applyFilter(
+    items: GalleryItem[],
+    filter: GalleryFilter
+  ): GalleryItem[] {
     return items.filter(item => {
       // Date range filter
       if (filter.dateRange) {
         const itemDate = item.createdAt
-        if (itemDate < filter.dateRange.start || itemDate > filter.dateRange.end) {
+        if (
+          itemDate < filter.dateRange.start ||
+          itemDate > filter.dateRange.end
+        ) {
           return false
         }
       }
@@ -332,36 +358,49 @@ export class PhotoGallery {
         const context = item.data.haccpContext
         if (!context) return false
 
-        if (filter.haccpContext.conservationPointId && 
-            context.conservationPointId !== filter.haccpContext.conservationPointId) {
+        if (
+          filter.haccpContext.conservationPointId &&
+          context.conservationPointId !==
+            filter.haccpContext.conservationPointId
+        ) {
           return false
         }
-        if (filter.haccpContext.taskId && 
-            context.taskId !== filter.haccpContext.taskId) {
+        if (
+          filter.haccpContext.taskId &&
+          context.taskId !== filter.haccpContext.taskId
+        ) {
           return false
         }
-        if (filter.haccpContext.inspectionId && 
-            context.inspectionId !== filter.haccpContext.inspectionId) {
+        if (
+          filter.haccpContext.inspectionId &&
+          context.inspectionId !== filter.haccpContext.inspectionId
+        ) {
           return false
         }
       }
 
       // Device info filter
       if (filter.deviceInfo) {
-        if (filter.deviceInfo.platform && 
-            item.data.deviceInfo.platform !== filter.deviceInfo.platform) {
+        if (
+          filter.deviceInfo.platform &&
+          item.data.deviceInfo.platform !== filter.deviceInfo.platform
+        ) {
           return false
         }
-        if (filter.deviceInfo.model && 
-            item.data.deviceInfo.model !== filter.deviceInfo.model) {
+        if (
+          filter.deviceInfo.model &&
+          item.data.deviceInfo.model !== filter.deviceInfo.model
+        ) {
           return false
         }
       }
 
       // Has annotations filter
       if (filter.hasAnnotations !== undefined) {
-        const hasAnnotations = item.type === 'processed' && 
-          (item.data as ProcessedPhoto).processingOptions.annotations?.length > 0
+        const hasAnnotations =
+          item.type === 'processed' &&
+          (item.data as ProcessedPhoto).processingOptions.annotations?.length >
+            0
         if (hasAnnotations !== filter.hasAnnotations) {
           return false
         }
@@ -384,7 +423,10 @@ export class PhotoGallery {
           fileSize = 500000 // Estimate
         }
 
-        if (fileSize < filter.fileSizeRange.min || fileSize > filter.fileSizeRange.max) {
+        if (
+          fileSize < filter.fileSizeRange.min ||
+          fileSize > filter.fileSizeRange.max
+        ) {
           return false
         }
       }
@@ -407,10 +449,14 @@ export class PhotoGallery {
           bValue = b.createdAt.getTime()
           break
         case 'fileSize':
-          aValue = a.type === 'processed' ? 
-            (a.data as ProcessedPhoto).fileSize.processed : 500000
-          bValue = b.type === 'processed' ? 
-            (b.data as ProcessedPhoto).fileSize.processed : 500000
+          aValue =
+            a.type === 'processed'
+              ? (a.data as ProcessedPhoto).fileSize.processed
+              : 500000
+          bValue =
+            b.type === 'processed'
+              ? (b.data as ProcessedPhoto).fileSize.processed
+              : 500000
           break
         case 'deviceModel':
           aValue = a.data.deviceInfo.model

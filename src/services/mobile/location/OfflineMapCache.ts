@@ -75,7 +75,7 @@ export class OfflineMapCache {
       maxTileAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       compressionEnabled: true,
       autoDownload: true,
-      downloadOnWifiOnly: false
+      downloadOnWifiOnly: false,
     }
 
     this.setupEventListeners()
@@ -106,7 +106,10 @@ export class OfflineMapCache {
    * Download map region for offline use
    */
   public async downloadRegion(
-    region: Omit<MapRegion, 'id' | 'tiles' | 'size' | 'createdAt' | 'updatedAt'>,
+    region: Omit<
+      MapRegion,
+      'id' | 'tiles' | 'size' | 'createdAt' | 'updatedAt'
+    >,
     progressCallback?: (progress: DownloadProgress) => void
   ): Promise<string> {
     if (!this.isOnline && !this.options.downloadOnWifiOnly) {
@@ -120,7 +123,7 @@ export class OfflineMapCache {
       tiles: [],
       size: 0,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     }
 
     // Calculate tiles needed
@@ -134,7 +137,7 @@ export class OfflineMapCache {
       progress: 0,
       speed: 0,
       estimatedTimeRemaining: 0,
-      status: 'downloading'
+      status: 'downloading',
     }
 
     this.activeDownloads.set(regionId, progress)
@@ -142,7 +145,7 @@ export class OfflineMapCache {
     try {
       for (let i = 0; i < tiles.length; i++) {
         const tile = tiles[i]
-        
+
         try {
           const tileData = await this.downloadTile(tile)
           const mapTile: MapTile = {
@@ -150,7 +153,7 @@ export class OfflineMapCache {
             data: tileData,
             timestamp: new Date(),
             size: tileData.byteLength,
-            format: this.getTileFormat(tile.url)
+            format: this.getTileFormat(tile.url),
           }
 
           mapRegion.tiles.push(mapTile)
@@ -165,7 +168,10 @@ export class OfflineMapCache {
 
           progressCallback?.(progress)
         } catch (error) {
-          console.warn(`⚠️ Failed to download tile ${tile.x},${tile.y},${tile.z}:`, error)
+          console.warn(
+            `⚠️ Failed to download tile ${tile.x},${tile.y},${tile.z}:`,
+            error
+          )
         }
       }
 
@@ -173,7 +179,9 @@ export class OfflineMapCache {
       this.regions.set(regionId, mapRegion)
       await this.saveRegionToDB(mapRegion)
 
-      console.log(`🗺️ Region downloaded: ${region.name} (${mapRegion.size} bytes)`)
+      console.log(
+        `🗺️ Region downloaded: ${region.name} (${mapRegion.size} bytes)`
+      )
       return regionId
     } catch (error) {
       progress.status = 'error'
@@ -187,7 +195,11 @@ export class OfflineMapCache {
   /**
    * Get cached tile
    */
-  public async getTile(x: number, y: number, z: number): Promise<MapTile | null> {
+  public async getTile(
+    x: number,
+    y: number,
+    z: number
+  ): Promise<MapTile | null> {
     const key = this.getTileKey({ x, y, z, url: '' })
     const tile = this.tiles.get(key)
 
@@ -267,7 +279,8 @@ export class OfflineMapCache {
     })
 
     this.regions.forEach(region => {
-      regionsByPriority[region.priority] = (regionsByPriority[region.priority] || 0) + 1
+      regionsByPriority[region.priority] =
+        (regionsByPriority[region.priority] || 0) + 1
     })
 
     return {
@@ -276,7 +289,7 @@ export class OfflineMapCache {
       totalSize,
       oldestTile,
       newestTile,
-      regionsByPriority
+      regionsByPriority,
     }
   }
 
@@ -311,12 +324,12 @@ export class OfflineMapCache {
   public async clearCache(): Promise<void> {
     this.regions.clear()
     this.tiles.clear()
-    
+
     if (this.db) {
       const transaction = this.db.transaction(['regions', 'tiles'], 'readwrite')
       await Promise.all([
         transaction.objectStore('regions').clear(),
-        transaction.objectStore('tiles').clear()
+        transaction.objectStore('tiles').clear(),
       ])
     }
 
@@ -364,12 +377,22 @@ export class OfflineMapCache {
   /**
    * Calculate tiles needed for region
    */
-  private calculateTilesForRegion(region: MapRegion): Array<{ x: number; y: number; z: number; url: string }> {
+  private calculateTilesForRegion(
+    region: MapRegion
+  ): Array<{ x: number; y: number; z: number; url: string }> {
     const tiles: Array<{ x: number; y: number; z: number; url: string }> = []
 
     region.zoomLevels.forEach(z => {
-      const nwTile = this.latLngToTile(region.bounds.north, region.bounds.west, z)
-      const seTile = this.latLngToTile(region.bounds.south, region.bounds.east, z)
+      const nwTile = this.latLngToTile(
+        region.bounds.north,
+        region.bounds.west,
+        z
+      )
+      const seTile = this.latLngToTile(
+        region.bounds.south,
+        region.bounds.east,
+        z
+      )
 
       for (let x = nwTile.x; x <= seTile.x; x++) {
         for (let y = nwTile.y; y <= seTile.y; y++) {
@@ -377,7 +400,7 @@ export class OfflineMapCache {
             x,
             y,
             z,
-            url: this.getTileUrl(x, y, z)
+            url: this.getTileUrl(x, y, z),
           })
         }
       }
@@ -389,10 +412,16 @@ export class OfflineMapCache {
   /**
    * Convert lat/lng to tile coordinates
    */
-  private latLngToTile(lat: number, lng: number, zoom: number): { x: number; y: number } {
+  private latLngToTile(
+    lat: number,
+    lng: number,
+    zoom: number
+  ): { x: number; y: number } {
     const n = Math.pow(2, zoom)
-    const x = Math.floor((lng + 180) / 360 * n)
-    const y = Math.floor((1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2 * n)
+    const x = Math.floor(((lng + 180) / 360) * n)
+    const y = Math.floor(
+      ((1 - Math.asinh(Math.tan((lat * Math.PI) / 180)) / Math.PI) / 2) * n
+    )
     return { x, y }
   }
 
@@ -407,7 +436,12 @@ export class OfflineMapCache {
   /**
    * Download tile
    */
-  private async downloadTile(tile: { x: number; y: number; z: number; url: string }): Promise<ArrayBuffer> {
+  private async downloadTile(tile: {
+    x: number
+    y: number
+    z: number
+    url: string
+  }): Promise<ArrayBuffer> {
     const response = await fetch(tile.url)
     if (!response.ok) {
       throw new Error(`Failed to download tile: ${response.statusText}`)
@@ -493,12 +527,14 @@ export class OfflineMapCache {
         resolve()
       }
 
-      request.onupgradeneeded = (event) => {
+      request.onupgradeneeded = event => {
         const db = (event.target as IDBOpenDBRequest).result
 
         // Create regions store
         if (!db.objectStoreNames.contains('regions')) {
-          const regionsStore = db.createObjectStore('regions', { keyPath: 'id' })
+          const regionsStore = db.createObjectStore('regions', {
+            keyPath: 'id',
+          })
           regionsStore.createIndex('name', 'name', { unique: false })
           regionsStore.createIndex('priority', 'priority', { unique: false })
         }

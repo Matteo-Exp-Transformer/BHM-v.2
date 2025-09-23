@@ -4,24 +4,36 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { photoGallery, GalleryItem, GalleryFilter, GallerySort, GalleryStats } from '@/services/mobile/camera'
+import {
+  photoGallery,
+  GalleryItem,
+  GalleryFilter,
+  GallerySort,
+  GalleryStats,
+} from '@/services/mobile/camera'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { 
-  Grid3X3, 
-  List, 
-  Search, 
-  Filter, 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Grid3X3,
+  List,
+  Search,
+  Filter,
   Calendar,
   Download,
   Trash2,
   Eye,
   Image as ImageIcon,
   QrCode,
-  Settings
+  Settings,
 } from 'lucide-react'
 
 interface PhotoGalleryViewProps {
@@ -35,14 +47,17 @@ type ViewMode = 'grid' | 'list'
 export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
   onItemSelect,
   onItemDelete,
-  className = ''
+  className = '',
 }) => {
   const [items, setItems] = useState<GalleryItem[]>([])
   const [stats, setStats] = useState<GalleryStats | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState<GalleryFilter>({})
-  const [sort, setSort] = useState<GallerySort>({ field: 'timestamp', direction: 'desc' })
+  const [sort, setSort] = useState<GallerySort>({
+    field: 'timestamp',
+    direction: 'desc',
+  })
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
 
@@ -53,11 +68,19 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
   const loadGalleryData = () => {
     setIsLoading(true)
     try {
-      const search = searchQuery ? {
-        query: searchQuery,
-        fields: ['notes', 'conservationPointId', 'taskId', 'inspectionId', 'deviceModel'] as const,
-        caseSensitive: false
-      } : undefined
+      const search = searchQuery
+        ? {
+            query: searchQuery,
+            fields: [
+              'notes',
+              'conservationPointId',
+              'taskId',
+              'inspectionId',
+              'deviceModel',
+            ] as const,
+            caseSensitive: false,
+          }
+        : undefined
 
       const galleryItems = photoGallery.getItems(filter, sort, search)
       const galleryStats = photoGallery.getStats()
@@ -85,8 +108,10 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
 
   const handleBulkDelete = () => {
     if (selectedItems.size === 0) return
-    
-    if (confirm(`Are you sure you want to delete ${selectedItems.size} items?`)) {
+
+    if (
+      confirm(`Are you sure you want to delete ${selectedItems.size} items?`)
+    ) {
       selectedItems.forEach(itemId => {
         photoGallery.removeItem(itemId)
       })
@@ -163,7 +188,7 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
                 src={item.thumbnail}
                 alt={item.id}
                 className="w-full h-full object-cover rounded-md"
-                onError={(e) => {
+                onError={e => {
                   e.currentTarget.style.display = 'none'
                 }}
               />
@@ -177,7 +202,7 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
                 <input
                   type="checkbox"
                   checked={selectedItems.has(item.id)}
-                  onChange={(e) => {
+                  onChange={e => {
                     e.stopPropagation()
                     handleSelectItem(item.id)
                   }}
@@ -214,12 +239,12 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
                   src={item.thumbnail}
                   alt={item.id}
                   className="w-full h-full object-cover rounded-md"
-                  onError={(e) => {
+                  onError={e => {
                     e.currentTarget.style.display = 'none'
                   }}
                 />
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <Badge className={getItemTypeColor(item)}>
@@ -230,10 +255,13 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
                     {item.id.slice(-8)}
                   </span>
                 </div>
-                
+
                 <div className="text-sm text-gray-600">
                   <p>{item.createdAt.toLocaleString()}</p>
-                  <p>{item.data.deviceInfo.platform} - {item.data.deviceInfo.model}</p>
+                  <p>
+                    {item.data.deviceInfo.platform} -{' '}
+                    {item.data.deviceInfo.model}
+                  </p>
                   {item.data.haccpContext && (
                     <div className="flex gap-1 mt-1">
                       {item.data.haccpContext.conservationPointId && (
@@ -255,7 +283,7 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
                 <input
                   type="checkbox"
                   checked={selectedItems.has(item.id)}
-                  onChange={(e) => {
+                  onChange={e => {
                     e.stopPropagation()
                     handleSelectItem(item.id)
                   }}
@@ -264,7 +292,7 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation()
                     handleItemDelete(item.id)
                   }}
@@ -327,7 +355,7 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
                 <Input
                   placeholder="Search photos..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={e => setSearchQuery(e.target.value)}
                   className="pl-10"
                 />
               </div>
@@ -336,9 +364,12 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
             {/* Sort */}
             <Select
               value={`${sort.field}-${sort.direction}`}
-              onValueChange={(value) => {
+              onValueChange={value => {
                 const [field, direction] = value.split('-')
-                setSort({ field: field as GallerySort['field'], direction: direction as GallerySort['direction'] })
+                setSort({
+                  field: field as GallerySort['field'],
+                  direction: direction as GallerySort['direction'],
+                })
               }}
             >
               <SelectTrigger className="w-40">
@@ -357,7 +388,8 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
           {selectedItems.size > 0 && (
             <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 rounded-md">
               <span className="text-sm text-blue-700">
-                {selectedItems.size} item{selectedItems.size !== 1 ? 's' : ''} selected
+                {selectedItems.size} item{selectedItems.size !== 1 ? 's' : ''}{' '}
+                selected
               </span>
               <Button
                 variant="destructive"
@@ -400,19 +432,27 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
           <CardContent className="p-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div>
-                <p className="text-2xl font-bold text-blue-600">{stats.totalItems}</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {stats.totalItems}
+                </p>
                 <p className="text-sm text-gray-600">Total Items</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-green-600">{stats.itemsByType.photos}</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {stats.itemsByType.photos}
+                </p>
                 <p className="text-sm text-gray-600">Photos</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-purple-600">{stats.itemsByType.scans}</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {stats.itemsByType.scans}
+                </p>
                 <p className="text-sm text-gray-600">Scans</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-orange-600">{formatFileSize(stats.totalSize)}</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {formatFileSize(stats.totalSize)}
+                </p>
                 <p className="text-sm text-gray-600">Total Size</p>
               </div>
             </div>
@@ -427,12 +467,16 @@ export const PhotoGalleryView: React.FC<PhotoGalleryViewProps> = ({
             <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600">No photos found</p>
             <p className="text-sm text-gray-500 mt-2">
-              {searchQuery ? 'Try adjusting your search criteria' : 'Start by capturing some photos'}
+              {searchQuery
+                ? 'Try adjusting your search criteria'
+                : 'Start by capturing some photos'}
             </p>
           </CardContent>
         </Card>
+      ) : viewMode === 'grid' ? (
+        renderGridView()
       ) : (
-        viewMode === 'grid' ? renderGridView() : renderListView()
+        renderListView()
       )}
     </div>
   )

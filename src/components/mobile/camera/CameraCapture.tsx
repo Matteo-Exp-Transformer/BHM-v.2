@@ -5,11 +5,20 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'
-import { cameraService, PhotoMetadata, CameraOptions } from '@/services/mobile/camera'
+import {
+  cameraService,
+  PhotoMetadata,
+  CameraOptions,
+} from '@/services/mobile/camera'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { AlertCircle, Camera as CameraIcon, Image as ImageIcon, Settings } from 'lucide-react'
+import {
+  AlertCircle,
+  Camera as CameraIcon,
+  Image as ImageIcon,
+  Settings,
+} from 'lucide-react'
 
 interface CameraCaptureProps {
   onPhotoCaptured?: (metadata: PhotoMetadata) => void
@@ -27,7 +36,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   onPhotoCaptured,
   onError,
   haccpContext,
-  className = ''
+  className = '',
 }) => {
   const [isInitialized, setIsInitialized] = useState(false)
   const [isCapturing, setIsCapturing] = useState(false)
@@ -39,7 +48,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     resultType: CameraResultType.DataUrl,
     source: CameraSource.Camera,
     correctOrientation: true,
-    saveToGallery: true
+    saveToGallery: true,
   })
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -53,7 +62,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     try {
       await cameraService.initialize()
       const hasPermissions = await cameraService.checkPermissions()
-      
+
       if (!hasPermissions) {
         const granted = await cameraService.requestPermissions()
         setPermissionsGranted(granted)
@@ -73,7 +82,10 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
     setIsCapturing(true)
     try {
-      const metadata = await cameraService.captureHACCPPhoto(haccpContext, cameraOptions)
+      const metadata = await cameraService.captureHACCPPhoto(
+        haccpContext,
+        cameraOptions
+      )
       setLastPhoto(metadata)
       onPhotoCaptured?.(metadata)
     } catch (error) {
@@ -122,7 +134,8 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         </CardHeader>
         <CardContent>
           <p className="text-gray-600 mb-4">
-            Please grant camera permission to capture photos for HACCP documentation.
+            Please grant camera permission to capture photos for HACCP
+            documentation.
           </p>
           <Button onClick={initializeCamera} className="w-full">
             Grant Permission
@@ -145,12 +158,16 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         <CardContent className="space-y-4">
           {/* Quality Settings */}
           <div>
-            <label className="block text-sm font-medium mb-2">Photo Quality</label>
+            <label className="block text-sm font-medium mb-2">
+              Photo Quality
+            </label>
             <div className="flex gap-2">
               {[60, 75, 85, 95].map(quality => (
                 <Button
                   key={quality}
-                  variant={cameraOptions.quality === quality ? 'default' : 'outline'}
+                  variant={
+                    cameraOptions.quality === quality ? 'default' : 'outline'
+                  }
                   size="sm"
                   onClick={() => handleQualityChange(quality)}
                 >
@@ -162,10 +179,16 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
           {/* Source Selection */}
           <div>
-            <label className="block text-sm font-medium mb-2">Photo Source</label>
+            <label className="block text-sm font-medium mb-2">
+              Photo Source
+            </label>
             <div className="flex gap-2">
               <Button
-                variant={cameraOptions.source === CameraSource.Camera ? 'default' : 'outline'}
+                variant={
+                  cameraOptions.source === CameraSource.Camera
+                    ? 'default'
+                    : 'outline'
+                }
                 size="sm"
                 onClick={() => handleSourceChange(CameraSource.Camera)}
               >
@@ -173,7 +196,11 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
                 Camera
               </Button>
               <Button
-                variant={cameraOptions.source === CameraSource.Photos ? 'default' : 'outline'}
+                variant={
+                  cameraOptions.source === CameraSource.Photos
+                    ? 'default'
+                    : 'outline'
+                }
                 size="sm"
                 onClick={() => handleSourceChange(CameraSource.Photos)}
               >
@@ -219,9 +246,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
                 </Badge>
               )}
               {haccpContext.taskId && (
-                <Badge variant="secondary">
-                  Task: {haccpContext.taskId}
-                </Badge>
+                <Badge variant="secondary">Task: {haccpContext.taskId}</Badge>
               )}
               {haccpContext.inspectionId && (
                 <Badge variant="secondary">
@@ -265,7 +290,8 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               <div className="flex justify-between">
                 <span className="text-gray-600">Resolution:</span>
                 <span>
-                  {lastPhoto.cameraSettings.resolution.width} × {lastPhoto.cameraSettings.resolution.height}
+                  {lastPhoto.cameraSettings.resolution.width} ×{' '}
+                  {lastPhoto.cameraSettings.resolution.height}
                 </span>
               </div>
             </div>

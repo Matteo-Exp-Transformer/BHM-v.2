@@ -8,44 +8,48 @@ import { MapView } from './MapView'
 import { LocationPicker } from './LocationPicker'
 import { GeofenceVisualizer } from './GeofenceVisualizer'
 import { RouteDisplay } from './RouteDisplay'
-import { 
-  gpsService, 
-  geofenceManager, 
-  offlineMapCache, 
-  routeOptimizer, 
+import {
+  gpsService,
+  geofenceManager,
+  offlineMapCache,
+  routeOptimizer,
   locationHistory,
   LocationData,
   ConservationPointLocation,
   Geofence,
-  Route
+  Route,
 } from '@/services/mobile/location'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { 
-  MapPin, 
-  Navigation, 
-  Shield, 
+import {
+  MapPin,
+  Navigation,
+  Shield,
   Route as RouteIcon,
-  Smartphone, 
+  Smartphone,
   Zap,
   CheckCircle,
   AlertCircle,
-  Info
+  Info,
 } from 'lucide-react'
 
 export const LocationDemo: React.FC = () => {
   const [activeTab, setActiveTab] = useState('map')
-  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null)
-  const [conservationPoints, setConservationPoints] = useState<ConservationPointLocation[]>([])
+  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(
+    null
+  )
+  const [conservationPoints, setConservationPoints] = useState<
+    ConservationPointLocation[]
+  >([])
   const [geofences, setGeofences] = useState<Geofence[]>([])
   const [routes, setRoutes] = useState<Route[]>([])
   const [demoStats, setDemoStats] = useState({
     locationsTracked: 0,
     geofenceEvents: 0,
     routesOptimized: 0,
-    conservationPointsCreated: 0
+    conservationPointsCreated: 0,
   })
   const [isInitialized, setIsInitialized] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -73,58 +77,79 @@ export const LocationDemo: React.FC = () => {
       setRoutes(routesList)
 
       // Subscribe to location updates
-      gpsService.startTracking({ enableHighAccuracy: true }, (location) => {
+      gpsService.startTracking({ enableHighAccuracy: true }, location => {
         setCurrentLocation(location)
-        setDemoStats(prev => ({ ...prev, locationsTracked: prev.locationsTracked + 1 }))
-        
+        setDemoStats(prev => ({
+          ...prev,
+          locationsTracked: prev.locationsTracked + 1,
+        }))
+
         // Update geofence manager with new location
         geofenceManager.updateLocation(location)
-        
+
         // Add to location history
         locationHistory.addEntry(location, {
           activity: 'walking',
           batteryLevel: 85,
-          appState: 'foreground'
+          appState: 'foreground',
         })
       })
 
       // Subscribe to geofence events
-      geofenceManager.onEvent((event) => {
-        setDemoStats(prev => ({ ...prev, geofenceEvents: prev.geofenceEvents + 1 }))
+      geofenceManager.onEvent(event => {
+        setDemoStats(prev => ({
+          ...prev,
+          geofenceEvents: prev.geofenceEvents + 1,
+        }))
         console.log('Geofence event:', event)
       })
 
       setIsInitialized(true)
       console.log('🗺️ Location demo initialized successfully')
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to initialize location demo')
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to initialize location demo'
+      )
       console.error('❌ Location demo initialization failed:', error)
     }
   }
 
-  const handleLocationSelect = (location: { latitude: number; longitude: number; name?: string }) => {
+  const handleLocationSelect = (location: {
+    latitude: number
+    longitude: number
+    name?: string
+  }) => {
     console.log('Location selected:', location)
   }
 
-  const handleConservationPointCreate = async (point: Omit<ConservationPointLocation, 'id'>) => {
+  const handleConservationPointCreate = async (
+    point: Omit<ConservationPointLocation, 'id'>
+  ) => {
     try {
       // Create conservation point
       const newPoint: ConservationPointLocation = {
         ...point,
-        id: `CP_${Date.now()}`
+        id: `CP_${Date.now()}`,
       }
-      
+
       gpsService.addConservationPoint(newPoint)
       setConservationPoints(prev => [...prev, newPoint])
-      setDemoStats(prev => ({ ...prev, conservationPointsCreated: prev.conservationPointsCreated + 1 }))
-      
+      setDemoStats(prev => ({
+        ...prev,
+        conservationPointsCreated: prev.conservationPointsCreated + 1,
+      }))
+
       console.log('Conservation point created:', newPoint)
     } catch (error) {
       console.error('Failed to create conservation point:', error)
     }
   }
 
-  const handleGeofenceCreate = (geofence: Omit<Geofence, 'id' | 'metadata'>) => {
+  const handleGeofenceCreate = (
+    geofence: Omit<Geofence, 'id' | 'metadata'>
+  ) => {
     try {
       const newGeofence: Geofence = {
         ...geofence,
@@ -132,13 +157,13 @@ export const LocationDemo: React.FC = () => {
         metadata: {
           created: new Date(),
           updated: new Date(),
-          priority: 'medium'
-        }
+          priority: 'medium',
+        },
       }
-      
+
       geofenceManager.addGeofence(newGeofence)
       setGeofences(prev => [...prev, newGeofence])
-      
+
       console.log('Geofence created:', newGeofence)
     } catch (error) {
       console.error('Failed to create geofence:', error)
@@ -150,12 +175,17 @@ export const LocationDemo: React.FC = () => {
       const result = await routeOptimizer.optimizeRoute(route.id, {
         algorithm: 'nearest_neighbor',
         minimizeDistance: true,
-        respectTimeWindows: true
+        respectTimeWindows: true,
       })
-      
+
       if (result.success && result.route) {
-        setRoutes(prev => prev.map(r => r.id === route.id ? result.route! : r))
-        setDemoStats(prev => ({ ...prev, routesOptimized: prev.routesOptimized + 1 }))
+        setRoutes(prev =>
+          prev.map(r => (r.id === route.id ? result.route! : r))
+        )
+        setDemoStats(prev => ({
+          ...prev,
+          routesOptimized: prev.routesOptimized + 1,
+        }))
       }
     } catch (error) {
       console.error('Failed to optimize route:', error)
@@ -168,17 +198,17 @@ export const LocationDemo: React.FC = () => {
         name: 'Demo HACCP Area',
         bounds: {
           north: 45.4645,
-          south: 45.4640,
+          south: 45.464,
           east: 9.1905,
-          west: 9.1895
+          west: 9.1895,
         },
         zoomLevels: [15, 16, 17],
         priority: 'high' as const,
         haccpContext: {
           conservationPointIds: conservationPoints.map(p => p.id),
           inspectionRoutes: routes.map(r => r.id),
-          emergencyLocations: []
-        }
+          emergencyLocations: [],
+        },
       }
 
       const regionId = await offlineMapCache.downloadRegion(region)
@@ -225,26 +255,35 @@ export const LocationDemo: React.FC = () => {
         </CardHeader>
         <CardContent>
           <p className="text-gray-600 mb-4">
-            This demo showcases the location services for HACCP field work, 
-            including GPS tracking, geofencing, route optimization, and offline mapping.
+            This demo showcases the location services for HACCP field work,
+            including GPS tracking, geofencing, route optimization, and offline
+            mapping.
           </p>
-          
+
           {/* Demo Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{demoStats.locationsTracked}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {demoStats.locationsTracked}
+              </div>
               <div className="text-sm text-blue-700">Locations Tracked</div>
             </div>
             <div className="text-center p-3 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">{demoStats.geofenceEvents}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {demoStats.geofenceEvents}
+              </div>
               <div className="text-sm text-green-700">Geofence Events</div>
             </div>
             <div className="text-center p-3 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">{demoStats.routesOptimized}</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {demoStats.routesOptimized}
+              </div>
               <div className="text-sm text-purple-700">Routes Optimized</div>
             </div>
             <div className="text-center p-3 bg-orange-50 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">{demoStats.conservationPointsCreated}</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {demoStats.conservationPointsCreated}
+              </div>
               <div className="text-sm text-orange-700">Points Created</div>
             </div>
           </div>
@@ -254,12 +293,17 @@ export const LocationDemo: React.FC = () => {
             <div className="mt-4 p-3 bg-green-50 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle className="h-4 w-4 text-green-600" />
-                <span className="font-medium text-green-800">Current Location</span>
+                <span className="font-medium text-green-800">
+                  Current Location
+                </span>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
                   <span className="text-green-600">Coordinates:</span>
-                  <p className="font-mono">{currentLocation.latitude.toFixed(6)}, {currentLocation.longitude.toFixed(6)}</p>
+                  <p className="font-mono">
+                    {currentLocation.latitude.toFixed(6)},{' '}
+                    {currentLocation.longitude.toFixed(6)}
+                  </p>
                 </div>
                 <div>
                   <span className="text-green-600">Accuracy:</span>
@@ -305,13 +349,15 @@ export const LocationDemo: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <MapView
               onLocationSelect={handleLocationSelect}
-              onConservationPointSelect={(point) => console.log('Conservation point selected:', point)}
+              onConservationPointSelect={point =>
+                console.log('Conservation point selected:', point)
+              }
               showCurrentLocation={true}
               showConservationPoints={true}
               showGeofences={true}
               height="500px"
             />
-            
+
             <LocationPicker
               onLocationSelect={handleLocationSelect}
               onConservationPointCreate={handleConservationPointCreate}
@@ -323,19 +369,23 @@ export const LocationDemo: React.FC = () => {
         {/* Geofences Tab */}
         <TabsContent value="geofences" className="mt-6">
           <GeofenceVisualizer
-            onGeofenceSelect={(geofence) => console.log('Geofence selected:', geofence)}
+            onGeofenceSelect={geofence =>
+              console.log('Geofence selected:', geofence)
+            }
             onGeofenceCreate={handleGeofenceCreate}
-            onGeofenceUpdate={(geofence) => console.log('Geofence updated:', geofence)}
-            onGeofenceDelete={(id) => console.log('Geofence deleted:', id)}
+            onGeofenceUpdate={geofence =>
+              console.log('Geofence updated:', geofence)
+            }
+            onGeofenceDelete={id => console.log('Geofence deleted:', id)}
           />
         </TabsContent>
 
         {/* Routes Tab */}
         <TabsContent value="routes" className="mt-6">
           <RouteDisplay
-            onRouteSelect={(route) => console.log('Route selected:', route)}
-            onRouteStart={(route) => console.log('Route started:', route)}
-            onRouteComplete={(route) => console.log('Route completed:', route)}
+            onRouteSelect={route => console.log('Route selected:', route)}
+            onRouteStart={route => console.log('Route started:', route)}
+            onRouteComplete={route => console.log('Route completed:', route)}
           />
         </TabsContent>
 
@@ -355,12 +405,12 @@ export const LocationDemo: React.FC = () => {
                   <p className="text-gray-600">
                     Download map regions for offline use during inspections.
                   </p>
-                  
+
                   <Button onClick={handleDownloadMapRegion} className="w-full">
                     <Navigation className="h-4 w-4 mr-2" />
                     Download Demo Region
                   </Button>
-                  
+
                   <div className="text-sm text-gray-500">
                     <p>• HACCP conservation points area</p>
                     <p>• Zoom levels 15-17</p>
@@ -383,10 +433,10 @@ export const LocationDemo: React.FC = () => {
                   <p className="text-gray-600">
                     View and manage location tracking history.
                   </p>
-                  
+
                   <div className="space-y-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full"
                       onClick={() => {
                         const stats = locationHistory.getStats()
@@ -395,9 +445,9 @@ export const LocationDemo: React.FC = () => {
                     >
                       View Statistics
                     </Button>
-                    
-                    <Button 
-                      variant="outline" 
+
+                    <Button
+                      variant="outline"
                       className="w-full"
                       onClick={() => {
                         const clusters = locationHistory.getLocationClusters()
@@ -406,9 +456,9 @@ export const LocationDemo: React.FC = () => {
                     >
                       View Clusters
                     </Button>
-                    
-                    <Button 
-                      variant="outline" 
+
+                    <Button
+                      variant="outline"
                       className="w-full"
                       onClick={() => {
                         const exportData = locationHistory.exportHistory('json')
@@ -435,22 +485,30 @@ export const LocationDemo: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-3 bg-green-50 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-green-800">GPS Service</p>
+                  <p className="text-sm font-medium text-green-800">
+                    GPS Service
+                  </p>
                   <p className="text-xs text-green-600">Active</p>
                 </div>
                 <div className="text-center p-3 bg-green-50 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-green-800">Geofence Manager</p>
+                  <p className="text-sm font-medium text-green-800">
+                    Geofence Manager
+                  </p>
                   <p className="text-xs text-green-600">Monitoring</p>
                 </div>
                 <div className="text-center p-3 bg-green-50 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-green-800">Route Optimizer</p>
+                  <p className="text-sm font-medium text-green-800">
+                    Route Optimizer
+                  </p>
                   <p className="text-xs text-green-600">Ready</p>
                 </div>
                 <div className="text-center p-3 bg-green-50 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-green-800">Location History</p>
+                  <p className="text-sm font-medium text-green-800">
+                    Location History
+                  </p>
                   <p className="text-xs text-green-600">Tracking</p>
                 </div>
               </div>
@@ -479,7 +537,7 @@ export const LocationDemo: React.FC = () => {
                 <li>• Offline map caching</li>
               </ul>
             </div>
-            
+
             <div className="space-y-3">
               <h3 className="font-semibold text-green-700">🚧 Geofencing</h3>
               <ul className="text-sm text-gray-600 space-y-1">
@@ -490,9 +548,11 @@ export const LocationDemo: React.FC = () => {
                 <li>• Visual geofence management</li>
               </ul>
             </div>
-            
+
             <div className="space-y-3">
-              <h3 className="font-semibold text-purple-700">🛣️ Route Optimization</h3>
+              <h3 className="font-semibold text-purple-700">
+                🛣️ Route Optimization
+              </h3>
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• Multiple optimization algorithms</li>
                 <li>• Inspection route planning</li>

@@ -52,7 +52,11 @@ export interface Route {
 }
 
 export interface OptimizationOptions {
-  algorithm: 'nearest_neighbor' | 'genetic' | 'simulated_annealing' | 'tsp_exact'
+  algorithm:
+    | 'nearest_neighbor'
+    | 'genetic'
+    | 'simulated_annealing'
+    | 'tsp_exact'
   maxDuration?: number // minutes
   respectTimeWindows?: boolean
   respectDependencies?: boolean
@@ -126,7 +130,7 @@ export class RouteOptimizer {
     description?: string
   ): string {
     const routeId = this.generateRouteId()
-    
+
     const route: Route = {
       id: routeId,
       name,
@@ -139,7 +143,7 @@ export class RouteOptimizer {
       createdAt: new Date(),
       updatedAt: new Date(),
       status: 'draft',
-      metadata
+      metadata,
     }
 
     this.routes.set(routeId, route)
@@ -164,7 +168,7 @@ export class RouteOptimizer {
         totalDuration: 0,
         optimizationTime: 0,
         algorithm: options.algorithm || 'nearest_neighbor',
-        error: 'Route not found'
+        error: 'Route not found',
       }
     }
 
@@ -186,15 +190,19 @@ export class RouteOptimizer {
           result = await this.optimizeTSPExact(route, options)
           break
         default:
-          throw new Error(`Unknown optimization algorithm: ${options.algorithm}`)
+          throw new Error(
+            `Unknown optimization algorithm: ${options.algorithm}`
+          )
       }
 
       result.optimizationTime = Date.now() - startTime
-      
+
       if (result.success && result.route) {
         this.routes.set(routeId, result.route)
         this.optimizationHistory.push(result)
-        console.log(`🗺️ Route optimized: ${route.name} (efficiency: ${result.efficiency.toFixed(1)}%)`)
+        console.log(
+          `🗺️ Route optimized: ${route.name} (efficiency: ${result.efficiency.toFixed(1)}%)`
+        )
       }
 
       return result
@@ -207,9 +215,9 @@ export class RouteOptimizer {
         totalDuration: 0,
         optimizationTime: Date.now() - startTime,
         algorithm: options.algorithm || 'nearest_neighbor',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       }
-      
+
       this.optimizationHistory.push(errorResult)
       return errorResult
     }
@@ -218,7 +226,10 @@ export class RouteOptimizer {
   /**
    * Start route execution
    */
-  public startRoute(routeId: string, currentLocation?: LocationData): RouteProgress | null {
+  public startRoute(
+    routeId: string,
+    currentLocation?: LocationData
+  ): RouteProgress | null {
     const route = this.routes.get(routeId)
     if (!route || route.status !== 'active') {
       return null
@@ -230,15 +241,17 @@ export class RouteOptimizer {
       completedPoints: [],
       remainingPoints: route.optimizedOrder.map(p => p.id),
       currentLocation,
-      estimatedArrival: currentLocation ? this.calculateArrivalTime(route.optimizedOrder[0], currentLocation) : undefined,
+      estimatedArrival: currentLocation
+        ? this.calculateArrivalTime(route.optimizedOrder[0], currentLocation)
+        : undefined,
       estimatedCompletion: this.calculateCompletionTime(route),
       actualDuration: 0,
-      efficiency: 100
+      efficiency: 100,
     }
 
     this.activeRoutes.set(routeId, progress)
     route.status = 'active'
-    
+
     console.log(`🗺️ Route started: ${route.name}`)
     return progress
   }
@@ -247,7 +260,7 @@ export class RouteOptimizer {
    * Update route progress
    */
   public updateProgress(
-    routeId: string, 
+    routeId: string,
     currentLocation: LocationData,
     completedPointId?: string
   ): RouteProgress | null {
@@ -262,20 +275,32 @@ export class RouteOptimizer {
         progress.completedPoints.push(completedPointId)
         progress.remainingPoints.splice(pointIndex, 1)
         progress.currentPointIndex++
-        
+
         // Update estimated arrival for next point
         if (progress.remainingPoints.length > 0) {
-          const nextPoint = this.getRoutePoint(routeId, progress.remainingPoints[0])
+          const nextPoint = this.getRoutePoint(
+            routeId,
+            progress.remainingPoints[0]
+          )
           if (nextPoint) {
-            progress.estimatedArrival = this.calculateArrivalTime(nextPoint, currentLocation)
+            progress.estimatedArrival = this.calculateArrivalTime(
+              nextPoint,
+              currentLocation
+            )
           }
         }
       }
     } else {
       // Update estimated arrival for current point
-      const currentPoint = this.getRoutePoint(routeId, progress.remainingPoints[0])
+      const currentPoint = this.getRoutePoint(
+        routeId,
+        progress.remainingPoints[0]
+      )
       if (currentPoint) {
-        progress.estimatedArrival = this.calculateArrivalTime(currentPoint, currentLocation)
+        progress.estimatedArrival = this.calculateArrivalTime(
+          currentPoint,
+          currentLocation
+        )
       }
     }
 
@@ -291,12 +316,12 @@ export class RouteOptimizer {
   public completeRoute(routeId: string): boolean {
     const route = this.routes.get(routeId)
     const progress = this.activeRoutes.get(routeId)
-    
+
     if (!route || !progress) return false
 
     route.status = 'completed'
     this.activeRoutes.delete(routeId)
-    
+
     console.log(`🗺️ Route completed: ${route.name}`)
     return true
   }
@@ -338,7 +363,7 @@ export class RouteOptimizer {
 
     this.routes.delete(id)
     this.activeRoutes.delete(id)
-    
+
     console.log(`🗺️ Route deleted: ${route.name}`)
     return true
   }
@@ -354,7 +379,7 @@ export class RouteOptimizer {
    * Nearest Neighbor optimization algorithm
    */
   private async optimizeNearestNeighbor(
-    route: Route, 
+    route: Route,
     options: OptimizationOptions
   ): Promise<OptimizationResult> {
     const points = [...route.points]
@@ -424,7 +449,7 @@ export class RouteOptimizer {
       totalDuration,
       optimizationTime: 0, // Will be set by caller
       algorithm: 'nearest_neighbor',
-      iterations: 1
+      iterations: 1,
     }
   }
 
@@ -432,12 +457,12 @@ export class RouteOptimizer {
    * Genetic algorithm optimization (simplified)
    */
   private async optimizeGenetic(
-    route: Route, 
+    route: Route,
     options: OptimizationOptions
   ): Promise<OptimizationResult> {
     // Simplified genetic algorithm implementation
     // In a real implementation, this would be more sophisticated
-    
+
     const populationSize = 50
     const generations = 100
     let bestRoute = route.points
@@ -445,7 +470,7 @@ export class RouteOptimizer {
 
     for (let gen = 0; gen < generations; gen++) {
       const population = this.generatePopulation(route.points, populationSize)
-      
+
       for (const individual of population) {
         const distance = this.calculateTotalDistance(individual)
         if (distance < bestDistance) {
@@ -468,7 +493,7 @@ export class RouteOptimizer {
       totalDuration,
       optimizationTime: 0,
       algorithm: 'genetic',
-      iterations: generations
+      iterations: generations,
     }
   }
 
@@ -476,27 +501,27 @@ export class RouteOptimizer {
    * Simulated Annealing optimization
    */
   private async optimizeSimulatedAnnealing(
-    route: Route, 
+    route: Route,
     options: OptimizationOptions
   ): Promise<OptimizationResult> {
     // Simplified simulated annealing implementation
     let currentRoute = [...route.points]
     let bestRoute = [...currentRoute]
     let bestDistance = this.calculateTotalDistance(currentRoute)
-    
+
     const initialTemperature = 1000
     const coolingRate = 0.95
     const iterations = 1000
-    
+
     let temperature = initialTemperature
 
     for (let i = 0; i < iterations; i++) {
       const newRoute = this.mutateRoute(currentRoute)
       const currentDistance = this.calculateTotalDistance(currentRoute)
       const newDistance = this.calculateTotalDistance(newRoute)
-      
+
       const delta = newDistance - currentDistance
-      
+
       if (delta < 0 || Math.random() < Math.exp(-delta / temperature)) {
         currentRoute = newRoute
         if (newDistance < bestDistance) {
@@ -504,7 +529,7 @@ export class RouteOptimizer {
           bestRoute = [...newRoute]
         }
       }
-      
+
       temperature *= coolingRate
     }
 
@@ -521,7 +546,7 @@ export class RouteOptimizer {
       totalDuration,
       optimizationTime: 0,
       algorithm: 'simulated_annealing',
-      iterations
+      iterations,
     }
   }
 
@@ -529,13 +554,15 @@ export class RouteOptimizer {
    * Exact TSP solution (for small problems)
    */
   private async optimizeTSPExact(
-    route: Route, 
+    route: Route,
     options: OptimizationOptions
   ): Promise<OptimizationResult> {
     // For small numbers of points, we can try all permutations
     // This is not practical for large numbers of points
     if (route.points.length > 10) {
-      throw new Error('TSP exact solution not practical for more than 10 points')
+      throw new Error(
+        'TSP exact solution not practical for more than 10 points'
+      )
     }
 
     const points = route.points
@@ -544,7 +571,7 @@ export class RouteOptimizer {
 
     // Generate all permutations (simplified - in reality would use more efficient methods)
     const permutations = this.generatePermutations(points)
-    
+
     for (const permutation of permutations) {
       const distance = this.calculateTotalDistance(permutation)
       if (distance < bestDistance) {
@@ -566,24 +593,29 @@ export class RouteOptimizer {
       totalDuration,
       optimizationTime: 0,
       algorithm: 'tsp_exact',
-      iterations: permutations.length
+      iterations: permutations.length,
     }
   }
 
   /**
    * Calculate distance between two points
    */
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number {
     const R = 6371e3 // Earth's radius in meters
-    const φ1 = lat1 * Math.PI / 180
-    const φ2 = lat2 * Math.PI / 180
-    const Δφ = (lat2 - lat1) * Math.PI / 180
-    const Δλ = (lon2 - lon1) * Math.PI / 180
+    const φ1 = (lat1 * Math.PI) / 180
+    const φ2 = (lat2 * Math.PI) / 180
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180
 
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 
     return R * c // Distance in meters
   }
@@ -593,7 +625,7 @@ export class RouteOptimizer {
    */
   private calculateTotalDistance(points: RoutePoint[]): number {
     let totalDistance = 0
-    
+
     for (let i = 0; i < points.length - 1; i++) {
       const distance = this.calculateDistance(
         points[i].latitude,
@@ -603,7 +635,7 @@ export class RouteOptimizer {
       )
       totalDistance += distance
     }
-    
+
     return totalDistance
   }
 
@@ -612,46 +644,53 @@ export class RouteOptimizer {
    */
   private calculateTotalDuration(points: RoutePoint[]): number {
     let totalDuration = 0
-    
+
     for (const point of points) {
       totalDuration += point.estimatedDuration
     }
-    
+
     // Add travel time (assuming average speed of 5 km/h for walking)
     const totalDistance = this.calculateTotalDistance(points)
     const travelTime = totalDistance / (5000 / 60) // Convert to minutes
     totalDuration += travelTime
-    
+
     return totalDuration
   }
 
   /**
    * Calculate route efficiency
    */
-  private calculateEfficiency(original: RoutePoint[], optimized: RoutePoint[]): number {
+  private calculateEfficiency(
+    original: RoutePoint[],
+    optimized: RoutePoint[]
+  ): number {
     const originalDistance = this.calculateTotalDistance(original)
     const optimizedDistance = this.calculateTotalDistance(optimized)
-    
+
     if (originalDistance === 0) return 100
-    
-    const improvement = ((originalDistance - optimizedDistance) / originalDistance) * 100
+
+    const improvement =
+      ((originalDistance - optimizedDistance) / originalDistance) * 100
     return Math.max(0, Math.min(100, 100 + improvement))
   }
 
   /**
    * Calculate arrival time for point
    */
-  private calculateArrivalTime(point: RoutePoint, currentLocation: LocationData): Date {
+  private calculateArrivalTime(
+    point: RoutePoint,
+    currentLocation: LocationData
+  ): Date {
     const distance = this.calculateDistance(
       currentLocation.latitude,
       currentLocation.longitude,
       point.latitude,
       point.longitude
     )
-    
+
     // Assuming average walking speed of 5 km/h
     const travelTimeMinutes = distance / (5000 / 60)
-    
+
     return new Date(Date.now() + travelTimeMinutes * 60 * 1000)
   }
 
@@ -668,10 +707,11 @@ export class RouteOptimizer {
    */
   private calculateRouteEfficiency(progress: RouteProgress): number {
     if (progress.remainingPoints.length === 0) return 100
-    
-    const completedRatio = progress.completedPoints.length / 
+
+    const completedRatio =
+      progress.completedPoints.length /
       (progress.completedPoints.length + progress.remainingPoints.length)
-    
+
     return completedRatio * 100
   }
 
@@ -681,26 +721,29 @@ export class RouteOptimizer {
   private getRoutePoint(routeId: string, pointId: string): RoutePoint | null {
     const route = this.routes.get(routeId)
     if (!route) return null
-    
+
     return route.optimizedOrder.find(p => p.id === pointId) || null
   }
 
   /**
    * Generate population for genetic algorithm
    */
-  private generatePopulation(points: RoutePoint[], size: number): RoutePoint[][] {
+  private generatePopulation(
+    points: RoutePoint[],
+    size: number
+  ): RoutePoint[][] {
     const population: RoutePoint[][] = []
-    
+
     for (let i = 0; i < size; i++) {
       const individual = [...points]
       // Shuffle the array
       for (let j = individual.length - 1; j > 0; j--) {
-        const k = Math.floor(Math.random() * (j + 1));
-        [individual[j], individual[k]] = [individual[k], individual[j]]
+        const k = Math.floor(Math.random() * (j + 1))
+        ;[individual[j], individual[k]] = [individual[k], individual[j]]
       }
       population.push(individual)
     }
-    
+
     return population
   }
 
@@ -710,11 +753,11 @@ export class RouteOptimizer {
   private mutateRoute(route: RoutePoint[]): RoutePoint[] {
     const mutated = [...route]
     const i = Math.floor(Math.random() * mutated.length)
-    const j = Math.floor(Math.random() * mutated.length)
-    
-    // Swap two points
-    [mutated[i], mutated[j]] = [mutated[j], mutated[i]]
-    
+    const j = (Math.floor(Math.random() * mutated.length)[
+      // Swap two points
+      (mutated[i], mutated[j])
+    ] = [mutated[j], mutated[i]])
+
     return mutated
   }
 
@@ -725,7 +768,7 @@ export class RouteOptimizer {
     // Simplified permutation generation
     // In reality, would use more efficient methods for large sets
     if (points.length <= 1) return [points]
-    
+
     const result: RoutePoint[][] = []
     for (let i = 0; i < points.length; i++) {
       const rest = [...points.slice(0, i), ...points.slice(i + 1)]
@@ -734,7 +777,7 @@ export class RouteOptimizer {
         result.push([points[i], ...perm])
       }
     }
-    
+
     return result
   }
 
@@ -753,14 +796,14 @@ export class RouteOptimizer {
             type: 'conservation_point',
             name: 'Main Refrigeration Unit',
             latitude: 45.4642,
-            longitude: 9.1900,
+            longitude: 9.19,
             priority: 'high',
             estimatedDuration: 5,
             haccpContext: {
               conservationPointId: 'CP001',
               temperatureCheck: true,
-              documentationRequired: true
-            }
+              documentationRequired: true,
+            },
           },
           {
             id: 'point_002',
@@ -773,9 +816,9 @@ export class RouteOptimizer {
             haccpContext: {
               conservationPointId: 'CP002',
               temperatureCheck: true,
-              documentationRequired: true
-            }
-          }
+              documentationRequired: true,
+            },
+          },
         ],
         optimizedOrder: [],
         totalDistance: 0,
@@ -786,9 +829,9 @@ export class RouteOptimizer {
         status: 'draft',
         metadata: {
           createdBy: 'system',
-          vehicleType: 'foot'
-        }
-      }
+          vehicleType: 'foot',
+        },
+      },
     ]
 
     defaultRoutes.forEach(route => {

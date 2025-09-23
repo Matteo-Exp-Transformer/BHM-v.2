@@ -47,7 +47,7 @@ await cameraService.initialize()
 const metadata = await cameraService.captureHACCPPhoto({
   conservationPointId: 'CP001',
   taskId: 'DAILY_INSPECTION',
-  notes: 'Temperature check'
+  notes: 'Temperature check',
 })
 
 // Check capabilities
@@ -65,7 +65,7 @@ import { photoProcessor } from '@/services/mobile/camera'
 const compressed = await photoProcessor.compressPhoto(dataUrl, {
   quality: 85,
   maxWidth: 1920,
-  maxHeight: 1080
+  maxHeight: 1080,
 })
 
 // Add annotations
@@ -75,8 +75,8 @@ const annotated = await photoProcessor.addAnnotations(dataUrl, [
     position: { x: 50, y: 50 },
     fontSize: 16,
     color: '#ffffff',
-    backgroundColor: '#000000'
-  }
+    backgroundColor: '#000000',
+  },
 ])
 
 // Generate HACCP annotations
@@ -104,7 +104,7 @@ barcodeScanner.addProduct({
   productId: 'NEW001',
   name: 'Fresh Product',
   category: 'Meat',
-  haccpCriticalPoints: ['Temperature Control']
+  haccpCriticalPoints: ['Temperature Control'],
 })
 ```
 
@@ -124,7 +124,7 @@ photoGallery.addScanResult(scanResult, thumbnail)
 const items = photoGallery.getItems(
   {
     dateRange: { start: new Date('2025-01-01'), end: new Date('2025-01-31') },
-    haccpContext: { conservationPointId: 'CP001' }
+    haccpContext: { conservationPointId: 'CP001' },
   },
   { field: 'timestamp', direction: 'desc' },
   { query: 'temperature', fields: ['notes'] }
@@ -141,13 +141,13 @@ const stats = photoGallery.getStats()
 ```tsx
 import { CameraCapture } from '@/components/mobile/camera/CameraCapture'
 
-<CameraCapture
-  onPhotoCaptured={(metadata) => console.log('Photo captured:', metadata)}
-  onError={(error) => console.error('Camera error:', error)}
+;<CameraCapture
+  onPhotoCaptured={metadata => console.log('Photo captured:', metadata)}
+  onError={error => console.error('Camera error:', error)}
   haccpContext={{
     conservationPointId: 'CP001',
     taskId: 'DAILY_INSPECTION',
-    notes: 'Temperature check'
+    notes: 'Temperature check',
   }}
 />
 ```
@@ -157,9 +157,11 @@ import { CameraCapture } from '@/components/mobile/camera/CameraCapture'
 ```tsx
 import { PhotoAnnotation } from '@/components/mobile/camera/PhotoAnnotation'
 
-<PhotoAnnotation
+;<PhotoAnnotation
   photoDataUrl={photoDataUrl}
-  onAnnotationComplete={(processedPhoto) => console.log('Annotation complete:', processedPhoto)}
+  onAnnotationComplete={processedPhoto =>
+    console.log('Annotation complete:', processedPhoto)
+  }
   onCancel={() => setShowAnnotation(false)}
 />
 ```
@@ -169,10 +171,10 @@ import { PhotoAnnotation } from '@/components/mobile/camera/PhotoAnnotation'
 ```tsx
 import { BarcodeScanner } from '@/components/mobile/camera/BarcodeScanner'
 
-<BarcodeScanner
-  onScanComplete={(scanResult) => console.log('Scan complete:', scanResult)}
-  onProductFound={(product) => console.log('Product found:', product)}
-  onError={(error) => console.error('Scan error:', error)}
+;<BarcodeScanner
+  onScanComplete={scanResult => console.log('Scan complete:', scanResult)}
+  onProductFound={product => console.log('Product found:', product)}
+  onError={error => console.error('Scan error:', error)}
 />
 ```
 
@@ -181,9 +183,9 @@ import { BarcodeScanner } from '@/components/mobile/camera/BarcodeScanner'
 ```tsx
 import { PhotoGalleryView } from '@/components/mobile/camera/PhotoGalleryView'
 
-<PhotoGalleryView
-  onItemSelect={(item) => console.log('Item selected:', item)}
-  onItemDelete={(itemId) => console.log('Item deleted:', itemId)}
+;<PhotoGalleryView
+  onItemSelect={item => console.log('Item selected:', item)}
+  onItemDelete={itemId => console.log('Item deleted:', itemId)}
 />
 ```
 
@@ -232,10 +234,10 @@ interface PhotoMetadata {
 
 ```typescript
 interface CameraOptions {
-  quality?: number        // 0-100, default: 85
-  allowEditing?: boolean  // default: false
+  quality?: number // 0-100, default: 85
+  allowEditing?: boolean // default: false
   resultType?: CameraResultType
-  source?: CameraSource   // Camera or Photos
+  source?: CameraSource // Camera or Photos
   width?: number
   height?: number
   correctOrientation?: boolean
@@ -247,9 +249,9 @@ interface CameraOptions {
 
 ```typescript
 interface CompressionOptions {
-  maxWidth?: number       // default: 1920
-  maxHeight?: number      // default: 1080
-  quality?: number        // 0-100, default: 85
+  maxWidth?: number // default: 1920
+  maxHeight?: number // default: 1080
+  quality?: number // 0-100, default: 85
   format?: 'jpeg' | 'png' | 'webp'
   progressive?: boolean
 }
@@ -269,6 +271,7 @@ The camera services include comprehensive error handling and fallbacks:
 This completes **B.8.4 Session 1-2: Camera & Photo Management**.
 
 Ready for **B.8.4 Session 3-4: GPS & Location Features**:
+
 - GPS-based conservation point mapping
 - Geofencing for temperature monitoring
 - Location-based task assignments

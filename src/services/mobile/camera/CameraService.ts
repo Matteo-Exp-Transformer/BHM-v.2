@@ -3,7 +3,12 @@
  * Advanced camera integration with manual controls for HACCP photo documentation
  */
 
-import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera'
+import {
+  Camera,
+  CameraResultType,
+  CameraSource,
+  Photo,
+} from '@capacitor/camera'
 import { Device } from '@capacitor/device'
 
 export interface CameraOptions {
@@ -67,13 +72,15 @@ export class CameraService {
   public async initialize(): Promise<void> {
     try {
       const deviceInfo = await Device.getInfo()
-      
+
       this.capabilities = {
-        hasCamera: 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices,
+        hasCamera:
+          'mediaDevices' in navigator &&
+          'getUserMedia' in navigator.mediaDevices,
         hasFlash: false, // Will be detected during capture
         hasFrontCamera: false, // Will be detected during capture
         maxResolution: { width: 4096, height: 3072 }, // Default high resolution
-        supportedFormats: ['image/jpeg', 'image/png', 'image/webp']
+        supportedFormats: ['image/jpeg', 'image/png', 'image/webp'],
       }
 
       console.log('📷 Camera service initialized:', this.capabilities)
@@ -86,7 +93,9 @@ export class CameraService {
   /**
    * Capture photo with advanced options
    */
-  public async capturePhoto(options: CameraOptions = {}): Promise<PhotoMetadata> {
+  public async capturePhoto(
+    options: CameraOptions = {}
+  ): Promise<PhotoMetadata> {
     if (!this.capabilities?.hasCamera) {
       throw new Error('Camera not available on this device')
     }
@@ -99,7 +108,7 @@ export class CameraService {
         source: CameraSource.Camera,
         correctOrientation: true,
         saveToGallery: true,
-        ...options
+        ...options,
       }
 
       const photo = await Camera.getPhoto(defaultOptions)
@@ -111,16 +120,16 @@ export class CameraService {
         deviceInfo: {
           platform: deviceInfo.platform,
           model: deviceInfo.model,
-          osVersion: deviceInfo.osVersion
+          osVersion: deviceInfo.osVersion,
         },
         cameraSettings: {
           quality: defaultOptions.quality || 85,
           resolution: {
             width: photo.width || 1920,
-            height: photo.height || 1080
+            height: photo.height || 1080,
           },
-          flashUsed: false // TODO: Detect flash usage
-        }
+          flashUsed: false, // TODO: Detect flash usage
+        },
       }
 
       this.photoHistory.push(metadata)
@@ -160,10 +169,12 @@ export class CameraService {
   /**
    * Get photos by HACCP context
    */
-  public getPhotosByContext(context: Partial<PhotoMetadata['haccpContext']>): PhotoMetadata[] {
+  public getPhotosByContext(
+    context: Partial<PhotoMetadata['haccpContext']>
+  ): PhotoMetadata[] {
     return this.photoHistory.filter(photo => {
       if (!photo.haccpContext || !context) return false
-      
+
       return Object.keys(context).every(key => {
         const contextKey = key as keyof PhotoMetadata['haccpContext']
         return photo.haccpContext?.[contextKey] === context[contextKey]
