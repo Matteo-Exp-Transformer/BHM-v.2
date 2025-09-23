@@ -15,6 +15,7 @@
 ### **⚠️ PRIMA DI QUALSIASI OPERAZIONE - WORKFLOW MANDATORY:**
 
 **1. 📚 LETTURA COMPLETA OBBLIGATORIA:**
+
 ```
 DEVI LEGGERE QUESTI FILE PRIMA DI INIZIARE:
 ✅ Project_Knowledge/CURSOR-COORDINATION-MASTER.md (questo file)
@@ -25,6 +26,7 @@ DEVI LEGGERE QUESTI FILE PRIMA DI INIZIARE:
 ```
 
 **2. 🌿 VERIFICA BRANCH OBBLIGATORIA:**
+
 ```bash
 # COMANDI OBBLIGATORI DA ESEGUIRE:
 git branch                    # Verifica branch attuale
@@ -36,6 +38,7 @@ git log --oneline -5         # Verifica ultimi commit
 **❌ NON LAVORARE MAI SU `main` O `Claude`**
 
 **3. 📋 DICHIARAZIONE OBBLIGATORIA:**
+
 ```
 PRIMA DI INIZIARE DEVI DICHIARARE:
 "Ho letto tutta la documentazione ✅"
@@ -45,6 +48,7 @@ PRIMA DI INIZIARE DEVI DICHIARARE:
 ```
 
 **4. 🚫 DIVIETI ASSOLUTI:**
+
 ```
 ❌ NON fare merge senza autorizzazione esplicita
 ❌ NON cambiare branch senza consultare documentazione
@@ -53,6 +57,7 @@ PRIMA DI INIZIARE DEVI DICHIARARE:
 ```
 
 **5. 📊 REPORT OBBLIGATORI:**
+
 ```
 ✅ Compila Tasks Debug Report ogni sessione
 ✅ Aggiorna todo list durante lavoro
@@ -63,6 +68,7 @@ PRIMA DI INIZIARE DEVI DICHIARARE:
 ### **🔄 WORKFLOW VERIFICATION CHECKLIST:**
 
 Prima di ogni sessione:
+
 - [ ] Ho letto TUTTI i file di documentazione?
 - [ ] Sono sul branch Curs?
 - [ ] Ho verificato git status?
