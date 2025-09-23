@@ -140,7 +140,6 @@ const stats = photoGallery.getStats()
 
 ```tsx
 import { CameraCapture } from '@/components/mobile/camera/CameraCapture'
-
 ;<CameraCapture
   onPhotoCaptured={metadata => console.log('Photo captured:', metadata)}
   onError={error => console.error('Camera error:', error)}
@@ -156,7 +155,6 @@ import { CameraCapture } from '@/components/mobile/camera/CameraCapture'
 
 ```tsx
 import { PhotoAnnotation } from '@/components/mobile/camera/PhotoAnnotation'
-
 ;<PhotoAnnotation
   photoDataUrl={photoDataUrl}
   onAnnotationComplete={processedPhoto =>
@@ -170,7 +168,6 @@ import { PhotoAnnotation } from '@/components/mobile/camera/PhotoAnnotation'
 
 ```tsx
 import { BarcodeScanner } from '@/components/mobile/camera/BarcodeScanner'
-
 ;<BarcodeScanner
   onScanComplete={scanResult => console.log('Scan complete:', scanResult)}
   onProductFound={product => console.log('Product found:', product)}
@@ -182,7 +179,6 @@ import { BarcodeScanner } from '@/components/mobile/camera/BarcodeScanner'
 
 ```tsx
 import { PhotoGalleryView } from '@/components/mobile/camera/PhotoGalleryView'
-
 ;<PhotoGalleryView
   onItemSelect={item => console.log('Item selected:', item)}
   onItemDelete={itemId => console.log('Item deleted:', itemId)}
