@@ -1,10 +1,6 @@
 import React, { useState } from 'react'
 import { X, User, Plus } from 'lucide-react'
-<<<<<<< HEAD
-import type { TypedCalendarEvent } from '@/types/calendar'
-=======
-import type { CalendarEvent, CalendarEventType } from '@/types/calendar'
->>>>>>> origin/Curs
+import type { TypedCalendarEvent, CalendarEventType } from '@/types/calendar'
 
 interface CreateEventModalProps {
   selectedDate: Date | null

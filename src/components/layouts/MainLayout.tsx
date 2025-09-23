@@ -8,12 +8,8 @@ import {
   Settings,
   Users,
 } from 'lucide-react'
-<<<<<<< HEAD
-import { useAuth, type UserRole } from '@/hooks/useAuth'
-=======
 import { SyncStatusBar } from '@/components/offline/SyncStatusBar'
-import { useAuth, UserRole } from '@/hooks/useAuth'
->>>>>>> origin/Curs
+import { useAuth, type UserRole } from '@/hooks/useAuth'
 
 interface MainLayoutProps {
   children: ReactNode

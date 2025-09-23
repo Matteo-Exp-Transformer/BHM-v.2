@@ -442,9 +442,6 @@ export interface MaintenanceStats {
   completion_rate: number
   tasks_by_type: Record<MaintenanceType, number>
   average_completion_time: number
-<<<<<<< HEAD
-}
-=======
   upcoming_tasks: MaintenanceTask[]
 }
 
@@ -688,4 +685,3 @@ export const TEMPERATURE_RANGES = {
   fridge: { min: 0, max: 9, optimal: 4 },
   ambient: { min: 10, max: 25, optimal: 18 },
 } as const
->>>>>>> origin/Curs

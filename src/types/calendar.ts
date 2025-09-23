@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 export interface CalendarNotification {
   id: string
   type: 'email' | 'push' | 'sms' | 'in_app'
@@ -15,7 +13,6 @@ export interface CalendarFilter {
   assignedTo?: string[]
 }
 
->>>>>>> origin/Curs
 // Calendar Event Types for HACCP Business Manager
 // Unified schema for tasks, maintenances, and custom events
 
@@ -210,37 +207,23 @@ export type TypedCalendarEvent = CalendarEvent
 
 // Calendar settings interface
 export interface CalendarSettings {
-<<<<<<< HEAD
-  defaultView: 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay'
-  timeFormat: '24h' | '12h'
-  weekStart: 0 | 1 // 0 = Sunday, 1 = Monday
+  defaultView: 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listWeek'
+  timeFormat: '12h' | '24h'
+  weekStartsOn: 0 | 1 // 0 = Sunday, 1 = Monday
+  firstDayOfWeek: number
+  colorScheme: Record<CalendarEvent['source'], string>
   businessHours: {
     enabled: boolean
+    daysOfWeek: number[]
     startTime: string
     endTime: string
-    daysOfWeek: number[]
   }
-  colorScheme: Record<string, string>
   notifications: {
     enabled: boolean
     reminderMinutes: number[]
     emailNotifications: boolean
     pushNotifications: boolean
-=======
-  defaultView: 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listWeek'
-  weekStartsOn: 0 | 1
-  timeFormat: '12h' | '24h'
-  firstDayOfWeek: number
-  colorScheme: Record<CalendarEvent['source'], string>
-  businessHours: {
-    daysOfWeek: number[]
-    startTime: string
-    endTime: string
-  }
-  notifications: {
-    enabled: boolean
     defaultTimings: CalendarNotification['timing'][]
->>>>>>> origin/Curs
   }
 }
 
