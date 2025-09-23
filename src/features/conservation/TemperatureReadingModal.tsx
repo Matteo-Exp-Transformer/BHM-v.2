@@ -3,6 +3,7 @@ import { X, Thermometer, Camera, Clock } from 'lucide-react'
 import type {
   ConservationPoint,
   CreateTemperatureReadingRequest,
+  TemperatureMethod,
 } from '@/types/conservation'
 
 interface TemperatureReadingModalProps {
@@ -26,7 +27,7 @@ export function TemperatureReadingModal({
 }: TemperatureReadingModalProps) {
   const [formData, setFormData] = useState({
     temperature: conservationPoint.setpoint_temp,
-    method: 'manual' as const,
+    method: 'manual' as TemperatureMethod,
     notes: '',
     photo_evidence: '',
   })

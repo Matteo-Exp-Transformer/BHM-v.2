@@ -6,16 +6,14 @@ interface ShoppingListCardProps {
   list: ShoppingList
   onEdit: (list: ShoppingList) => void
   onDelete: (id: string) => void
-  onToggleComplete: (id: string) => void
 }
 
 export const ShoppingListCard: React.FC<ShoppingListCardProps> = ({
   list,
   onEdit,
   onDelete,
-  onToggleComplete,
 }) => {
-  const completedItems = list.items?.filter(item => item.completed).length || 0
+  const completedItems = list.items?.filter(item => item.is_completed).length || 0
   const totalItems = list.items?.length || 0
   const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0
 
@@ -71,12 +69,12 @@ export const ShoppingListCard: React.FC<ShoppingListCardProps> = ({
               <div
                 key={index}
                 className={`flex items-center gap-2 text-sm ${
-                  item.completed ? 'text-gray-500 line-through' : 'text-gray-700'
+                  item.is_completed ? 'text-gray-500 line-through' : 'text-gray-700'
                 }`}
               >
                 <CheckCircle
                   className={`w-4 h-4 ${
-                    item.completed ? 'text-green-500' : 'text-gray-300'
+                    item.is_completed ? 'text-green-500' : 'text-gray-300'
                   }`}
                 />
                 <span>{item.product_name} x{item.quantity}</span>

@@ -106,66 +106,41 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Core React libraries
-          react: ['react', 'react-dom'],
-
-          // Router
-          router: ['react-router-dom'],
-
-          // Auth
-          auth: ['@clerk/clerk-react'],
-
-          // State management
-          state: ['@tanstack/react-query', 'zustand'],
-
-          // Database
-          supabase: ['@supabase/supabase-js'],
-
-          // Calendar library (large)
-          calendar: [
-            '@fullcalendar/core',
-            '@fullcalendar/react',
-            '@fullcalendar/daygrid',
-            '@fullcalendar/timegrid',
-            '@fullcalendar/interaction',
-            '@fullcalendar/list'
+          // Vendor chunks
+          'react-vendor': ['react', 'react-dom'],
+          'router-vendor': ['react-router-dom'],
+          'query-vendor': ['@tanstack/react-query'],
+          'auth-vendor': ['@clerk/clerk-react'],
+          'ui-vendor': ['lucide-react', 'react-toastify'],
+          'calendar-vendor': ['@fullcalendar/react', '@fullcalendar/core', '@fullcalendar/daygrid', '@fullcalendar/timegrid', '@fullcalendar/interaction'],
+          
+          // Feature chunks
+          'calendar-features': [
+            './src/features/calendar',
+            './src/hooks/useCalendar.ts'
           ],
-
-          // Charts
-          charts: ['chart.js', 'react-chartjs-2'],
-
-          // PDF generation
-          pdf: ['jspdf'],
-
-          // Forms
-          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
-
-          // Icons and UI
-          ui: ['lucide-react'],
-
-          // Date utilities
-          dates: ['date-fns'],
-
-          // Toast notifications
-          notifications: ['react-toastify'],
-
-          // Monitoring
-          monitoring: ['@sentry/react']
+          'inventory-features': [
+            './src/features/inventory',
+            './src/types/inventory.ts'
+          ],
+          'conservation-features': [
+            './src/features/conservation',
+            './src/hooks/useConservation.ts'
+          ],
+          'management-features': [
+            './src/features/management',
+            './src/hooks/useStaff.ts'
+          ],
+          'dashboard-features': [
+            './src/features/dashboard',
+            './src/hooks/useDashboardData.ts'
+          ],
+          'settings-features': [
+            './src/features/settings'
+          ]
         }
       }
     },
-    // Enable tree shaking
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug']
-      }
-    },
-    // Source maps for production debugging
-    sourcemap: false,
-    // Chunk size warning at 800kb instead of 500kb
-    chunkSizeWarningLimit: 800
+    chunkSizeWarningLimit: 1000,
   },
 })

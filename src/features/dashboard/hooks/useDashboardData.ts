@@ -62,7 +62,7 @@ export const useDashboardData = () => {
 
   const { staff } = useStaff()
   const { products } = useProducts()
-  const { expiredProducts } = useExpiryTracking()
+  const { expiredProducts, expiryStats } = useExpiryTracking()
   const { conservationPoints } = useConservationPoints()
   const { temperatureReadings } = useTemperatureReadings()
   const { maintenanceTasks } = useMaintenanceTasks()
@@ -95,12 +95,17 @@ export const useDashboardData = () => {
             : 'down'
 
       const totalProducts = products.length
-      const expiredProducts = getExpiredProducts?.() || []
-      const expiringSoon = expiringProducts.length
+      const expiredCount = expiredProducts?.length || 0
+      const expiringSoon = expiryStats?.expiring_this_week || 0
       const wastePercentage =
-        totalProducts > 0 ? (expiredProducts.length / totalProducts) * 100 : 0
+        totalProducts > 0 ? (expiredCount / totalProducts) * 100 : 0
 
-      const staffStats = getStaffStats()
+      // Calculate department distribution
+      const departmentDistribution = staff.reduce((acc, member) => {
+        const dept = member.role || 'unknown'
+        acc[dept] = (acc[dept] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
       const staffWithExpiringCerts = staff.filter(member => {
         if (!member.haccp_certification?.expiry_date) return false
         const expiryDate = new Date(member.haccp_certification.expiry_date)
@@ -188,7 +193,7 @@ export const useDashboardData = () => {
           active_staff: staff.filter(member => member.status === 'active')
             .length,
           haccp_certifications_expiring: staffWithExpiringCerts,
-          department_distribution: staffStats.by_department || {},
+          department_distribution: departmentDistribution,
         },
         shopping_activity: {
           total_lists: totalLists,

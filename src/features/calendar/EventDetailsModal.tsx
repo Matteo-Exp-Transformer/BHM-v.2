@@ -24,6 +24,9 @@ const sourceLabels = {
   training: 'Formazione',
   inventory: 'Inventario',
   meeting: 'Riunione',
+  temperature_reading: 'Lettura Temperatura',
+  general_task: 'Attività Generale',
+  custom: 'Personalizzato',
 }
 
 const priorityLabels = {
@@ -175,7 +178,7 @@ export function EventDetailsModal({
                 {event.title}
               </h2>
               <p className="text-sm text-gray-600">
-                {sourceLabels[event.source]} • {formatDate(event.start)}
+                {event.source ? sourceLabels[event.source] : 'Sconosciuto'} • {formatDate(event.start)}
               </p>
             </div>
           </div>
@@ -197,10 +200,10 @@ export function EventDetailsModal({
               </span>
               <span
                 className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  priorityColors[event.extendedProps.priority]
+                  event.extendedProps.priority ? priorityColors[event.extendedProps.priority] : ''
                 }`}
               >
-                {priorityLabels[event.extendedProps.priority]}
+                {event.extendedProps.priority ? priorityLabels[event.extendedProps.priority] : 'N/A'}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -208,7 +211,7 @@ export function EventDetailsModal({
               <select
                 value={event.extendedProps.status}
                 onChange={e => handleStatusChange(e.target.value)}
-                className={`px-2 py-1 rounded-full text-xs font-medium border-0 ${statusColors[event.extendedProps.status]}`}
+                className={`px-2 py-1 rounded-full text-xs font-medium border-0 ${event.extendedProps.status ? statusColors[event.extendedProps.status] : ''}`}
               >
                 {Object.entries(statusLabels).map(([value, label]) => (
                   <option key={value} value={value}>

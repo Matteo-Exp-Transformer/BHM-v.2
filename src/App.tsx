@@ -33,27 +33,15 @@ function App() {
         <Routes>
           <Route
             path="/login"
-            element={
-              <Suspense fallback={<PageLoader />}>
-                <LoginPage />
-              </Suspense>
-            }
+            element={<LoginPage />}
           />
           <Route
             path="/sign-in"
-            element={
-              <Suspense fallback={<PageLoader />}>
-                <LoginPage />
-              </Suspense>
-            }
+            element={<LoginPage />}
           />
           <Route
             path="/sign-up"
-            element={
-              <Suspense fallback={<PageLoader />}>
-                <RegisterPage />
-              </Suspense>
-            }
+            element={<RegisterPage />}
           />
           <Route
             path="/*"
@@ -61,60 +49,58 @@ function App() {
               <>
                 <SignedIn>
                   <MainLayout>
-                    <Suspense fallback={<PageLoader />}>
-                      <Routes>
-                        <Route
-                          path="/"
-                          element={
-                            <ProtectedRoute>
-                              <HomePage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/conservazione"
-                          element={
-                            <ProtectedRoute>
-                              <ConservationPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/attivita"
-                          element={
-                            <ProtectedRoute>
-                              <CalendarPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/inventario"
-                          element={
-                            <ProtectedRoute>
-                              <InventoryPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/impostazioni"
-                          element={
-                            <ProtectedRoute requiredRole="admin">
-                              <SettingsPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/gestione"
-                          element={
-                            <ProtectedRoute
-                              requiredRole={['admin', 'responsabile']}
-                            >
-                              <ManagementPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                      </Routes>
-                    </Suspense>
+                    <Routes>
+                      <Route
+                        path="/"
+                        element={
+                          <ProtectedRoute>
+                            <HomePage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/conservazione"
+                        element={
+                          <ProtectedRoute>
+                            <ConservationPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/attivita"
+                        element={
+                          <ProtectedRoute>
+                            <CalendarPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/inventario"
+                        element={
+                          <ProtectedRoute>
+                            <InventoryPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/impostazioni"
+                        element={
+                          <ProtectedRoute requiredRole="admin">
+                            <SettingsPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/gestione"
+                        element={
+                          <ProtectedRoute
+                            requiredRole={['admin', 'responsabile']}
+                          >
+                            <ManagementPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                    </Routes>
                   </MainLayout>
                 </SignedIn>
                 <SignedOut>

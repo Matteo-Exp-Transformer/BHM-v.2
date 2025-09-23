@@ -15,46 +15,30 @@ export const ShoppingListManager = () => {
     templates,
     stats,
     isLoading,
-    isCreating,
-    isCreatingFromTemplate,
-    isDeleting,
     createShoppingList,
     createFromTemplate,
     deleteShoppingList,
   } = useShoppingLists()
 
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showProductSelector, setShowProductSelector] = useState(false)
-  const [editingList, setEditingList] = useState<ShoppingList | null>(null)
   const [selectedTemplate, setSelectedTemplate] = useState<ShoppingList | null>(null)
 
   const handleCreateNew = () => {
-    setEditingList(null)
     setSelectedTemplate(null)
     setShowCreateModal(true)
   }
 
   const handleCreateFromTemplate = (template: ShoppingList) => {
     setSelectedTemplate(template)
-    setEditingList(null)
     setShowCreateModal(true)
   }
 
-  const handleAddProducts = (list: ShoppingList) => {
-    setEditingList(list)
-    setShowProductSelector(true)
-  }
 
   const handleCloseModal = () => {
     setShowCreateModal(false)
-    setEditingList(null)
     setSelectedTemplate(null)
   }
 
-  const handleCloseProductSelector = () => {
-    setShowProductSelector(false)
-    setEditingList(null)
-  }
 
   const handleSubmit = (input: any) => {
     if (selectedTemplate) {
@@ -183,9 +167,8 @@ export const ShoppingListManager = () => {
                     <ShoppingListCard
                       key={list.id}
                       list={list}
-                      onAddProducts={() => handleAddProducts(list)}
+                      onEdit={() => {}}
                       onDelete={() => handleDelete(list.id)}
-                      isDeleting={isDeleting}
                     />
                   ))}
                 </div>
@@ -206,10 +189,8 @@ export const ShoppingListManager = () => {
                     <ShoppingListCard
                       key={list.id}
                       list={list}
-                      onAddProducts={() => handleAddProducts(list)}
+                      onEdit={() => {}}
                       onDelete={() => handleDelete(list.id)}
-                      isDeleting={isDeleting}
-                      isCompleted={true}
                     />
                   ))}
                 </div>
@@ -297,15 +278,16 @@ export const ShoppingListManager = () => {
       <CreateListModal
         isOpen={showCreateModal}
         onClose={handleCloseModal}
-        onSubmit={handleSubmit}
-        template={selectedTemplate}
-        isLoading={isCreating || isCreatingFromTemplate}
+        onCreate={handleSubmit}
+        templates={templates}
       />
 
       <ProductSelector
-        isOpen={showProductSelector}
-        onClose={handleCloseProductSelector}
-        list={editingList}
+        products={[]}
+        selectedProducts={[]}
+        onToggleProduct={() => {}}
+        onClose={() => {}}
+        onConfirm={() => {}}
       />
     </>
   )

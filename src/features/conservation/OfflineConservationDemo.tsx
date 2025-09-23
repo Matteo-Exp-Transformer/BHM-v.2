@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Thermometer,
   Plus,
@@ -9,7 +9,6 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  Download,
   Upload,
 } from 'lucide-react'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
@@ -28,7 +27,6 @@ export function OfflineConservationDemo() {
   )
 
   const {
-    isOnline,
     isSyncing,
     pendingOperations,
     lastSyncTime,
@@ -41,8 +39,6 @@ export function OfflineConservationDemo() {
   const {
     isInitialized: storageReady,
     store,
-    getAll,
-    count,
     STORES,
   } = useOfflineStorage()
 
@@ -53,11 +49,12 @@ export function OfflineConservationDemo() {
   const mockConservationPoints: ConservationPoint[] = [
     {
       id: '1',
+      company_id: 'company1',
       name: 'Frigorifero Principale',
       type: 'fridge',
-      location: 'Cucina - Zona 1',
       setpoint_temp: 4,
       status: 'normal',
+      is_blast_chiller: false,
       department_id: 'dept1',
       product_categories: ['latticini', 'carni'],
       created_at: new Date(),
@@ -65,11 +62,12 @@ export function OfflineConservationDemo() {
     },
     {
       id: '2',
+      company_id: 'company1',
       name: 'Congelatore Blast',
       type: 'blast',
-      location: 'Magazzino Freddo',
       setpoint_temp: -18,
       status: 'normal',
+      is_blast_chiller: true,
       department_id: 'dept1',
       product_categories: ['surgelati'],
       created_at: new Date(),
@@ -77,11 +75,12 @@ export function OfflineConservationDemo() {
     },
     {
       id: '3',
+      company_id: 'company1',
       name: 'Cella Carni',
       type: 'fridge',
-      location: 'Magazzino - Zona A',
       setpoint_temp: 2,
       status: 'warning',
+      is_blast_chiller: false,
       department_id: 'dept1',
       product_categories: ['carni', 'salumi'],
       created_at: new Date(),
@@ -339,7 +338,7 @@ export function OfflineConservationDemo() {
                   </div>
                   <div className="flex justify-between">
                     <span>Posizione:</span>
-                    <span className="font-medium">{point.location}</span>
+                    <span className="font-medium">{point.name}</span>
                   </div>
                 </div>
 

@@ -90,7 +90,7 @@ export const useShoppingLists = () => {
       if (error) throw error
 
       // Transform data to include item counts
-      return (data || []).map(list => ({
+      return (data || []).map((list: any) => ({
         ...list,
         item_count: list.shopping_list_items?.length || 0,
         completed_items: list.shopping_list_items?.filter((item: any) => item.is_completed).length || 0,
@@ -130,7 +130,7 @@ export const useShoppingLists = () => {
 
       if (error) throw error
 
-      return (data || []).map(list => ({
+      return (data || []).map((list: any) => ({
         ...list,
         items: list.shopping_list_items || [],
         item_count: list.shopping_list_items?.length || 0,

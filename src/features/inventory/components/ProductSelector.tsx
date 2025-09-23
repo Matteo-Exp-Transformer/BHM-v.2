@@ -103,9 +103,6 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({
                           {product.supplier_name && (
                             <span>Fornitore: {product.supplier_name}</span>
                           )}
-                          {product.category && (
-                            <span className="ml-2">Categoria: {product.category}</span>
-                          )}
                         </div>
 
                         <div className="mt-1 text-xs text-gray-500">
@@ -120,7 +117,7 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({
 
                       <div className="text-right">
                         <div className="text-sm font-medium text-gray-900">
-                          €{product.price?.toFixed(2) || 'N/A'}
+                          {product.quantity} {product.unit}
                         </div>
                         {product.allergens && product.allergens.length > 0 && (
                           <div className="text-xs text-orange-600 mt-1">

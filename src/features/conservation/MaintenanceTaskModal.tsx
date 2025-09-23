@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
-import { X, Wrench, Plus, Clock, Calendar } from 'lucide-react'
+import { X, Wrench, Plus, Calendar } from 'lucide-react'
 import type {
   ConservationPoint,
   CreateMaintenanceTaskRequest,
 } from '@/types/conservation'
+
+type MaintenanceTaskKind = 'temperature' | 'sanitization' | 'defrosting'
 
 interface MaintenanceTaskModalProps {
   conservationPoint: ConservationPoint
@@ -60,7 +62,7 @@ export function MaintenanceTaskModal({
   isCreating,
 }: MaintenanceTaskModalProps) {
   const [formData, setFormData] = useState({
-    kind: 'temperature' as const,
+    kind: 'temperature' as MaintenanceTaskKind,
     frequency: 'weekly' as const,
     next_due_date: new Date(Date.now() + 24 * 60 * 60 * 1000)
       .toISOString()
