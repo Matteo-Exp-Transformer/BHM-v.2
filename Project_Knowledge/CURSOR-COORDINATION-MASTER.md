@@ -12,10 +12,12 @@
 
 ### **🔥 AZIONI PRIORITARIE:**
 
-1. **COPIA QUESTO FILE** nel tuo progetto come `CURSOR-INSTRUCTIONS.md`
-2. **LEGGI TASKS-ACTIVE.md** per vedere lo stato corrente del progetto
+1. **LEGGI QUESTO FILE** direttamente dal worktree di Claude (NON copiare)
+2. **CONSULTA TASKS-ACTIVE.md** nel worktree di Claude per stato progetto
 3. **INIZIA B.8.2** Advanced Dashboard Analytics (tuo prossimo milestone)
 4. **USA IL TESTING FRAMEWORK** di Claude per quality assurance
+
+**🚨 IMPORTANTE:** Non creare file guida nel tuo worktree - leggi sempre dal worktree di Claude
 
 ### **🎯 TUO PROSSIMO MILESTONE: B.8.2 Advanced Dashboard Analytics**
 
