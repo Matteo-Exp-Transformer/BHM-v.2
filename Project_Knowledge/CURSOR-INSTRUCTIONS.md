@@ -32,53 +32,120 @@
 
 ### **📋 IMMEDIATE CURSOR TASKS (B.7.3 Mobile PWA Enhancement)**
 
-**🎯 Focus Priority: Mobile-First Experience**
+**🎯 POST-MERGE FOCUS: Mobile-First Experience & Performance**
 
-1. **Touch Interface Optimization**
-   - Implement touch-friendly button sizes (44px minimum)
-   - Add swipe gestures for navigation
-   - Optimize scroll performance on mobile devices
+**SESSION 1-2: Mobile Touch Optimization**
+```typescript
+// Immediate priorities:
+1. Update all Button components to 44px minimum
+2. Add touch event handlers for swipe gestures
+3. Implement mobile-friendly form controls
+4. Add haptic feedback for mobile interactions
 
-2. **Responsive Design Improvements**
-   - Fix mobile layout issues in dashboard
-   - Optimize forms for mobile input
-   - Implement mobile-specific navigation patterns
+// Files to focus on:
+- src/components/ui/Button.tsx (enhance existing)
+- src/components/ui/FormField.tsx (create mobile variants)
+- src/components/mobile/ (new mobile-specific components)
+- src/styles/mobile.css (mobile-first CSS)
+```
 
-3. **PWA Features Enhancement**
-   - Update manifest.json for better mobile experience
-   - Add iOS-specific meta tags and icons
-   - Implement app-like navigation (no browser chrome)
+**SESSION 3-4: Responsive Design & PWA**
+```typescript
+// Responsive improvements:
+1. Mobile-first CSS for all existing components
+2. Enhanced manifest.json with mobile installation prompts
+3. iOS meta tags and splash screens
+4. Touch-optimized navigation patterns
 
-4. **Performance Optimization**
-   - Reduce bundle size to <1MB (currently 1.6-1.7MB)
-   - Implement lazy loading for mobile components
-   - Optimize images and assets for mobile networks
+// Files to focus on:
+- public/manifest.json (enhance for mobile)
+- src/styles/responsive.css (mobile breakpoints)
+- src/components/navigation/ (mobile nav patterns)
+- index.html (iOS meta tags)
+```
 
-5. **Testing Suite Completion**
-   - Complete the testing files that were partially removed
-   - Add mobile-specific tests for touch interactions
-   - Implement performance testing for mobile devices
+**SESSION 5-6: Performance Optimization**
+```typescript
+// Bundle size reduction (1.6MB → <1MB):
+1. Code splitting implementation
+2. Dynamic imports for large components
+3. Image optimization and lazy loading
+4. Remove unused dependencies
 
-**⚠️ DO NOT:** Try to merge with Claude branch - it will cause massive conflicts and lose work
+// Performance targets:
+- Bundle size: <1MB
+- First contentful paint: <2s on 3G
+- Time to interactive: <3s on mobile
+- Lighthouse mobile score: >90
+```
+
+**SESSION 7-8: Mobile Testing & Polish**
+```typescript
+// Testing and finalization:
+1. Mobile-specific test suite
+2. Touch interaction testing
+3. Performance benchmarking
+4. Cross-device compatibility testing
+
+// Final checklist:
+- [ ] All buttons ≥44px touch targets
+- [ ] Swipe gestures implemented
+- [ ] Bundle size <1MB achieved
+- [ ] PWA install prompts working
+- [ ] iOS splash screens configured
+```
+
+**🎯 SUCCESS CRITERIA FOR B.7.3 COMPLETION:**
+- ✅ All touch targets ≥44px (WCAG AA compliance)
+- ✅ Bundle size reduced to <1MB
+- ✅ PWA mobile installation working
+- ✅ Lighthouse mobile score >90
+- ✅ Cross-device testing completed
 
 ---
 
-## 🚀 **SESSION STARTUP PROTOCOL (MANDATORY)**
+## 🚀 **SESSION STARTUP PROTOCOL (POST-MERGE)**
 
 ### **📂 Files to Link in Every Cursor Chat**
 
 **⚠️ CRITICAL - Link these files in EXACT order:**
 
-1. **📋 Current Tasks**: `@Project_Knowledge/TASKS-ACTIVE.md`
+1. **📋 Current Tasks**: `@Project_Knowledge/TASKS-ACTIVE.md` (UPDATED with B.7.3 roadmap)
 2. **👨‍💻 Instructions**: `@Project_Knowledge/CURSOR-INSTRUCTIONS.md` (this file)
-3. **🐛 Bug Priority**: `@Project_Knowledge/Bug_Reports/bug-tracking-index.md`
-4. **📖 Bug Workflow**: `@Project_Knowledge/Bug_Reports/Cross_References/README.md`
+3. **🔄 Merge Status**: `@Project_Knowledge/MERGE-INSTRUCTIONS.md` (NEW - coordination info)
 
 **Optional (if needed):**
-
-- `@Project_Knowledge/Claude.md` (for coordination)
+- `@Project_Knowledge/Claude.md` (for coordination history)
 - `@PLANNING.md` (for architecture context)
-- `@.claude_rules` (for branch rules understanding)
+
+### **🔍 FIRST SESSION POST-MERGE CHECKLIST**
+
+**MANDATORY - Do this at start of EVERY new session:**
+
+1. **Verify Branch Status:**
+   ```bash
+   git branch  # Should show "Claude" as current
+   git status  # Should be clean or only your changes
+   ```
+
+2. **Verify Integrated Work:**
+   ```bash
+   ls src/services/offline/     # Claude's offline system
+   ls src/services/export/      # Claude's export system
+   ls src/services/realtime/    # Claude's real-time system
+   ls src/components/ui/        # Your UI components
+   cat src/styles/accessibility.css  # Your accessibility work
+   ```
+
+3. **Check Development Server:**
+   ```bash
+   npm run dev  # Should start on port 3000 without errors
+   ```
+
+4. **Review Task Status:**
+   - Read TASKS-ACTIVE.md section "CURSOR IMMEDIATE TASKS"
+   - Confirm you're working on B.7.3 Mobile PWA Enhancement
+   - Note your current session number (1-8 for B.7.3)
 
 ### **🔍 Session Startup Checklist**
 
