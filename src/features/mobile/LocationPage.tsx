@@ -5,8 +5,8 @@
 
 import React from 'react'
 import { LocationDemo } from '@/components/mobile/location/LocationDemo'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
 import { MapPin, Smartphone, Zap } from 'lucide-react'
 
 export const LocationPage: React.FC = () => {

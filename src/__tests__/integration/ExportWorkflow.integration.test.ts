@@ -272,7 +272,7 @@ describe('Export Workflow Integration Tests', () => {
         end: new Date('2025-01-31')
       }
 
-      const excelBlob = await excelExporter.exportTemperatureData(companyId, dateRange)
+      const excelBlob = await excelExporter.exportTemperatureReadings(companyId, dateRange)
 
       expect(excelBlob).toBeInstanceOf(Blob)
       expect(supabase.from).toHaveBeenCalledWith('temperature_readings')
@@ -333,7 +333,7 @@ describe('Export Workflow Integration Tests', () => {
       })
 
       const startTime = performance.now()
-      const excelBlob = await excelExporter.exportTemperatureData(
+      const excelBlob = await excelExporter.exportTemperatureReadings(
         'company123',
         { start: new Date('2025-01-01'), end: new Date('2025-01-31') }
       )
@@ -348,12 +348,16 @@ describe('Export Workflow Integration Tests', () => {
     it('should process scheduled reports and send emails', async () => {
       const mockSchedule = {
         id: 'schedule_1',
-        company_id: 'company123',
-        frequency: 'weekly',
-        report_type: 'haccp_pdf',
+        companyId: 'company123',
+        name: 'Weekly HACCP Report',
         recipients: ['manager@test.com'],
-        is_active: true,
-        next_run: new Date('2025-01-20T09:00:00Z')
+        frequency: 'weekly' as const,
+        time: '09:00',
+        reportType: 'haccp_pdf' as const,
+        isActive: true,
+        nextSend: new Date('2025-01-20T09:00:00Z'),
+        createdAt: new Date(),
+        createdBy: 'test_user'
       }
 
       // Process due schedules
@@ -362,11 +366,11 @@ describe('Export Workflow Integration Tests', () => {
       expect(processedReports).toBeGreaterThanOrEqual(0)
 
       // Test specific schedule execution
-      const result = await emailScheduler.executeSchedule(mockSchedule)
+      const result = await emailScheduler.sendScheduledReport(mockSchedule)
 
       expect(result.success).toBe(true)
-      expect(result.emailsSent).toBe(1)
-      expect(result.errors).toHaveLength(0)
+      expect(result.recipients).toHaveLength(1)
+      expect(result.error).toBeUndefined()
 
       // Should have generated report and sent email
       expect(supabase.from).toHaveBeenCalledWith('companies')
@@ -376,28 +380,35 @@ describe('Export Workflow Integration Tests', () => {
       const schedules = [
         {
           id: 'schedule_pdf',
-          company_id: 'company123',
-          frequency: 'weekly',
-          report_type: 'haccp_pdf',
+          companyId: 'company123',
+          name: 'Weekly PDF Report',
+          frequency: 'weekly' as const,
+          time: '10:00',
+          reportType: 'haccp_pdf' as const,
           recipients: ['manager@test.com'],
-          is_active: true,
-          next_run: new Date()
+          isActive: true,
+          nextSend: new Date(),
+          createdAt: new Date(),
+          createdBy: 'test_user'
         },
         {
           id: 'schedule_excel',
-          company_id: 'company123',
-          frequency: 'monthly',
-          report_type: 'excel_full',
+          companyId: 'company123',
+          name: 'Monthly Excel Report',
+          frequency: 'monthly' as const,
+          time: '11:00',
+          reportType: 'excel_full' as const,
           recipients: ['analyst@test.com'],
-          is_active: true,
-          next_run: new Date()
-        }
-      ]
+          isActive: true,
+          nextSend: new Date(),
+          createdAt: new Date(),
+          createdBy: 'test_user'
+        }]
 
       for (const schedule of schedules) {
-        const result = await emailScheduler.executeSchedule(schedule)
+        const result = await emailScheduler.sendScheduledReport(schedule)
         expect(result.success).toBe(true)
-        expect(result.emailsSent).toBe(1)
+        expect(result.recipients).toHaveLength(1)
       }
 
       // Both report types should have been generated
@@ -411,20 +422,23 @@ describe('Export Workflow Integration Tests', () => {
 
       const schedule = {
         id: 'schedule_fail',
-        company_id: 'company123',
-        frequency: 'daily',
-        report_type: 'haccp_pdf',
+        companyId: 'company123',
+        name: 'Daily Failure Report',
+        frequency: 'daily' as const,
+        time: '12:00',
+        reportType: 'haccp_pdf' as const,
         recipients: ['failed@test.com'],
-        is_active: true,
-        next_run: new Date()
+        isActive: true,
+        nextSend: new Date(),
+        createdAt: new Date(),
+        createdBy: 'test_user'
       }
 
-      const result = await emailScheduler.executeSchedule(schedule)
+      const result = await emailScheduler.sendScheduledReport(schedule)
 
       expect(result.success).toBe(false)
-      expect(result.emailsSent).toBe(0)
-      expect(result.errors).toHaveLength(1)
-      expect(result.errors[0]).toContain('SMTP error')
+      expect(result.recipients).toHaveLength(1)
+      expect(result.error).toContain('SMTP error')
     })
   })
 
@@ -475,9 +489,9 @@ describe('Export Workflow Integration Tests', () => {
       expect(reportBlob).toBeInstanceOf(Blob)
 
       // Export to Excel should also work
-      const excelBlob = await excelExporter.exportTemperatureData(
+      const excelBlob = await excelExporter.exportTemperatureReadings(
         'company123',
-        { start: new Date('2025-01-15'), end: new Date('2025-01-15') }
+        { start: new Date('2025-01-01'), end: new Date('2025-01-31') }
       )
 
       expect(excelBlob).toBeInstanceOf(Blob)
@@ -510,18 +524,22 @@ describe('Export Workflow Integration Tests', () => {
       // Step 3: Send automated compliance email
       const schedule = {
         id: 'compliance_schedule',
-        company_id: companyId,
-        frequency: 'inspection',
-        report_type: 'haccp_pdf',
+        companyId: companyId,
+        name: 'Compliance Inspection Report',
+        frequency: 'weekly' as const,
+        time: '08:00',
+        reportType: 'haccp_pdf' as const,
         recipients: ['health.inspector@gov.it', 'manager@restaurant.com'],
-        is_active: true,
-        next_run: inspectionDate
+        isActive: true,
+        nextSend: inspectionDate,
+        createdAt: new Date(),
+        createdBy: 'test_user'
       }
 
-      const emailResult = await emailScheduler.executeSchedule(schedule)
+      const emailResult = await emailScheduler.sendScheduledReport(schedule)
 
       expect(emailResult.success).toBe(true)
-      expect(emailResult.emailsSent).toBe(2) // Both recipients
+      expect(emailResult.recipients).toHaveLength(2) // Both recipients
 
       // Verify all systems were called
       expect(supabase.from).toHaveBeenCalledWith('companies')
@@ -545,7 +563,10 @@ describe('Export Workflow Integration Tests', () => {
       ).rejects.toThrow('Database connection failed')
 
       await expect(
-        excelExporter.exportTemperatureData('company123', { start: new Date(), end: new Date() })
+        excelExporter.exportTemperatureReadings(
+          'company123',
+          { start: new Date(), end: new Date() }
+        )
       ).rejects.toThrow('Database connection failed')
     })
 
@@ -578,9 +599,9 @@ describe('Export Workflow Integration Tests', () => {
       expect(reportBlob).toBeInstanceOf(Blob)
 
       // Excel export should also handle missing data
-      const excelBlob = await excelExporter.exportTemperatureData(
+      const excelBlob = await excelExporter.exportTemperatureReadings(
         'company123',
-        { start: new Date(), end: new Date() }
+        { start: new Date('2025-01-15'), end: new Date('2025-01-15') }
       )
 
       expect(excelBlob).toBeInstanceOf(Blob)

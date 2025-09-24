@@ -5,8 +5,8 @@
 
 import React from 'react'
 import { CameraDemo } from '@/components/mobile/camera/CameraDemo'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
 import { Camera, Smartphone, Zap } from 'lucide-react'
 
 export const CameraPage: React.FC = () => {

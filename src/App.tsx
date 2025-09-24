@@ -1,4 +1,5 @@
-import { Routes, Route, Suspense, lazy } from 'react'
+import { Suspense, lazy } from 'react'
+import { Routes, Route } from 'react-router-dom'
 import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'

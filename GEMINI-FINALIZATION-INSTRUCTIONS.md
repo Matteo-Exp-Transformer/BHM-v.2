@@ -10,6 +10,7 @@
 ## 🎯 **MISSION: PROJECT FINALIZATION & CLEANUP**
 
 ### **Your Role as Lead Finalizer:**
+
 You are now responsible for bringing the HACCP Business Manager project to **production-ready status**. This includes technical finalization, structural cleanup, and deployment preparation.
 
 ---
@@ -17,19 +18,24 @@ You are now responsible for bringing the HACCP Business Manager project to **pro
 ## 📋 **PHASE B.10.5 - PRODUCTION DEPLOYMENT TASKS**
 
 ### ⚠️ URGENT - AUDIT FAILED (September 24, 2025)
+
 **The initial health check (`lint` + `type-check`) has FAILED catastrophically.**
+
 - **1 CRITICAL SYNTAX ERROR:** Blocks all TypeScript compilation.
 - **~900 LINTING ERRORS:** Caused by ESLint misconfiguration.
 - **~750 LINTING WARNINGS:** Indicate massive technical debt.
-**IMMEDIATE PRIORITY:** The tasks in this document must begin with fixing these foundational issues. The "STRUCTURAL DEBUG & CLEANUP" phase must start with the action plan outlined in `TASKS-ACTIVE.md`.
+  **IMMEDIATE PRIORITY:** The tasks in this document must begin with fixing these foundational issues. The "STRUCTURAL DEBUG & CLEANUP" phase must start with the action plan outlined in `TASKS-ACTIVE.md`.
+
 ---
 
 ### **🔥 CRITICAL PRIORITIES (In Order)**
 
 #### **1. STRUCTURAL DEBUG & CLEANUP (NEW TASK)**
+
 **Objective:** Clean and optimize codebase for production deployment
 
 **Cleanup Targets:**
+
 ```bash
 # Files to analyze and potentially remove:
 - Obsolete component versions
@@ -42,6 +48,7 @@ You are now responsible for bringing the HACCP Business Manager project to **pro
 ```
 
 **Cleanup Process:**
+
 1. **Dependency Analysis:** Review package.json for unused dependencies
 2. **Code Analysis:** Find unused imports, variables, and functions
 3. **File Structure:** Remove obsolete files and consolidate duplicates
@@ -49,6 +56,7 @@ You are now responsible for bringing the HACCP Business Manager project to **pro
 5. **Bundle Optimization:** Identify and remove code bloating factors
 
 **Tools to Use:**
+
 ```bash
 # Analyze bundle size
 npm run build:analyze
@@ -64,9 +72,11 @@ npm run lint
 ```
 
 #### **2. PRODUCTION ENVIRONMENT SETUP**
+
 **Objective:** Configure production-ready environment
 
 **Tasks:**
+
 - [ ] Environment variables validation
 - [ ] Production build optimization
 - [ ] Security configurations review
@@ -74,9 +84,11 @@ npm run lint
 - [ ] Performance benchmarking
 
 #### **3. DEPLOYMENT PREPARATION**
+
 **Objective:** Prepare for production deployment
 
 **Tasks:**
+
 - [ ] Production build testing
 - [ ] Lighthouse performance audit (target: >90)
 - [ ] Security audit completion
@@ -84,9 +96,11 @@ npm run lint
 - [ ] Deployment scripts preparation
 
 #### **4. FINAL TESTING & VALIDATION**
+
 **Objective:** Comprehensive system validation
 
 **Tasks:**
+
 - [ ] Full E2E testing suite
 - [ ] Mobile device testing
 - [ ] PWA functionality validation
@@ -100,6 +114,7 @@ npm run lint
 ### **Code Structure Cleanup:**
 
 **Frontend Cleanup:**
+
 ```typescript
 // Target areas for cleanup:
 src/components/unused/          // Remove unused components
@@ -110,6 +125,7 @@ src/services/backup/            // Remove backup service versions
 ```
 
 **Documentation Cleanup:**
+
 ```bash
 # Files to consolidate or archive:
 Project_Knowledge/Archive/      # Archive historical docs
@@ -120,6 +136,7 @@ CHANGELOG-backup.md             # Remove backup changelogs
 ```
 
 **Build Cleanup:**
+
 ```bash
 # Optimize build outputs:
 dist/unused-chunks/             # Remove unused bundle chunks
@@ -131,12 +148,14 @@ node_modules/unused/            # Clean unused dependencies
 ### **Performance Optimization:**
 
 **Bundle Size Targets:**
+
 - Main bundle: <800KB (currently ~593KB ✅)
 - Vendor bundle: <1.2MB
 - Total initial load: <2MB
 - First Load JS: <244KB
 
 **Performance Metrics:**
+
 - First Contentful Paint: <1.5s
 - Time to Interactive: <3.5s
 - Lighthouse Performance: >90
@@ -147,6 +166,7 @@ node_modules/unused/            # Clean unused dependencies
 ## 🔧 **TECHNICAL IMPLEMENTATION STEPS**
 
 ### **Step 1: Environment Setup**
+
 ```bash
 # Verify you're in Gemini worktree
 pwd  # Should show: BHM-v.2-Gemini
@@ -163,6 +183,7 @@ npm run test
 ```
 
 ### **Step 2: Cleanup Analysis**
+
 ```bash
 # Generate cleanup analysis report
 npx depcheck > cleanup-analysis.txt
@@ -173,6 +194,7 @@ find . -name "*.backup" -o -name "*-old.*" -o -name "*.tmp" > obsolete-files.txt
 ```
 
 ### **Step 3: Systematic Cleanup**
+
 ```bash
 # Remove unused dependencies
 npm uninstall [unused-packages]
@@ -186,6 +208,7 @@ rm -rf [confirmed-obsolete-paths]
 ```
 
 ### **Step 4: Production Build Test**
+
 ```bash
 # Test production build
 npm run build
@@ -202,6 +225,7 @@ npm run preview
 ## 📊 **SUCCESS CRITERIA & VALIDATION**
 
 ### **Cleanup Success Metrics:**
+
 - [ ] Bundle size reduction: Target >20% from current
 - [ ] Dependency count reduction: Target >15%
 - [ ] File count reduction: Target >10%
@@ -209,6 +233,7 @@ npm run preview
 - [ ] Lighthouse score: >90 (Performance, Accessibility, Best Practices, SEO)
 
 ### **Production Readiness Checklist:**
+
 - [ ] All TypeScript errors resolved (0 errors)
 - [ ] All tests passing (100% pass rate)
 - [ ] All linting issues resolved
@@ -223,12 +248,14 @@ npm run preview
 ## 📋 **DELIVERABLES**
 
 ### **Required Reports:**
+
 1. **Cleanup Analysis Report** - Detail of removed/optimized items
 2. **Performance Improvement Report** - Before/after metrics
 3. **Production Readiness Report** - Final validation results
 4. **Deployment Guide** - Step-by-step production deployment
 
 ### **Code Deliverables:**
+
 1. **Optimized Codebase** - Clean, production-ready code
 2. **Production Build** - Validated build artifacts
 3. **Deployment Scripts** - Automated deployment configuration
@@ -239,6 +266,7 @@ npm run preview
 ## 🚨 **CRITICAL WARNINGS**
 
 ### **DO NOT Remove Without Verification:**
+
 - Core business logic files
 - Database schema files
 - Authentication configurations
@@ -246,6 +274,7 @@ npm run preview
 - Required environment configs
 
 ### **BACKUP Before Major Changes:**
+
 ```bash
 # Create safety backup before major cleanup
 git checkout -b backup-pre-cleanup
@@ -254,6 +283,7 @@ git commit -m "Backup before structural cleanup"
 ```
 
 ### **Validate After Each Major Change:**
+
 ```bash
 # After each cleanup step:
 npm run dev        # Verify app starts
@@ -266,11 +296,13 @@ npm run test       # Verify tests pass
 ## 🎯 **COORDINATION WITH CURSOR**
 
 ### **Handoff Points:**
+
 1. **After Cleanup:** Coordinate with Cursor for UI polish
 2. **After Build Optimization:** Cursor validates mobile performance
 3. **Before Deployment:** Joint final validation session
 
 ### **Communication Protocol:**
+
 - Update `CURSOR-COORDINATION-MASTER.md` after each major milestone
 - Mark completed tasks in shared documentation
 - Report any issues that affect UI/UX components

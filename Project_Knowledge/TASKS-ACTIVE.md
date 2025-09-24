@@ -46,16 +46,16 @@ C:\Users\matte.MIO\Documents\GitHub\
 **Phase 1: Codebase Health & Optimization - ⚠️ AUDIT FAILED**
 
 - [ ] **AUDIT: Codebase Health Analysis:** Initial audit performed to assess production readiness. **STATUS: FAILED**.
-    - **Summary:** The audit revealed **1654 issues** (900 errors, 754 warnings). The codebase is not in a healthy state and requires immediate attention before proceeding with finalization.
-    - **Blocker 1: Critical Syntax Error:** A parsing error in `src/__tests__/integration/ExportWorkflow.integration.test.ts` prevents `tsc` from running, blocking all type-checking.
-    - **Blocker 2: ESLint Misconfiguration:** ESLint is not configured for test/Node.js environments, causing ~900 false-positive `no-undef` errors.
-    - **Blocker 3: Massive Technical Debt:** Over 750 warnings for `no-explicit-any` and unused code indicate poor code quality.
+  - **Summary:** The audit revealed **1654 issues** (900 errors, 754 warnings). The codebase is not in a healthy state and requires immediate attention before proceeding with finalization.
+  - **Blocker 1: Critical Syntax Error:** A parsing error in `src/__tests__/integration/ExportWorkflow.integration.test.ts` prevents `tsc` from running, blocking all type-checking.
+  - **Blocker 2: ESLint Misconfiguration:** ESLint is not configured for test/Node.js environments, causing ~900 false-positive `no-undef` errors.
+  - **Blocker 3: Massive Technical Debt:** Over 750 warnings for `no-explicit-any` and unused code indicate poor code quality.
 
 - [ ] **TypeScript Error Resolution:** Systematically fix all `tsc` and `eslint` errors.
-    - [ ] **FIX:** Correct the blocking syntax error in `ExportWorkflow.integration.test.ts`.
-    - [ ] **FIX:** Reconfigure ESLint (`eslint.config.js`) to correctly recognize test and Node.js environments.
-    - [ ] **CLEANUP:** Address all `no-unused-vars` errors reported by the linter.
-    - [ ] **REFACTOR:** Begin systematic replacement of `any` types.
+  - [ ] **FIX:** Correct the blocking syntax error in `ExportWorkflow.integration.test.ts`.
+  - [ ] **FIX:** Reconfigure ESLint (`eslint.config.js`) to correctly recognize test and Node.js environments.
+  - [ ] **CLEANUP:** Address all `no-unused-vars` errors reported by the linter.
+  - [ ] **REFACTOR:** Begin systematic replacement of `any` types.
 
 - [ ] **Dependency Cleanup:** Run `npx depcheck` to identify and remove unused dependencies.
 - [ ] **Bundle Analysis:** Analyze and optimize the production bundle size.
