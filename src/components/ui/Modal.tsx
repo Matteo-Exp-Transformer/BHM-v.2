@@ -21,42 +21,42 @@ export const Modal: React.FC<ModalProps> = ({
   size = 'md',
   showCloseButton = true,
   closeOnOverlayClick = true,
-  closeOnEscape = true
+  closeOnEscape = true,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null)
   const previousActiveElement = useRef<HTMLElement | null>(null)
 
   const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl'
+    sm: 'max-w-sm sm:max-w-md',
+    md: 'max-w-sm sm:max-w-lg',
+    lg: 'max-w-sm sm:max-w-2xl',
+    xl: 'max-w-sm sm:max-w-4xl',
   }
 
   useEffect(() => {
     if (isOpen) {
       // Store the currently focused element
       previousActiveElement.current = document.activeElement as HTMLElement
-      
+
       // Focus the modal
       modalRef.current?.focus()
-      
+
       // Prevent body scroll
       document.body.style.overflow = 'hidden'
-      
+
       // Add escape key listener
       const handleEscape = (e: KeyboardEvent) => {
         if (closeOnEscape && e.key === 'Escape') {
           onClose()
         }
       }
-      
+
       document.addEventListener('keydown', handleEscape)
-      
+
       return () => {
         document.removeEventListener('keydown', handleEscape)
         document.body.style.overflow = 'unset'
-        
+
         // Restore focus to the previously focused element
         previousActiveElement.current?.focus()
       }
@@ -78,14 +78,14 @@ export const Modal: React.FC<ModalProps> = ({
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-center justify-center p-4 safe-area-top safe-area-bottom">
         {/* Overlay */}
         <div
           className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
           aria-hidden="true"
           onClick={handleOverlayClick}
         />
-        
+
         {/* Modal */}
         <div
           ref={modalRef}
@@ -93,8 +93,8 @@ export const Modal: React.FC<ModalProps> = ({
           tabIndex={-1}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+            <h2
               id="modal-title"
               className="text-lg font-semibold text-gray-900"
             >
@@ -112,11 +112,9 @@ export const Modal: React.FC<ModalProps> = ({
               </Button>
             )}
           </div>
-          
+
           {/* Content */}
-          <div className="p-6">
-            {children}
-          </div>
+          <div className="p-4 sm:p-6">{children}</div>
         </div>
       </div>
     </div>
@@ -130,10 +128,12 @@ interface ModalActionsProps {
 
 export const ModalActions: React.FC<ModalActionsProps> = ({
   children,
-  className = ''
+  className = '',
 }) => {
   return (
-    <div className={`flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 ${className}`}>
+    <div
+      className={`flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:space-x-3 pt-4 sm:pt-6 border-t border-gray-200 ${className}`}
+    >
       {children}
     </div>
   )

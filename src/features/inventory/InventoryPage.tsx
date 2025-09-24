@@ -152,26 +152,26 @@ export default function InventoryPage() {
             Gestisci prodotti, scadenze e liste della spesa
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={() => setShowAddCategoryModal(true)}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+            className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 touch-manipulation min-h-[44px]"
           >
             <Plus className="w-4 h-4" />
-            Categoria
+            <span className="text-sm sm:text-base">Categoria</span>
           </button>
           <button
             onClick={() => setShowAddProductModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 touch-manipulation min-h-[44px]"
           >
             <Plus className="w-4 h-4" />
-            Prodotto
+            <span className="text-sm sm:text-base">Prodotto</span>
           </button>
         </div>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
@@ -242,14 +242,14 @@ export default function InventoryPage() {
           />
           <button
             onClick={() => setShowExpiredOnly(!showExpiredOnly)}
-            className={`px-4 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
+            className={`px-4 py-3 rounded-lg border transition-colors flex items-center justify-center gap-2 touch-manipulation min-h-[44px] ${
               showExpiredOnly
                 ? 'bg-red-100 border-red-300 text-red-700'
                 : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
             }`}
           >
             <Filter className="w-4 h-4" />
-            Solo Scaduti
+            <span className="text-sm sm:text-base">Solo Scaduti</span>
           </button>
         </div>
       </div>

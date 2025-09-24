@@ -104,13 +104,15 @@ export function ConservationPointCard({
           {getStatusIcon()}
           <button
             onClick={() => onEdit(point)}
-            className="p-1 text-gray-600 hover:text-blue-600 transition-colors"
+            className="p-2 text-gray-600 hover:text-blue-600 transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Modifica punto di conservazione"
           >
             <Edit className="w-4 h-4" />
           </button>
           <button
             onClick={() => onDelete(point.id)}
-            className="p-1 text-gray-600 hover:text-red-600 transition-colors"
+            className="p-2 text-gray-600 hover:text-red-600 transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Elimina punto di conservazione"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -118,12 +120,14 @@ export function ConservationPointCard({
       </div>
 
       {/* Temperature Info */}
-      <div className="grid grid-cols-2 gap-4 mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
         <div className="flex items-center space-x-2">
           <Thermometer className={`w-4 h-4 ${colors.icon}`} />
           <div>
-            <div className="text-sm text-gray-600">Temperatura target</div>
-            <div className={`font-semibold ${colors.text}`}>
+            <div className="text-sm sm:text-base text-gray-600">
+              Temperatura target
+            </div>
+            <div className={`font-semibold text-lg ${colors.text}`}>
               {point.setpoint_temp}°C
             </div>
           </div>
@@ -134,8 +138,8 @@ export function ConservationPointCard({
             className={`w-3 h-3 rounded-full ${point.status === 'normal' ? 'bg-green-400' : point.status === 'warning' ? 'bg-yellow-400' : 'bg-red-400'}`}
           />
           <div>
-            <div className="text-sm text-gray-600">Stato</div>
-            <div className={`font-semibold ${colors.text}`}>
+            <div className="text-sm sm:text-base text-gray-600">Stato</div>
+            <div className={`font-semibold text-lg ${colors.text}`}>
               {getStatusText()}
             </div>
           </div>

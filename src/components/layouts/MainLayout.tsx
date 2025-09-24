@@ -75,19 +75,21 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Content */}
-      <main 
-        className="pb-20 safe-area-top" 
+      <main
+        className="pb-20 safe-area-top"
         role="main"
         aria-label="Main content"
+        id="main-content"
       >
         {children}
       </main>
 
       {/* Bottom Navigation */}
-      <nav 
+      <nav
         className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-area-bottom z-50"
         role="navigation"
         aria-label="Main navigation"
+        aria-describedby="main-content"
       >
         <div
           className={`grid h-16 ${
@@ -116,11 +118,9 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                 aria-label={`Navigate to ${tab.label}`}
                 aria-current={isActive ? 'page' : undefined}
               >
-                <Icon 
-                  size={20} 
-                  aria-hidden="true"
-                />
+                <Icon size={20} aria-hidden="true" />
                 <span className="text-xs font-medium">{tab.label}</span>
+                {isActive && <span className="sr-only">(pagina corrente)</span>}
               </Link>
             )
           })}

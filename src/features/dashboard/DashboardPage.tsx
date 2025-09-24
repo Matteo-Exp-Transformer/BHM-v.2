@@ -71,16 +71,19 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center space-x-4">
-        <BarChart3 className="h-10 w-10 text-primary" />
+      <header className="flex items-center space-x-4">
+        <BarChart3 className="h-10 w-10 text-primary" aria-hidden="true" />
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600">Panoramica completa del sistema HACCP</p>
         </div>
-      </div>
+      </header>
 
       {/* Main KPIs Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <section
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        aria-label="Indicatori chiave di performance"
+      >
         <KPICard
           title="Compliance Score"
           value={`${kpis.overall_compliance_score.value}%`}
@@ -151,10 +154,13 @@ export const DashboardPage: React.FC = () => {
           }
           icon={<Users className="w-5 h-5" />}
         />
-      </div>
+      </section>
 
       {/* Secondary KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section
+        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        aria-label="Indicatori secondari"
+      >
         <KPICard
           title="Inventory Health"
           value={`${kpis.inventory_metrics.total_products}`}
@@ -201,34 +207,52 @@ export const DashboardPage: React.FC = () => {
           }
           icon={<Thermometer className="w-5 h-5" />}
         />
-      </div>
+      </section>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Quick Actions
-        </h3>
+      <section
+        className="bg-white rounded-lg border border-gray-200 p-6"
+        aria-label="Azioni rapide"
+      >
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          Azioni Rapide
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+          <button
+            className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            aria-label="Registra lettura temperatura"
+          >
             <div className="flex items-center space-x-3">
-              <Thermometer className="w-5 h-5 text-blue-600" />
-              <span className="font-medium">Record Temperature Reading</span>
+              <Thermometer
+                className="w-5 h-5 text-blue-600"
+                aria-hidden="true"
+              />
+              <span className="font-medium">Registra Lettura Temperatura</span>
             </div>
           </button>
-          <button className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+          <button
+            className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            aria-label="Aggiungi nuovo prodotto"
+          >
             <div className="flex items-center space-x-3">
-              <Package className="w-5 h-5 text-green-600" />
-              <span className="font-medium">Add New Product</span>
+              <Package className="w-5 h-5 text-green-600" aria-hidden="true" />
+              <span className="font-medium">Aggiungi Nuovo Prodotto</span>
             </div>
           </button>
-          <button className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+          <button
+            className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+            aria-label="Crea lista della spesa"
+          >
             <div className="flex items-center space-x-3">
-              <ShoppingCart className="w-5 h-5 text-purple-600" />
-              <span className="font-medium">Create Shopping List</span>
+              <ShoppingCart
+                className="w-5 h-5 text-purple-600"
+                aria-hidden="true"
+              />
+              <span className="font-medium">Crea Lista della Spesa</span>
             </div>
           </button>
         </div>
-      </div>
+      </section>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -85,6 +85,13 @@ export default defineConfig({
       '@clerk/clerk-react',
       '@sentry/react',
     ],
+    exclude: [
+      '@fullcalendar/react',
+      '@fullcalendar/core',
+      '@fullcalendar/daygrid',
+      '@fullcalendar/timegrid',
+      '@fullcalendar/interaction',
+    ],
   },
   resolve: {
     alias: {
@@ -103,6 +110,13 @@ export default defineConfig({
   },
   build: {
     target: 'es2020',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks: {
@@ -112,35 +126,40 @@ export default defineConfig({
           'query-vendor': ['@tanstack/react-query'],
           'auth-vendor': ['@clerk/clerk-react'],
           'ui-vendor': ['lucide-react', 'react-toastify'],
-          'calendar-vendor': ['@fullcalendar/react', '@fullcalendar/core', '@fullcalendar/daygrid', '@fullcalendar/timegrid', '@fullcalendar/interaction'],
-          
-          // Feature chunks
+          'calendar-vendor': [
+            '@fullcalendar/react',
+            '@fullcalendar/core',
+            '@fullcalendar/daygrid',
+            '@fullcalendar/timegrid',
+            '@fullcalendar/interaction',
+          ],
+
+          // Feature chunks - smaller, more granular
           'calendar-features': [
-            './src/features/calendar',
-            './src/hooks/useCalendar.ts'
+            './src/features/calendar/CalendarPage.tsx',
+            './src/hooks/useCalendar.ts',
           ],
           'inventory-features': [
-            './src/features/inventory',
-            './src/types/inventory.ts'
+            './src/features/inventory/InventoryPage.tsx',
+            './src/types/inventory.ts',
           ],
           'conservation-features': [
-            './src/features/conservation',
-            './src/hooks/useConservation.ts'
+            './src/features/conservation/ConservationPage.tsx',
+            './src/hooks/useConservation.ts',
           ],
           'management-features': [
-            './src/features/management',
-            './src/hooks/useStaff.ts'
+            './src/features/management/ManagementPage.tsx',
+            './src/features/management/hooks/useStaff.ts',
           ],
           'dashboard-features': [
-            './src/features/dashboard',
-            './src/hooks/useDashboardData.ts'
+            './src/features/dashboard/DashboardPage.tsx',
+            './src/features/dashboard/hooks/useDashboardData.ts',
           ],
-          'settings-features': [
-            './src/features/settings'
-          ]
-        }
-      }
+          'settings-features': ['./src/features/settings/SettingsPage.tsx'],
+        },
+      },
     },
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 500,
+    sourcemap: false, // Disable sourcemaps in production for better performance
   },
 })
