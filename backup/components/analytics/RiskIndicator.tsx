@@ -3,7 +3,7 @@
  * Risk assessment visualization and management component
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -18,11 +18,7 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Target,
-  Users,
   Settings,
-  BarChart3,
-  PieChart,
   Activity,
 } from 'lucide-react'
 
@@ -44,7 +40,7 @@ interface RiskIndicatorProps {
 export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
   riskAssessment,
   showDetails = true,
-  showHistory = false,
+  showHistory: _showHistory = false,
   onRecommendationClick,
   onFactorClick,
   onUpdateAssessment,

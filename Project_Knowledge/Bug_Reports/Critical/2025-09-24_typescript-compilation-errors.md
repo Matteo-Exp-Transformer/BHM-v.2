@@ -29,6 +29,7 @@ Il comando `npm run type-check` dovrebbe completarsi senza errori, indicando che
 ## ❌ Actual Behavior
 
 Il comando fallisce con un gran numero di errori, impedendo la validazione del codice. Gli errori includono:
+
 - `TS1149`: Conflitti di casing nei percorsi di importazione.
 - `TS2307`: Moduli non trovati (in particolare `@/lib/utils`).
 - `TS2305`: Membri non esportati da moduli (es. `SelectContent` da `Select`).
@@ -49,6 +50,7 @@ Il comando fallisce con un gran numero di errori, impedendo la validazione del c
 ## 🛠️ Root Cause Analysis
 
 La causa principale è una combinazione di fattori accumulati nel tempo e venuti alla luce durante la fase di "strict type checking":
+
 1.  **Casing non coerente:** Il file system (Windows) non è case-sensitive, ma il resolver dei moduli di TypeScript lo è. Importare `@/components/ui/card` invece di `@/components/ui/Card` causa conflitti.
 2.  **Dipendenza Mancante/Configurata Male:** Il file `@/lib/utils`, richiesto da quasi tutti i componenti UI per funzioni come `cn`, sembra mancare o non essere correttamente mappato in `tsconfig.json`.
 3.  **Modifiche API non Propagate:** Le API interne (nomi di metodi, proprietà degli oggetti) sono state modificate, ma i file di test e alcuni componenti che le utilizzano non sono stati aggiornati.
@@ -57,6 +59,7 @@ La causa principale è una combinazione di fattori accumulati nel tempo e venuti
 ## ✅ Proposed Solution
 
 Un approccio multifase per risolvere gli errori in ordine di priorità:
+
 1.  **Fase 1: Ripristino Fondamenta UI:**
     - Creare o ripristinare il file `src/lib/utils.ts` (probabilmente contenente la funzione `cn`).
     - Correggere le esportazioni dei componenti UI complessi (es. `Select`, `Tabs`) per includere tutti i sotto-componenti necessari.
@@ -69,26 +72,27 @@ Un approccio multifase per risolvere gli errori in ordine di priorità:
 
 ## 🧪 Fix Implementation
 
-*In corso...*
+_In corso..._
+
 - [x] Analisi e categorizzazione degli errori.
 - [x] Correzione parziale degli errori di casing nei componenti primari.
 - [x] **Fase 1 (Fix Fondamenta UI) Completata:**
-    - Creato `src/lib/utils.ts` (file utility mancante).
-    - Aggiornato `src/components/ui/Select.tsx` (esportazioni corrette).
-    - Creato `src/components/ui/Tabs.tsx` (esportazioni e casing corretti).
-    - Creato `src/components/ui/Progress.tsx` (esportazioni corrette).
-    - Creato `src/components/ui/Switch.tsx` (esportazioni corrette).
-    - Corretto `src/App.tsx` (import di Routes/Route da react-router-dom).
+  - Creato `src/lib/utils.ts` (file utility mancante).
+  - Aggiornato `src/components/ui/Select.tsx` (esportazioni corrette).
+  - Creato `src/components/ui/Tabs.tsx` (esportazioni e casing corretti).
+  - Creato `src/components/ui/Progress.tsx` (esportazioni corrette).
+  - Creato `src/components/ui/Switch.tsx` (esportazioni corrette).
+  - Corretto `src/App.tsx` (import di Routes/Route da react-router-dom).
 - [x] **Fase 2 (Correzione Sistematica del Casing) Completata:**
-    - Corretto casing import in `src/features/analytics/AdvancedAnalyticsPage.tsx`.
-    - Corretto casing import in `src/features/mobile/CameraPage.tsx`.
-    - Corretto casing import in `src/features/mobile/LocationPage.tsx`.
+  - Corretto casing import in `src/features/analytics/AdvancedAnalyticsPage.tsx`.
+  - Corretto casing import in `src/features/mobile/CameraPage.tsx`.
+  - Corretto casing import in `src/features/mobile/LocationPage.tsx`.
 - [x] **Fase 3 (Allineamento Dati e API) - In Corso:**
-    - Corretto `src/__tests__/integration/ExportWorkflow.integration.test.ts`:
-        - Sostituito `excelExporter.exportTemperatureData` con `excelExporter.exportTemperatureReadings`.
-        - Sostituito `emailScheduler.executeSchedule` con `emailScheduler.sendScheduledReport`.
-        - Allineati i mock degli oggetti `EmailSchedule` (aggiunti `createdAt`, `createdBy`, corretti `frequency` e `reportType` con `as const`).
-        - Risolti errori di sintassi (`TS1136`, `TS1005`) nel file.
+  - Corretto `src/__tests__/integration/ExportWorkflow.integration.test.ts`:
+    - Sostituito `excelExporter.exportTemperatureData` con `excelExporter.exportTemperatureReadings`.
+    - Sostituito `emailScheduler.executeSchedule` con `emailScheduler.sendScheduledReport`.
+    - Allineati i mock degli oggetti `EmailSchedule` (aggiunti `createdAt`, `createdBy`, corretti `frequency` e `reportType` con `as const`).
+    - Risolti errori di sintassi (`TS1136`, `TS1005`) nel file.
 
 ## ✅ Testing Verification
 

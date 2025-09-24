@@ -21,9 +21,13 @@ const PageLoader = () => (
 const HomePage = lazy(() => import('./features/auth/HomePage'))
 const LoginPage = lazy(() => import('./features/auth/LoginPage'))
 const RegisterPage = lazy(() => import('./features/auth/RegisterPage'))
-const ManagementPage = lazy(() => import('./features/management/ManagementPage'))
+const ManagementPage = lazy(
+  () => import('./features/management/ManagementPage')
+)
 const CalendarPage = lazy(() => import('./features/calendar/CalendarPage'))
-const ConservationPage = lazy(() => import('./features/conservation/ConservationPage'))
+const ConservationPage = lazy(
+  () => import('./features/conservation/ConservationPage')
+)
 const InventoryPage = lazy(() => import('./features/inventory/InventoryPage'))
 const SettingsPage = lazy(() => import('./features/settings/SettingsPage'))
 
@@ -32,18 +36,9 @@ function App() {
     <>
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          <Route
-            path="/login"
-            element={<LoginPage />}
-          />
-          <Route
-            path="/sign-in"
-            element={<LoginPage />}
-          />
-          <Route
-            path="/sign-up"
-            element={<RegisterPage />}
-          />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/sign-in" element={<LoginPage />} />
+          <Route path="/sign-up" element={<RegisterPage />} />
           <Route
             path="/*"
             element={

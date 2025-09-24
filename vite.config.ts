@@ -116,27 +116,26 @@ export default defineConfig({
           
           // Feature chunks
           'calendar-features': [
-            './src/features/calendar',
+            './src/features/calendar/CalendarPage',
+            './src/features/calendar/Calendar',
             './src/hooks/useCalendar.ts'
           ],
           'inventory-features': [
-            './src/features/inventory',
+            './src/features/inventory/InventoryPage',
             './src/types/inventory.ts'
           ],
           'conservation-features': [
-            './src/features/conservation',
+            './src/features/conservation/ConservationPage',
             './src/hooks/useConservation.ts'
           ],
           'management-features': [
-            './src/features/management',
-            './src/hooks/useStaff.ts'
+            './src/features/management/ManagementPage'
           ],
           'dashboard-features': [
-            './src/features/dashboard',
-            './src/hooks/useDashboardData.ts'
+            './src/features/dashboard/DashboardPage'
           ],
           'settings-features': [
-            './src/features/settings'
+            './src/features/settings/SettingsPage'
           ]
         }
       }

@@ -197,7 +197,7 @@ describe('Export Performance Tests', () => {
 
     it('should handle memory pressure during large report generation', async () => {
       // Create memory pressure
-      const memoryPressure = performanceHelpers.createMemoryPressure(50 * 1024 * 1024) // 50MB
+      const _memoryPressure = performanceHelpers.createMemoryPressure(50 * 1024 * 1024) // 50MB
 
       const largeDataset = performanceHelpers.generateLargeDataset(
         (i) => createMockTemperatureReading({
@@ -256,7 +256,7 @@ describe('Export Performance Tests', () => {
       } as any)
 
       const { result, timeMs } = await performanceHelpers.measureExecutionTime(
-        () => excelExporter.exportTemperatureData(
+        () => excelExporter.exportTemperatureReadings(
           'company123',
           { start: new Date(), end: new Date() }
         )
@@ -292,7 +292,7 @@ describe('Export Performance Tests', () => {
       } as any)
 
       const { result, timeMs } = await performanceHelpers.measureExecutionTime(
-        () => excelExporter.exportTemperatureData(
+        () => excelExporter.exportTemperatureReadings(
           'company123',
           { start: new Date(), end: new Date() }
         )
@@ -328,16 +328,16 @@ describe('Export Performance Tests', () => {
 
       const { result: results, timeMs } = await performanceHelpers.measureExecutionTime(
         () => Promise.all([
-          excelExporter.exportTemperatureData('company1', { start: new Date(), end: new Date() }),
-          excelExporter.exportTemperatureData('company2', { start: new Date(), end: new Date() }),
-          excelExporter.exportTemperatureData('company3', { start: new Date(), end: new Date() }),
-          excelExporter.exportTemperatureData('company4', { start: new Date(), end: new Date() }),
-          excelExporter.exportTemperatureData('company5', { start: new Date(), end: new Date() })
+          excelExporter.exportTemperatureReadings('company1', { start: new Date(), end: new Date() }),
+          excelExporter.exportTemperatureReadings('company2', { start: new Date(), end: new Date() }),
+          excelExporter.exportTemperatureReadings('company3', { start: new Date(), end: new Date() }),
+          excelExporter.exportTemperatureReadings('company4', { start: new Date(), end: new Date() }),
+          excelExporter.exportTemperatureReadings('company5', { start: new Date(), end: new Date() })
         ])
       )
 
       expect(results).toHaveLength(5)
-      results.forEach(result => {
+      results.forEach((result: Blob) => {
         expect(result).toBeInstanceOf(Blob)
       })
       expect(timeMs).toBeLessThan(15000) // All 5 exports should complete in under 15 seconds
@@ -372,7 +372,7 @@ describe('Export Performance Tests', () => {
       } as any)
 
       const { result, timeMs } = await performanceHelpers.measureExecutionTime(
-        () => excelExporter.exportTemperatureData(
+        () => excelExporter.exportTemperatureReadings(
           'company123',
           { start: new Date(), end: new Date() }
         )
@@ -395,7 +395,7 @@ describe('Export Performance Tests', () => {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         gte: vi.fn().mockReturnThis(),
-        lte: vi.fn().mkReturnThis(),
+        lte: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({ data: dataset, error: null })
       } as any)
@@ -454,7 +454,7 @@ describe('Export Performance Tests', () => {
       )
 
       expect(results).toHaveLength(10)
-      results.forEach(result => {
+      results.forEach((result: Blob) => {
         expect(result).toBeInstanceOf(Blob)
       })
 

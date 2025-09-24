@@ -19,9 +19,11 @@ vi.mock('jspdf', () => ({
     addPage: vi.fn(),
     setTextColor: vi.fn(),
     line: vi.fn(),
-    output: vi.fn().mockReturnValue(new Blob(['mock-pdf'], { type: 'application/pdf' })),
-    internal: { pageSize: { height: 297 } }
-  }))
+    output: vi
+      .fn()
+      .mockReturnValue(new Blob(['mock-pdf'], { type: 'application/pdf' })),
+    internal: { pageSize: { height: 297 } },
+  })),
 }))
 
 vi.mock('xlsx', () => ({
@@ -29,19 +31,19 @@ vi.mock('xlsx', () => ({
     book_new: vi.fn(() => ({ SheetNames: [], Sheets: {} })),
     json_to_sheet: vi.fn(() => ({ '!ref': 'A1:D10' })),
     book_append_sheet: vi.fn(),
-    sheet_add_aoa: vi.fn()
+    sheet_add_aoa: vi.fn(),
   },
   writeFile: vi.fn(),
-  write: vi.fn(() => new ArrayBuffer(8))
+  write: vi.fn(() => new ArrayBuffer(8)),
 }))
 
 // Mock email service
 const mockEmailClient = {
-  send: vi.fn().mockResolvedValue({ success: true, messageId: 'msg123' })
+  send: vi.fn().mockResolvedValue({ success: true, messageId: 'msg123' }),
 }
 
 vi.mock('@/lib/email/client', () => ({
-  emailClient: mockEmailClient
+  emailClient: mockEmailClient,
 }))
 
 describe('Export Workflow Integration Tests', () => {
@@ -56,9 +58,9 @@ describe('Export Workflow Integration Tests', () => {
             name: 'Test Restaurant',
             address: 'Via Roma 123, Milano',
             license_number: 'LIC2025001',
-            responsible_person: 'Marco Bianchi'
+            responsible_person: 'Marco Bianchi',
           },
-          error: null
+          error: null,
         },
         temperature_readings: {
           data: [
@@ -70,9 +72,9 @@ describe('Export Workflow Integration Tests', () => {
               conservation_points: {
                 name: 'Frigorifero Verdure',
                 temperature_min: 2,
-                temperature_max: 6
+                temperature_max: 6,
               },
-              staff: { name: 'Giovanni Rossi' }
+              staff: { name: 'Giovanni Rossi' },
             },
             {
               id: 'temp_2',
@@ -82,9 +84,9 @@ describe('Export Workflow Integration Tests', () => {
               conservation_points: {
                 name: 'Frigorifero Verdure',
                 temperature_min: 2,
-                temperature_max: 6
+                temperature_max: 6,
               },
-              staff: { name: 'Maria Verdi' }
+              staff: { name: 'Maria Verdi' },
             },
             {
               id: 'temp_3',
@@ -94,12 +96,12 @@ describe('Export Workflow Integration Tests', () => {
               conservation_points: {
                 name: 'Frigorifero Verdure',
                 temperature_min: 2,
-                temperature_max: 6
+                temperature_max: 6,
               },
-              staff: { name: 'Paolo Blu' }
-            }
+              staff: { name: 'Paolo Blu' },
+            },
           ],
-          error: null
+          error: null,
         },
         tasks: {
           data: [
@@ -111,7 +113,7 @@ describe('Export Workflow Integration Tests', () => {
               created_at: '2025-01-14T09:00:00Z',
               due_date: '2025-01-15T18:00:00Z',
               conservation_points: { name: 'Frigorifero Verdure' },
-              staff: { name: 'Giovanni Rossi' }
+              staff: { name: 'Giovanni Rossi' },
             },
             {
               id: 'task_2',
@@ -121,10 +123,10 @@ describe('Export Workflow Integration Tests', () => {
               created_at: '2025-01-15T06:00:00Z',
               due_date: '2025-01-16T18:00:00Z',
               conservation_points: { name: 'Cella Carne' },
-              staff: { name: 'Maria Verdi' }
-            }
+              staff: { name: 'Maria Verdi' },
+            },
           ],
-          error: null
+          error: null,
         },
         conservation_points: {
           data: [
@@ -136,8 +138,8 @@ describe('Export Workflow Integration Tests', () => {
               temperature_readings: [
                 { temperature: 4.2, recorded_at: '2025-01-15T08:00:00Z' },
                 { temperature: 4.8, recorded_at: '2025-01-15T14:00:00Z' },
-                { temperature: 7.5, recorded_at: '2025-01-15T20:00:00Z' }
-              ]
+                { temperature: 7.5, recorded_at: '2025-01-15T20:00:00Z' },
+              ],
             },
             {
               name: 'Cella Carne',
@@ -146,11 +148,11 @@ describe('Export Workflow Integration Tests', () => {
               tolerance_range: 0.5,
               temperature_readings: [
                 { temperature: 2.1, recorded_at: '2025-01-15T08:00:00Z' },
-                { temperature: 1.8, recorded_at: '2025-01-15T14:00:00Z' }
-              ]
-            }
+                { temperature: 1.8, recorded_at: '2025-01-15T14:00:00Z' },
+              ],
+            },
           ],
-          error: null
+          error: null,
         },
         email_schedules: {
           data: [
@@ -161,11 +163,11 @@ describe('Export Workflow Integration Tests', () => {
               report_type: 'haccp_pdf',
               recipients: ['manager@restaurant.com', 'health@inspector.gov'],
               is_active: true,
-              next_run: '2025-01-22T09:00:00Z'
-            }
+              next_run: '2025-01-22T09:00:00Z',
+            },
           ],
-          error: null
-        }
+          error: null,
+        },
       }
 
       return {
@@ -176,7 +178,14 @@ describe('Export Workflow Integration Tests', () => {
         order: vi.fn().mockReturnThis(),
         insert: vi.fn().mockResolvedValue({ data: {}, error: null }),
         update: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue(mockData[table as keyof typeof mockData] || { data: [], error: null })
+        single: vi
+          .fn()
+          .mockResolvedValue(
+            mockData[table as keyof typeof mockData] || {
+              data: [],
+              error: null,
+            }
+          ),
       } as any
     })
   })
@@ -236,7 +245,7 @@ describe('Export Workflow Integration Tests', () => {
         companyId: 'company123',
         dateRange: {
           start: new Date('2025-01-01'),
-          end: new Date('2025-01-31')
+          end: new Date('2025-01-31'),
         },
         reportType: 'monthly' as const,
         includeCharts: true,
@@ -246,8 +255,8 @@ describe('Export Workflow Integration Tests', () => {
           maintenanceTasks: true,
           staffTraining: false,
           correctiveActions: false,
-          criticalControlPoints: true
-        }
+          criticalControlPoints: true,
+        },
       }
 
       const englishReport = await haccpReportGenerator.generateReport(config)
@@ -255,7 +264,8 @@ describe('Export Workflow Integration Tests', () => {
 
       // Generate Italian version
       const italianConfig = { ...config, language: 'it' as const }
-      const italianReport = await haccpReportGenerator.generateReport(italianConfig)
+      const italianReport =
+        await haccpReportGenerator.generateReport(italianConfig)
       expect(italianReport).toBeInstanceOf(Blob)
 
       // Both should be valid PDFs
@@ -269,10 +279,13 @@ describe('Export Workflow Integration Tests', () => {
       const companyId = 'company123'
       const dateRange = {
         start: new Date('2025-01-01'),
-        end: new Date('2025-01-31')
+        end: new Date('2025-01-31'),
       }
 
-      const excelBlob = await excelExporter.exportTemperatureReadings(companyId, dateRange)
+      const excelBlob = await excelExporter.exportTemperatureReadings(
+        companyId,
+        dateRange
+      )
 
       expect(excelBlob).toBeInstanceOf(Blob)
       expect(supabase.from).toHaveBeenCalledWith('temperature_readings')
@@ -285,7 +298,7 @@ describe('Export Workflow Integration Tests', () => {
       const companyId = 'company123'
       const dateRange = {
         start: new Date('2025-01-01'),
-        end: new Date('2025-01-31')
+        end: new Date('2025-01-31'),
       }
 
       const excelBlob = await excelExporter.exportAllData(companyId, dateRange)
@@ -309,9 +322,9 @@ describe('Export Workflow Integration Tests', () => {
         conservation_points: {
           name: `Point_${i % 10}`,
           temperature_min: 2,
-          temperature_max: 6
+          temperature_max: 6,
         },
-        staff: { name: `User_${i % 5}` }
+        staff: { name: `User_${i % 5}` },
       }))
 
       vi.mocked(supabase.from).mockImplementation((table: string) => {
@@ -322,13 +335,18 @@ describe('Export Workflow Integration Tests', () => {
             gte: vi.fn().mockReturnThis(),
             lte: vi.fn().mockReturnThis(),
             order: vi.fn().mockReturnThis(),
-            single: vi.fn().mockResolvedValue({ data: largeTemperatureDataset, error: null })
+            single: vi
+              .fn()
+              .mockResolvedValue({
+                data: largeTemperatureDataset,
+                error: null,
+              }),
           } as any
         }
         return {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
-          single: vi.fn().mockResolvedValue({ data: [], error: null })
+          single: vi.fn().mockResolvedValue({ data: [], error: null }),
         } as any
       })
 
@@ -357,7 +375,7 @@ describe('Export Workflow Integration Tests', () => {
         isActive: true,
         nextSend: new Date('2025-01-20T09:00:00Z'),
         createdAt: new Date(),
-        createdBy: 'test_user'
+        createdBy: 'test_user',
       }
 
       // Process due schedules
@@ -389,7 +407,7 @@ describe('Export Workflow Integration Tests', () => {
           isActive: true,
           nextSend: new Date(),
           createdAt: new Date(),
-          createdBy: 'test_user'
+          createdBy: 'test_user',
         },
         {
           id: 'schedule_excel',
@@ -402,8 +420,9 @@ describe('Export Workflow Integration Tests', () => {
           isActive: true,
           nextSend: new Date(),
           createdAt: new Date(),
-          createdBy: 'test_user'
-        }]
+          createdBy: 'test_user',
+        },
+      ]
 
       for (const schedule of schedules) {
         const result = await emailScheduler.sendScheduledReport(schedule)
@@ -431,7 +450,7 @@ describe('Export Workflow Integration Tests', () => {
         isActive: true,
         nextSend: new Date(),
         createdAt: new Date(),
-        createdBy: 'test_user'
+        createdBy: 'test_user',
       }
 
       const result = await emailScheduler.sendScheduledReport(schedule)
@@ -454,11 +473,11 @@ describe('Export Workflow Integration Tests', () => {
           conservation_points: {
             name: 'Emergency Backup Fridge',
             temperature_min: 2,
-            temperature_max: 6
+            temperature_max: 6,
           },
           staff: { name: 'Emergency Operator' },
-          synced_from_offline: true
-        }
+          synced_from_offline: true,
+        },
       ]
 
       // Mock data that includes offline-synced entries
@@ -470,13 +489,15 @@ describe('Export Workflow Integration Tests', () => {
             gte: vi.fn().mockReturnThis(),
             lte: vi.fn().mockReturnThis(),
             order: vi.fn().mockReturnThis(),
-            single: vi.fn().mockResolvedValue({ data: offlineSyncedData, error: null })
+            single: vi
+              .fn()
+              .mockResolvedValue({ data: offlineSyncedData, error: null }),
           } as any
         }
         return {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
-          single: vi.fn().mockResolvedValue({ data: [], error: null })
+          single: vi.fn().mockResolvedValue({ data: [], error: null }),
         } as any
       })
 
@@ -511,13 +532,10 @@ describe('Export Workflow Integration Tests', () => {
       expect(pdfReport.type).toBe('application/pdf')
 
       // Step 2: Generate Excel backup
-      const excelBackup = await excelExporter.exportAllData(
-        companyId,
-        {
-          start: new Date(inspectionDate.getTime() - 30 * 24 * 60 * 60 * 1000),
-          end: inspectionDate
-        }
-      )
+      const excelBackup = await excelExporter.exportAllData(companyId, {
+        start: new Date(inspectionDate.getTime() - 30 * 24 * 60 * 60 * 1000),
+        end: inspectionDate,
+      })
 
       expect(excelBackup).toBeInstanceOf(Blob)
 
@@ -533,7 +551,7 @@ describe('Export Workflow Integration Tests', () => {
         isActive: true,
         nextSend: inspectionDate,
         createdAt: new Date(),
-        createdBy: 'test_user'
+        createdBy: 'test_user',
       }
 
       const emailResult = await emailScheduler.sendScheduledReport(schedule)
@@ -555,7 +573,9 @@ describe('Export Workflow Integration Tests', () => {
       vi.mocked(supabase.from).mockReturnValue({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockRejectedValue(new Error('Database connection failed'))
+        single: vi
+          .fn()
+          .mockRejectedValue(new Error('Database connection failed')),
       } as any)
 
       await expect(
@@ -563,10 +583,10 @@ describe('Export Workflow Integration Tests', () => {
       ).rejects.toThrow('Database connection failed')
 
       await expect(
-        excelExporter.exportTemperatureReadings(
-          'company123',
-          { start: new Date(), end: new Date() }
-        )
+        excelExporter.exportTemperatureReadings('company123', {
+          start: new Date(),
+          end: new Date(),
+        })
       ).rejects.toThrow('Database connection failed')
     })
 
@@ -577,7 +597,7 @@ describe('Export Workflow Integration Tests', () => {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
-            single: vi.fn().mockResolvedValue({ data: null, error: null })
+            single: vi.fn().mockResolvedValue({ data: null, error: null }),
           } as any
         }
         return {
@@ -586,7 +606,7 @@ describe('Export Workflow Integration Tests', () => {
           gte: vi.fn().mockReturnThis(),
           lte: vi.fn().mockReturnThis(),
           order: vi.fn().mockReturnThis(),
-          single: vi.fn().mockResolvedValue({ data: [], error: null })
+          single: vi.fn().mockResolvedValue({ data: [], error: null }),
         } as any
       })
 

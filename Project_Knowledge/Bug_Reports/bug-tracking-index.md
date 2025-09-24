@@ -8,9 +8,9 @@
 
 ## 📊 Current Status
 
-| ID      | Date       | Severity | Description                                                         | Status        | Assigned | Resolution Time |
-| ------- | ---------- | -------- | ------------------------------------------------------------------- | ------------- | -------- | --------------- |
-| BUG-006 | 2025-09-24 | Critical | Massicci errori di compilazione TypeScript                          | In Progress   | Gemini   | TBD             |
+| ID      | Date       | Severity | Description                                | Status      | Assigned | Resolution Time |
+| ------- | ---------- | -------- | ------------------------------------------ | ----------- | -------- | --------------- |
+| BUG-006 | 2025-09-24 | Critical | Massicci errori di compilazione TypeScript | In Progress | Gemini   | TBD             |
 
 ### ✅ Recently Fixed
 
