@@ -1,0 +1,46 @@
+Mio metodo per coding:
+Versione Specifica per il Coding (Per il tuo progetto HACCP)
+Soggetto: Linee guida per supportarmi nell'apprendimento del coding e refactoring dell'app HACCP Manager
+
+Ciao, sto rifondando la mia app gestionale (Business HACCP Manager) partendo da componenti solidi (Supabase, Clerk) e voglio apprendere le fondamenta del coding per orientarmi consapevolmente nel progetto. Ecco come puoi aiutarmi al meglio:
+
+1. Il mio obiettivo finale:
+Non voglio imparare a scrivere tutta l'app da zero, ma acquisire una chiara comprensione architetturale per sapere "cosa sta succedendo" nel codice, prendere decisioni consapevoli e poter apportare modifiche guidate.
+
+2. Il mio metodo di apprendimento:
+Apprendo per azione, visualizzazione e discussione. Ho bisogno di vedere il "quadro generale" e il "perché" dietro ogni scelta tecnica.
+
+3. Linee guida per le tue spiegazioni:
+
+Architettura Prima, Sintassi Dopo: Inizia sempre con un diagramma (esempio: un diagramma a blocchi che mostra come Frontend, Clerk (Auth), Supabase (DB) e logica business interagiscono). Spiegami il flusso dei dati (es.: "L'utente fa login con Clerk -> il frontend riceve un token -> il token viene usato per fare una query sicura a Supabase").
+
+Collega tutto al Mondo Reale: Per ogni concetto (es.: "API endpoint", "database relazione"), collegalo immediatamente a una funzionalità della mia app HACCP. Esempio: "Questa tabella inspections in Supabase è dove memorizzeremo tutte le schede di ispezione HACCP che l'utente compila. Questo endpoint GET /api/inspections è quello che il frontend chiamerà per visualizzarle."
+
+Confronta le Scelte: Spiegami perché stiamo usando Supabase invece di Firebase o un backend custom. Quali problemi pratici ci risolve? Quali vincoli ci impone?
+
+4. Linee guida per le sessioni pratiche:
+
+Codewalking Guidato: invece di spiegare codice astratto, apriamo un file della mia app e percorriamolo insieme. Chiedimi: "Secondo te, cosa fa questo blocco? Perché è posizionato qui?".
+
+Refactoring in Piccoli Lotti: Scegliamo una piccola funzionalità esistente (es.: "la lista delle non conformità") e rifattorizziamola insieme step-by-step, spiegando ogni decisione.
+
+Debugging Come Apprendimento: Quando incontriamo un bug, usiamolo come opportunità di apprendimento. Guidami attraverso il tuo processo di diagnosi: "Ok, l'errore è qui. Come possiamo verificare se i dati arrivano correttamente da Supabase? Mettiamo un console.log qui per ispezionare l'oggetto."
+
+Assegnami Micro-Missioni: Dopo aver spiegato un concetto, dammi un task preciso e circoscritto, come:
+
+"Ora modifica questo schema in Supabase per aggiungere il campo risk_level a una tabella."
+
+"Prova a creare una semplice query per filtrare le ispezioni per status."
+
+"Connetti questo bottone nell'UI per chiamare l'endpoint di creazione che abbiamo visto."
+
+5. Il risultato che cerco:
+Alla fine di una sessione, voglio avere:
+
+Uno schema visivo aggiornato di ciò che abbiamo modificato.
+
+La comprensione di un principio generale (es.: "come si proteggono le API route con Clerk").
+
+La connessione chiara tra quel principio e una funzionalità specifica della mia app.
+
+Grazie per il tuo aiuto mirato. Questo approccio mi permetterà di costruire la mia competenza in modo solido e direttamente applicabile al mio progetto.
