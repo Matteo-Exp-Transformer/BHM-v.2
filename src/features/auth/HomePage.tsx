@@ -1,8 +1,21 @@
 import { UserButton, useUser } from '@clerk/clerk-react'
 import { CheckCircle, AlertTriangle, Clock, TrendingUp } from 'lucide-react'
+import * as Sentry from '@sentry/react'
 
 const HomePage = () => {
   const { user } = useUser()
+
+  // Funzione di test per Sentry
+  const testSentry = () => {
+    try {
+      // Simula un errore
+      throw new Error('Test errore Sentry - HACCP Manager!')
+    } catch (error) {
+      Sentry.captureException(error)
+      console.log('Errore inviato a Sentry!')
+      alert('Errore di test inviato a Sentry! Controlla la console.')
+    }
+  }
 
   const stats = [
     {
@@ -68,6 +81,17 @@ const HomePage = () => {
             </div>
           )
         })}
+      </div>
+
+      {/* Test Sentry Button - TEMPORANEO */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold text-gray-900">Test Sentry</h2>
+        <button
+          onClick={testSentry}
+          className="w-full bg-red-500 text-white p-4 rounded-lg hover:bg-red-600 transition-colors font-medium"
+        >
+          🧪 Test Sentry - Clicca per inviare un errore di test
+        </button>
       </div>
 
       {/* Quick Actions */}

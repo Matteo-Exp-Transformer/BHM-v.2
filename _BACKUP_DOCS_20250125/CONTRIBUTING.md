@@ -286,23 +286,6 @@ Use the feature request template and include:
 - `priority: high` - High priority
 - `priority: low` - Low priority
 
-## 📋 Project Management Files
-
-### Essential Documentation
-
-- **`APP_STATUS.md`** - Current application status and quick references
-- **`WORK_LOG.md`** - Session tracking and work planning
-- **`BUG_TRACKER.md`** - Bug management and fix registry
-
-### Archived Documentation
-
-All detailed development documentation is organized in `Project_Knowledge/Archive/`:
-
-- **Session Reports** - Development session summaries
-- **Setup Guides** - Technical setup instructions
-- **Planning Docs** - Project planning and architecture
-- **Progress Reports** - Development progress tracking
-
 ## 🏗️ Project Architecture
 
 ### Component Structure
@@ -344,15 +327,6 @@ src/components/
 - [Tailwind CSS Docs](https://tailwindcss.com/docs)
 - [Vite Guide](https://vitejs.dev/guide/)
 - [Testing Library Docs](https://testing-library.com/docs/)
-
-## 🐛 Bug Reporting & Fix Assignment
-
-### Quick Reference
-
-- **Simple fixes** (TypeScript, imports, syntax) → **CURSOR**
-- **Complex issues** (architecture, auth, database) → **CLAUDE/GEMINI**
-
-See `BUG_TRACKER.md` for detailed bug management and `APP_STATUS.md` for current system status.
 
 ## ❓ Questions?
 

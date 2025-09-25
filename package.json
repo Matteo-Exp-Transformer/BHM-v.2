@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Progressive Web App for digitalizing food safety management in restaurants",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 3000",
     "build": "vite build",
     "build:clean": "powershell -ExecutionPolicy Bypass -File cleanup.ps1 && vite build",
     "build:prod": "cross-env NODE_ENV=production npm run build:clean",
