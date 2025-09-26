@@ -7,7 +7,12 @@ import { RealtimeChannel, RealtimeClient } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
 
 export type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE'
-export type TableName = 'temperature_readings' | 'maintenance_tasks' | 'products' | 'tasks' | 'shopping_lists'
+export type TableName =
+  | 'temperature_readings'
+  | 'maintenance_tasks'
+  | 'products'
+  | 'tasks'
+  | 'shopping_lists'
 
 export interface RealtimeSubscription {
   id: string
@@ -41,7 +46,7 @@ class RealtimeConnectionManager {
   private connectionStatus: ConnectionStatus = {
     connected: false,
     reconnecting: false,
-    connectionAttempts: 0
+    connectionAttempts: 0,
   }
   private statusCallbacks: ((status: ConnectionStatus) => void)[] = []
   private presenceCallbacks: ((presence: PresenceState[]) => void)[] = []
@@ -60,11 +65,15 @@ class RealtimeConnectionManager {
   /**
    * Initialize real-time connection and presence
    */
-  public async connect(companyId: string, userId: string, userEmail: string): Promise<void> {
+  public async connect(
+    companyId: string,
+    userId: string,
+    userEmail: string
+  ): Promise<void> {
     try {
       this.updateConnectionStatus({
         connected: false,
-        reconnecting: true
+        reconnecting: true,
       })
 
       // Setup presence channel for collaborative features
@@ -74,7 +83,7 @@ class RealtimeConnectionManager {
         connected: true,
         reconnecting: false,
         lastConnected: new Date(),
-        connectionAttempts: 0
+        connectionAttempts: 0,
       })
 
       console.log('✅ Real-time connection established')
@@ -87,7 +96,9 @@ class RealtimeConnectionManager {
   /**
    * Subscribe to table changes with advanced filtering
    */
-  public subscribe(subscription: Omit<RealtimeSubscription, 'id' | 'channel'>): string {
+  public subscribe(
+    subscription: Omit<RealtimeSubscription, 'id' | 'channel'>
+  ): string {
     const subscriptionId = this.generateSubscriptionId()
 
     const channel = supabase
@@ -98,17 +109,20 @@ class RealtimeConnectionManager {
           event: subscription.event,
           schema: 'public',
           table: subscription.table,
-          filter: subscription.filter
+          filter: subscription.filter,
         },
-        (payload) => {
+        payload => {
           try {
             subscription.callback(payload)
           } catch (error) {
-            console.error(`Error in subscription callback for ${subscription.table}:`, error)
+            console.error(
+              `Error in subscription callback for ${subscription.table}:`,
+              error
+            )
           }
         }
       )
-      .subscribe((status) => {
+      .subscribe(status => {
         if (status === 'SUBSCRIBED') {
           console.log(`📡 Subscribed to ${subscription.table} changes`)
         } else if (status === 'CHANNEL_ERROR') {
@@ -120,7 +134,7 @@ class RealtimeConnectionManager {
     const fullSubscription: RealtimeSubscription = {
       id: subscriptionId,
       channel,
-      ...subscription
+      ...subscription,
     }
 
     this.subscriptions.set(subscriptionId, fullSubscription)
@@ -143,7 +157,7 @@ class RealtimeConnectionManager {
    * Unsubscribe from all active subscriptions
    */
   public unsubscribeAll(): void {
-    this.subscriptions.forEach((subscription) => {
+    this.subscriptions.forEach(subscription => {
       subscription.channel?.unsubscribe()
     })
     this.subscriptions.clear()
@@ -159,7 +173,11 @@ class RealtimeConnectionManager {
   /**
    * Setup presence channel for collaborative features
    */
-  private async setupPresenceChannel(companyId: string, userId: string, userEmail: string): Promise<void> {
+  private async setupPresenceChannel(
+    companyId: string,
+    userId: string,
+    userEmail: string
+  ): Promise<void> {
     if (this.presenceChannel) {
       this.presenceChannel.unsubscribe()
     }
@@ -178,14 +196,14 @@ class RealtimeConnectionManager {
         console.log('👋 User left:', key, leftPresences)
       })
 
-    await this.presenceChannel.subscribe(async (status) => {
+    await this.presenceChannel.subscribe(async status => {
       if (status === 'SUBSCRIBED') {
         // Track user presence
         await this.presenceChannel!.track({
           userId,
           userEmail,
           online_at: new Date().toISOString(),
-          activity_status: 'active'
+          activity_status: 'active',
         })
         console.log('👥 Presence tracking enabled')
       }
@@ -195,12 +213,15 @@ class RealtimeConnectionManager {
   /**
    * Update user activity status
    */
-  public async updateActivity(status: 'active' | 'idle' | 'away', currentPage?: string): Promise<void> {
+  public async updateActivity(
+    status: 'active' | 'idle' | 'away',
+    currentPage?: string
+  ): Promise<void> {
     if (this.presenceChannel) {
       await this.presenceChannel.track({
         activity_status: status,
         current_page: currentPage,
-        last_activity: new Date().toISOString()
+        last_activity: new Date().toISOString(),
       })
     }
   }
@@ -215,7 +236,7 @@ class RealtimeConnectionManager {
         connected: true,
         reconnecting: false,
         lastConnected: new Date(),
-        connectionAttempts: 0
+        connectionAttempts: 0,
       })
     })
 
@@ -224,7 +245,7 @@ class RealtimeConnectionManager {
       this.attemptReconnection()
     })
 
-    supabase.realtime.onError((error) => {
+    supabase.realtime.onError(error => {
       console.error('Real-time connection error:', error)
       this.handleConnectionError(error)
     })
@@ -237,14 +258,18 @@ class RealtimeConnectionManager {
     this.connectionStatus.connectionAttempts++
 
     if (this.connectionStatus.connectionAttempts <= this.maxReconnectAttempts) {
-      setTimeout(() => {
-        this.attemptReconnection()
-      }, this.reconnectInterval * Math.pow(2, this.connectionStatus.connectionAttempts - 1))
+      setTimeout(
+        () => {
+          this.attemptReconnection()
+        },
+        this.reconnectInterval *
+          Math.pow(2, this.connectionStatus.connectionAttempts - 1)
+      )
     } else {
       this.updateConnectionStatus({
         connected: false,
         reconnecting: false,
-        error: 'Max reconnection attempts exceeded'
+        error: 'Max reconnection attempts exceeded',
       })
     }
   }
@@ -267,7 +292,7 @@ class RealtimeConnectionManager {
           table: sub.table,
           event: sub.event,
           callback: sub.callback,
-          filter: sub.filter
+          filter: sub.filter,
         })
       }
     } catch (error) {
@@ -287,7 +312,7 @@ class RealtimeConnectionManager {
           table: subscription.table,
           event: subscription.event,
           callback: subscription.callback,
-          filter: subscription.filter
+          filter: subscription.filter,
         })
       }, 2000)
     }
@@ -296,18 +321,20 @@ class RealtimeConnectionManager {
   /**
    * Transform Supabase presence state to our format
    */
-  private transformPresenceState(presenceState: Record<string, any[]>): PresenceState[] {
+  private transformPresenceState(
+    presenceState: Record<string, any[]>
+  ): PresenceState[] {
     const users: PresenceState[] = []
 
     Object.entries(presenceState).forEach(([key, presences]) => {
-      presences.forEach((presence) => {
+      presences.forEach(presence => {
         users.push({
           userId: presence.userId,
           userEmail: presence.userEmail,
           presence_ref: key,
           online_at: presence.online_at,
           current_page: presence.current_page,
-          activity_status: presence.activity_status || 'active'
+          activity_status: presence.activity_status || 'active',
         })
       })
     })
@@ -346,14 +373,18 @@ class RealtimeConnectionManager {
     this.presenceCallbacks.push(callback)
   }
 
-  public removeStatusCallback(callback: (status: ConnectionStatus) => void): void {
+  public removeStatusCallback(
+    callback: (status: ConnectionStatus) => void
+  ): void {
     const index = this.statusCallbacks.indexOf(callback)
     if (index > -1) {
       this.statusCallbacks.splice(index, 1)
     }
   }
 
-  public removePresenceCallback(callback: (users: PresenceState[]) => void): void {
+  public removePresenceCallback(
+    callback: (users: PresenceState[]) => void
+  ): void {
     const index = this.presenceCallbacks.indexOf(callback)
     if (index > -1) {
       this.presenceCallbacks.splice(index, 1)

@@ -96,13 +96,21 @@ This system helps you systematically track, document, and resolve bugs during de
 2025-01-22_dashboard-loading-state-broken.md
 ```
 
-### **Current Priority (January 22, 2025):**
+### **Current Priority (September 25, 2025):**
 
-1. **BUG-001:** TypeScript User import (CRITICAL - blocks commits)
-2. **BUG-002:** CollapsibleCard props inconsistency
-3. **BUG-003:** Database types missing
-4. **BUG-004:** Calendar component properties
-5. **BUG-005:** Settings component React imports
+1. **BUG-001:** TypeScript Compilation Errors (CRITICAL - 190+ errors)
+   - Conservation module type mismatches (80+ errors)
+   - Calendar system type conflicts (30+ errors)
+   - Security services duplicate identifiers (50+ errors)
+   - Inventory and other modules (30+ errors)
+2. **BUG-002:** Puppeteer MCP Integration (HIGH - testing blocked)
+   - MCP tools not loading after configuration
+   - Test script ES module conflicts
+   - Automated testing infrastructure incomplete
+3. **BUG-003:** Production Build Failures (HIGH - deployment blocked)
+   - TypeScript errors prevent build completion
+   - Bundle optimization needed
+   - Performance targets not met
 
 ---
 
@@ -146,7 +154,7 @@ These metrics help:
 
 ---
 
-## 🤝 Coordination with Claude
+## 🤝 Coordination with Claude & Gemini
 
 ### **When to Escalate:**
 
@@ -154,12 +162,30 @@ These metrics help:
 - Authentication system issues
 - Architecture decision needed for fix
 - HACCP compliance impact
+- TypeScript compilation blocking entire project
 
-### **Shared Responsibility:**
+### **AI Agent Responsibilities:**
 
-- **Cursor:** UI/UX bugs, TypeScript errors, component issues
-- **Claude:** Database bugs, complex business logic, architecture issues
-- **Both:** Performance issues, integration problems
+- **Claude (Architecture Lead):** Database bugs, complex business logic, architecture issues
+- **Gemini (Cleanup Lead):** TypeScript errors, structural cleanup, production optimization
+- **Cursor (UI Lead):** UI/UX bugs, component issues, accessibility fixes
+- **All Agents:** Performance issues, integration problems, testing coordination
+
+### **Critical Bug Report Updates Required:**
+
+After each testing cycle, MUST update:
+
+1. **Bug_Reports/README.md** (this file)
+2. **Bug_Reports/Cross_References/README.md**
+3. **Bug_Reports/Istruzioni_Debug_Agente/README.md**
+4. **Testing_Guidelines/BUG-REPORT-GUIDE.md**
+
+### **Puppeteer MCP Testing Integration:**
+
+- Document automation test results
+- Include screenshots in bug reports
+- Cross-reference manual vs automated findings
+- Track regression patterns across test runs
 
 ---
 
@@ -174,11 +200,14 @@ These metrics help:
 
 ### **Quality Indicators:**
 
-- Clean TypeScript compilation
-- Zero console errors in browser
-- All components render without errors
-- Mobile responsiveness maintained
-- Performance targets met
+- ✅ Clean TypeScript compilation (TARGET: 0 errors, CURRENT: 190+)
+- ✅ Zero console errors in browser
+- ✅ All components render without errors
+- ✅ Mobile responsiveness maintained
+- ✅ Performance targets met
+- ✅ Puppeteer MCP testing fully operational
+- ✅ HACCP core functionality 100% tested and validated
+- ✅ Production build succeeds with optimized bundle
 
 ---
 

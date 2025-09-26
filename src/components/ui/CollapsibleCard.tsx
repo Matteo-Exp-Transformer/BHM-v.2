@@ -39,26 +39,46 @@ export const CollapsibleCard = ({
   return (
     <div
       className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className}`}
+      role="region"
+      aria-labelledby={`card-title-${title.replace(/\s+/g, '-').toLowerCase()}`}
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2 rounded-t-lg"
         onClick={toggleExpanded}
+        role="button"
+        tabIndex={0}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            toggleExpanded()
+          }
+        }}
+        aria-expanded={isExpanded}
+        aria-controls={`card-content-${title.replace(/\s+/g, '-').toLowerCase()}`}
       >
         <div className="flex items-center space-x-3">
-          {Icon && <Icon className="h-5 w-5 text-gray-500" />}
+          {Icon && (
+            <Icon className="h-5 w-5 text-gray-500" aria-hidden="true" />
+          )}
           <div className="flex flex-col space-y-1">
             <div className="flex items-center space-x-2">
-              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+              <h3
+                id={`card-title-${title.replace(/\s+/g, '-').toLowerCase()}`}
+                className="text-lg font-semibold text-gray-900"
+              >
+                {title}
+              </h3>
               {counter !== undefined && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <span
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                  aria-label={`${counter} items`}
+                >
                   {counter}
                 </span>
               )}
             </div>
-            {subtitle && (
-              <p className="text-sm text-gray-500">{subtitle}</p>
-            )}
+            {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
           </div>
         </div>
 
@@ -68,16 +88,20 @@ export const CollapsibleCard = ({
           )}
           <button
             type="button"
-            className="p-1 rounded-md hover:bg-gray-100 transition-colors"
+            className="p-1 rounded-md hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             onClick={e => {
               e.stopPropagation()
               toggleExpanded()
             }}
+            aria-label={isExpanded ? 'Collapse section' : 'Expand section'}
           >
             {isExpanded ? (
-              <ChevronUp className="h-4 w-4 text-gray-500" />
+              <ChevronUp className="h-4 w-4 text-gray-500" aria-hidden="true" />
             ) : (
-              <ChevronDown className="h-4 w-4 text-gray-500" />
+              <ChevronDown
+                className="h-4 w-4 text-gray-500"
+                aria-hidden="true"
+              />
             )}
           </button>
         </div>
@@ -85,20 +109,35 @@ export const CollapsibleCard = ({
 
       {/* Content */}
       {isExpanded && (
-        <div className="border-t border-gray-200">
+        <div
+          id={`card-content-${title.replace(/\s+/g, '-').toLowerCase()}`}
+          className="border-t border-gray-200"
+          role="region"
+          aria-labelledby={`card-title-${title.replace(/\s+/g, '-').toLowerCase()}`}
+        >
           {loading && (
-            <div className="p-6 text-center">
+            <div className="p-6 text-center" role="status" aria-live="polite">
               <div className="inline-flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <div
+                  className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"
+                  aria-hidden="true"
+                ></div>
                 <span className="text-gray-600">Caricamento...</span>
               </div>
             </div>
           )}
 
           {error && (
-            <div className="p-4 m-4 bg-red-50 border border-red-200 rounded-lg">
+            <div
+              className="p-4 m-4 bg-red-50 border border-red-200 rounded-lg"
+              role="alert"
+              aria-live="assertive"
+            >
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-red-500 rounded-full flex-shrink-0"></div>
+                <div
+                  className="w-4 h-4 bg-red-500 rounded-full flex-shrink-0"
+                  aria-hidden="true"
+                ></div>
                 <p className="text-red-800 text-sm">{error}</p>
               </div>
             </div>
@@ -109,7 +148,12 @@ export const CollapsibleCard = ({
               {showEmpty && (
                 <div className="p-8 text-center text-gray-500">
                   <div className="w-12 h-12 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                    {Icon && <Icon className="h-6 w-6 text-gray-400" />}
+                    {Icon && (
+                      <Icon
+                        className="h-6 w-6 text-gray-400"
+                        aria-hidden="true"
+                      />
+                    )}
                   </div>
                   <p className="text-sm">{emptyMessage}</p>
                 </div>
@@ -148,14 +192,15 @@ export const CardActionButton = ({
   return (
     <button
       type="button"
-      className={`${baseClasses} ${variantClasses[variant]}`}
+      className={`${baseClasses} ${variantClasses[variant]} focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2`}
       onClick={e => {
         e.stopPropagation()
         onClick()
       }}
       disabled={disabled}
+      aria-label={label}
     >
-      <Icon className="h-3 w-3 mr-1" />
+      <Icon className="h-3 w-3 mr-1" aria-hidden="true" />
       {label}
     </button>
   )

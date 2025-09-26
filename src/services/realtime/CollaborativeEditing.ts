@@ -3,7 +3,10 @@
  * Real-time collaborative editing with operational transformation and conflict resolution
  */
 
-import { realtimeManager, type PresenceState } from './RealtimeConnectionManager'
+import {
+  realtimeManager,
+  type PresenceState,
+} from './RealtimeConnectionManager'
 
 export interface EditOperation {
   id: string
@@ -81,7 +84,8 @@ class CollaborativeEditing {
   private operationCallbacks: ((operation: EditOperation) => void)[] = []
   private cursorCallbacks: ((cursors: CursorPosition[]) => void)[] = []
   private conflictCallbacks: ((conflict: EditConflict) => void)[] = []
-  private presenceCallbacks: ((collaborators: CollaboratorInfo[]) => void)[] = []
+  private presenceCallbacks: ((collaborators: CollaboratorInfo[]) => void)[] =
+    []
 
   // Operational Transformation parameters
   private readonly maxOperationHistory = 1000
@@ -111,7 +115,7 @@ class CollaborativeEditing {
         operations: [],
         current_version: 0,
         created_at: new Date(),
-        last_activity: new Date()
+        last_activity: new Date(),
       }
       this.sessions.set(sessionId, session)
     }
@@ -126,10 +130,10 @@ class CollaborativeEditing {
         userEmail,
         presence_ref: '',
         online_at: new Date().toISOString(),
-        activity_status: 'active'
+        activity_status: 'active',
       },
       last_activity: new Date(),
-      permissions
+      permissions,
     }
 
     session.participants.set(userId, collaborator)
@@ -181,7 +185,7 @@ class CollaborativeEditing {
       id: this.generateOperationId(),
       timestamp: new Date(),
       applied: false,
-      ...operation
+      ...operation,
     }
 
     // Check for conflicts
@@ -235,7 +239,7 @@ class CollaborativeEditing {
       field,
       position,
       selection,
-      timestamp: new Date()
+      timestamp: new Date(),
     }
 
     // Broadcast cursor position
@@ -277,7 +281,10 @@ class CollaborativeEditing {
   /**
    * Unlock document
    */
-  public async unlockDocument(documentId: string, userId: string): Promise<void> {
+  public async unlockDocument(
+    documentId: string,
+    userId: string
+  ): Promise<void> {
     const session = this.findSessionByDocument(documentId)
     if (!session) return
 
@@ -315,11 +322,15 @@ class CollaborativeEditing {
   /**
    * Detect conflicts between operations
    */
-  private detectConflicts(session: CollaborativeSession, newOperation: EditOperation): EditConflict[] {
+  private detectConflicts(
+    session: CollaborativeSession,
+    newOperation: EditOperation
+  ): EditConflict[] {
     const conflicts: EditConflict[] = []
-    const recentOperations = session.operations.filter(op =>
-      op.field === newOperation.field &&
-      (new Date().getTime() - op.timestamp.getTime()) < this.conflictTimeWindow
+    const recentOperations = session.operations.filter(
+      op =>
+        op.field === newOperation.field &&
+        new Date().getTime() - op.timestamp.getTime() < this.conflictTimeWindow
     )
 
     for (const existingOp of recentOperations) {
@@ -328,8 +339,11 @@ class CollaborativeEditing {
           id: this.generateConflictId(),
           operation1: existingOp,
           operation2: newOperation,
-          resolution_strategy: this.determineResolutionStrategy(existingOp, newOperation),
-          resolved: false
+          resolution_strategy: this.determineResolutionStrategy(
+            existingOp,
+            newOperation
+          ),
+          resolved: false,
         })
       }
     }
@@ -358,14 +372,18 @@ class CollaborativeEditing {
   /**
    * Transform operation based on operational transformation rules
    */
-  private transformOperation(session: CollaborativeSession, operation: EditOperation): EditOperation {
+  private transformOperation(
+    session: CollaborativeSession,
+    operation: EditOperation
+  ): EditOperation {
     const transformedOp = { ...operation }
 
     // Get operations that happened after the base version this operation was created on
-    const concurrentOps = session.operations.filter(op =>
-      op.applied &&
-      op.timestamp < operation.timestamp &&
-      op.field === operation.field
+    const concurrentOps = session.operations.filter(
+      op =>
+        op.applied &&
+        op.timestamp < operation.timestamp &&
+        op.field === operation.field
     )
 
     // Apply operational transformation
@@ -382,12 +400,18 @@ class CollaborativeEditing {
   /**
    * Transform position based on concurrent operation
    */
-  private transformPosition(position: number, concurrentOp: EditOperation): number {
+  private transformPosition(
+    position: number,
+    concurrentOp: EditOperation
+  ): number {
     if (concurrentOp.position <= position) {
       if (concurrentOp.type === 'insert') {
         return position + concurrentOp.content.length
       } else if (concurrentOp.type === 'delete') {
-        return Math.max(position - concurrentOp.content.length, concurrentOp.position)
+        return Math.max(
+          position - concurrentOp.content.length,
+          concurrentOp.position
+        )
       }
     }
     return position
@@ -428,13 +452,16 @@ class CollaborativeEditing {
   /**
    * Attempt to merge two conflicting operations
    */
-  private mergeOperations(op1: EditOperation, op2: EditOperation): EditOperation | null {
+  private mergeOperations(
+    op1: EditOperation,
+    op2: EditOperation
+  ): EditOperation | null {
     // Simple merge strategy - concatenate content
     if (op1.type === 'insert' && op2.type === 'insert') {
       return {
         ...op2,
         content: op1.content + op2.content,
-        position: Math.min(op1.position, op2.position)
+        position: Math.min(op1.position, op2.position),
       }
     }
 
@@ -444,22 +471,30 @@ class CollaborativeEditing {
   /**
    * Broadcast operation to other collaborators
    */
-  private async broadcastOperation(session: CollaborativeSession, operation: EditOperation): Promise<void> {
+  private async broadcastOperation(
+    session: CollaborativeSession,
+    operation: EditOperation
+  ): Promise<void> {
     // In a real implementation, this would send through WebSocket or Supabase realtime
-    console.log(`📡 Broadcasting operation: ${operation.type} in ${operation.field}`)
+    console.log(
+      `📡 Broadcasting operation: ${operation.type} in ${operation.field}`
+    )
   }
 
   /**
    * Broadcast cursor position
    */
-  private broadcastCursor(session: CollaborativeSession, cursor: CursorPosition): void {
+  private broadcastCursor(
+    session: CollaborativeSession,
+    cursor: CursorPosition
+  ): void {
     const otherCursors = Array.from(session.participants.values())
       .filter(p => p.userId !== cursor.userId)
       .map(p => ({
         userId: p.userId,
         field: p.current_field || '',
         position: p.cursor_position || 0,
-        timestamp: p.last_activity
+        timestamp: p.last_activity,
       }))
 
     this.notifyCursorCallbacks([cursor, ...otherCursors])
@@ -468,8 +503,14 @@ class CollaborativeEditing {
   /**
    * Broadcast lock status
    */
-  private broadcastLockStatus(session: CollaborativeSession, userId: string, locked: boolean): void {
-    console.log(`🔐 Broadcasting lock status: ${locked ? 'locked' : 'unlocked'} by ${userId}`)
+  private broadcastLockStatus(
+    session: CollaborativeSession,
+    userId: string,
+    locked: boolean
+  ): void {
+    console.log(
+      `🔐 Broadcasting lock status: ${locked ? 'locked' : 'unlocked'} by ${userId}`
+    )
   }
 
   /**
@@ -490,7 +531,9 @@ class CollaborativeEditing {
   /**
    * Save current document state
    */
-  private async saveDocumentState(session: CollaborativeSession): Promise<void> {
+  private async saveDocumentState(
+    session: CollaborativeSession
+  ): Promise<void> {
     const state = this.getDocumentState(session.id)
     if (!state) return
 
@@ -501,15 +544,18 @@ class CollaborativeEditing {
   /**
    * Subscribe to document changes
    */
-  private async subscribeToDocument(documentId: string, documentType: string): Promise<void> {
+  private async subscribeToDocument(
+    documentId: string,
+    documentType: string
+  ): Promise<void> {
     if (this.subscriptions.has(documentId)) return
 
     const tableName = this.getTableName(documentType)
     const subscriptionId = realtimeManager.subscribe({
       table: tableName as any,
       event: '*',
-      callback: (payload) => this.handleExternalUpdate(documentId, payload),
-      filter: `id=eq.${documentId}`
+      callback: payload => this.handleExternalUpdate(documentId, payload),
+      filter: `id=eq.${documentId}`,
     })
 
     this.subscriptions.set(documentId, subscriptionId)
@@ -531,7 +577,7 @@ class CollaborativeEditing {
       field: 'external_update',
       userId: 'system',
       timestamp: new Date(),
-      applied: true
+      applied: true,
     }
 
     session.operations.push(operation)
@@ -541,21 +587,33 @@ class CollaborativeEditing {
   /**
    * Utility methods
    */
-  private findSessionByDocument(documentId: string): CollaborativeSession | undefined {
-    return Array.from(this.sessions.values()).find(s => s.document_id === documentId)
+  private findSessionByDocument(
+    documentId: string
+  ): CollaborativeSession | undefined {
+    return Array.from(this.sessions.values()).find(
+      s => s.document_id === documentId
+    )
   }
 
   private getTableName(documentType: string): string {
     switch (documentType) {
-      case 'maintenance_task': return 'maintenance_tasks'
-      case 'product': return 'products'
-      case 'shopping_list': return 'shopping_lists'
-      case 'calendar_event': return 'calendar_events'
-      default: return 'tasks'
+      case 'maintenance_task':
+        return 'maintenance_tasks'
+      case 'product':
+        return 'products'
+      case 'shopping_list':
+        return 'shopping_lists'
+      case 'calendar_event':
+        return 'calendar_events'
+      default:
+        return 'tasks'
     }
   }
 
-  private determineResolutionStrategy(op1: EditOperation, op2: EditOperation): EditConflict['resolution_strategy'] {
+  private determineResolutionStrategy(
+    op1: EditOperation,
+    op2: EditOperation
+  ): EditConflict['resolution_strategy'] {
     // Simple strategy determination
     if (op1.type === op2.type && op1.field === op2.field) {
       return 'merge'
@@ -580,11 +638,18 @@ class CollaborativeEditing {
     return null
   }
 
-  private async setDocumentLock(documentId: string, userId: string, duration: number): Promise<void> {
+  private async setDocumentLock(
+    documentId: string,
+    userId: string,
+    duration: number
+  ): Promise<void> {
     // Implementation would set lock in database
   }
 
-  private async removeDocumentLock(documentId: string, userId: string): Promise<void> {
+  private async removeDocumentLock(
+    documentId: string,
+    userId: string
+  ): Promise<void> {
     // Implementation would remove lock from database
   }
 
@@ -593,7 +658,10 @@ class CollaborativeEditing {
     return null
   }
 
-  private applyOperationToState(state: DocumentState, operation: EditOperation): void {
+  private applyOperationToState(
+    state: DocumentState,
+    operation: EditOperation
+  ): void {
     // Apply operation to document state
     if (operation.type === 'update') {
       try {
@@ -676,7 +744,9 @@ class CollaborativeEditing {
     this.conflictCallbacks.push(callback)
   }
 
-  public onPresence(callback: (collaborators: CollaboratorInfo[]) => void): void {
+  public onPresence(
+    callback: (collaborators: CollaboratorInfo[]) => void
+  ): void {
     this.presenceCallbacks.push(callback)
   }
 

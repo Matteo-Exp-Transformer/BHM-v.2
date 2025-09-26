@@ -1,6 +1,49 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  // Safelist for dynamic classes
+  safelist: [
+    // Keep dynamic classes that might be missed
+    'bg-blue-500',
+    'bg-green-500',
+    'bg-red-500',
+    'bg-yellow-500',
+    'text-blue-500',
+    'text-green-500',
+    'text-red-500',
+    'text-yellow-500',
+    'border-blue-500',
+    'border-green-500',
+    'border-red-500',
+    'border-yellow-500',
+    'hover:bg-blue-600',
+    'hover:bg-green-600',
+    'hover:bg-red-600',
+    'hover:bg-yellow-600',
+    'focus:bg-blue-600',
+    'focus:bg-green-600',
+    'focus:bg-red-600',
+    'focus:bg-yellow-600',
+    'active:bg-blue-700',
+    'active:bg-green-700',
+    'active:bg-red-700',
+    'active:bg-yellow-700',
+    // Keep animation classes
+    'animate-spin',
+    'animate-pulse',
+    'animate-bounce',
+    // Keep responsive prefixes
+    'sm:hidden',
+    'md:hidden',
+    'lg:hidden',
+    'xl:hidden',
+    '2xl:hidden',
+    'sm:block',
+    'md:block',
+    'lg:block',
+    'xl:block',
+    '2xl:block',
+  ],
   theme: {
     extend: {
       colors: {

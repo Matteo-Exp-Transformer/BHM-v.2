@@ -9,7 +9,7 @@ export {
   type TenantContext,
   type DataSharingAgreement,
   type TenantLimits,
-  type TenantFeatures
+  type TenantFeatures,
 } from './MultiTenantManager'
 
 export {
@@ -17,14 +17,14 @@ export {
   type Permission,
   type Role,
   type UserRoleAssignment,
-  type AccessRequest
+  type AccessRequest,
 } from './PermissionManager'
 
 export {
   crossCompanyReporting,
   type CrossCompanyReport,
   type ReportType,
-  type ReportExportOptions
+  type ReportExportOptions,
 } from './CrossCompanyReporting'
 
 /**
@@ -47,22 +47,31 @@ class MultiTenantServices {
 
     try {
       // Initialize tenant context
-      const tenantContext = await multiTenantManager.initializeTenant(companyId, userId)
+      const tenantContext = await multiTenantManager.initializeTenant(
+        companyId,
+        userId
+      )
       console.log(`✅ Tenant context: ${tenantContext.company_id}`)
 
       // Setup user permissions
-      const userPermissions = await permissionManager.getUserPermissions(userId, companyId)
-      console.log(`✅ User permissions: ${userPermissions.length} permissions loaded`)
+      const userPermissions = await permissionManager.getUserPermissions(
+        userId,
+        companyId
+      )
+      console.log(
+        `✅ User permissions: ${userPermissions.length} permissions loaded`
+      )
 
       // Check data sharing agreements
-      const sharedData = await multiTenantManager.getSharedData('temperature_readings')
+      const sharedData = await multiTenantManager.getSharedData(
+        'temperature_readings'
+      )
       console.log(`✅ Shared data sources: ${sharedData.length} available`)
 
       this.currentTenant = companyId
       this.initialized = true
 
       console.log('🚀 Multi-Tenant Services initialized successfully')
-
     } catch (error) {
       console.error('❌ Failed to initialize multi-tenant services:', error)
       throw error
@@ -78,7 +87,12 @@ class MultiTenantServices {
     permissionId: string,
     context?: Record<string, any>
   ): Promise<boolean> {
-    return await permissionManager.hasPermission(userId, companyId, permissionId, context)
+    return await permissionManager.hasPermission(
+      userId,
+      companyId,
+      permissionId,
+      context
+    )
   }
 
   /**
@@ -176,11 +190,7 @@ class MultiTenantServices {
 export const multiTenantServices = new MultiTenantServices()
 
 // Export individual services for direct access
-export {
-  multiTenantManager,
-  permissionManager,
-  crossCompanyReporting
-}
+export { multiTenantManager, permissionManager, crossCompanyReporting }
 
 // Auto-initialize in development mode
 if (import.meta.env?.DEV) {

@@ -85,18 +85,25 @@ export function AddTemperatureModal({
   const toleranceRange = getToleranceRange()
 
   useEffect(() => {
+    let tolerance = 2
+    switch (conservationPoint.type) {
+      case 'blast':
+        tolerance = 5
+        break
+      case 'ambient':
+        tolerance = 3
+        break
+    }
     const status = getTemperatureStatus(
       formData.temperature,
       conservationPoint.setpoint_temp,
-      toleranceRange.min,
-      toleranceRange.max
+      tolerance
     )
-    setPredictedStatus(status)
+    setPredictedStatus(status === 'normal' ? 'compliant' : status)
   }, [
     formData.temperature,
     conservationPoint.setpoint_temp,
-    toleranceRange.min,
-    toleranceRange.max,
+    conservationPoint.type,
   ])
 
   useEffect(() => {
@@ -122,12 +129,14 @@ export function AddTemperatureModal({
       conservation_point_id: conservationPoint.id,
       temperature: formData.temperature,
       target_temperature: conservationPoint.setpoint_temp,
-      tolerance_range: toleranceRange,
+      tolerance_range_min: toleranceRange.min,
+      tolerance_range_max: toleranceRange.max,
       status: predictedStatus,
       recorded_by: user.id,
       method: formData.method,
       notes: formData.notes,
       photo_evidence: formData.photo_evidence,
+      created_at: new Date(),
     })
   }
 

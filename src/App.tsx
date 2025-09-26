@@ -1,4 +1,5 @@
-import { Routes, Route, Suspense, lazy } from 'react'
+import { Suspense, lazy } from 'react'
+import { Routes, Route } from 'react-router-dom'
 import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
@@ -20,9 +21,13 @@ const PageLoader = () => (
 const HomePage = lazy(() => import('./features/auth/HomePage'))
 const LoginPage = lazy(() => import('./features/auth/LoginPage'))
 const RegisterPage = lazy(() => import('./features/auth/RegisterPage'))
-const ManagementPage = lazy(() => import('./features/management/ManagementPage'))
+const ManagementPage = lazy(
+  () => import('./features/management/ManagementPage')
+)
 const CalendarPage = lazy(() => import('./features/calendar/CalendarPage'))
-const ConservationPage = lazy(() => import('./features/conservation/ConservationPage'))
+const ConservationPage = lazy(
+  () => import('./features/conservation/ConservationPage')
+)
 const InventoryPage = lazy(() => import('./features/inventory/InventoryPage'))
 const SettingsPage = lazy(() => import('./features/settings/SettingsPage'))
 
@@ -31,90 +36,67 @@ function App() {
     <>
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          <Route
-            path="/login"
-            element={
-              <Suspense fallback={<PageLoader />}>
-                <LoginPage />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/sign-in"
-            element={
-              <Suspense fallback={<PageLoader />}>
-                <LoginPage />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/sign-up"
-            element={
-              <Suspense fallback={<PageLoader />}>
-                <RegisterPage />
-              </Suspense>
-            }
-          />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/sign-in" element={<LoginPage />} />
+          <Route path="/sign-up" element={<RegisterPage />} />
           <Route
             path="/*"
             element={
               <>
                 <SignedIn>
                   <MainLayout>
-                    <Suspense fallback={<PageLoader />}>
-                      <Routes>
-                        <Route
-                          path="/"
-                          element={
-                            <ProtectedRoute>
-                              <HomePage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/conservazione"
-                          element={
-                            <ProtectedRoute>
-                              <ConservationPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/attivita"
-                          element={
-                            <ProtectedRoute>
-                              <CalendarPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/inventario"
-                          element={
-                            <ProtectedRoute>
-                              <InventoryPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/impostazioni"
-                          element={
-                            <ProtectedRoute requiredRole="admin">
-                              <SettingsPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/gestione"
-                          element={
-                            <ProtectedRoute
-                              requiredRole={['admin', 'responsabile']}
-                            >
-                              <ManagementPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                      </Routes>
-                    </Suspense>
+                    <Routes>
+                      <Route
+                        path="/"
+                        element={
+                          <ProtectedRoute>
+                            <HomePage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/conservazione"
+                        element={
+                          <ProtectedRoute>
+                            <ConservationPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/attivita"
+                        element={
+                          <ProtectedRoute>
+                            <CalendarPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/inventario"
+                        element={
+                          <ProtectedRoute>
+                            <InventoryPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/impostazioni"
+                        element={
+                          <ProtectedRoute requiredRole="admin">
+                            <SettingsPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/gestione"
+                        element={
+                          <ProtectedRoute
+                            requiredRole={['admin', 'responsabile']}
+                          >
+                            <ManagementPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                    </Routes>
                   </MainLayout>
                 </SignedIn>
                 <SignedOut>

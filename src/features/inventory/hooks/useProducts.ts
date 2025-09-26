@@ -45,14 +45,11 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
       expiry_date: new Date('2025-09-28'),
       quantity: 10.0,
       unit: 'litri',
-      allergens: [AllergenType.LATTOSIO],
+      allergens: [AllergenType.LATTE],
       status: 'active',
       notes: 'Prodotto fresco di alta qualità',
       created_at: new Date(),
       updated_at: new Date(),
-      category: 'Latticini',
-      departments: { name: 'Cucina' },
-      conservation_points: { name: 'Frigorifero Principale', type: 'fridge' },
     },
     {
       id: '2',
@@ -66,14 +63,11 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
       expiry_date: new Date('2025-12-15'),
       quantity: 2.5,
       unit: 'kg',
-      allergens: [AllergenType.LATTOSIO],
+      allergens: [AllergenType.LATTE],
       status: 'active',
       notes: 'Stagionato 24 mesi, qualità DOP',
       created_at: new Date(),
       updated_at: new Date(),
-      category: 'Latticini',
-      departments: { name: 'Cucina' },
-      conservation_points: { name: 'Frigorifero Principale', type: 'fridge' },
     },
     {
       id: '3',
@@ -87,14 +81,11 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
       expiry_date: new Date('2025-09-19'),
       quantity: 1.0,
       unit: 'litri',
-      allergens: [AllergenType.LATTOSIO],
+      allergens: [AllergenType.LATTE],
       status: 'expired',
       notes: 'Prodotto scaduto da rimuovere',
       created_at: new Date(),
       updated_at: new Date(),
-      category: 'Latticini',
-      departments: { name: 'Cucina' },
-      conservation_points: { name: 'Frigorifero Principale', type: 'fridge' },
     },
   ]
 
@@ -104,7 +95,7 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
     error,
     refetch,
   } = useQuery({
-    queryKey: QUERY_KEYS.products(companyId, searchParams?.filters),
+    queryKey: QUERY_KEYS.products(companyId || '', searchParams?.filters),
     queryFn: async () => {
       console.log(
         '🔧 Using mock data for products - database disabled temporarily'
@@ -116,7 +107,7 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
 
   // Fetch product statistics - DISABLED TEMPORARILY
   const { data: stats } = useQuery({
-    queryKey: QUERY_KEYS.productStats(companyId),
+    queryKey: QUERY_KEYS.productStats(companyId || ''),
     queryFn: async (): Promise<InventoryStats> => {
       console.log(
         '🔧 Using mock stats for products - database disabled temporarily'
@@ -166,10 +157,10 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.products(companyId),
+        queryKey: QUERY_KEYS.products(companyId || ''),
       })
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.productStats(companyId),
+        queryKey: QUERY_KEYS.productStats(companyId || ''),
       })
       toast.success('Prodotto creato con successo')
     },
@@ -206,10 +197,10 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.products(companyId),
+        queryKey: QUERY_KEYS.products(companyId || ''),
       })
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.productStats(companyId),
+        queryKey: QUERY_KEYS.productStats(companyId || ''),
       })
       toast.success('Prodotto aggiornato con successo')
     },
@@ -235,10 +226,10 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.products(companyId),
+        queryKey: QUERY_KEYS.products(companyId || ''),
       })
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.productStats(companyId),
+        queryKey: QUERY_KEYS.productStats(companyId || ''),
       })
       toast.success('Prodotto eliminato con successo')
     },
@@ -277,10 +268,10 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.products(companyId),
+        queryKey: QUERY_KEYS.products(companyId || ''),
       })
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.productStats(companyId),
+        queryKey: QUERY_KEYS.productStats(companyId || ''),
       })
       toast.success('Stato prodotto aggiornato')
     },

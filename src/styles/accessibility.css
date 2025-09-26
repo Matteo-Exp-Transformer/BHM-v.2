@@ -41,11 +41,11 @@
   .bg-gray-50 {
     background-color: #ffffff;
   }
-  
+
   .border-gray-200 {
     border-color: #000000;
   }
-  
+
   .text-gray-500 {
     color: #000000;
   }
@@ -65,9 +65,9 @@
 /* Touch target size improvements */
 @media (max-width: 768px) {
   button,
-  [role="button"],
-  input[type="button"],
-  input[type="submit"],
+  [role='button'],
+  input[type='button'],
+  input[type='submit'],
   a {
     min-height: 44px;
     min-width: 44px;
@@ -93,7 +93,7 @@
 
 /* Improved focus styles for keyboard navigation */
 button:focus-visible,
-[role="button"]:focus-visible,
+[role='button']:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
@@ -103,12 +103,12 @@ a:focus-visible {
 }
 
 /* Loading states with proper ARIA support */
-[aria-busy="true"] {
+[aria-busy='true'] {
   position: relative;
 }
 
-[aria-busy="true"]::after {
-  content: "";
+[aria-busy='true']::after {
+  content: '';
   position: absolute;
   top: 50%;
   left: 50%;
@@ -122,18 +122,22 @@ a:focus-visible {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Error states with proper contrast */
-[aria-invalid="true"] {
+[aria-invalid='true'] {
   border-color: #dc2626;
   box-shadow: 0 0 0 1px #dc2626;
 }
 
 /* Success states */
-[aria-invalid="false"] {
+[aria-invalid='false'] {
   border-color: #16a34a;
   box-shadow: 0 0 0 1px #16a34a;
 }

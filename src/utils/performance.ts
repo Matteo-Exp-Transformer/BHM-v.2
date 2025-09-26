@@ -29,8 +29,12 @@ export const throttle = <T extends (...args: any[]) => any>(
 }
 
 // Image optimization for inventory photos
-export const optimizeImage = (file: File, maxWidth: number = 800, quality: number = 0.8): Promise<Blob> => {
-  return new Promise((resolve) => {
+export const optimizeImage = (
+  file: File,
+  maxWidth: number = 800,
+  quality: number = 0.8
+): Promise<Blob> => {
+  return new Promise(resolve => {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')!
     const img = new Image()
@@ -55,13 +59,16 @@ export const queryKeyFactory = {
   conservation: {
     all: ['conservation'] as const,
     points: () => [...queryKeyFactory.conservation.all, 'points'] as const,
-    point: (id: string) => [...queryKeyFactory.conservation.points(), id] as const,
-    temperatures: (pointId: string) => [...queryKeyFactory.conservation.point(pointId), 'temperatures'] as const,
+    point: (id: string) =>
+      [...queryKeyFactory.conservation.points(), id] as const,
+    temperatures: (pointId: string) =>
+      [...queryKeyFactory.conservation.point(pointId), 'temperatures'] as const,
   },
   inventory: {
     all: ['inventory'] as const,
     products: () => [...queryKeyFactory.inventory.all, 'products'] as const,
-    product: (id: string) => [...queryKeyFactory.inventory.products(), id] as const,
+    product: (id: string) =>
+      [...queryKeyFactory.inventory.products(), id] as const,
     categories: () => [...queryKeyFactory.inventory.all, 'categories'] as const,
   },
   staff: {
@@ -73,7 +80,7 @@ export const queryKeyFactory = {
     all: ['calendar'] as const,
     events: () => [...queryKeyFactory.calendar.all, 'events'] as const,
     event: (id: string) => [...queryKeyFactory.calendar.events(), id] as const,
-  }
+  },
 }
 
 // Memory cleanup for large lists
@@ -97,7 +104,7 @@ export const createCleanupManager = () => {
     cleanup: () => {
       cleanupFunctions.forEach(fn => fn())
       cleanupFunctions.length = 0
-    }
+    },
   }
 }
 

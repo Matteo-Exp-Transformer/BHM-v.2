@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import {
   ConservationPoint,
   ConservationPointType,
-  classifyConservationPoint,
   TEMPERATURE_RANGES,
 } from '@/types/conservation'
 import { X, Thermometer, Info } from 'lucide-react'
@@ -93,10 +92,21 @@ export function AddPointModal({
   }, [point, isOpen])
 
   useEffect(() => {
-    const type = classifyConservationPoint(
-      formData.setpoint_temp,
-      formData.is_blast_chiller
-    )
+    const temp = formData.setpoint_temp
+    const isBlast = formData.is_blast_chiller
+    let type: ConservationPointType = 'fridge' // default
+
+    if (isBlast) {
+      type = 'blast'
+    } else {
+      if (temp >= 15 && temp <= 25) {
+        type = 'ambient'
+      } else if (temp >= 0 && temp <= 8) {
+        type = 'fridge'
+      } else if (temp >= -25 && temp <= -15) {
+        type = 'freezer'
+      }
+    }
     setPredictedType(type)
   }, [formData.setpoint_temp, formData.is_blast_chiller])
 

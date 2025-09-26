@@ -88,7 +88,9 @@ export function CalendarSettings({
             <select
               value={settings.weekStart}
               onChange={e =>
-                onSettingsChange({ weekStart: parseInt(e.target.value) as 0 | 1 })
+                onSettingsChange({
+                  weekStart: parseInt(e.target.value) as 0 | 1,
+                })
               }
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -193,6 +195,9 @@ export function CalendarSettings({
               training: 'Formazione',
               inventory: 'Inventario',
               meeting: 'Riunioni',
+              temperature_reading: 'Letture Temperatura',
+              general_task: 'Attività Generali',
+              custom: 'Personalizzato',
             }
 
             return (
@@ -237,6 +242,9 @@ export function CalendarSettings({
                 training: '#F59E0B',
                 inventory: '#8B5CF6',
                 meeting: '#EF4444',
+                temperature_reading: '#06B6D4',
+                general_task: '#6366F1',
+                custom: '#EC4899',
               },
             }
             onSettingsChange(defaultSettings)

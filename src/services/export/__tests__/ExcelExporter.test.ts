@@ -11,13 +11,13 @@ import { supabase } from '@/lib/supabase/client'
 const mockWorkbook = {
   SheetNames: [],
   Sheets: {},
-  Props: {}
+  Props: {},
 }
 
 const mockWorksheet = {
   '!ref': 'A1:D10',
   '!cols': [],
-  '!merges': []
+  '!merges': [],
 }
 
 const mockXLSX = {
@@ -26,10 +26,10 @@ const mockXLSX = {
     json_to_sheet: vi.fn(() => mockWorksheet),
     book_append_sheet: vi.fn(),
     sheet_add_aoa: vi.fn(),
-    sheet_set_array_formula: vi.fn()
+    sheet_set_array_formula: vi.fn(),
   },
   writeFile: vi.fn(),
-  write: vi.fn(() => new ArrayBuffer(8))
+  write: vi.fn(() => new ArrayBuffer(8)),
 }
 
 vi.mock('xlsx', () => mockXLSX)
@@ -52,7 +52,7 @@ describe('ExcelExporter', () => {
       gte: vi.fn().mockReturnThis(),
       lte: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: [], error: null })
+      single: vi.fn().mockResolvedValue({ data: [], error: null }),
     } as any)
   })
 
@@ -65,11 +65,11 @@ describe('ExcelExporter', () => {
       companyId: 'company123',
       dateRange: {
         start: new Date('2025-01-01'),
-        end: new Date('2025-01-31')
+        end: new Date('2025-01-31'),
       },
       tables: ['temperature_readings', 'tasks'],
       includeCharts: true,
-      format: 'xlsx'
+      format: 'xlsx',
     }
 
     it('should export data to Excel format successfully', async () => {
@@ -81,17 +81,17 @@ describe('ExcelExporter', () => {
             recorded_at: '2025-01-15T10:00:00Z',
             temperature: 4.2,
             conservation_points: { name: 'Frigorifero 1' },
-            staff: { name: 'Giovanni Bianchi' }
+            staff: { name: 'Giovanni Bianchi' },
           },
           {
             id: 'temp2',
             recorded_at: '2025-01-15T14:00:00Z',
             temperature: 4.5,
             conservation_points: { name: 'Frigorifero 2' },
-            staff: { name: 'Mario Rossi' }
-          }
+            staff: { name: 'Mario Rossi' },
+          },
         ],
-        error: null
+        error: null,
       }
 
       // Mock tasks data
@@ -102,31 +102,34 @@ describe('ExcelExporter', () => {
             title: 'Pulizia frigoriferi',
             status: 'completed',
             created_at: '2025-01-10T09:00:00Z',
-            staff: { name: 'Marco Verdi' }
-          }
+            staff: { name: 'Marco Verdi' },
+          },
         ],
-        error: null
+        error: null,
       }
 
       // Setup Supabase mock responses
       let callCount = 0
-      vi.mocked(supabase.from).mockImplementation((table: string) => ({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockReturnThis(),
-        lte: vi.fn().mockReturnThis(),
-        order: vi.fn().mockReturnThis(),
-        single: vi.fn().mockImplementation(() => {
-          callCount++
-          if (table === 'temperature_readings') {
-            return Promise.resolve(mockTemperatureData)
-          }
-          if (table === 'tasks') {
-            return Promise.resolve(mockTasksData)
-          }
-          return Promise.resolve({ data: [], error: null })
-        })
-      } as any))
+      vi.mocked(supabase.from).mockImplementation(
+        (table: string) =>
+          ({
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            gte: vi.fn().mockReturnThis(),
+            lte: vi.fn().mockReturnThis(),
+            order: vi.fn().mockReturnThis(),
+            single: vi.fn().mockImplementation(() => {
+              callCount++
+              if (table === 'temperature_readings') {
+                return Promise.resolve(mockTemperatureData)
+              }
+              if (table === 'tasks') {
+                return Promise.resolve(mockTasksData)
+              }
+              return Promise.resolve({ data: [], error: null })
+            }),
+          }) as any
+      )
 
       const result = await excelExporter.exportData(mockConfig)
 
@@ -134,11 +137,18 @@ describe('ExcelExporter', () => {
       expect(mockXLSX.utils.book_new).toHaveBeenCalled()
       expect(mockXLSX.utils.json_to_sheet).toHaveBeenCalledTimes(2) // 2 tables
       expect(mockXLSX.utils.book_append_sheet).toHaveBeenCalledTimes(2)
-      expect(mockXLSX.write).toHaveBeenCalledWith(mockWorkbook, { bookType: 'xlsx', type: 'array' })
+      expect(mockXLSX.write).toHaveBeenCalledWith(mockWorkbook, {
+        bookType: 'xlsx',
+        type: 'array',
+      })
     })
 
     it('should export data to CSV format', async () => {
-      const csvConfig = { ...mockConfig, format: 'csv' as const, tables: ['temperature_readings'] }
+      const csvConfig = {
+        ...mockConfig,
+        format: 'csv' as const,
+        tables: ['temperature_readings'],
+      }
 
       vi.mocked(supabase.from).mockReturnValue({
         select: vi.fn().mockReturnThis(),
@@ -151,17 +161,20 @@ describe('ExcelExporter', () => {
             {
               id: 'temp1',
               recorded_at: '2025-01-15T10:00:00Z',
-              temperature: 4.2
-            }
+              temperature: 4.2,
+            },
           ],
-          error: null
-        })
+          error: null,
+        }),
       } as any)
 
       const result = await excelExporter.exportData(csvConfig)
 
       expect(result).toBeInstanceOf(Blob)
-      expect(mockXLSX.write).toHaveBeenCalledWith(mockWorkbook, { bookType: 'csv', type: 'array' })
+      expect(mockXLSX.write).toHaveBeenCalledWith(mockWorkbook, {
+        bookType: 'csv',
+        type: 'array',
+      })
     })
 
     it('should include summary sheet when charts are enabled', async () => {
@@ -173,7 +186,7 @@ describe('ExcelExporter', () => {
         gte: vi.fn().mockReturnThis(),
         lte: vi.fn().mkReturnThis(),
         order: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({ data: [], error: null })
+        single: vi.fn().mockResolvedValue({ data: [], error: null }),
       } as any)
 
       await excelExporter.exportData(configWithCharts)
@@ -195,8 +208,8 @@ describe('ExcelExporter', () => {
             conservation_points: {
               name: 'Frigorifero 1',
               temperature_min: 2,
-              temperature_max: 6
-            }
+              temperature_max: 6,
+            },
           },
           {
             id: 'temp2',
@@ -204,11 +217,11 @@ describe('ExcelExporter', () => {
             conservation_points: {
               name: 'Frigorifero 1',
               temperature_min: 2,
-              temperature_max: 6
-            }
-          }
+              temperature_max: 6,
+            },
+          },
         ],
-        error: null
+        error: null,
       }
 
       vi.mocked(supabase.from).mockReturnValue({
@@ -217,7 +230,7 @@ describe('ExcelExporter', () => {
         gte: vi.fn().mockReturnThis(),
         lte: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue(mockTemperatureData)
+        single: vi.fn().mockResolvedValue(mockTemperatureData),
       } as any)
 
       const tempConfig = { ...mockConfig, tables: ['temperature_readings'] }
@@ -227,8 +240,8 @@ describe('ExcelExporter', () => {
       expect(mockXLSX.utils.json_to_sheet).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
-            Compliance: expect.any(String) // 'Compliant' or 'Non-Compliant'
-          })
+            Compliance: expect.any(String), // 'Compliant' or 'Non-Compliant'
+          }),
         ])
       )
     })
@@ -242,11 +255,15 @@ describe('ExcelExporter', () => {
             id: 'temp1',
             recorded_at: '2025-01-15T10:00:00Z',
             temperature: 4.2,
-            conservation_points: { name: 'Frigorifero 1', temperature_min: 2, temperature_max: 6 },
-            staff: { name: 'Test User' }
-          }
+            conservation_points: {
+              name: 'Frigorifero 1',
+              temperature_min: 2,
+              temperature_max: 6,
+            },
+            staff: { name: 'Test User' },
+          },
         ],
-        error: null
+        error: null,
       }
 
       vi.mocked(supabase.from).mockReturnValue({
@@ -255,13 +272,13 @@ describe('ExcelExporter', () => {
         gte: vi.fn().mockReturnThis(),
         lte: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue(mockData)
+        single: vi.fn().mockResolvedValue(mockData),
       } as any)
 
-      const result = await excelExporter.exportTemperatureData(
-        'company123',
-        { start: new Date(), end: new Date() }
-      )
+      const result = await excelExporter.exportTemperatureData('company123', {
+        start: new Date(),
+        end: new Date(),
+      })
 
       expect(result).toBeInstanceOf(Blob)
       expect(mockXLSX.utils.json_to_sheet).toHaveBeenCalledWith(
@@ -269,8 +286,8 @@ describe('ExcelExporter', () => {
           expect.objectContaining({
             Temperature: 4.2,
             Compliance: 'Compliant',
-            Location: 'Frigorifero 1'
-          })
+            Location: 'Frigorifero 1',
+          }),
         ])
       )
     })
@@ -278,11 +295,20 @@ describe('ExcelExporter', () => {
     it('should calculate compliance statistics', async () => {
       const mockData = {
         data: [
-          { temperature: 4.2, conservation_points: { temperature_min: 2, temperature_max: 6 } },
-          { temperature: 8.5, conservation_points: { temperature_min: 2, temperature_max: 6 } },
-          { temperature: 3.8, conservation_points: { temperature_min: 2, temperature_max: 6 } }
+          {
+            temperature: 4.2,
+            conservation_points: { temperature_min: 2, temperature_max: 6 },
+          },
+          {
+            temperature: 8.5,
+            conservation_points: { temperature_min: 2, temperature_max: 6 },
+          },
+          {
+            temperature: 3.8,
+            conservation_points: { temperature_min: 2, temperature_max: 6 },
+          },
         ],
-        error: null
+        error: null,
       }
 
       vi.mocked(supabase.from).mockReturnValue({
@@ -291,13 +317,13 @@ describe('ExcelExporter', () => {
         gte: vi.fn().mockReturnThis(),
         lte: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue(mockData)
+        single: vi.fn().mockResolvedValue(mockData),
       } as any)
 
-      await excelExporter.exportTemperatureData(
-        'company123',
-        { start: new Date(), end: new Date() }
-      )
+      await excelExporter.exportTemperatureData('company123', {
+        start: new Date(),
+        end: new Date(),
+      })
 
       // Should create summary with compliance rate
       expect(mockXLSX.utils.book_append_sheet).toHaveBeenCalledWith(
@@ -317,18 +343,24 @@ describe('ExcelExporter', () => {
         gte: vi.fn().mockReturnThis(),
         lte: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({ data: [], error: null })
+        single: vi.fn().mockResolvedValue({ data: [], error: null }),
       } as any)
 
-      const result = await excelExporter.exportAllData(
-        'company123',
-        { start: new Date(), end: new Date() }
-      )
+      const result = await excelExporter.exportAllData('company123', {
+        start: new Date(),
+        end: new Date(),
+      })
 
       expect(result).toBeInstanceOf(Blob)
 
       // Should have called for each table
-      const expectedTables = ['temperature_readings', 'tasks', 'products', 'staff', 'departments']
+      const expectedTables = [
+        'temperature_readings',
+        'tasks',
+        'products',
+        'staff',
+        'departments',
+      ]
       expect(supabase.from).toHaveBeenCalledTimes(expectedTables.length)
 
       expectedTables.forEach(table => {
@@ -368,10 +400,22 @@ describe('ExcelExporter', () => {
       const calculateStats = (excelExporter as any).calculateComplianceStats
 
       const testReadings = [
-        { temperature: 4.0, conservation_points: { temperature_min: 2, temperature_max: 6 } },
-        { temperature: 5.0, conservation_points: { temperature_min: 2, temperature_max: 6 } },
-        { temperature: 8.0, conservation_points: { temperature_min: 2, temperature_max: 6 } },
-        { temperature: 3.0, conservation_points: { temperature_min: 2, temperature_max: 6 } }
+        {
+          temperature: 4.0,
+          conservation_points: { temperature_min: 2, temperature_max: 6 },
+        },
+        {
+          temperature: 5.0,
+          conservation_points: { temperature_min: 2, temperature_max: 6 },
+        },
+        {
+          temperature: 8.0,
+          conservation_points: { temperature_min: 2, temperature_max: 6 },
+        },
+        {
+          temperature: 3.0,
+          conservation_points: { temperature_min: 2, temperature_max: 6 },
+        },
       ]
 
       const stats = calculateStats(testReadings)
@@ -383,7 +427,7 @@ describe('ExcelExporter', () => {
         complianceRate: 75,
         averageTemperature: 5.0,
         minTemperature: 3.0,
-        maxTemperature: 8.0
+        maxTemperature: 8.0,
       })
     })
 
@@ -399,7 +443,7 @@ describe('ExcelExporter', () => {
         complianceRate: 0,
         averageTemperature: 0,
         minTemperature: 0,
-        maxTemperature: 0
+        maxTemperature: 0,
       })
     })
   })
@@ -412,7 +456,9 @@ describe('ExcelExporter', () => {
         gte: vi.fn().mockReturnThis(),
         lte: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
-        single: vi.fn().mockRejectedValue(new Error('Database connection failed'))
+        single: vi
+          .fn()
+          .mockRejectedValue(new Error('Database connection failed')),
       } as any)
 
       const config: ExcelExportConfig = {
@@ -420,10 +466,12 @@ describe('ExcelExporter', () => {
         dateRange: { start: new Date(), end: new Date() },
         tables: ['temperature_readings'],
         includeCharts: false,
-        format: 'xlsx'
+        format: 'xlsx',
       }
 
-      await expect(excelExporter.exportData(config)).rejects.toThrow('Database connection failed')
+      await expect(excelExporter.exportData(config)).rejects.toThrow(
+        'Database connection failed'
+      )
     })
 
     it('should handle XLSX library errors', async () => {
@@ -433,7 +481,7 @@ describe('ExcelExporter', () => {
         gte: vi.fn().mockReturnThis(),
         lte: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({ data: [], error: null })
+        single: vi.fn().mockResolvedValue({ data: [], error: null }),
       } as any)
 
       // Mock XLSX error
@@ -446,10 +494,12 @@ describe('ExcelExporter', () => {
         dateRange: { start: new Date(), end: new Date() },
         tables: ['temperature_readings'],
         includeCharts: false,
-        format: 'xlsx'
+        format: 'xlsx',
       }
 
-      await expect(excelExporter.exportData(config)).rejects.toThrow('Excel generation failed')
+      await expect(excelExporter.exportData(config)).rejects.toThrow(
+        'Excel generation failed'
+      )
     })
 
     it('should handle missing conservation point data', () => {
@@ -468,7 +518,7 @@ describe('ExcelExporter', () => {
         id: `temp${i}`,
         temperature: 4.0 + Math.random() * 2, // Random temps between 4-6
         recorded_at: new Date().toISOString(),
-        conservation_points: { temperature_min: 2, temperature_max: 6 }
+        conservation_points: { temperature_min: 2, temperature_max: 6 },
       }))
 
       vi.mocked(supabase.from).mockReturnValue({
@@ -477,7 +527,7 @@ describe('ExcelExporter', () => {
         gte: vi.fn().mockReturnThis(),
         lte: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({ data: largeDataset, error: null })
+        single: vi.fn().mockResolvedValue({ data: largeDataset, error: null }),
       } as any)
 
       const config: ExcelExportConfig = {
@@ -485,7 +535,7 @@ describe('ExcelExporter', () => {
         dateRange: { start: new Date(), end: new Date() },
         tables: ['temperature_readings'],
         includeCharts: false,
-        format: 'xlsx'
+        format: 'xlsx',
       }
 
       const startTime = performance.now()
