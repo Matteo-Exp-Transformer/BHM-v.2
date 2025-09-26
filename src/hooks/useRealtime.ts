@@ -11,7 +11,7 @@ import {
   type ConnectionStatus,
   type PresenceState,
   type TableName,
-  type RealtimeEvent
+  type RealtimeEvent,
 } from '@/services/realtime/RealtimeConnectionManager'
 
 interface UseRealtimeOptions {
@@ -39,7 +39,10 @@ export interface RealtimeHookReturn {
 
   // Presence features
   onlineUsers: PresenceState[]
-  updateActivity: (status: 'active' | 'idle' | 'away', currentPage?: string) => Promise<void>
+  updateActivity: (
+    status: 'active' | 'idle' | 'away',
+    currentPage?: string
+  ) => Promise<void>
 
   // Connection status
   connectionStatus: ConnectionStatus
@@ -47,15 +50,21 @@ export interface RealtimeHookReturn {
   connectionAttempts: number
 }
 
-export function useRealtime(options: UseRealtimeOptions = {}): RealtimeHookReturn {
-  const { autoConnect = true, trackPresence = true, activityTracking = true } = options
+export function useRealtime(
+  options: UseRealtimeOptions = {}
+): RealtimeHookReturn {
+  const {
+    autoConnect = true,
+    trackPresence = true,
+    activityTracking = true,
+  } = options
   const { user, userData } = useAuth()
 
   // State management
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
     connected: false,
     reconnecting: false,
-    connectionAttempts: 0
+    connectionAttempts: 0,
   })
   const [onlineUsers, setOnlineUsers] = useState<PresenceState[]>([])
 
@@ -102,19 +111,22 @@ export function useRealtime(options: UseRealtimeOptions = {}): RealtimeHookRetur
   /**
    * Subscribe to table changes
    */
-  const subscribe = useCallback((
-    table: TableName,
-    event: RealtimeEvent | '*',
-    callback: (payload: any) => void,
-    filter?: string
-  ): string => {
-    return realtimeManager.subscribe({
-      table,
-      event,
-      callback,
-      filter
-    })
-  }, [])
+  const subscribe = useCallback(
+    (
+      table: TableName,
+      event: RealtimeEvent | '*',
+      callback: (payload: any) => void,
+      filter?: string
+    ): string => {
+      return realtimeManager.subscribe({
+        table,
+        event,
+        callback,
+        filter,
+      })
+    },
+    []
+  )
 
   /**
    * Unsubscribe from table changes
@@ -126,13 +138,16 @@ export function useRealtime(options: UseRealtimeOptions = {}): RealtimeHookRetur
   /**
    * Update user activity status
    */
-  const updateActivity = useCallback(async (
-    status: 'active' | 'idle' | 'away',
-    currentPage?: string
-  ): Promise<void> => {
-    lastActivityRef.current = new Date()
-    await realtimeManager.updateActivity(status, currentPage)
-  }, [])
+  const updateActivity = useCallback(
+    async (
+      status: 'active' | 'idle' | 'away',
+      currentPage?: string
+    ): Promise<void> => {
+      lastActivityRef.current = new Date()
+      await realtimeManager.updateActivity(status, currentPage)
+    },
+    []
+  )
 
   /**
    * Track user activity for automatic idle detection
@@ -153,18 +168,31 @@ export function useRealtime(options: UseRealtimeOptions = {}): RealtimeHookRetur
       }
 
       // Set idle timer (5 minutes)
-      idleTimeoutRef.current = setTimeout(() => {
-        updateActivity('idle', window.location.pathname)
-      }, 5 * 60 * 1000)
+      idleTimeoutRef.current = setTimeout(
+        () => {
+          updateActivity('idle', window.location.pathname)
+        },
+        5 * 60 * 1000
+      )
 
       // Set away timer (15 minutes)
-      activityTimeoutRef.current = setTimeout(() => {
-        updateActivity('away', window.location.pathname)
-      }, 15 * 60 * 1000)
+      activityTimeoutRef.current = setTimeout(
+        () => {
+          updateActivity('away', window.location.pathname)
+        },
+        15 * 60 * 1000
+      )
     }
 
     // Listen for user activity
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click']
+    const events = [
+      'mousedown',
+      'mousemove',
+      'keypress',
+      'scroll',
+      'touchstart',
+      'click',
+    ]
     events.forEach(event => {
       document.addEventListener(event, handleActivity, { passive: true })
     })
@@ -232,7 +260,7 @@ export function useRealtime(options: UseRealtimeOptions = {}): RealtimeHookRetur
     connect,
     setupActivityTracking,
     user,
-    userData?.company_id
+    userData?.company_id,
   ])
 
   /**
@@ -288,7 +316,7 @@ export function useRealtime(options: UseRealtimeOptions = {}): RealtimeHookRetur
     // Connection status
     connectionStatus,
     lastConnected: connectionStatus.lastConnected,
-    connectionAttempts: connectionStatus.connectionAttempts
+    connectionAttempts: connectionStatus.connectionAttempts,
   }
 }
 
@@ -307,7 +335,7 @@ export function useTemperatureRealtime(companyId?: string) {
     const tempSubscriptionId = subscribe(
       'temperature_readings',
       'INSERT',
-      (payload) => {
+      payload => {
         const newReading = payload.new
         setTemperatureReadings(prev => [newReading, ...prev.slice(0, 99)]) // Keep last 100 readings
 
@@ -320,9 +348,9 @@ export function useTemperatureRealtime(companyId?: string) {
               type: 'temperature_violation',
               reading: newReading,
               timestamp: new Date(),
-              severity: isViolation.severity
+              severity: isViolation.severity,
             },
-            ...prev
+            ...prev,
           ])
         }
       },
@@ -343,7 +371,7 @@ export function useTemperatureRealtime(companyId?: string) {
   return {
     temperatureReadings,
     criticalAlerts,
-    isConnected
+    isConnected,
   }
 }
 
@@ -353,7 +381,9 @@ export function useTemperatureRealtime(companyId?: string) {
 export function useTaskCollaboration(taskId?: string) {
   const { subscribe, unsubscribe, onlineUsers, isConnected } = useRealtime()
   const [taskActivity, setTaskActivity] = useState<any[]>([])
-  const [activeCollaborators, setActiveCollaborators] = useState<PresenceState[]>([])
+  const [activeCollaborators, setActiveCollaborators] = useState<
+    PresenceState[]
+  >([])
 
   useEffect(() => {
     if (!isConnected || !taskId) return
@@ -362,15 +392,15 @@ export function useTaskCollaboration(taskId?: string) {
     const taskSubscriptionId = subscribe(
       'maintenance_tasks',
       '*',
-      (payload) => {
+      payload => {
         setTaskActivity(prev => [
           {
             id: Date.now(),
             event: payload.eventType,
             data: payload.new || payload.old,
-            timestamp: new Date()
+            timestamp: new Date(),
           },
-          ...prev.slice(0, 49) // Keep last 50 activities
+          ...prev.slice(0, 49), // Keep last 50 activities
         ])
       },
       `id=eq.${taskId}`
@@ -383,8 +413,10 @@ export function useTaskCollaboration(taskId?: string) {
 
   useEffect(() => {
     // Filter users working on current task
-    const collaborators = onlineUsers.filter(user =>
-      user.current_page?.includes(taskId || '') && user.activity_status === 'active'
+    const collaborators = onlineUsers.filter(
+      user =>
+        user.current_page?.includes(taskId || '') &&
+        user.activity_status === 'active'
     )
     setActiveCollaborators(collaborators)
   }, [onlineUsers, taskId])
@@ -392,6 +424,6 @@ export function useTaskCollaboration(taskId?: string) {
   return {
     taskActivity,
     activeCollaborators,
-    isConnected
+    isConnected,
   }
 }

@@ -148,15 +148,14 @@ export default function ConservationPage() {
   const handleCompleteMaintenance = (task: MaintenanceTask) => {
     if (
       confirm(
-        `Sei sicuro di voler completare la manutenzione "${task.kind}" per ${task.conservation_point?.name}?`
+        `Sei sicuro di voler completare la manutenzione "${task.type}" per ${task.conservation_point?.name}?`
       )
     ) {
       completeTask({
         maintenance_task_id: task.id,
         completed_by: 'user1', // TODO: get from auth
         completed_at: new Date(),
-        status: 'completed',
-        checklist_completed: Array.from(task.checklist || []),
+        created_at: new Date(),
         notes: 'Completato tramite interfaccia web',
       })
     }
@@ -560,14 +559,14 @@ export default function ConservationPage() {
               <div className="text-lg mb-1">🌡️</div>
               <div className="text-xs text-gray-600">Controllo Temperature</div>
               <div className="text-sm font-semibold">
-                {maintenanceStats.byType.temperature}
+                {maintenanceStats.byType.temperature_calibration}
               </div>
             </div>
             <div className="text-center">
               <div className="text-lg mb-1">🧼</div>
-              <div className="text-xs text-gray-600">Sanificazione</div>
+              <div className="text-xs text-gray-600">Pulizia Profonda</div>
               <div className="text-sm font-semibold">
-                {maintenanceStats.byType.sanitization}
+                {maintenanceStats.byType.deep_cleaning}
               </div>
             </div>
             <div className="text-center">
@@ -611,8 +610,8 @@ export default function ConservationPage() {
 
                 // Then by due date
                 return (
-                  new Date(a.next_due_date).getTime() -
-                  new Date(b.next_due_date).getTime()
+                  new Date(a.next_due).getTime() -
+                  new Date(b.next_due).getTime()
                 )
               })
               .map(task => (

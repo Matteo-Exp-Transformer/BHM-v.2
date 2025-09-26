@@ -4,13 +4,17 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { indexedDBManager, type OfflineData, type SyncQueue } from '../IndexedDBManager'
+import {
+  indexedDBManager,
+  type OfflineData,
+  type SyncQueue,
+} from '../IndexedDBManager'
 
 // Mock IndexedDB for testing
 const mockDB = {
   objectStoreNames: { contains: vi.fn() },
   createObjectStore: vi.fn().mockReturnValue({
-    createIndex: vi.fn()
+    createIndex: vi.fn(),
   }),
   transaction: vi.fn().mockReturnValue({
     objectStore: vi.fn().mockReturnValue({
@@ -20,17 +24,17 @@ const mockDB = {
       getAll: vi.fn().mockReturnValue({ onsuccess: null, onerror: null }),
       delete: vi.fn().mockReturnValue({ onsuccess: null, onerror: null }),
       index: vi.fn().mockReturnValue({
-        openCursor: vi.fn().mockReturnValue({ onsuccess: null, onerror: null })
-      })
-    })
-  })
+        openCursor: vi.fn().mockReturnValue({ onsuccess: null, onerror: null }),
+      }),
+    }),
+  }),
 }
 
 const mockOpenDBRequest = {
   result: mockDB,
   onsuccess: null as any,
   onerror: null as any,
-  onupgradeneeded: null as any
+  onupgradeneeded: null as any,
 }
 
 // Mock global indexedDB
@@ -61,7 +65,10 @@ describe('IndexedDBManager', () => {
       }, 0)
 
       await expect(initPromise).resolves.toBeUndefined()
-      expect(global.indexedDB.open).toHaveBeenCalledWith('HACCPBusinessManager', 1)
+      expect(global.indexedDB.open).toHaveBeenCalledWith(
+        'HACCPBusinessManager',
+        1
+      )
     })
 
     it('should handle database errors during init', async () => {
@@ -93,10 +100,18 @@ describe('IndexedDBManager', () => {
 
       await initPromise
 
-      expect(mockDB.createObjectStore).toHaveBeenCalledWith('offlineData', { keyPath: 'id' })
-      expect(mockDB.createObjectStore).toHaveBeenCalledWith('syncQueue', { keyPath: 'id' })
-      expect(mockDB.createObjectStore).toHaveBeenCalledWith('apiCache', { keyPath: 'key' })
-      expect(mockDB.createObjectStore).toHaveBeenCalledWith('offlineSettings', { keyPath: 'userId' })
+      expect(mockDB.createObjectStore).toHaveBeenCalledWith('offlineData', {
+        keyPath: 'id',
+      })
+      expect(mockDB.createObjectStore).toHaveBeenCalledWith('syncQueue', {
+        keyPath: 'id',
+      })
+      expect(mockDB.createObjectStore).toHaveBeenCalledWith('apiCache', {
+        keyPath: 'key',
+      })
+      expect(mockDB.createObjectStore).toHaveBeenCalledWith('offlineSettings', {
+        keyPath: 'userId',
+      })
     })
   })
 
@@ -110,12 +125,12 @@ describe('IndexedDBManager', () => {
       const mockStore = {
         add: vi.fn().mockReturnValue({
           onsuccess: null as any,
-          onerror: null as any
-        })
+          onerror: null as any,
+        }),
       }
 
       const mockTransaction = {
-        objectStore: vi.fn().mockReturnValue(mockStore)
+        objectStore: vi.fn().mockReturnValue(mockStore),
       }
 
       mockDB.transaction = vi.fn().mockReturnValue(mockTransaction)
@@ -126,7 +141,7 @@ describe('IndexedDBManager', () => {
         action: 'create' as const,
         synced: false,
         userId: 'user123',
-        companyId: 'company456'
+        companyId: 'company456',
       }
 
       const savePromise = indexedDBManager.saveOfflineData(testData)
@@ -140,12 +155,15 @@ describe('IndexedDBManager', () => {
 
       const id = await savePromise
       expect(id).toContain('temperature_readings_')
-      expect(mockDB.transaction).toHaveBeenCalledWith(['offlineData'], 'readwrite')
+      expect(mockDB.transaction).toHaveBeenCalledWith(
+        ['offlineData'],
+        'readwrite'
+      )
       expect(mockStore.add).toHaveBeenCalledWith(
         expect.objectContaining({
           ...testData,
           id: expect.stringContaining('temperature_readings_'),
-          timestamp: expect.any(Number)
+          timestamp: expect.any(Number),
         })
       )
     })
@@ -159,10 +177,12 @@ describe('IndexedDBManager', () => {
         action: 'create' as const,
         synced: false,
         userId: 'user123',
-        companyId: 'company456'
+        companyId: 'company456',
       }
 
-      await expect(indexedDBManager.saveOfflineData(testData)).rejects.toThrow('Database not initialized')
+      await expect(indexedDBManager.saveOfflineData(testData)).rejects.toThrow(
+        'Database not initialized'
+      )
     })
   })
 
@@ -176,15 +196,15 @@ describe('IndexedDBManager', () => {
         getAll: vi.fn().mockReturnValue({
           result: [
             { id: '1', table: 'tasks', timestamp: 1000 },
-            { id: '2', table: 'products', timestamp: 2000 }
+            { id: '2', table: 'products', timestamp: 2000 },
           ],
           onsuccess: null as any,
-          onerror: null as any
-        })
+          onerror: null as any,
+        }),
       }
 
       const mockTransaction = {
-        objectStore: vi.fn().mockReturnValue(mockStore)
+        objectStore: vi.fn().mockReturnValue(mockStore),
       }
 
       mockDB.transaction = vi.fn().mockReturnValue(mockTransaction)
@@ -208,19 +228,19 @@ describe('IndexedDBManager', () => {
       const mockData = [
         { id: '1', table: 'tasks', timestamp: 1000, synced: false },
         { id: '2', table: 'products', timestamp: 2000, synced: false },
-        { id: '3', table: 'tasks', timestamp: 3000, synced: true }
+        { id: '3', table: 'tasks', timestamp: 3000, synced: true },
       ]
 
       const mockStore = {
         getAll: vi.fn().mockReturnValue({
           result: mockData,
           onsuccess: null as any,
-          onerror: null as any
-        })
+          onerror: null as any,
+        }),
       }
 
       const mockTransaction = {
-        objectStore: vi.fn().mockReturnValue(mockStore)
+        objectStore: vi.fn().mockReturnValue(mockStore),
       }
 
       mockDB.transaction = vi.fn().mockReturnValue(mockTransaction)
@@ -243,19 +263,19 @@ describe('IndexedDBManager', () => {
       const mockData = [
         { id: '1', table: 'tasks', timestamp: 1000, synced: false },
         { id: '2', table: 'products', timestamp: 2000, synced: false },
-        { id: '3', table: 'tasks', timestamp: 3000, synced: true }
+        { id: '3', table: 'tasks', timestamp: 3000, synced: true },
       ]
 
       const mockStore = {
         getAll: vi.fn().mockReturnValue({
           result: mockData,
           onsuccess: null as any,
-          onerror: null as any
-        })
+          onerror: null as any,
+        }),
       }
 
       const mockTransaction = {
-        objectStore: vi.fn().mockReturnValue(mockStore)
+        objectStore: vi.fn().mockReturnValue(mockStore),
       }
 
       mockDB.transaction = vi.fn().mockReturnValue(mockTransaction)
@@ -284,12 +304,12 @@ describe('IndexedDBManager', () => {
       const mockStore = {
         add: vi.fn().mockReturnValue({
           onsuccess: null as any,
-          onerror: null as any
-        })
+          onerror: null as any,
+        }),
       }
 
       const mockTransaction = {
-        objectStore: vi.fn().mockReturnValue(mockStore)
+        objectStore: vi.fn().mockReturnValue(mockStore),
       }
 
       mockDB.transaction = vi.fn().mockReturnValue(mockTransaction)
@@ -297,7 +317,7 @@ describe('IndexedDBManager', () => {
       const syncItem = {
         operation: 'create' as const,
         table: 'temperature_readings',
-        data: { temperature: 4.5 }
+        data: { temperature: 4.5 },
       }
 
       const addPromise = indexedDBManager.addToSyncQueue(syncItem)
@@ -311,13 +331,16 @@ describe('IndexedDBManager', () => {
 
       await addPromise
 
-      expect(mockDB.transaction).toHaveBeenCalledWith(['syncQueue'], 'readwrite')
+      expect(mockDB.transaction).toHaveBeenCalledWith(
+        ['syncQueue'],
+        'readwrite'
+      )
       expect(mockStore.add).toHaveBeenCalledWith(
         expect.objectContaining({
           ...syncItem,
           id: expect.stringContaining('sync_'),
           timestamp: expect.any(Number),
-          retryCount: 0
+          retryCount: 0,
         })
       )
     })
@@ -335,16 +358,16 @@ describe('IndexedDBManager', () => {
         get: vi.fn().mockReturnValue({
           result: mockData,
           onsuccess: null as any,
-          onerror: null as any
+          onerror: null as any,
         }),
         put: vi.fn().mockReturnValue({
           onsuccess: null as any,
-          onerror: null as any
-        })
+          onerror: null as any,
+        }),
       }
 
       const mockTransaction = {
-        objectStore: vi.fn().mockReturnValue(mockStore)
+        objectStore: vi.fn().mockReturnValue(mockStore),
       }
 
       mockDB.transaction = vi.fn().mockReturnValue(mockTransaction)
@@ -376,13 +399,13 @@ describe('IndexedDBManager', () => {
         get: vi.fn().mockReturnValue({
           result: null,
           onsuccess: null as any,
-          onerror: null as any
+          onerror: null as any,
         }),
-        put: vi.fn()
+        put: vi.fn(),
       }
 
       const mockTransaction = {
-        objectStore: vi.fn().mockReturnValue(mockStore)
+        objectStore: vi.fn().mockReturnValue(mockStore),
       }
 
       mockDB.transaction = vi.fn().mockReturnValue(mockTransaction)
@@ -410,23 +433,23 @@ describe('IndexedDBManager', () => {
       const mockOfflineIndex = {
         openCursor: vi.fn().mockReturnValue({
           onsuccess: null as any,
-          onerror: null as any
-        })
+          onerror: null as any,
+        }),
       }
 
       const mockCacheIndex = {
         openCursor: vi.fn().mockReturnValue({
           onsuccess: null as any,
-          onerror: null as any
-        })
+          onerror: null as any,
+        }),
       }
 
       const mockOfflineStore = {
-        index: vi.fn().mockReturnValue(mockOfflineIndex)
+        index: vi.fn().mockReturnValue(mockOfflineIndex),
       }
 
       const mockCacheStore = {
-        index: vi.fn().mockReturnValue(mockCacheIndex)
+        index: vi.fn().mockReturnValue(mockCacheIndex),
       }
 
       const mockTransaction = {
@@ -435,14 +458,14 @@ describe('IndexedDBManager', () => {
           if (storeName === 'apiCache') return mockCacheStore
           return {}
         }),
-        onerror: null as any
+        onerror: null as any,
       }
 
       mockDB.transaction = vi.fn().mockReturnValue(mockTransaction)
 
       // Mock IDBKeyRange
       global.IDBKeyRange = {
-        upperBound: vi.fn().mockReturnValue('mock-range')
+        upperBound: vi.fn().mockReturnValue('mock-range'),
       } as any
 
       const cleanupPromise = indexedDBManager.clearOldData(1000) // 1 second max age
@@ -462,7 +485,10 @@ describe('IndexedDBManager', () => {
 
       await cleanupPromise
 
-      expect(mockDB.transaction).toHaveBeenCalledWith(['offlineData', 'apiCache'], 'readwrite')
+      expect(mockDB.transaction).toHaveBeenCalledWith(
+        ['offlineData', 'apiCache'],
+        'readwrite'
+      )
       expect(global.IDBKeyRange.upperBound).toHaveBeenCalled()
     })
   })

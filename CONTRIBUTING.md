@@ -1,365 +1,292 @@
-# 🤝 Contributing to HACCP Business Manager
+# 🤖 AI Agent Development Workflow - HACCP Business Manager
 
-Thank you for your interest in contributing to HACCP Business Manager! This document provides guidelines and information for contributors.
+**Specialized workflow for Cursor, Gemini, and Claude AI agents working collaboratively on the HACCP Business Manager project.**
 
 ## 📋 Table of Contents
 
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [Development Setup](#development-setup)
-- [Contributing Process](#contributing-process)
+- [Agent-Specific Workflow](#agent-specific-workflow)
+- [Branch Management](#branch-management)
+- [Bug Assignment System](#bug-assignment-system)
+- [Quality Gates](#quality-gates)
+- [Agent Responsibilities](#agent-responsibilities)
+- [Escalation Process](#escalation-process)
 - [Coding Standards](#coding-standards)
-- [Testing Guidelines](#testing-guidelines)
-- [Pull Request Process](#pull-request-process)
-- [Issue Guidelines](#issue-guidelines)
+- [Testing Requirements](#testing-requirements)
 
-## 📜 Code of Conduct
+## 🎯 Agent-Specific Workflow
 
-This project follows a code of conduct that we expect all contributors to follow. Please be respectful, inclusive, and constructive in all interactions.
+### 🔄 **Branch Management System**
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 18.x or 20.x LTS
-- npm 9.0+
-- Git 2.40+
-- VS Code (recommended)
-
-### Development Setup
-
-1. **Fork the repository**
-
-   ```bash
-   # Fork on GitHub, then clone your fork
-   git clone https://github.com/YOUR_USERNAME/BHM-v.2.git
-   cd BHM-v.2
-   ```
-
-2. **Add upstream remote**
-
-   ```bash
-   git remote add upstream https://github.com/Matteo-Exp-Transformer/BHM-v.2.git
-   ```
-
-3. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-4. **Set up environment**
-
-   ```bash
-   cp env.example .env.local
-   # Configure your environment variables
-   ```
-
-5. **Start development server**
-   ```bash
-   npm run dev
-   ```
-
-## 🔄 Contributing Process
-
-### 1. Choose an Issue
-
-- Look for issues labeled `good first issue` or `help wanted`
-- Comment on the issue to express interest
-- Wait for assignment before starting work
-
-### 2. Create a Branch
+Each AI agent works on a **dedicated permanent branch**:
 
 ```bash
-git checkout -b feature/your-feature-name
-# or
-git checkout -b fix/issue-number-description
+main                    # ← Stable version (managed by Matteo)
+├── cursor-workspace    # ← Cursor's permanent working branch
+├── gemini-workspace    # ← Gemini's permanent working branch
+├── claude-workspace    # ← Claude's permanent working branch
+└── hotfix/*           # ← Emergency fixes (any agent)
 ```
 
-### 3. Make Changes
+### 📋 **Daily Workflow for All Agents**
 
-- Follow the coding standards
-- Write tests for new functionality
-- Update documentation as needed
-- Ensure all tests pass
-
-### 4. Commit Changes
-
-Use conventional commits:
+**BEFORE starting any work:**
 
 ```bash
-git commit -m "feat(auth): add login functionality"
-git commit -m "fix(ui): resolve button alignment issue"
-git commit -m "docs: update API documentation"
+# 1. Switch to your workspace
+git checkout [agent]-workspace
+
+# 2. Sync with main (MANDATORY)
+git pull origin main
+git rebase origin/main  # Resolve any conflicts
+
+# 3. Check app status
+npm run dev                    # Start if not running
+node debug-app-detailed.js     # Run full test suite
+
+# 4. ANALYZE BEFORE CODING (MANDATORY)
+# - Read ENTIRE component/file you plan to modify
+# - Understand app structure and dependencies
+# - Review related components and imports
+# - Check existing patterns and conventions
+
+# 5. Work on assigned tasks
+# 6. Test your changes
+# 7. Commit with clear messages
+# 8. Push to your workspace
 ```
 
-### 5. Push and Create PR
+## 🎯 Bug Assignment System
+
+### **🚨 IMMEDIATE ASSIGNMENT RULES**
+
+**No waiting for assignment needed** - Use this decision tree:
+
+#### **🔧 CURSOR handles (< 15min fixes):**
+
+- ✅ TypeScript compilation errors
+- ✅ Import/export issues
+- ✅ Syntax and linting errors
+- ✅ Simple UI component fixes
+- ✅ Dependency updates
+- ✅ Basic form validation
+- ✅ CSS/styling adjustments
+
+**🎯 Cursor Problem-Solving Pattern:**
+
+```
+1. 📋 PROBLEM RECEIVED → Examine the issue details
+2. 🔍 ANALYZE PROBLEM → Review error messages and context
+3. 📚 CHECK ASSIGNMENT → Consult CONTRIBUTING.md decision tree
+4. ✅ IF CURSOR TASK → Proceed with fix immediately
+5. ❌ IF NOT CURSOR → Inform user which agent should handle it
+
+CURSOR Response Templates:
+✅ "This is a [TypeScript/UI/Import] issue - I'll fix it now"
+❌ "This requires [Architecture/Auth/Security] expertise - assign to [Claude/Gemini]"
+```
+
+**Cursor Fix Template:**
+
+```
+Fix: [Bug description]
+Files affected: [list]
+Expected: Standard TypeScript/React fix
+Deadline: 15 minutes max
+```
+
+#### **⚡ GEMINI/CLAUDE handle (Complex fixes):**
+
+- 🔥 **Architecture restructuring**
+- 🔐 **Authentication/Authorization issues**
+- 💾 **Database schema changes**
+- 🚀 **Performance optimizations**
+- 🔒 **Security vulnerabilities**
+- 🧪 **Testing infrastructure setup**
+- 🏗️ **Build/deployment problems**
+- 🌐 **Cross-platform compatibility**
+
+**Claude/Gemini Prompt Template:**
+
+```
+Complex Fix Required: [Detailed description]
+System Impact: [Architecture/Security/Performance]
+Analysis needed: [Root cause investigation]
+Testing: [Comprehensive validation required]
+```
+
+### **🔄 Escalation System**
 
 ```bash
-git push origin feature/your-feature-name
-# Create Pull Request on GitHub
+# CURSOR → CLAUDE/GEMINI escalation triggers:
+- Fix takes > 15 minutes
+- Requires architecture changes
+- Affects multiple system components
+- Security implications discovered
 ```
 
-## 📝 Coding Standards
+## ✅ Quality Gates
 
-### TypeScript
+### **🧪 MANDATORY Testing Before Commit**
 
-- Use TypeScript for all new components
-- Define proper interfaces and types
-- Avoid `any` type usage
-- Use strict type checking
+All agents must run these tests before pushing:
 
-### React Components
+```bash
+# 1. TypeScript check (MUST pass)
+npm run type-check
+
+# 2. Linting (MUST pass)
+npm run lint
+
+# 3. Basic tests (MUST pass)
+npm run test
+
+# 4. Full app testing (CRITICAL)
+node debug-app-detailed.js    # Our Puppeteer test suite
+```
+
+### **🎯 Commit Standards**
+
+Use conventional commits with agent prefix:
+
+```bash
+# CURSOR commits:
+git commit -m "fix(cursor): resolve TypeScript import error in AuthComponent"
+git commit -m "style(cursor): update button styling in UserProfile"
+
+# GEMINI/CLAUDE commits:
+git commit -m "feat(claude): implement advanced user authentication system"
+git commit -m "perf(gemini): optimize database query performance"
+```
+
+## 🎯 Agent Responsibilities
+
+### **🔧 CURSOR - Rapid Development**
+
+**Specialty**: Quick fixes, standard implementations
+**Working time**: < 15 minutes per task
+**Focus areas**:
+
+- TypeScript/JavaScript errors
+- Component implementations
+- UI/UX adjustments
+- Dependency management
+- Code formatting
+
+**Daily workflow**:
+
+```bash
+git checkout cursor-workspace
+git rebase origin/main
+# Fix assigned bugs quickly
+# Test with npm commands
+# Push to cursor-workspace
+```
+
+### **⚡ GEMINI - System Architecture**
+
+**Specialty**: Complex system design and integration
+**Working time**: Hours to days per task
+**Focus areas**:
+
+- Database design and optimization
+- Authentication systems
+- API architecture
+- Performance optimization
+- Cross-platform compatibility
+
+### **🧠 CLAUDE - Analysis & Security**
+
+**Specialty**: Deep analysis, security, and advanced features
+**Working time**: Variable, thorough investigation
+**Focus areas**:
+
+- Security vulnerability analysis
+- Code architecture review
+- Advanced testing strategies
+- Documentation and planning
+- Complex debugging
+
+## 🚨 Escalation Process
+
+### **CURSOR → CLAUDE/GEMINI**
+
+```bash
+# When CURSOR hits a roadblock:
+git commit -m "wip(cursor): escalating - [reason]"
+git push cursor-workspace
+
+# Create escalation note:
+echo "ESCALATION: [description]" >> BUG_TRACKER.md
+# Prompt for Claude/Gemini with full context
+```
+
+### **Emergency Hotfix Protocol**
+
+```bash
+# For critical production issues:
+git checkout -b hotfix/critical-[issue]
+# Fix immediately
+# Test thoroughly
+# Direct merge to main (Matteo approval)
+```
+
+## 📝 Code Quality Standards
+
+### **TypeScript Requirements**
+
+- Strict mode enabled
+- No `any` types (use `unknown` if needed)
+- Proper interface definitions
+- Comprehensive error handling
+
+### **React Component Standards**
 
 ```typescript
-// ✅ Good
-interface ButtonProps {
+// ✅ REQUIRED structure
+interface ComponentProps {
   variant: 'primary' | 'secondary'
   children: React.ReactNode
-  onClick?: () => void
+  onAction?: () => void
 }
 
-export const Button: React.FC<ButtonProps> = ({
+export const Component: React.FC<ComponentProps> = ({
   variant,
   children,
-  onClick
+  onAction
 }) => {
   return (
-    <button
-      className={`btn btn-${variant}`}
-      onClick={onClick}
-    >
+    <div className="component-base">
       {children}
-    </button>
+    </div>
   )
 }
-
-// ❌ Bad
-export const Button = ({ variant, children, onClick }) => {
-  return <button onClick={onClick}>{children}</button>
-}
 ```
 
-### File Naming
+## 🧪 Testing Requirements
 
-- Components: `PascalCase.tsx` (e.g., `UserProfile.tsx`)
-- Hooks: `camelCase.ts` (e.g., `useUserData.ts`)
-- Utilities: `camelCase.ts` (e.g., `formatDate.ts`)
-- Types: `camelCase.ts` (e.g., `userTypes.ts`)
+### **Required Test Coverage**
 
-### Import Organization
+- **CURSOR**: Basic functionality tests
+- **GEMINI/CLAUDE**: Comprehensive integration tests
 
-```typescript
-// 1. React imports
-import React, { useState, useEffect } from 'react'
+### **Puppeteer Integration**
 
-// 2. Third-party libraries
-import { z } from 'zod'
-import { toast } from 'react-toastify'
+All major changes must pass:
 
-// 3. Internal imports (absolute paths)
-import { Button } from '@/components/ui/Button'
-import { useAuth } from '@/hooks/useAuth'
-
-// 4. Relative imports
-import './Component.css'
+```bash
+node debug-app-detailed.js
+# Must show: ✅ No critical errors
 ```
-
-### CSS/Styling
-
-- Use Tailwind CSS classes
-- Create custom components for reusable styles
-- Follow mobile-first responsive design
-- Use CSS variables for theming
-
-```typescript
-// ✅ Good - Tailwind classes
-<div className="flex flex-col gap-4 p-6 bg-white rounded-lg shadow-md">
-
-// ✅ Good - Custom component
-<Card className="p-6">
-  <CardHeader>
-    <CardTitle>User Profile</CardTitle>
-  </CardHeader>
-</Card>
-```
-
-## 🧪 Testing Guidelines
-
-### Unit Tests
-
-- Test all utility functions
-- Test custom hooks
-- Test component behavior, not implementation
-- Aim for >80% code coverage
-
-```typescript
-// Example test
-import { render, screen, fireEvent } from '@testing-library/react'
-import { Button } from './Button'
-
-describe('Button', () => {
-  it('renders with correct text', () => {
-    render(<Button>Click me</Button>)
-    expect(screen.getByText('Click me')).toBeInTheDocument()
-  })
-
-  it('calls onClick when clicked', () => {
-    const handleClick = jest.fn()
-    render(<Button onClick={handleClick}>Click me</Button>)
-
-    fireEvent.click(screen.getByText('Click me'))
-    expect(handleClick).toHaveBeenCalledTimes(1)
-  })
-})
-```
-
-### Integration Tests
-
-- Test API interactions
-- Test state management
-- Test user workflows
-
-### E2E Tests
-
-- Test critical user paths
-- Test mobile responsiveness
-- Test offline functionality
-
-## 📋 Pull Request Process
-
-### Before Submitting
-
-- [ ] Code follows project standards
-- [ ] All tests pass (`npm test`)
-- [ ] Code is properly formatted (`npm run format`)
-- [ ] No linting errors (`npm run lint`)
-- [ ] TypeScript compiles without errors (`npm run type-check`)
-- [ ] Documentation is updated
-- [ ] Commit messages follow conventional format
-
-### PR Template
-
-When creating a PR, please include:
-
-1. **Description**: What changes were made and why
-2. **Type**: Bug fix, feature, documentation, etc.
-3. **Testing**: How the changes were tested
-4. **Screenshots**: If UI changes were made
-5. **Checklist**: Confirm all requirements are met
-
-### Review Process
-
-- All PRs require at least one review
-- Address feedback promptly
-- Keep PRs focused and small when possible
-- Update PR description if scope changes
-
-## 🐛 Issue Guidelines
-
-### Bug Reports
-
-Use the bug report template and include:
-
-- Clear description of the issue
-- Steps to reproduce
-- Expected vs actual behavior
-- Environment details
-- Screenshots if applicable
-
-### Feature Requests
-
-Use the feature request template and include:
-
-- Clear description of the feature
-- Use case and benefits
-- Potential implementation approach
-- HACCP compliance impact (if applicable)
-
-### Issue Labels
-
-- `bug` - Something isn't working
-- `enhancement` - New feature or request
-- `documentation` - Documentation improvements
-- `good first issue` - Good for newcomers
-- `help wanted` - Extra attention needed
-- `priority: high` - High priority
-- `priority: low` - Low priority
-
-## 📋 Project Management Files
-
-### Essential Documentation
-
-- **`APP_STATUS.md`** - Current application status and quick references
-- **`WORK_LOG.md`** - Session tracking and work planning
-- **`BUG_TRACKER.md`** - Bug management and fix registry
-
-### Archived Documentation
-
-All detailed development documentation is organized in `Project_Knowledge/Archive/`:
-
-- **Session Reports** - Development session summaries
-- **Setup Guides** - Technical setup instructions
-- **Planning Docs** - Project planning and architecture
-- **Progress Reports** - Development progress tracking
-
-## 🏗️ Project Architecture
-
-### Component Structure
-
-```
-src/components/
-├── ui/                 # Base UI components
-│   ├── Button/
-│   │   ├── Button.tsx
-│   │   ├── Button.test.tsx
-│   │   └── index.ts
-│   └── Card/
-├── forms/              # Form components
-├── layouts/            # Layout components
-└── features/           # Feature-specific components
-    ├── auth/
-    ├── conservation/
-    └── tasks/
-```
-
-### State Management
-
-- Use Zustand for global state
-- Use React Query for server state
-- Use local state for component-specific data
-- Keep state as close to where it's used as possible
-
-### API Layer
-
-- All API calls go through service layer
-- Use React Query for caching and synchronization
-- Implement proper error handling
-- Use TypeScript for API responses
-
-## 📚 Resources
-
-- [React Documentation](https://react.dev/)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-- [Tailwind CSS Docs](https://tailwindcss.com/docs)
-- [Vite Guide](https://vitejs.dev/guide/)
-- [Testing Library Docs](https://testing-library.com/docs/)
-
-## 🐛 Bug Reporting & Fix Assignment
-
-### Quick Reference
-
-- **Simple fixes** (TypeScript, imports, syntax) → **CURSOR**
-- **Complex issues** (architecture, auth, database) → **CLAUDE/GEMINI**
-
-See `BUG_TRACKER.md` for detailed bug management and `APP_STATUS.md` for current system status.
-
-## ❓ Questions?
-
-- Check existing [GitHub Discussions](https://github.com/Matteo-Exp-Transformer/BHM-v.2/discussions)
-- Create a new discussion for questions
-- Join our community chat (if available)
 
 ---
 
-Thank you for contributing to HACCP Business Manager! 🎉
+## 🎯 **SUMMARY FOR AGENTS**
+
+1. **Work on your dedicated branch** (`[agent]-workspace`)
+2. **Sync with main daily** before starting work
+3. **Use decision tree** for immediate bug assignment
+4. **Follow quality gates** before every commit
+5. **Escalate when needed** - no shame in complexity
+6. **Test thoroughly** with our Puppeteer suite
+
+**🚀 This workflow ensures rapid development while maintaining code quality and system stability.**

@@ -120,7 +120,7 @@ export function ConservationPointCard({
       {/* Temperature Info */}
       <div className="grid grid-cols-2 gap-4 mb-3">
         <div className="flex items-center space-x-2">
-          <Thermometer className={`w-4 h-4 ${colors.icon}`} />
+          <Thermometer className={`w-4 h-4 ${colors.text}`} />
           <div>
             <div className="text-sm text-gray-600">Temperatura target</div>
             <div className={`font-semibold ${colors.text}`}>
@@ -143,7 +143,7 @@ export function ConservationPointCard({
       </div>
 
       {/* Last Temperature Reading */}
-      {point.temperature_readings && point.temperature_readings.length > 0 && (
+      {point.last_temperature_reading && (
         <div
           className={`rounded-md ${colors.bg} border ${colors.border} p-3 mb-3`}
         >
@@ -151,19 +151,12 @@ export function ConservationPointCard({
             <div>
               <div className="text-sm text-gray-600">Ultima lettura</div>
               <div className={`font-semibold ${colors.text}`}>
-                {
-                  point.temperature_readings[
-                    point.temperature_readings.length - 1
-                  ].temperature
-                }
-                °C
+                {point.last_temperature_reading.temperature}°C
               </div>
             </div>
             <div className="text-xs text-gray-500">
               {new Date(
-                point.temperature_readings[
-                  point.temperature_readings.length - 1
-                ].recorded_at
+                point.last_temperature_reading.recorded_at
               ).toLocaleDateString('it-IT', {
                 day: '2-digit',
                 month: '2-digit',

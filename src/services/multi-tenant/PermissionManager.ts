@@ -59,7 +59,12 @@ export interface RoleRestriction {
 }
 
 export interface PermissionCondition {
-  type: 'time_range' | 'ip_restriction' | 'department_only' | 'approval_required' | 'data_classification'
+  type:
+    | 'time_range'
+    | 'ip_restriction'
+    | 'department_only'
+    | 'approval_required'
+    | 'data_classification'
   value: any
   description: string
 }
@@ -120,7 +125,7 @@ class PermissionManager {
         resource: 'temperature_readings',
         action: 'read',
         description: 'View temperature monitoring data',
-        category: 'data_access'
+        category: 'data_access',
       },
       {
         id: 'write_temperature_data',
@@ -133,9 +138,9 @@ class PermissionManager {
           {
             type: 'department_only',
             value: ['quality_control', 'maintenance'],
-            description: 'Limited to QC and maintenance departments'
-          }
-        ]
+            description: 'Limited to QC and maintenance departments',
+          },
+        ],
       },
       {
         id: 'delete_temperature_data',
@@ -144,7 +149,7 @@ class PermissionManager {
         action: 'delete',
         description: 'Delete temperature readings (requires approval)',
         category: 'data_access',
-        requires_approval: true
+        requires_approval: true,
       },
 
       // User Management Permissions
@@ -154,7 +159,7 @@ class PermissionManager {
         resource: 'users',
         action: 'manage',
         description: 'Create, modify, and deactivate user accounts',
-        category: 'user_management'
+        category: 'user_management',
       },
       {
         id: 'assign_roles',
@@ -163,7 +168,7 @@ class PermissionManager {
         action: 'assign',
         description: 'Assign and modify user roles',
         category: 'user_management',
-        requires_approval: true
+        requires_approval: true,
       },
       {
         id: 'view_user_activity',
@@ -171,7 +176,7 @@ class PermissionManager {
         resource: 'audit_logs',
         action: 'read',
         description: 'View user activity and audit logs',
-        category: 'user_management'
+        category: 'user_management',
       },
 
       // System Administration
@@ -181,7 +186,7 @@ class PermissionManager {
         resource: 'company_settings',
         action: 'manage',
         description: 'Modify company configuration and settings',
-        category: 'system_administration'
+        category: 'system_administration',
       },
       {
         id: 'manage_integrations',
@@ -189,7 +194,7 @@ class PermissionManager {
         resource: 'integrations',
         action: 'manage',
         description: 'Configure third-party integrations',
-        category: 'system_administration'
+        category: 'system_administration',
       },
       {
         id: 'access_system_logs',
@@ -197,7 +202,7 @@ class PermissionManager {
         resource: 'system_logs',
         action: 'read',
         description: 'View system logs and error reports',
-        category: 'system_administration'
+        category: 'system_administration',
       },
 
       // Compliance and Audit
@@ -207,7 +212,7 @@ class PermissionManager {
         resource: 'audit_reports',
         action: 'create',
         description: 'Generate compliance and audit reports',
-        category: 'compliance_audit'
+        category: 'compliance_audit',
       },
       {
         id: 'sign_compliance_documents',
@@ -216,7 +221,7 @@ class PermissionManager {
         action: 'sign',
         description: 'Digitally sign compliance documents',
         category: 'compliance_audit',
-        requires_approval: true
+        requires_approval: true,
       },
       {
         id: 'access_sensitive_audit_data',
@@ -229,9 +234,9 @@ class PermissionManager {
           {
             type: 'ip_restriction',
             value: ['company_network'],
-            description: 'Only accessible from company network'
-          }
-        ]
+            description: 'Only accessible from company network',
+          },
+        ],
       },
 
       // Reporting
@@ -241,7 +246,7 @@ class PermissionManager {
         resource: 'reports',
         action: 'create',
         description: 'Create standard operational reports',
-        category: 'reporting'
+        category: 'reporting',
       },
       {
         id: 'export_data',
@@ -249,7 +254,7 @@ class PermissionManager {
         resource: 'data_export',
         action: 'execute',
         description: 'Export data in various formats',
-        category: 'reporting'
+        category: 'reporting',
       },
       {
         id: 'schedule_reports',
@@ -257,7 +262,7 @@ class PermissionManager {
         resource: 'report_schedules',
         action: 'manage',
         description: 'Create and manage automated report schedules',
-        category: 'reporting'
+        category: 'reporting',
       },
 
       // Data Sharing
@@ -268,7 +273,7 @@ class PermissionManager {
         action: 'create',
         description: 'Create agreements for sharing data with other companies',
         category: 'data_sharing',
-        requires_approval: true
+        requires_approval: true,
       },
       {
         id: 'approve_sharing_requests',
@@ -276,7 +281,7 @@ class PermissionManager {
         resource: 'sharing_requests',
         action: 'approve',
         description: 'Approve or deny incoming data sharing requests',
-        category: 'data_sharing'
+        category: 'data_sharing',
       },
       {
         id: 'access_shared_data',
@@ -284,8 +289,8 @@ class PermissionManager {
         resource: 'shared_data',
         action: 'read',
         description: 'Access data shared by other companies',
-        category: 'data_sharing'
-      }
+        category: 'data_sharing',
+      },
     ]
 
     permissions.forEach(permission => {
@@ -310,7 +315,7 @@ class PermissionManager {
         created_at: new Date(),
         updated_at: new Date(),
         hierarchy_level: 10,
-        can_delegate_to: ['admin', 'manager', 'operator', 'auditor']
+        can_delegate_to: ['admin', 'manager', 'operator', 'auditor'],
       },
       {
         id: 'admin',
@@ -328,7 +333,7 @@ class PermissionManager {
           'generate_reports',
           'export_data',
           'schedule_reports',
-          'approve_sharing_requests'
+          'approve_sharing_requests',
         ],
         is_system_role: true,
         is_default: true,
@@ -337,7 +342,7 @@ class PermissionManager {
         updated_at: new Date(),
         hierarchy_level: 8,
         max_subordinates: 50,
-        can_delegate_to: ['manager', 'operator', 'auditor']
+        can_delegate_to: ['manager', 'operator', 'auditor'],
       },
       {
         id: 'manager',
@@ -350,7 +355,7 @@ class PermissionManager {
           'view_user_activity',
           'create_audit_reports',
           'generate_reports',
-          'export_data'
+          'export_data',
         ],
         is_system_role: true,
         is_default: true,
@@ -359,7 +364,7 @@ class PermissionManager {
         updated_at: new Date(),
         hierarchy_level: 6,
         max_subordinates: 20,
-        can_delegate_to: ['operator']
+        can_delegate_to: ['operator'],
       },
       {
         id: 'operator',
@@ -369,7 +374,7 @@ class PermissionManager {
         permissions: [
           'read_temperature_data',
           'write_temperature_data',
-          'generate_reports'
+          'generate_reports',
         ],
         is_system_role: true,
         is_default: true,
@@ -377,7 +382,7 @@ class PermissionManager {
         created_at: new Date(),
         updated_at: new Date(),
         hierarchy_level: 4,
-        max_subordinates: 0
+        max_subordinates: 0,
       },
       {
         id: 'auditor',
@@ -389,7 +394,7 @@ class PermissionManager {
           'view_user_activity',
           'create_audit_reports',
           'access_sensitive_audit_data',
-          'sign_compliance_documents'
+          'sign_compliance_documents',
         ],
         is_system_role: true,
         is_default: true,
@@ -397,24 +402,22 @@ class PermissionManager {
         created_at: new Date(),
         updated_at: new Date(),
         hierarchy_level: 7,
-        max_subordinates: 5
+        max_subordinates: 5,
       },
       {
         id: 'readonly',
         name: 'Read Only',
         description: 'View-only access to basic data',
         company_id: 'system',
-        permissions: [
-          'read_temperature_data'
-        ],
+        permissions: ['read_temperature_data'],
         is_system_role: true,
         is_default: true,
         created_by: 'system',
         created_at: new Date(),
         updated_at: new Date(),
         hierarchy_level: 1,
-        max_subordinates: 0
-      }
+        max_subordinates: 0,
+      },
     ]
 
     defaultRoles.forEach(role => {
@@ -436,9 +439,8 @@ class PermissionManager {
     try {
       // Get user's active role assignments
       const assignments = await this.getUserRoleAssignments(userId, companyId)
-      const activeAssignments = assignments.filter(a =>
-        a.is_active &&
-        (!a.expires_at || a.expires_at > new Date())
+      const activeAssignments = assignments.filter(
+        a => a.is_active && (!a.expires_at || a.expires_at > new Date())
       )
 
       if (activeAssignments.length === 0) {
@@ -482,10 +484,11 @@ class PermissionManager {
       // Log denied access
       await this.logAccess(userId, permissionId, 'denied', context)
       return false
-
     } catch (error) {
       console.error('Permission check failed:', error)
-      await this.logAccess(userId, permissionId, 'error', { error: error.message })
+      await this.logAccess(userId, permissionId, 'error', {
+        error: error.message,
+      })
       return false
     }
   }
@@ -526,7 +529,7 @@ class PermissionManager {
       expires_at: options?.expires_at,
       is_active: true,
       restrictions: options?.restrictions,
-      delegation_chain: await this.buildDelegationChain(assignedBy, companyId)
+      delegation_chain: await this.buildDelegationChain(assignedBy, companyId),
     }
 
     // Store assignment
@@ -538,10 +541,12 @@ class PermissionManager {
     await this.logAccess(assignedBy, 'assign_roles', 'executed', {
       target_user: userId,
       role_assigned: roleId,
-      assignment_id: assignment.id
+      assignment_id: assignment.id,
     })
 
-    console.log(`👤 Role assigned: ${roleId} to user ${userId} by ${assignedBy}`)
+    console.log(
+      `👤 Role assigned: ${roleId} to user ${userId} by ${assignedBy}`
+    )
     return assignment
   }
 
@@ -566,7 +571,7 @@ class PermissionManager {
       status: 'pending',
       justification,
       expires_at: duration ? new Date(Date.now() + duration) : undefined,
-      audit_trail: []
+      audit_trail: [],
     }
 
     this.accessRequests.set(request.id, request)
@@ -612,7 +617,7 @@ class PermissionManager {
       timestamp: new Date(),
       action: response,
       user_id: approverId,
-      details: { notes }
+      details: { notes },
     })
 
     // Notify requester
@@ -624,11 +629,13 @@ class PermissionManager {
   /**
    * Get user's effective permissions
    */
-  public async getUserPermissions(userId: string, companyId: string): Promise<Permission[]> {
+  public async getUserPermissions(
+    userId: string,
+    companyId: string
+  ): Promise<Permission[]> {
     const assignments = await this.getUserRoleAssignments(userId, companyId)
-    const activeAssignments = assignments.filter(a =>
-      a.is_active &&
-      (!a.expires_at || a.expires_at > new Date())
+    const activeAssignments = assignments.filter(
+      a => a.is_active && (!a.expires_at || a.expires_at > new Date())
     )
 
     const permissionIds = new Set<string>()
@@ -657,13 +664,19 @@ class PermissionManager {
     hierarchyLevel: number
   ): Promise<Role> {
     // Validate permissions
-    const invalidPermissions = permissions.filter(p => !this.systemPermissions.has(p))
+    const invalidPermissions = permissions.filter(
+      p => !this.systemPermissions.has(p)
+    )
     if (invalidPermissions.length > 0) {
       throw new Error(`Invalid permissions: ${invalidPermissions.join(', ')}`)
     }
 
     // Check if creator can create roles
-    const canCreate = await this.hasPermission(createdBy, companyId, 'manage_roles')
+    const canCreate = await this.hasPermission(
+      createdBy,
+      companyId,
+      'manage_roles'
+    )
     if (!canCreate) {
       throw new Error('Insufficient permissions to create roles')
     }
@@ -679,7 +692,7 @@ class PermissionManager {
       created_by: createdBy,
       created_at: new Date(),
       updated_at: new Date(),
-      hierarchy_level: hierarchyLevel
+      hierarchy_level: hierarchyLevel,
     }
 
     // Store role
@@ -694,12 +707,18 @@ class PermissionManager {
   /**
    * Helper methods
    */
-  private async getUserRoleAssignments(userId: string, companyId: string): Promise<UserRoleAssignment[]> {
+  private async getUserRoleAssignments(
+    userId: string,
+    companyId: string
+  ): Promise<UserRoleAssignment[]> {
     const allAssignments = this.userAssignments.get(userId) || []
     return allAssignments.filter(a => a.company_id === companyId)
   }
 
-  private async getRole(roleId: string, companyId: string): Promise<Role | null> {
+  private async getRole(
+    roleId: string,
+    companyId: string
+  ): Promise<Role | null> {
     // Check company-specific roles first
     const companyRoles = this.companyRoles.get(companyId) || []
     const companyRole = companyRoles.find(r => r.id === roleId)
@@ -742,12 +761,19 @@ class PermissionManager {
     return true // Simplified for demo
   }
 
-  private async canAssignRole(assignerId: string, roleId: string, companyId: string): Promise<boolean> {
+  private async canAssignRole(
+    assignerId: string,
+    roleId: string,
+    companyId: string
+  ): Promise<boolean> {
     // Check if assigner can assign this specific role
     return await this.hasPermission(assignerId, companyId, 'assign_roles')
   }
 
-  private async buildDelegationChain(assignerId: string, companyId: string): Promise<string[]> {
+  private async buildDelegationChain(
+    assignerId: string,
+    companyId: string
+  ): Promise<string[]> {
     // Build chain showing who delegated authority
     return [assignerId]
   }
@@ -764,8 +790,8 @@ class PermissionManager {
       user_id: userId,
       details: {
         resource,
-        ...context
-      }
+        ...context,
+      },
     }
 
     this.auditLog.push(entry)
@@ -780,7 +806,10 @@ class PermissionManager {
     console.log(`📧 Notifying access request: ${request.id}`)
   }
 
-  private async notifyAccessResponse(request: AccessRequest, response: string): Promise<void> {
+  private async notifyAccessResponse(
+    request: AccessRequest,
+    response: string
+  ): Promise<void> {
     console.log(`📬 Notifying access response: ${response} for ${request.id}`)
   }
 
@@ -818,7 +847,9 @@ class PermissionManager {
       filtered = filtered.filter(entry => entry.user_id === userId)
     }
 
-    return filtered.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+    return filtered.sort(
+      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+    )
   }
 }
 

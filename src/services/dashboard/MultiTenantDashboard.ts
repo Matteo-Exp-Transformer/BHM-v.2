@@ -66,7 +66,6 @@ class MultiTenantDashboardService {
       this.initialized = true
 
       console.log('🚀 Multi-Tenant Dashboard Service ready')
-
     } catch (error) {
       console.error('❌ Failed to initialize multi-tenant dashboard:', error)
       throw error
@@ -88,10 +87,13 @@ class MultiTenantDashboardService {
           companyId: company.id,
           companyName: company.name,
           metrics,
-          lastUpdated: new Date()
+          lastUpdated: new Date(),
         })
       } catch (error) {
-        console.warn(`⚠️ Failed to get metrics for company ${company.id}:`, error)
+        console.warn(
+          `⚠️ Failed to get metrics for company ${company.id}:`,
+          error
+        )
         // Continue with other companies
       }
     }
@@ -123,7 +125,7 @@ class MultiTenantDashboardService {
       temperatureReadings: analytics.temperatureReadings || 0,
       complianceScore: analytics.complianceScore || 0,
       pendingTasks: analytics.pendingTasks || 0,
-      criticalAlerts: analytics.criticalAlerts || 0
+      criticalAlerts: analytics.criticalAlerts || 0,
     }
   }
 
@@ -136,8 +138,13 @@ class MultiTenantDashboardService {
     const allMetrics = await this.getAllCompaniesMetrics()
 
     // Calculate cross-company aggregations
-    const totalReadings = allMetrics.reduce((sum, data) => sum + data.metrics.temperatureReadings, 0)
-    const avgCompliance = allMetrics.reduce((sum, data) => sum + data.metrics.complianceScore, 0) / allMetrics.length
+    const totalReadings = allMetrics.reduce(
+      (sum, data) => sum + data.metrics.temperatureReadings,
+      0
+    )
+    const avgCompliance =
+      allMetrics.reduce((sum, data) => sum + data.metrics.complianceScore, 0) /
+      allMetrics.length
 
     // Mock alert trends (would come from actual data)
     const alertTrends = this.generateAlertTrends()
@@ -147,21 +154,26 @@ class MultiTenantDashboardService {
       companyId: data.companyId,
       companyName: data.companyName,
       score: data.metrics.complianceScore,
-      trend: this.calculateTrend(data.metrics.complianceScore) as 'up' | 'down' | 'stable'
+      trend: this.calculateTrend(data.metrics.complianceScore) as
+        | 'up'
+        | 'down'
+        | 'stable',
     }))
 
     return {
       averageCompliance: avgCompliance,
       totalTemperatureReadings: totalReadings,
       alertTrends,
-      performanceComparison
+      performanceComparison,
     }
   }
 
   /**
    * Get real-time dashboard updates
    */
-  public async getRealtimeUpdates(companyId?: string): Promise<Partial<DashboardMetrics>> {
+  public async getRealtimeUpdates(
+    companyId?: string
+  ): Promise<Partial<DashboardMetrics>> {
     this.ensureInitialized()
 
     if (companyId) {
@@ -169,7 +181,7 @@ class MultiTenantDashboardService {
       const metrics = await this.getCompanyMetrics(companyId)
       return {
         temperatureReadings: metrics.temperatureReadings,
-        criticalAlerts: metrics.criticalAlerts
+        criticalAlerts: metrics.criticalAlerts,
       }
     } else {
       // Cross-company updates
@@ -177,7 +189,7 @@ class MultiTenantDashboardService {
       return {
         totalCompanies: this.accessibleCompanies.length,
         temperatureReadings: analytics.totalTemperatureReadings,
-        complianceScore: analytics.averageCompliance
+        complianceScore: analytics.averageCompliance,
       }
     }
   }
@@ -229,7 +241,9 @@ class MultiTenantDashboardService {
     }
   }
 
-  private async getUserAccessibleCompanies(userId: string): Promise<CompanyTenant[]> {
+  private async getUserAccessibleCompanies(
+    userId: string
+  ): Promise<CompanyTenant[]> {
     // This would query the database for user's company access
     // For now, return mock data
     return [
@@ -241,15 +255,15 @@ class MultiTenantDashboardService {
         limits: {
           max_users: 50,
           max_locations: 10,
-          storage_gb: 100
+          storage_gb: 100,
         },
         features: {
           advanced_analytics: true,
           cross_company_reporting: true,
           api_access: true,
-          custom_branding: true
-        }
-      }
+          custom_branding: true,
+        },
+      },
     ]
   }
 
@@ -262,7 +276,9 @@ class MultiTenantDashboardService {
       trends.push({
         date: date.toISOString().split('T')[0],
         count: Math.floor(Math.random() * 20) + 5,
-        severity: ['low', 'medium', 'high', 'critical'][Math.floor(Math.random() * 4)] as any
+        severity: ['low', 'medium', 'high', 'critical'][
+          Math.floor(Math.random() * 4)
+        ] as any,
       })
     }
     return trends
@@ -287,8 +303,8 @@ class MultiTenantDashboardService {
         'temperature_trends',
         'compliance_score',
         'alert_summary',
-        ...(this.accessibleCompanies.length > 1 ? ['company_comparison'] : [])
-      ]
+        ...(this.accessibleCompanies.length > 1 ? ['company_comparison'] : []),
+      ],
     }
   }
 }

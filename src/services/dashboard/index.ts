@@ -7,7 +7,7 @@ export {
   multiTenantDashboard,
   type DashboardMetrics,
   type CompanyDashboardData,
-  type CrossCompanyAnalytics
+  type CrossCompanyAnalytics,
 } from './MultiTenantDashboard'
 
 // Real-time dashboard updates service
@@ -68,91 +68,91 @@ export const dashboardRealtime = new DashboardRealtimeService()
 // Dashboard widget registry for Cursor components
 export const dashboardWidgets = {
   // KPI Widgets
-  'temperature_overview': {
+  temperature_overview: {
     component: 'TemperatureOverviewWidget',
     dataSource: 'multiTenantDashboard.getCompanyMetrics',
-    updateFrequency: 30000 // 30 seconds
+    updateFrequency: 30000, // 30 seconds
   },
-  'compliance_score': {
+  compliance_score: {
     component: 'ComplianceScoreWidget',
     dataSource: 'multiTenantDashboard.getCrossCompanyAnalytics',
-    updateFrequency: 60000 // 1 minute
+    updateFrequency: 60000, // 1 minute
   },
-  'alert_summary': {
+  alert_summary: {
     component: 'AlertSummaryWidget',
     dataSource: 'multiTenantDashboard.getRealtimeUpdates',
-    updateFrequency: 10000 // 10 seconds
+    updateFrequency: 10000, // 10 seconds
   },
-  'task_overview': {
+  task_overview: {
     component: 'TaskOverviewWidget',
     dataSource: 'multiTenantDashboard.getCompanyMetrics',
-    updateFrequency: 30000
+    updateFrequency: 30000,
   },
   // Chart Widgets (for Cursor's Chart.js integration)
-  'temperature_trends': {
+  temperature_trends: {
     component: 'TemperatureTrendsChart',
     dataSource: 'multiTenantDashboard.getCrossCompanyAnalytics',
     updateFrequency: 300000, // 5 minutes
-    chartType: 'line'
+    chartType: 'line',
   },
-  'compliance_trends': {
+  compliance_trends: {
     component: 'ComplianceTrendsChart',
     dataSource: 'multiTenantDashboard.getCrossCompanyAnalytics',
     updateFrequency: 300000,
-    chartType: 'bar'
+    chartType: 'bar',
   },
-  'company_comparison': {
+  company_comparison: {
     component: 'CompanyComparisonChart',
     dataSource: 'multiTenantDashboard.getCrossCompanyAnalytics',
     updateFrequency: 300000,
-    chartType: 'radar'
-  }
+    chartType: 'radar',
+  },
 } as const
 
 // Dashboard layout configurations
 export const dashboardLayouts = {
-  'single_company': {
+  single_company: {
     widgets: [
       'temperature_overview',
       'compliance_score',
       'alert_summary',
       'task_overview',
-      'temperature_trends'
+      'temperature_trends',
     ],
     grid: {
       cols: 12,
       rows: 4,
       positions: {
-        'temperature_overview': { x: 0, y: 0, w: 3, h: 1 },
-        'compliance_score': { x: 3, y: 0, w: 3, h: 1 },
-        'alert_summary': { x: 6, y: 0, w: 3, h: 1 },
-        'task_overview': { x: 9, y: 0, w: 3, h: 1 },
-        'temperature_trends': { x: 0, y: 1, w: 12, h: 3 }
-      }
-    }
+        temperature_overview: { x: 0, y: 0, w: 3, h: 1 },
+        compliance_score: { x: 3, y: 0, w: 3, h: 1 },
+        alert_summary: { x: 6, y: 0, w: 3, h: 1 },
+        task_overview: { x: 9, y: 0, w: 3, h: 1 },
+        temperature_trends: { x: 0, y: 1, w: 12, h: 3 },
+      },
+    },
   },
-  'multi_company': {
+  multi_company: {
     widgets: [
       'temperature_overview',
       'compliance_score',
       'alert_summary',
       'company_comparison',
       'temperature_trends',
-      'compliance_trends'
+      'compliance_trends',
     ],
     grid: {
       cols: 12,
       rows: 6,
       positions: {
-        'temperature_overview': { x: 0, y: 0, w: 4, h: 1 },
-        'compliance_score': { x: 4, y: 0, w: 4, h: 1 },
-        'alert_summary': { x: 8, y: 0, w: 4, h: 1 },
-        'company_comparison': { x: 0, y: 1, w: 6, h: 2 },
-        'temperature_trends': { x: 6, y: 1, w: 6, h: 2 },
-        'compliance_trends': { x: 0, y: 3, w: 12, h: 3 }
-      }
-    }
-  }
+        temperature_overview: { x: 0, y: 0, w: 4, h: 1 },
+        compliance_score: { x: 4, y: 0, w: 4, h: 1 },
+        alert_summary: { x: 8, y: 0, w: 4, h: 1 },
+        company_comparison: { x: 0, y: 1, w: 6, h: 2 },
+        temperature_trends: { x: 6, y: 1, w: 6, h: 2 },
+        compliance_trends: { x: 0, y: 3, w: 12, h: 3 },
+      },
+    },
+  },
 } as const
 
 // Performance optimization for dashboard
@@ -163,8 +163,14 @@ export const dashboardOptimizer = {
   optimizeWidgetLoading: (visibleWidgets: string[]) => {
     return visibleWidgets.map(widgetId => ({
       id: widgetId,
-      priority: dashboardWidgets[widgetId as keyof typeof dashboardWidgets]?.updateFrequency < 30000 ? 'high' : 'normal',
-      shouldLazyLoad: !['temperature_overview', 'alert_summary'].includes(widgetId)
+      priority:
+        dashboardWidgets[widgetId as keyof typeof dashboardWidgets]
+          ?.updateFrequency < 30000
+          ? 'high'
+          : 'normal',
+      shouldLazyLoad: !['temperature_overview', 'alert_summary'].includes(
+        widgetId
+      ),
     }))
   },
 
@@ -177,10 +183,10 @@ export const dashboardOptimizer = {
     return Object.fromEntries(
       Object.entries(dashboardWidgets).map(([key, widget]) => [
         key,
-        widget.updateFrequency * multiplier
+        widget.updateFrequency * multiplier,
       ])
     )
-  }
+  },
 }
 
 // Export everything for Cursor's dashboard implementation
@@ -189,5 +195,5 @@ export default {
   dashboardRealtime,
   dashboardWidgets,
   dashboardLayouts,
-  dashboardOptimizer
+  dashboardOptimizer,
 }

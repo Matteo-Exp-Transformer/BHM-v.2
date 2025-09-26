@@ -27,9 +27,15 @@ Bug_Reports/
 
 ## 🎯 Purpose & Workflow
 
-### **For Cursor:**
+### **For All AI Agents (Claude/Gemini/Cursor):**
 
 This system helps you systematically track, document, and resolve bugs during development and testing.
+
+#### **Agent-Specific Responsibilities:**
+
+- **Gemini:** TypeScript errors, structural cleanup, build optimization
+- **Claude:** Architecture bugs, database issues, complex business logic
+- **Cursor:** UI/UX bugs, component issues, accessibility fixes
 
 ### **Workflow Steps:**
 
@@ -96,13 +102,22 @@ This system helps you systematically track, document, and resolve bugs during de
 2025-01-22_dashboard-loading-state-broken.md
 ```
 
-### **Current Priority (January 22, 2025):**
+### **Current Priority (September 25, 2025):**
 
-1. **BUG-001:** TypeScript User import (CRITICAL - blocks commits)
-2. **BUG-002:** CollapsibleCard props inconsistency
-3. **BUG-003:** Database types missing
-4. **BUG-004:** Calendar component properties
-5. **BUG-005:** Settings component React imports
+1. **BUG-001:** TypeScript Compilation Crisis (CRITICAL - Fixed)
+   - **Owner:** Gemini (TypeScript cleanup specialist)
+   - **Status:** Fixed - Conservation Module errors resolved
+   - **Guide:** Read TYPESCRIPT-ERROR-FIXING-GUIDE.md
+
+2. **BUG-002:** Puppeteer MCP Integration (HIGH - blocks testing)
+   - **Owner:** Claude + Gemini (collaborative)
+   - **Status:** MCP tools not loading, test automation broken
+   - **Guide:** Read PUPPETEER-MCP-SETUP-GUIDE.md
+
+3. **BUG-003:** Production Build Failures (HIGH - blocks deployment)
+   - **Owner:** Gemini (after TypeScript fixes)
+   - **Status:** Cannot build production version
+   - **Dependencies:** Must complete BUG-001 first
 
 ---
 
@@ -111,20 +126,35 @@ This system helps you systematically track, document, and resolve bugs during de
 ### **Before Each Session:**
 
 - Check `bug-tracking-index.md` for priority queue
-- Address Critical and High severity bugs first
+- **CRITICAL:** Address TypeScript errors FIRST (blocks everything)
 - Don't start new features with open Critical bugs
+- Verify app is running: http://localhost:3002
+- Read agent-specific guide files:
+  - Gemini: `TYPESCRIPT-ERROR-FIXING-GUIDE.md`
+  - Claude: `PUPPETEER-MCP-SETUP-GUIDE.md`
+  - All: `HACCP-APP-TESTING-GUIDE.md`
 
 ### **During Development:**
 
 - Document bugs immediately when found
 - Don't skip bug reports for "small" issues
 - Update bug status when starting/completing fixes
+- **For TypeScript errors:** Use systematic approach from fixing guide
+- **For Puppeteer issues:** Include screenshots and console logs
+- **Cross-reference fixes** between AI agents using Cross_References/
 
 ### **End of Session:**
 
 - Update index with progress
 - Archive fixed bugs to Fixed folder
 - Commit bug reports with code changes
+- **Update Project_Knowledge documentation:**
+  - Bug_Reports/README.md
+  - Bug_Reports/Cross_References/README.md
+  - Bug_Reports/Istruzioni_Debug_Agente/README.md
+  - Testing_Guidelines/BUG-REPORT-GUIDE.md
+- **Document TypeScript progress:** Error count reduction
+- **Document Puppeteer test results:** Automated testing outcomes
 
 ---
 

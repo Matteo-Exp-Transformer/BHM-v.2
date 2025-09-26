@@ -46,12 +46,22 @@ export interface CalendarEvent {
   description?: string
   start: Date
   end?: Date
-  allDay: boolean
+  allDay?: boolean
 
   // Event classification
   type: CalendarEventType
   status: CalendarEventStatus
   priority: CalendarEventPriority
+  source?:
+    | 'maintenance'
+    | 'task'
+    | 'training'
+    | 'inventory'
+    | 'meeting'
+    | 'temperature_reading'
+    | 'general_task'
+    | 'custom'
+  sourceId?: string
 
   // Assignment and organization
   assigned_to: string[] // Staff IDs
@@ -73,6 +83,21 @@ export interface CalendarEvent {
   backgroundColor: string
   borderColor: string
   textColor: string
+
+  // Extended metadata for FullCalendar compatibility
+  extendedProps: {
+    description?: string
+    priority?: 'low' | 'medium' | 'high' | 'critical'
+    status?: 'scheduled' | 'in_progress' | 'completed' | 'overdue' | 'cancelled'
+    assignedTo?: string[]
+    location?: string
+    category?: string
+    color?: string
+    isRecurring?: boolean
+    recurrenceRule?: string
+    notifications?: CalendarNotification[]
+    metadata?: Record<string, any>
+  }
 
   // Extended metadata
   metadata: CalendarEventMetadata
@@ -191,33 +216,19 @@ export interface CalendarFilters {
   }
 }
 
-// Legacy CalendarFilter definition removed - use CalendarFilters instead
-
-// Additional event type interfaces for legacy support
-export type TaskEvent = CalendarEvent & { type: 'general_task' }
-export type TrainingEvent = CalendarEvent & { type: 'custom', metadata: { training_type?: string } }
-export type InventoryEvent = CalendarEvent & { type: 'custom', metadata: { inventory_type?: string } }
-export type MeetingEvent = CalendarEvent & { type: 'custom', metadata: { meeting_type?: string } }
-export type TypedCalendarEvent = CalendarEvent
-
-// Calendar settings interface
 export interface CalendarSettings {
   defaultView: 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listWeek'
+  weekStartsOn: 0 | 1
   timeFormat: '12h' | '24h'
-  weekStartsOn: 0 | 1 // 0 = Sunday, 1 = Monday
   firstDayOfWeek: number
-  colorScheme: Record<CalendarEvent['source'], string>
+  colorScheme: Record<NonNullable<CalendarEvent['source']>, string>
   businessHours: {
-    enabled: boolean
     daysOfWeek: number[]
     startTime: string
     endTime: string
   }
   notifications: {
     enabled: boolean
-    reminderMinutes: number[]
-    emailNotifications: boolean
-    pushNotifications: boolean
     defaultTimings: CalendarNotification['timing'][]
   }
 }
@@ -240,6 +251,11 @@ export interface CalendarViewConfig {
     startTime: string
     endTime: string
   }
+  notifications: {
+    enabled: boolean
+    defaultTimings: CalendarNotification['timing'][]
+  }
+  colorScheme: Record<NonNullable<CalendarEvent['source']>, string>
 }
 
 // Event creation/editing interfaces

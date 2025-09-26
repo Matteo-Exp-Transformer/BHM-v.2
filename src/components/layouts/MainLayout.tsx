@@ -9,7 +9,7 @@ import {
   Users,
 } from 'lucide-react'
 import { SyncStatusBar } from '@/components/offline/SyncStatusBar'
-import { useAuth, type UserRole } from '@/hooks/useAuth'
+import { useAuth, UserRole } from '@/hooks/useAuth'
 
 interface MainLayoutProps {
   children: ReactNode
@@ -73,12 +73,22 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16">
+    <div className="min-h-screen bg-gray-50">
       {/* Main Content */}
-      <main className="safe-area-top">{children}</main>
+      <main
+        className="pb-20 safe-area-top"
+        role="main"
+        aria-label="Main content"
+      >
+        {children}
+      </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-area-bottom">
+      <nav
+        className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-area-bottom z-50"
+        role="navigation"
+        aria-label="Main navigation"
+      >
         <div
           className={`grid h-16 ${
             tabs.length === 4
@@ -98,19 +108,24 @@ const MainLayout = ({ children }: MainLayoutProps) => {
               <Link
                 key={tab.id}
                 to={tab.path}
-                className={`flex flex-col items-center justify-center space-y-1 touch-manipulation ${
+                className={`flex flex-col items-center justify-center space-y-1 touch-manipulation transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
                   isActive
                     ? 'text-primary-600 bg-primary-50'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
+                aria-label={`Navigate to ${tab.label}`}
+                aria-current={isActive ? 'page' : undefined}
               >
-                <Icon size={20} />
+                <Icon size={20} aria-hidden="true" />
                 <span className="text-xs font-medium">{tab.label}</span>
               </Link>
             )
           })}
         </div>
       </nav>
+
+      {/* Offline Sync Status Bar */}
+      <SyncStatusBar position="bottom" />
     </div>
   )
 }

@@ -84,7 +84,11 @@ export type DataShareType =
   | 'compliance_certificates'
   | 'supplier_information'
 
-export type SharePermission = 'read' | 'read_write' | 'export' | 'aggregate_only'
+export type SharePermission =
+  | 'read'
+  | 'read_write'
+  | 'export'
+  | 'aggregate_only'
 
 export interface ShareCondition {
   type: 'time_range' | 'data_filter' | 'approval_required' | 'notification'
@@ -100,7 +104,10 @@ class MultiTenantManager {
   /**
    * Initialize multi-tenant context for current user
    */
-  public async initializeTenant(companyId: string, userId: string): Promise<TenantContext> {
+  public async initializeTenant(
+    companyId: string,
+    userId: string
+  ): Promise<TenantContext> {
     try {
       // Fetch company tenant information
       const tenant = await this.getTenantInfo(companyId)
@@ -124,7 +131,6 @@ class MultiTenantManager {
 
       console.log(`🏢 Multi-tenant context initialized for ${tenant.name}`)
       return userContext
-
     } catch (error) {
       console.error('Failed to initialize tenant context:', error)
       throw error
@@ -134,7 +140,9 @@ class MultiTenantManager {
   /**
    * Get tenant information
    */
-  private async getTenantInfo(companyId: string): Promise<CompanyTenant | null> {
+  private async getTenantInfo(
+    companyId: string
+  ): Promise<CompanyTenant | null> {
     // In real implementation, this would query the database
     // For now, return a mock tenant for development
     return {
@@ -147,14 +155,17 @@ class MultiTenantManager {
       settings: this.getDefaultCompanySettings(),
       limits: this.getPlanLimits('enterprise'),
       features: this.getPlanFeatures('enterprise'),
-      metadata: {}
+      metadata: {},
     }
   }
 
   /**
    * Get user context within tenant
    */
-  private async getUserTenantContext(tenant: CompanyTenant, userId: string): Promise<TenantContext> {
+  private async getUserTenantContext(
+    tenant: CompanyTenant,
+    userId: string
+  ): Promise<TenantContext> {
     // Mock user context - in real implementation, query user roles and permissions
     return {
       company_id: tenant.id,
@@ -165,14 +176,16 @@ class MultiTenantManager {
       features: tenant.features,
       is_admin: true,
       can_manage_users: true,
-      can_access_audit: true
+      can_access_audit: true,
     }
   }
 
   /**
    * Configure tenant-specific environment
    */
-  private async configureTenantEnvironment(tenant: CompanyTenant): Promise<void> {
+  private async configureTenantEnvironment(
+    tenant: CompanyTenant
+  ): Promise<void> {
     // Configure timezone
     if (tenant.settings.timezone) {
       // Set application timezone
@@ -203,7 +216,10 @@ class MultiTenantManager {
   /**
    * Check if action is within tenant limits
    */
-  public checkLimit(resource: keyof TenantLimits, currentUsage: number): boolean {
+  public checkLimit(
+    resource: keyof TenantLimits,
+    currentUsage: number
+  ): boolean {
     const limit = this.tenantContext?.plan_limits[resource]
     return limit ? currentUsage < limit : false
   }
@@ -223,7 +239,9 @@ class MultiTenantManager {
 
     // Check if current user can create sharing agreements
     if (!this.tenantContext.permissions.includes('manage_data_sharing')) {
-      throw new Error('Insufficient permissions to create data sharing agreement')
+      throw new Error(
+        'Insufficient permissions to create data sharing agreement'
+      )
     }
 
     const agreement: DataSharingAgreement = {
@@ -234,13 +252,17 @@ class MultiTenantManager {
       permissions,
       status: 'pending',
       created_at: new Date(),
-      conditions
+      conditions,
     }
 
     // Store agreement
-    const fromAgreements = this.dataSharingAgreements.get(this.tenantContext.company_id) || []
+    const fromAgreements =
+      this.dataSharingAgreements.get(this.tenantContext.company_id) || []
     fromAgreements.push(agreement)
-    this.dataSharingAgreements.set(this.tenantContext.company_id, fromAgreements)
+    this.dataSharingAgreements.set(
+      this.tenantContext.company_id,
+      fromAgreements
+    )
 
     // Notify target company
     await this.notifyDataSharingRequest(agreement)
@@ -267,9 +289,10 @@ class MultiTenantManager {
     )
 
     // Filter by data type and source company
-    const relevantAgreements = agreements.filter(agreement =>
-      agreement.data_types.includes(dataType) &&
-      (!fromCompanyId || agreement.from_company_id === fromCompanyId)
+    const relevantAgreements = agreements.filter(
+      agreement =>
+        agreement.data_types.includes(dataType) &&
+        (!fromCompanyId || agreement.from_company_id === fromCompanyId)
     )
 
     // Fetch shared data based on agreements
@@ -333,7 +356,7 @@ class MultiTenantManager {
       limits: this.tenantContext.plan_limits,
       features_used: await this.getFeatureUsageStats(),
       data_sharing_stats: await this.getDataSharingStats(),
-      cost_analysis: await this.calculateCostAnalysis()
+      cost_analysis: await this.calculateCostAnalysis(),
     }
   }
 
@@ -355,14 +378,17 @@ class MultiTenantManager {
       console.log(`🔄 Starting data migration: ${migrationId}`)
 
       // Create migration plan
-      const plan = await this.createMigrationPlan(sourceCompanyId, targetCompanyId, dataTypes)
+      const plan = await this.createMigrationPlan(
+        sourceCompanyId,
+        targetCompanyId,
+        dataTypes
+      )
 
       // Execute migration with progress tracking
       const result = await this.executeMigration(plan, options)
 
       console.log(`✅ Migration completed: ${migrationId}`)
       return result
-
     } catch (error) {
       console.error(`❌ Migration failed: ${migrationId}`, error)
       throw error
@@ -383,19 +409,19 @@ class MultiTenantManager {
         email_alerts: true,
         sms_alerts: false,
         push_notifications: true,
-        digest_frequency: 'daily'
+        digest_frequency: 'daily',
       },
       branding: {
         logo_url: '',
         primary_color: '#2563eb',
         secondary_color: '#64748b',
-        custom_css: ''
+        custom_css: '',
       },
       integrations: {
         email_provider: 'sendgrid',
         storage_provider: 'aws_s3',
-        analytics_provider: 'google_analytics'
-      }
+        analytics_provider: 'google_analytics',
+      },
     }
   }
 
@@ -409,7 +435,7 @@ class MultiTenantManager {
         max_storage_mb: 100,
         max_export_requests_per_day: 5,
         data_retention_days: 90,
-        api_calls_per_hour: 100
+        api_calls_per_hour: 100,
       },
       standard: {
         max_users: 25,
@@ -419,7 +445,7 @@ class MultiTenantManager {
         max_storage_mb: 1000,
         max_export_requests_per_day: 25,
         data_retention_days: 365,
-        api_calls_per_hour: 500
+        api_calls_per_hour: 500,
       },
       enterprise: {
         max_users: 1000,
@@ -429,8 +455,8 @@ class MultiTenantManager {
         max_storage_mb: 10000,
         max_export_requests_per_day: 1000,
         data_retention_days: 2555, // 7 years
-        api_calls_per_hour: 5000
-      }
+        api_calls_per_hour: 5000,
+      },
     }
 
     return limits[plan]
@@ -448,7 +474,7 @@ class MultiTenantManager {
         sso_integration: false,
         audit_trails: false,
         data_sharing: false,
-        backup_export: false
+        backup_export: false,
       },
       standard: {
         offline_mode: true,
@@ -460,7 +486,7 @@ class MultiTenantManager {
         sso_integration: false,
         audit_trails: true,
         data_sharing: false,
-        backup_export: true
+        backup_export: true,
       },
       enterprise: {
         offline_mode: true,
@@ -472,8 +498,8 @@ class MultiTenantManager {
         sso_integration: true,
         audit_trails: true,
         data_sharing: true,
-        backup_export: true
-      }
+        backup_export: true,
+      },
     }
 
     return features[plan]
@@ -484,7 +510,9 @@ class MultiTenantManager {
     console.log('🎨 Applying custom branding')
   }
 
-  private async setupIntegrations(integrations: IntegrationConfig): Promise<void> {
+  private async setupIntegrations(
+    integrations: IntegrationConfig
+  ): Promise<void> {
     // Setup third-party integrations
     console.log('🔗 Setting up integrations')
   }
@@ -503,25 +531,38 @@ class MultiTenantManager {
   }
 
   // Additional helper methods would be implemented here
-  private async notifyDataSharingRequest(agreement: DataSharingAgreement): Promise<void> {
+  private async notifyDataSharingRequest(
+    agreement: DataSharingAgreement
+  ): Promise<void> {
     console.log(`📧 Notifying data sharing request: ${agreement.id}`)
   }
 
-  private async notifyDataSharingResponse(agreement: DataSharingAgreement, response: string): Promise<void> {
+  private async notifyDataSharingResponse(
+    agreement: DataSharingAgreement,
+    response: string
+  ): Promise<void> {
     console.log(`📬 Notifying data sharing response: ${response}`)
   }
 
-  private async getActiveDataSharingAgreements(companyId: string, role: 'sender' | 'recipient'): Promise<DataSharingAgreement[]> {
+  private async getActiveDataSharingAgreements(
+    companyId: string,
+    role: 'sender' | 'recipient'
+  ): Promise<DataSharingAgreement[]> {
     // Implementation would query database
     return []
   }
 
-  private async fetchSharedDataForAgreement(agreement: DataSharingAgreement, dataType: DataShareType): Promise<any[]> {
+  private async fetchSharedDataForAgreement(
+    agreement: DataSharingAgreement,
+    dataType: DataShareType
+  ): Promise<any[]> {
     // Implementation would fetch actual data based on agreement
     return []
   }
 
-  private async getDataSharingAgreement(agreementId: string): Promise<DataSharingAgreement | null> {
+  private async getDataSharingAgreement(
+    agreementId: string
+  ): Promise<DataSharingAgreement | null> {
     // Implementation would query database
     return null
   }
@@ -542,15 +583,25 @@ class MultiTenantManager {
     return {}
   }
 
-  private async validateMigrationPermissions(sourceId: string, targetId: string): Promise<void> {
+  private async validateMigrationPermissions(
+    sourceId: string,
+    targetId: string
+  ): Promise<void> {
     // Validate migration permissions
   }
 
-  private async createMigrationPlan(sourceId: string, targetId: string, dataTypes: string[]): Promise<any> {
+  private async createMigrationPlan(
+    sourceId: string,
+    targetId: string,
+    dataTypes: string[]
+  ): Promise<any> {
     return {}
   }
 
-  private async executeMigration(plan: any, options: MigrationOptions): Promise<MigrationResult> {
+  private async executeMigration(
+    plan: any,
+    options: MigrationOptions
+  ): Promise<MigrationResult> {
     return { success: true, migrated_records: 0, errors: [] }
   }
 }

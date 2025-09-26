@@ -11,7 +11,13 @@ describe('Calendar Utilities', () => {
   })
 
   it('should handle event type validation', () => {
-    const validTypes = ['maintenance', 'training', 'meeting', 'inventory', 'task']
+    const validTypes = [
+      'maintenance',
+      'training',
+      'meeting',
+      'inventory',
+      'task',
+    ]
 
     validTypes.forEach(type => {
       expect(validTypes.includes(type)).toBe(true)
@@ -27,7 +33,13 @@ describe('Calendar Utilities', () => {
   })
 
   it('should validate status values', () => {
-    const validStatuses = ['scheduled', 'in_progress', 'completed', 'cancelled', 'overdue']
+    const validStatuses = [
+      'scheduled',
+      'in_progress',
+      'completed',
+      'cancelled',
+      'overdue',
+    ]
 
     validStatuses.forEach(status => {
       expect(validStatuses.includes(status)).toBe(true)

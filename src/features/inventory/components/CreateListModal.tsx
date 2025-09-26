@@ -5,7 +5,9 @@ import { ShoppingList } from '../hooks/useShoppingLists'
 interface CreateListModalProps {
   isOpen: boolean
   onClose: () => void
-  onCreate: (list: Omit<ShoppingList, 'id' | 'created_at' | 'updated_at'>) => void
+  onCreate: (
+    list: Omit<ShoppingList, 'id' | 'created_at' | 'updated_at'>
+  ) => void
   templates?: ShoppingList[]
 }
 
@@ -36,10 +38,27 @@ export const CreateListModal: React.FC<CreateListModalProps> = ({
     if (!formData.name.trim()) return
 
     onCreate({
+      company_id: 'temp-company',
       name: formData.name,
       description: formData.description,
+      created_by: 'temp-user',
       is_template: formData.is_template,
-      items: formData.items,
+      is_completed: false,
+      completed_items: 0,
+      item_count: formData.items.length,
+      items: formData.items.map(item => ({
+        id: `temp-${Date.now()}-${Math.random()}`,
+        shopping_list_id: '',
+        product_id: '',
+        product_name: item.product_name,
+        category_name: '',
+        quantity: item.quantity,
+        unit: '',
+        notes: '',
+        is_completed: item.completed,
+        added_at: new Date().toISOString(),
+        completed_at: item.completed ? new Date().toISOString() : undefined,
+      })),
     })
 
     // Reset form
@@ -81,8 +100,12 @@ export const CreateListModal: React.FC<CreateListModalProps> = ({
     setFormData(prev => ({
       ...prev,
       name: template.name,
-      description: template.description,
-      items: template.items || [],
+      description: template.description || '',
+      items: (template.items || []).map(item => ({
+        product_name: item.product_name,
+        quantity: item.quantity,
+        completed: item.is_completed,
+      })),
     }))
   }
 
@@ -112,7 +135,9 @@ export const CreateListModal: React.FC<CreateListModalProps> = ({
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              onChange={e =>
+                setFormData(prev => ({ ...prev, name: e.target.value }))
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Es. Spesa Settimanale"
               required
@@ -125,7 +150,9 @@ export const CreateListModal: React.FC<CreateListModalProps> = ({
             </label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={e =>
+                setFormData(prev => ({ ...prev, description: e.target.value }))
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows={3}
               placeholder="Descrizione opzionale della lista"
@@ -137,7 +164,12 @@ export const CreateListModal: React.FC<CreateListModalProps> = ({
               type="checkbox"
               id="is_template"
               checked={formData.is_template}
-              onChange={(e) => setFormData(prev => ({ ...prev, is_template: e.target.checked }))}
+              onChange={e =>
+                setFormData(prev => ({
+                  ...prev,
+                  is_template: e.target.checked,
+                }))
+              }
               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <label htmlFor="is_template" className="text-sm text-gray-700">
@@ -152,14 +184,16 @@ export const CreateListModal: React.FC<CreateListModalProps> = ({
                 Usa Template
               </label>
               <div className="grid grid-cols-1 gap-2">
-                {templates.map((template) => (
+                {templates.map(template => (
                   <button
                     key={template.id}
                     type="button"
                     onClick={() => useTemplate(template)}
                     className="p-2 text-left border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
                   >
-                    <div className="font-medium text-gray-900">{template.name}</div>
+                    <div className="font-medium text-gray-900">
+                      {template.name}
+                    </div>
                     <div className="text-sm text-gray-500">
                       {template.items?.length || 0} prodotti
                     </div>
@@ -176,8 +210,13 @@ export const CreateListModal: React.FC<CreateListModalProps> = ({
             </label>
             <div className="space-y-2">
               {formData.items.map((item, index) => (
-                <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
-                  <span className="flex-1 text-sm">{item.product_name} x{item.quantity}</span>
+                <div
+                  key={index}
+                  className="flex items-center gap-2 p-2 bg-gray-50 rounded-md"
+                >
+                  <span className="flex-1 text-sm">
+                    {item.product_name} x{item.quantity}
+                  </span>
                   <button
                     type="button"
                     onClick={() => removeItem(index)}
@@ -192,14 +231,24 @@ export const CreateListModal: React.FC<CreateListModalProps> = ({
                 <input
                   type="text"
                   value={newItem.product_name}
-                  onChange={(e) => setNewItem(prev => ({ ...prev, product_name: e.target.value }))}
+                  onChange={e =>
+                    setNewItem(prev => ({
+                      ...prev,
+                      product_name: e.target.value,
+                    }))
+                  }
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Nome prodotto"
                 />
                 <input
                   type="number"
                   value={newItem.quantity}
-                  onChange={(e) => setNewItem(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+                  onChange={e =>
+                    setNewItem(prev => ({
+                      ...prev,
+                      quantity: parseInt(e.target.value) || 1,
+                    }))
+                  }
                   className="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min="1"
                 />

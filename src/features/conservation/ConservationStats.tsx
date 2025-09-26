@@ -13,7 +13,6 @@ interface ConservationStatsProps {
 }
 
 export function ConservationStats({ stats }: ConservationStatsProps) {
-
   const getComplianceBadge = (rate: number) => {
     if (rate >= 95) return 'bg-green-100 text-green-800'
     if (rate >= 85) return 'bg-yellow-100 text-yellow-800'

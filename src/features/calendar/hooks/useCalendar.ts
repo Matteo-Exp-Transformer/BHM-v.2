@@ -42,6 +42,9 @@ const defaultViewConfig: CalendarViewConfig = {
     training: '#10B981',
     inventory: '#8B5CF6',
     meeting: '#EF4444',
+    temperature_reading: '#06B6D4',
+    general_task: '#84CC16',
+    custom: '#F97316',
   },
 }
 

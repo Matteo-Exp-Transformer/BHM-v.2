@@ -15,7 +15,7 @@ vi.mock('@/lib/supabase/client')
 // Mock navigator.onLine
 Object.defineProperty(navigator, 'onLine', {
   writable: true,
-  value: true
+  value: true,
 })
 
 // Mock window events
@@ -23,7 +23,7 @@ const mockAddEventListener = vi.fn()
 const mockRemoveEventListener = vi.fn()
 global.window = {
   addEventListener: mockAddEventListener,
-  removeEventListener: mockRemoveEventListener
+  removeEventListener: mockRemoveEventListener,
 } as any
 
 describe('BackgroundSyncService', () => {
@@ -39,8 +39,14 @@ describe('BackgroundSyncService', () => {
 
   describe('constructor', () => {
     it('should setup online listeners', () => {
-      expect(mockAddEventListener).toHaveBeenCalledWith('online', expect.any(Function))
-      expect(mockAddEventListener).toHaveBeenCalledWith('offline', expect.any(Function))
+      expect(mockAddEventListener).toHaveBeenCalledWith(
+        'online',
+        expect.any(Function)
+      )
+      expect(mockAddEventListener).toHaveBeenCalledWith(
+        'offline',
+        expect.any(Function)
+      )
     })
 
     it('should detect initial online status', () => {
@@ -62,7 +68,10 @@ describe('BackgroundSyncService', () => {
       // Second sync should return immediately
       const secondSync = backgroundSyncService.startSync()
 
-      const [firstResult, secondResult] = await Promise.all([firstSync, secondSync])
+      const [firstResult, secondResult] = await Promise.all([
+        firstSync,
+        secondSync,
+      ])
 
       expect(firstResult.success).toBe(true)
       expect(secondResult.success).toBe(false)
@@ -96,7 +105,7 @@ describe('BackgroundSyncService', () => {
           table: 'temperature_readings',
           data: { temperature: 4.5, conservation_point_id: 'cp1' },
           timestamp: Date.now(),
-          retryCount: 0
+          retryCount: 0,
         },
         {
           id: 'sync2',
@@ -104,8 +113,8 @@ describe('BackgroundSyncService', () => {
           table: 'tasks',
           data: { id: 'task1', status: 'completed' },
           timestamp: Date.now(),
-          retryCount: 0
-        }
+          retryCount: 0,
+        },
       ]
 
       vi.mocked(indexedDBManager.getSyncQueue).mockResolvedValue(mockSyncItems)
@@ -114,8 +123,8 @@ describe('BackgroundSyncService', () => {
       vi.mocked(supabase.from).mockReturnValue({
         insert: vi.fn().mockResolvedValue({ data: {}, error: null }),
         update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: {}, error: null })
-        })
+          eq: vi.fn().mockResolvedValue({ data: {}, error: null }),
+        }),
       } as any)
 
       const progressCallback = vi.fn()
@@ -135,14 +144,14 @@ describe('BackgroundSyncService', () => {
         table: 'temperature_readings',
         data: { temperature: 4.5 },
         timestamp: Date.now(),
-        retryCount: 2 // Already at max retries
+        retryCount: 2, // Already at max retries
       }
 
       vi.mocked(indexedDBManager.getSyncQueue).mockResolvedValue([mockSyncItem])
 
       // Mock failed Supabase operation
       vi.mocked(supabase.from).mockReturnValue({
-        insert: vi.fn().mockRejectedValue(new Error('Network error'))
+        insert: vi.fn().mockRejectedValue(new Error('Network error')),
       } as any)
 
       const result = await backgroundSyncService.startSync()
@@ -165,13 +174,13 @@ describe('BackgroundSyncService', () => {
           table: 'temperature_readings',
           data: { temperature: 4.5 },
           timestamp: Date.now(),
-          retryCount: 0
-        }
+          retryCount: 0,
+        },
       ]
 
       vi.mocked(indexedDBManager.getSyncQueue).mockResolvedValue(mockSyncItems)
       vi.mocked(supabase.from).mockReturnValue({
-        insert: vi.fn().mockResolvedValue({ data: {}, error: null })
+        insert: vi.fn().mockResolvedValue({ data: {}, error: null }),
       } as any)
 
       const progressCallback = vi.fn()
@@ -180,12 +189,12 @@ describe('BackgroundSyncService', () => {
       expect(progressCallback).toHaveBeenCalledWith({
         total: 1,
         completed: 0,
-        current: 'create temperature_readings'
+        current: 'create temperature_readings',
       })
 
       expect(progressCallback).toHaveBeenCalledWith({
         total: 1,
-        completed: 1
+        completed: 1,
       })
     })
   })
@@ -195,11 +204,11 @@ describe('BackgroundSyncService', () => {
       vi.mocked(supabase.from).mockReturnValue({
         insert: vi.fn().mockResolvedValue({ data: {}, error: null }),
         update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: {}, error: null })
+          eq: vi.fn().mockResolvedValue({ data: {}, error: null }),
         }),
         delete: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: {}, error: null })
-        })
+          eq: vi.fn().mockResolvedValue({ data: {}, error: null }),
+        }),
       } as any)
     })
 
@@ -211,8 +220,8 @@ describe('BackgroundSyncService', () => {
           table: 'temperature_readings',
           data: { temperature: 4.5, conservation_point_id: 'cp1' },
           timestamp: Date.now(),
-          retryCount: 0
-        }
+          retryCount: 0,
+        },
       ]
 
       vi.mocked(indexedDBManager.getSyncQueue).mockResolvedValue(mockSyncItems)
@@ -231,8 +240,8 @@ describe('BackgroundSyncService', () => {
           table: 'tasks',
           data: { id: 'task1', status: 'completed' },
           timestamp: Date.now(),
-          retryCount: 0
-        }
+          retryCount: 0,
+        },
       ]
 
       vi.mocked(indexedDBManager.getSyncQueue).mockResolvedValue(mockSyncItems)
@@ -251,8 +260,8 @@ describe('BackgroundSyncService', () => {
           table: 'custom_table',
           data: { name: 'test' },
           timestamp: Date.now(),
-          retryCount: 0
-        }
+          retryCount: 0,
+        },
       ]
 
       vi.mocked(indexedDBManager.getSyncQueue).mockResolvedValue(mockSyncItems)
@@ -271,27 +280,35 @@ describe('BackgroundSyncService', () => {
     })
 
     it('should queue items for sync', async () => {
-      await backgroundSyncService.queueForSync('temperature_readings', 'create', {
-        temperature: 4.5,
-        conservation_point_id: 'cp1'
-      })
+      await backgroundSyncService.queueForSync(
+        'temperature_readings',
+        'create',
+        {
+          temperature: 4.5,
+          conservation_point_id: 'cp1',
+        }
+      )
 
       expect(indexedDBManager.addToSyncQueue).toHaveBeenCalledWith({
         operation: 'create',
         table: 'temperature_readings',
-        data: { temperature: 4.5, conservation_point_id: 'cp1' }
+        data: { temperature: 4.5, conservation_point_id: 'cp1' },
       })
     })
 
     it('should trigger immediate sync when online', async () => {
-      const startSyncSpy = vi.spyOn(backgroundSyncService, 'startSync').mockResolvedValue({
-        success: true,
-        syncedCount: 0,
-        failedCount: 0,
-        errors: []
-      })
+      const startSyncSpy = vi
+        .spyOn(backgroundSyncService, 'startSync')
+        .mockResolvedValue({
+          success: true,
+          syncedCount: 0,
+          failedCount: 0,
+          errors: [],
+        })
 
-      await backgroundSyncService.queueForSync('tasks', 'update', { id: 'task1' })
+      await backgroundSyncService.queueForSync('tasks', 'update', {
+        id: 'task1',
+      })
 
       // Wait for setTimeout to execute
       await new Promise(resolve => setTimeout(resolve, 1100))
@@ -304,7 +321,9 @@ describe('BackgroundSyncService', () => {
 
       const startSyncSpy = vi.spyOn(backgroundSyncService, 'startSync')
 
-      await backgroundSyncService.queueForSync('tasks', 'update', { id: 'task1' })
+      await backgroundSyncService.queueForSync('tasks', 'update', {
+        id: 'task1',
+      })
 
       // Wait for potential setTimeout
       await new Promise(resolve => setTimeout(resolve, 1100))
@@ -316,8 +335,22 @@ describe('BackgroundSyncService', () => {
   describe('getPendingSyncCount', () => {
     it('should return correct pending sync count', async () => {
       const mockSyncItems = [
-        { id: 'sync1', operation: 'create', table: 'tasks', data: {}, timestamp: Date.now(), retryCount: 0 },
-        { id: 'sync2', operation: 'update', table: 'products', data: {}, timestamp: Date.now(), retryCount: 0 }
+        {
+          id: 'sync1',
+          operation: 'create',
+          table: 'tasks',
+          data: {},
+          timestamp: Date.now(),
+          retryCount: 0,
+        },
+        {
+          id: 'sync2',
+          operation: 'update',
+          table: 'products',
+          data: {},
+          timestamp: Date.now(),
+          retryCount: 0,
+        },
       ]
 
       vi.mocked(indexedDBManager.init).mockResolvedValue()
@@ -332,8 +365,22 @@ describe('BackgroundSyncService', () => {
   describe('clearSyncQueue', () => {
     it('should clear all sync queue items', async () => {
       const mockSyncItems = [
-        { id: 'sync1', operation: 'create', table: 'tasks', data: {}, timestamp: Date.now(), retryCount: 0 },
-        { id: 'sync2', operation: 'update', table: 'products', data: {}, timestamp: Date.now(), retryCount: 0 }
+        {
+          id: 'sync1',
+          operation: 'create',
+          table: 'tasks',
+          data: {},
+          timestamp: Date.now(),
+          retryCount: 0,
+        },
+        {
+          id: 'sync2',
+          operation: 'update',
+          table: 'products',
+          data: {},
+          timestamp: Date.now(),
+          retryCount: 0,
+        },
       ]
 
       vi.mocked(indexedDBManager.init).mockResolvedValue()
@@ -350,15 +397,19 @@ describe('BackgroundSyncService', () => {
 
   describe('online/offline events', () => {
     it('should handle online event', () => {
-      const startSyncSpy = vi.spyOn(backgroundSyncService, 'startSync').mockResolvedValue({
-        success: true,
-        syncedCount: 0,
-        failedCount: 0,
-        errors: []
-      })
+      const startSyncSpy = vi
+        .spyOn(backgroundSyncService, 'startSync')
+        .mockResolvedValue({
+          success: true,
+          syncedCount: 0,
+          failedCount: 0,
+          errors: [],
+        })
 
       // Simulate online event
-      const onlineHandler = mockAddEventListener.mock.calls.find(call => call[0] === 'online')?.[1]
+      const onlineHandler = mockAddEventListener.mock.calls.find(
+        call => call[0] === 'online'
+      )?.[1]
       onlineHandler?.()
 
       expect(backgroundSyncService.isCurrentlyOnline()).toBe(true)
@@ -367,7 +418,9 @@ describe('BackgroundSyncService', () => {
 
     it('should handle offline event', () => {
       // Simulate offline event
-      const offlineHandler = mockAddEventListener.mock.calls.find(call => call[0] === 'offline')?.[1]
+      const offlineHandler = mockAddEventListener.mock.calls.find(
+        call => call[0] === 'offline'
+      )?.[1]
       offlineHandler?.()
 
       expect(backgroundSyncService.isCurrentlyOnline()).toBe(false)
@@ -376,7 +429,9 @@ describe('BackgroundSyncService', () => {
 
   describe('error handling', () => {
     it('should handle IndexedDB initialization errors', async () => {
-      vi.mocked(indexedDBManager.init).mockRejectedValue(new Error('IndexedDB error'))
+      vi.mocked(indexedDBManager.init).mockRejectedValue(
+        new Error('IndexedDB error')
+      )
 
       const result = await backgroundSyncService.startSync()
 
@@ -392,7 +447,7 @@ describe('BackgroundSyncService', () => {
         table: 'temperature_readings',
         data: { temperature: 4.5 },
         timestamp: Date.now(),
-        retryCount: 0
+        retryCount: 0,
       }
 
       vi.mocked(indexedDBManager.init).mockResolvedValue()
@@ -402,8 +457,8 @@ describe('BackgroundSyncService', () => {
       vi.mocked(supabase.from).mockReturnValue({
         insert: vi.fn().mockResolvedValue({
           data: null,
-          error: { message: 'Database constraint violation' }
-        })
+          error: { message: 'Database constraint violation' },
+        }),
       } as any)
 
       const result = await backgroundSyncService.startSync()

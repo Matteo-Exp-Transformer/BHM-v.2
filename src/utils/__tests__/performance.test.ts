@@ -8,7 +8,7 @@ import {
   pageSizeDefault,
   trackPerformance,
   createCleanupManager,
-  batchUpdates
+  batchUpdates,
 } from '../performance'
 
 describe('Performance Utilities', () => {
@@ -67,28 +67,58 @@ describe('Performance Utilities', () => {
   describe('queryKeyFactory', () => {
     it('should generate correct conservation keys', () => {
       expect(queryKeyFactory.conservation.all).toEqual(['conservation'])
-      expect(queryKeyFactory.conservation.points()).toEqual(['conservation', 'points'])
-      expect(queryKeyFactory.conservation.point('123')).toEqual(['conservation', 'points', '123'])
-      expect(queryKeyFactory.conservation.temperatures('123')).toEqual(['conservation', 'points', '123', 'temperatures'])
+      expect(queryKeyFactory.conservation.points()).toEqual([
+        'conservation',
+        'points',
+      ])
+      expect(queryKeyFactory.conservation.point('123')).toEqual([
+        'conservation',
+        'points',
+        '123',
+      ])
+      expect(queryKeyFactory.conservation.temperatures('123')).toEqual([
+        'conservation',
+        'points',
+        '123',
+        'temperatures',
+      ])
     })
 
     it('should generate correct inventory keys', () => {
       expect(queryKeyFactory.inventory.all).toEqual(['inventory'])
-      expect(queryKeyFactory.inventory.products()).toEqual(['inventory', 'products'])
-      expect(queryKeyFactory.inventory.product('456')).toEqual(['inventory', 'products', '456'])
-      expect(queryKeyFactory.inventory.categories()).toEqual(['inventory', 'categories'])
+      expect(queryKeyFactory.inventory.products()).toEqual([
+        'inventory',
+        'products',
+      ])
+      expect(queryKeyFactory.inventory.product('456')).toEqual([
+        'inventory',
+        'products',
+        '456',
+      ])
+      expect(queryKeyFactory.inventory.categories()).toEqual([
+        'inventory',
+        'categories',
+      ])
     })
 
     it('should generate correct staff keys', () => {
       expect(queryKeyFactory.staff.all).toEqual(['staff'])
       expect(queryKeyFactory.staff.list()).toEqual(['staff', 'list'])
-      expect(queryKeyFactory.staff.member('789')).toEqual(['staff', 'list', '789'])
+      expect(queryKeyFactory.staff.member('789')).toEqual([
+        'staff',
+        'list',
+        '789',
+      ])
     })
 
     it('should generate correct calendar keys', () => {
       expect(queryKeyFactory.calendar.all).toEqual(['calendar'])
       expect(queryKeyFactory.calendar.events()).toEqual(['calendar', 'events'])
-      expect(queryKeyFactory.calendar.event('abc')).toEqual(['calendar', 'events', 'abc'])
+      expect(queryKeyFactory.calendar.event('abc')).toEqual([
+        'calendar',
+        'events',
+        'abc',
+      ])
     })
   })
 
@@ -109,7 +139,9 @@ describe('Performance Utilities', () => {
 
       trackPerformance('slow operation', 0)
 
-      expect(consoleSpy).toHaveBeenCalledWith('Performance: slow operation took 2000.00ms')
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Performance: slow operation took 2000.00ms'
+      )
 
       performance.now = originalNow
       consoleSpy.mockRestore()

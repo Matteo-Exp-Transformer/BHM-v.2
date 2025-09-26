@@ -3,7 +3,11 @@
  * Generates aggregated reports across multiple companies with data sharing agreements
  */
 
-import { multiTenantManager, type DataSharingAgreement, type CompanyTenant } from './MultiTenantManager'
+import {
+  multiTenantManager,
+  type DataSharingAgreement,
+  type CompanyTenant,
+} from './MultiTenantManager'
 import { permissionManager } from './PermissionManager'
 
 export interface CrossCompanyReport {
@@ -60,7 +64,11 @@ export interface AggregationRule {
   weight_by_company?: boolean
 }
 
-export type ComplianceLevel = 'internal' | 'regulatory' | 'audit_ready' | 'court_admissible'
+export type ComplianceLevel =
+  | 'internal'
+  | 'regulatory'
+  | 'audit_ready'
+  | 'court_admissible'
 
 export interface SharingRestriction {
   type: 'geographic' | 'temporal' | 'recipient_type' | 'purpose_limitation'
@@ -126,33 +134,50 @@ class CrossCompanyReportingManager {
       await this.validateReportPermissions(generatedBy, companies, reportType)
 
       // Verify data sharing agreements
-      const validAgreements = await this.verifyDataSharingAgreements(companies, reportType)
+      const validAgreements = await this.verifyDataSharingAgreements(
+        companies,
+        reportType
+      )
 
       // Collect data from all companies
-      const dataSources = await this.collectDataSources(companies, reportType, dateRange)
+      const dataSources = await this.collectDataSources(
+        companies,
+        reportType,
+        dateRange
+      )
 
       // Apply data anonymization based on agreements
-      const anonymizedData = await this.anonymizeData(dataSources, validAgreements)
+      const anonymizedData = await this.anonymizeData(
+        dataSources,
+        validAgreements
+      )
 
       // Generate report
       const report: CrossCompanyReport = {
         id: this.generateReportId(),
         title: this.generateReportTitle(reportType, companies),
-        description: this.generateReportDescription(reportType, companies, dateRange),
+        description: this.generateReportDescription(
+          reportType,
+          companies,
+          dateRange
+        ),
         type: reportType,
         companies_included: await this.getCompanyInfo(companies),
         data_sources: dataSources,
-        aggregation_rules: options?.aggregation_rules || this.getDefaultAggregationRules(reportType),
+        aggregation_rules:
+          options?.aggregation_rules ||
+          this.getDefaultAggregationRules(reportType),
         generated_at: new Date(),
         generated_by: generatedBy,
         compliance_level: options?.compliance_level || 'internal',
-        sharing_restrictions: await this.determineSharingRestrictions(validAgreements),
+        sharing_restrictions:
+          await this.determineSharingRestrictions(validAgreements),
         metadata: {
           data_quality_score: await this.calculateDataQualityScore(dataSources),
           companies_count: companies.length,
           date_range: dateRange,
-          generation_duration_ms: 0 // Will be set after completion
-        }
+          generation_duration_ms: 0, // Will be set after completion
+        },
       }
 
       // Process and aggregate data
@@ -166,7 +191,6 @@ class CrossCompanyReportingManager {
 
       console.log(`📊 Cross-company report generated: ${report.id}`)
       return report
-
     } catch (error) {
       console.error('Cross-company report generation failed:', error)
       throw error
@@ -179,8 +203,14 @@ class CrossCompanyReportingManager {
   public async getAvailableReportTypes(
     userId: string,
     companyId: string
-  ): Promise<{ type: ReportType; description: string; requirements: string[] }[]> {
-    const availableTypes: { type: ReportType; description: string; requirements: string[] }[] = []
+  ): Promise<
+    { type: ReportType; description: string; requirements: string[] }[]
+  > {
+    const availableTypes: {
+      type: ReportType
+      description: string
+      requirements: string[]
+    }[] = []
 
     // Check permissions for each report type
     for (const [type, template] of this.reportTemplates) {
@@ -194,7 +224,7 @@ class CrossCompanyReportingManager {
         availableTypes.push({
           type,
           description: template.description,
-          requirements: template.data_requirements
+          requirements: template.data_requirements,
         })
       }
     }
@@ -245,7 +275,7 @@ class CrossCompanyReportingManager {
     await this.createAuditTrail(report, 'exported', userId, {
       format: options.format,
       file_size: exportData.size,
-      encryption_level: options.encryption_level
+      encryption_level: options.encryption_level,
     })
 
     return exportData
@@ -278,7 +308,7 @@ class CrossCompanyReportingManager {
       shared_by: sharedBy,
       shared_at: new Date(),
       restrictions: restrictions || report.sharing_restrictions,
-      access_granted: true
+      access_granted: true,
     }
 
     // Notify target company
@@ -287,7 +317,7 @@ class CrossCompanyReportingManager {
     // Create audit trail
     await this.createAuditTrail(report, 'shared', sharedBy, {
       target_company: targetCompanyId,
-      restrictions_applied: restrictions?.length || 0
+      restrictions_applied: restrictions?.length || 0,
     })
 
     console.log(`📤 Report shared: ${reportId} with company ${targetCompanyId}`)
@@ -309,21 +339,27 @@ class CrossCompanyReportingManager {
         data_points_processed: await this.countDataPoints(report),
         companies_involved: report.companies_included.length,
         processing_time_ms: report.metadata.generation_duration_ms || 0,
-        data_quality_score: report.metadata.data_quality_score || 0
+        data_quality_score: report.metadata.data_quality_score || 0,
       },
       access_stats: {
         total_views: auditTrail.filter(a => a.action === 'accessed').length,
-        unique_viewers: new Set(auditTrail.filter(a => a.action === 'accessed').map(a => a.user_id)).size,
+        unique_viewers: new Set(
+          auditTrail.filter(a => a.action === 'accessed').map(a => a.user_id)
+        ).size,
         exports_count: auditTrail.filter(a => a.action === 'exported').length,
-        shares_count: auditTrail.filter(a => a.action === 'shared').length
+        shares_count: auditTrail.filter(a => a.action === 'shared').length,
       },
       compliance_stats: {
         compliance_level: report.compliance_level,
-        audit_ready: report.compliance_level === 'audit_ready' || report.compliance_level === 'court_admissible',
+        audit_ready:
+          report.compliance_level === 'audit_ready' ||
+          report.compliance_level === 'court_admissible',
         data_retention_days: this.calculateRetentionPeriod(report),
-        anonymization_applied: report.data_sources.some(ds => ds.anonymization_level !== 'none')
+        anonymization_applied: report.data_sources.some(
+          ds => ds.anonymization_level !== 'none'
+        ),
       },
-      insights: await this.generateReportInsights(report)
+      insights: await this.generateReportInsights(report),
     }
   }
 
@@ -332,34 +368,46 @@ class CrossCompanyReportingManager {
    */
   private initializeReportTemplates(): void {
     const templates: Array<[ReportType, ReportTemplate]> = [
-      ['temperature_compliance', {
-        description: 'Aggregated temperature compliance across companies',
-        data_requirements: ['temperature_readings', 'conservation_points'],
-        default_aggregations: ['average', 'min', 'max', 'count'],
-        compliance_level: 'regulatory',
-        retention_days: 2555 // 7 years for HACCP compliance
-      }],
-      ['maintenance_summary', {
-        description: 'Cross-company maintenance performance summary',
-        data_requirements: ['maintenance_tasks', 'maintenance_completions'],
-        default_aggregations: ['count', 'average'],
-        compliance_level: 'internal',
-        retention_days: 1095 // 3 years
-      }],
-      ['audit_consolidation', {
-        description: 'Consolidated audit report across multiple facilities',
-        data_requirements: ['audit_logs', 'compliance_documents'],
-        default_aggregations: ['count', 'sum'],
-        compliance_level: 'audit_ready',
-        retention_days: 3650 // 10 years
-      }],
-      ['supplier_performance', {
-        description: 'Supplier performance analysis across company network',
-        data_requirements: ['products', 'suppliers', 'quality_metrics'],
-        default_aggregations: ['average', 'count', 'percentile'],
-        compliance_level: 'internal',
-        retention_days: 1825 // 5 years
-      }]
+      [
+        'temperature_compliance',
+        {
+          description: 'Aggregated temperature compliance across companies',
+          data_requirements: ['temperature_readings', 'conservation_points'],
+          default_aggregations: ['average', 'min', 'max', 'count'],
+          compliance_level: 'regulatory',
+          retention_days: 2555, // 7 years for HACCP compliance
+        },
+      ],
+      [
+        'maintenance_summary',
+        {
+          description: 'Cross-company maintenance performance summary',
+          data_requirements: ['maintenance_tasks', 'maintenance_completions'],
+          default_aggregations: ['count', 'average'],
+          compliance_level: 'internal',
+          retention_days: 1095, // 3 years
+        },
+      ],
+      [
+        'audit_consolidation',
+        {
+          description: 'Consolidated audit report across multiple facilities',
+          data_requirements: ['audit_logs', 'compliance_documents'],
+          default_aggregations: ['count', 'sum'],
+          compliance_level: 'audit_ready',
+          retention_days: 3650, // 10 years
+        },
+      ],
+      [
+        'supplier_performance',
+        {
+          description: 'Supplier performance analysis across company network',
+          data_requirements: ['products', 'suppliers', 'quality_metrics'],
+          default_aggregations: ['average', 'count', 'percentile'],
+          compliance_level: 'internal',
+          retention_days: 1825, // 5 years
+        },
+      ],
     ]
 
     templates.forEach(([type, template]) => {
@@ -383,7 +431,9 @@ class CrossCompanyReportingManager {
         `generate_${reportType}_reports`
       )
       if (!hasPermission) {
-        throw new Error(`Insufficient permissions to generate ${reportType} report for company ${companyId}`)
+        throw new Error(
+          `Insufficient permissions to generate ${reportType} report for company ${companyId}`
+        )
       }
     }
   }
@@ -415,7 +465,7 @@ class CrossCompanyReportingManager {
           table_name: tableName,
           fields: this.getRequiredFields(tableName, reportType),
           date_range: dateRange,
-          anonymization_level: 'partial'
+          anonymization_level: 'partial',
         })
       }
     }
@@ -431,12 +481,20 @@ class CrossCompanyReportingManager {
     return []
   }
 
-  private getRequiredFields(tableName: string, reportType: ReportType): string[] {
+  private getRequiredFields(
+    tableName: string,
+    reportType: ReportType
+  ): string[] {
     // Return required fields based on table and report type
     const fieldMap: Record<string, string[]> = {
-      temperature_readings: ['temperature', 'reading_time', 'conservation_point_id', 'status'],
+      temperature_readings: [
+        'temperature',
+        'reading_time',
+        'conservation_point_id',
+        'status',
+      ],
       maintenance_tasks: ['title', 'status', 'due_date', 'completed_at'],
-      audit_logs: ['action', 'timestamp', 'user_id', 'details']
+      audit_logs: ['action', 'timestamp', 'user_id', 'details'],
     }
 
     return fieldMap[tableName] || []
@@ -449,11 +507,13 @@ class CrossCompanyReportingManager {
       company_name: `Company ${id}`,
       role: 'both' as const,
       contribution_percentage: 100 / companies.length,
-      data_classification: ['internal']
+      data_classification: ['internal'],
     }))
   }
 
-  private getDefaultAggregationRules(reportType: ReportType): AggregationRule[] {
+  private getDefaultAggregationRules(
+    reportType: ReportType
+  ): AggregationRule[] {
     const template = this.reportTemplates.get(reportType)
     if (!template) return []
 
@@ -461,27 +521,34 @@ class CrossCompanyReportingManager {
       field: 'value',
       method: method as any,
       group_by: ['company_id', 'date'],
-      weight_by_company: true
+      weight_by_company: true,
     }))
   }
 
-  private async determineSharingRestrictions(agreements: DataSharingAgreement[]): Promise<SharingRestriction[]> {
+  private async determineSharingRestrictions(
+    agreements: DataSharingAgreement[]
+  ): Promise<SharingRestriction[]> {
     // Determine sharing restrictions based on agreements
     return [
       {
         type: 'purpose_limitation',
         conditions: { allowed_purposes: ['compliance', 'audit', 'analysis'] },
-        description: 'Data can only be used for compliance and audit purposes'
-      }
+        description: 'Data can only be used for compliance and audit purposes',
+      },
     ]
   }
 
-  private async calculateDataQualityScore(dataSources: DataSource[]): Promise<number> {
+  private async calculateDataQualityScore(
+    dataSources: DataSource[]
+  ): Promise<number> {
     // Calculate data quality score based on completeness, accuracy, timeliness
     return 0.95 // Mock score
   }
 
-  private async processReportData(report: CrossCompanyReport, data: any[]): Promise<ReportSection[]> {
+  private async processReportData(
+    report: CrossCompanyReport,
+    data: any[]
+  ): Promise<ReportSection[]> {
     // Process and aggregate data into report sections
     return []
   }
@@ -494,7 +561,11 @@ class CrossCompanyReportingManager {
     return `Cross-Company ${type.replace('_', ' ')} Report (${companies.length} companies)`
   }
 
-  private generateReportDescription(type: ReportType, companies: string[], dateRange: any): string {
+  private generateReportDescription(
+    type: ReportType,
+    companies: string[],
+    dateRange: any
+  ): string {
     return `Aggregated ${type} analysis across ${companies.length} companies for period ${dateRange.start.toDateString()} to ${dateRange.end.toDateString()}`
   }
 
@@ -511,7 +582,9 @@ class CrossCompanyReportingManager {
       company_id: 'cross_company',
       timestamp: new Date(),
       details: details || {},
-      compliance_officer_notified: report.compliance_level === 'audit_ready' || report.compliance_level === 'court_admissible'
+      compliance_officer_notified:
+        report.compliance_level === 'audit_ready' ||
+        report.compliance_level === 'court_admissible',
     }
 
     const trails = this.auditTrails.get(report.id) || []
@@ -520,41 +593,71 @@ class CrossCompanyReportingManager {
   }
 
   // Export generation methods (simplified)
-  private async generatePDFExport(report: CrossCompanyReport, options: ReportExportOptions): Promise<Blob> {
+  private async generatePDFExport(
+    report: CrossCompanyReport,
+    options: ReportExportOptions
+  ): Promise<Blob> {
     // Generate PDF export
     return new Blob(['PDF content'], { type: 'application/pdf' })
   }
 
-  private async generateExcelExport(report: CrossCompanyReport, options: ReportExportOptions): Promise<Blob> {
+  private async generateExcelExport(
+    report: CrossCompanyReport,
+    options: ReportExportOptions
+  ): Promise<Blob> {
     // Generate Excel export
-    return new Blob(['Excel content'], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    return new Blob(['Excel content'], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
   }
 
-  private async generateCSVExport(report: CrossCompanyReport, options: ReportExportOptions): Promise<Blob> {
+  private async generateCSVExport(
+    report: CrossCompanyReport,
+    options: ReportExportOptions
+  ): Promise<Blob> {
     // Generate CSV export
     return new Blob(['CSV content'], { type: 'text/csv' })
   }
 
-  private async generateJSONExport(report: CrossCompanyReport, options: ReportExportOptions): Promise<Blob> {
+  private async generateJSONExport(
+    report: CrossCompanyReport,
+    options: ReportExportOptions
+  ): Promise<Blob> {
     // Generate JSON export
-    return new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' })
+    return new Blob([JSON.stringify(report, null, 2)], {
+      type: 'application/json',
+    })
   }
 
-  private async generateXMLExport(report: CrossCompanyReport, options: ReportExportOptions): Promise<Blob> {
+  private async generateXMLExport(
+    report: CrossCompanyReport,
+    options: ReportExportOptions
+  ): Promise<Blob> {
     // Generate XML export
     return new Blob(['<report></report>'], { type: 'application/xml' })
   }
 
   // Additional helper methods
-  private async validateExportPermissions(userId: string, report: CrossCompanyReport, options: ReportExportOptions): Promise<void> {
+  private async validateExportPermissions(
+    userId: string,
+    report: CrossCompanyReport,
+    options: ReportExportOptions
+  ): Promise<void> {
     // Validate export permissions
   }
 
-  private async validateSharingPermissions(userId: string, report: CrossCompanyReport, targetCompanyId: string): Promise<void> {
+  private async validateSharingPermissions(
+    userId: string,
+    report: CrossCompanyReport,
+    targetCompanyId: string
+  ): Promise<void> {
     // Validate sharing permissions
   }
 
-  private async validateSharingAgreements(report: CrossCompanyReport, targetCompanyId: string): Promise<void> {
+  private async validateSharingAgreements(
+    report: CrossCompanyReport,
+    targetCompanyId: string
+  ): Promise<void> {
     // Validate sharing agreements
   }
 
@@ -571,11 +674,13 @@ class CrossCompanyReportingManager {
     return template?.retention_days || 365
   }
 
-  private async generateReportInsights(report: CrossCompanyReport): Promise<string[]> {
+  private async generateReportInsights(
+    report: CrossCompanyReport
+  ): Promise<string[]> {
     return [
       'Cross-company temperature compliance improved by 15%',
       'Maintenance efficiency varies significantly between locations',
-      'Data quality is consistent across all participating companies'
+      'Data quality is consistent across all participating companies',
     ]
   }
 }

@@ -4,7 +4,10 @@
  */
 
 import { realtimeManager } from './RealtimeConnectionManager'
-import type { TemperatureReading, ConservationPoint } from '@/lib/supabase/client'
+import type {
+  TemperatureReading,
+  ConservationPoint,
+} from '@/lib/supabase/client'
 
 export interface TemperatureThresholds {
   fridge: { min: number; max: number }
@@ -68,7 +71,7 @@ class TemperatureMonitor {
     fridge: { min: 0, max: 4 },
     freezer: { min: -25, max: -18 },
     ambient: { min: 15, max: 25 },
-    blast: { min: -40, max: -30 }
+    blast: { min: -40, max: -30 },
   }
 
   constructor(config?: Partial<MonitoringConfig>) {
@@ -78,21 +81,24 @@ class TemperatureMonitor {
         immediate_alerts: true,
         email_notifications: true,
         sms_critical: true,
-        violation_tolerance: 300 // 5 minutes
+        violation_tolerance: 300, // 5 minutes
       },
       compliance_settings: {
         required_frequency: 60, // 1 hour
         warning_threshold: 85,
-        critical_threshold: 70
+        critical_threshold: 70,
       },
-      ...config
+      ...config,
     }
   }
 
   /**
    * Start monitoring temperature readings for a company
    */
-  public async startMonitoring(companyId: string, conservationPoints: ConservationPoint[]): Promise<void> {
+  public async startMonitoring(
+    companyId: string,
+    conservationPoints: ConservationPoint[]
+  ): Promise<void> {
     // Store conservation points for reference
     conservationPoints.forEach(point => {
       this.conservationPoints.set(point.id, point)
@@ -103,11 +109,13 @@ class TemperatureMonitor {
     this.subscriptionId = realtimeManager.subscribe({
       table: 'temperature_readings',
       event: 'INSERT',
-      callback: (payload) => this.handleNewReading(payload.new),
-      filter: `company_id=eq.${companyId}`
+      callback: payload => this.handleNewReading(payload.new),
+      filter: `company_id=eq.${companyId}`,
     })
 
-    console.log(`🌡️ Temperature monitoring started for ${conservationPoints.length} conservation points`)
+    console.log(
+      `🌡️ Temperature monitoring started for ${conservationPoints.length} conservation points`
+    )
   }
 
   /**
@@ -130,13 +138,19 @@ class TemperatureMonitor {
    * Handle new temperature reading
    */
   private handleNewReading(reading: TemperatureReading): void {
-    const conservationPoint = this.conservationPoints.get(reading.conservation_point_id)
+    const conservationPoint = this.conservationPoints.get(
+      reading.conservation_point_id
+    )
     if (!conservationPoint) return
 
     // Add to recent readings
-    const pointReadings = this.recentReadings.get(reading.conservation_point_id) || []
+    const pointReadings =
+      this.recentReadings.get(reading.conservation_point_id) || []
     pointReadings.unshift(reading)
-    this.recentReadings.set(reading.conservation_point_id, pointReadings.slice(0, 100)) // Keep last 100
+    this.recentReadings.set(
+      reading.conservation_point_id,
+      pointReadings.slice(0, 100)
+    ) // Keep last 100
 
     // Check for violations
     const violation = this.checkViolation(reading, conservationPoint)
@@ -154,7 +168,10 @@ class TemperatureMonitor {
   /**
    * Check if temperature reading violates thresholds
    */
-  private checkViolation(reading: TemperatureReading, point: ConservationPoint): TemperatureAlert | null {
+  private checkViolation(
+    reading: TemperatureReading,
+    point: ConservationPoint
+  ): TemperatureAlert | null {
     const thresholds = this.getThresholdsForPoint(point)
     if (!thresholds) return null
 
@@ -197,7 +214,7 @@ class TemperatureMonitor {
       threshold_max: max,
       deviation,
       timestamp: new Date(),
-      acknowledged: false
+      acknowledged: false,
     }
   }
 
@@ -206,12 +223,18 @@ class TemperatureMonitor {
    */
   private handleViolation(alert: TemperatureAlert): void {
     // Check if we already have an active alert for this point
-    const existingAlert = Array.from(this.activeAlerts.values())
-      .find(a => a.conservation_point_id === alert.conservation_point_id && !a.acknowledged)
+    const existingAlert = Array.from(this.activeAlerts.values()).find(
+      a =>
+        a.conservation_point_id === alert.conservation_point_id &&
+        !a.acknowledged
+    )
 
     if (existingAlert) {
       // Update existing alert if this one is more severe
-      if (this.getSeverityWeight(alert.severity) > this.getSeverityWeight(existingAlert.severity)) {
+      if (
+        this.getSeverityWeight(alert.severity) >
+        this.getSeverityWeight(existingAlert.severity)
+      ) {
         this.activeAlerts.set(existingAlert.id, alert)
         this.notifyAlertCallbacks(alert)
       }
@@ -225,7 +248,7 @@ class TemperatureMonitor {
       point: alert.conservation_point_name,
       temperature: alert.reading.temperature,
       violation: alert.violation_type,
-      severity: alert.severity
+      severity: alert.severity,
     })
   }
 
@@ -233,8 +256,11 @@ class TemperatureMonitor {
    * Clear alerts for a conservation point
    */
   private clearAlerts(conservationPointId: string): void {
-    const alertsToRemove = Array.from(this.activeAlerts.entries())
-      .filter(([_, alert]) => alert.conservation_point_id === conservationPointId && !alert.acknowledged)
+    const alertsToRemove = Array.from(this.activeAlerts.entries()).filter(
+      ([_, alert]) =>
+        alert.conservation_point_id === conservationPointId &&
+        !alert.acknowledged
+    )
 
     alertsToRemove.forEach(([alertId]) => {
       this.activeAlerts.delete(alertId)
@@ -244,12 +270,14 @@ class TemperatureMonitor {
   /**
    * Get thresholds for a conservation point
    */
-  private getThresholdsForPoint(point: ConservationPoint): { min: number; max: number } | null {
+  private getThresholdsForPoint(
+    point: ConservationPoint
+  ): { min: number; max: number } | null {
     // Use point-specific thresholds if available
     if (point.temperature_min !== null && point.temperature_max !== null) {
       return {
         min: point.temperature_min,
-        max: point.temperature_max
+        max: point.temperature_max,
       }
     }
 
@@ -265,20 +293,26 @@ class TemperatureMonitor {
     if (readings.length === 0) return
 
     // Calculate statistics for the last 24 hours
-    const last24h = readings.filter(r =>
-      new Date(r.reading_time).getTime() > Date.now() - 24 * 60 * 60 * 1000
+    const last24h = readings.filter(
+      r => new Date(r.reading_time).getTime() > Date.now() - 24 * 60 * 60 * 1000
     )
 
-    const violations = Array.from(this.activeAlerts.values())
-      .filter(a => a.conservation_point_id === conservationPointId)
+    const violations = Array.from(this.activeAlerts.values()).filter(
+      a => a.conservation_point_id === conservationPointId
+    )
 
     const stats: TemperatureStats = {
       total_readings: last24h.length,
       violations_today: violations.length,
-      compliance_rate: last24h.length > 0 ? ((last24h.length - violations.length) / last24h.length) * 100 : 100,
-      avg_temperature: last24h.reduce((sum, r) => sum + r.temperature, 0) / last24h.length || 0,
+      compliance_rate:
+        last24h.length > 0
+          ? ((last24h.length - violations.length) / last24h.length) * 100
+          : 100,
+      avg_temperature:
+        last24h.reduce((sum, r) => sum + r.temperature, 0) / last24h.length ||
+        0,
       trend: this.calculateTrend(last24h),
-      last_reading: readings[0]
+      last_reading: readings[0],
     }
 
     this.notifyStatsCallbacks(stats)
@@ -287,7 +321,9 @@ class TemperatureMonitor {
   /**
    * Calculate temperature trend
    */
-  private calculateTrend(readings: TemperatureReading[]): 'stable' | 'rising' | 'falling' {
+  private calculateTrend(
+    readings: TemperatureReading[]
+  ): 'stable' | 'rising' | 'falling' {
     if (readings.length < 3) return 'stable'
 
     const recent = readings.slice(0, 3).map(r => r.temperature)
@@ -307,7 +343,11 @@ class TemperatureMonitor {
   /**
    * Acknowledge an alert
    */
-  public acknowledgeAlert(alertId: string, acknowledgedBy: string, notes?: string): void {
+  public acknowledgeAlert(
+    alertId: string,
+    acknowledgedBy: string,
+    notes?: string
+  ): void {
     const alert = this.activeAlerts.get(alertId)
     if (alert) {
       alert.acknowledged = true
@@ -324,15 +364,18 @@ class TemperatureMonitor {
    * Get active alerts
    */
   public getActiveAlerts(): TemperatureAlert[] {
-    return Array.from(this.activeAlerts.values()).filter(alert => !alert.acknowledged)
+    return Array.from(this.activeAlerts.values()).filter(
+      alert => !alert.acknowledged
+    )
   }
 
   /**
    * Get alerts for a specific conservation point
    */
   public getAlertsForPoint(conservationPointId: string): TemperatureAlert[] {
-    return Array.from(this.activeAlerts.values())
-      .filter(alert => alert.conservation_point_id === conservationPointId)
+    return Array.from(this.activeAlerts.values()).filter(
+      alert => alert.conservation_point_id === conservationPointId
+    )
   }
 
   /**
@@ -354,14 +397,18 @@ class TemperatureMonitor {
     this.statsCallbacks.push(callback)
   }
 
-  public removeAlertCallback(callback: (alert: TemperatureAlert) => void): void {
+  public removeAlertCallback(
+    callback: (alert: TemperatureAlert) => void
+  ): void {
     const index = this.alertCallbacks.indexOf(callback)
     if (index > -1) {
       this.alertCallbacks.splice(index, 1)
     }
   }
 
-  public removeStatsCallback(callback: (stats: TemperatureStats) => void): void {
+  public removeStatsCallback(
+    callback: (stats: TemperatureStats) => void
+  ): void {
     const index = this.statsCallbacks.indexOf(callback)
     if (index > -1) {
       this.statsCallbacks.splice(index, 1)
@@ -373,10 +420,14 @@ class TemperatureMonitor {
    */
   private getSeverityWeight(severity: string): number {
     switch (severity) {
-      case 'emergency': return 3
-      case 'critical': return 2
-      case 'warning': return 1
-      default: return 0
+      case 'emergency':
+        return 3
+      case 'critical':
+        return 2
+      case 'warning':
+        return 1
+      default:
+        return 0
     }
   }
 
