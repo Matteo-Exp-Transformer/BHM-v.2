@@ -29,7 +29,11 @@
       "Bash(git worktree:*)",
       "Read(//c/Users/matte.MIO/Documents/GitHub/BHM-v.2/**)",
       "Bash(npx tsx:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(npm run test:e2e:screenshots:*)",
+      "Bash(set SCREENSHOT=true)",
+      "Bash(findstr:*)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []
