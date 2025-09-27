@@ -21,6 +21,7 @@ export const supabase = (() => {
         detectSessionInUrl: true,
         storage:
           typeof window !== 'undefined' ? window.localStorage : undefined,
+        storageKey: 'bhm-supabase-auth',
       },
     })
   }
