@@ -28,8 +28,8 @@ const NotFoundPage: React.FC = () => {
         </h2>
 
         <p className="text-gray-600 mb-8 leading-relaxed">
-          La pagina che stai cercando non esiste o è stata spostata.
-          Verifica l'URL o torna alla homepage per continuare.
+          La pagina che stai cercando non esiste o è stata spostata. Verifica
+          l'URL o torna alla homepage per continuare.
         </p>
 
         {/* Action Buttons */}
