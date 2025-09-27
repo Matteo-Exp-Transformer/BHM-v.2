@@ -30,6 +30,7 @@ const ConservationPage = lazy(
 )
 const InventoryPage = lazy(() => import('./features/inventory/InventoryPage'))
 const SettingsPage = lazy(() => import('./features/settings/SettingsPage'))
+const NotFoundPage = lazy(() => import('./components/pages/NotFoundPage'))
 
 function App() {
   return (
@@ -96,6 +97,8 @@ function App() {
                           </ProtectedRoute>
                         }
                       />
+                      {/* 404 Not Found - catch all route for authenticated users */}
+                      <Route path="*" element={<NotFoundPage />} />
                     </Routes>
                   </MainLayout>
                 </SignedIn>
