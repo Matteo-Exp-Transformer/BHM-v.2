@@ -16,7 +16,7 @@ class TestSuite {
       skipped: 0,
       errors: [],
       performance: {},
-      screenshots: []
+      screenshots: [],
     }
   }
 
@@ -77,7 +77,7 @@ class TestSuite {
 
     this.results.performance[pageName] = {
       ...metrics,
-      navigation: JSON.parse(performanceData)
+      navigation: JSON.parse(performanceData),
     }
 
     console.log(`📊 Performance data captured for ${pageName}`)
@@ -118,7 +118,7 @@ class TestSuite {
       console.log(`🌐 Navigating to ${PUPPETEER_CONFIG.app.baseUrl}`)
       await this.page.goto(PUPPETEER_CONFIG.app.baseUrl, {
         waitUntil: 'networkidle2',
-        timeout: PUPPETEER_CONFIG.app.timeout
+        timeout: PUPPETEER_CONFIG.app.timeout,
       })
 
       await this.measurePerformance('homepage')
@@ -131,12 +131,16 @@ class TestSuite {
       await this.assertElement('#root', 'React app root element exists')
 
       // Check if Clerk authentication loads
-      const hasAuth = await this.page.$('.cl-userButton-trigger') || await this.page.$('[data-testid="sign-in"]')
+      const hasAuth =
+        (await this.page.$('.cl-userButton-trigger')) ||
+        (await this.page.$('[data-testid="sign-in"]'))
       if (hasAuth) {
         console.log('✅ Authentication system loaded')
         this.results.passed++
       } else {
-        console.log('⚠️ Authentication system not detected (might be on login page)')
+        console.log(
+          '⚠️ Authentication system not detected (might be on login page)'
+        )
       }
 
       // Check for no JavaScript errors in console
@@ -148,7 +152,6 @@ class TestSuite {
         console.log(`❌ ${jsErrors.length} JavaScript errors detected`)
         this.results.failed++
       }
-
     } catch (error) {
       console.log(`❌ Page load failed: ${error.message}`)
       this.results.failed++
@@ -171,7 +174,10 @@ class TestSuite {
       }
 
       // Look for sign-in elements
-      await this.assertElement('button, a, [data-testid="sign-in"]', 'Sign-in button/link is present')
+      await this.assertElement(
+        'button, a, [data-testid="sign-in"]',
+        'Sign-in button/link is present'
+      )
 
       // Check Clerk authentication UI loads
       const clerkElements = await this.page.$$('[class*="cl-"]')
@@ -183,7 +189,6 @@ class TestSuite {
       }
 
       await this.takeScreenshot('02-authentication')
-
     } catch (error) {
       console.log(`❌ Authentication test failed: ${error.message}`)
       this.results.failed++
@@ -203,7 +208,7 @@ class TestSuite {
         { path: '/attivita', name: 'Activities' },
         { path: '/inventario', name: 'Inventory' },
         { path: '/gestione', name: 'Management' },
-        { path: '/impostazioni', name: 'Settings' }
+        { path: '/impostazioni', name: 'Settings' },
       ]
 
       for (const route of routes) {
@@ -211,7 +216,7 @@ class TestSuite {
           console.log(`🔗 Testing route: ${route.path}`)
           await this.page.goto(PUPPETEER_CONFIG.app.baseUrl + route.path, {
             waitUntil: 'networkidle2',
-            timeout: 10000
+            timeout: 10000,
           })
 
           await this.delay(1000)
@@ -227,14 +232,15 @@ class TestSuite {
           }
 
           await this.takeScreenshot(`03-navigation-${route.name.toLowerCase()}`)
-
         } catch (error) {
           console.log(`❌ ${route.name} route failed: ${error.message}`)
           this.results.failed++
-          this.results.errors.push({ test: `Navigation ${route.name}`, error: error.message })
+          this.results.errors.push({
+            test: `Navigation ${route.name}`,
+            error: error.message,
+          })
         }
       }
-
     } catch (error) {
       console.log(`❌ Navigation test failed: ${error.message}`)
       this.results.failed++
@@ -248,7 +254,9 @@ class TestSuite {
 
     try {
       // Go back to homepage
-      await this.page.goto(PUPPETEER_CONFIG.app.baseUrl, { waitUntil: 'networkidle2' })
+      await this.page.goto(PUPPETEER_CONFIG.app.baseUrl, {
+        waitUntil: 'networkidle2',
+      })
 
       // Test desktop layout
       await this.page.setViewport({ width: 1920, height: 1080 })
@@ -266,7 +274,9 @@ class TestSuite {
       await this.takeScreenshot('04-mobile-layout')
 
       // Check if elements adapt to mobile
-      const mobileElements = await this.page.$$('[class*="mobile"], [class*="responsive"], [class*="sm:"], [class*="md:"], [class*="lg:"]')
+      const mobileElements = await this.page.$$(
+        '[class*="mobile"], [class*="responsive"], [class*="sm:"], [class*="md:"], [class*="lg:"]'
+      )
       if (mobileElements.length > 0) {
         console.log('✅ Responsive design elements detected')
         this.results.passed++
@@ -275,8 +285,9 @@ class TestSuite {
       }
 
       // Reset to desktop
-      await this.page.setViewport(PUPPETEER_CONFIG.launchOptions.defaultViewport)
-
+      await this.page.setViewport(
+        PUPPETEER_CONFIG.launchOptions.defaultViewport
+      )
     } catch (error) {
       console.log(`❌ UI Components test failed: ${error.message}`)
       this.results.failed++
@@ -290,7 +301,9 @@ class TestSuite {
 
     try {
       // Go to homepage
-      await this.page.goto(PUPPETEER_CONFIG.app.baseUrl, { waitUntil: 'networkidle2' })
+      await this.page.goto(PUPPETEER_CONFIG.app.baseUrl, {
+        waitUntil: 'networkidle2',
+      })
 
       // Check for service worker
       const hasServiceWorker = await this.page.evaluate(() => {
@@ -347,7 +360,6 @@ class TestSuite {
       }
 
       await this.takeScreenshot('05-pwa-features')
-
     } catch (error) {
       console.log(`❌ PWA Features test failed: ${error.message}`)
       this.results.failed++
@@ -361,31 +373,48 @@ class TestSuite {
 
     try {
       // Fresh page load for accurate metrics
-      await this.page.goto(PUPPETEER_CONFIG.app.baseUrl, { waitUntil: 'networkidle2' })
+      await this.page.goto(PUPPETEER_CONFIG.app.baseUrl, {
+        waitUntil: 'networkidle2',
+      })
 
       // Get performance metrics
       const metrics = await this.page.metrics()
       const timing = await this.page.evaluate(() => {
         const navigation = performance.getEntriesByType('navigation')[0]
         return {
-          domContentLoaded: navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
+          domContentLoaded:
+            navigation.domContentLoadedEventEnd -
+            navigation.domContentLoadedEventStart,
           loadComplete: navigation.loadEventEnd - navigation.loadEventStart,
-          firstPaint: performance.getEntriesByType('paint').find(entry => entry.name === 'first-paint')?.startTime,
-          firstContentfulPaint: performance.getEntriesByType('paint').find(entry => entry.name === 'first-contentful-paint')?.startTime
+          firstPaint: performance
+            .getEntriesByType('paint')
+            .find(entry => entry.name === 'first-paint')?.startTime,
+          firstContentfulPaint: performance
+            .getEntriesByType('paint')
+            .find(entry => entry.name === 'first-contentful-paint')?.startTime,
         }
       })
 
       console.log('📊 Performance Metrics:')
-      console.log(`   DOM Content Loaded: ${timing.domContentLoaded?.toFixed(2)}ms`)
+      console.log(
+        `   DOM Content Loaded: ${timing.domContentLoaded?.toFixed(2)}ms`
+      )
       console.log(`   Load Complete: ${timing.loadComplete?.toFixed(2)}ms`)
       console.log(`   First Paint: ${timing.firstPaint?.toFixed(2)}ms`)
-      console.log(`   First Contentful Paint: ${timing.firstContentfulPaint?.toFixed(2)}ms`)
-      console.log(`   JS Heap Used: ${(metrics.JSHeapUsedSize / 1024 / 1024).toFixed(2)}MB`)
+      console.log(
+        `   First Contentful Paint: ${timing.firstContentfulPaint?.toFixed(2)}ms`
+      )
+      console.log(
+        `   JS Heap Used: ${(metrics.JSHeapUsedSize / 1024 / 1024).toFixed(2)}MB`
+      )
 
       // Performance thresholds
       const thresholds = PUPPETEER_CONFIG.performance
 
-      if (timing.firstContentfulPaint && timing.firstContentfulPaint < thresholds.firstContentfulPaint) {
+      if (
+        timing.firstContentfulPaint &&
+        timing.firstContentfulPaint < thresholds.firstContentfulPaint
+      ) {
         console.log('✅ First Contentful Paint meets performance threshold')
         this.results.passed++
       } else {
@@ -393,7 +422,6 @@ class TestSuite {
       }
 
       this.results.performance.final = { metrics, timing }
-
     } catch (error) {
       console.log(`❌ Performance test failed: ${error.message}`)
       this.results.failed++
@@ -407,16 +435,22 @@ class TestSuite {
 
     try {
       // Test 404 page
-      await this.page.goto(PUPPETEER_CONFIG.app.baseUrl + '/non-existent-page', {
-        waitUntil: 'networkidle2'
-      })
+      await this.page.goto(
+        PUPPETEER_CONFIG.app.baseUrl + '/non-existent-page',
+        {
+          waitUntil: 'networkidle2',
+        }
+      )
 
       await this.delay(1000)
 
       // Should either show 404 page or redirect to homepage
       const pageContent = await this.page.content()
-      if (pageContent.includes('404') || pageContent.includes('Not Found') ||
-          pageContent.includes('Page not found')) {
+      if (
+        pageContent.includes('404') ||
+        pageContent.includes('Not Found') ||
+        pageContent.includes('Page not found')
+      ) {
         console.log('✅ 404 error page is properly handled')
         this.results.passed++
       } else {
@@ -430,7 +464,9 @@ class TestSuite {
 
       for (const route of invalidRoutes) {
         try {
-          await this.page.goto(PUPPETEER_CONFIG.app.baseUrl + route, { waitUntil: 'networkidle2' })
+          await this.page.goto(PUPPETEER_CONFIG.app.baseUrl + route, {
+            waitUntil: 'networkidle2',
+          })
           await this.delay(500)
 
           // Should handle gracefully (no white screen of death)
@@ -440,10 +476,11 @@ class TestSuite {
             this.results.passed++
           }
         } catch (error) {
-          console.log(`⚠️ Route ${route} caused navigation error: ${error.message}`)
+          console.log(
+            `⚠️ Route ${route} caused navigation error: ${error.message}`
+          )
         }
       }
-
     } catch (error) {
       console.log(`❌ Error handling test failed: ${error.message}`)
       this.results.failed++
@@ -457,7 +494,9 @@ class TestSuite {
 
     try {
       // Go back to homepage and check console for Supabase messages
-      await this.page.goto(PUPPETEER_CONFIG.app.baseUrl, { waitUntil: 'networkidle2' })
+      await this.page.goto(PUPPETEER_CONFIG.app.baseUrl, {
+        waitUntil: 'networkidle2',
+      })
 
       await this.delay(2000) // Wait for connection test to run
 
@@ -478,11 +517,13 @@ class TestSuite {
 
       console.log('✅ Database connection test completed')
       this.results.passed++
-
     } catch (error) {
       console.log(`❌ Supabase connection test failed: ${error.message}`)
       this.results.failed++
-      this.results.errors.push({ test: 'Supabase Connection', error: error.message })
+      this.results.errors.push({
+        test: 'Supabase Connection',
+        error: error.message,
+      })
     }
   }
 
@@ -493,9 +534,14 @@ class TestSuite {
     console.log(`✅ Passed: ${this.results.passed}`)
     console.log(`❌ Failed: ${this.results.failed}`)
     console.log(`⏭️ Skipped: ${this.results.skipped}`)
-    console.log(`📈 Total: ${this.results.passed + this.results.failed + this.results.skipped}`)
+    console.log(
+      `📈 Total: ${this.results.passed + this.results.failed + this.results.skipped}`
+    )
 
-    const successRate = ((this.results.passed / (this.results.passed + this.results.failed)) * 100).toFixed(1)
+    const successRate = (
+      (this.results.passed / (this.results.passed + this.results.failed)) *
+      100
+    ).toFixed(1)
     console.log(`🎯 Success Rate: ${successRate}%`)
 
     if (this.results.errors.length > 0) {
@@ -506,7 +552,9 @@ class TestSuite {
     }
 
     if (this.results.screenshots.length > 0) {
-      console.log(`\n📸 Screenshots captured: ${this.results.screenshots.length}`)
+      console.log(
+        `\n📸 Screenshots captured: ${this.results.screenshots.length}`
+      )
       this.results.screenshots.forEach(screenshot => {
         console.log(`   ${screenshot}`)
       })
@@ -518,9 +566,9 @@ class TestSuite {
       environment: {
         baseUrl: PUPPETEER_CONFIG.app.baseUrl,
         browser: 'chromium',
-        viewport: PUPPETEER_CONFIG.launchOptions.defaultViewport
+        viewport: PUPPETEER_CONFIG.launchOptions.defaultViewport,
       },
-      results: this.results
+      results: this.results,
     }
 
     return report
@@ -553,7 +601,6 @@ class TestSuite {
       const report = await this.generateReport()
 
       return report
-
     } catch (error) {
       console.error('🔥 Test suite failed:', error)
       this.results.errors.push({ test: 'Test Suite', error: error.message })
@@ -570,14 +617,17 @@ export default TestSuite
 // Run if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   const testSuite = new TestSuite()
-  testSuite.run().then(report => {
-    console.log('\n🎉 Test suite completed!')
-    console.log('📋 Full report available in return value')
+  testSuite
+    .run()
+    .then(report => {
+      console.log('\n🎉 Test suite completed!')
+      console.log('📋 Full report available in return value')
 
-    // Exit with appropriate code
-    process.exit(report.failed > 0 ? 1 : 0)
-  }).catch(error => {
-    console.error('💥 Test suite crashed:', error)
-    process.exit(1)
-  })
+      // Exit with appropriate code
+      process.exit(report.failed > 0 ? 1 : 0)
+    })
+    .catch(error => {
+      console.error('💥 Test suite crashed:', error)
+      process.exit(1)
+    })
 }

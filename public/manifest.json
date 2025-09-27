@@ -71,7 +71,9 @@
     {
       "action": "/import",
       "accept": {
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+          ".xlsx"
+        ],
         "application/pdf": [".pdf"],
         "image/*": [".jpg", ".jpeg", ".png", ".webp"]
       }
