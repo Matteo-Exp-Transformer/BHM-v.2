@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home,
   Snowflake,
@@ -10,6 +10,8 @@ import {
 } from 'lucide-react'
 import { SyncStatusBar } from '@/components/offline/SyncStatusBar'
 import { useAuth, UserRole } from '@/hooks/useAuth'
+import HeaderButtons from '@/components/HeaderButtons'
+import { resetApp } from '@/utils/onboardingHelpers'
 
 interface MainLayoutProps {
   children: ReactNode
@@ -17,7 +19,13 @@ interface MainLayoutProps {
 
 const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation()
+  const navigate = useNavigate()
   const { hasRole, isLoading } = useAuth()
+
+  // Funzione per aprire l'onboarding
+  const handleOpenOnboarding = () => {
+    navigate('/onboarding')
+  }
 
   const allTabs = [
     { id: 'home', label: 'Home', icon: Home, path: '/', requiresAuth: true },
@@ -74,9 +82,23 @@ const MainLayout = ({ children }: MainLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Header with Control Buttons */}
+      <header className="bg-white border-b border-gray-200 px-4 py-3 safe-area-top">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <h1 className="text-lg font-semibold text-gray-900">HACCP Manager</h1>
+          </div>
+          <HeaderButtons
+            onResetApp={resetApp}
+            onOpenOnboarding={handleOpenOnboarding}
+            showResetApp={process.env.NODE_ENV === 'development'}
+          />
+        </div>
+      </header>
+
       {/* Main Content */}
       <main
-        className="pb-20 safe-area-top"
+        className="pb-20 pt-0"
         role="main"
         aria-label="Main content"
       >

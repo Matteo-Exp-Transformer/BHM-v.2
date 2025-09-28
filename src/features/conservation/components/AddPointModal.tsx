@@ -3,9 +3,25 @@ import {
   ConservationPoint,
   ConservationPointType,
   TEMPERATURE_RANGES,
+  MaintenanceType,
+  MaintenanceFrequency,
+  MAINTENANCE_TASK_TYPES,
 } from '@/types/conservation'
-import { X, Thermometer, Info } from 'lucide-react'
+import { X, Thermometer, Info, Wrench, Plus, Trash2 } from 'lucide-react'
 import { useDepartments } from '@/features/management/hooks/useDepartments'
+import { useStaff } from '@/features/management/hooks/useStaff'
+
+interface MaintenanceTaskData {
+  id?: string
+  title: string
+  type: MaintenanceType
+  frequency: MaintenanceFrequency
+  estimated_duration: number
+  assigned_to?: string
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  next_due: Date
+  instructions?: string[]
+}
 
 interface AddPointModalProps {
   isOpen: boolean
@@ -19,7 +35,8 @@ interface AddPointModalProps {
       | 'updated_at'
       | 'status'
       | 'last_temperature_reading'
-    >
+    >,
+    maintenanceTasks: MaintenanceTaskData[]
   ) => void
   point?: ConservationPoint | null
   isLoading?: boolean
@@ -46,6 +63,195 @@ const PRODUCT_CATEGORIES = [
   'Altri',
 ]
 
+interface MaintenanceTaskFormProps {
+  task: MaintenanceTaskData
+  index: number
+  staff: any[]
+  onUpdate: (index: number, task: MaintenanceTaskData) => void
+  onRemove: (index: number) => void
+}
+
+function MaintenanceTaskForm({ task, index, staff, onUpdate, onRemove }: MaintenanceTaskFormProps) {
+  const [expanded, setExpanded] = useState(true)
+
+  const updateTask = (field: keyof MaintenanceTaskData, value: any) => {
+    onUpdate(index, { ...task, [field]: value })
+  }
+
+  const getTaskTypeInfo = () => {
+    return MAINTENANCE_TASK_TYPES[task.type] || {
+      label: 'Altro',
+      icon: 'tool',
+      color: 'gray',
+      defaultDuration: 60,
+      defaultChecklist: [],
+    }
+  }
+
+  const typeInfo = getTaskTypeInfo()
+
+  return (
+    <div className="border border-gray-200 rounded-lg">
+      <div className="flex items-center justify-between p-4 bg-gray-50">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            {expanded ? '▼' : '▶'}
+          </button>
+          <div>
+            <h4 className="font-medium text-gray-900">{task.title}</h4>
+            <p className="text-sm text-gray-500">
+              {typeInfo.label} • {task.frequency} • {task.estimated_duration}min
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => onRemove(index)}
+          className="text-red-500 hover:text-red-700"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+
+      {expanded && (
+        <div className="p-4 space-y-4">
+          {/* Basic Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Titolo *
+              </label>
+              <input
+                type="text"
+                value={task.title}
+                onChange={e => updateTask('title', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Nome della manutenzione"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tipo *
+              </label>
+              <select
+                value={task.type}
+                onChange={e => updateTask('type', e.target.value as MaintenanceType)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {Object.entries(MAINTENANCE_TASK_TYPES).map(([key, info]) => (
+                  <option key={key} value={key}>
+                    {info.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Frequency and Timing */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Frequenza *
+              </label>
+              <select
+                value={task.frequency}
+                onChange={e => updateTask('frequency', e.target.value as MaintenanceFrequency)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="daily">Giornaliera</option>
+                <option value="weekly">Settimanale</option>
+                <option value="monthly">Mensile</option>
+                <option value="quarterly">Trimestrale</option>
+                <option value="annually">Annuale</option>
+                <option value="custom">Personalizzata</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Durata (min) *
+              </label>
+              <input
+                type="number"
+                min="5"
+                step="5"
+                value={task.estimated_duration}
+                onChange={e => updateTask('estimated_duration', parseInt(e.target.value) || 30)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Priorità *
+              </label>
+              <select
+                value={task.priority}
+                onChange={e => updateTask('priority', e.target.value as 'low' | 'medium' | 'high' | 'critical')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="low">Bassa</option>
+                <option value="medium">Media</option>
+                <option value="high">Alta</option>
+                <option value="critical">Critica</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Assignment and Due Date */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Assegnato a
+              </label>
+              <select
+                value={task.assigned_to || ''}
+                onChange={e => updateTask('assigned_to', e.target.value || undefined)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Assegnazione automatica</option>
+                {staff.map(person => (
+                  <option key={person.id} value={person.id}>
+                    {person.name} ({person.role})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Prima scadenza *
+              </label>
+              <input
+                type="datetime-local"
+                value={task.next_due.toISOString().slice(0, 16)}
+                onChange={e => updateTask('next_due', new Date(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => updateTask('instructions', typeInfo.defaultChecklist)}
+              className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+            >
+              Carica checklist standard
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function AddPointModal({
   isOpen,
   onClose,
@@ -54,6 +260,7 @@ export function AddPointModal({
   isLoading,
 }: AddPointModalProps) {
   const { departments } = useDepartments()
+  const { staff } = useStaff()
   const [formData, setFormData] = useState({
     name: '',
     department_id: '',
@@ -62,6 +269,9 @@ export function AddPointModal({
     product_categories: [] as string[],
     maintenance_due: '',
   })
+
+  const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTaskData[]>([])
+  const [showMaintenanceForm, setShowMaintenanceForm] = useState(false)
 
   const [predictedType, setPredictedType] =
     useState<ConservationPointType>('fridge')
@@ -79,6 +289,17 @@ export function AddPointModal({
           ? new Date(point.maintenance_due).toISOString().split('T')[0]
           : '',
       })
+      setMaintenanceTasks(point.maintenance_tasks?.map(task => ({
+        id: task.id,
+        title: task.title,
+        type: task.type,
+        frequency: task.frequency,
+        estimated_duration: task.estimated_duration,
+        assigned_to: task.assigned_to,
+        priority: task.priority,
+        next_due: new Date(task.next_due),
+        instructions: task.checklist,
+      })) || [])
     } else {
       setFormData({
         name: '',
@@ -88,6 +309,7 @@ export function AddPointModal({
         product_categories: [],
         maintenance_due: '',
       })
+      setMaintenanceTasks([])
     }
   }, [point, isOpen])
 
@@ -123,7 +345,31 @@ export function AddPointModal({
       maintenance_due: formData.maintenance_due
         ? new Date(formData.maintenance_due)
         : undefined,
-    })
+    }, maintenanceTasks)
+  }
+
+  const addMaintenanceTask = () => {
+    const newTask: MaintenanceTaskData = {
+      title: 'Nuova Manutenzione',
+      type: 'general_inspection',
+      frequency: 'weekly',
+      estimated_duration: 30,
+      priority: 'medium',
+      next_due: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
+      instructions: [],
+    }
+    setMaintenanceTasks([...maintenanceTasks, newTask])
+    setShowMaintenanceForm(true)
+  }
+
+  const updateMaintenanceTask = (index: number, updatedTask: MaintenanceTaskData) => {
+    const updated = [...maintenanceTasks]
+    updated[index] = updatedTask
+    setMaintenanceTasks(updated)
+  }
+
+  const removeMaintenanceTask = (index: number) => {
+    setMaintenanceTasks(maintenanceTasks.filter((_, i) => i !== index))
   }
 
   const handleCategoryToggle = (category: string) => {
@@ -342,22 +588,51 @@ export function AddPointModal({
             )}
           </div>
 
-          {/* Maintenance Due */}
+          {/* Maintenance Tasks */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Prossima manutenzione programmata
-            </label>
-            <input
-              type="date"
-              value={formData.maintenance_due}
-              onChange={e =>
-                setFormData(prev => ({
-                  ...prev,
-                  maintenance_due: e.target.value,
-                }))
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Manutenzioni Programmate
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Configura le manutenzioni per questo punto di conservazione
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addMaintenanceTask}
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                <Plus className="w-4 h-4" />
+                Aggiungi
+              </button>
+            </div>
+
+            {maintenanceTasks.length === 0 ? (
+              <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                <Wrench className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">
+                  Nessuna manutenzione configurata
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Aggiungi manutenzioni per automatizzare il controllo
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {maintenanceTasks.map((task, index) => (
+                  <MaintenanceTaskForm
+                    key={index}
+                    task={task}
+                    index={index}
+                    staff={staff}
+                    onUpdate={updateMaintenanceTask}
+                    onRemove={removeMaintenanceTask}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Actions */}

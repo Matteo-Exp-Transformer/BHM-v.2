@@ -1,34 +1,51 @@
 import { UserButton, useUser } from '@clerk/clerk-react'
 import { CheckCircle, AlertTriangle, Clock, TrendingUp } from 'lucide-react'
+import { useConservationPoints } from '@/features/conservation/hooks/useConservationPoints'
+import { useProducts } from '@/features/inventory/hooks/useProducts'
+import { useCalendarEvents } from '@/features/calendar/hooks/useCalendarEvents'
 
 const HomePage = () => {
   const { user } = useUser()
 
+  // Load real data from hooks
+  const { stats: conservationStats, isLoading: isLoadingConservation } = useConservationPoints()
+  const { stats: inventoryStats, isLoading: isLoadingInventory } = useProducts()
+  const { getEventStats, isLoading: isLoadingEvents } = useCalendarEvents()
+
+  const eventStats = getEventStats()
+  const isLoading = isLoadingConservation || isLoadingInventory || isLoadingEvents
+
+  // Calculate compliance score based on real data
+  const complianceScore = isLoading ? 0 : Math.round(
+    ((conservationStats?.normal || 0) + (inventoryStats?.active_products || 0)) /
+    Math.max((conservationStats?.total || 1) + (inventoryStats?.total_products || 1), 1) * 100
+  )
+
   const stats = [
     {
       label: 'Compliance Score',
-      value: '95%',
+      value: isLoading ? '--' : `${complianceScore}%`,
       icon: TrendingUp,
-      color: 'text-success-600',
-      bgColor: 'bg-success-50',
+      color: complianceScore >= 90 ? 'text-success-600' : complianceScore >= 70 ? 'text-warning-600' : 'text-error-600',
+      bgColor: complianceScore >= 90 ? 'bg-success-50' : complianceScore >= 70 ? 'bg-warning-50' : 'bg-error-50',
     },
     {
-      label: 'Completate Oggi',
-      value: '12/15',
+      label: 'Punti Conservazione',
+      value: isLoading ? '--' : `${conservationStats?.normal || 0}/${conservationStats?.total || 0}`,
       icon: CheckCircle,
       color: 'text-success-600',
       bgColor: 'bg-success-50',
     },
     {
       label: 'In Scadenza',
-      value: '3',
+      value: isLoading ? '--' : `${inventoryStats?.expiring_soon || 0}`,
       icon: Clock,
       color: 'text-warning-600',
       bgColor: 'bg-warning-50',
     },
     {
-      label: 'Critiche',
-      value: '1',
+      label: 'Attività Scadute',
+      value: isLoading ? '--' : `${eventStats?.overdue || 0}`,
       icon: AlertTriangle,
       color: 'text-error-600',
       bgColor: 'bg-error-50',
