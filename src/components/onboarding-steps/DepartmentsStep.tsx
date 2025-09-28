@@ -14,30 +14,40 @@ interface DepartmentsStepProps {
   onValidChange: (isValid: boolean) => void
 }
 
-const DepartmentsStep = ({ data, onUpdate, onValidChange }: DepartmentsStepProps) => {
+const DepartmentsStep = ({
+  data,
+  onUpdate,
+  onValidChange,
+}: DepartmentsStepProps) => {
   const [departments, setDepartments] = useState<Department[]>(data || [])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    is_active: true
+    is_active: true,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    validateForm()
     onUpdate(departments)
-  }, [departments, onUpdate])
 
-  const validateForm = () => {
-    const isValid = departments.length > 0 && departments.every(dept =>
-      dept.name.trim().length >= 2 &&
-      !departments.find(other => other.id !== dept.id && other.name.toLowerCase() === dept.name.toLowerCase())
-    )
-    onValidChange(isValid)
-  }
+    const hasValidDepartments =
+      departments.length > 0 &&
+      departments.every(
+        dept =>
+          dept.name.trim().length >= 2 &&
+          !departments.find(
+            other =>
+              other.id !== dept.id &&
+              other.name.toLowerCase() === dept.name.toLowerCase()
+          )
+      )
 
-  const generateId = () => `dept_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    onValidChange(hasValidDepartments)
+  }, [departments, onUpdate, onValidChange])
+
+  const generateId = () =>
+    `dept_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
   const addDepartment = () => {
     const newErrors: Record<string, string> = {}
@@ -46,7 +56,11 @@ const DepartmentsStep = ({ data, onUpdate, onValidChange }: DepartmentsStepProps
       newErrors.name = 'Il nome del reparto è obbligatorio'
     } else if (formData.name.trim().length < 2) {
       newErrors.name = 'Il nome deve essere di almeno 2 caratteri'
-    } else if (departments.find(d => d.name.toLowerCase() === formData.name.toLowerCase())) {
+    } else if (
+      departments.find(
+        d => d.name.toLowerCase() === formData.name.toLowerCase()
+      )
+    ) {
       newErrors.name = 'Un reparto con questo nome esiste già'
     }
 
@@ -57,7 +71,7 @@ const DepartmentsStep = ({ data, onUpdate, onValidChange }: DepartmentsStepProps
         id: generateId(),
         name: formData.name.trim(),
         description: formData.description.trim(),
-        is_active: formData.is_active
+        is_active: formData.is_active,
       }
 
       setDepartments([...departments, newDepartment])
@@ -72,18 +86,31 @@ const DepartmentsStep = ({ data, onUpdate, onValidChange }: DepartmentsStepProps
       newErrors.name = 'Il nome del reparto è obbligatorio'
     } else if (formData.name.trim().length < 2) {
       newErrors.name = 'Il nome deve essere di almeno 2 caratteri'
-    } else if (departments.find(d => d.id !== editingId && d.name.toLowerCase() === formData.name.toLowerCase())) {
+    } else if (
+      departments.find(
+        d =>
+          d.id !== editingId &&
+          d.name.toLowerCase() === formData.name.toLowerCase()
+      )
+    ) {
       newErrors.name = 'Un reparto con questo nome esiste già'
     }
 
     setErrors(newErrors)
 
     if (Object.keys(newErrors).length === 0) {
-      setDepartments(departments.map(dept =>
-        dept.id === editingId
-          ? { ...dept, name: formData.name.trim(), description: formData.description.trim(), is_active: formData.is_active }
-          : dept
-      ))
+      setDepartments(
+        departments.map(dept =>
+          dept.id === editingId
+            ? {
+                ...dept,
+                name: formData.name.trim(),
+                description: formData.description.trim(),
+                is_active: formData.is_active,
+              }
+            : dept
+        )
+      )
       setEditingId(null)
       setFormData({ name: '', description: '', is_active: true })
     }
@@ -98,7 +125,7 @@ const DepartmentsStep = ({ data, onUpdate, onValidChange }: DepartmentsStepProps
     setFormData({
       name: department.name,
       description: department.description,
-      is_active: department.is_active
+      is_active: department.is_active,
     })
     setErrors({})
   }
@@ -115,38 +142,38 @@ const DepartmentsStep = ({ data, onUpdate, onValidChange }: DepartmentsStepProps
         id: generateId(),
         name: 'Cucina',
         description: 'Area di preparazione dei cibi',
-        is_active: true
+        is_active: true,
       },
       {
         id: generateId(),
         name: 'Bancone',
         description: 'Area servizio al bancone',
-        is_active: true
+        is_active: true,
       },
       {
         id: generateId(),
         name: 'Sala',
         description: 'Area servizio ai tavoli',
-        is_active: true
+        is_active: true,
       },
       {
         id: generateId(),
         name: 'Magazzino',
         description: 'Deposito merci e prodotti',
-        is_active: true
+        is_active: true,
       },
       {
         id: generateId(),
         name: 'Dispensa',
         description: 'Conservazione prodotti secchi',
-        is_active: true
+        is_active: true,
       },
       {
         id: generateId(),
         name: 'Lavaggio',
         description: 'Area lavaggio stoviglie',
-        is_active: true
-      }
+        is_active: true,
+      },
     ]
     setDepartments(sampleDepartments)
   }
@@ -162,7 +189,8 @@ const DepartmentsStep = ({ data, onUpdate, onValidChange }: DepartmentsStepProps
           Configurazione Reparti
         </h2>
         <p className="text-gray-600">
-          Definisci i reparti della tua azienda per organizzare staff, attrezzature e controlli
+          Definisci i reparti della tua azienda per organizzare staff,
+          attrezzature e controlli
         </p>
       </div>
 
@@ -191,7 +219,7 @@ const DepartmentsStep = ({ data, onUpdate, onValidChange }: DepartmentsStepProps
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={e => setFormData({ ...formData, name: e.target.value })}
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.name ? 'border-red-300' : 'border-gray-300'
               }`}
@@ -209,7 +237,9 @@ const DepartmentsStep = ({ data, onUpdate, onValidChange }: DepartmentsStepProps
             <input
               type="text"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={e =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Descrizione del reparto..."
             />
@@ -221,7 +251,9 @@ const DepartmentsStep = ({ data, onUpdate, onValidChange }: DepartmentsStepProps
             <input
               type="checkbox"
               checked={formData.is_active}
-              onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+              onChange={e =>
+                setFormData({ ...formData, is_active: e.target.checked })
+              }
               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span className="ml-2 text-sm text-gray-700">Reparto attivo</span>
@@ -274,25 +306,33 @@ const DepartmentsStep = ({ data, onUpdate, onValidChange }: DepartmentsStepProps
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {departments.map((department) => (
+            {departments.map(department => (
               <div
                 key={department.id}
                 className={`border rounded-lg p-4 ${
-                  department.is_active ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
+                  department.is_active
+                    ? 'border-green-200 bg-green-50'
+                    : 'border-gray-200 bg-gray-50'
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{department.name}</h4>
+                    <h4 className="font-medium text-gray-900">
+                      {department.name}
+                    </h4>
                     {department.description && (
-                      <p className="text-sm text-gray-600 mt-1">{department.description}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {department.description}
+                      </p>
                     )}
                     <div className="flex items-center mt-2">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        department.is_active
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          department.is_active
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
                         {department.is_active ? 'Attivo' : 'Inattivo'}
                       </span>
                     </div>
@@ -326,9 +366,10 @@ const DepartmentsStep = ({ data, onUpdate, onValidChange }: DepartmentsStepProps
           ℹ️ Organizzazione HACCP
         </h3>
         <p className="text-sm text-blue-700">
-          I reparti sono utilizzati per organizzare il personale, assegnare responsabilità
-          e configurare punti di controllo specifici. Ogni reparto può avere le proprie
-          procedure HACCP e controlli di temperatura.
+          I reparti sono utilizzati per organizzare il personale, assegnare
+          responsabilità e configurare punti di controllo specifici. Ogni
+          reparto può avere le proprie procedure HACCP e controlli di
+          temperatura.
         </p>
       </div>
     </div>

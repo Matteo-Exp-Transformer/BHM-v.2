@@ -8,30 +8,52 @@ const HomePage = () => {
   const { user } = useUser()
 
   // Load real data from hooks
-  const { stats: conservationStats, isLoading: isLoadingConservation } = useConservationPoints()
+  const { stats: conservationStats, isLoading: isLoadingConservation } =
+    useConservationPoints()
   const { stats: inventoryStats, isLoading: isLoadingInventory } = useProducts()
   const { getEventStats, isLoading: isLoadingEvents } = useCalendarEvents()
 
   const eventStats = getEventStats()
-  const isLoading = isLoadingConservation || isLoadingInventory || isLoadingEvents
+  const isLoading =
+    isLoadingConservation || isLoadingInventory || isLoadingEvents
 
   // Calculate compliance score based on real data
-  const complianceScore = isLoading ? 0 : Math.round(
-    ((conservationStats?.normal || 0) + (inventoryStats?.active_products || 0)) /
-    Math.max((conservationStats?.total || 1) + (inventoryStats?.total_products || 1), 1) * 100
-  )
+  const complianceScore = isLoading
+    ? 0
+    : Math.round(
+        (((conservationStats?.normal || 0) +
+          (inventoryStats?.active_products || 0)) /
+          Math.max(
+            (conservationStats?.total || 1) +
+              (inventoryStats?.total_products || 1),
+            1
+          )) *
+          100
+      )
 
   const stats = [
     {
       label: 'Compliance Score',
       value: isLoading ? '--' : `${complianceScore}%`,
       icon: TrendingUp,
-      color: complianceScore >= 90 ? 'text-success-600' : complianceScore >= 70 ? 'text-warning-600' : 'text-error-600',
-      bgColor: complianceScore >= 90 ? 'bg-success-50' : complianceScore >= 70 ? 'bg-warning-50' : 'bg-error-50',
+      color:
+        complianceScore >= 90
+          ? 'text-success-600'
+          : complianceScore >= 70
+            ? 'text-warning-600'
+            : 'text-error-600',
+      bgColor:
+        complianceScore >= 90
+          ? 'bg-success-50'
+          : complianceScore >= 70
+            ? 'bg-warning-50'
+            : 'bg-error-50',
     },
     {
       label: 'Punti Conservazione',
-      value: isLoading ? '--' : `${conservationStats?.normal || 0}/${conservationStats?.total || 0}`,
+      value: isLoading
+        ? '--'
+        : `${conservationStats?.normal || 0}/${conservationStats?.total || 0}`,
       icon: CheckCircle,
       color: 'text-success-600',
       bgColor: 'bg-success-50',

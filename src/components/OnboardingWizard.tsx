@@ -19,7 +19,11 @@ import StepNavigator from './StepNavigator'
 import DevButtons from './DevButtons'
 
 // Onboarding Helpers
-import { prefillOnboarding, resetOnboarding, completeOnboarding as completeOnboardingHelper } from '@/utils/onboardingHelpers'
+import {
+  prefillOnboarding,
+  resetOnboarding,
+  completeOnboarding as completeOnboardingHelper,
+} from '@/utils/onboardingHelpers'
 
 interface OnboardingData {
   business?: any
@@ -90,7 +94,7 @@ const OnboardingWizard = () => {
   const updateFormData = (stepKey: keyof OnboardingData, data: any) => {
     setFormData(prev => ({
       ...prev,
-      [stepKey]: data
+      [stepKey]: data,
     }))
   }
 
@@ -127,7 +131,7 @@ const OnboardingWizard = () => {
         .from('companies')
         .update({
           onboarding_completed: true,
-          onboarding_completed_at: new Date().toISOString()
+          onboarding_completed_at: new Date().toISOString(),
         })
         .eq('id', companyId)
 
@@ -142,7 +146,7 @@ const OnboardingWizard = () => {
       navigate('/')
     } catch (error) {
       console.error('Error completing onboarding:', error)
-      toast.error('Errore durante il completamento dell\'onboarding')
+      toast.error("Errore durante il completamento dell'onboarding")
     } finally {
       setIsCompleting(false)
       setIsLoading(false)
@@ -158,7 +162,7 @@ const OnboardingWizard = () => {
         .from('companies')
         .update({
           ...formData.business,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', companyId)
 
@@ -171,12 +175,10 @@ const OnboardingWizard = () => {
         ...dept,
         company_id: companyId,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       }))
 
-      const { error } = await supabase
-        .from('departments')
-        .insert(departments)
+      const { error } = await supabase.from('departments').insert(departments)
 
       if (error) throw error
     }
@@ -187,12 +189,10 @@ const OnboardingWizard = () => {
         ...person,
         company_id: companyId,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       }))
 
-      const { error } = await supabase
-        .from('staff')
-        .insert(staff)
+      const { error } = await supabase.from('staff').insert(staff)
 
       if (error) throw error
     }
@@ -203,7 +203,7 @@ const OnboardingWizard = () => {
         ...point,
         company_id: companyId,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       }))
 
       const { error } = await supabase
@@ -219,12 +219,10 @@ const OnboardingWizard = () => {
         ...task,
         company_id: companyId,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       }))
 
-      const { error } = await supabase
-        .from('maintenance_tasks')
-        .insert(tasks)
+      const { error } = await supabase.from('maintenance_tasks').insert(tasks)
 
       if (error) throw error
     }
@@ -235,12 +233,10 @@ const OnboardingWizard = () => {
         ...product,
         company_id: companyId,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       }))
 
-      const { error } = await supabase
-        .from('products')
-        .insert(products)
+      const { error } = await supabase.from('products').insert(products)
 
       if (error) throw error
     }
@@ -252,7 +248,7 @@ const OnboardingWizard = () => {
         return (
           <BusinessInfoStep
             data={formData.business}
-            onUpdate={(data) => updateFormData('business', data)}
+            onUpdate={data => updateFormData('business', data)}
             onValidChange={setIsValid}
           />
         )
@@ -260,7 +256,7 @@ const OnboardingWizard = () => {
         return (
           <DepartmentsStep
             data={formData.departments}
-            onUpdate={(data) => updateFormData('departments', data)}
+            onUpdate={data => updateFormData('departments', data)}
             onValidChange={setIsValid}
           />
         )
@@ -269,7 +265,7 @@ const OnboardingWizard = () => {
           <StaffStep
             data={formData.staff}
             departments={formData.departments || []}
-            onUpdate={(data) => updateFormData('staff', data)}
+            onUpdate={data => updateFormData('staff', data)}
             onValidChange={setIsValid}
           />
         )
@@ -278,7 +274,7 @@ const OnboardingWizard = () => {
           <ConservationStep
             data={formData.conservation}
             departments={formData.departments || []}
-            onUpdate={(data) => updateFormData('conservation', data)}
+            onUpdate={data => updateFormData('conservation', data)}
             onValidChange={setIsValid}
           />
         )
@@ -288,7 +284,7 @@ const OnboardingWizard = () => {
             data={formData.tasks}
             departments={formData.departments || []}
             conservationPoints={formData.conservation || []}
-            onUpdate={(data) => updateFormData('tasks', data)}
+            onUpdate={data => updateFormData('tasks', data)}
             onValidChange={setIsValid}
           />
         )
@@ -298,7 +294,7 @@ const OnboardingWizard = () => {
             data={formData.inventory as any}
             departments={formData.departments || []}
             conservationPoints={formData.conservation || []}
-            onUpdate={(data) => updateFormData('inventory', data)}
+            onUpdate={data => updateFormData('inventory', data)}
             onValidChange={setIsValid}
           />
         )
@@ -325,7 +321,7 @@ const OnboardingWizard = () => {
               onPrefillOnboarding={handlePrefillOnboarding}
               onResetOnboarding={handleResetOnboarding}
               onCompleteOnboarding={handleCompleteOnboarding}
-              isDevMode={process.env.NODE_ENV === 'development'}
+              isDevMode={import.meta.env.DEV}
             />
           </div>
         </div>
@@ -378,7 +374,7 @@ const OnboardingWizard = () => {
             <div
               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
               style={{
-                width: `${((currentStep + 1) / TOTAL_STEPS) * 100}%`
+                width: `${((currentStep + 1) / TOTAL_STEPS) * 100}%`,
               }}
             />
           </div>

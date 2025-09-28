@@ -1,722 +1,525 @@
-import { useState, useEffect } from 'react'
-import { User, Plus, Trash2, Edit2, Shield, Building2 } from 'lucide-react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Plus, Trash2, Edit2, ShieldAlert, ShieldCheck } from 'lucide-react'
 
-interface Department {
-  id: string
-  name: string
-  description: string
-  is_active: boolean
+import { useScrollToForm } from '@/hooks/useScrollToForm'
+
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Label } from '@/components/ui/Label'
+import { Select, SelectOption } from '@/components/ui/Select'
+import { Textarea } from '@/components/ui/Textarea'
+import { Badge } from '@/components/ui/Badge'
+
+import {
+  STAFF_ROLES,
+  STAFF_CATEGORIES,
+  HACCP_CERT_REQUIRED_CATEGORIES,
+} from '@/utils/haccpRules'
+
+import {
+  buildStaffMember,
+  getHaccpExpiryStatus,
+  normalizeStaffMember,
+  validateStaffMember,
+} from '@/utils/onboarding/staffUtils'
+
+import type {
+  StaffMember,
+  StaffStepFormData,
+  StaffStepProps,
+  StaffValidationErrors,
+  StaffRole,
+} from '@/types/onboarding'
+
+const EMPTY_FORM: StaffStepFormData = {
+  name: '',
+  surname: '',
+  email: '',
+  phone: '',
+  role: STAFF_ROLES[0].value,
+  categories: [STAFF_CATEGORIES[0].value],
+  departmentAssignments: [],
+  haccpExpiry: '',
+  notes: '',
 }
-
-interface StaffMember {
-  id: string
-  name: string
-  role: 'dipendente' | 'collaboratore' | 'responsabile' | 'admin'
-  category: string
-  email?: string
-  phone?: string
-  hire_date?: string
-  status: 'active' | 'inactive' | 'suspended'
-  notes?: string
-  department_assignments: string[]
-  haccp_certification?: {
-    level: 'base' | 'advanced'
-    expiry_date: string
-    issuing_authority: string
-    certificate_number: string
-  }
-}
-
-interface StaffStepProps {
-  data?: StaffMember[]
-  departments: Department[]
-  onUpdate: (data: StaffMember[]) => void
-  onValidChange: (isValid: boolean) => void
-}
-
-const STAFF_CATEGORIES = [
-  'Cuoco',
-  'Aiuto Cuoco',
-  'Cameriere',
-  'Barista',
-  'Responsabile Sala',
-  'Responsabile Cucina',
-  'Lavapiatti',
-  'Addetto Pulizie',
-  'Magazziniere',
-  'Altro'
-]
 
 const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProps) => {
-  const [staff, setStaff] = useState<StaffMember[]>(data || [])
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>(data || [])
+  const [formData, setFormData] = useState<StaffStepFormData>(EMPTY_FORM)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [formData, setFormData] = useState({
-    name: '',
-    role: 'dipendente' as const,
-    category: 'Altro',
-    email: '',
-    phone: '',
-    hire_date: '',
-    status: 'active' as const,
-    notes: '',
-    department_assignments: [] as string[],
-    hasHaccpCert: false,
-    haccpCert: {
-      level: 'base' as const,
-      expiry_date: '',
-      issuing_authority: '',
-      certificate_number: ''
-    }
-  })
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [errors, setErrors] = useState<StaffValidationErrors>({})
+
+  const { formRef, scrollToForm } = useScrollToForm(Boolean(editingId), 'staff-step-form')
 
   useEffect(() => {
-    validateForm()
-    onUpdate(staff)
-  }, [staff, onUpdate])
+    onUpdate(staffMembers)
+  }, [staffMembers, onUpdate])
 
-  const validateForm = () => {
-    const isValid = staff.length > 0 && staff.every(member =>
-      member.name.trim().length >= 2 &&
-      (!member.email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(member.email))
-    )
-    onValidChange(isValid)
-  }
+  useEffect(() => {
+    const allValid = staffMembers.length > 0 && staffMembers.every(member => validateStaffMember(member).success)
+    onValidChange(allValid)
+  }, [staffMembers, onValidChange])
 
-  const generateId = () => `staff_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
-  const validateMember = () => {
-    const newErrors: Record<string, string> = {}
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Il nome è obbligatorio'
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Il nome deve essere di almeno 2 caratteri'
-    }
-
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Inserisci un email valido'
-    }
-
-    if (formData.phone && !/^[\d\s\-+()]+$/.test(formData.phone)) {
-      newErrors.phone = 'Inserisci un numero di telefono valido'
-    }
-
-    if (formData.hasHaccpCert) {
-      if (!formData.haccpCert.expiry_date) {
-        newErrors.haccp_expiry = 'La data di scadenza è obbligatoria'
-      }
-      if (!formData.haccpCert.issuing_authority.trim()) {
-        newErrors.haccp_authority = "L'ente certificatore è obbligatorio"
-      }
-      if (!formData.haccpCert.certificate_number.trim()) {
-        newErrors.haccp_number = 'Il numero certificato è obbligatorio'
-      }
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const addStaffMember = () => {
-    if (!validateMember()) return
-
-    const newMember: StaffMember = {
-      id: generateId(),
-      name: formData.name.trim(),
-      role: formData.role,
-      category: formData.category,
-      email: formData.email || undefined,
-      phone: formData.phone || undefined,
-      hire_date: formData.hire_date || undefined,
-      status: formData.status,
-      notes: formData.notes || undefined,
-      department_assignments: formData.department_assignments,
-      haccp_certification: formData.hasHaccpCert ? formData.haccpCert : undefined
-    }
-
-    setStaff([...staff, newMember])
-    resetForm()
-  }
-
-  const updateStaffMember = () => {
-    if (!validateMember()) return
-
-    setStaff(staff.map(member =>
-      member.id === editingId
-        ? {
-            ...member,
-            name: formData.name.trim(),
-            role: formData.role,
-            category: formData.category,
-            email: formData.email || undefined,
-            phone: formData.phone || undefined,
-            hire_date: formData.hire_date || undefined,
-            status: formData.status,
-            notes: formData.notes || undefined,
-            department_assignments: formData.department_assignments,
-            haccp_certification: formData.hasHaccpCert ? formData.haccpCert : undefined
-          }
-        : member
-    ))
-    resetForm()
-  }
-
-  const deleteStaffMember = (id: string) => {
-    setStaff(staff.filter(member => member.id !== id))
-  }
-
-  const startEdit = (member: StaffMember) => {
-    setEditingId(member.id)
-    setFormData({
-      name: member.name,
-      role: member.role,
-      category: member.category,
-      email: member.email || '',
-      phone: member.phone || '',
-      hire_date: member.hire_date || '',
-      status: member.status,
-      notes: member.notes || '',
-      department_assignments: member.department_assignments || [],
-      hasHaccpCert: !!member.haccp_certification,
-      haccpCert: member.haccp_certification || {
-        level: 'base',
-        expiry_date: '',
-        issuing_authority: '',
-        certificate_number: ''
-      }
-    })
-    setErrors({})
-  }
+  const departmentOptions = useMemo(
+    () => departments.filter(department => department.is_active),
+    [departments]
+  )
 
   const resetForm = () => {
-    setEditingId(null)
-    setFormData({
-      name: '',
-      role: 'dipendente',
-      category: 'Altro',
-      email: '',
-      phone: '',
-      hire_date: '',
-      status: 'active',
-      notes: '',
-      department_assignments: [],
-      hasHaccpCert: false,
-      haccpCert: {
-        level: 'base',
-        expiry_date: '',
-        issuing_authority: '',
-        certificate_number: ''
-      }
-    })
+    setFormData(EMPTY_FORM)
     setErrors({})
+    setEditingId(null)
   }
 
-  const handleDepartmentToggle = (departmentId: string) => {
-    const isAssigned = formData.department_assignments.includes(departmentId)
-    setFormData({
-      ...formData,
-      department_assignments: isAssigned
-        ? formData.department_assignments.filter(id => id !== departmentId)
-        : [...formData.department_assignments, departmentId]
+  const handleEditMember = (member: StaffMember) => {
+    setEditingId(member.id)
+    setFormData(normalizeStaffMember(member))
+    setErrors({})
+    scrollToForm()
+  }
+
+  const handleDeleteMember = (id: string) => {
+    setStaffMembers(prev => prev.filter(member => member.id !== id))
+    if (editingId === id) {
+      resetForm()
+    }
+  }
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    const { member, validation } = buildStaffMember(formData, editingId)
+    setErrors(validation.fieldErrors || {})
+
+    if (!validation.success || !member) {
+      return
+    }
+
+    setStaffMembers(prev => {
+      if (editingId) {
+        return prev.map(existing => (existing.id === editingId ? member : existing))
+      }
+      return [...prev, member]
     })
+
+    resetForm()
   }
 
   const prefillSampleData = () => {
-    const sampleStaff: StaffMember[] = [
+    const cucina = departments.find(dept => dept.name.toLowerCase() === 'cucina')
+    const sala = departments.find(dept => dept.name.toLowerCase() === 'sala')
+    const bancone = departments.find(dept => dept.name.toLowerCase() === 'bancone')
+
+    const generateId = () => `staff_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+
+    const samples: StaffMember[] = [
       {
         id: generateId(),
-        name: 'Mario Rossi',
-        role: 'responsabile',
-        category: 'Responsabile Cucina',
+        name: 'Mario',
+        surname: 'Rossi',
+        fullName: 'Mario Rossi',
         email: 'mario.rossi@alritrovo.it',
         phone: '+39 340 1234567',
-        hire_date: '2020-01-15',
-        status: 'active',
-        department_assignments: departments.filter(d => d.name === 'Cucina').map(d => d.id),
-        haccp_certification: {
-          level: 'advanced',
-          expiry_date: '2025-12-31',
-          issuing_authority: 'ASL Bologna',
-          certificate_number: 'HACCP-2024-001'
-        }
+        role: 'responsabile',
+        categories: ['Cuochi'],
+        department_assignments: cucina ? [cucina.id] : [],
+        haccpExpiry: '2025-12-31',
+        notes: 'Responsabile HACCP cucina',
       },
       {
         id: generateId(),
-        name: 'Giulia Bianchi',
-        role: 'dipendente',
-        category: 'Cameriere',
+        name: 'Giulia',
+        surname: 'Bianchi',
+        fullName: 'Giulia Bianchi',
         email: 'giulia.bianchi@alritrovo.it',
-        phone: '+39 349 7654321',
-        hire_date: '2021-03-10',
-        status: 'active',
-        department_assignments: departments.filter(d => d.name === 'Sala').map(d => d.id),
-        haccp_certification: {
-          level: 'base',
-          expiry_date: '2025-06-30',
-          issuing_authority: 'ASL Bologna',
-          certificate_number: 'HACCP-2024-002'
-        }
+        role: 'dipendente',
+        categories: ['Camerieri'],
+        department_assignments: sala ? [sala.id] : [],
+        haccpExpiry: '2025-06-30',
       },
       {
         id: generateId(),
-        name: 'Luca Verdi',
+        name: 'Luca',
+        surname: 'Verdi',
+        fullName: 'Luca Verdi',
         role: 'collaboratore',
-        category: 'Barista',
-        email: 'luca.verdi@alritrovo.it',
-        status: 'active',
-        department_assignments: departments.filter(d => d.name === 'Bancone').map(d => d.id)
-      }
+        categories: ['Banconisti'],
+        department_assignments: bancone ? [bancone.id] : [],
+      },
     ]
-    setStaff(sampleStaff)
+
+    setStaffMembers(samples)
+    resetForm()
   }
 
-  const getRoleLabel = (role: string) => {
-    const roles = {
-      dipendente: 'Dipendente',
-      collaboratore: 'Collaboratore',
-      responsabile: 'Responsabile',
-      admin: 'Amministratore'
-    }
-    return roles[role as keyof typeof roles] || role
-  }
+  const haccpSummary = useMemo(() => {
+    if (staffMembers.length === 0) return null
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      active: 'bg-green-100 text-green-800',
-      inactive: 'bg-gray-100 text-gray-800',
-      suspended: 'bg-red-100 text-red-800'
-    }
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800'
-  }
+    const requiringCertification = staffMembers.filter(member =>
+      member.categories.some(category => HACCP_CERT_REQUIRED_CATEGORIES.includes(category))
+    )
 
-  const getStatusLabel = (status: string) => {
-    const labels = {
-      active: 'Attivo',
-      inactive: 'Inattivo',
-      suspended: 'Sospeso'
+    const compliant = requiringCertification.filter(member => validateStaffMember(member).success && Boolean(member.haccpExpiry))
+
+    const expiringSoon = requiringCertification.filter(member => getHaccpExpiryStatus(member.haccpExpiry).level === 'warning')
+    const expired = requiringCertification.filter(member => getHaccpExpiryStatus(member.haccpExpiry).level === 'expired')
+
+    return {
+      total: staffMembers.length,
+      requiringCertification: requiringCertification.length,
+      compliant: compliant.length,
+      expiringSoon: expiringSoon.length,
+      expired: expired.length,
     }
-    return labels[status as keyof typeof labels] || status
-  }
+  }, [staffMembers])
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <User className="w-8 h-8 text-blue-600" />
-        </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Gestione Personale
-        </h2>
-        <p className="text-gray-600">
-          Aggiungi i membri del team con ruoli, responsabilità e certificazioni HACCP
+    <div className="space-y-6" id="staff-step">
+      <header className="text-center space-y-2">
+        <h2 className="text-2xl font-bold text-gray-900">Gestione del Personale</h2>
+        <p className="text-gray-600 max-w-2xl mx-auto">
+          Registra ruoli, categorie operative e certificazioni HACCP del personale per garantire la conformità normativa.
         </p>
-      </div>
+      </header>
 
-      {/* Quick Fill Button */}
       <div className="flex justify-center">
-        <button
-          type="button"
-          onClick={prefillSampleData}
-          className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-        >
-          🚀 Carica staff predefinito
-        </button>
+        <Button variant="outline" onClick={prefillSampleData} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Carica staff di esempio
+        </Button>
       </div>
 
-      {/* Add/Edit Form */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h3 className="font-medium text-gray-900 mb-4">
-          {editingId ? 'Modifica Dipendente' : 'Aggiungi Nuovo Dipendente'}
-        </h3>
-
-        <div className="space-y-4">
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nome Completo *
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.name ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="Nome e Cognome"
-              />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ruolo *
-              </label>
-              <select
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="dipendente">Dipendente</option>
-                <option value="collaboratore">Collaboratore</option>
-                <option value="responsabile">Responsabile</option>
-                <option value="admin">Amministratore</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Categoria *
-              </label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {STAFF_CATEGORIES.map(category => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Stato
-              </label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="active">Attivo</option>
-                <option value="inactive">Inattivo</option>
-                <option value="suspended">Sospeso</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Contact Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.email ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="email@esempio.com"
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Telefono
-              </label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.phone ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="+39 123 456 7890"
-              />
-              {errors.phone && (
-                <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Hire Date */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data di Assunzione
-            </label>
-            <input
-              type="date"
-              value={formData.hire_date}
-              onChange={(e) => setFormData({ ...formData, hire_date: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Department Assignments */}
-          {departments.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Building2 className="inline w-4 h-4 mr-1" />
-                Assegnazione Reparti
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {departments.map(department => (
-                  <label
-                    key={department.id}
-                    className="flex items-center space-x-2 p-2 border rounded-md hover:bg-gray-50 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.department_assignments.includes(department.id)}
-                      onChange={() => handleDepartmentToggle(department.id)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="text-sm text-gray-700">
-                      {department.name}
-                    </span>
-                  </label>
-                ))}
+      {haccpSummary && (
+        <section className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+            <h3 className="text-sm font-semibold text-blue-900 mb-2">Panoramica HACCP</h3>
+            <dl className="space-y-1 text-sm text-blue-800">
+              <div className="flex justify-between">
+                <dt>Membri registrati</dt>
+                <dd className="font-semibold">{haccpSummary.total}</dd>
               </div>
-            </div>
+              <div className="flex justify-between">
+                <dt>Richiedono certificazione</dt>
+                <dd className="font-semibold">{haccpSummary.requiringCertification}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt>Certificazioni valide</dt>
+                <dd className="font-semibold">{haccpSummary.compliant}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="rounded-lg border border-amber-100 bg-amber-50 p-4">
+            <h3 className="text-sm font-semibold text-amber-900 mb-2">Scadenze monitorate</h3>
+            <dl className="space-y-1 text-sm text-amber-800">
+              <div className="flex justify-between">
+                <dt>Certificati in scadenza</dt>
+                <dd className="font-semibold">{haccpSummary.expiringSoon}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt>Certificati scaduti</dt>
+                <dd className="font-semibold">{haccpSummary.expired}</dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+      )}
+
+      <section className="rounded-lg border border-gray-200 bg-white">
+        <header className="border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-gray-900">Staff configurato</h3>
+            <p className="text-sm text-gray-500">Elenco dei membri registrati durante l'onboarding</p>
+          </div>
+          <Button variant="ghost" className="gap-2" onClick={scrollToForm}>
+            <Plus className="h-4 w-4" />
+            {editingId ? 'Modifica membro' : 'Aggiungi membro'}
+          </Button>
+        </header>
+
+        <div className="divide-y divide-gray-100">
+          {staffMembers.length === 0 && (
+            <p className="px-4 py-8 text-center text-sm text-gray-500">
+              Nessun membro dello staff registrato. Aggiungi almeno un membro per procedere.
+            </p>
           )}
 
-          {/* HACCP Certification */}
-          <div className="border-t pt-4">
-            <div className="flex items-center space-x-2 mb-3">
-              <input
-                type="checkbox"
-                checked={formData.hasHaccpCert}
-                onChange={(e) => setFormData({ ...formData, hasHaccpCert: e.target.checked })}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          {staffMembers.map(member => {
+            const requiresHaccp = member.categories.some(category =>
+              HACCP_CERT_REQUIRED_CATEGORIES.includes(category)
+            )
+            const expiryStatus = getHaccpExpiryStatus(member.haccpExpiry)
+
+            return (
+              <article
+                key={member.id}
+                className="grid gap-4 px-4 py-3 md:grid-cols-[1fr_auto] md:items-start"
+              >
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="text-base font-semibold text-gray-900">
+                      {member.fullName}
+                    </h4>
+                    <Badge>{member.role}</Badge>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 text-xs text-gray-600">
+                    {member.email && <Badge variant="secondary">{member.email}</Badge>}
+                    {member.phone && <Badge variant="secondary">{member.phone}</Badge>}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 text-xs text-gray-600">
+                    {member.categories.map(category => (
+                      <Badge key={category} variant="outline">
+                        {category}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  {member.department_assignments.length > 0 && (
+                    <div className="flex flex-wrap gap-2 text-xs text-gray-600">
+                      {member.department_assignments.map(deptId => {
+                        const department = departments.find(dept => dept.id === deptId)
+                        return department ? (
+                          <Badge key={deptId} variant="outline">
+                            {department.name}
+                          </Badge>
+                        ) : null
+                      })}
+                    </div>
+                  )}
+
+                  {requiresHaccp && (
+                    <div className="mt-3 flex items-center gap-2 text-sm">
+                      {expiryStatus.level === 'ok' ? (
+                        <ShieldCheck className="h-4 w-4 text-green-600" aria-hidden />
+                      ) : (
+                        <ShieldAlert className="h-4 w-4 text-amber-600" aria-hidden />
+                      )}
+                      <span
+                        className={
+                          expiryStatus.level === 'expired'
+                            ? 'text-red-600 font-semibold'
+                            : expiryStatus.level === 'warning'
+                              ? 'text-amber-600 font-semibold'
+                              : 'text-green-700'
+                        }
+                      >
+                        {expiryStatus.message}
+                      </span>
+                    </div>
+                  )}
+
+                  {member.notes && (
+                    <p className="text-sm text-gray-500 border-l-2 border-gray-200 pl-3">
+                      {member.notes}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button variant="outline" size="icon" onClick={() => handleEditMember(member)} aria-label="Modifica membro">
+                    <Edit2 className="h-4 w-4" aria-hidden />
+                  </Button>
+                  <Button variant="destructive" size="icon" onClick={() => handleDeleteMember(member.id)} aria-label="Elimina membro">
+                    <Trash2 className="h-4 w-4" aria-hidden />
+                  </Button>
+                </div>
+              </article>
+            )
+          })}
+        </div>
+      </section>
+
+      <section id="staff-step-form" ref={formRef} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+        <header className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            {editingId ? 'Modifica membro dello staff' : 'Aggiungi nuovo membro'}
+          </h3>
+          <p className="text-sm text-gray-500">
+            Compila i campi obbligatori per registrare il personale. Le certificazioni HACCP sono richieste solo per le categorie operative.
+          </p>
+        </header>
+
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label htmlFor="staff-name">Nome *</Label>
+              <Input
+                id="staff-name"
+                value={formData.name}
+                onChange={event => setFormData(prev => ({ ...prev, name: event.target.value }))}
+                placeholder="Mario"
+                aria-invalid={Boolean(errors.name)}
               />
-              <label className="flex items-center text-sm font-medium text-gray-700">
-                <Shield className="h-4 w-4 mr-1" />
-                Certificazione HACCP
-              </label>
+              {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
             </div>
-
-            {formData.hasHaccpCert && (
-              <div className="ml-6 space-y-4 p-4 bg-blue-50 rounded-lg">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Livello *
-                    </label>
-                    <select
-                      value={formData.haccpCert.level}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        haccpCert: { ...formData.haccpCert, level: e.target.value as 'base' | 'advanced' }
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="base">Base</option>
-                      <option value="advanced">Avanzato</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Data Scadenza *
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.haccpCert.expiry_date}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        haccpCert: { ...formData.haccpCert, expiry_date: e.target.value }
-                      })}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.haccp_expiry ? 'border-red-300' : 'border-gray-300'
-                      }`}
-                    />
-                    {errors.haccp_expiry && (
-                      <p className="mt-1 text-sm text-red-600">{errors.haccp_expiry}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Ente Certificatore *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.haccpCert.issuing_authority}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        haccpCert: { ...formData.haccpCert, issuing_authority: e.target.value }
-                      })}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.haccp_authority ? 'border-red-300' : 'border-gray-300'
-                      }`}
-                      placeholder="Nome ente certificatore"
-                    />
-                    {errors.haccp_authority && (
-                      <p className="mt-1 text-sm text-red-600">{errors.haccp_authority}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Numero Certificato *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.haccpCert.certificate_number}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        haccpCert: { ...formData.haccpCert, certificate_number: e.target.value }
-                      })}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.haccp_number ? 'border-red-300' : 'border-gray-300'
-                      }`}
-                      placeholder="Numero del certificato"
-                    />
-                    {errors.haccp_number && (
-                      <p className="mt-1 text-sm text-red-600">{errors.haccp_number}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+            <div>
+              <Label htmlFor="staff-surname">Cognome *</Label>
+              <Input
+                id="staff-surname"
+                value={formData.surname}
+                onChange={event => setFormData(prev => ({ ...prev, surname: event.target.value }))}
+                placeholder="Rossi"
+                aria-invalid={Boolean(errors.surname)}
+              />
+              {errors.surname && <p className="mt-1 text-sm text-red-600">{errors.surname}</p>}
+            </div>
           </div>
 
-          {/* Notes */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label htmlFor="staff-email">Email</Label>
+              <Input
+                id="staff-email"
+                type="email"
+                value={formData.email}
+                onChange={event => setFormData(prev => ({ ...prev, email: event.target.value }))}
+                placeholder="email@azienda.it"
+                aria-invalid={Boolean(errors.email)}
+              />
+              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+            </div>
+            <div>
+              <Label htmlFor="staff-phone">Telefono</Label>
+              <Input
+                id="staff-phone"
+                value={formData.phone}
+                onChange={event => setFormData(prev => ({ ...prev, phone: event.target.value }))}
+                placeholder="+39 340 1234567"
+                aria-invalid={Boolean(errors.phone)}
+              />
+              {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label htmlFor="staff-role">Ruolo *</Label>
+              <Select
+                id="staff-role"
+                value={formData.role}
+                onValueChange={value => setFormData(prev => ({ ...prev, role: value as StaffRole }))}
+              >
+                {STAFF_ROLES.map(role => (
+                  <SelectOption key={role.value} value={role.value}>
+                    {role.label}
+                  </SelectOption>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <Label>Categorie operative *</Label>
+              <div className="space-y-2">
+                {formData.categories.map((category, index) => (
+                  <div key={`category-${index}`} className="flex items-center gap-2">
+                    <Select
+                      value={category}
+                      onValueChange={value =>
+                        setFormData(prev => ({
+                          ...prev,
+                          categories: prev.categories.map((existing, idx) =>
+                            idx === index ? (value as string) : existing
+                          ),
+                        }))
+                      }
+                    >
+                      {STAFF_CATEGORIES.map(option => (
+                        <SelectOption key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectOption>
+                      ))}
+                    </Select>
+                    {formData.categories.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                          setFormData(prev => ({
+                            ...prev,
+                            categories: prev.categories.filter((_, idx) => idx !== index),
+                          }))
+                        }
+                        aria-label="Rimuovi categoria"
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    setFormData(prev => ({
+                      ...prev,
+                      categories: [...prev.categories, STAFF_CATEGORIES[0].value],
+                    }))
+                  }
+                  className="w-full"
+                >
+                  Aggiungi categoria
+                </Button>
+              </div>
+            </div>
+          </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Note
-            </label>
-            <textarea
+            <Label>Assegnazione reparti</Label>
+            <div className="mt-2 grid gap-2 md:grid-cols-2">
+              {departmentOptions.map(department => (
+                <label
+                  key={department.id}
+                  className="flex items-center gap-2 rounded border border-gray-200 bg-white px-3 py-2 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    checked={formData.departmentAssignments.includes(department.id)}
+                    onChange={event => {
+                      const isChecked = event.target.checked
+                      setFormData(prev => ({
+                        ...prev,
+                        departmentAssignments: isChecked
+                          ? [...prev.departmentAssignments, department.id]
+                          : prev.departmentAssignments.filter(id => id !== department.id),
+                      }))
+                    }}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span>{department.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="staff-haccp-expiry">Scadenza certificazione HACCP *</Label>
+            <Input
+              id="staff-haccp-expiry"
+              type="date"
+              value={formData.haccpExpiry}
+              onChange={event => setFormData(prev => ({ ...prev, haccpExpiry: event.target.value }))}
+              aria-invalid={Boolean(errors.haccpExpiry)}
+            />
+            {errors.haccpExpiry && <p className="mt-1 text-sm text-red-600">{errors.haccpExpiry}</p>}
+          </div>
+
+          <div>
+            <Label htmlFor="staff-notes">Note</Label>
+            <Textarea
+              id="staff-notes"
               value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Note aggiuntive sul dipendente..."
+              onChange={event => setFormData(prev => ({ ...prev, notes: event.target.value }))}
+              placeholder="Aggiungi note sulla certificazione HACCP o sul membro"
             />
           </div>
 
-          {/* Form Actions */}
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            {editingId && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Annulla
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={editingId ? updateStaffMember : addStaffMember}
-              className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
-            >
-              {editingId ? (
-                <>
-                  <Edit2 className="w-4 h-4" />
-                  Aggiorna
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4" />
-                  Aggiungi
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Staff List */}
-      <div>
-        <h3 className="font-medium text-gray-900 mb-3">
-          Personale Configurato ({staff.length})
-        </h3>
-
-        {staff.length === 0 ? (
-          <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-            <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 mb-2">Nessun dipendente configurato</p>
-            <p className="text-sm text-gray-400">
-              Aggiungi almeno un membro del team per continuare
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {staff.map((member) => (
-              <div
-                key={member.id}
-                className="border border-gray-200 rounded-lg p-4 bg-white"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-medium text-gray-900">{member.name}</h4>
-                      {member.haccp_certification && (
-                        <Shield className="w-4 h-4 text-green-600" title="Certificazione HACCP" />
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600 mb-1">
-                      {getRoleLabel(member.role)} • {member.category}
-                    </p>
-                    {member.email && (
-                      <p className="text-sm text-gray-500 mb-1">{member.email}</p>
-                    )}
-                    {member.department_assignments.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        {member.department_assignments.map(deptId => {
-                          const dept = departments.find(d => d.id === deptId)
-                          return dept ? (
-                            <span key={deptId} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                              {dept.name}
-                            </span>
-                          ) : null
-                        })}
-                      </div>
-                    )}
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(member.status)}`}>
-                      {getStatusLabel(member.status)}
-                    </span>
-                  </div>
-                  <div className="flex gap-2 ml-4">
-                    <button
-                      onClick={() => startEdit(member)}
-                      className="p-1 text-blue-600 hover:text-blue-800"
-                      title="Modifica dipendente"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => deleteStaffMember(member.id)}
-                      className="p-1 text-red-600 hover:text-red-800"
-                      title="Elimina dipendente"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* HACCP Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-medium text-blue-900 mb-2">
-          ℹ️ Gestione HACCP del Personale
-        </h3>
-        <p className="text-sm text-blue-700">
-          Ogni membro del team può avere responsabilità specifiche nei controlli HACCP.
-          Le certificazioni HACCP sono monitorate per garantire conformità normativa.
-          I responsabili possono supervisionare e validare i controlli di temperatura.
-        </p>
-      </div>
+          <Button type="submit" className="w-full">
+            {editingId ? 'Salva modifiche' : 'Aggiungi membro'}
+          </Button>
+        </form>
+      </section>
     </div>
   )
 }

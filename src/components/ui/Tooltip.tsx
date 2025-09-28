@@ -16,7 +16,9 @@ export const Tooltip: React.FC<TooltipProps> = ({
   disabled = false,
 }) => {
   const [isVisible, setIsVisible] = useState(false)
-  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null)
+  const [timeoutId, setTimeoutId] = useState<ReturnType<typeof setTimeout> | null>(
+    null
+  )
   const tooltipRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLElement>(null)
 

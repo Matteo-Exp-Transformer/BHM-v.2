@@ -3,7 +3,8 @@ import { toast } from 'react-toastify'
 
 // Dati precompilati seguendo esattamente la guida di riferimento
 export const getPrefillData = () => {
-  const generateId = () => `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  const generateId = () =>
+    `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
   return {
     business: {
@@ -14,93 +15,80 @@ export const getPrefillData = () => {
       vat_number: '001255668899101',
       business_type: 'ristorante',
       established_date: '2020-01-15',
-      license_number: 'RIS-2020-001'
+      license_number: 'RIS-2020-001',
     },
     departments: [
       {
         id: generateId(),
         name: 'Cucina',
         description: 'Area di preparazione e cottura cibi',
-        is_active: true
+        is_active: true,
       },
       {
         id: generateId(),
         name: 'Bancone',
         description: 'Area di servizio clienti',
-        is_active: true
+        is_active: true,
       },
       {
         id: generateId(),
         name: 'Sala',
         description: 'Area di servizio ai tavoli',
-        is_active: true
+        is_active: true,
       },
       {
         id: generateId(),
         name: 'Magazzino',
         description: 'Area di stoccaggio merci',
-        is_active: true
+        is_active: true,
       },
       {
         id: generateId(),
         name: 'Magazzino B',
         description: 'Area di stoccaggio secondaria',
-        is_active: true
+        is_active: true,
       },
       {
         id: generateId(),
         name: 'Sala B',
         description: 'Area di servizio secondaria',
-        is_active: true
-      }
+        is_active: true,
+      },
     ],
     staff: [
       {
         id: generateId(),
-        name: 'Matteo Cavallaro',
+        name: 'Mario',
+        surname: 'Rossi',
+        fullName: 'Mario Rossi',
         role: 'responsabile' as const,
-        category: 'Responsabile Sala',
-        email: 'matteo.cavallaro@alritrovo.it',
+        categories: ['Cuochi'],
+        email: 'mario.rossi@alritrovo.it',
         phone: '+39 340 1234567',
-        hire_date: '2020-01-15',
-        status: 'active' as const,
         department_assignments: [],
-        haccp_certification: {
-          level: 'advanced' as const,
-          expiry_date: '2025-12-31',
-          issuing_authority: 'ASL Bologna',
-          certificate_number: 'HACCP-2024-001'
-        }
+        haccpExpiry: '2025-12-31',
+        notes: 'Responsabile HACCP cucina',
       },
       {
         id: generateId(),
-        name: 'Fabrizio Dettori',
-        role: 'admin' as const,
-        category: 'Amministratore',
-        email: 'fabrizio.dettori@alritrovo.it',
-        status: 'active' as const,
-        department_assignments: [],
-        haccp_certification: {
-          level: 'advanced' as const,
-          expiry_date: '2025-06-30',
-          issuing_authority: 'ASL Bologna',
-          certificate_number: 'HACCP-2024-002'
-        }
-      },
-      {
-        id: generateId(),
-        name: 'Paolo Dettori',
+        name: 'Giulia',
+        surname: 'Bianchi',
+        fullName: 'Giulia Bianchi',
         role: 'dipendente' as const,
-        category: 'Cuoco',
-        status: 'active' as const,
+        categories: ['Camerieri'],
+        email: 'giulia.bianchi@alritrovo.it',
         department_assignments: [],
-        haccp_certification: {
-          level: 'base' as const,
-          expiry_date: '2025-03-15',
-          issuing_authority: 'ASL Bologna',
-          certificate_number: 'HACCP-2024-003'
-        }
-      }
+        haccpExpiry: '2025-06-30',
+      },
+      {
+        id: generateId(),
+        name: 'Luca',
+        surname: 'Verdi',
+        fullName: 'Luca Verdi',
+        role: 'collaboratore' as const,
+        categories: ['Banconisti'],
+        department_assignments: [],
+      },
     ],
     conservation: [
       {
@@ -110,7 +98,7 @@ export const getPrefillData = () => {
         setpoint_temp: 4,
         type: 'fridge' as const,
         is_blast_chiller: false,
-        product_categories: ['Carni fresche', 'Latticini', 'Verdure fresche']
+        product_categories: ['Carni fresche', 'Latticini', 'Verdure fresche'],
       },
       {
         id: generateId(),
@@ -119,7 +107,7 @@ export const getPrefillData = () => {
         setpoint_temp: 2,
         type: 'fridge' as const,
         is_blast_chiller: false,
-        product_categories: ['Bevande', 'Latticini']
+        product_categories: ['Bevande', 'Latticini'],
       },
       {
         id: generateId(),
@@ -128,7 +116,7 @@ export const getPrefillData = () => {
         setpoint_temp: 3,
         type: 'fridge' as const,
         is_blast_chiller: false,
-        product_categories: ['Bevande', 'Conserve']
+        product_categories: ['Bevande', 'Conserve'],
       },
       {
         id: generateId(),
@@ -137,14 +125,15 @@ export const getPrefillData = () => {
         setpoint_temp: -18,
         type: 'freezer' as const,
         is_blast_chiller: false,
-        product_categories: ['Surgelati', 'Gelati']
-      }
+        product_categories: ['Surgelati', 'Gelati'],
+      },
     ],
     tasks: [
       {
         id: generateId(),
         name: 'Rilevamento Temperatura Giornaliero',
-        description: 'Controllo e registrazione temperature di tutti i frigoriferi',
+        description:
+          'Controllo e registrazione temperature di tutti i frigoriferi',
         frequency: 'daily' as const,
         priority: 'high' as const,
         estimated_duration: 15,
@@ -153,9 +142,9 @@ export const getPrefillData = () => {
           'Verificare temperatura display frigorifero',
           'Controllare temperatura con termometro di controllo',
           'Registrare temperatura su modulo HACCP',
-          'Verificare corretta chiusura porta'
+          'Verificare corretta chiusura porta',
         ],
-        required_tools: ['Termometro digitale', 'Modulo registrazione']
+        required_tools: ['Termometro digitale', 'Modulo registrazione'],
       },
       {
         id: generateId(),
@@ -169,9 +158,9 @@ export const getPrefillData = () => {
           'Preparare soluzione disinfettante',
           'Pulire tutte le superfici di lavoro',
           'Sanificare attrezzature',
-          'Documentare intervento'
+          'Documentare intervento',
         ],
-        required_tools: ['Disinfettante professionale', 'Panni monouso']
+        required_tools: ['Disinfettante professionale', 'Panni monouso'],
       },
       {
         id: generateId(),
@@ -185,10 +174,10 @@ export const getPrefillData = () => {
           'Controllare date scadenza frigorifero',
           'Controllare date scadenza dispensa',
           'Rimuovere prodotti scaduti',
-          'Segnalare prodotti in scadenza'
+          'Segnalare prodotti in scadenza',
         ],
-        required_tools: ['Etichette', 'Registro scadenze']
-      }
+        required_tools: ['Etichette', 'Registro scadenze'],
+      },
     ],
     inventory: {
       categories: [
@@ -200,8 +189,8 @@ export const getPrefillData = () => {
             temp_min: 0,
             temp_max: 4,
             max_storage_days: 3,
-            requires_blast_chilling: true
-          }
+            requires_blast_chilling: true,
+          },
         },
         {
           id: generateId(),
@@ -211,8 +200,8 @@ export const getPrefillData = () => {
             temp_min: 0,
             temp_max: 2,
             max_storage_days: 2,
-            requires_blast_chilling: true
-          }
+            requires_blast_chilling: true,
+          },
         },
         {
           id: generateId(),
@@ -221,8 +210,8 @@ export const getPrefillData = () => {
           conservation_rules: {
             temp_min: 2,
             temp_max: 6,
-            max_storage_days: 7
-          }
+            max_storage_days: 7,
+          },
         },
         {
           id: generateId(),
@@ -231,9 +220,9 @@ export const getPrefillData = () => {
           conservation_rules: {
             temp_min: 4,
             temp_max: 8,
-            max_storage_days: 5
-          }
-        }
+            max_storage_days: 5,
+          },
+        },
       ],
       products: [
         {
@@ -243,8 +232,10 @@ export const getPrefillData = () => {
           unit: 'kg',
           supplier_name: 'Ortofrutta Napoletana',
           purchase_date: new Date().toISOString().split('T')[0],
-          expiry_date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          status: 'active' as const
+          expiry_date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0],
+          status: 'active' as const,
         },
         {
           id: generateId(),
@@ -254,8 +245,10 @@ export const getPrefillData = () => {
           allergens: ['Latte'],
           supplier_name: 'Caseificio Campano',
           purchase_date: new Date().toISOString().split('T')[0],
-          expiry_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          status: 'active' as const
+          expiry_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0],
+          status: 'active' as const,
         },
         {
           id: generateId(),
@@ -264,8 +257,10 @@ export const getPrefillData = () => {
           unit: 'kg',
           supplier_name: 'Carni Locali SRL',
           purchase_date: new Date().toISOString().split('T')[0],
-          expiry_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          status: 'active' as const
+          expiry_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0],
+          status: 'active' as const,
         },
         {
           id: generateId(),
@@ -275,8 +270,10 @@ export const getPrefillData = () => {
           allergens: ['Pesce'],
           supplier_name: 'Pescheria del Porto',
           purchase_date: new Date().toISOString().split('T')[0],
-          expiry_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          status: 'active' as const
+          expiry_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0],
+          status: 'active' as const,
         },
         {
           id: generateId(),
@@ -285,8 +282,10 @@ export const getPrefillData = () => {
           unit: 'l',
           supplier_name: 'Frantoio Toscano',
           purchase_date: new Date().toISOString().split('T')[0],
-          expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          status: 'active' as const
+          expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0],
+          status: 'active' as const,
         },
         {
           id: generateId(),
@@ -296,11 +295,13 @@ export const getPrefillData = () => {
           allergens: ['Glutine'],
           supplier_name: 'Pastificio Artigianale',
           purchase_date: new Date().toISOString().split('T')[0],
-          expiry_date: new Date(Date.now() + 730 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          status: 'active' as const
-        }
-      ]
-    }
+          expiry_date: new Date(Date.now() + 730 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0],
+          status: 'active' as const,
+        },
+      ],
+    },
   }
 }
 
@@ -324,33 +325,50 @@ export const prefillOnboarding = (): void => {
 
       data.conservation = data.conservation.map(point => ({
         ...point,
-        department_id: point.name.includes('Cucina') ? cucinaId || '' :
-                      point.name.includes('Bancone') ? banconeId || '' :
-                      data.departments[0]?.id || ''
+        department_id: point.name.includes('Cucina')
+          ? cucinaId || ''
+          : point.name.includes('Bancone')
+            ? banconeId || ''
+            : data.departments[0]?.id || '',
       }))
 
       // Associa department assignments al staff
       data.staff = data.staff.map(member => ({
         ...member,
-        department_assignments: member.category === 'Responsabile Sala' ? [banconeId || ''] :
-                               member.category === 'Cuoco' ? [cucinaId || ''] :
-                               [data.departments[0]?.id || '']
+        department_assignments:
+          member.category === 'Responsabile Sala'
+            ? [banconeId || '']
+            : member.category === 'Cuoco'
+              ? [cucinaId || '']
+              : [data.departments[0]?.id || ''],
       }))
 
       // Associa category_id ai prodotti
       if (data.inventory.categories.length > 0) {
-        const carniId = data.inventory.categories.find(c => c.name === 'Carni Fresche')?.id
-        const pesceId = data.inventory.categories.find(c => c.name === 'Pesce Fresco')?.id
-        const latticiniId = data.inventory.categories.find(c => c.name === 'Latticini')?.id
-        const verdureId = data.inventory.categories.find(c => c.name === 'Verdure Fresche')?.id
+        const carniId = data.inventory.categories.find(
+          c => c.name === 'Carni Fresche'
+        )?.id
+        const pesceId = data.inventory.categories.find(
+          c => c.name === 'Pesce Fresco'
+        )?.id
+        const latticiniId = data.inventory.categories.find(
+          c => c.name === 'Latticini'
+        )?.id
+        const verdureId = data.inventory.categories.find(
+          c => c.name === 'Verdure Fresche'
+        )?.id
 
         data.inventory.products = data.inventory.products.map(product => ({
           ...product,
-          category_id: product.name.includes('Pollo') ? carniId :
-                      product.name.includes('Salmone') ? pesceId :
-                      product.name.includes('Mozzarella') ? latticiniId :
-                      product.name.includes('Pomodori') ? verdureId :
-                      undefined
+          category_id: product.name.includes('Pollo')
+            ? carniId
+            : product.name.includes('Salmone')
+              ? pesceId
+              : product.name.includes('Mozzarella')
+                ? latticiniId
+                : product.name.includes('Pomodori')
+                  ? verdureId
+                  : undefined,
         }))
       }
     }
@@ -361,14 +379,13 @@ export const prefillOnboarding = (): void => {
     console.log('✅ Onboarding precompilato con successo:', data)
     toast.success('Onboarding precompilato con dati di Al Ritrovo SRL!', {
       position: 'top-right',
-      autoClose: 3000
+      autoClose: 3000,
     })
-
   } catch (error) {
     console.error('❌ Errore nella precompilazione:', error)
     toast.error('Errore durante la precompilazione', {
       position: 'top-right',
-      autoClose: 3000
+      autoClose: 3000,
     })
   }
 }
@@ -379,12 +396,12 @@ export const prefillOnboarding = (): void => {
 export const resetOnboarding = (): void => {
   const confirmed = window.confirm(
     '⚠️ ATTENZIONE!\n\n' +
-    'Questa operazione cancellerà TUTTI i dati dell\'onboarding e dell\'app.\n\n' +
-    'Sei sicuro di voler continuare?'
+      "Questa operazione cancellerà TUTTI i dati dell'onboarding e dell'app.\n\n" +
+      'Sei sicuro di voler continuare?'
   )
 
   if (!confirmed) {
-    console.log('🔄 Reset onboarding annullato dall\'utente')
+    console.log("🔄 Reset onboarding annullato dall'utente")
     return
   }
 
@@ -397,19 +414,18 @@ export const resetOnboarding = (): void => {
     console.log('✅ Reset onboarding completato con successo')
     toast.success('Onboarding resettato completamente!', {
       position: 'top-right',
-      autoClose: 3000
+      autoClose: 3000,
     })
 
     // Ricarica la pagina dopo un breve delay
     setTimeout(() => {
       window.location.reload()
     }, 1000)
-
   } catch (error) {
     console.error('❌ Errore nel reset onboarding:', error)
     toast.error('Errore durante il reset', {
       position: 'top-right',
-      autoClose: 3000
+      autoClose: 3000,
     })
   }
 }
@@ -420,13 +436,13 @@ export const resetOnboarding = (): void => {
 export const resetApp = (): void => {
   const confirmed = window.confirm(
     '🚨 RESET COMPLETO APP\n\n' +
-    'Questa operazione cancellerà TUTTO il localStorage e sessionStorage.\n' +
-    'Utilizzare solo in sviluppo!\n\n' +
-    'Sei ASSOLUTAMENTE sicuro?'
+      'Questa operazione cancellerà TUTTO il localStorage e sessionStorage.\n' +
+      'Utilizzare solo in sviluppo!\n\n' +
+      'Sei ASSOLUTAMENTE sicuro?'
   )
 
   if (!confirmed) {
-    console.log('🔄 Reset app annullato dall\'utente')
+    console.log("🔄 Reset app annullato dall'utente")
     return
   }
 
@@ -439,19 +455,18 @@ export const resetApp = (): void => {
     console.log('✅ Reset app completato con successo')
     toast.success('App resettata completamente!', {
       position: 'top-right',
-      autoClose: 2000
+      autoClose: 2000,
     })
 
     // Ricarica la pagina immediatamente
     setTimeout(() => {
       window.location.reload()
     }, 500)
-
   } catch (error) {
     console.error('❌ Errore nel reset app:', error)
     toast.error('Errore durante il reset completo', {
       position: 'top-right',
-      autoClose: 3000
+      autoClose: 3000,
     })
   }
 }
@@ -476,19 +491,18 @@ export const completeOnboarding = (): void => {
     console.log('✅ Onboarding completato automaticamente')
     toast.success('Onboarding completato automaticamente!', {
       position: 'top-right',
-      autoClose: 3000
+      autoClose: 3000,
     })
 
     // Reindirizza alla dashboard
     setTimeout(() => {
       window.location.href = '/'
     }, 1000)
-
   } catch (error) {
     console.error('❌ Errore nel completamento automatico:', error)
     toast.error('Errore durante il completamento automatico', {
       position: 'top-right',
-      autoClose: 3000
+      autoClose: 3000,
     })
   }
 }

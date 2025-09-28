@@ -13,7 +13,9 @@ export const safeSetItem = (key: string, data: any): boolean => {
   try {
     // Valida che i dati siano serializzabili
     if (data === undefined) {
-      console.warn(`[SafeStorage] Tentativo di salvare undefined per chiave: ${key}`)
+      console.warn(
+        `[SafeStorage] Tentativo di salvare undefined per chiave: ${key}`
+      )
       return false
     }
 
@@ -41,7 +43,10 @@ export const safeSetItem = (key: string, data: any): boolean => {
  * @param defaultValue - Valore di default se il caricamento fallisce
  * @returns Dati caricati o valore di default
  */
-export const safeGetItem = <T = any>(key: string, defaultValue: T | null = null): T | null => {
+export const safeGetItem = <T = any>(
+  key: string,
+  defaultValue: T | null = null
+): T | null => {
   try {
     const item = localStorage.getItem(key)
 
@@ -51,14 +56,18 @@ export const safeGetItem = <T = any>(key: string, defaultValue: T | null = null)
 
     // Controlla se è la stringa corrotta "[object Object]"
     if (item === '[object Object]') {
-      console.warn(`[SafeStorage] Dati corrotti rilevati per chiave: ${key}, rimuovendo...`)
+      console.warn(
+        `[SafeStorage] Dati corrotti rilevati per chiave: ${key}, rimuovendo...`
+      )
       localStorage.removeItem(key)
       return defaultValue
     }
 
     // Controlla se l'elemento inizia con "company_" (dati corrotti specifici)
     if (item.startsWith('company_') && !item.startsWith('"company_')) {
-      console.warn(`[SafeStorage] Dati corrotti rilevati per chiave: ${key} (company_*), rimuovendo...`)
+      console.warn(
+        `[SafeStorage] Dati corrotti rilevati per chiave: ${key} (company_*), rimuovendo...`
+      )
       localStorage.removeItem(key)
       return defaultValue
     }
@@ -117,7 +126,7 @@ export const clearHaccpData = (): boolean => {
       'haccp-current-user',
       'haccp-last-check',
       'haccp-last-sync',
-      'haccp-company-id'
+      'haccp-company-id',
     ]
 
     keysToRemove.forEach(key => {
@@ -160,7 +169,7 @@ export const checkDataIntegrity = (): {
   const report = {
     corrupted: [] as string[],
     valid: [] as string[],
-    total: 0
+    total: 0,
   }
 
   try {

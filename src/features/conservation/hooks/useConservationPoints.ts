@@ -85,13 +85,18 @@ export function useConservationPoints() {
         return mockData
       }
 
-      console.log('🔧 Loading conservation points from Supabase for company:', user.company_id)
+      console.log(
+        '🔧 Loading conservation points from Supabase for company:',
+        user.company_id
+      )
       const { data, error } = await supabase
         .from('conservation_points')
-        .select(`
+        .select(
+          `
           *,
           department:departments(id, name)
-        `)
+        `
+        )
         .eq('company_id', user.company_id)
         .order('created_at', { ascending: false })
 
@@ -102,7 +107,10 @@ export function useConservationPoints() {
         return mockData
       }
 
-      console.log('✅ Loaded conservation points from Supabase:', data?.length || 0)
+      console.log(
+        '✅ Loaded conservation points from Supabase:',
+        data?.length || 0
+      )
       return data || []
     },
     enabled: !!user, // Only run when user is available

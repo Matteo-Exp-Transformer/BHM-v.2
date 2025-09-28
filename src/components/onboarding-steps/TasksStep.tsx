@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react'
-import { CheckSquare, Plus, Trash2, Edit2, Clock, AlertTriangle } from 'lucide-react'
+import {
+  CheckSquare,
+  Plus,
+  Trash2,
+  Edit2,
+  Clock,
+  AlertTriangle,
+} from 'lucide-react'
 
 interface Department {
   id: string
@@ -22,14 +29,26 @@ interface Task {
   id: string
   name: string
   description: string
-  frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annually' | 'custom'
+  frequency:
+    | 'daily'
+    | 'weekly'
+    | 'monthly'
+    | 'quarterly'
+    | 'annually'
+    | 'custom'
   department_id?: string
   conservation_point_id?: string
   priority: 'low' | 'medium' | 'high' | 'critical'
   estimated_duration: number
   checklist: string[]
   required_tools: string[]
-  haccp_category: 'temperature' | 'hygiene' | 'maintenance' | 'documentation' | 'training' | 'other'
+  haccp_category:
+    | 'temperature'
+    | 'hygiene'
+    | 'maintenance'
+    | 'documentation'
+    | 'training'
+    | 'other'
 }
 
 interface TasksStepProps {
@@ -46,7 +65,7 @@ const HACCP_CATEGORIES = [
   { value: 'maintenance', label: 'Manutenzione Attrezzature', icon: '🔧' },
   { value: 'documentation', label: 'Documentazione HACCP', icon: '📋' },
   { value: 'training', label: 'Formazione Personale', icon: '🎓' },
-  { value: 'other', label: 'Altre Attività', icon: '📝' }
+  { value: 'other', label: 'Altre Attività', icon: '📝' },
 ]
 
 const TASK_FREQUENCIES = [
@@ -55,10 +74,16 @@ const TASK_FREQUENCIES = [
   { value: 'monthly', label: 'Mensile' },
   { value: 'quarterly', label: 'Trimestrale' },
   { value: 'annually', label: 'Annuale' },
-  { value: 'custom', label: 'Personalizzata' }
+  { value: 'custom', label: 'Personalizzata' },
 ]
 
-const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidChange }: TasksStepProps) => {
+const TasksStep = ({
+  data,
+  departments,
+  conservationPoints,
+  onUpdate,
+  onValidChange,
+}: TasksStepProps) => {
   const [tasks, setTasks] = useState<Task[]>(data || [])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
@@ -73,24 +98,30 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
     required_tools: [] as string[],
     haccp_category: 'other' as const,
     checklistInput: '',
-    toolInput: ''
+    toolInput: '',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    validateForm()
     onUpdate(tasks)
-  }, [tasks, onUpdate])
 
-  const validateForm = () => {
-    const isValid = tasks.length > 0 && tasks.every(task =>
-      task.name.trim().length >= 2 &&
-      !tasks.find(other => other.id !== task.id && other.name.toLowerCase() === task.name.toLowerCase())
-    )
+    const isValid =
+      tasks.length > 0 &&
+      tasks.every(
+        task =>
+          task.name.trim().length >= 2 &&
+          !tasks.find(
+            other =>
+              other.id !== task.id &&
+              other.name.toLowerCase() === task.name.toLowerCase()
+          )
+      )
+
     onValidChange(isValid)
-  }
+  }, [tasks, onUpdate, onValidChange])
 
-  const generateId = () => `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  const generateId = () =>
+    `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
   const validateTask = () => {
     const newErrors: Record<string, string> = {}
@@ -99,7 +130,13 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
       newErrors.name = 'Il nome del task è obbligatorio'
     } else if (formData.name.trim().length < 2) {
       newErrors.name = 'Il nome deve essere di almeno 2 caratteri'
-    } else if (tasks.find(t => t.id !== editingId && t.name.toLowerCase() === formData.name.toLowerCase())) {
+    } else if (
+      tasks.find(
+        t =>
+          t.id !== editingId &&
+          t.name.toLowerCase() === formData.name.toLowerCase()
+      )
+    ) {
       newErrors.name = 'Un task con questo nome esiste già'
     }
 
@@ -125,7 +162,7 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
       estimated_duration: formData.estimated_duration,
       checklist: formData.checklist,
       required_tools: formData.required_tools,
-      haccp_category: formData.haccp_category
+      haccp_category: formData.haccp_category,
     }
 
     setTasks([...tasks, newTask])
@@ -135,23 +172,26 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
   const updateTask = () => {
     if (!validateTask()) return
 
-    setTasks(tasks.map(task =>
-      task.id === editingId
-        ? {
-            ...task,
-            name: formData.name.trim(),
-            description: formData.description.trim(),
-            frequency: formData.frequency,
-            department_id: formData.department_id || undefined,
-            conservation_point_id: formData.conservation_point_id || undefined,
-            priority: formData.priority,
-            estimated_duration: formData.estimated_duration,
-            checklist: formData.checklist,
-            required_tools: formData.required_tools,
-            haccp_category: formData.haccp_category
-          }
-        : task
-    ))
+    setTasks(
+      tasks.map(task =>
+        task.id === editingId
+          ? {
+              ...task,
+              name: formData.name.trim(),
+              description: formData.description.trim(),
+              frequency: formData.frequency,
+              department_id: formData.department_id || undefined,
+              conservation_point_id:
+                formData.conservation_point_id || undefined,
+              priority: formData.priority,
+              estimated_duration: formData.estimated_duration,
+              checklist: formData.checklist,
+              required_tools: formData.required_tools,
+              haccp_category: formData.haccp_category,
+            }
+          : task
+      )
+    )
     resetForm()
   }
 
@@ -173,7 +213,7 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
       required_tools: task.required_tools || [],
       haccp_category: task.haccp_category,
       checklistInput: '',
-      toolInput: ''
+      toolInput: '',
     })
     setErrors({})
   }
@@ -192,7 +232,7 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
       required_tools: [],
       haccp_category: 'other',
       checklistInput: '',
-      toolInput: ''
+      toolInput: '',
     })
     setErrors({})
   }
@@ -202,7 +242,7 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
       setFormData({
         ...formData,
         checklist: [...formData.checklist, formData.checklistInput.trim()],
-        checklistInput: ''
+        checklistInput: '',
       })
     }
   }
@@ -210,7 +250,7 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
   const removeChecklistItem = (index: number) => {
     setFormData({
       ...formData,
-      checklist: formData.checklist.filter((_, i) => i !== index)
+      checklist: formData.checklist.filter((_, i) => i !== index),
     })
   }
 
@@ -219,7 +259,7 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
       setFormData({
         ...formData,
         required_tools: [...formData.required_tools, formData.toolInput.trim()],
-        toolInput: ''
+        toolInput: '',
       })
     }
   }
@@ -227,19 +267,22 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
   const removeTool = (index: number) => {
     setFormData({
       ...formData,
-      required_tools: formData.required_tools.filter((_, i) => i !== index)
+      required_tools: formData.required_tools.filter((_, i) => i !== index),
     })
   }
 
   const prefillSampleData = () => {
     const cucina = departments.find(d => d.name === 'Cucina')
-    const frigorifero = conservationPoints.find(p => p.name.includes('Frigorifero'))
+    const frigorifero = conservationPoints.find(p =>
+      p.name.includes('Frigorifero')
+    )
 
     const sampleTasks: Task[] = [
       {
         id: generateId(),
         name: 'Controllo Temperature Frigoriferi',
-        description: 'Verifica e registrazione temperature di tutti i frigoriferi',
+        description:
+          'Verifica e registrazione temperature di tutti i frigoriferi',
         frequency: 'daily',
         department_id: cucina?.id,
         conservation_point_id: frigorifero?.id,
@@ -251,9 +294,12 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
           'Controllare temperatura con termometro di controllo',
           'Registrare temperatura su modulo HACCP',
           'Verificare corretta chiusura porta',
-          'Controllare pulizia guarnizioni'
+          'Controllare pulizia guarnizioni',
         ],
-        required_tools: ['Termometro digitale', 'Modulo registrazione temperature']
+        required_tools: [
+          'Termometro digitale',
+          'Modulo registrazione temperature',
+        ],
       },
       {
         id: generateId(),
@@ -270,9 +316,14 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
           'Risciacquare accuratamente',
           'Applicare disinfettante alimentare',
           'Lasciare agire per tempo indicato',
-          'Risciacquare se necessario'
+          'Risciacquare se necessario',
         ],
-        required_tools: ['Detergente professionale', 'Disinfettante alimentare', 'Panni monouso', 'Spugne dedicate']
+        required_tools: [
+          'Detergente professionale',
+          'Disinfettante alimentare',
+          'Panni monouso',
+          'Spugne dedicate',
+        ],
       },
       {
         id: generateId(),
@@ -288,14 +339,14 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
           'Controllare date di scadenza in dispensa',
           'Rimuovere prodotti scaduti',
           'Segnalare prodotti in scadenza entro 2 giorni',
-          'Aggiornare inventario'
+          'Aggiornare inventario',
         ],
-        required_tools: ['Etichette', 'Pennarello', 'Registro scadenze']
+        required_tools: ['Etichette', 'Pennarello', 'Registro scadenze'],
       },
       {
         id: generateId(),
         name: 'Pulizia Profonda Abbattitore',
-        description: 'Sanificazione completa dell\'abbattitore di temperatura',
+        description: "Sanificazione completa dell'abbattitore di temperatura",
         frequency: 'weekly',
         department_id: cucina?.id,
         priority: 'medium',
@@ -308,14 +359,20 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
           'Pulire camera interna',
           'Disinfettare tutte le superfici',
           'Controllare stato guarnizioni',
-          'Riaccendere e verificare funzionamento'
+          'Riaccendere e verificare funzionamento',
         ],
-        required_tools: ['Detergente per acciaio', 'Disinfettante', 'Spugne non abrasive', 'Panni in microfibra']
+        required_tools: [
+          'Detergente per acciaio',
+          'Disinfettante',
+          'Spugne non abrasive',
+          'Panni in microfibra',
+        ],
       },
       {
         id: generateId(),
         name: 'Formazione HACCP Mensile',
-        description: 'Sessione di aggiornamento formativo per tutto il personale',
+        description:
+          'Sessione di aggiornamento formativo per tutto il personale',
         frequency: 'monthly',
         priority: 'medium',
         estimated_duration: 120,
@@ -326,9 +383,13 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
           'Illustrare procedure HACCP aggiornate',
           'Discutere casi pratici',
           'Verificare comprensione concetti',
-          'Registrare partecipazione su registro'
+          'Registrare partecipazione su registro',
         ],
-        required_tools: ['Materiale didattico', 'Registro formazione', 'Attestati partecipazione']
+        required_tools: [
+          'Materiale didattico',
+          'Registro formazione',
+          'Attestati partecipazione',
+        ],
       },
       {
         id: generateId(),
@@ -345,9 +406,14 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
           'Controllare scadenze certificazioni',
           'Verificare procedure operative',
           'Redigere report audit',
-          'Pianificare azioni correttive'
+          'Pianificare azioni correttive',
         ],
-        required_tools: ['Checklist audit', 'Moduli non conformità', 'Macchina fotografica', 'Computer/tablet']
+        required_tools: [
+          'Checklist audit',
+          'Moduli non conformità',
+          'Macchina fotografica',
+          'Computer/tablet',
+        ],
       },
       {
         id: generateId(),
@@ -365,9 +431,14 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
           'Verificare lettura 0°C ±1°C',
           'Registrare risultati taratura',
           'Sostituire termometri non conformi',
-          'Etichettare termometri tarati'
+          'Etichettare termometri tarati',
         ],
-        required_tools: ['Ghiaccio', 'Contenitore per bagno', 'Etichette', 'Registro tarature']
+        required_tools: [
+          'Ghiaccio',
+          'Contenitore per bagno',
+          'Etichette',
+          'Registro tarature',
+        ],
       },
       {
         id: generateId(),
@@ -384,16 +455,23 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
           'Verificare presenza insetti volanti',
           'Controllare pulizia griglie scarichi',
           'Registrare osservazioni',
-          'Contattare ditta disinfestazione se necessario'
+          'Contattare ditta disinfestazione se necessario',
         ],
-        required_tools: ['Torcia', 'Registro controlli', 'Guanti', 'Telefono ditta disinfestazione']
-      }
+        required_tools: [
+          'Torcia',
+          'Registro controlli',
+          'Guanti',
+          'Telefono ditta disinfestazione',
+        ],
+      },
     ]
     setTasks(sampleTasks)
   }
 
   const getCategoryInfo = (category: string) => {
-    return HACCP_CATEGORIES.find(c => c.value === category) || HACCP_CATEGORIES[5]
+    return (
+      HACCP_CATEGORIES.find(c => c.value === category) || HACCP_CATEGORIES[5]
+    )
   }
 
   const getFrequencyLabel = (frequency: string) => {
@@ -405,9 +483,11 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
       low: 'bg-green-100 text-green-800',
       medium: 'bg-yellow-100 text-yellow-800',
       high: 'bg-orange-100 text-orange-800',
-      critical: 'bg-red-100 text-red-800'
+      critical: 'bg-red-100 text-red-800',
     }
-    return colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+    return (
+      colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+    )
   }
 
   const getPriorityLabel = (priority: string) => {
@@ -415,7 +495,7 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
       low: 'Bassa',
       medium: 'Media',
       high: 'Alta',
-      critical: 'Critica'
+      critical: 'Critica',
     }
     return labels[priority as keyof typeof labels] || priority
   }
@@ -462,7 +542,9 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   errors.name ? 'border-red-300' : 'border-gray-300'
                 }`}
@@ -479,7 +561,12 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
               </label>
               <select
                 value={formData.haccp_category}
-                onChange={(e) => setFormData({ ...formData, haccp_category: e.target.value as any })}
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    haccp_category: e.target.value as any,
+                  })
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {HACCP_CATEGORIES.map(category => (
@@ -497,7 +584,9 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
             </label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={e =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Descrizione dettagliata dell'attività..."
@@ -512,7 +601,9 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
               </label>
               <select
                 value={formData.frequency}
-                onChange={(e) => setFormData({ ...formData, frequency: e.target.value as any })}
+                onChange={e =>
+                  setFormData({ ...formData, frequency: e.target.value as any })
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {TASK_FREQUENCIES.map(freq => (
@@ -529,7 +620,9 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
               </label>
               <select
                 value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                onChange={e =>
+                  setFormData({ ...formData, priority: e.target.value as any })
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="low">Bassa</option>
@@ -548,13 +641,22 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
                 min="5"
                 step="5"
                 value={formData.estimated_duration}
-                onChange={(e) => setFormData({ ...formData, estimated_duration: parseInt(e.target.value) || 30 })}
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    estimated_duration: parseInt(e.target.value) || 30,
+                  })
+                }
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.estimated_duration ? 'border-red-300' : 'border-gray-300'
+                  errors.estimated_duration
+                    ? 'border-red-300'
+                    : 'border-gray-300'
                 }`}
               />
               {errors.estimated_duration && (
-                <p className="mt-1 text-sm text-red-600">{errors.estimated_duration}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.estimated_duration}
+                </p>
               )}
             </div>
           </div>
@@ -567,7 +669,9 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
               </label>
               <select
                 value={formData.department_id}
-                onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, department_id: e.target.value })
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Tutti i reparti</option>
@@ -585,7 +689,12 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
               </label>
               <select
                 value={formData.conservation_point_id}
-                onChange={(e) => setFormData({ ...formData, conservation_point_id: e.target.value })}
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    conservation_point_id: e.target.value,
+                  })
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Nessuno specifico</option>
@@ -607,10 +716,14 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
               <input
                 type="text"
                 value={formData.checklistInput}
-                onChange={(e) => setFormData({ ...formData, checklistInput: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, checklistInput: e.target.value })
+                }
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Aggiungi elemento alla checklist..."
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addChecklistItem())}
+                onKeyDown={e =>
+                  e.key === 'Enter' && (e.preventDefault(), addChecklistItem())
+                }
               />
               <button
                 type="button"
@@ -623,7 +736,10 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
             {formData.checklist.length > 0 && (
               <div className="space-y-1">
                 {formData.checklist.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-white border border-gray-200 rounded">
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 p-2 bg-white border border-gray-200 rounded"
+                  >
                     <CheckSquare className="w-4 h-4 text-green-600" />
                     <span className="flex-1 text-sm">{item}</span>
                     <button
@@ -648,10 +764,14 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
               <input
                 type="text"
                 value={formData.toolInput}
-                onChange={(e) => setFormData({ ...formData, toolInput: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, toolInput: e.target.value })
+                }
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Aggiungi strumento necessario..."
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTool())}
+                onKeyDown={e =>
+                  e.key === 'Enter' && (e.preventDefault(), addTool())
+                }
               />
               <button
                 type="button"
@@ -664,7 +784,10 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
             {formData.required_tools.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {formData.required_tools.map((tool, index) => (
-                  <div key={index} className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                  <div
+                    key={index}
+                    className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm"
+                  >
                     <span>{tool}</span>
                     <button
                       type="button"
@@ -727,9 +850,13 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
-            {tasks.map((task) => {
-              const department = departments.find(d => d.id === task.department_id)
-              const conservationPoint = conservationPoints.find(p => p.id === task.conservation_point_id)
+            {tasks.map(task => {
+              const department = departments.find(
+                d => d.id === task.department_id
+              )
+              const conservationPoint = conservationPoints.find(
+                p => p.id === task.conservation_point_id
+              )
               const categoryInfo = getCategoryInfo(task.haccp_category)
 
               return (
@@ -741,14 +868,20 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-lg">{categoryInfo.icon}</span>
-                        <h4 className="font-medium text-gray-900">{task.name}</h4>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                        <h4 className="font-medium text-gray-900">
+                          {task.name}
+                        </h4>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}
+                        >
                           {getPriorityLabel(task.priority)}
                         </span>
                       </div>
 
                       {task.description && (
-                        <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                        <p className="text-sm text-gray-600 mb-2">
+                          {task.description}
+                        </p>
                       )}
 
                       <div className="flex flex-wrap gap-2 text-sm text-gray-500 mb-2">
@@ -774,16 +907,23 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
 
                       {task.checklist.length > 0 && (
                         <div className="mb-2">
-                          <p className="text-xs font-medium text-gray-700 mb-1">Checklist ({task.checklist.length} elementi)</p>
+                          <p className="text-xs font-medium text-gray-700 mb-1">
+                            Checklist ({task.checklist.length} elementi)
+                          </p>
                           <div className="text-xs text-gray-500">
                             {task.checklist.slice(0, 2).map((item, index) => (
-                              <div key={index} className="flex items-center gap-1">
+                              <div
+                                key={index}
+                                className="flex items-center gap-1"
+                              >
                                 <CheckSquare className="w-3 h-3" />
                                 <span>{item}</span>
                               </div>
                             ))}
                             {task.checklist.length > 2 && (
-                              <span className="text-gray-400">... e altri {task.checklist.length - 2}</span>
+                              <span className="text-gray-400">
+                                ... e altri {task.checklist.length - 2}
+                              </span>
                             )}
                           </div>
                         </div>
@@ -791,11 +931,16 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
 
                       {task.required_tools.length > 0 && (
                         <div className="flex flex-wrap gap-1">
-                          {task.required_tools.slice(0, 3).map((tool, index) => (
-                            <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                              {tool}
-                            </span>
-                          ))}
+                          {task.required_tools
+                            .slice(0, 3)
+                            .map((tool, index) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+                              >
+                                {tool}
+                              </span>
+                            ))}
                           {task.required_tools.length > 3 && (
                             <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
                               +{task.required_tools.length - 3}
@@ -835,9 +980,10 @@ const TasksStep = ({ data, departments, conservationPoints, onUpdate, onValidCha
           ℹ️ Automazione Controlli HACCP
         </h3>
         <p className="text-sm text-blue-700">
-          Le attività configurate verranno automaticamente assegnate al personale secondo
-          la frequenza impostata. Il sistema genererà promemoria e monitererà il completamento
-          per garantire la conformità alle procedure HACCP.
+          Le attività configurate verranno automaticamente assegnate al
+          personale secondo la frequenza impostata. Il sistema genererà
+          promemoria e monitererà il completamento per garantire la conformità
+          alle procedure HACCP.
         </p>
       </div>
     </div>

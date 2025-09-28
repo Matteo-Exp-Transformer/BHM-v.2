@@ -71,7 +71,13 @@ interface MaintenanceTaskFormProps {
   onRemove: (index: number) => void
 }
 
-function MaintenanceTaskForm({ task, index, staff, onUpdate, onRemove }: MaintenanceTaskFormProps) {
+function MaintenanceTaskForm({
+  task,
+  index,
+  staff,
+  onUpdate,
+  onRemove,
+}: MaintenanceTaskFormProps) {
   const [expanded, setExpanded] = useState(true)
 
   const updateTask = (field: keyof MaintenanceTaskData, value: any) => {
@@ -79,13 +85,15 @@ function MaintenanceTaskForm({ task, index, staff, onUpdate, onRemove }: Mainten
   }
 
   const getTaskTypeInfo = () => {
-    return MAINTENANCE_TASK_TYPES[task.type] || {
-      label: 'Altro',
-      icon: 'tool',
-      color: 'gray',
-      defaultDuration: 60,
-      defaultChecklist: [],
-    }
+    return (
+      MAINTENANCE_TASK_TYPES[task.type] || {
+        label: 'Altro',
+        icon: 'tool',
+        color: 'gray',
+        defaultDuration: 60,
+        defaultChecklist: [],
+      }
+    )
   }
 
   const typeInfo = getTaskTypeInfo()
@@ -140,7 +148,9 @@ function MaintenanceTaskForm({ task, index, staff, onUpdate, onRemove }: Mainten
               </label>
               <select
                 value={task.type}
-                onChange={e => updateTask('type', e.target.value as MaintenanceType)}
+                onChange={e =>
+                  updateTask('type', e.target.value as MaintenanceType)
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {Object.entries(MAINTENANCE_TASK_TYPES).map(([key, info]) => (
@@ -160,7 +170,12 @@ function MaintenanceTaskForm({ task, index, staff, onUpdate, onRemove }: Mainten
               </label>
               <select
                 value={task.frequency}
-                onChange={e => updateTask('frequency', e.target.value as MaintenanceFrequency)}
+                onChange={e =>
+                  updateTask(
+                    'frequency',
+                    e.target.value as MaintenanceFrequency
+                  )
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="daily">Giornaliera</option>
@@ -181,7 +196,12 @@ function MaintenanceTaskForm({ task, index, staff, onUpdate, onRemove }: Mainten
                 min="5"
                 step="5"
                 value={task.estimated_duration}
-                onChange={e => updateTask('estimated_duration', parseInt(e.target.value) || 30)}
+                onChange={e =>
+                  updateTask(
+                    'estimated_duration',
+                    parseInt(e.target.value) || 30
+                  )
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -192,7 +212,12 @@ function MaintenanceTaskForm({ task, index, staff, onUpdate, onRemove }: Mainten
               </label>
               <select
                 value={task.priority}
-                onChange={e => updateTask('priority', e.target.value as 'low' | 'medium' | 'high' | 'critical')}
+                onChange={e =>
+                  updateTask(
+                    'priority',
+                    e.target.value as 'low' | 'medium' | 'high' | 'critical'
+                  )
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="low">Bassa</option>
@@ -211,7 +236,9 @@ function MaintenanceTaskForm({ task, index, staff, onUpdate, onRemove }: Mainten
               </label>
               <select
                 value={task.assigned_to || ''}
-                onChange={e => updateTask('assigned_to', e.target.value || undefined)}
+                onChange={e =>
+                  updateTask('assigned_to', e.target.value || undefined)
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Assegnazione automatica</option>
@@ -240,7 +267,9 @@ function MaintenanceTaskForm({ task, index, staff, onUpdate, onRemove }: Mainten
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => updateTask('instructions', typeInfo.defaultChecklist)}
+              onClick={() =>
+                updateTask('instructions', typeInfo.defaultChecklist)
+              }
               className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
             >
               Carica checklist standard
@@ -270,7 +299,9 @@ export function AddPointModal({
     maintenance_due: '',
   })
 
-  const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTaskData[]>([])
+  const [maintenanceTasks, setMaintenanceTasks] = useState<
+    MaintenanceTaskData[]
+  >([])
   const [showMaintenanceForm, setShowMaintenanceForm] = useState(false)
 
   const [predictedType, setPredictedType] =
@@ -289,17 +320,19 @@ export function AddPointModal({
           ? new Date(point.maintenance_due).toISOString().split('T')[0]
           : '',
       })
-      setMaintenanceTasks(point.maintenance_tasks?.map(task => ({
-        id: task.id,
-        title: task.title,
-        type: task.type,
-        frequency: task.frequency,
-        estimated_duration: task.estimated_duration,
-        assigned_to: task.assigned_to,
-        priority: task.priority,
-        next_due: new Date(task.next_due),
-        instructions: task.checklist,
-      })) || [])
+      setMaintenanceTasks(
+        point.maintenance_tasks?.map(task => ({
+          id: task.id,
+          title: task.title,
+          type: task.type,
+          frequency: task.frequency,
+          estimated_duration: task.estimated_duration,
+          assigned_to: task.assigned_to,
+          priority: task.priority,
+          next_due: new Date(task.next_due),
+          instructions: task.checklist,
+        })) || []
+      )
     } else {
       setFormData({
         name: '',
@@ -335,17 +368,20 @@ export function AddPointModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    onSave({
-      name: formData.name,
-      department_id: formData.department_id,
-      setpoint_temp: formData.setpoint_temp,
-      type: predictedType,
-      is_blast_chiller: formData.is_blast_chiller,
-      product_categories: formData.product_categories,
-      maintenance_due: formData.maintenance_due
-        ? new Date(formData.maintenance_due)
-        : undefined,
-    }, maintenanceTasks)
+    onSave(
+      {
+        name: formData.name,
+        department_id: formData.department_id,
+        setpoint_temp: formData.setpoint_temp,
+        type: predictedType,
+        is_blast_chiller: formData.is_blast_chiller,
+        product_categories: formData.product_categories,
+        maintenance_due: formData.maintenance_due
+          ? new Date(formData.maintenance_due)
+          : undefined,
+      },
+      maintenanceTasks
+    )
   }
 
   const addMaintenanceTask = () => {
@@ -362,7 +398,10 @@ export function AddPointModal({
     setShowMaintenanceForm(true)
   }
 
-  const updateMaintenanceTask = (index: number, updatedTask: MaintenanceTaskData) => {
+  const updateMaintenanceTask = (
+    index: number,
+    updatedTask: MaintenanceTaskData
+  ) => {
     const updated = [...maintenanceTasks]
     updated[index] = updatedTask
     setMaintenanceTasks(updated)

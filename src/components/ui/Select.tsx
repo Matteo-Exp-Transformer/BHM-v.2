@@ -4,7 +4,7 @@ import { Check, ChevronDown, ChevronUp } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
-const Select = SelectPrimitive.Root
+const SelectRoot = SelectPrimitive.Root
 
 const SelectGroup = SelectPrimitive.Group
 
@@ -144,8 +144,14 @@ const SelectSeparator = React.forwardRef<
 ))
 SelectSeparator.displayName = SelectPrimitive.Separator.displayName
 
+const Option: React.FC<React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item> & { value: string }> = ({ children, ...props }) => (
+  <SelectItem {...props} value={props.value}>
+    {children}
+  </SelectItem>
+)
+
 export {
-  Select,
+  SelectRoot as Select,
   SelectGroup,
   SelectValue,
   SelectTrigger,
@@ -155,4 +161,5 @@ export {
   SelectSeparator,
   SelectScrollUpButton,
   SelectScrollDownButton,
+  Option as SelectOption,
 }

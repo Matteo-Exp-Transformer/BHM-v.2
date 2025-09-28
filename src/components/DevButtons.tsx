@@ -12,10 +12,12 @@ const DevButtons: React.FC<DevButtonsProps> = ({
   onPrefillOnboarding,
   onResetOnboarding,
   onCompleteOnboarding,
-  isDevMode = false
+  isDevMode = false,
 }) => {
   // Always visible for testing and demo (isDevMode reserved for future use)
-  console.log('DevButtons loaded', { isDevMode })
+  if (isDevMode) {
+    console.log('DevButtons loaded in dev mode')
+  }
   return (
     <div className="flex gap-2 flex-wrap">
       <button

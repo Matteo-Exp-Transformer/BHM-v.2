@@ -1,11 +1,16 @@
 import { Suspense, lazy, useEffect } from 'react'
-import { Routes, Route, useNavigate } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
 // Onboarding helpers
-import { prefillOnboarding, resetOnboarding, resetApp, completeOnboarding } from './utils/onboardingHelpers'
+import {
+  prefillOnboarding,
+  resetOnboarding,
+  resetApp,
+  completeOnboarding,
+} from './utils/onboardingHelpers'
 
 // Control components (used in components)
 // import DevButtons from './components/DevButtons'
@@ -40,9 +45,16 @@ const SettingsPage = lazy(() => import('./features/settings/SettingsPage'))
 const OnboardingWizard = lazy(() => import('./components/OnboardingWizard'))
 const NotFoundPage = lazy(() => import('./components/pages/NotFoundPage'))
 
-function App() {
-  // const navigate = useNavigate() // Available for navigation functions
+type DevWindow = Window &
+  Partial<{
+    resetApp: typeof resetApp
+    resetOnboarding: typeof resetOnboarding
+    prefillOnboarding: typeof prefillOnboarding
+    completeOnboarding: typeof completeOnboarding
+    devFunctionsLogged: boolean
+  }>
 
+function App() {
   // Funzione per aprire l'onboarding (implemented in MainLayout)
   // const handleOpenOnboarding = () => {
   //   navigate('/onboarding')
@@ -50,21 +62,24 @@ function App() {
 
   // Espone funzioni globalmente in modalità sviluppo per debug console
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       // Espone funzioni globalmente per debug
-      ;(window as any).resetApp = resetApp
-      ;(window as any).resetOnboarding = resetOnboarding
-      ;(window as any).prefillOnboarding = prefillOnboarding
-      ;(window as any).completeOnboarding = completeOnboarding
+      const devWindow = window as DevWindow
+      devWindow.resetApp = resetApp
+      devWindow.resetOnboarding = resetOnboarding
+      devWindow.prefillOnboarding = prefillOnboarding
+      devWindow.completeOnboarding = completeOnboarding
 
       // Log delle funzioni disponibili
-      if (!(window as any).devFunctionsLogged) {
+      if (!devWindow.devFunctionsLogged) {
         console.log('🔄 Funzioni dev disponibili:')
         console.log('  - resetApp() - Reset completo app')
         console.log('  - resetOnboarding() - Reset onboarding e app')
         console.log('  - prefillOnboarding() - Precompila onboarding')
-        console.log('  - completeOnboarding() - Completa onboarding automaticamente')
-        ;(window as any).devFunctionsLogged = true
+        console.log(
+          '  - completeOnboarding() - Completa onboarding automaticamente'
+        )
+        devWindow.devFunctionsLogged = true
       }
     }
   }, [])
