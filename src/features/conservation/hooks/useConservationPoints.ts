@@ -78,18 +78,42 @@ export function useConservationPoints() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['conservation-points'],
+    queryKey: ['conservation-points', user?.company_id],
     queryFn: async () => {
-      // FORCE MOCK DATA FOR TESTING
-      console.log('🔧 Using mock data for conservation points')
-      return mockData
+      if (!user?.company_id) {
+        console.log('🔧 No company_id, using mock data for conservation points')
+        return mockData
+      }
+
+      console.log('🔧 Loading conservation points from Supabase for company:', user.company_id)
+      const { data, error } = await supabase
+        .from('conservation_points')
+        .select(`
+          *,
+          department:departments(id, name)
+        `)
+        .eq('company_id', user.company_id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error loading conservation points:', error)
+        // Fallback to mock data if there's an error
+        console.log('🔧 Fallback to mock data due to error')
+        return mockData
+      }
+
+      console.log('✅ Loaded conservation points from Supabase:', data?.length || 0)
+      return data || []
     },
-    enabled: true, // Always enabled for testing
+    enabled: !!user, // Only run when user is available
   })
 
   const createConservationPointMutation = useMutation({
-    mutationFn: async (
-      data: Omit<
+    mutationFn: async ({
+      conservationPoint,
+      maintenanceTasks,
+    }: {
+      conservationPoint: Omit<
         ConservationPoint,
         | 'id'
         | 'company_id'
@@ -98,20 +122,22 @@ export function useConservationPoints() {
         | 'status'
         | 'last_temperature_reading'
       >
-    ) => {
+      maintenanceTasks: any[]
+    }) => {
       if (!user?.company_id) throw new Error('No company ID available')
 
       // Auto-classify based on temperature
       const type = classifyConservationPoint(
-        data.setpoint_temp,
-        data.is_blast_chiller
+        conservationPoint.setpoint_temp,
+        conservationPoint.is_blast_chiller
       )
 
-      const { data: result, error } = await supabase
+      // Create conservation point
+      const { data: pointResult, error: pointError } = await supabase
         .from('conservation_points')
         .insert([
           {
-            ...data,
+            ...conservationPoint,
             company_id: user.company_id,
             type,
           },
@@ -119,11 +145,39 @@ export function useConservationPoints() {
         .select()
         .single()
 
-      if (error) throw error
-      return result
+      if (pointError) throw pointError
+
+      // Create maintenance tasks if any
+      if (maintenanceTasks.length > 0) {
+        const tasksToInsert = maintenanceTasks.map(task => ({
+          company_id: user.company_id,
+          conservation_point_id: pointResult.id,
+          title: task.title,
+          type: task.type,
+          frequency: task.frequency,
+          estimated_duration: task.estimated_duration,
+          assigned_to: task.assigned_to,
+          priority: task.priority,
+          next_due: task.next_due.toISOString(),
+          status: 'scheduled',
+          instructions: task.instructions,
+        }))
+
+        const { error: tasksError } = await supabase
+          .from('maintenance_tasks')
+          .insert(tasksToInsert)
+
+        if (tasksError) {
+          console.error('Error creating maintenance tasks:', tasksError)
+          // Don't throw here - the point was created successfully
+        }
+      }
+
+      return pointResult
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conservation-points'] })
+      queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] })
       toast.success('Punto di conservazione creato con successo')
     },
     onError: error => {

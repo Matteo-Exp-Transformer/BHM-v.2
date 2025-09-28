@@ -23,6 +23,12 @@ export const supabase = (() => {
           typeof window !== 'undefined' ? window.localStorage : undefined,
         storageKey: 'bhm-supabase-auth',
       },
+      global: {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      },
     })
   }
   return supabaseInstance

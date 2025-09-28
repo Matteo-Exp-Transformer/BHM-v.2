@@ -97,42 +97,85 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
   } = useQuery({
     queryKey: QUERY_KEYS.products(companyId || '', searchParams?.filters),
     queryFn: async () => {
-      console.log(
-        '🔧 Using mock data for products - database disabled temporarily'
-      )
-      return mockProducts
+      if (!companyId) {
+        console.log('🔧 No company_id, using mock data for products')
+        return mockProducts
+      }
+
+      console.log('🔧 Loading products from Supabase for company:', companyId)
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          category:product_categories(id, name, color),
+          department:departments(id, name),
+          conservation_point:conservation_points(id, name)
+        `)
+        .eq('company_id', companyId)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error loading products:', error)
+        // Fallback to mock data if there's an error
+        console.log('🔧 Fallback to mock data due to error')
+        return mockProducts
+      }
+
+      console.log('✅ Loaded products from Supabase:', data?.length || 0)
+      return data || []
     },
     enabled: !!companyId && !!user,
   })
 
-  // Fetch product statistics - DISABLED TEMPORARILY
+  // Fetch product statistics
   const { data: stats } = useQuery({
     queryKey: QUERY_KEYS.productStats(companyId || ''),
     queryFn: async (): Promise<InventoryStats> => {
-      console.log(
-        '🔧 Using mock stats for products - database disabled temporarily'
-      )
-      return {
-        total_products: 3,
-        active_products: 2,
-        expiring_soon: 1,
-        expired: 1,
-        by_category: {
-          Latticini: 3,
-        },
-        by_department: {
-          Cucina: 3,
-        },
-        by_status: {
-          active: 2,
+      if (!companyId || !products) {
+        console.log('🔧 Using mock stats for products - no data available')
+        return {
+          total_products: 3,
+          active_products: 2,
+          expiring_soon: 1,
           expired: 1,
-          consumed: 0,
-          waste: 0,
-        },
-        compliance_rate: 85,
+          by_category: { Latticini: 3 },
+          by_department: { Cucina: 3 },
+          by_status: { active: 2, expired: 1, consumed: 0, waste: 0 },
+          compliance_rate: 85,
+        }
       }
+
+      console.log('🔧 Computing product stats from loaded data')
+
+      // Compute stats from actual products data
+      const now = new Date()
+      const soon = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000) // 3 days from now
+
+      const stats: InventoryStats = {
+        total_products: products.length,
+        active_products: products.filter(p => p.status === 'active').length,
+        expiring_soon: products.filter(p =>
+          p.status === 'active' &&
+          new Date(p.expiry_date) <= soon &&
+          new Date(p.expiry_date) > now
+        ).length,
+        expired: products.filter(p =>
+          new Date(p.expiry_date) <= now || p.status === 'expired'
+        ).length,
+        by_category: {},
+        by_department: {},
+        by_status: {
+          active: products.filter(p => p.status === 'active').length,
+          expired: products.filter(p => p.status === 'expired').length,
+          consumed: products.filter(p => p.status === 'consumed').length,
+          waste: products.filter(p => p.status === 'waste').length,
+        },
+        compliance_rate: Math.round((products.filter(p => p.status === 'active').length / Math.max(products.length, 1)) * 100),
+      }
+
+      return stats
     },
-    enabled: !!companyId && !!user,
+    enabled: !!companyId && !!user && !!products,
   })
 
   // Create product mutation

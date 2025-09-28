@@ -82,7 +82,8 @@ export default function ConservationPage() {
       | 'updated_at'
       | 'status'
       | 'last_temperature_reading'
-    >
+    >,
+    maintenanceTasks: any[] = []
   ) => {
     if (editingPoint) {
       updateConservationPoint({
@@ -90,7 +91,10 @@ export default function ConservationPage() {
         data,
       })
     } else {
-      createConservationPoint(data)
+      createConservationPoint({
+        conservationPoint: data,
+        maintenanceTasks,
+      })
     }
     setShowAddModal(false)
     setEditingPoint(null)
@@ -251,51 +255,51 @@ export default function ConservationPage() {
           </button>
         }
       >
-        {/* Mini Statistics - Punti di Conservazione */}
+        {/* Mini Statistics - Punti di Conservazione per Tipo */}
         <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="bg-blue-50 rounded-lg border border-blue-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-blue-700">Totale</p>
-                <p className="text-lg font-bold text-blue-900">{stats.total}</p>
+                <p className="text-xs text-blue-700">Frigoriferi</p>
+                <p className="text-lg font-bold text-blue-900">{stats.byType.fridge}</p>
               </div>
-              <Thermometer className="w-5 h-5 text-blue-600" />
+              <div className="text-xl">❄️</div>
             </div>
           </div>
 
-          <div className="bg-green-50 rounded-lg border border-green-200 p-3">
+          <div className="bg-cyan-50 rounded-lg border border-cyan-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-green-700">Regolari</p>
-                <p className="text-lg font-bold text-green-900">
-                  {stats.normal}
+                <p className="text-xs text-cyan-700">Freezer</p>
+                <p className="text-lg font-bold text-cyan-900">
+                  {stats.byType.freezer}
                 </p>
               </div>
-              <CheckCircle className="w-5 h-5 text-green-600" />
+              <div className="text-xl">🧊</div>
             </div>
           </div>
 
-          <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-3">
+          <div className="bg-purple-50 rounded-lg border border-purple-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-yellow-700">Attenzione</p>
-                <p className="text-lg font-bold text-yellow-900">
-                  {stats.warning}
+                <p className="text-xs text-purple-700">Abbattitore</p>
+                <p className="text-lg font-bold text-purple-900">
+                  {stats.byType.blast}
                 </p>
               </div>
-              <AlertTriangle className="w-5 h-5 text-yellow-600" />
+              <div className="text-xl">⚡</div>
             </div>
           </div>
 
-          <div className="bg-red-50 rounded-lg border border-red-200 p-3">
+          <div className="bg-orange-50 rounded-lg border border-orange-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-red-700">Critici</p>
-                <p className="text-lg font-bold text-red-900">
-                  {stats.critical}
+                <p className="text-xs text-orange-700">Dispensa</p>
+                <p className="text-lg font-bold text-orange-900">
+                  {stats.byType.ambient}
                 </p>
               </div>
-              <AlertTriangle className="w-5 h-5 text-red-600" />
+              <div className="text-xl">🌡️</div>
             </div>
           </div>
         </div>
