@@ -105,12 +105,14 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
       console.log('🔧 Loading products from Supabase for company:', companyId)
       const { data, error } = await supabase
         .from('products')
-        .select(`
+        .select(
+          `
           *,
           category:product_categories(id, name, color),
           department:departments(id, name),
           conservation_point:conservation_points(id, name)
-        `)
+        `
+        )
         .eq('company_id', companyId)
         .order('created_at', { ascending: false })
 
@@ -154,13 +156,14 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
       const stats: InventoryStats = {
         total_products: products.length,
         active_products: products.filter(p => p.status === 'active').length,
-        expiring_soon: products.filter(p =>
-          p.status === 'active' &&
-          new Date(p.expiry_date) <= soon &&
-          new Date(p.expiry_date) > now
+        expiring_soon: products.filter(
+          p =>
+            p.status === 'active' &&
+            new Date(p.expiry_date) <= soon &&
+            new Date(p.expiry_date) > now
         ).length,
-        expired: products.filter(p =>
-          new Date(p.expiry_date) <= now || p.status === 'expired'
+        expired: products.filter(
+          p => new Date(p.expiry_date) <= now || p.status === 'expired'
         ).length,
         by_category: {},
         by_department: {},
@@ -170,7 +173,11 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
           consumed: products.filter(p => p.status === 'consumed').length,
           waste: products.filter(p => p.status === 'waste').length,
         },
-        compliance_rate: Math.round((products.filter(p => p.status === 'active').length / Math.max(products.length, 1)) * 100),
+        compliance_rate: Math.round(
+          (products.filter(p => p.status === 'active').length /
+            Math.max(products.length, 1)) *
+            100
+        ),
       }
 
       return stats

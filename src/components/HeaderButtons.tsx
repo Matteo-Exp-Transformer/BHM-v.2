@@ -10,7 +10,7 @@ interface HeaderButtonsProps {
 const HeaderButtons: React.FC<HeaderButtonsProps> = ({
   onResetApp,
   onOpenOnboarding,
-  showResetApp = false
+  showResetApp = false,
 }) => {
   return (
     <div className="flex gap-2">

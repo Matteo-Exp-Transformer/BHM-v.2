@@ -13,4 +13,5 @@ export {
 export { Input } from './Input'
 export { Label } from './Label'
 export { Select } from './Select'
+export { SelectOption } from './Select'
 export { Textarea } from './Textarea'

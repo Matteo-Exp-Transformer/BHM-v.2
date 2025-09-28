@@ -70,8 +70,8 @@ export function useRealtime(
 
   // Track activity for idle detection
   const lastActivityRef = useRef<Date>(new Date())
-  const activityTimeoutRef = useRef<NodeJS.Timeout>()
-  const idleTimeoutRef = useRef<NodeJS.Timeout>()
+  const activityTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
+  const idleTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
 
   /**
    * Connect to real-time services

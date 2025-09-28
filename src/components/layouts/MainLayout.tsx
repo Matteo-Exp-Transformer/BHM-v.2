@@ -86,22 +86,20 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       <header className="bg-white border-b border-gray-200 px-4 py-3 safe-area-top">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <h1 className="text-lg font-semibold text-gray-900">HACCP Manager</h1>
+            <h1 className="text-lg font-semibold text-gray-900">
+              HACCP Manager
+            </h1>
           </div>
           <HeaderButtons
             onResetApp={resetApp}
             onOpenOnboarding={handleOpenOnboarding}
-            showResetApp={process.env.NODE_ENV === 'development'}
+            showResetApp={import.meta.env.DEV}
           />
         </div>
       </header>
 
       {/* Main Content */}
-      <main
-        className="pb-20 pt-0"
-        role="main"
-        aria-label="Main content"
-      >
+      <main className="pb-20 pt-0" role="main" aria-label="Main content">
         {children}
       </main>
 

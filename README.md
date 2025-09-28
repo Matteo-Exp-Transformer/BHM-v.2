@@ -93,22 +93,42 @@ pnpm test:coverage # Run tests with coverage
 ### Project Structure
 
 ```
-src/
-├── components/          # Reusable React components
-│   ├── ui/             # Base UI components
-│   ├── forms/          # Form components
-│   └── layouts/        # Layout components
-├── features/           # Feature-based modules
-│   ├── auth/          # Authentication
-│   ├── onboarding/    # Onboarding flow
-│   ├── conservation/  # Temperature management
-│   ├── tasks/         # Task management
-│   └── inventory/     # Inventory system
-├── hooks/             # Custom React hooks
-├── lib/               # Utilities and helpers
-├── stores/            # Zustand stores
-├── types/             # TypeScript types
-└── styles/            # Global styles
+BHM-v.2/
+├── 📁 src/                    # Application source code
+│   ├── components/            # Reusable React components
+│   │   ├── ui/               # Base UI components
+│   │   ├── layouts/          # Layout components
+│   │   ├── pages/            # Page components
+│   │   └── offline/          # Offline components
+│   ├── features/             # Feature-based modules
+│   │   ├── auth/            # Authentication
+│   │   ├── conservation/    # Temperature management
+│   │   ├── calendar/        # Calendar system
+│   │   ├── inventory/       # Inventory system
+│   │   ├── management/      # Staff management
+│   │   ├── settings/        # App settings
+│   │   └── dashboard/       # Dashboard
+│   ├── hooks/               # Custom React hooks
+│   ├── lib/                 # Utilities and helpers
+│   ├── services/            # Business logic services
+│   ├── types/               # TypeScript types
+│   └── styles/              # Global styles
+├── 📁 database/              # Database schemas and SQL files
+│   ├── COMPLETE-DATABASE-SETUP.sql
+│   ├── audit-logs-schema.sql
+│   ├── reports-schema.sql
+│   ├── settings-schema.sql
+│   └── check-conservation-points.sql
+├── 📁 scripts/               # Utility scripts
+│   ├── debug-app-detailed.js
+│   ├── debug-puppeteer.js
+│   ├── test-with-auth.js
+│   ├── test-bypass-auth.js
+│   └── run-e2e-tests.js
+├── 📁 e2e/                   # End-to-end testing
+├── 📁 docs/                   # Documentation
+├── 📁 public/                 # Static assets
+└── 📄 Configuration files
 ```
 
 ## 🧪 Testing

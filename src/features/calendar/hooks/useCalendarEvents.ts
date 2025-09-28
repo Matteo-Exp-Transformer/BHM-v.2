@@ -163,7 +163,11 @@ export function useCalendarEvents() {
         console.log('🔧 No company_id, using mock calendar events')
         const updatedEvents = MOCK_EVENTS.map(updateEventStatus)
         return updatedEvents.map(event => {
-          const colors = getEventColors(event.type, event.status, event.priority)
+          const colors = getEventColors(
+            event.type,
+            event.status,
+            event.priority
+          )
           return {
             ...event,
             backgroundColor: colors.backgroundColor,
@@ -173,16 +177,21 @@ export function useCalendarEvents() {
         })
       }
 
-      console.log('🔧 Loading calendar events from Supabase for company:', user.company_id)
+      console.log(
+        '🔧 Loading calendar events from Supabase for company:',
+        user.company_id
+      )
 
       try {
         // Load maintenance tasks from Supabase and convert to calendar events
         const { data: tasks, error: tasksError } = await supabase
           .from('maintenance_tasks')
-          .select(`
+          .select(
+            `
             *,
             conservation_point:conservation_points(id, name, department:departments(id, name))
-          `)
+          `
+          )
           .eq('company_id', user.company_id)
           .order('next_due', { ascending: true })
 
@@ -191,12 +200,17 @@ export function useCalendarEvents() {
           throw tasksError
         }
 
-        console.log('✅ Loaded maintenance tasks from Supabase:', tasks?.length || 0)
+        console.log(
+          '✅ Loaded maintenance tasks from Supabase:',
+          tasks?.length || 0
+        )
 
         // Convert maintenance tasks to calendar events
         const calendarEvents: CalendarEvent[] = (tasks || []).map(task => {
           const startDate = new Date(task.next_due)
-          const endDate = new Date(startDate.getTime() + (task.estimated_duration || 60) * 60 * 1000)
+          const endDate = new Date(
+            startDate.getTime() + (task.estimated_duration || 60) * 60 * 1000
+          )
 
           const event: CalendarEvent = {
             id: `task-${task.id}`,
@@ -206,17 +220,25 @@ export function useCalendarEvents() {
             end: endDate,
             allDay: false,
             type: 'maintenance',
-            status: task.status === 'completed' ? 'completed' :
-                   startDate < new Date() ? 'overdue' : 'pending',
+            status:
+              task.status === 'completed'
+                ? 'completed'
+                : startDate < new Date()
+                  ? 'overdue'
+                  : 'pending',
             priority: task.priority || 'medium',
             assigned_to: task.assigned_to ? [task.assigned_to] : [],
             department_id: task.conservation_point?.department?.id,
             conservation_point_id: task.conservation_point_id,
             recurring: task.frequency !== 'once',
-            recurrence_pattern: task.frequency === 'daily' ? { frequency: 'daily', interval: 1 } :
-                              task.frequency === 'weekly' ? { frequency: 'weekly', interval: 1 } :
-                              task.frequency === 'monthly' ? { frequency: 'monthly', interval: 1 } :
-                              undefined,
+            recurrence_pattern:
+              task.frequency === 'daily'
+                ? { frequency: 'daily', interval: 1 }
+                : task.frequency === 'weekly'
+                  ? { frequency: 'weekly', interval: 1 }
+                  : task.frequency === 'monthly'
+                    ? { frequency: 'monthly', interval: 1 }
+                    : undefined,
             backgroundColor: '#FEF3C7',
             borderColor: '#F59E0B',
             textColor: '#92400E',
@@ -235,7 +257,11 @@ export function useCalendarEvents() {
           }
 
           // Apply colors based on status
-          const colors = getEventColors(event.type, event.status, event.priority)
+          const colors = getEventColors(
+            event.type,
+            event.status,
+            event.priority
+          )
           return {
             ...event,
             backgroundColor: colors.backgroundColor,
@@ -245,14 +271,17 @@ export function useCalendarEvents() {
         })
 
         return calendarEvents
-
       } catch (error) {
         console.error('Error loading calendar events from Supabase:', error)
         // Fallback to mock data
         console.log('🔧 Fallback to mock calendar events due to error')
         const updatedEvents = MOCK_EVENTS.map(updateEventStatus)
         return updatedEvents.map(event => {
-          const colors = getEventColors(event.type, event.status, event.priority)
+          const colors = getEventColors(
+            event.type,
+            event.status,
+            event.priority
+          )
           return {
             ...event,
             backgroundColor: colors.backgroundColor,

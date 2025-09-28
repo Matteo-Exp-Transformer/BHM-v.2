@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Building2, MapPin, Phone, Mail, FileText, Calendar } from 'lucide-react'
+import {
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
+  FileText,
+  Calendar,
+} from 'lucide-react'
 
 interface BusinessData {
   name: string
@@ -26,10 +33,14 @@ const BUSINESS_TYPES = [
   'osteria',
   'enoteca',
   'birreria',
-  'altro'
+  'altro',
 ]
 
-const BusinessInfoStep = ({ data, onUpdate, onValidChange }: BusinessInfoStepProps) => {
+const BusinessInfoStep = ({
+  data,
+  onUpdate,
+  onValidChange,
+}: BusinessInfoStepProps) => {
   const [formData, setFormData] = useState<BusinessData>({
     name: '',
     address: '',
@@ -39,52 +50,63 @@ const BusinessInfoStep = ({ data, onUpdate, onValidChange }: BusinessInfoStepPro
     business_type: '',
     established_date: '',
     license_number: '',
-    ...data
+    ...data,
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    validateForm()
-  }, [formData])
-
-  useEffect(() => {
     onUpdate(formData)
   }, [formData, onUpdate])
 
-  const validateForm = () => {
+  useEffect(() => {
+    const dataToValidate = formData
     const newErrors: Record<string, string> = {}
 
     // Campo obbligatorio: nome azienda
-    if (!formData.name.trim()) {
+    if (!dataToValidate.name.trim()) {
       newErrors.name = "Il nome dell'azienda è obbligatorio"
-    } else if (formData.name.trim().length < 2) {
+    } else if (dataToValidate.name.trim().length < 2) {
       newErrors.name = 'Il nome deve essere di almeno 2 caratteri'
     }
 
     // Campo obbligatorio: indirizzo
-    if (!formData.address.trim()) {
+    if (!dataToValidate.address.trim()) {
       newErrors.address = "L'indirizzo è obbligatorio"
     }
 
     // Validazione email (se presente)
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    if (
+      dataToValidate.email &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dataToValidate.email)
+    ) {
       newErrors.email = 'Inserisci un indirizzo email valido'
     }
 
     // Validazione telefono (se presente)
-    if (formData.phone && !/^[+]?[0-9\s\-()]+$/.test(formData.phone)) {
+    if (
+      dataToValidate.phone &&
+      !/^[+]?[0-9\s\-()]+$/.test(dataToValidate.phone)
+    ) {
       newErrors.phone = 'Inserisci un numero di telefono valido'
     }
 
     // Validazione P.IVA (se presente)
-    if (formData.vat_number && !/^IT[0-9]{11}$/.test(formData.vat_number.replace(/\s/g, ''))) {
-      newErrors.vat_number = 'Inserisci una Partita IVA valida (es: IT12345678901)'
+    if (
+      dataToValidate.vat_number &&
+      !/^IT[0-9]{11}$/.test(dataToValidate.vat_number.replace(/\s/g, ''))
+    ) {
+      newErrors.vat_number =
+        'Inserisci una Partita IVA valida (es: IT12345678901)'
     }
 
     setErrors(newErrors)
-    onValidChange(Object.keys(newErrors).length === 0 && formData.name.trim() && formData.address.trim())
-  }
+    onValidChange(
+      Object.keys(newErrors).length === 0 &&
+        dataToValidate.name.trim() &&
+        dataToValidate.address.trim()
+    )
+  }, [formData, onValidChange])
 
   const handleInputChange = (field: keyof BusinessData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -114,7 +136,8 @@ const BusinessInfoStep = ({ data, onUpdate, onValidChange }: BusinessInfoStepPro
           Informazioni Aziendali
         </h2>
         <p className="text-gray-600">
-          Inserisci i dati principali della tua azienda per configurare il sistema HACCP
+          Inserisci i dati principali della tua azienda per configurare il
+          sistema HACCP
         </p>
       </div>
 
@@ -140,7 +163,7 @@ const BusinessInfoStep = ({ data, onUpdate, onValidChange }: BusinessInfoStepPro
           <input
             type="text"
             value={formData.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
+            onChange={e => handleInputChange('name', e.target.value)}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               errors.name ? 'border-red-300' : 'border-gray-300'
             }`}
@@ -159,7 +182,7 @@ const BusinessInfoStep = ({ data, onUpdate, onValidChange }: BusinessInfoStepPro
           </label>
           <select
             value={formData.business_type}
-            onChange={(e) => handleInputChange('business_type', e.target.value)}
+            onChange={e => handleInputChange('business_type', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Seleziona tipo di attività</option>
@@ -180,7 +203,9 @@ const BusinessInfoStep = ({ data, onUpdate, onValidChange }: BusinessInfoStepPro
           <input
             type="date"
             value={formData.established_date}
-            onChange={(e) => handleInputChange('established_date', e.target.value)}
+            onChange={e =>
+              handleInputChange('established_date', e.target.value)
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -193,7 +218,7 @@ const BusinessInfoStep = ({ data, onUpdate, onValidChange }: BusinessInfoStepPro
           </label>
           <textarea
             value={formData.address}
-            onChange={(e) => handleInputChange('address', e.target.value)}
+            onChange={e => handleInputChange('address', e.target.value)}
             rows={3}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               errors.address ? 'border-red-300' : 'border-gray-300'
@@ -214,7 +239,7 @@ const BusinessInfoStep = ({ data, onUpdate, onValidChange }: BusinessInfoStepPro
           <input
             type="tel"
             value={formData.phone}
-            onChange={(e) => handleInputChange('phone', e.target.value)}
+            onChange={e => handleInputChange('phone', e.target.value)}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               errors.phone ? 'border-red-300' : 'border-gray-300'
             }`}
@@ -234,7 +259,7 @@ const BusinessInfoStep = ({ data, onUpdate, onValidChange }: BusinessInfoStepPro
           <input
             type="email"
             value={formData.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
+            onChange={e => handleInputChange('email', e.target.value)}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               errors.email ? 'border-red-300' : 'border-gray-300'
             }`}
@@ -254,7 +279,7 @@ const BusinessInfoStep = ({ data, onUpdate, onValidChange }: BusinessInfoStepPro
           <input
             type="text"
             value={formData.vat_number}
-            onChange={(e) => handleInputChange('vat_number', e.target.value)}
+            onChange={e => handleInputChange('vat_number', e.target.value)}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               errors.vat_number ? 'border-red-300' : 'border-gray-300'
             }`}
@@ -274,7 +299,7 @@ const BusinessInfoStep = ({ data, onUpdate, onValidChange }: BusinessInfoStepPro
           <input
             type="text"
             value={formData.license_number}
-            onChange={(e) => handleInputChange('license_number', e.target.value)}
+            onChange={e => handleInputChange('license_number', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="RIS-2024-001"
           />
@@ -283,13 +308,12 @@ const BusinessInfoStep = ({ data, onUpdate, onValidChange }: BusinessInfoStepPro
 
       {/* HACCP Info */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-medium text-blue-900 mb-2">
-          ℹ️ Conformità HACCP
-        </h3>
+        <h3 className="font-medium text-blue-900 mb-2">ℹ️ Conformità HACCP</h3>
         <p className="text-sm text-blue-700">
-          Le informazioni inserite verranno utilizzate per configurare il sistema HACCP
-          in conformità alle normative vigenti. I campi obbligatori sono necessari
-          per garantire la tracciabilità e la compliance.
+          Le informazioni inserite verranno utilizzate per configurare il
+          sistema HACCP in conformità alle normative vigenti. I campi
+          obbligatori sono necessari per garantire la tracciabilità e la
+          compliance.
         </p>
       </div>
     </div>

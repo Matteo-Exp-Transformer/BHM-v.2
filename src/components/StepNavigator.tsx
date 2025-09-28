@@ -1,5 +1,12 @@
 import React from 'react'
-import { Building2, Users, Shield, Thermometer, CheckSquare, Package } from 'lucide-react'
+import {
+  Building2,
+  Users,
+  Shield,
+  Thermometer,
+  CheckSquare,
+  Package,
+} from 'lucide-react'
 
 interface StepNavigatorProps {
   currentStep: number
@@ -46,7 +53,11 @@ const stepInfo = [
   },
 ]
 
-const StepNavigator = ({ currentStep, totalSteps, onStepClick }: StepNavigatorProps) => {
+const StepNavigator = ({
+  currentStep,
+  totalSteps,
+  onStepClick,
+}: StepNavigatorProps) => {
   const getStepStatus = (stepIndex: number) => {
     if (stepIndex < currentStep) return 'completed'
     if (stepIndex === currentStep) return 'current'
@@ -64,7 +75,8 @@ const StepNavigator = ({ currentStep, totalSteps, onStepClick }: StepNavigatorPr
         }
       case 'current':
         return {
-          container: 'border-blue-200 bg-blue-50 ring-2 ring-blue-500 ring-opacity-50',
+          container:
+            'border-blue-200 bg-blue-50 ring-2 ring-blue-500 ring-opacity-50',
           icon: 'bg-blue-600 text-white',
           text: 'text-blue-900',
           description: 'text-blue-600',
@@ -84,7 +96,7 @@ const StepNavigator = ({ currentStep, totalSteps, onStepClick }: StepNavigatorPr
       {/* Desktop Navigation */}
       <div className="hidden md:block">
         <div className="grid grid-cols-6 gap-4">
-          {stepInfo.map((step) => {
+          {stepInfo.map(step => {
             const status = getStepStatus(step.id)
             const styles = getStepStyles(status)
             const IconComponent = step.icon
@@ -101,10 +113,12 @@ const StepNavigator = ({ currentStep, totalSteps, onStepClick }: StepNavigatorPr
                 `}
               >
                 <div className="flex items-center mb-2">
-                  <div className={`
+                  <div
+                    className={`
                     w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
                     ${styles.icon}
-                  `}>
+                  `}
+                  >
                     {status === 'completed' ? (
                       <span>✓</span>
                     ) : (
@@ -140,11 +154,15 @@ const StepNavigator = ({ currentStep, totalSteps, onStepClick }: StepNavigatorPr
 
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center">
-            <div className={`
+            <div
+              className={`
               w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
               bg-blue-600 text-white
-            `}>
-              {React.createElement(stepInfo[currentStep].icon, { className: "w-5 h-5" })}
+            `}
+            >
+              {React.createElement(stepInfo[currentStep].icon, {
+                className: 'w-5 h-5',
+              })}
             </div>
             <div className="ml-3">
               <h3 className="text-base font-semibold text-gray-900">
@@ -168,8 +186,13 @@ const StepNavigator = ({ currentStep, totalSteps, onStepClick }: StepNavigatorPr
                 disabled={index > currentStep}
                 className={`
                   w-3 h-3 rounded-full transition-all duration-200
-                  ${status === 'completed' ? 'bg-green-500' :
-                    status === 'current' ? 'bg-blue-500' : 'bg-gray-300'}
+                  ${
+                    status === 'completed'
+                      ? 'bg-green-500'
+                      : status === 'current'
+                        ? 'bg-blue-500'
+                        : 'bg-gray-300'
+                  }
                   ${index <= currentStep ? 'cursor-pointer' : 'cursor-not-allowed'}
                 `}
               />

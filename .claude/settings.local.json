@@ -33,7 +33,10 @@
       "Bash(npm run test:e2e:screenshots:*)",
       "Bash(set SCREENSHOT=true)",
       "Bash(findstr:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Read(//c/Users/matte.MIO/Documents/GitHub/Business-HACCP-manager/src/**)",
+      "Bash(timeout:*)",
+      "Read(//c/Users/matte.MIO/Documents/GitHub/Business-HACCP-manager/**)"
     ],
     "deny": [],
     "ask": []

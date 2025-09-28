@@ -261,7 +261,9 @@ export default function ConservationPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-blue-700">Frigoriferi</p>
-                <p className="text-lg font-bold text-blue-900">{stats.byType.fridge}</p>
+                <p className="text-lg font-bold text-blue-900">
+                  {stats.byType.fridge}
+                </p>
               </div>
               <div className="text-xl">❄️</div>
             </div>

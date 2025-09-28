@@ -9,12 +9,14 @@ Questa guida documenta tutte le funzionalità di **precompilazione**, **reset** 
 ## 📁 **FILE DA ESAMINARE**
 
 ### **File Principali**
+
 1. **`src/App.jsx`** - Funzioni principali di precompilazione e reset
 2. **`src/components/DevButtons.jsx`** - Pulsanti di sviluppo per precompilazione e reset
 3. **`src/components/HeaderButtons.jsx`** - Pulsante "Riapri Onboarding"
 4. **`src/utils/safeStorage.js`** - Utility per pulizia sicura dei dati
 
 ### **File di Supporto**
+
 5. **`src/components/DevModeBanner.jsx`** - Banner dev mode con pulsanti reset
 6. **`src/utils/devMode.js`** - Gestione modalità sviluppo
 
@@ -31,6 +33,7 @@ Questa guida documenta tutte le funzionalità di **precompilazione**, **reset** 
 **Dati Precompilati**:
 
 #### **🏢 Informazioni Aziendali**
+
 ```javascript
 {
   companyName: "Al Ritrovo SRL",
@@ -42,114 +45,123 @@ Questa guida documenta tutte le funzionalità di **precompilazione**, **reset** 
 ```
 
 #### **🏭 Reparti (6)**
+
 ```javascript
-[
-  { name: "Cucina", description: "Area di preparazione cibi", type: "kitchen" },
-  { name: "Bancone", description: "Area di servizio clienti", type: "counter" },
-  { name: "Sala", description: "Area di consumo", type: "dining" },
-  { name: "Magazzino", description: "Area di stoccaggio", type: "storage" },
-  { name: "Magazzino B", description: "Area di stoccaggio secondaria", type: "storage" },
-  { name: "Sala B", description: "Area di consumo secondaria", type: "dining" }
+;[
+  { name: 'Cucina', description: 'Area di preparazione cibi', type: 'kitchen' },
+  { name: 'Bancone', description: 'Area di servizio clienti', type: 'counter' },
+  { name: 'Sala', description: 'Area di consumo', type: 'dining' },
+  { name: 'Magazzino', description: 'Area di stoccaggio', type: 'storage' },
+  {
+    name: 'Magazzino B',
+    description: 'Area di stoccaggio secondaria',
+    type: 'storage',
+  },
+  { name: 'Sala B', description: 'Area di consumo secondaria', type: 'dining' },
 ]
 ```
 
 #### **👥 Staff (3 dipendenti)**
+
 ```javascript
-[
+;[
   {
-    firstName: "Matteo",
-    lastName: "Cavallaro",
-    email: "matteo.cavallaro@alritrovo.it",
-    role: "Responsabile",
-    department: "Banconisti"
+    firstName: 'Matteo',
+    lastName: 'Cavallaro',
+    email: 'matteo.cavallaro@alritrovo.it',
+    role: 'Responsabile',
+    department: 'Banconisti',
   },
   {
-    firstName: "Fabrizio",
-    lastName: "Dettori",
-    role: "Amministratore",
-    department: "Amministratore"
+    firstName: 'Fabrizio',
+    lastName: 'Dettori',
+    role: 'Amministratore',
+    department: 'Amministratore',
   },
   {
-    firstName: "Paolo",
-    lastName: "Dettori",
-    role: "Cuoco",
-    department: "Cuochi"
-  }
+    firstName: 'Paolo',
+    lastName: 'Dettori',
+    role: 'Cuoco',
+    department: 'Cuochi',
+  },
 ]
 ```
 
 #### **❄️ Punti di Conservazione (4)**
+
 ```javascript
-[
+;[
   {
-    name: "Frigo A",
-    temperature: "4°C",
-    type: "refrigerator",
-    department: "Cucina"
+    name: 'Frigo A',
+    temperature: '4°C',
+    type: 'refrigerator',
+    department: 'Cucina',
   },
   {
-    name: "Frigo Bancone 1",
-    temperature: "2°C",
-    type: "refrigerator",
-    department: "Bancone"
+    name: 'Frigo Bancone 1',
+    temperature: '2°C',
+    type: 'refrigerator',
+    department: 'Bancone',
   },
   {
-    name: "Frigo Bancone 2",
-    temperature: "3°C",
-    type: "refrigerator",
-    department: "Bancone"
+    name: 'Frigo Bancone 2',
+    temperature: '3°C',
+    type: 'refrigerator',
+    department: 'Bancone',
   },
   {
-    name: "Frigo Bancone 3",
-    temperature: "5°C",
-    type: "refrigerator",
-    department: "Bancone"
-  }
+    name: 'Frigo Bancone 3',
+    temperature: '5°C',
+    type: 'refrigerator',
+    department: 'Bancone',
+  },
 ]
 ```
 
 #### **📋 Task di Manutenzione (8)**
+
 ```javascript
-[
+;[
   {
-    task_name: "Rilevamento Temperatura",
-    frequency: "Giornaliero",
-    assigned_role: "Responsabile",
-    assigned_category: "Banconisti"
+    task_name: 'Rilevamento Temperatura',
+    frequency: 'Giornaliero',
+    assigned_role: 'Responsabile',
+    assigned_category: 'Banconisti',
   },
   {
-    task_name: "Sanificazione",
-    frequency: "Settimanale",
-    assigned_role: "Dipendente",
-    assigned_category: "Cuochi"
+    task_name: 'Sanificazione',
+    frequency: 'Settimanale',
+    assigned_role: 'Dipendente',
+    assigned_category: 'Cuochi',
   },
   {
-    task_name: "Sbrinamento",
-    frequency: "Annuale",
-    assigned_role: "Amministratore",
-    assigned_category: "Amministratore"
-  }
+    task_name: 'Sbrinamento',
+    frequency: 'Annuale',
+    assigned_role: 'Amministratore',
+    assigned_category: 'Amministratore',
+  },
   // ... altri 5 task
 ]
 ```
 
 #### **📦 Inventario (6 prodotti)**
+
 ```javascript
-[
+;[
   {
-    name: "Pomodori San Marzano",
-    category: "Verdura",
-    quantity: "5 kg",
-    expiryDate: "2024-12-25",
-    position: "Frigo A"
+    name: 'Pomodori San Marzano',
+    category: 'Verdura',
+    quantity: '5 kg',
+    expiryDate: '2024-12-25',
+    position: 'Frigo A',
   },
   {
-    name: "Mozzarella di Bufala",
-    category: "Latticini",
-    quantity: "3 confezioni",
-    expiryDate: "2024-12-22",
-    position: "Frigo Bancone 1"
-  }
+    name: 'Mozzarella di Bufala',
+    category: 'Latticini',
+    quantity: '3 confezioni',
+    expiryDate: '2024-12-22',
+    position: 'Frigo Bancone 1',
+  },
   // ... altri 4 prodotti
 ]
 ```
@@ -161,12 +173,14 @@ Questa guida documenta tutte le funzionalità di **precompilazione**, **reset** 
 **Scopo**: Resetta completamente l'onboarding e tutti i dati dell'app.
 
 **Funzionalità**:
+
 - Conferma utente con `window.confirm()`
 - Pulisce tutti i dati localStorage
 - Resetta stato onboarding
 - Ricarica la pagina
 
 **Dati Rimossi**:
+
 ```javascript
 const keysToRemove = [
   'haccp-onboarding',
@@ -182,8 +196,8 @@ const keysToRemove = [
   'haccp-current-user',
   'haccp-last-check',
   'haccp-last-sync',
-  'haccp-company-id'
-];
+  'haccp-company-id',
+]
 ```
 
 ### **3. `resetApp()` - Reset App Completo**
@@ -193,6 +207,7 @@ const keysToRemove = [
 **Scopo**: Reset completo dell'applicazione (solo sviluppo).
 
 **Funzionalità**:
+
 - Conferma utente
 - Pulisce tutti i dati
 - Resetta stato completo
@@ -205,6 +220,7 @@ const keysToRemove = [
 **Scopo**: Completa automaticamente l'onboarding senza interazione utente.
 
 **Funzionalità**:
+
 - Simula completamento onboarding
 - Imposta stato completato
 - Chiude wizard
@@ -221,6 +237,7 @@ const keysToRemove = [
 **Pulsanti Disponibili**:
 
 #### **🟢 Precompila**
+
 ```javascript
 <Button
   onClick={onPrefillOnboarding}
@@ -235,6 +252,7 @@ const keysToRemove = [
 ```
 
 #### **🔵 Completa Onboarding**
+
 ```javascript
 <Button
   onClick={onCompleteOnboarding}
@@ -249,6 +267,7 @@ const keysToRemove = [
 ```
 
 #### **🔴 Reset Onboarding**
+
 ```javascript
 <Button
   onClick={onResetOnboarding}
@@ -269,22 +288,26 @@ const keysToRemove = [
 **Pulsanti Disponibili**:
 
 #### **🔴 Reset App (Solo Sviluppo)**
+
 ```javascript
-{showResetApp && (
-  <Button
-    onClick={onResetApp}
-    variant="outline"
-    size="sm"
-    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-    title="Reset completo dell'app (solo sviluppo)"
-  >
-    <RotateCcw className="h-4 w-4" />
-    <span>Reset App</span>
-  </Button>
-)}
+{
+  showResetApp && (
+    <Button
+      onClick={onResetApp}
+      variant="outline"
+      size="sm"
+      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+      title="Reset completo dell'app (solo sviluppo)"
+    >
+      <RotateCcw className="h-4 w-4" />
+      <span>Reset App</span>
+    </Button>
+  )
+}
 ```
 
 #### **🔵 Riapri Onboarding**
+
 ```javascript
 <Button
   onClick={onOpenOnboarding}
@@ -303,6 +326,7 @@ const keysToRemove = [
 **Posizione**: `src/components/DevModeBanner.jsx`
 
 **Funzionalità**:
+
 - Banner giallo in modalità sviluppo
 - Pulsante "Disattiva Dev Mode"
 - Pulsante "Rimuovi Dati Dev"
@@ -319,21 +343,25 @@ const keysToRemove = [
 **Funzioni Principali**:
 
 #### **`safeSetItem(key, data)`**
+
 - Salva dati in localStorage in modo sicuro
 - Previene errori di serializzazione
 - Gestisce dati undefined/null
 
 #### **`safeGetItem(key, defaultValue)`**
+
 - Carica dati da localStorage in modo sicuro
 - Gestisce dati corrotti
 - Ritorna valore di default se errore
 
 #### **`clearHaccpData()`**
+
 - Pulisce tutti i dati HACCP
 - Rimuove chiavi specifiche
 - Gestisce errori di pulizia
 
 #### **`checkDataIntegrity()`**
+
 - Verifica integrità dati localStorage
 - Identifica dati corrotti
 - Genera report dettagliato
@@ -345,15 +373,18 @@ const keysToRemove = [
 **Funzioni Principali**:
 
 #### **`isDevMode()`**
+
 - Controlla se modalità dev è attiva
 - Legge da localStorage
 
 #### **`toggleDevMode(enabled, reason)`**
+
 - Attiva/disattiva modalità dev
 - Salva impostazioni
 - Ricarica pagina se necessario
 
 #### **`shouldBypassOnboarding()`**
+
 - Controlla se bypassare onboarding
 - Basato su modalità dev
 
@@ -373,14 +404,16 @@ useEffect(() => {
     window.resetOnboarding = resetOnboarding
     window.prefillOnboarding = prefillOnboarding
     window.completeOnboarding = completeOnboarding
-    
+
     // Log delle funzioni disponibili
     if (!window.devFunctionsLogged) {
       console.log('🔄 Funzioni dev disponibili:')
       console.log('  - resetApp() - Reset completo app')
       console.log('  - resetOnboarding() - Reset onboarding e app')
       console.log('  - prefillOnboarding() - Precompila onboarding')
-      console.log('  - completeOnboarding() - Completa onboarding automaticamente')
+      console.log(
+        '  - completeOnboarding() - Completa onboarding automaticamente'
+      )
       window.devFunctionsLogged = true
     }
   }
@@ -458,24 +491,28 @@ console.log('Modalità dev attiva:', isDev)
 ## 📋 **CHECKLIST IMPLEMENTAZIONE**
 
 ### **✅ Funzioni Core**
+
 - [ ] `prefillOnboarding()` con tutti i dati
 - [ ] `resetOnboarding()` con conferma
 - [ ] `resetApp()` per sviluppo
 - [ ] `completeOnboarding()` automatico
 
 ### **✅ Componenti UI**
+
 - [ ] `DevButtons` con 3 pulsanti
 - [ ] `HeaderButtons` con reset e riapri
 - [ ] `DevModeBanner` con controlli dev
 - [ ] Styling Tailwind CSS
 
 ### **✅ Utility**
+
 - [ ] `safeStorage.js` per operazioni sicure
 - [ ] `devMode.js` per gestione modalità
 - [ ] Gestione errori e logging
 - [ ] Validazione dati
 
 ### **✅ Integrazione**
+
 - [ ] Esposizione funzioni globali (dev)
 - [ ] Rendering condizionale componenti
 - [ ] Gestione stato onboarding
@@ -486,30 +523,35 @@ console.log('Modalità dev attiva:', isDev)
 ## 🎯 **ISTRUZIONI PER AGENTE**
 
 ### **1. Implementare Precompilazione**
+
 - Creare funzione `prefillOnboarding()` in App.jsx
 - Includere tutti i dati predefiniti (azienda, reparti, staff, etc.)
 - Gestire salvataggio in localStorage
 - Aggiungere logging per debug
 
 ### **2. Implementare Reset**
+
 - Creare funzione `resetOnboarding()` con conferma
 - Creare funzione `resetApp()` per sviluppo
 - Implementare pulizia completa dati
 - Gestire ricaricamento pagina
 
 ### **3. Creare Componenti UI**
+
 - `DevButtons` con 3 pulsanti colorati
 - `HeaderButtons` con reset e riapri
 - `DevModeBanner` per controlli dev
 - Usare icone Lucide React
 
 ### **4. Implementare Utility**
+
 - `safeStorage.js` per operazioni sicure
 - `devMode.js` per gestione modalità
 - Gestione errori e validazione
 - Logging dettagliato
 
 ### **5. Integrare nell'App**
+
 - Esporre funzioni globalmente (dev mode)
 - Rendering condizionale componenti
 - Gestione stato e persistenza
@@ -520,6 +562,7 @@ console.log('Modalità dev attiva:', isDev)
 ## 📚 **RISORSE AGGIUNTIVE**
 
 ### **Dati Precompilati Completi**
+
 - **Azienda**: Al Ritrovo SRL con dati completi
 - **Reparti**: 6 reparti con tipologie diverse
 - **Staff**: 3 dipendenti con ruoli specifici
@@ -528,12 +571,14 @@ console.log('Modalità dev attiva:', isDev)
 - **Inventario**: 6 prodotti con scadenze
 
 ### **Funzioni Console Disponibili**
+
 - `prefillOnboarding()` - Precompila tutto
 - `resetOnboarding()` - Reset completo
 - `resetApp()` - Reset app (dev)
 - `completeOnboarding()` - Completa automatico
 
 ### **Componenti UI**
+
 - Pulsanti colorati con icone
 - Tooltip informativi
 - Responsive design
@@ -556,6 +601,6 @@ Questa guida fornisce tutte le informazioni necessarie per ricreare le stesse fu
 
 ---
 
-*Ultima modifica: 2024-12-19*
-*Versione: 1.0*
-*Autore: AI Assistant*
+_Ultima modifica: 2024-12-19_
+_Versione: 1.0_
+_Autore: AI Assistant_

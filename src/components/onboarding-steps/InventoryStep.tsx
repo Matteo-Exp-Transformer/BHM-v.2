@@ -1,127 +1,155 @@
 import { useState, useEffect } from 'react'
 import { Package, Plus, Trash2, Edit2, Tag, Calendar } from 'lucide-react'
 
-interface Department {
-  id: string
-  name: string
-  description: string
-  is_active: boolean
-}
-
-interface ConservationPoint {
-  id: string
-  name: string
-  department_id: string
-  setpoint_temp: number
-  type: 'ambient' | 'fridge' | 'freezer' | 'blast'
-  product_categories: string[]
-  is_blast_chiller: boolean
-}
-
-interface ProductCategory {
-  id: string
-  name: string
-  color: string
-  description?: string
-  conservation_rules: {
-    temp_min: number
-    temp_max: number
-    max_storage_days?: number
-    requires_blast_chilling?: boolean
-  }
-}
-
-interface Product {
-  id: string
-  name: string
-  category_id?: string
-  department_id?: string
-  conservation_point_id?: string
-  quantity?: number
-  unit?: string
-  allergens?: string[]
-  supplier_name?: string
-  purchase_date?: string
-  expiry_date?: string
-  status: 'active' | 'expired' | 'consumed' | 'waste'
-  notes?: string
-}
-
-interface InventoryStepProps {
-  data?: {
-    categories?: ProductCategory[]
-    products?: Product[]
-  }
-  departments: Department[]
-  conservationPoints: ConservationPoint[]
-  onUpdate: (data: { categories: ProductCategory[], products: Product[] }) => void
-  onValidChange: (isValid: boolean) => void
-}
+import type {
+  InventoryStepProps,
+  ProductCategory,
+  InventoryProduct,
+  ProductStatus,
+} from '@/types/onboarding'
+import { normalizeInventoryProduct } from '@/utils/onboarding/inventoryUtils'
 
 const PREDEFINED_CATEGORIES = [
-  { name: 'Carni Fresche', color: '#ef4444', temp_min: 0, temp_max: 4, max_storage_days: 3, requires_blast_chilling: true },
-  { name: 'Pesce Fresco', color: '#3b82f6', temp_min: 0, temp_max: 2, max_storage_days: 2, requires_blast_chilling: true },
-  { name: 'Latticini', color: '#f59e0b', temp_min: 2, temp_max: 6, max_storage_days: 7 },
-  { name: 'Verdure Fresche', color: '#10b981', temp_min: 4, temp_max: 8, max_storage_days: 5 },
-  { name: 'Surgelati', color: '#6366f1', temp_min: -18, temp_max: -15, max_storage_days: 90 },
-  { name: 'Prodotti Secchi', color: '#8b5cf6', temp_min: 15, temp_max: 25, max_storage_days: 365 }
+  {
+    name: 'Carni Fresche',
+    color: '#ef4444',
+    temp_min: 0,
+    temp_max: 4,
+    max_storage_days: 3,
+    requires_blast_chilling: true,
+  },
+  {
+    name: 'Pesce Fresco',
+    color: '#3b82f6',
+    temp_min: 0,
+    temp_max: 2,
+    max_storage_days: 2,
+    requires_blast_chilling: true,
+  },
+  {
+    name: 'Latticini',
+    color: '#f59e0b',
+    temp_min: 2,
+    temp_max: 6,
+    max_storage_days: 7,
+  },
+  {
+    name: 'Verdure Fresche',
+    color: '#10b981',
+    temp_min: 4,
+    temp_max: 8,
+    max_storage_days: 5,
+  },
+  {
+    name: 'Surgelati',
+    color: '#6366f1',
+    temp_min: -18,
+    temp_max: -15,
+    max_storage_days: 90,
+  },
+  {
+    name: 'Prodotti Secchi',
+    color: '#8b5cf6',
+    temp_min: 15,
+    temp_max: 25,
+    max_storage_days: 365,
+  },
 ]
 
-const ALLERGENS = [
-  'Glutine', 'Crostacei', 'Uova', 'Pesce', 'Arachidi', 'Soia', 'Latte',
-  'Frutta a guscio', 'Sedano', 'Senape', 'Sesamo', 'Anidride solforosa',
-  'Lupini', 'Molluschi'
+const ALLERGEN_OPTIONS = [
+  { value: 'glutine', label: 'Glutine' },
+  { value: 'crostacei', label: 'Crostacei' },
+  { value: 'uova', label: 'Uova' },
+  { value: 'pesce', label: 'Pesce' },
+  { value: 'arachidi', label: 'Arachidi' },
+  { value: 'soia', label: 'Soia' },
+  { value: 'latte', label: 'Latte' },
+  { value: 'frutta_guscio', label: 'Frutta a guscio' },
+  { value: 'sedano', label: 'Sedano' },
+  { value: 'senape', label: 'Senape' },
+  { value: 'sesamo', label: 'Sesamo' },
+  { value: 'anidride_solforosa', label: 'Anidride solforosa' },
+  { value: 'lupini', label: 'Lupini' },
+  { value: 'molluschi', label: 'Molluschi' },
 ]
 
 const UNITS = ['kg', 'g', 'l', 'ml', 'pz', 'conf', 'scatole', 'buste']
 
-const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onValidChange }: InventoryStepProps) => {
-  const [categories, setCategories] = useState<ProductCategory[]>(data?.categories || [])
-  const [products, setProducts] = useState<Product[]>(data?.products || [])
-  const [activeTab, setActiveTab] = useState<'categories' | 'products'>('categories')
-
-  // Category form
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
-  const [categoryForm, setCategoryForm] = useState({
-    name: '',
-    color: '#3b82f6',
-    description: '',
-    temp_min: 0,
-    temp_max: 8,
-    max_storage_days: 7,
-    requires_blast_chilling: false
-  })
-
-  // Product form
-  const [editingProductId, setEditingProductId] = useState<string | null>(null)
-  const [productForm, setProductForm] = useState({
-    name: '',
-    category_id: '',
-    department_id: '',
-    conservation_point_id: '',
-    quantity: '',
-    unit: 'kg',
-    allergens: [] as string[],
-    supplier_name: '',
-    purchase_date: '',
-    expiry_date: '',
-    status: 'active' as const,
-    notes: ''
-  })
-
+const InventoryStep = ({
+  data,
+  departments,
+  conservationPoints,
+  onUpdate,
+  onValidChange,
+}: InventoryStepProps) => {
+  const [categories, setCategories] = useState<ProductCategory[]>(
+    data?.categories || []
+  )
+  const [products, setProducts] = useState<InventoryProduct[]>(
+    data?.products?.map(product => normalizeInventoryProduct(product)) || []
+  )
+  const [activeTab, setActiveTab] = useState<'categories' | 'products'>(
+    'categories'
+  )
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  const departmentOptions = useMemo(
+    () => departments.filter(department => department.is_active),
+    [departments]
+  )
+
+  const categoryFormInitial = useMemo(
+    () => ({
+      name: '',
+      color: '#3b82f6',
+      description: '',
+      conservationRules: {
+        minTemp: 0,
+        maxTemp: 8,
+        maxStorageDays: 7,
+        requiresBlastChilling: false,
+      },
+    }),
+    []
+  )
+
+  const productFormInitial = useMemo(
+    () => ({
+      name: '',
+      categoryId: '',
+      departmentId: '',
+      conservationPointId: '',
+      sku: '',
+      barcode: '',
+      supplierName: '',
+      purchaseDate: '',
+      expiryDate: '',
+      quantity: '',
+      unit: 'kg',
+      allergens: [] as string[],
+      labelPhotoUrl: '',
+      status: 'active' as ProductStatus,
+      notes: '',
+    }),
+    []
+  )
+
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
+  const [categoryForm, setCategoryForm] = useState(categoryFormInitial)
+
+  const [editingProductId, setEditingProductId] = useState<string | null>(null)
+  const [productForm, setProductForm] = useState(productFormInitial)
+
   useEffect(() => {
-    validateForm()
     onUpdate({ categories, products })
   }, [categories, products, onUpdate])
 
-  const validateForm = () => {
-    const isValid = categories.length > 0 && products.length > 0
-    onValidChange(isValid)
-  }
+  useEffect(() => {
+    onValidChange(products.length > 0)
+  }, [products.length, onValidChange])
 
-  const generateId = () => `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  const generateId = () =>
+    `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
   // Category Management
   const validateCategory = () => {
@@ -129,12 +157,19 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
 
     if (!categoryForm.name.trim()) {
       newErrors.category_name = 'Il nome della categoria è obbligatorio'
-    } else if (categories.find(c => c.id !== editingCategoryId && c.name.toLowerCase() === categoryForm.name.toLowerCase())) {
+    } else if (
+      categories.find(
+        c =>
+          c.id !== editingCategoryId &&
+          c.name.toLowerCase() === categoryForm.name.toLowerCase()
+      )
+    ) {
       newErrors.category_name = 'Una categoria con questo nome esiste già'
     }
 
     if (categoryForm.temp_min >= categoryForm.temp_max) {
-      newErrors.temp_range = 'La temperatura minima deve essere inferiore alla massima'
+      newErrors.temp_range =
+        'La temperatura minima deve essere inferiore alla massima'
     }
 
     setErrors(newErrors)
@@ -149,12 +184,13 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
       name: categoryForm.name.trim(),
       color: categoryForm.color,
       description: categoryForm.description || undefined,
-      conservation_rules: {
-        temp_min: categoryForm.temp_min,
-        temp_max: categoryForm.temp_max,
-        max_storage_days: categoryForm.max_storage_days || undefined,
-        requires_blast_chilling: categoryForm.requires_blast_chilling
-      }
+      conservationRules: {
+        minTemp: categoryForm.conservationRules.minTemp,
+        maxTemp: categoryForm.conservationRules.maxTemp,
+        maxStorageDays: categoryForm.conservationRules.maxStorageDays,
+        requiresBlastChilling:
+          categoryForm.conservationRules.requiresBlastChilling,
+      },
     }
 
     setCategories([...categories, newCategory])
@@ -164,31 +200,38 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
   const updateCategory = () => {
     if (!validateCategory()) return
 
-    setCategories(categories.map(category =>
-      category.id === editingCategoryId
-        ? {
-            ...category,
-            name: categoryForm.name.trim(),
-            color: categoryForm.color,
-            description: categoryForm.description || undefined,
-            conservation_rules: {
-              temp_min: categoryForm.temp_min,
-              temp_max: categoryForm.temp_max,
-              max_storage_days: categoryForm.max_storage_days || undefined,
-              requires_blast_chilling: categoryForm.requires_blast_chilling
+    setCategories(
+      categories.map(category =>
+        category.id === editingCategoryId
+          ? {
+              ...category,
+              name: categoryForm.name.trim(),
+              color: categoryForm.color,
+              description: categoryForm.description || undefined,
+              conservationRules: {
+                minTemp: categoryForm.conservationRules.minTemp,
+                maxTemp: categoryForm.conservationRules.maxTemp,
+                maxStorageDays: categoryForm.conservationRules.maxStorageDays,
+                requiresBlastChilling:
+                  categoryForm.conservationRules.requiresBlastChilling,
+              },
             }
-          }
-        : category
-    ))
+          : category
+      )
+    )
     resetCategoryForm()
   }
 
   const deleteCategory = (id: string) => {
     setCategories(categories.filter(cat => cat.id !== id))
     // Remove category from products
-    setProducts(products.map(product =>
-      product.category_id === id ? { ...product, category_id: undefined } : product
-    ))
+    setProducts(
+      products.map(product =>
+        product.category_id === id
+          ? { ...product, category_id: undefined }
+          : product
+      )
+    )
   }
 
   const startEditCategory = (category: ProductCategory) => {
@@ -197,25 +240,20 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
       name: category.name,
       color: category.color,
       description: category.description || '',
-      temp_min: category.conservation_rules.temp_min,
-      temp_max: category.conservation_rules.temp_max,
-      max_storage_days: category.conservation_rules.max_storage_days || 7,
-      requires_blast_chilling: category.conservation_rules.requires_blast_chilling || false
+      conservationRules: {
+        minTemp: category.conservationRules.minTemp,
+        maxTemp: category.conservationRules.maxTemp,
+        maxStorageDays: category.conservationRules.maxStorageDays || 7,
+        requiresBlastChilling:
+          category.conservationRules.requiresBlastChilling || false,
+      },
     })
     setErrors({})
   }
 
   const resetCategoryForm = () => {
     setEditingCategoryId(null)
-    setCategoryForm({
-      name: '',
-      color: '#3b82f6',
-      description: '',
-      temp_min: 0,
-      temp_max: 8,
-      max_storage_days: 7,
-      requires_blast_chilling: false
-    })
+    setCategoryForm(categoryFormInitial)
     setErrors({})
   }
 
@@ -238,90 +276,90 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
   const addProduct = () => {
     if (!validateProduct()) return
 
-    const newProduct: Product = {
+    const newProduct: InventoryProduct = {
       id: generateId(),
       name: productForm.name.trim(),
-      category_id: productForm.category_id || undefined,
-      department_id: productForm.department_id || undefined,
-      conservation_point_id: productForm.conservation_point_id || undefined,
+      categoryId: productForm.categoryId || undefined,
+      departmentId: productForm.departmentId || undefined,
+      conservationPointId: productForm.conservationPointId || undefined,
+      sku: productForm.sku || undefined,
+      barcode: productForm.barcode || undefined,
+      supplierName: productForm.supplierName || undefined,
+      purchaseDate: productForm.purchaseDate || undefined,
+      expiryDate: productForm.expiryDate || undefined,
       quantity: productForm.quantity ? parseFloat(productForm.quantity) : undefined,
       unit: productForm.unit || undefined,
-      allergens: productForm.allergens.length > 0 ? productForm.allergens : undefined,
-      supplier_name: productForm.supplier_name || undefined,
-      purchase_date: productForm.purchase_date || undefined,
-      expiry_date: productForm.expiry_date || undefined,
+      allergens: productForm.allergens,
+      labelPhotoUrl: productForm.labelPhotoUrl || undefined,
       status: productForm.status,
-      notes: productForm.notes || undefined
+      notes: productForm.notes || undefined,
     }
 
-    setProducts([...products, newProduct])
+    setProducts(prev => [...prev, newProduct])
     resetProductForm()
   }
 
   const updateProduct = () => {
     if (!validateProduct()) return
 
-    setProducts(products.map(product =>
-      product.id === editingProductId
-        ? {
-            ...product,
-            name: productForm.name.trim(),
-            category_id: productForm.category_id || undefined,
-            department_id: productForm.department_id || undefined,
-            conservation_point_id: productForm.conservation_point_id || undefined,
-            quantity: productForm.quantity ? parseFloat(productForm.quantity) : undefined,
-            unit: productForm.unit || undefined,
-            allergens: productForm.allergens.length > 0 ? productForm.allergens : undefined,
-            supplier_name: productForm.supplier_name || undefined,
-            purchase_date: productForm.purchase_date || undefined,
-            expiry_date: productForm.expiry_date || undefined,
-            status: productForm.status,
-            notes: productForm.notes || undefined
-          }
-        : product
-    ))
+    setProducts(prev =>
+      prev.map(product =>
+        product.id === editingProductId
+          ? {
+              ...product,
+              name: productForm.name.trim(),
+              categoryId: productForm.categoryId || undefined,
+              departmentId: productForm.departmentId || undefined,
+              conservationPointId: productForm.conservationPointId || undefined,
+              sku: productForm.sku || undefined,
+              barcode: productForm.barcode || undefined,
+              supplierName: productForm.supplierName || undefined,
+              purchaseDate: productForm.purchaseDate || undefined,
+              expiryDate: productForm.expiryDate || undefined,
+              quantity: productForm.quantity
+                ? parseFloat(productForm.quantity)
+                : undefined,
+              unit: productForm.unit || undefined,
+              allergens: productForm.allergens,
+              labelPhotoUrl: productForm.labelPhotoUrl || undefined,
+              status: productForm.status,
+              notes: productForm.notes || undefined,
+            }
+          : product
+      )
+    )
     resetProductForm()
   }
 
   const deleteProduct = (id: string) => {
-    setProducts(products.filter(product => product.id !== id))
+    setProducts(prev => prev.filter(product => product.id !== id))
   }
 
-  const startEditProduct = (product: Product) => {
+  const startEditProduct = (product: InventoryProduct) => {
     setEditingProductId(product.id)
     setProductForm({
       name: product.name,
-      category_id: product.category_id || '',
-      department_id: product.department_id || '',
-      conservation_point_id: product.conservation_point_id || '',
+      categoryId: product.categoryId || '',
+      departmentId: product.departmentId || '',
+      conservationPointId: product.conservationPointId || '',
       quantity: product.quantity?.toString() || '',
       unit: product.unit || 'kg',
       allergens: product.allergens || [],
-      supplier_name: product.supplier_name || '',
-      purchase_date: product.purchase_date || '',
-      expiry_date: product.expiry_date || '',
+      supplierName: product.supplierName || '',
+      purchaseDate: product.purchaseDate || '',
+      expiryDate: product.expiryDate || '',
       status: product.status,
-      notes: product.notes || ''
+      barcode: product.barcode || '',
+      sku: product.sku || '',
+      labelPhotoUrl: product.labelPhotoUrl || '',
+      notes: product.notes || '',
     })
     setErrors({})
   }
 
   const resetProductForm = () => {
     setEditingProductId(null)
-    setProductForm({
-      name: '',
-      category_id: '',
-      department_id: '',
-      conservation_point_id: '',
-      quantity: '',
-      unit: 'kg',
-      allergens: [],
-      supplier_name: '',
-      purchase_date: '',
-      expiry_date: '',
-      status: 'active',
-      notes: ''
-    })
+    setProductForm(productFormInitial)
     setErrors({})
   }
 
@@ -330,22 +368,24 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
       ...prev,
       allergens: prev.allergens.includes(allergen)
         ? prev.allergens.filter(a => a !== allergen)
-        : [...prev.allergens, allergen]
+        : [...prev.allergens, allergen],
     }))
   }
 
   const prefillSampleCategories = () => {
-    const sampleCategories: ProductCategory[] = PREDEFINED_CATEGORIES.map(cat => ({
-      id: generateId(),
-      name: cat.name,
-      color: cat.color,
-      conservation_rules: {
-        temp_min: cat.temp_min,
-        temp_max: cat.temp_max,
-        max_storage_days: cat.max_storage_days,
-        requires_blast_chilling: cat.requires_blast_chilling
-      }
-    }))
+    const sampleCategories: ProductCategory[] = PREDEFINED_CATEGORIES.map(
+      cat => ({
+        id: generateId(),
+        name: cat.name,
+        color: cat.color,
+        conservation_rules: {
+          temp_min: cat.temp_min,
+          temp_max: cat.temp_max,
+          max_storage_days: cat.max_storage_days,
+          requires_blast_chilling: cat.requires_blast_chilling,
+        },
+      })
+    )
     setCategories(sampleCategories)
   }
 
@@ -373,8 +413,10 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
         unit: 'kg',
         supplier_name: 'Carni Locali SRL',
         purchase_date: new Date().toISOString().split('T')[0],
-        expiry_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: 'active'
+        expiry_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0],
+        status: 'active',
       },
       {
         id: generateId(),
@@ -387,8 +429,10 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
         allergens: ['Pesce'],
         supplier_name: 'Pescheria del Porto',
         purchase_date: new Date().toISOString().split('T')[0],
-        expiry_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: 'active'
+        expiry_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0],
+        status: 'active',
       },
       {
         id: generateId(),
@@ -401,8 +445,10 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
         allergens: ['Latte'],
         supplier_name: 'Caseificio Campano',
         purchase_date: new Date().toISOString().split('T')[0],
-        expiry_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: 'active'
+        expiry_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0],
+        status: 'active',
       },
       {
         id: generateId(),
@@ -413,8 +459,10 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
         unit: 'kg',
         supplier_name: 'Ortofrutta Napoletana',
         purchase_date: new Date().toISOString().split('T')[0],
-        expiry_date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: 'active'
+        expiry_date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0],
+        status: 'active',
       },
       {
         id: generateId(),
@@ -423,8 +471,10 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
         unit: 'l',
         supplier_name: 'Frantoio Toscano',
         purchase_date: new Date().toISOString().split('T')[0],
-        expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: 'active'
+        expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0],
+        status: 'active',
       },
       {
         id: generateId(),
@@ -434,9 +484,11 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
         allergens: ['Glutine'],
         supplier_name: 'Pastificio Artigianale',
         purchase_date: new Date().toISOString().split('T')[0],
-        expiry_date: new Date(Date.now() + 730 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: 'active'
-      }
+        expiry_date: new Date(Date.now() + 730 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0],
+        status: 'active',
+      },
     ]
     setProducts(sampleProducts)
   }
@@ -452,7 +504,8 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
           Gestione Inventario
         </h2>
         <p className="text-gray-600">
-          Configura categorie prodotti e inventario iniziale per il controllo HACCP
+          Configura categorie prodotti e inventario iniziale per il controllo
+          HACCP
         </p>
       </div>
 
@@ -499,7 +552,9 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
           {/* Category Form */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 mb-4">
-              {editingCategoryId ? 'Modifica Categoria' : 'Nuova Categoria Prodotto'}
+              {editingCategoryId
+                ? 'Modifica Categoria'
+                : 'Nuova Categoria Prodotto'}
             </h3>
 
             <div className="space-y-4">
@@ -511,14 +566,20 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                   <input
                     type="text"
                     value={categoryForm.name}
-                    onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                    onChange={e =>
+                      setCategoryForm({ ...categoryForm, name: e.target.value })
+                    }
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.category_name ? 'border-red-300' : 'border-gray-300'
+                      errors.category_name
+                        ? 'border-red-300'
+                        : 'border-gray-300'
                     }`}
                     placeholder="es. Carni Fresche"
                   />
                   {errors.category_name && (
-                    <p className="mt-1 text-sm text-red-600">{errors.category_name}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.category_name}
+                    </p>
                   )}
                 </div>
 
@@ -529,7 +590,12 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                   <input
                     type="color"
                     value={categoryForm.color}
-                    onChange={(e) => setCategoryForm({ ...categoryForm, color: e.target.value })}
+                    onChange={e =>
+                      setCategoryForm({
+                        ...categoryForm,
+                        color: e.target.value,
+                      })
+                    }
                     className="w-full h-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -542,7 +608,12 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                 <input
                   type="text"
                   value={categoryForm.description}
-                  onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
+                  onChange={e =>
+                    setCategoryForm({
+                      ...categoryForm,
+                      description: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Descrizione opzionale"
                 />
@@ -557,7 +628,12 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                     type="number"
                     step="0.1"
                     value={categoryForm.temp_min}
-                    onChange={(e) => setCategoryForm({ ...categoryForm, temp_min: parseFloat(e.target.value) })}
+                    onChange={e =>
+                      setCategoryForm({
+                        ...categoryForm,
+                        temp_min: parseFloat(e.target.value),
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -570,11 +646,18 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                     type="number"
                     step="0.1"
                     value={categoryForm.temp_max}
-                    onChange={(e) => setCategoryForm({ ...categoryForm, temp_max: parseFloat(e.target.value) })}
+                    onChange={e =>
+                      setCategoryForm({
+                        ...categoryForm,
+                        temp_max: parseFloat(e.target.value),
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   {errors.temp_range && (
-                    <p className="mt-1 text-sm text-red-600">{errors.temp_range}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.temp_range}
+                    </p>
                   )}
                 </div>
 
@@ -586,7 +669,12 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                     type="number"
                     min="1"
                     value={categoryForm.max_storage_days}
-                    onChange={(e) => setCategoryForm({ ...categoryForm, max_storage_days: parseInt(e.target.value) })}
+                    onChange={e =>
+                      setCategoryForm({
+                        ...categoryForm,
+                        max_storage_days: parseInt(e.target.value),
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -597,10 +685,18 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                   type="checkbox"
                   id="requires_blast_chilling"
                   checked={categoryForm.requires_blast_chilling}
-                  onChange={(e) => setCategoryForm({ ...categoryForm, requires_blast_chilling: e.target.checked })}
+                  onChange={e =>
+                    setCategoryForm({
+                      ...categoryForm,
+                      requires_blast_chilling: e.target.checked,
+                    })
+                  }
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <label htmlFor="requires_blast_chilling" className="ml-2 text-sm text-gray-700">
+                <label
+                  htmlFor="requires_blast_chilling"
+                  className="ml-2 text-sm text-gray-700"
+                >
                   Richiede abbattimento di temperatura
                 </label>
               </div>
@@ -645,14 +741,16 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
             {categories.length === 0 ? (
               <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
                 <Tag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 mb-2">Nessuna categoria configurata</p>
+                <p className="text-gray-500 mb-2">
+                  Nessuna categoria configurata
+                </p>
                 <p className="text-sm text-gray-400">
                   Aggiungi categorie per organizzare i prodotti
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {categories.map((category) => (
+                {categories.map(category => (
                   <div
                     key={category.id}
                     className="border border-gray-200 rounded-lg p-4 bg-white"
@@ -664,18 +762,32 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                             className="w-4 h-4 rounded-full"
                             style={{ backgroundColor: category.color }}
                           />
-                          <h4 className="font-medium text-gray-900">{category.name}</h4>
+                          <h4 className="font-medium text-gray-900">
+                            {category.name}
+                          </h4>
                         </div>
                         {category.description && (
-                          <p className="text-sm text-gray-600 mb-2">{category.description}</p>
+                          <p className="text-sm text-gray-600 mb-2">
+                            {category.description}
+                          </p>
                         )}
                         <div className="text-sm text-gray-500">
-                          <p>Temperatura: {category.conservation_rules.temp_min}°C - {category.conservation_rules.temp_max}°C</p>
+                          <p>
+                            Temperatura: {category.conservation_rules.temp_min}
+                            °C - {category.conservation_rules.temp_max}°C
+                          </p>
                           {category.conservation_rules.max_storage_days && (
-                            <p>Durata max: {category.conservation_rules.max_storage_days} giorni</p>
+                            <p>
+                              Durata max:{' '}
+                              {category.conservation_rules.max_storage_days}{' '}
+                              giorni
+                            </p>
                           )}
-                          {category.conservation_rules.requires_blast_chilling && (
-                            <p className="text-orange-600">⚡ Richiede abbattimento</p>
+                          {category.conservation_rules
+                            .requires_blast_chilling && (
+                            <p className="text-orange-600">
+                              ⚡ Richiede abbattimento
+                            </p>
                           )}
                         </div>
                       </div>
@@ -733,14 +845,18 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                   <input
                     type="text"
                     value={productForm.name}
-                    onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                    onChange={e =>
+                      setProductForm({ ...productForm, name: e.target.value })
+                    }
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                       errors.product_name ? 'border-red-300' : 'border-gray-300'
                     }`}
                     placeholder="es. Petto di Pollo"
                   />
                   {errors.product_name && (
-                    <p className="mt-1 text-sm text-red-600">{errors.product_name}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.product_name}
+                    </p>
                   )}
                 </div>
 
@@ -750,7 +866,12 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                   </label>
                   <select
                     value={productForm.category_id}
-                    onChange={(e) => setProductForm({ ...productForm, category_id: e.target.value })}
+                    onChange={e =>
+                      setProductForm({
+                        ...productForm,
+                        category_id: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Nessuna categoria</option>
@@ -770,7 +891,12 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                   </label>
                   <select
                     value={productForm.department_id}
-                    onChange={(e) => setProductForm({ ...productForm, department_id: e.target.value })}
+                    onChange={e =>
+                      setProductForm({
+                        ...productForm,
+                        department_id: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Nessun reparto</option>
@@ -788,7 +914,12 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                   </label>
                   <select
                     value={productForm.conservation_point_id}
-                    onChange={(e) => setProductForm({ ...productForm, conservation_point_id: e.target.value })}
+                    onChange={e =>
+                      setProductForm({
+                        ...productForm,
+                        conservation_point_id: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Nessun punto specifico</option>
@@ -811,14 +942,21 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                     step="0.01"
                     min="0"
                     value={productForm.quantity}
-                    onChange={(e) => setProductForm({ ...productForm, quantity: e.target.value })}
+                    onChange={e =>
+                      setProductForm({
+                        ...productForm,
+                        quantity: e.target.value,
+                      })
+                    }
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                       errors.quantity ? 'border-red-300' : 'border-gray-300'
                     }`}
                     placeholder="0"
                   />
                   {errors.quantity && (
-                    <p className="mt-1 text-sm text-red-600">{errors.quantity}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.quantity}
+                    </p>
                   )}
                 </div>
 
@@ -828,7 +966,9 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                   </label>
                   <select
                     value={productForm.unit}
-                    onChange={(e) => setProductForm({ ...productForm, unit: e.target.value })}
+                    onChange={e =>
+                      setProductForm({ ...productForm, unit: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {UNITS.map(unit => (
@@ -845,7 +985,12 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                   </label>
                   <select
                     value={productForm.status}
-                    onChange={(e) => setProductForm({ ...productForm, status: e.target.value as any })}
+                    onChange={e =>
+                      setProductForm({
+                        ...productForm,
+                        status: e.target.value as any,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="active">Attivo</option>
@@ -864,7 +1009,12 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                   <input
                     type="text"
                     value={productForm.supplier_name}
-                    onChange={(e) => setProductForm({ ...productForm, supplier_name: e.target.value })}
+                    onChange={e =>
+                      setProductForm({
+                        ...productForm,
+                        supplier_name: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Nome fornitore"
                   />
@@ -878,7 +1028,12 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                     <input
                       type="date"
                       value={productForm.purchase_date}
-                      onChange={(e) => setProductForm({ ...productForm, purchase_date: e.target.value })}
+                      onChange={e =>
+                        setProductForm({
+                          ...productForm,
+                          purchase_date: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -890,7 +1045,12 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                     <input
                       type="date"
                       value={productForm.expiry_date}
-                      onChange={(e) => setProductForm({ ...productForm, expiry_date: e.target.value })}
+                      onChange={e =>
+                        setProductForm({
+                          ...productForm,
+                          expiry_date: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -926,7 +1086,9 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                 </label>
                 <textarea
                   value={productForm.notes}
-                  onChange={(e) => setProductForm({ ...productForm, notes: e.target.value })}
+                  onChange={e =>
+                    setProductForm({ ...productForm, notes: e.target.value })
+                  }
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Note aggiuntive sul prodotto..."
@@ -973,17 +1135,25 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
             {products.length === 0 ? (
               <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
                 <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 mb-2">Nessun prodotto configurato</p>
+                <p className="text-gray-500 mb-2">
+                  Nessun prodotto configurato
+                </p>
                 <p className="text-sm text-gray-400">
                   Aggiungi prodotti per gestire l'inventario
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4">
-                {products.map((product) => {
-                  const category = categories.find(c => c.id === product.category_id)
-                  const department = departments.find(d => d.id === product.department_id)
-                  const conservationPoint = conservationPoints.find(p => p.id === product.conservation_point_id)
+                {products.map(product => {
+                  const category = categories.find(
+                    c => c.id === product.category_id
+                  )
+                  const department = departments.find(
+                    d => d.id === product.department_id
+                  )
+                  const conservationPoint = conservationPoints.find(
+                    p => p.id === product.conservation_point_id
+                  )
 
                   return (
                     <div
@@ -999,7 +1169,9 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                                 style={{ backgroundColor: category.color }}
                               />
                             )}
-                            <h4 className="font-medium text-gray-900">{product.name}</h4>
+                            <h4 className="font-medium text-gray-900">
+                              {product.name}
+                            </h4>
                             {product.quantity && (
                               <span className="text-sm text-gray-500">
                                 {product.quantity} {product.unit}
@@ -1014,9 +1186,7 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                                 {category.name}
                               </span>
                             )}
-                            {department && (
-                              <span>{department.name}</span>
-                            )}
+                            {department && <span>{department.name}</span>}
                             {conservationPoint && (
                               <span>{conservationPoint.name}</span>
                             )}
@@ -1031,14 +1201,18 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
                             {product.expiry_date && (
                               <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full flex items-center gap-1">
                                 <Calendar className="w-3 h-3" />
-                                Scad: {new Date(product.expiry_date).toLocaleDateString('it-IT')}
+                                Scad:{' '}
+                                {new Date(
+                                  product.expiry_date
+                                ).toLocaleDateString('it-IT')}
                               </span>
                             )}
-                            {product.allergens && product.allergens.length > 0 && (
-                              <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full">
-                                Allergeni: {product.allergens.join(', ')}
-                              </span>
-                            )}
+                            {product.allergens &&
+                              product.allergens.length > 0 && (
+                                <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full">
+                                  Allergeni: {product.allergens.join(', ')}
+                                </span>
+                              )}
                           </div>
                         </div>
 
@@ -1074,10 +1248,11 @@ const InventoryStep = ({ data, departments, conservationPoints, onUpdate, onVali
           ℹ️ Gestione Inventario HACCP
         </h3>
         <p className="text-sm text-blue-700">
-          Le categorie prodotto definiscono le regole di conservazione specifiche.
-          L'inventario è utilizzato per il controllo delle scadenze e la tracciabilità.
-          Il sistema genererà automaticamente alert per i prodotti in scadenza
-          e monitorerà la conformità delle temperature di conservazione.
+          Le categorie prodotto definiscono le regole di conservazione
+          specifiche. L'inventario è utilizzato per il controllo delle scadenze
+          e la tracciabilità. Il sistema genererà automaticamente alert per i
+          prodotti in scadenza e monitorerà la conformità delle temperature di
+          conservazione.
         </p>
       </div>
     </div>
