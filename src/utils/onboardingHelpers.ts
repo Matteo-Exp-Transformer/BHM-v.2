@@ -185,42 +185,42 @@ export const getPrefillData = () => {
           id: generateId(),
           name: 'Carni Fresche',
           color: '#ef4444',
-          conservation_rules: {
-            temp_min: 0,
-            temp_max: 4,
-            max_storage_days: 3,
-            requires_blast_chilling: true,
+          conservationRules: {
+            minTemp: 0,
+            maxTemp: 4,
+            maxStorageDays: 3,
+            requiresBlastChilling: true,
           },
         },
         {
           id: generateId(),
           name: 'Pesce Fresco',
           color: '#3b82f6',
-          conservation_rules: {
-            temp_min: 0,
-            temp_max: 2,
-            max_storage_days: 2,
-            requires_blast_chilling: true,
+          conservationRules: {
+            minTemp: 0,
+            maxTemp: 2,
+            maxStorageDays: 2,
+            requiresBlastChilling: true,
           },
         },
         {
           id: generateId(),
           name: 'Latticini',
           color: '#f59e0b',
-          conservation_rules: {
-            temp_min: 2,
-            temp_max: 6,
-            max_storage_days: 7,
+          conservationRules: {
+            minTemp: 2,
+            maxTemp: 6,
+            maxStorageDays: 7,
           },
         },
         {
           id: generateId(),
           name: 'Verdure Fresche',
           color: '#10b981',
-          conservation_rules: {
-            temp_min: 4,
-            temp_max: 8,
-            max_storage_days: 5,
+          conservationRules: {
+            minTemp: 4,
+            maxTemp: 8,
+            maxStorageDays: 5,
           },
         },
       ],
@@ -230,75 +230,78 @@ export const getPrefillData = () => {
           name: 'Pomodori San Marzano',
           quantity: 5,
           unit: 'kg',
-          supplier_name: 'Ortofrutta Napoletana',
-          purchase_date: new Date().toISOString().split('T')[0],
-          expiry_date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000)
+          supplierName: 'Ortofrutta Napoletana',
+          purchaseDate: new Date().toISOString().split('T')[0],
+          expiryDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000)
             .toISOString()
             .split('T')[0],
-          status: 'active' as const,
+          status: 'active',
+          allergens: [],
         },
         {
           id: generateId(),
           name: 'Mozzarella di Bufala',
           quantity: 10,
           unit: 'pz',
-          allergens: ['Latte'],
-          supplier_name: 'Caseificio Campano',
-          purchase_date: new Date().toISOString().split('T')[0],
-          expiry_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
+          allergens: ['latte'],
+          supplierName: 'Caseificio Campano',
+          purchaseDate: new Date().toISOString().split('T')[0],
+          expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
             .toISOString()
             .split('T')[0],
-          status: 'active' as const,
+          status: 'active',
         },
         {
           id: generateId(),
           name: 'Petto di Pollo',
           quantity: 2.5,
           unit: 'kg',
-          supplier_name: 'Carni Locali SRL',
-          purchase_date: new Date().toISOString().split('T')[0],
-          expiry_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+          supplierName: 'Carni Locali SRL',
+          purchaseDate: new Date().toISOString().split('T')[0],
+          expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
             .toISOString()
             .split('T')[0],
-          status: 'active' as const,
+          status: 'active',
+          allergens: [],
         },
         {
           id: generateId(),
           name: 'Salmone Fresco',
           quantity: 1.8,
           unit: 'kg',
-          allergens: ['Pesce'],
-          supplier_name: 'Pescheria del Porto',
-          purchase_date: new Date().toISOString().split('T')[0],
-          expiry_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+          allergens: ['pesce'],
+          supplierName: 'Pescheria del Porto',
+          purchaseDate: new Date().toISOString().split('T')[0],
+          expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
             .toISOString()
             .split('T')[0],
-          status: 'active' as const,
+          status: 'active',
         },
         {
           id: generateId(),
           name: 'Olio Extravergine',
           quantity: 5,
           unit: 'l',
-          supplier_name: 'Frantoio Toscano',
-          purchase_date: new Date().toISOString().split('T')[0],
-          expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          supplierName: 'Frantoio Toscano',
+          purchaseDate: new Date().toISOString().split('T')[0],
+          expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
             .toISOString()
             .split('T')[0],
-          status: 'active' as const,
+          status: 'active',
+          allergens: [],
         },
         {
           id: generateId(),
           name: 'Pasta di Grano Duro',
           quantity: 20,
           unit: 'conf',
-          allergens: ['Glutine'],
-          supplier_name: 'Pastificio Artigianale',
-          purchase_date: new Date().toISOString().split('T')[0],
-          expiry_date: new Date(Date.now() + 730 * 24 * 60 * 60 * 1000)
+          allergens: ['glutine'],
+          supplierName: 'Pastificio Artigianale',
+          purchaseDate: new Date().toISOString().split('T')[0],
+          expiryDate: new Date(Date.now() + 730 * 24 * 60 * 60 * 1000)
             .toISOString()
             .split('T')[0],
-          status: 'active' as const,
+          status: 'active',
         },
       ],
     },
