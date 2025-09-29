@@ -19,7 +19,7 @@ const DepartmentsStep = ({
   onUpdate,
   onValidChange,
 }: DepartmentsStepProps) => {
-  const [departments, setDepartments] = useState<Department[]>(data || [])
+  const departments = data || []
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: '',
@@ -29,8 +29,6 @@ const DepartmentsStep = ({
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    onUpdate(departments)
-
     const hasValidDepartments =
       departments.length > 0 &&
       departments.every(
@@ -44,7 +42,7 @@ const DepartmentsStep = ({
       )
 
     onValidChange(hasValidDepartments)
-  }, [departments, onUpdate, onValidChange])
+  }, [departments, onValidChange])
 
   const generateId = () =>
     `dept_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -74,7 +72,7 @@ const DepartmentsStep = ({
         is_active: formData.is_active,
       }
 
-      setDepartments([...departments, newDepartment])
+      onUpdate([...departments, newDepartment])
       setFormData({ name: '', description: '', is_active: true })
     }
   }
@@ -99,7 +97,7 @@ const DepartmentsStep = ({
     setErrors(newErrors)
 
     if (Object.keys(newErrors).length === 0) {
-      setDepartments(
+      onUpdate(
         departments.map(dept =>
           dept.id === editingId
             ? {
@@ -117,7 +115,7 @@ const DepartmentsStep = ({
   }
 
   const deleteDepartment = (id: string) => {
-    setDepartments(departments.filter(dept => dept.id !== id))
+    onUpdate(departments.filter(dept => dept.id !== id))
   }
 
   const startEdit = (department: Department) => {
@@ -175,7 +173,7 @@ const DepartmentsStep = ({
         is_active: true,
       },
     ]
-    setDepartments(sampleDepartments)
+    onUpdate(sampleDepartments)
   }
 
   return (
