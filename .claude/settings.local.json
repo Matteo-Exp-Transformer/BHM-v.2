@@ -36,7 +36,11 @@
       "Bash(dir:*)",
       "Read(//c/Users/matte.MIO/Documents/GitHub/Business-HACCP-manager/src/**)",
       "Bash(timeout:*)",
-      "Read(//c/Users/matte.MIO/Documents/GitHub/Business-HACCP-manager/**)"
+      "Read(//c/Users/matte.MIO/Documents/GitHub/Business-HACCP-manager/**)",
+      "Bash(tasklist)",
+      "Bash(npm run build:clean:*)",
+      "Bash(npm run preview:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []
