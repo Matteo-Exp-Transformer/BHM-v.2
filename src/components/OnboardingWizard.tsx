@@ -59,7 +59,7 @@ const OnboardingWizard = () => {
   }, [])
 
   // Gestori per i pulsanti di controllo
-  const handlePrefillOnboarding = () => {
+  const handlePrefillOnboarding = useCallback(() => {
     try {
       const data = getPrefillData()
       setFormData(data)
@@ -68,15 +68,15 @@ const OnboardingWizard = () => {
       console.error('Error prefilling onboarding:', error)
       toast.error('Errore durante la precompilazione')
     }
-  }
+  }, [])
 
-  const handleCompleteOnboarding = () => {
+  const handleCompleteOnboarding = useCallback(() => {
     completeOnboardingHelper()
-  }
+  }, [])
 
-  const handleResetOnboarding = () => {
+  const handleResetOnboarding = useCallback(() => {
     resetOnboarding()
-  }
+  }, [])
 
   // Salva automaticamente in localStorage con debounce
   const saveTimeoutRef = useRef<number>()
