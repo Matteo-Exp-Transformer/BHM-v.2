@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { AllergenType } from '@/types/inventory'
 
 import type {
   ConservationPoint,
@@ -7,22 +8,17 @@ import type {
   ProductStatus,
 } from '@/types/onboarding'
 
-export const ALLERGEN_LIST = [
-  'glutine',
-  'crostacei',
-  'uova',
-  'pesce',
-  'arachidi',
-  'soia',
-  'latte',
-  'frutta_a_guscio',
-  'sedano',
-  'senape',
-  'sesamo',
-  'anidride_solforosa',
-  'lupini',
-  'molluschi',
-]
+// Mappa per le etichette degli allergeni - allineata con AddProductModal
+const ALLERGEN_LABELS: Record<AllergenType, string> = {
+  [AllergenType.GLUTINE]: 'Glutine',
+  [AllergenType.LATTE]: 'Latte',
+  [AllergenType.UOVA]: 'Uova',
+  [AllergenType.SOIA]: 'Soia',
+  [AllergenType.FRUTTA_GUSCIO]: 'Frutta a guscio',
+  [AllergenType.ARACHIDI]: 'Arachidi',
+  [AllergenType.PESCE]: 'Pesce',
+  [AllergenType.CROSTACEI]: 'Crostacei',
+}
 
 export const UNIT_OPTIONS = [
   'kg',
@@ -71,7 +67,7 @@ const productSchema = z.object({
     .nonnegative({ message: 'La quantità deve essere positiva' })
     .optional(),
   unit: z.string().optional(),
-  allergens: z.array(z.string()).default([]),
+  allergens: z.array(z.nativeEnum(AllergenType)).default([]),
   labelPhotoUrl: z.string().optional(),
   status: z.enum(PRODUCT_STATUS_OPTIONS),
   notes: z.string().optional(),
@@ -318,39 +314,8 @@ export const normalizeInventoryProduct = (
   notes: product.notes || undefined,
 })
 
-export const getAllergenLabel = (id: string) => {
-  switch (id) {
-    case 'glutine':
-      return 'Glutine'
-    case 'crostacei':
-      return 'Crostacei'
-    case 'uova':
-      return 'Uova'
-    case 'pesce':
-      return 'Pesce'
-    case 'arachidi':
-      return 'Arachidi'
-    case 'soia':
-      return 'Soia'
-    case 'latte':
-      return 'Latte'
-    case 'frutta_a_guscio':
-      return 'Frutta a guscio'
-    case 'sedano':
-      return 'Sedano'
-    case 'senape':
-      return 'Senape'
-    case 'sesamo':
-      return 'Sesamo'
-    case 'anidride_solforosa':
-      return 'Anidride solforosa'
-    case 'lupini':
-      return 'Lupini'
-    case 'molluschi':
-      return 'Molluschi'
-    default:
-      return id
-  }
+export const getAllergenLabel = (allergen: AllergenType): string => {
+  return ALLERGEN_LABELS[allergen] || allergen
 }
 
 export const isProductCompliant = (

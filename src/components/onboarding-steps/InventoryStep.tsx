@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Package, Tag, Plus, Edit2, Trash2 } from 'lucide-react'
+import {
+  Package,
+  Tag,
+  Plus,
+  Edit2,
+  Trash2,
+  AlertTriangle,
+  Calendar,
+} from 'lucide-react'
+import { AllergenType } from '@/types/inventory'
 
 import type {
   InventoryStepData,
@@ -8,7 +17,6 @@ import type {
   ProductCategory,
 } from '@/types/onboarding'
 import {
-  ALLERGEN_LIST,
   UNIT_OPTIONS,
   normalizeInventoryProduct,
   createEmptyCategory,
@@ -18,6 +26,18 @@ import {
   isProductCompliant,
   getAllergenLabel,
 } from '@/utils/onboarding/inventoryUtils'
+
+// Allineato con AddProductModal - stessi allergeni e labels
+const ALLERGEN_OPTIONS: { value: AllergenType; label: string }[] = [
+  { value: AllergenType.GLUTINE, label: 'Glutine' },
+  { value: AllergenType.LATTE, label: 'Latte' },
+  { value: AllergenType.UOVA, label: 'Uova' },
+  { value: AllergenType.SOIA, label: 'Soia' },
+  { value: AllergenType.FRUTTA_GUSCIO, label: 'Frutta a guscio' },
+  { value: AllergenType.ARACHIDI, label: 'Arachidi' },
+  { value: AllergenType.PESCE, label: 'Pesce' },
+  { value: AllergenType.CROSTACEI, label: 'Crostacei' },
+]
 
 const InventoryStep = ({
   data,
@@ -162,7 +182,7 @@ const InventoryStep = ({
     setProducts(prev => prev.filter(product => product.id !== id))
   }
 
-  const toggleProductAllergen = (allergen: string) => {
+  const toggleProductAllergen = (allergen: AllergenType) => {
     setDraftProduct(prev =>
       prev
         ? {
@@ -679,296 +699,356 @@ const InventoryStep = ({
           )}
 
           {draftProduct && (
-            <div className="space-y-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-              <h4 className="text-sm font-semibold text-blue-900">
-                {products.some(prod => prod.id === draftProduct.id)
-                  ? 'Modifica prodotto'
-                  : 'Nuovo prodotto'}
-              </h4>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-blue-900">
-                    Nome prodotto *
-                  </label>
-                  <input
-                    type="text"
-                    value={draftProduct.name}
-                    onChange={e =>
-                      setDraftProduct(prev =>
-                        prev ? { ...prev, name: e.target.value } : prev
-                      )
-                    }
-                    className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
-                      productErrors.name ? 'border-red-300' : 'border-blue-200'
-                    }`}
-                  />
-                  {productErrors.name && (
-                    <p className="mt-1 text-xs text-red-600">
-                      {productErrors.name}
-                    </p>
-                  )}
+            <div className="space-y-6 rounded-lg border border-blue-200 bg-blue-50 p-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Package className="w-5 h-5 text-blue-600" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-lg font-semibold text-blue-900">
+                    {products.some(prod => prod.id === draftProduct.id)
+                      ? 'Modifica Prodotto'
+                      : 'Nuovo Prodotto'}
+                  </h4>
+                  <p className="text-sm text-blue-600">
+                    {products.some(prod => prod.id === draftProduct.id)
+                      ? 'Aggiorna le informazioni del prodotto'
+                      : "Aggiungi un nuovo prodotto all'inventario"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-blue-900 flex items-center gap-2">
+                  <Package className="w-5 h-5" />
+                  Informazioni Base
+                </h3>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
                     <label className="mb-1 block text-sm font-medium text-blue-900">
-                      SKU
+                      Nome prodotto *
                     </label>
                     <input
                       type="text"
-                      value={draftProduct.sku ?? ''}
+                      value={draftProduct.name}
                       onChange={e =>
                         setDraftProduct(prev =>
-                          prev ? { ...prev, sku: e.target.value } : prev
+                          prev ? { ...prev, name: e.target.value } : prev
                         )
                       }
-                      className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                      className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+                        productErrors.name
+                          ? 'border-red-300'
+                          : 'border-blue-200'
+                      }`}
                     />
+                    {productErrors.name && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {productErrors.name}
+                      </p>
+                    )}
                   </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-blue-900">
-                      Barcode
-                    </label>
-                    <input
-                      type="text"
-                      value={draftProduct.barcode ?? ''}
-                      onChange={e =>
-                        setDraftProduct(prev =>
-                          prev ? { ...prev, barcode: e.target.value } : prev
-                        )
-                      }
-                      className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-blue-900">
+                        SKU
+                      </label>
+                      <input
+                        type="text"
+                        value={draftProduct.sku ?? ''}
+                        onChange={e =>
+                          setDraftProduct(prev =>
+                            prev ? { ...prev, sku: e.target.value } : prev
+                          )
+                        }
+                        className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-blue-900">
+                        Barcode
+                      </label>
+                      <input
+                        type="text"
+                        value={draftProduct.barcode ?? ''}
+                        onChange={e =>
+                          setDraftProduct(prev =>
+                            prev ? { ...prev, barcode: e.target.value } : prev
+                          )
+                        }
+                        className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-blue-900">
-                    Categoria
-                  </label>
-                  <select
-                    value={draftProduct.categoryId ?? ''}
-                    onChange={e =>
-                      setDraftProduct(prev =>
-                        prev
-                          ? {
-                              ...prev,
-                              categoryId: e.target.value || undefined,
-                            }
-                          : prev
-                      )
-                    }
-                    className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Seleziona categoria</option>
-                    {categories.map(category => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                  {productErrors.categoryId && (
-                    <p className="mt-1 text-xs text-red-600">
-                      {productErrors.categoryId}
-                    </p>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+              {/* Category and Location */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-blue-900 flex items-center gap-2">
+                  <Tag className="w-5 h-5" />
+                  Categoria e Posizione
+                </h3>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
                     <label className="mb-1 block text-sm font-medium text-blue-900">
-                      Reparto
+                      Categoria
                     </label>
                     <select
-                      value={draftProduct.departmentId ?? ''}
+                      value={draftProduct.categoryId ?? ''}
                       onChange={e =>
                         setDraftProduct(prev =>
                           prev
                             ? {
                                 ...prev,
-                                departmentId: e.target.value || undefined,
+                                categoryId: e.target.value || undefined,
                               }
                             : prev
                         )
                       }
                       className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="">Seleziona reparto</option>
-                      {departmentOptions.map(department => (
-                        <option key={department.id} value={department.id}>
-                          {department.name}
+                      <option value="">Seleziona categoria</option>
+                      {categories.map(category => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
                         </option>
                       ))}
                     </select>
+                    {productErrors.categoryId && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {productErrors.categoryId}
+                      </p>
+                    )}
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-blue-900">
+                        Reparto
+                      </label>
+                      <select
+                        value={draftProduct.departmentId ?? ''}
+                        onChange={e =>
+                          setDraftProduct(prev =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  departmentId: e.target.value || undefined,
+                                }
+                              : prev
+                          )
+                        }
+                        className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Seleziona reparto</option>
+                        {departmentOptions.map(department => (
+                          <option key={department.id} value={department.id}>
+                            {department.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-blue-900">
+                        Conservazione
+                      </label>
+                      <select
+                        value={draftProduct.conservationPointId ?? ''}
+                        onChange={e =>
+                          setDraftProduct(prev =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  conservationPointId:
+                                    e.target.value || undefined,
+                                }
+                              : prev
+                          )
+                        }
+                        className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+                          productErrors.conservationPointId
+                            ? 'border-red-300'
+                            : 'border-blue-200'
+                        }`}
+                      >
+                        <option value="">Seleziona punto conservazione</option>
+                        {conservationPoints.map(point => (
+                          <option key={point.id} value={point.id}>
+                            {point.name} ({point.targetTemperature}°C)
+                          </option>
+                        ))}
+                      </select>
+                      {productErrors.conservationPointId && (
+                        <p className="mt-1 text-xs text-red-600">
+                          {productErrors.conservationPointId}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dates and Quantity */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-blue-900 flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Date e Quantità
+                </h3>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
                     <label className="mb-1 block text-sm font-medium text-blue-900">
-                      Conservazione
+                      Data Acquisto
                     </label>
-                    <select
-                      value={draftProduct.conservationPointId ?? ''}
+                    <input
+                      type="date"
+                      value={draftProduct?.purchaseDate ?? ''}
                       onChange={e =>
                         setDraftProduct(prev =>
                           prev
                             ? {
                                 ...prev,
-                                conservationPointId:
-                                  e.target.value || undefined,
+                                purchaseDate: e.target.value || undefined,
+                              }
+                            : prev
+                        )
+                      }
+                      className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-blue-900">
+                      Data Scadenza
+                    </label>
+                    <input
+                      type="date"
+                      value={draftProduct?.expiryDate ?? ''}
+                      onChange={e =>
+                        setDraftProduct(prev =>
+                          prev
+                            ? {
+                                ...prev,
+                                expiryDate: e.target.value || undefined,
                               }
                             : prev
                         )
                       }
                       className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
-                        productErrors.conservationPointId
+                        productErrors.expiryDate
                           ? 'border-red-300'
                           : 'border-blue-200'
                       }`}
+                    />
+                    {productErrors.expiryDate && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {productErrors.expiryDate}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-blue-900">
+                      Quantità
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.001"
+                      value={draftProduct.quantity ?? ''}
+                      onChange={e =>
+                        setDraftProduct(prev =>
+                          prev
+                            ? {
+                                ...prev,
+                                quantity: e.target.value
+                                  ? Number(e.target.value)
+                                  : undefined,
+                              }
+                            : prev
+                        )
+                      }
+                      className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+                        productErrors.quantity
+                          ? 'border-red-300'
+                          : 'border-blue-200'
+                      }`}
+                    />
+                    {productErrors.quantity && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {productErrors.quantity}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-blue-900">
+                      Unità
+                    </label>
+                    <select
+                      value={draftProduct.unit ?? 'pz'}
+                      onChange={e =>
+                        setDraftProduct(prev =>
+                          prev ? { ...prev, unit: e.target.value } : prev
+                        )
+                      }
+                      className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="">Seleziona punto conservazione</option>
-                      {conservationPoints.map(point => (
-                        <option key={point.id} value={point.id}>
-                          {point.name} ({point.targetTemperature}°C)
+                      {UNIT_OPTIONS.map(unit => (
+                        <option key={unit} value={unit}>
+                          {unit}
                         </option>
                       ))}
                     </select>
-                    {productErrors.conservationPointId && (
-                      <p className="mt-1 text-xs text-red-600">
-                        {productErrors.conservationPointId}
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-blue-900">
-                    Quantità
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    step="0.001"
-                    value={draftProduct.quantity ?? ''}
-                    onChange={e =>
-                      setDraftProduct(prev =>
-                        prev
-                          ? {
-                              ...prev,
-                              quantity: e.target.value
-                                ? Number(e.target.value)
-                                : undefined,
-                            }
-                          : prev
-                      )
-                    }
-                    className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
-                      productErrors.quantity
-                        ? 'border-red-300'
-                        : 'border-blue-200'
-                    }`}
-                  />
-                  {productErrors.quantity && (
-                    <p className="mt-1 text-xs text-red-600">
-                      {productErrors.quantity}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-blue-900">
-                    Unità
-                  </label>
-                  <select
-                    value={draftProduct.unit ?? 'pz'}
-                    onChange={e =>
-                      setDraftProduct(prev =>
-                        prev ? { ...prev, unit: e.target.value } : prev
-                      )
-                    }
-                    className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  >
-                    {UNIT_OPTIONS.map(unit => (
-                      <option key={unit} value={unit}>
-                        {unit}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-blue-900">
-                    Data acquisto
-                  </label>
-                  <input
-                    type="date"
-                    value={draftProduct.purchaseDate ?? ''}
-                    onChange={e =>
-                      setDraftProduct(prev =>
-                        prev
-                          ? {
-                              ...prev,
-                              purchaseDate: e.target.value || undefined,
-                            }
-                          : prev
-                      )
-                    }
-                    className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-blue-900">
-                    Data scadenza
-                  </label>
-                  <input
-                    type="date"
-                    value={draftProduct.expiryDate ?? ''}
-                    onChange={e =>
-                      setDraftProduct(prev =>
-                        prev
-                          ? {
-                              ...prev,
-                              expiryDate: e.target.value || undefined,
-                            }
-                          : prev
-                      )
-                    }
-                    className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
-                      productErrors.expiryDate
-                        ? 'border-red-300'
-                        : 'border-blue-200'
-                    }`}
-                  />
-                  {productErrors.expiryDate && (
-                    <p className="mt-1 text-xs text-red-600">
-                      {productErrors.expiryDate}
-                    </p>
-                  )}
+              <div>
+                <h3 className="text-lg font-medium text-blue-900 flex items-center gap-2 mb-4">
+                  <AlertTriangle className="w-5 h-5" />
+                  Allergeni
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {ALLERGEN_OPTIONS.map(allergen => (
+                    <label
+                      key={allergen.value}
+                      className="flex items-center gap-2 p-3 border border-blue-200 rounded-lg hover:bg-blue-50/50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={
+                          draftProduct?.allergens.includes(allergen.value) ||
+                          false
+                        }
+                        onChange={() => toggleProductAllergen(allergen.value)}
+                        className="w-4 h-4 text-blue-600 border-blue-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-sm font-medium text-blue-900">
+                        {allergen.label}
+                      </span>
+                    </label>
+                  ))}
                 </div>
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-blue-900">
-                  Allergeni
+                <label className="mb-1 block text-sm font-medium text-blue-900">
+                  URL Foto Etichetta
                 </label>
-                <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                  {ALLERGEN_LIST.map(allergen => (
-                    <label
-                      key={allergen}
-                      className="flex items-center gap-2 rounded-md border border-blue-200 bg-white/60 px-3 py-2 text-xs font-medium text-blue-900"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={draftProduct.allergens.includes(allergen)}
-                        onChange={() => toggleProductAllergen(allergen)}
-                        className="h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span>{getAllergenLabel(allergen)}</span>
-                    </label>
-                  ))}
-                </div>
+                <input
+                  type="url"
+                  value={draftProduct?.labelPhotoUrl ?? ''}
+                  onChange={e =>
+                    setDraftProduct(prev =>
+                      prev ? { ...prev, labelPhotoUrl: e.target.value } : prev
+                    )
+                  }
+                  className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://..."
+                />
               </div>
 
               <div>
