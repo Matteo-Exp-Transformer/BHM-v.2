@@ -5,7 +5,11 @@ export interface DepartmentSummary {
   is_active?: boolean
 }
 
-export type StaffRole = 'admin' | 'responsabile' | 'dipendente' | 'collaboratore'
+export type StaffRole =
+  | 'admin'
+  | 'responsabile'
+  | 'dipendente'
+  | 'collaboratore'
 
 export interface StaffMember {
   id: string
@@ -59,6 +63,8 @@ export interface ConservationPoint {
   pointType: 'ambient' | 'fridge' | 'freezer' | 'blast'
   isBlastChiller: boolean
   productCategories: string[]
+  maintenanceTasks?: ConservationMaintenanceTask[]
+  maintenanceDue?: string
   source: 'manual' | 'prefill' | 'import'
 }
 
@@ -82,7 +88,12 @@ export interface ConservationStepProps {
   onValidChange: (valid: boolean) => void
 }
 
-export type TaskFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annual'
+export type TaskFrequency =
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'quarterly'
+  | 'annual'
 
 export type TaskPriority = 'low' | 'medium' | 'high' | 'critical'
 
@@ -106,6 +117,9 @@ export interface GeneralTask {
   checklist: string[]
   requiredTools: string[]
   haccpCategory: HaccpTaskCategory
+  responsibleStaffIds?: string[]
+  documentationUrl?: string
+  validationNotes?: string
 }
 
 export type MaintenanceTaskType =
@@ -116,12 +130,21 @@ export type MaintenanceTaskType =
 export interface MaintenanceTask {
   id: string
   conservationPointId: string
-  conservationPointName: string
+  conservationPointName?: string
   type: MaintenanceTaskType
   frequency: TaskFrequency
   assignedRole?: string
   assignedStaffIds: string[]
   notes?: string
+  estimatedDuration?: number
+  priority?: TaskPriority
+  nextDue?: string
+  instructions?: string[]
+}
+
+export interface ConservationMaintenanceTask extends MaintenanceTask {
+  title: string
+  status?: 'pending' | 'completed' | 'overdue'
 }
 
 export interface TasksStepData {
@@ -139,6 +162,8 @@ export interface TasksStepProps {
 }
 
 export type ProductStatus = 'active' | 'expired' | 'consumed' | 'waste'
+
+import type { AllergenType } from '@/types/inventory'
 
 export interface ProductCategory {
   id: string
@@ -159,14 +184,17 @@ export interface InventoryProduct {
   categoryId?: string
   departmentId?: string
   conservationPointId?: string
-  quantity?: number
-  unit?: string
-  allergens: string[]
+  sku?: string
+  barcode?: string
   supplierName?: string
-  batchNumber?: string
   purchaseDate?: string
   expiryDate?: string
+  quantity?: number
+  unit?: string
+  allergens: AllergenType[]
+  labelPhotoUrl?: string
   status: ProductStatus
+  complianceStatus?: 'compliant' | 'warning' | 'non_compliant'
   notes?: string
 }
 
@@ -182,4 +210,3 @@ export interface InventoryStepProps {
   onUpdate: (data: InventoryStepData) => void
   onValidChange: (valid: boolean) => void
 }
-

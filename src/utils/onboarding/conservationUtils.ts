@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import type { ConservationPoint } from '@/types/onboarding'
+import type { ConservationPoint, MaintenanceTask } from '@/types/onboarding'
 
 export const CONSERVATION_POINT_TYPES = {
   ambient: {
@@ -98,13 +98,35 @@ const conservationPointSchema = z.object({
     .max(80),
   pointType: z.enum(['ambient', 'fridge', 'freezer', 'blast']),
   isBlastChiller: z.boolean(),
-  productCategories: z.array(z.string()).min(1, 'Seleziona almeno una categoria'),
+  productCategories: z
+    .array(z.string())
+    .min(1, 'Seleziona almeno una categoria'),
   source: z.enum(['manual', 'prefill', 'import']),
+  maintenanceTasks: z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string().min(2, 'Il titolo è obbligatorio'),
+        type: z.string(),
+        frequency: z.string(),
+        estimatedDuration: z.number().optional(),
+        priority: z.string().optional(),
+        assignedStaffIds: z.array(z.string()).optional(),
+        nextDue: z.string().optional(),
+        instructions: z.array(z.string()).optional(),
+        notes: z.string().optional(),
+      })
+    )
+    .optional(),
 })
 
 export const validateConservationPoint = (
   point: ConservationPoint
-): { success: boolean; point?: ConservationPoint; errors?: Record<string, string> } => {
+): {
+  success: boolean
+  point?: ConservationPoint
+  errors?: Record<string, string>
+} => {
   const result = conservationPointSchema.safeParse(point)
 
   if (!result.success) {
@@ -121,7 +143,10 @@ export const validateConservationPoint = (
     const category = getCategoryById(categoryId)
     if (!category) return false
 
-    if (category.compatibleTypes && !category.compatibleTypes.includes(point.pointType)) {
+    if (
+      category.compatibleTypes &&
+      !category.compatibleTypes.includes(point.pointType)
+    ) {
       return true
     }
 
@@ -132,7 +157,8 @@ export const validateConservationPoint = (
     return {
       success: false,
       errors: {
-        productCategories: 'Alcune categorie non sono compatibili con la tipologia selezionata',
+        productCategories:
+          'Alcune categorie non sono compatibili con la tipologia selezionata',
         global: `Rimuovi le categorie incompatibili: ${incompatibleCategories
           .map(id => getCategoryById(id)?.label || id)
           .join(', ')}`,
@@ -154,7 +180,8 @@ export const validateConservationPoint = (
     return {
       success: false,
       errors: {
-        targetTemperature: 'La temperatura non rientra nei range HACCP delle categorie selezionate',
+        targetTemperature:
+          'La temperatura non rientra nei range HACCP delle categorie selezionate',
         global: `Verifica i range per: ${outOfRangeCategories
           .map(id => getCategoryById(id)?.label || id)
           .join(', ')}`,
@@ -165,10 +192,115 @@ export const validateConservationPoint = (
   return { success: true, point }
 }
 
+export const validateMaintenanceTask = (
+  task: MaintenanceTask
+): { success: boolean; errors?: Record<string, string> } => {
+  const errors: Record<string, string> = {}
+
+  if (!task.title || task.title.trim().length < 2) {
+    errors.title = 'Inserisci un titolo per il task di manutenzione'
+  }
+
+  if (!task.type) {
+    errors.type = 'Seleziona un tipo di manutenzione'
+  }
+
+  if (!task.frequency) {
+    errors.frequency = 'Indica la frequenza del task'
+  }
+
+  if (!task.nextDue || task.nextDue.trim() === '') {
+    errors.nextDue = 'Specificare la prossima scadenza è obbligatorio'
+  }
+
+  return {
+    success: Object.keys(errors).length === 0,
+    errors: Object.keys(errors).length > 0 ? errors : undefined,
+  }
+}
+
+export const generateConservationPointId = () =>
+  `cp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+
+export const createDraftConservationPoint = (
+  point?: ConservationPoint | null
+): ConservationPoint => {
+  if (point) {
+    return {
+      ...point,
+      productCategories: [...point.productCategories],
+      maintenanceTasks: point.maintenanceTasks
+        ? point.maintenanceTasks.map(task => ({
+            ...task,
+            assignedStaffIds: [...(task.assignedStaffIds ?? [])],
+            instructions: [...(task.instructions ?? [])],
+          }))
+        : [],
+    }
+  }
+
+  return {
+    id: generateConservationPointId(),
+    name: '',
+    departmentId: '',
+    targetTemperature: 4,
+    pointType: 'fridge',
+    isBlastChiller: false,
+    productCategories: [],
+    maintenanceTasks: [],
+    source: 'manual',
+  }
+}
+
+export const normalizeConservationPoint = (
+  point: ConservationPoint
+): ConservationPoint => ({
+  id: point.id,
+  name: point.name.trim(),
+  departmentId: point.departmentId,
+  targetTemperature: point.targetTemperature,
+  pointType: point.pointType,
+  isBlastChiller: point.isBlastChiller,
+  productCategories: [...point.productCategories],
+  maintenanceTasks: point.maintenanceTasks?.map(normalizeMaintenanceTask),
+  maintenanceDue: point.maintenanceDue,
+  source: point.source,
+})
+
+export const createDraftMaintenanceTask = (): MaintenanceTask => ({
+  id: `mt_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+  conservationPointId: '',
+  title: 'Nuova manutenzione',
+  type: 'general_inspection',
+  frequency: 'weekly',
+  assignedStaffIds: [],
+  notes: '',
+})
+
+export const normalizeMaintenanceTask = (
+  task: MaintenanceTask
+): MaintenanceTask => ({
+  id: task.id,
+  conservationPointId: task.conservationPointId,
+  conservationPointName: task.conservationPointName,
+  title: task.title.trim(),
+  type: task.type,
+  frequency: task.frequency,
+  assignedRole: task.assignedRole,
+  assignedStaffIds: task.assignedStaffIds ?? [],
+  notes: task.notes,
+  estimatedDuration: task.estimatedDuration,
+  priority: task.priority,
+  nextDue: task.nextDue,
+  instructions: task.instructions ?? [],
+})
+
 export const getCategoryById = (id: string) =>
   CONSERVATION_CATEGORIES.find(category => category.id === id)
 
-export const getConservationPointType = (type: ConservationPoint['pointType']) => {
+export const getConservationPointType = (
+  type: ConservationPoint['pointType']
+) => {
   return CONSERVATION_POINT_TYPES[type]
 }
 
@@ -207,4 +339,3 @@ export const getOptimalTemperatureSuggestion = (point: ConservationPoint) => {
   const optimal = ((min + max) / 2).toFixed(1)
   return `Range consigliato: ${min}°C - ${max}°C • Temperatura ottimale: ${optimal}°C`
 }
-

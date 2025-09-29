@@ -24,7 +24,16 @@ export const ALLERGEN_LIST = [
   'molluschi',
 ]
 
-export const UNIT_OPTIONS = ['kg', 'g', 'l', 'ml', 'pz', 'conf', 'buste', 'vaschette']
+export const UNIT_OPTIONS = [
+  'kg',
+  'g',
+  'l',
+  'ml',
+  'pz',
+  'conf',
+  'buste',
+  'vaschette',
+]
 
 export const PRODUCT_STATUS_OPTIONS: ProductStatus[] = [
   'active',
@@ -48,52 +57,76 @@ const categorySchema = z.object({
 
 const productSchema = z.object({
   id: z.string(),
-  name: z.string().min(2, 'Nome prodotto troppo corto'),
-  categoryId: z.string().min(1).optional(),
-  departmentId: z.string().min(1).optional(),
-  conservationPointId: z.string().min(1).optional(),
-  quantity: z.number().nonnegative().optional(),
-  unit: z.string().optional(),
-  allergens: z.array(z.string()).default([]),
+  name: z.string().min(2, 'Il nome del prodotto è obbligatorio'),
+  categoryId: z.string().min(1, 'Seleziona una categoria').optional(),
+  departmentId: z.string().optional(),
+  conservationPointId: z.string().optional(),
+  sku: z.string().optional(),
+  barcode: z.string().optional(),
   supplierName: z.string().optional(),
-  batchNumber: z.string().optional(),
   purchaseDate: z.string().optional(),
   expiryDate: z.string().optional(),
+  quantity: z
+    .number()
+    .nonnegative({ message: 'La quantità deve essere positiva' })
+    .optional(),
+  unit: z.string().optional(),
+  allergens: z.array(z.string()).default([]),
+  labelPhotoUrl: z.string().optional(),
   status: z.enum(PRODUCT_STATUS_OPTIONS),
   notes: z.string().optional(),
 })
 
-export const validateCategory = (
-  category: ProductCategory
-): { success: boolean; errors?: Record<string, string> } => {
-  const result = categorySchema.safeParse(category)
-  if (result.success) {
-    if (category.conservationRules.minTemp >= category.conservationRules.maxTemp) {
-      return {
-        success: false,
-        errors: {
-          minTemp: 'La temperatura minima deve essere inferiore alla massima',
-          maxTemp: 'La temperatura massima deve essere superiore alla minima',
-        },
-      }
+const REQUIRED_FIELDS = {
+  name: 'Inserisci il nome del prodotto',
+  categoryId: 'Seleziona una categoria di appartenenza',
+  departmentId: 'Seleziona un reparto di riferimento',
+  conservationPointId: 'Associa un punto di conservazione',
+  quantity: 'La quantità è obbligatoria',
+  unit: "Seleziona l'unità di misura",
+} as const
+
+const REQUIRED_NUMERIC_FIELDS: Array<keyof InventoryProduct> = ['quantity']
+const REQUIRED_STRING_FIELDS: Array<keyof InventoryProduct> = [
+  'categoryId',
+  'departmentId',
+  'conservationPointId',
+  'unit',
+]
+
+const collectMissingFields = (product: InventoryProduct) => {
+  const errors: Record<string, string> = {}
+
+  REQUIRED_STRING_FIELDS.forEach(field => {
+    const value = product[field]
+    if (!value || (typeof value === 'string' && value.trim() === '')) {
+      errors[field] = REQUIRED_FIELDS[field]
     }
-    return { success: true }
+  })
+
+  REQUIRED_NUMERIC_FIELDS.forEach(field => {
+    const value = product[field]
+    if (value === undefined || value === null || Number.isNaN(value)) {
+      errors[field] = REQUIRED_FIELDS[field]
+    }
+  })
+
+  if (!product.purchaseDate || product.purchaseDate.trim() === '') {
+    errors.purchaseDate = 'Seleziona la data di acquisto'
   }
 
-  const errors: Record<string, string> = {}
-  result.error.issues.forEach(issue => {
-    const field = issue.path.join('.')
-    errors[field] = issue.message
-  })
-  return { success: false, errors }
+  if (!product.expiryDate || product.expiryDate.trim() === '') {
+    errors.expiryDate = 'Seleziona la data di scadenza'
+  }
+
+  return errors
 }
 
-export const validateProduct = (
-  product: InventoryProduct,
-  categories: ProductCategory[],
-  conservationPoints: ConservationPoint[]
+export const validateInventoryCategory = (
+  category: ProductCategory,
+  others: ProductCategory[]
 ): { success: boolean; errors?: Record<string, string> } => {
-  const result = productSchema.safeParse(product)
+  const result = categorySchema.safeParse(category)
   if (!result.success) {
     const errors: Record<string, string> = {}
     result.error.issues.forEach(issue => {
@@ -103,35 +136,108 @@ export const validateProduct = (
     return { success: false, errors }
   }
 
+  const { minTemp, maxTemp } = category.conservationRules
+  if (minTemp >= maxTemp) {
+    return {
+      success: false,
+      errors: {
+        minTemp: 'La temperatura minima deve essere inferiore alla massima',
+        maxTemp: 'La temperatura massima deve essere superiore alla minima',
+      },
+    }
+  }
+
+  if (
+    others.some(
+      item =>
+        item.id !== category.id &&
+        item.name.trim().toLowerCase() === category.name.trim().toLowerCase()
+    )
+  ) {
+    return {
+      success: false,
+      errors: { name: 'Una categoria con questo nome esiste già' },
+    }
+  }
+
+  return { success: true }
+}
+
+export const validateInventoryProduct = (
+  product: InventoryProduct,
+  categories: ProductCategory[],
+  conservationPoints: ConservationPoint[]
+): { success: boolean; errors?: Record<string, string> } => {
+  const result = productSchema.safeParse(product)
+
+  const missingFieldErrors = collectMissingFields(product)
+
+  if (!result.success || Object.keys(missingFieldErrors).length > 0) {
+    const errors: Record<string, string> = { ...missingFieldErrors }
+    if (!result.success) {
+      result.error.issues.forEach(issue => {
+        const field = issue.path.join('.')
+        if (!errors[field]) {
+          errors[field] = issue.message
+        }
+      })
+    }
+    return { success: false, errors }
+  }
+
   if (product.categoryId) {
     const category = categories.find(cat => cat.id === product.categoryId)
     if (!category) {
       return {
         success: false,
-        errors: { categoryId: 'Categoria non valida' },
+        errors: { categoryId: 'Categoria selezionata non valida' },
       }
     }
+
     if (product.conservationPointId) {
-      const point = conservationPoints.find(p => p.id === product.conservationPointId)
+      const point = conservationPoints.find(
+        p => p.id === product.conservationPointId
+      )
       if (point) {
-        const { minTemp, maxTemp } = category.conservationRules
-        if (point.targetTemperature < minTemp || point.targetTemperature > maxTemp) {
+        const { minTemp, maxTemp, requiresBlastChilling } =
+          category.conservationRules
+
+        if (
+          point.targetTemperature < minTemp ||
+          point.targetTemperature > maxTemp
+        ) {
           return {
             success: false,
             errors: {
               conservationPointId:
-                'Il punto di conservazione non rispetta le temperature della categoria',
+                'Il punto di conservazione non rispetta il range di temperatura richiesto',
             },
           }
         }
-        if (category.conservationRules.requiresBlastChilling && !point.isBlastChiller) {
+
+        if (requiresBlastChilling && !point.isBlastChiller) {
           return {
             success: false,
             errors: {
-              conservationPointId: 'La categoria richiede un abbattitore di temperatura',
+              conservationPointId:
+                'La categoria richiede un abbattitore di temperatura',
             },
           }
         }
+      }
+    }
+  }
+
+  if (product.purchaseDate && product.expiryDate) {
+    const purchase = new Date(product.purchaseDate)
+    const expiry = new Date(product.expiryDate)
+    if (purchase >= expiry) {
+      return {
+        success: false,
+        errors: {
+          expiryDate:
+            'La data di scadenza deve essere successiva alla data di acquisto',
+        },
       }
     }
   }
@@ -141,6 +247,76 @@ export const validateProduct = (
 
 export const generateInventoryId = (prefix: string) =>
   `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+
+export const createEmptyCategory = {
+  fromExisting(category?: ProductCategory | null): ProductCategory {
+    if (category) {
+      return {
+        ...category,
+        color: category.color ?? '#3b82f6',
+        conservationRules: {
+          minTemp: category.conservationRules.minTemp ?? 0,
+          maxTemp: category.conservationRules.maxTemp ?? 4,
+          maxStorageDays: category.conservationRules.maxStorageDays,
+          requiresBlastChilling:
+            category.conservationRules.requiresBlastChilling ?? false,
+        },
+      }
+    }
+
+    return {
+      id: generateInventoryId('cat'),
+      name: '',
+      color: '#3b82f6',
+      conservationRules: {
+        minTemp: 0,
+        maxTemp: 4,
+        maxStorageDays: undefined,
+        requiresBlastChilling: false,
+      },
+    }
+  },
+}
+
+export const createEmptyProduct = {
+  fromExisting(product?: InventoryProduct | null): InventoryProduct {
+    if (product) {
+      return {
+        ...product,
+        allergens: product.allergens ?? [],
+      }
+    }
+
+    return {
+      id: generateInventoryId('prod'),
+      name: '',
+      status: 'active',
+      allergens: [],
+    }
+  },
+}
+
+export const normalizeInventoryProduct = (
+  product: InventoryProduct
+): InventoryProduct => ({
+  id: product.id,
+  name: product.name.trim(),
+  categoryId: product.categoryId || undefined,
+  departmentId: product.departmentId || undefined,
+  conservationPointId: product.conservationPointId || undefined,
+  sku: product.sku || undefined,
+  barcode: product.barcode || undefined,
+  supplierName: product.supplierName || undefined,
+  purchaseDate: product.purchaseDate || undefined,
+  expiryDate: product.expiryDate || undefined,
+  quantity: product.quantity,
+  unit: product.unit || undefined,
+  allergens: product.allergens ?? [],
+  labelPhotoUrl: product.labelPhotoUrl || undefined,
+  status: product.status,
+  complianceStatus: product.complianceStatus,
+  notes: product.notes || undefined,
+})
 
 export const getAllergenLabel = (id: string) => {
   switch (id) {
@@ -185,12 +361,15 @@ export const isProductCompliant = (
   if (!product.categoryId || !product.conservationPointId) {
     return {
       compliant: false,
-      message: 'Associa categoria e punto di conservazione per verificare la conformità',
+      message:
+        'Associa categoria e punto di conservazione per verificare la conformità',
     }
   }
 
   const category = categories.find(cat => cat.id === product.categoryId)
-  const point = conservationPoints.find(p => p.id === product.conservationPointId)
+  const point = conservationPoints.find(
+    p => p.id === product.conservationPointId
+  )
 
   if (!category || !point) {
     return {
@@ -220,4 +399,3 @@ export const isProductCompliant = (
     message: 'Configurazione conforme alle regole HACCP',
   }
 }
-

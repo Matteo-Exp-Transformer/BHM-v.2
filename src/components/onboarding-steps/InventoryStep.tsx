@@ -1,79 +1,23 @@
-import { useState, useEffect } from 'react'
-import { Package, Plus, Trash2, Edit2, Tag, Calendar } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Package, Tag, Plus, Edit2, Trash2 } from 'lucide-react'
 
 import type {
+  InventoryStepData,
   InventoryStepProps,
-  ProductCategory,
   InventoryProduct,
-  ProductStatus,
+  ProductCategory,
 } from '@/types/onboarding'
-import { normalizeInventoryProduct } from '@/utils/onboarding/inventoryUtils'
-
-const PREDEFINED_CATEGORIES = [
-  {
-    name: 'Carni Fresche',
-    color: '#ef4444',
-    temp_min: 0,
-    temp_max: 4,
-    max_storage_days: 3,
-    requires_blast_chilling: true,
-  },
-  {
-    name: 'Pesce Fresco',
-    color: '#3b82f6',
-    temp_min: 0,
-    temp_max: 2,
-    max_storage_days: 2,
-    requires_blast_chilling: true,
-  },
-  {
-    name: 'Latticini',
-    color: '#f59e0b',
-    temp_min: 2,
-    temp_max: 6,
-    max_storage_days: 7,
-  },
-  {
-    name: 'Verdure Fresche',
-    color: '#10b981',
-    temp_min: 4,
-    temp_max: 8,
-    max_storage_days: 5,
-  },
-  {
-    name: 'Surgelati',
-    color: '#6366f1',
-    temp_min: -18,
-    temp_max: -15,
-    max_storage_days: 90,
-  },
-  {
-    name: 'Prodotti Secchi',
-    color: '#8b5cf6',
-    temp_min: 15,
-    temp_max: 25,
-    max_storage_days: 365,
-  },
-]
-
-const ALLERGEN_OPTIONS = [
-  { value: 'glutine', label: 'Glutine' },
-  { value: 'crostacei', label: 'Crostacei' },
-  { value: 'uova', label: 'Uova' },
-  { value: 'pesce', label: 'Pesce' },
-  { value: 'arachidi', label: 'Arachidi' },
-  { value: 'soia', label: 'Soia' },
-  { value: 'latte', label: 'Latte' },
-  { value: 'frutta_guscio', label: 'Frutta a guscio' },
-  { value: 'sedano', label: 'Sedano' },
-  { value: 'senape', label: 'Senape' },
-  { value: 'sesamo', label: 'Sesamo' },
-  { value: 'anidride_solforosa', label: 'Anidride solforosa' },
-  { value: 'lupini', label: 'Lupini' },
-  { value: 'molluschi', label: 'Molluschi' },
-]
-
-const UNITS = ['kg', 'g', 'l', 'ml', 'pz', 'conf', 'scatole', 'buste']
+import {
+  ALLERGEN_LIST,
+  UNIT_OPTIONS,
+  normalizeInventoryProduct,
+  createEmptyCategory,
+  createEmptyProduct,
+  validateInventoryCategory,
+  validateInventoryProduct,
+  isProductCompliant,
+  getAllergenLabel,
+} from '@/utils/onboarding/inventoryUtils'
 
 const InventoryStep = ({
   data,
@@ -83,1178 +27,987 @@ const InventoryStep = ({
   onValidChange,
 }: InventoryStepProps) => {
   const [categories, setCategories] = useState<ProductCategory[]>(
-    data?.categories || []
+    (data?.categories ?? []).map(category =>
+      createEmptyCategory.fromExisting(category)
+    )
   )
   const [products, setProducts] = useState<InventoryProduct[]>(
-    data?.products?.map(product => normalizeInventoryProduct(product)) || []
+    (data?.products ?? []).map(normalizeInventoryProduct)
   )
   const [activeTab, setActiveTab] = useState<'categories' | 'products'>(
     'categories'
   )
-  const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const departmentOptions = useMemo(
-    () => departments.filter(department => department.is_active),
-    [departments]
+  const [draftCategory, setDraftCategory] = useState<ProductCategory | null>(
+    null
+  )
+  const [categoryErrors, setCategoryErrors] = useState<Record<string, string>>(
+    {}
   )
 
-  const categoryFormInitial = useMemo(
-    () => ({
-      name: '',
-      color: '#3b82f6',
-      description: '',
-      conservationRules: {
-        minTemp: 0,
-        maxTemp: 8,
-        maxStorageDays: 7,
-        requiresBlastChilling: false,
-      },
-    }),
-    []
+  const [draftProduct, setDraftProduct] = useState<InventoryProduct | null>(
+    null
   )
-
-  const productFormInitial = useMemo(
-    () => ({
-      name: '',
-      categoryId: '',
-      departmentId: '',
-      conservationPointId: '',
-      sku: '',
-      barcode: '',
-      supplierName: '',
-      purchaseDate: '',
-      expiryDate: '',
-      quantity: '',
-      unit: 'kg',
-      allergens: [] as string[],
-      labelPhotoUrl: '',
-      status: 'active' as ProductStatus,
-      notes: '',
-    }),
-    []
-  )
-
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
-  const [categoryForm, setCategoryForm] = useState(categoryFormInitial)
-
-  const [editingProductId, setEditingProductId] = useState<string | null>(null)
-  const [productForm, setProductForm] = useState(productFormInitial)
+  const [productErrors, setProductErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    onUpdate({ categories, products })
+    const payload: InventoryStepData = {
+      categories,
+      products,
+    }
+    onUpdate(payload)
   }, [categories, products, onUpdate])
 
   useEffect(() => {
     onValidChange(products.length > 0)
   }, [products.length, onValidChange])
 
-  const generateId = () =>
-    `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  const departmentOptions = useMemo(
+    () => departments.filter(department => department.is_active),
+    [departments]
+  )
 
-  // Category Management
-  const validateCategory = () => {
-    const newErrors: Record<string, string> = {}
-
-    if (!categoryForm.name.trim()) {
-      newErrors.category_name = 'Il nome della categoria è obbligatorio'
-    } else if (
-      categories.find(
-        c =>
-          c.id !== editingCategoryId &&
-          c.name.toLowerCase() === categoryForm.name.toLowerCase()
+  const complianceByProduct = useMemo(() => {
+    return products.reduce<
+      Record<string, ReturnType<typeof isProductCompliant>>
+    >((acc, product) => {
+      acc[product.id] = isProductCompliant(
+        product,
+        categories,
+        conservationPoints
       )
-    ) {
-      newErrors.category_name = 'Una categoria con questo nome esiste già'
-    }
+      return acc
+    }, {})
+  }, [products, categories, conservationPoints])
 
-    if (categoryForm.temp_min >= categoryForm.temp_max) {
-      newErrors.temp_range =
-        'La temperatura minima deve essere inferiore alla massima'
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+  const handleOpenCategoryEditor = (category?: ProductCategory) => {
+    setDraftCategory(createEmptyCategory.fromExisting(category))
+    setCategoryErrors({})
   }
 
-  const addCategory = () => {
-    if (!validateCategory()) return
-
-    const newCategory: ProductCategory = {
-      id: generateId(),
-      name: categoryForm.name.trim(),
-      color: categoryForm.color,
-      description: categoryForm.description || undefined,
-      conservationRules: {
-        minTemp: categoryForm.conservationRules.minTemp,
-        maxTemp: categoryForm.conservationRules.maxTemp,
-        maxStorageDays: categoryForm.conservationRules.maxStorageDays,
-        requiresBlastChilling:
-          categoryForm.conservationRules.requiresBlastChilling,
-      },
-    }
-
-    setCategories([...categories, newCategory])
-    resetCategoryForm()
+  const handleCancelCategory = () => {
+    setDraftCategory(null)
+    setCategoryErrors({})
   }
 
-  const updateCategory = () => {
-    if (!validateCategory()) return
-
-    setCategories(
-      categories.map(category =>
-        category.id === editingCategoryId
-          ? {
-              ...category,
-              name: categoryForm.name.trim(),
-              color: categoryForm.color,
-              description: categoryForm.description || undefined,
-              conservationRules: {
-                minTemp: categoryForm.conservationRules.minTemp,
-                maxTemp: categoryForm.conservationRules.maxTemp,
-                maxStorageDays: categoryForm.conservationRules.maxStorageDays,
-                requiresBlastChilling:
-                  categoryForm.conservationRules.requiresBlastChilling,
-              },
-            }
-          : category
-      )
-    )
-    resetCategoryForm()
-  }
-
-  const deleteCategory = (id: string) => {
-    setCategories(categories.filter(cat => cat.id !== id))
-    // Remove category from products
-    setProducts(
-      products.map(product =>
-        product.category_id === id
-          ? { ...product, category_id: undefined }
-          : product
-      )
-    )
-  }
-
-  const startEditCategory = (category: ProductCategory) => {
-    setEditingCategoryId(category.id)
-    setCategoryForm({
-      name: category.name,
-      color: category.color,
-      description: category.description || '',
-      conservationRules: {
-        minTemp: category.conservationRules.minTemp,
-        maxTemp: category.conservationRules.maxTemp,
-        maxStorageDays: category.conservationRules.maxStorageDays || 7,
-        requiresBlastChilling:
-          category.conservationRules.requiresBlastChilling || false,
-      },
-    })
-    setErrors({})
-  }
-
-  const resetCategoryForm = () => {
-    setEditingCategoryId(null)
-    setCategoryForm(categoryFormInitial)
-    setErrors({})
-  }
-
-  // Product Management
-  const validateProduct = () => {
-    const newErrors: Record<string, string> = {}
-
-    if (!productForm.name.trim()) {
-      newErrors.product_name = 'Il nome del prodotto è obbligatorio'
-    }
-
-    if (productForm.quantity && isNaN(parseFloat(productForm.quantity))) {
-      newErrors.quantity = 'Inserisci una quantità valida'
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const addProduct = () => {
-    if (!validateProduct()) return
-
-    const newProduct: InventoryProduct = {
-      id: generateId(),
-      name: productForm.name.trim(),
-      categoryId: productForm.categoryId || undefined,
-      departmentId: productForm.departmentId || undefined,
-      conservationPointId: productForm.conservationPointId || undefined,
-      sku: productForm.sku || undefined,
-      barcode: productForm.barcode || undefined,
-      supplierName: productForm.supplierName || undefined,
-      purchaseDate: productForm.purchaseDate || undefined,
-      expiryDate: productForm.expiryDate || undefined,
-      quantity: productForm.quantity ? parseFloat(productForm.quantity) : undefined,
-      unit: productForm.unit || undefined,
-      allergens: productForm.allergens,
-      labelPhotoUrl: productForm.labelPhotoUrl || undefined,
-      status: productForm.status,
-      notes: productForm.notes || undefined,
-    }
-
-    setProducts(prev => [...prev, newProduct])
-    resetProductForm()
-  }
-
-  const updateProduct = () => {
-    if (!validateProduct()) return
-
-    setProducts(prev =>
-      prev.map(product =>
-        product.id === editingProductId
-          ? {
-              ...product,
-              name: productForm.name.trim(),
-              categoryId: productForm.categoryId || undefined,
-              departmentId: productForm.departmentId || undefined,
-              conservationPointId: productForm.conservationPointId || undefined,
-              sku: productForm.sku || undefined,
-              barcode: productForm.barcode || undefined,
-              supplierName: productForm.supplierName || undefined,
-              purchaseDate: productForm.purchaseDate || undefined,
-              expiryDate: productForm.expiryDate || undefined,
-              quantity: productForm.quantity
-                ? parseFloat(productForm.quantity)
-                : undefined,
-              unit: productForm.unit || undefined,
-              allergens: productForm.allergens,
-              labelPhotoUrl: productForm.labelPhotoUrl || undefined,
-              status: productForm.status,
-              notes: productForm.notes || undefined,
-            }
-          : product
-      )
-    )
-    resetProductForm()
-  }
-
-  const deleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(product => product.id !== id))
-  }
-
-  const startEditProduct = (product: InventoryProduct) => {
-    setEditingProductId(product.id)
-    setProductForm({
-      name: product.name,
-      categoryId: product.categoryId || '',
-      departmentId: product.departmentId || '',
-      conservationPointId: product.conservationPointId || '',
-      quantity: product.quantity?.toString() || '',
-      unit: product.unit || 'kg',
-      allergens: product.allergens || [],
-      supplierName: product.supplierName || '',
-      purchaseDate: product.purchaseDate || '',
-      expiryDate: product.expiryDate || '',
-      status: product.status,
-      barcode: product.barcode || '',
-      sku: product.sku || '',
-      labelPhotoUrl: product.labelPhotoUrl || '',
-      notes: product.notes || '',
-    })
-    setErrors({})
-  }
-
-  const resetProductForm = () => {
-    setEditingProductId(null)
-    setProductForm(productFormInitial)
-    setErrors({})
-  }
-
-  const handleAllergenToggle = (allergen: string) => {
-    setProductForm(prev => ({
-      ...prev,
-      allergens: prev.allergens.includes(allergen)
-        ? prev.allergens.filter(a => a !== allergen)
-        : [...prev.allergens, allergen],
-    }))
-  }
-
-  const prefillSampleCategories = () => {
-    const sampleCategories: ProductCategory[] = PREDEFINED_CATEGORIES.map(
-      cat => ({
-        id: generateId(),
-        name: cat.name,
-        color: cat.color,
-        conservation_rules: {
-          temp_min: cat.temp_min,
-          temp_max: cat.temp_max,
-          max_storage_days: cat.max_storage_days,
-          requires_blast_chilling: cat.requires_blast_chilling,
-        },
-      })
-    )
-    setCategories(sampleCategories)
-  }
-
-  const prefillSampleProducts = () => {
-    if (categories.length === 0) {
-      prefillSampleCategories()
+  const handleSaveCategory = () => {
+    if (!draftCategory) return
+    const result = validateInventoryCategory(draftCategory, categories)
+    if (!result.success) {
+      setCategoryErrors(result.errors ?? {})
       return
     }
 
-    const carni = categories.find(c => c.name.includes('Carni'))
-    const pesce = categories.find(c => c.name.includes('Pesce'))
-    const latticini = categories.find(c => c.name.includes('Latticini'))
-    const verdure = categories.find(c => c.name.includes('Verdure'))
-    const cucina = departments.find(d => d.name === 'Cucina')
-    const frigorifero = conservationPoints.find(p => p.type === 'fridge')
+    setCategories(prev => {
+      const existingIdx = prev.findIndex(cat => cat.id === draftCategory.id)
+      if (existingIdx >= 0) {
+        const next = [...prev]
+        next[existingIdx] = draftCategory
+        return next
+      }
+      return [...prev, draftCategory]
+    })
 
-    const sampleProducts: Product[] = [
-      {
-        id: generateId(),
-        name: 'Petto di Pollo',
-        category_id: carni?.id,
-        department_id: cucina?.id,
-        conservation_point_id: frigorifero?.id,
-        quantity: 2.5,
-        unit: 'kg',
-        supplier_name: 'Carni Locali SRL',
-        purchase_date: new Date().toISOString().split('T')[0],
-        expiry_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0],
-        status: 'active',
-      },
-      {
-        id: generateId(),
-        name: 'Salmone Fresco',
-        category_id: pesce?.id,
-        department_id: cucina?.id,
-        conservation_point_id: frigorifero?.id,
-        quantity: 1.8,
-        unit: 'kg',
-        allergens: ['Pesce'],
-        supplier_name: 'Pescheria del Porto',
-        purchase_date: new Date().toISOString().split('T')[0],
-        expiry_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0],
-        status: 'active',
-      },
-      {
-        id: generateId(),
-        name: 'Mozzarella di Bufala',
-        category_id: latticini?.id,
-        department_id: cucina?.id,
-        conservation_point_id: frigorifero?.id,
-        quantity: 10,
-        unit: 'pz',
-        allergens: ['Latte'],
-        supplier_name: 'Caseificio Campano',
-        purchase_date: new Date().toISOString().split('T')[0],
-        expiry_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0],
-        status: 'active',
-      },
-      {
-        id: generateId(),
-        name: 'Pomodori San Marzano',
-        category_id: verdure?.id,
-        department_id: cucina?.id,
-        quantity: 3,
-        unit: 'kg',
-        supplier_name: 'Ortofrutta Napoletana',
-        purchase_date: new Date().toISOString().split('T')[0],
-        expiry_date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0],
-        status: 'active',
-      },
-      {
-        id: generateId(),
-        name: 'Olio Extravergine',
-        quantity: 5,
-        unit: 'l',
-        supplier_name: 'Frantoio Toscano',
-        purchase_date: new Date().toISOString().split('T')[0],
-        expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0],
-        status: 'active',
-      },
-      {
-        id: generateId(),
-        name: 'Pasta di Grano Duro',
-        quantity: 20,
-        unit: 'conf',
-        allergens: ['Glutine'],
-        supplier_name: 'Pastificio Artigianale',
-        purchase_date: new Date().toISOString().split('T')[0],
-        expiry_date: new Date(Date.now() + 730 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0],
-        status: 'active',
-      },
-    ]
-    setProducts(sampleProducts)
+    handleCancelCategory()
+  }
+
+  const handleDeleteCategory = (id: string) => {
+    setCategories(prev => prev.filter(cat => cat.id !== id))
+    setProducts(prev =>
+      prev.map(product =>
+        product.categoryId === id
+          ? { ...product, categoryId: undefined }
+          : product
+      )
+    )
+  }
+
+  const handleOpenProductEditor = (product?: InventoryProduct) => {
+    setDraftProduct(createEmptyProduct.fromExisting(product))
+    setProductErrors({})
+  }
+
+  const handleCancelProduct = () => {
+    setDraftProduct(null)
+    setProductErrors({})
+  }
+
+  const handleSaveProduct = () => {
+    if (!draftProduct) return
+    const normalized = normalizeInventoryProduct(draftProduct)
+    const result = validateInventoryProduct(
+      normalized,
+      categories,
+      conservationPoints
+    )
+    if (!result.success) {
+      setProductErrors(result.errors ?? {})
+      return
+    }
+
+    setProducts(prev => {
+      const existingIdx = prev.findIndex(prod => prod.id === normalized.id)
+      if (existingIdx >= 0) {
+        const next = [...prev]
+        next[existingIdx] = normalized
+        return next
+      }
+      return [...prev, normalized]
+    })
+
+    handleCancelProduct()
+  }
+
+  const handleDeleteProduct = (id: string) => {
+    setProducts(prev => prev.filter(product => product.id !== id))
+  }
+
+  const toggleProductAllergen = (allergen: string) => {
+    setDraftProduct(prev =>
+      prev
+        ? {
+            ...prev,
+            allergens: prev.allergens.includes(allergen)
+              ? prev.allergens.filter(a => a !== allergen)
+              : [...prev.allergens, allergen],
+          }
+        : prev
+    )
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Package className="w-8 h-8 text-blue-600" />
+      <header className="text-center space-y-2">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
+          <Package className="h-8 w-8 text-blue-600" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-bold text-gray-900">
           Gestione Inventario
         </h2>
         <p className="text-gray-600">
           Configura categorie prodotti e inventario iniziale per il controllo
           HACCP
         </p>
-      </div>
+      </header>
 
-      {/* Tabs */}
-      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+      <div className="flex space-x-1 rounded-lg bg-gray-100 p-1">
         <button
+          type="button"
           onClick={() => setActiveTab('categories')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+          className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'categories'
               ? 'bg-white text-blue-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          <Tag className="w-4 h-4 inline mr-2" />
+          <Tag className="mr-2 inline h-4 w-4" />
           Categorie Prodotti
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('products')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+          className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'products'
               ? 'bg-white text-blue-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          <Package className="w-4 h-4 inline mr-2" />
+          <Package className="mr-2 inline h-4 w-4" />
           Prodotti
         </button>
       </div>
 
-      {/* Categories Tab */}
       {activeTab === 'categories' && (
-        <div className="space-y-6">
-          {/* Quick Fill Button */}
-          <div className="flex justify-center">
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Categorie configurate ({categories.length})
+              </h3>
+              <p className="text-sm text-gray-600">
+                Ogni categoria definisce i range termici e i requisiti HACCP
+              </p>
+            </div>
             <button
               type="button"
-              onClick={prefillSampleCategories}
-              className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+              onClick={() => handleOpenCategoryEditor()}
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
             >
-              🚀 Carica categorie predefinite
+              <Plus className="h-4 w-4" /> Nuova categoria
             </button>
           </div>
 
-          {/* Category Form */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h3 className="font-medium text-gray-900 mb-4">
-              {editingCategoryId
-                ? 'Modifica Categoria'
-                : 'Nuova Categoria Prodotto'}
-            </h3>
+          {categories.length === 0 ? (
+            <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center text-gray-500">
+              Nessuna categoria configurata. Aggiungi la prima categoria per
+              iniziare.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {categories.map(category => (
+                <article
+                  key={category.id}
+                  className="rounded-lg border border-gray-200 bg-white p-4"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="mb-2 flex items-center gap-2">
+                        <span
+                          className="h-4 w-4 rounded-full"
+                          style={{ backgroundColor: category.color }}
+                        />
+                        <h4 className="font-medium text-gray-900">
+                          {category.name}
+                        </h4>
+                      </div>
+                      {category.description && (
+                        <p className="mb-2 text-sm text-gray-600">
+                          {category.description}
+                        </p>
+                      )}
+                      <dl className="space-y-1 text-xs text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">Range:</span>
+                          <span>
+                            {category.conservationRules.minTemp}°C ➝{' '}
+                            {category.conservationRules.maxTemp}°C
+                          </span>
+                        </div>
+                        {category.conservationRules.maxStorageDays && (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">Durata max:</span>
+                            <span>
+                              {category.conservationRules.maxStorageDays} giorni
+                            </span>
+                          </div>
+                        )}
+                        {category.conservationRules.requiresBlastChilling && (
+                          <div className="flex items-center gap-2 text-amber-600">
+                            ⚡ Richiede abbattitore
+                          </div>
+                        )}
+                      </dl>
+                    </div>
+                    <div className="ml-4 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenCategoryEditor(category)}
+                        className="rounded p-1 text-blue-600 hover:bg-blue-50"
+                        title="Modifica categoria"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCategory(category.id)}
+                        className="rounded p-1 text-red-600 hover:bg-red-50"
+                        title="Elimina categoria"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {draftCategory && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <h4 className="mb-4 text-sm font-semibold text-blue-900">
+                {categories.some(cat => cat.id === draftCategory.id)
+                  ? 'Modifica categoria'
+                  : 'Nuova categoria'}
+              </h4>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nome Categoria *
+                  <label className="mb-1 block text-sm font-medium text-blue-900">
+                    Nome *
                   </label>
                   <input
                     type="text"
-                    value={categoryForm.name}
+                    value={draftCategory.name}
                     onChange={e =>
-                      setCategoryForm({ ...categoryForm, name: e.target.value })
+                      setDraftCategory(prev =>
+                        prev ? { ...prev, name: e.target.value } : prev
+                      )
                     }
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.category_name
-                        ? 'border-red-300'
-                        : 'border-gray-300'
+                    className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+                      categoryErrors.name ? 'border-red-300' : 'border-blue-200'
                     }`}
-                    placeholder="es. Carni Fresche"
                   />
-                  {errors.category_name && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.category_name}
+                  {categoryErrors.name && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {categoryErrors.name}
                     </p>
                   )}
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="mb-1 block text-sm font-medium text-blue-900">
                     Colore
                   </label>
                   <input
                     type="color"
-                    value={categoryForm.color}
+                    value={draftCategory.color}
                     onChange={e =>
-                      setCategoryForm({
-                        ...categoryForm,
-                        color: e.target.value,
-                      })
+                      setDraftCategory(prev =>
+                        prev ? { ...prev, color: e.target.value } : prev
+                      )
                     }
-                    className="w-full h-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="h-10 w-full cursor-pointer rounded-md border border-blue-200"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-blue-900">
                   Descrizione
                 </label>
-                <input
-                  type="text"
-                  value={categoryForm.description}
+                <textarea
+                  value={draftCategory.description ?? ''}
                   onChange={e =>
-                    setCategoryForm({
-                      ...categoryForm,
-                      description: e.target.value,
-                    })
+                    setDraftCategory(prev =>
+                      prev ? { ...prev, description: e.target.value } : prev
+                    )
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                  className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   placeholder="Descrizione opzionale"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Temp. Min (°C) *
+                  <label className="mb-1 block text-sm font-medium text-blue-900">
+                    Temp. minima *
                   </label>
                   <input
                     type="number"
                     step="0.1"
-                    value={categoryForm.temp_min}
+                    value={draftCategory.conservationRules.minTemp}
                     onChange={e =>
-                      setCategoryForm({
-                        ...categoryForm,
-                        temp_min: parseFloat(e.target.value),
-                      })
+                      setDraftCategory(prev =>
+                        prev
+                          ? {
+                              ...prev,
+                              conservationRules: {
+                                ...prev.conservationRules,
+                                minTemp: Number(e.target.value),
+                              },
+                            }
+                          : prev
+                      )
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Temp. Max (°C) *
+                  <label className="mb-1 block text-sm font-medium text-blue-900">
+                    Temp. massima *
                   </label>
                   <input
                     type="number"
                     step="0.1"
-                    value={categoryForm.temp_max}
+                    value={draftCategory.conservationRules.maxTemp}
                     onChange={e =>
-                      setCategoryForm({
-                        ...categoryForm,
-                        temp_max: parseFloat(e.target.value),
-                      })
+                      setDraftCategory(prev =>
+                        prev
+                          ? {
+                              ...prev,
+                              conservationRules: {
+                                ...prev.conservationRules,
+                                maxTemp: Number(e.target.value),
+                              },
+                            }
+                          : prev
+                      )
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+                      categoryErrors['conservationRules.maxTemp']
+                        ? 'border-red-300'
+                        : 'border-blue-200'
+                    }`}
                   />
-                  {errors.temp_range && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.temp_range}
+                  {categoryErrors['conservationRules.maxTemp'] && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {categoryErrors['conservationRules.maxTemp']}
                     </p>
                   )}
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Durata Max (giorni)
+                  <label className="mb-1 block text-sm font-medium text-blue-900">
+                    Durata max (gg)
                   </label>
                   <input
                     type="number"
-                    min="1"
-                    value={categoryForm.max_storage_days}
+                    min={1}
+                    value={draftCategory.conservationRules.maxStorageDays ?? ''}
                     onChange={e =>
-                      setCategoryForm({
-                        ...categoryForm,
-                        max_storage_days: parseInt(e.target.value),
-                      })
+                      setDraftCategory(prev =>
+                        prev
+                          ? {
+                              ...prev,
+                              conservationRules: {
+                                ...prev.conservationRules,
+                                maxStorageDays: e.target.value
+                                  ? Number(e.target.value)
+                                  : undefined,
+                              },
+                            }
+                          : prev
+                      )
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   />
+                </div>
+                <div className="flex items-end gap-2">
+                  <input
+                    id="requiresBlastChilling"
+                    type="checkbox"
+                    checked={
+                      draftCategory.conservationRules.requiresBlastChilling ??
+                      false
+                    }
+                    onChange={e =>
+                      setDraftCategory(prev =>
+                        prev
+                          ? {
+                              ...prev,
+                              conservationRules: {
+                                ...prev.conservationRules,
+                                requiresBlastChilling: e.target.checked,
+                              },
+                            }
+                          : prev
+                      )
+                    }
+                    className="h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label
+                    htmlFor="requiresBlastChilling"
+                    className="text-sm text-blue-900"
+                  >
+                    Richiede abbattitore
+                  </label>
                 </div>
               </div>
 
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="requires_blast_chilling"
-                  checked={categoryForm.requires_blast_chilling}
-                  onChange={e =>
-                    setCategoryForm({
-                      ...categoryForm,
-                      requires_blast_chilling: e.target.checked,
-                    })
-                  }
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <label
-                  htmlFor="requires_blast_chilling"
-                  className="ml-2 text-sm text-gray-700"
-                >
-                  Richiede abbattimento di temperatura
-                </label>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                {editingCategoryId && (
-                  <button
-                    type="button"
-                    onClick={resetCategoryForm}
-                    className="px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                  >
-                    Annulla
-                  </button>
-                )}
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={editingCategoryId ? updateCategory : addCategory}
-                  className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+                  onClick={handleCancelCategory}
+                  className="rounded-lg px-4 py-2 text-sm text-blue-900 hover:bg-blue-100"
                 >
-                  {editingCategoryId ? (
-                    <>
-                      <Edit2 className="w-4 h-4" />
-                      Aggiorna
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      Aggiungi
-                    </>
-                  )}
+                  Annulla
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveCategory}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                >
+                  Salva categoria
                 </button>
               </div>
             </div>
-          </div>
-
-          {/* Categories List */}
-          <div>
-            <h3 className="font-medium text-gray-900 mb-3">
-              Categorie Configurate ({categories.length})
-            </h3>
-
-            {categories.length === 0 ? (
-              <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                <Tag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 mb-2">
-                  Nessuna categoria configurata
-                </p>
-                <p className="text-sm text-gray-400">
-                  Aggiungi categorie per organizzare i prodotti
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {categories.map(category => (
-                  <div
-                    key={category.id}
-                    className="border border-gray-200 rounded-lg p-4 bg-white"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div
-                            className="w-4 h-4 rounded-full"
-                            style={{ backgroundColor: category.color }}
-                          />
-                          <h4 className="font-medium text-gray-900">
-                            {category.name}
-                          </h4>
-                        </div>
-                        {category.description && (
-                          <p className="text-sm text-gray-600 mb-2">
-                            {category.description}
-                          </p>
-                        )}
-                        <div className="text-sm text-gray-500">
-                          <p>
-                            Temperatura: {category.conservation_rules.temp_min}
-                            °C - {category.conservation_rules.temp_max}°C
-                          </p>
-                          {category.conservation_rules.max_storage_days && (
-                            <p>
-                              Durata max:{' '}
-                              {category.conservation_rules.max_storage_days}{' '}
-                              giorni
-                            </p>
-                          )}
-                          {category.conservation_rules
-                            .requires_blast_chilling && (
-                            <p className="text-orange-600">
-                              ⚡ Richiede abbattimento
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-2 ml-4">
-                        <button
-                          onClick={() => startEditCategory(category)}
-                          className="p-1 text-blue-600 hover:text-blue-800"
-                          title="Modifica categoria"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => deleteCategory(category.id)}
-                          className="p-1 text-red-600 hover:text-red-800"
-                          title="Elimina categoria"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+          )}
+        </section>
       )}
 
-      {/* Products Tab */}
       {activeTab === 'products' && (
-        <div className="space-y-6">
-          {/* Quick Fill Button */}
-          <div className="flex justify-center">
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Prodotti configurati ({products.length})
+              </h3>
+              <p className="text-sm text-gray-600">
+                Ogni prodotto viene validato secondo le regole HACCP di
+                categoria
+              </p>
+            </div>
             <button
               type="button"
-              onClick={prefillSampleProducts}
-              className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+              onClick={() => handleOpenProductEditor()}
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
             >
-              🚀 Carica prodotti di esempio
+              <Plus className="h-4 w-4" /> Nuovo prodotto
             </button>
           </div>
 
-          {/* Product Form */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h3 className="font-medium text-gray-900 mb-4">
-              {editingProductId ? 'Modifica Prodotto' : 'Nuovo Prodotto'}
-            </h3>
+          {products.length === 0 ? (
+            <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center text-gray-500">
+              Nessun prodotto configurato. Aggiungi un prodotto per proseguire.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {products.map(product => {
+                const category = categories.find(
+                  cat => cat.id === product.categoryId
+                )
+                const department = departments.find(
+                  dept => dept.id === product.departmentId
+                )
+                const point = conservationPoints.find(
+                  cp => cp.id === product.conservationPointId
+                )
+                const compliance = complianceByProduct[product.id]
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                return (
+                  <article
+                    key={product.id}
+                    className="rounded-lg border border-gray-200 bg-white p-4"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="font-medium text-gray-900">
+                            {product.name}
+                          </h4>
+                          {product.quantity !== undefined && (
+                            <span className="text-sm text-gray-500">
+                              {product.quantity} {product.unit ?? 'pz'}
+                            </span>
+                          )}
+                          <span
+                            className={`rounded-full px-2 py-1 text-xs capitalize ${
+                              product.status === 'active'
+                                ? 'bg-green-100 text-green-800'
+                                : product.status === 'expired'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            {product.status}
+                          </span>
+                        </div>
+
+                        <dl className="grid grid-cols-1 gap-1 text-xs text-gray-600 md:grid-cols-3">
+                          {category && (
+                            <div>
+                              <dt className="font-semibold">Categoria:</dt>
+                              <dd>{category.name}</dd>
+                            </div>
+                          )}
+                          {department && (
+                            <div>
+                              <dt className="font-semibold">Reparto:</dt>
+                              <dd>{department.name}</dd>
+                            </div>
+                          )}
+                          {point && (
+                            <div>
+                              <dt className="font-semibold">Conservazione:</dt>
+                              <dd>
+                                {point.name} ({point.targetTemperature}°C)
+                              </dd>
+                            </div>
+                          )}
+                        </dl>
+
+                        <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+                          {product.supplierName && (
+                            <span className="rounded-full bg-gray-100 px-2 py-1">
+                              {product.supplierName}
+                            </span>
+                          )}
+                          {product.expiryDate && (
+                            <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-700">
+                              Scadenza: {product.expiryDate}
+                            </span>
+                          )}
+                          {product.allergens.length > 0 && (
+                            <span className="rounded-full bg-red-100 px-2 py-1 text-red-700">
+                              Allergeni:{' '}
+                              {product.allergens
+                                .map(getAllergenLabel)
+                                .join(', ')}
+                            </span>
+                          )}
+                        </div>
+
+                        {product.labelPhotoUrl && (
+                          <a
+                            href={product.labelPhotoUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 text-xs text-blue-600 hover:underline"
+                          >
+                            Visualizza etichetta
+                          </a>
+                        )}
+
+                        <div
+                          className={`rounded-md border px-3 py-2 text-xs ${
+                            compliance.compliant
+                              ? 'border-green-200 bg-green-50 text-green-700'
+                              : 'border-amber-200 bg-amber-50 text-amber-700'
+                          }`}
+                        >
+                          {compliance.message}
+                        </div>
+
+                        {product.notes && (
+                          <p className="border-l-2 border-blue-200 pl-3 text-sm text-gray-500">
+                            {product.notes}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenProductEditor(product)}
+                          className="rounded p-1 text-blue-600 hover:bg-blue-50"
+                          title="Modifica prodotto"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="rounded p-1 text-red-600 hover:bg-red-50"
+                          title="Elimina prodotto"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          )}
+
+          {draftProduct && (
+            <div className="space-y-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <h4 className="text-sm font-semibold text-blue-900">
+                {products.some(prod => prod.id === draftProduct.id)
+                  ? 'Modifica prodotto'
+                  : 'Nuovo prodotto'}
+              </h4>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nome Prodotto *
+                  <label className="mb-1 block text-sm font-medium text-blue-900">
+                    Nome prodotto *
                   </label>
                   <input
                     type="text"
-                    value={productForm.name}
+                    value={draftProduct.name}
                     onChange={e =>
-                      setProductForm({ ...productForm, name: e.target.value })
+                      setDraftProduct(prev =>
+                        prev ? { ...prev, name: e.target.value } : prev
+                      )
                     }
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.product_name ? 'border-red-300' : 'border-gray-300'
+                    className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+                      productErrors.name ? 'border-red-300' : 'border-blue-200'
                     }`}
-                    placeholder="es. Petto di Pollo"
                   />
-                  {errors.product_name && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.product_name}
+                  {productErrors.name && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {productErrors.name}
                     </p>
                   )}
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-blue-900">
+                      SKU
+                    </label>
+                    <input
+                      type="text"
+                      value={draftProduct.sku ?? ''}
+                      onChange={e =>
+                        setDraftProduct(prev =>
+                          prev ? { ...prev, sku: e.target.value } : prev
+                        )
+                      }
+                      className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-blue-900">
+                      Barcode
+                    </label>
+                    <input
+                      type="text"
+                      value={draftProduct.barcode ?? ''}
+                      onChange={e =>
+                        setDraftProduct(prev =>
+                          prev ? { ...prev, barcode: e.target.value } : prev
+                        )
+                      }
+                      className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
 
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="mb-1 block text-sm font-medium text-blue-900">
                     Categoria
                   </label>
                   <select
-                    value={productForm.category_id}
+                    value={draftProduct.categoryId ?? ''}
                     onChange={e =>
-                      setProductForm({
-                        ...productForm,
-                        category_id: e.target.value,
-                      })
+                      setDraftProduct(prev =>
+                        prev
+                          ? {
+                              ...prev,
+                              categoryId: e.target.value || undefined,
+                            }
+                          : prev
+                      )
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Nessuna categoria</option>
+                    <option value="">Seleziona categoria</option>
                     {categories.map(category => (
                       <option key={category.id} value={category.id}>
                         {category.name}
                       </option>
                     ))}
                   </select>
+                  {productErrors.categoryId && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {productErrors.categoryId}
+                    </p>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-blue-900">
+                      Reparto
+                    </label>
+                    <select
+                      value={draftProduct.departmentId ?? ''}
+                      onChange={e =>
+                        setDraftProduct(prev =>
+                          prev
+                            ? {
+                                ...prev,
+                                departmentId: e.target.value || undefined,
+                              }
+                            : prev
+                        )
+                      }
+                      className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Seleziona reparto</option>
+                      {departmentOptions.map(department => (
+                        <option key={department.id} value={department.id}>
+                          {department.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-blue-900">
+                      Conservazione
+                    </label>
+                    <select
+                      value={draftProduct.conservationPointId ?? ''}
+                      onChange={e =>
+                        setDraftProduct(prev =>
+                          prev
+                            ? {
+                                ...prev,
+                                conservationPointId:
+                                  e.target.value || undefined,
+                              }
+                            : prev
+                        )
+                      }
+                      className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+                        productErrors.conservationPointId
+                          ? 'border-red-300'
+                          : 'border-blue-200'
+                      }`}
+                    >
+                      <option value="">Seleziona punto conservazione</option>
+                      {conservationPoints.map(point => (
+                        <option key={point.id} value={point.id}>
+                          {point.name} ({point.targetTemperature}°C)
+                        </option>
+                      ))}
+                    </select>
+                    {productErrors.conservationPointId && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {productErrors.conservationPointId}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Reparto
-                  </label>
-                  <select
-                    value={productForm.department_id}
-                    onChange={e =>
-                      setProductForm({
-                        ...productForm,
-                        department_id: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Nessun reparto</option>
-                    {departments.map(dept => (
-                      <option key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Punto di Conservazione
-                  </label>
-                  <select
-                    value={productForm.conservation_point_id}
-                    onChange={e =>
-                      setProductForm({
-                        ...productForm,
-                        conservation_point_id: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Nessun punto specifico</option>
-                    {conservationPoints.map(point => (
-                      <option key={point.id} value={point.id}>
-                        {point.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="mb-1 block text-sm font-medium text-blue-900">
                     Quantità
                   </label>
                   <input
                     type="number"
-                    step="0.01"
-                    min="0"
-                    value={productForm.quantity}
+                    min={0}
+                    step="0.001"
+                    value={draftProduct.quantity ?? ''}
                     onChange={e =>
-                      setProductForm({
-                        ...productForm,
-                        quantity: e.target.value,
-                      })
+                      setDraftProduct(prev =>
+                        prev
+                          ? {
+                              ...prev,
+                              quantity: e.target.value
+                                ? Number(e.target.value)
+                                : undefined,
+                            }
+                          : prev
+                      )
                     }
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.quantity ? 'border-red-300' : 'border-gray-300'
+                    className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+                      productErrors.quantity
+                        ? 'border-red-300'
+                        : 'border-blue-200'
                     }`}
-                    placeholder="0"
                   />
-                  {errors.quantity && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.quantity}
+                  {productErrors.quantity && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {productErrors.quantity}
                     </p>
                   )}
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="mb-1 block text-sm font-medium text-blue-900">
                     Unità
                   </label>
                   <select
-                    value={productForm.unit}
+                    value={draftProduct.unit ?? 'pz'}
                     onChange={e =>
-                      setProductForm({ ...productForm, unit: e.target.value })
+                      setDraftProduct(prev =>
+                        prev ? { ...prev, unit: e.target.value } : prev
+                      )
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   >
-                    {UNITS.map(unit => (
+                    {UNIT_OPTIONS.map(unit => (
                       <option key={unit} value={unit}>
                         {unit}
                       </option>
                     ))}
                   </select>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Stato
-                  </label>
-                  <select
-                    value={productForm.status}
-                    onChange={e =>
-                      setProductForm({
-                        ...productForm,
-                        status: e.target.value as any,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="active">Attivo</option>
-                    <option value="expired">Scaduto</option>
-                    <option value="consumed">Consumato</option>
-                    <option value="waste">Scarto</option>
-                  </select>
-                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Fornitore
+                  <label className="mb-1 block text-sm font-medium text-blue-900">
+                    Data acquisto
                   </label>
                   <input
-                    type="text"
-                    value={productForm.supplier_name}
+                    type="date"
+                    value={draftProduct.purchaseDate ?? ''}
                     onChange={e =>
-                      setProductForm({
-                        ...productForm,
-                        supplier_name: e.target.value,
-                      })
+                      setDraftProduct(prev =>
+                        prev
+                          ? {
+                              ...prev,
+                              purchaseDate: e.target.value || undefined,
+                            }
+                          : prev
+                      )
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Nome fornitore"
+                    className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Data Acquisto
-                    </label>
-                    <input
-                      type="date"
-                      value={productForm.purchase_date}
-                      onChange={e =>
-                        setProductForm({
-                          ...productForm,
-                          purchase_date: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Data Scadenza
-                    </label>
-                    <input
-                      type="date"
-                      value={productForm.expiry_date}
-                      onChange={e =>
-                        setProductForm({
-                          ...productForm,
-                          expiry_date: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-blue-900">
+                    Data scadenza
+                  </label>
+                  <input
+                    type="date"
+                    value={draftProduct.expiryDate ?? ''}
+                    onChange={e =>
+                      setDraftProduct(prev =>
+                        prev
+                          ? {
+                              ...prev,
+                              expiryDate: e.target.value || undefined,
+                            }
+                          : prev
+                      )
+                    }
+                    className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+                      productErrors.expiryDate
+                        ? 'border-red-300'
+                        : 'border-blue-200'
+                    }`}
+                  />
+                  {productErrors.expiryDate && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {productErrors.expiryDate}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {/* Allergens */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-blue-900">
                   Allergeni
                 </label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {ALLERGENS.map(allergen => (
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                  {ALLERGEN_LIST.map(allergen => (
                     <label
                       key={allergen}
-                      className="flex items-center space-x-2 p-2 border rounded-md hover:bg-gray-50 cursor-pointer"
+                      className="flex items-center gap-2 rounded-md border border-blue-200 bg-white/60 px-3 py-2 text-xs font-medium text-blue-900"
                     >
                       <input
                         type="checkbox"
-                        checked={productForm.allergens.includes(allergen)}
-                        onChange={() => handleAllergenToggle(allergen)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        checked={draftProduct.allergens.includes(allergen)}
+                        onChange={() => toggleProductAllergen(allergen)}
+                        className="h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-700">{allergen}</span>
+                      <span>{getAllergenLabel(allergen)}</span>
                     </label>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-blue-900">
                   Note
                 </label>
                 <textarea
-                  value={productForm.notes}
+                  value={draftProduct.notes ?? ''}
                   onChange={e =>
-                    setProductForm({ ...productForm, notes: e.target.value })
+                    setDraftProduct(prev =>
+                      prev ? { ...prev, notes: e.target.value } : prev
+                    )
                   }
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Note aggiuntive sul prodotto..."
+                  className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  placeholder="Informazioni aggiuntive"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                {editingProductId && (
-                  <button
-                    type="button"
-                    onClick={resetProductForm}
-                    className="px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                  >
-                    Annulla
-                  </button>
-                )}
+              <div className="flex justify-end gap-3 border-t border-blue-200 pt-4">
                 <button
                   type="button"
-                  onClick={editingProductId ? updateProduct : addProduct}
-                  className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+                  onClick={handleCancelProduct}
+                  className="rounded-lg px-4 py-2 text-sm text-blue-900 hover:bg-blue-100"
                 >
-                  {editingProductId ? (
-                    <>
-                      <Edit2 className="w-4 h-4" />
-                      Aggiorna
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      Aggiungi
-                    </>
-                  )}
+                  Annulla
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveProduct}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                >
+                  Salva prodotto
                 </button>
               </div>
             </div>
-          </div>
-
-          {/* Products List */}
-          <div>
-            <h3 className="font-medium text-gray-900 mb-3">
-              Prodotti Configurati ({products.length})
-            </h3>
-
-            {products.length === 0 ? (
-              <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 mb-2">
-                  Nessun prodotto configurato
-                </p>
-                <p className="text-sm text-gray-400">
-                  Aggiungi prodotti per gestire l'inventario
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-4">
-                {products.map(product => {
-                  const category = categories.find(
-                    c => c.id === product.category_id
-                  )
-                  const department = departments.find(
-                    d => d.id === product.department_id
-                  )
-                  const conservationPoint = conservationPoints.find(
-                    p => p.id === product.conservation_point_id
-                  )
-
-                  return (
-                    <div
-                      key={product.id}
-                      className="border border-gray-200 rounded-lg p-4 bg-white"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            {category && (
-                              <div
-                                className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: category.color }}
-                              />
-                            )}
-                            <h4 className="font-medium text-gray-900">
-                              {product.name}
-                            </h4>
-                            {product.quantity && (
-                              <span className="text-sm text-gray-500">
-                                {product.quantity} {product.unit}
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600 mb-2">
-                            {category && (
-                              <span className="flex items-center gap-1">
-                                <Tag className="w-3 h-3" />
-                                {category.name}
-                              </span>
-                            )}
-                            {department && <span>{department.name}</span>}
-                            {conservationPoint && (
-                              <span>{conservationPoint.name}</span>
-                            )}
-                          </div>
-
-                          <div className="flex flex-wrap gap-2 text-xs">
-                            {product.supplier_name && (
-                              <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
-                                {product.supplier_name}
-                              </span>
-                            )}
-                            {product.expiry_date && (
-                              <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full flex items-center gap-1">
-                                <Calendar className="w-3 h-3" />
-                                Scad:{' '}
-                                {new Date(
-                                  product.expiry_date
-                                ).toLocaleDateString('it-IT')}
-                              </span>
-                            )}
-                            {product.allergens &&
-                              product.allergens.length > 0 && (
-                                <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full">
-                                  Allergeni: {product.allergens.join(', ')}
-                                </span>
-                              )}
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2 ml-4">
-                          <button
-                            onClick={() => startEditProduct(product)}
-                            className="p-1 text-blue-600 hover:text-blue-800"
-                            title="Modifica prodotto"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => deleteProduct(product.id)}
-                            className="p-1 text-red-600 hover:text-red-800"
-                            title="Elimina prodotto"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        </div>
+          )}
+        </section>
       )}
-
-      {/* HACCP Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-medium text-blue-900 mb-2">
-          ℹ️ Gestione Inventario HACCP
-        </h3>
-        <p className="text-sm text-blue-700">
-          Le categorie prodotto definiscono le regole di conservazione
-          specifiche. L'inventario è utilizzato per il controllo delle scadenze
-          e la tracciabilità. Il sistema genererà automaticamente alert per i
-          prodotti in scadenza e monitorerà la conformità delle temperature di
-          conservazione.
-        </p>
-      </div>
     </div>
   )
 }
