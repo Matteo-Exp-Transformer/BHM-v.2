@@ -1,5 +1,6 @@
 import { safeSetItem, clearAllStorage, clearHaccpData } from './safeStorage'
 import { toast } from 'react-toastify'
+import { AllergenType } from '@/types/inventory'
 
 // Dati precompilati seguendo esattamente la guida di riferimento
 export const getPrefillData = () => {
@@ -243,7 +244,7 @@ export const getPrefillData = () => {
           name: 'Mozzarella di Bufala',
           quantity: 10,
           unit: 'pz',
-          allergens: ['latte'],
+          allergens: [AllergenType.LATTE],
           supplierName: 'Caseificio Campano',
           purchaseDate: new Date().toISOString().split('T')[0],
           expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
@@ -269,7 +270,7 @@ export const getPrefillData = () => {
           name: 'Salmone Fresco',
           quantity: 1.8,
           unit: 'kg',
-          allergens: ['pesce'],
+          allergens: [AllergenType.PESCE],
           supplierName: 'Pescheria del Porto',
           purchaseDate: new Date().toISOString().split('T')[0],
           expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
@@ -327,12 +328,18 @@ export const prefillOnboarding = (): void => {
       const banconeId = data.departments.find(d => d.name === 'Bancone')?.id
 
       data.conservation = data.conservation.map(point => ({
-        ...point,
-        department_id: point.name.includes('Cucina')
+        id: point.id,
+        name: point.name,
+        departmentId: point.name.includes('Cucina')
           ? cucinaId || ''
           : point.name.includes('Bancone')
             ? banconeId || ''
             : data.departments[0]?.id || '',
+        targetTemperature: point.setpoint_temp,
+        pointType: point.type,
+        isBlastChiller: point.is_blast_chiller,
+        productCategories: point.product_categories,
+        source: 'prefill' as const,
       }))
 
       // Associa department assignments al staff
@@ -361,9 +368,14 @@ export const prefillOnboarding = (): void => {
           c => c.name === 'Verdure Fresche'
         )?.id
 
+        // Trova conservation points
+        const frigoId = data.conservation.find(cp =>
+          cp.name.includes('Frigo')
+        )?.id
+
         data.inventory.products = data.inventory.products.map(product => ({
           ...product,
-          category_id: product.name.includes('Pollo')
+          categoryId: product.name.includes('Pollo')
             ? carniId
             : product.name.includes('Salmone')
               ? pesceId
@@ -372,6 +384,8 @@ export const prefillOnboarding = (): void => {
                 : product.name.includes('Pomodori')
                   ? verdureId
                   : undefined,
+          departmentId: cucinaId, // Assegna tutti i prodotti alla cucina
+          conservationPointId: frigoId, // Assegna tutti i prodotti al frigo
         }))
       }
     }

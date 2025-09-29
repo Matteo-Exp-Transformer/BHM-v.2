@@ -20,7 +20,7 @@ import DevButtons from './DevButtons'
 
 // Onboarding Helpers
 import {
-  prefillOnboarding,
+  getPrefillData,
   resetOnboarding,
   completeOnboarding as completeOnboardingHelper,
 } from '@/utils/onboardingHelpers'
@@ -60,20 +60,14 @@ const OnboardingWizard = () => {
 
   // Gestori per i pulsanti di controllo
   const handlePrefillOnboarding = () => {
-    prefillOnboarding()
-    // Ricarica i dati dopo la precompilazione
-    setTimeout(() => {
-      const savedData = localStorage.getItem('onboarding-data')
-      if (savedData) {
-        try {
-          const parsed = JSON.parse(savedData)
-          setFormData(parsed)
-          toast.success('Dati precompilati caricati!')
-        } catch (error) {
-          console.error('Error loading prefilled data:', error)
-        }
-      }
-    }, 500)
+    try {
+      const data = getPrefillData()
+      setFormData(data)
+      toast.success('Dati precompilati caricati!')
+    } catch (error) {
+      console.error('Error prefilling onboarding:', error)
+      toast.error('Errore durante la precompilazione')
+    }
   }
 
   const handleCompleteOnboarding = () => {
