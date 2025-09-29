@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { supabase } from '@/lib/supabase/client'
@@ -78,19 +78,43 @@ const OnboardingWizard = () => {
     resetOnboarding()
   }
 
-  // Salva automaticamente in localStorage
+  // Salva automaticamente in localStorage con debounce
+  const saveTimeoutRef = useRef<number>()
+
   useEffect(() => {
     if (Object.keys(formData).length > 0) {
-      localStorage.setItem('onboarding-data', JSON.stringify(formData))
+      // Cancella il timeout precedente se esiste
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+
+      // Salva dopo 500ms di inattività
+      saveTimeoutRef.current = setTimeout(() => {
+        localStorage.setItem('onboarding-data', JSON.stringify(formData))
+      }, 500)
+    }
+
+    // Cleanup del timeout al unmount
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
     }
   }, [formData])
 
-  const updateFormData = (stepKey: keyof OnboardingData, data: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [stepKey]: data,
-    }))
-  }
+  const updateFormData = useCallback(
+    (stepKey: keyof OnboardingData, data: any) => {
+      setFormData(prev => ({
+        ...prev,
+        [stepKey]: data,
+      }))
+    },
+    []
+  )
+
+  const handleValidChange = useCallback((valid: boolean) => {
+    setIsValid(valid)
+  }, [])
 
   const handleNext = async () => {
     if (!isValid) {
@@ -243,7 +267,7 @@ const OnboardingWizard = () => {
           <BusinessInfoStep
             data={formData.business}
             onUpdate={data => updateFormData('business', data)}
-            onValidChange={setIsValid}
+            onValidChange={handleValidChange}
           />
         )
       case 1:
@@ -251,7 +275,7 @@ const OnboardingWizard = () => {
           <DepartmentsStep
             data={formData.departments}
             onUpdate={data => updateFormData('departments', data)}
-            onValidChange={setIsValid}
+            onValidChange={handleValidChange}
           />
         )
       case 2:
@@ -260,7 +284,7 @@ const OnboardingWizard = () => {
             data={formData.staff}
             departments={formData.departments || []}
             onUpdate={data => updateFormData('staff', data)}
-            onValidChange={setIsValid}
+            onValidChange={handleValidChange}
           />
         )
       case 3:
@@ -269,7 +293,7 @@ const OnboardingWizard = () => {
             data={formData.conservation}
             departments={formData.departments || []}
             onUpdate={data => updateFormData('conservation', data)}
-            onValidChange={setIsValid}
+            onValidChange={handleValidChange}
           />
         )
       case 4:
@@ -279,7 +303,7 @@ const OnboardingWizard = () => {
             departments={formData.departments || []}
             conservationPoints={formData.conservation || []}
             onUpdate={data => updateFormData('tasks', data)}
-            onValidChange={setIsValid}
+            onValidChange={handleValidChange}
           />
         )
       case 5:
@@ -289,7 +313,7 @@ const OnboardingWizard = () => {
             departments={formData.departments || []}
             conservationPoints={formData.conservation || []}
             onUpdate={data => updateFormData('inventory', data)}
-            onValidChange={setIsValid}
+            onValidChange={handleValidChange}
           />
         )
       default:
