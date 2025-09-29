@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Users, RotateCcw, CheckCircle } from 'lucide-react'
 
 interface DevButtonsProps {
@@ -15,9 +15,11 @@ const DevButtons: React.FC<DevButtonsProps> = ({
   isDevMode = false,
 }) => {
   // Always visible for testing and demo (isDevMode reserved for future use)
-  if (isDevMode) {
-    console.log('DevButtons loaded in dev mode')
-  }
+  useEffect(() => {
+    if (isDevMode) {
+      console.log('DevButtons loaded in dev mode')
+    }
+  }, [isDevMode])
   return (
     <div className="flex gap-2 flex-wrap">
       <button
