@@ -3,6 +3,8 @@ import { X, Wrench, Plus, Calendar } from 'lucide-react'
 import type {
   ConservationPoint,
   CreateMaintenanceTaskRequest,
+  MaintenanceTask,
+  MaintenanceType,
 } from '@/types/conservation'
 
 type MaintenanceTaskKind = 'temperature' | 'sanitization' | 'defrosting'
@@ -20,16 +22,24 @@ const maintenanceKinds = [
   { value: 'defrosting', label: 'Sbrinamento', icon: '❄️' },
 ] as const
 
-const frequencies = [
+const frequencies: Array<{
+  value: MaintenanceTask['frequency']
+  label: string
+  description: string
+}> = [
   { value: 'daily', label: 'Giornaliera', description: 'Ogni giorno' },
   { value: 'weekly', label: 'Settimanale', description: 'Ogni settimana' },
   { value: 'monthly', label: 'Mensile', description: 'Ogni mese' },
+  { value: 'quarterly', label: 'Trimestrale', description: 'Ogni trimestre' },
+  { value: 'biannually', label: 'Semestrale', description: "Due volte l'anno" },
+  { value: 'annually', label: 'Annuale', description: "Una volta l'anno" },
+  { value: 'as_needed', label: 'Al bisogno', description: 'Quando necessario' },
   {
     value: 'custom',
     label: 'Personalizzata',
     description: 'Frequenza specifica',
   },
-] as const
+]
 
 const commonChecklists = {
   temperature: [
@@ -61,14 +71,25 @@ export function MaintenanceTaskModal({
   onCreate,
   isCreating,
 }: MaintenanceTaskModalProps) {
-  const [formData, setFormData] = useState({
-    kind: 'temperature' as MaintenanceTaskKind,
-    frequency: 'weekly' as const,
-    next_due_date: new Date(Date.now() + 24 * 60 * 60 * 1000)
+  interface MaintenanceFormState {
+    kind: MaintenanceTaskKind
+    type: MaintenanceType
+    frequency: MaintenanceTask['frequency']
+    next_due: string
+    estimated_duration: number
+    checklist: string[]
+    assigned_to: string
+  }
+
+  const [formData, setFormData] = useState<MaintenanceFormState>({
+    kind: 'temperature',
+    type: 'temperature_calibration',
+    frequency: 'weekly',
+    next_due: new Date(Date.now() + 24 * 60 * 60 * 1000)
       .toISOString()
-      .slice(0, 16), // Tomorrow
+      .slice(0, 16),
     estimated_duration: 30,
-    checklist: [] as string[],
+    checklist: [],
     assigned_to: '',
   })
 
@@ -78,12 +99,16 @@ export function MaintenanceTaskModal({
     e.preventDefault()
     onCreate({
       conservation_point_id: conservationPoint.id,
-      kind: formData.kind,
+      name: formData.checklist[0] || 'Task di manutenzione',
+      description: formData.checklist.slice(1).join('\n') || undefined,
+      type: formData.type,
       frequency: formData.frequency,
-      next_due_date: new Date(formData.next_due_date),
       estimated_duration: formData.estimated_duration,
-      checklist: formData.checklist.length > 0 ? formData.checklist : undefined,
+      next_due: new Date(formData.next_due),
       assigned_to: formData.assigned_to || undefined,
+      priority: 'medium',
+      instructions:
+        formData.checklist.length > 0 ? formData.checklist : undefined,
     })
   }
 
@@ -91,6 +116,12 @@ export function MaintenanceTaskModal({
     setFormData(prev => ({
       ...prev,
       kind,
+      type:
+        kind === 'temperature'
+          ? 'temperature_calibration'
+          : kind === 'sanitization'
+            ? 'deep_cleaning'
+            : 'defrosting',
       checklist: commonChecklists[kind] || [],
     }))
   }
@@ -180,7 +211,7 @@ export function MaintenanceTaskModal({
                   onChange={e =>
                     setFormData(prev => ({
                       ...prev,
-                      frequency: e.target.value as any,
+                      frequency: e.target.value as MaintenanceTask['frequency'],
                     }))
                   }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -199,12 +230,11 @@ export function MaintenanceTaskModal({
                 </label>
                 <input
                   type="datetime-local"
-                  required
-                  value={formData.next_due_date}
+                  value={formData.next_due}
                   onChange={e =>
                     setFormData(prev => ({
                       ...prev,
-                      next_due_date: e.target.value,
+                      next_due: e.target.value,
                     }))
                   }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -344,7 +374,7 @@ export function MaintenanceTaskModal({
                 </div>
                 <div>
                   <strong>Prossima scadenza:</strong>{' '}
-                  {new Date(formData.next_due_date).toLocaleString('it-IT')}
+                  {new Date(formData.next_due).toLocaleString('it-IT')}
                 </div>
                 <div>
                   <strong>Attività checklist:</strong>{' '}

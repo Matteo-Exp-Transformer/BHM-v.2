@@ -31,11 +31,15 @@ export const UNIT_OPTIONS = [
   'vaschette',
 ]
 
-export const PRODUCT_STATUS_OPTIONS: ProductStatus[] = [
+const PRODUCT_STATUS_VALUES: [ProductStatus, ...ProductStatus[]] = [
   'active',
   'expired',
   'consumed',
   'waste',
+]
+
+export const PRODUCT_STATUS_OPTIONS: ProductStatus[] = [
+  ...PRODUCT_STATUS_VALUES,
 ]
 
 const categorySchema = z.object({
@@ -69,29 +73,46 @@ const productSchema = z.object({
   unit: z.string().optional(),
   allergens: z.array(z.nativeEnum(AllergenType)).default([]),
   labelPhotoUrl: z.string().optional(),
-  status: z.enum(PRODUCT_STATUS_OPTIONS),
+  status: z.enum(PRODUCT_STATUS_VALUES),
   notes: z.string().optional(),
 })
 
-const REQUIRED_FIELDS = {
+const REQUIRED_FIELDS: Record<
+  | 'name'
+  | 'categoryId'
+  | 'departmentId'
+  | 'conservationPointId'
+  | 'quantity'
+  | 'unit'
+  | 'purchaseDate'
+  | 'expiryDate',
+  string
+> = {
   name: 'Inserisci il nome del prodotto',
   categoryId: 'Seleziona una categoria di appartenenza',
   departmentId: 'Seleziona un reparto di riferimento',
   conservationPointId: 'Associa un punto di conservazione',
   quantity: 'La quantità è obbligatoria',
   unit: "Seleziona l'unità di misura",
-} as const
+  purchaseDate: 'Seleziona la data di acquisto',
+  expiryDate: 'Seleziona la data di scadenza',
+}
 
-const REQUIRED_NUMERIC_FIELDS: Array<keyof InventoryProduct> = ['quantity']
-const REQUIRED_STRING_FIELDS: Array<keyof InventoryProduct> = [
+const REQUIRED_NUMERIC_FIELDS: Array<keyof typeof REQUIRED_FIELDS> = [
+  'quantity',
+]
+const REQUIRED_STRING_FIELDS: Array<keyof typeof REQUIRED_FIELDS> = [
+  'name',
   'categoryId',
   'departmentId',
   'conservationPointId',
   'unit',
+  'purchaseDate',
+  'expiryDate',
 ]
 
 const collectMissingFields = (product: InventoryProduct) => {
-  const errors: Record<string, string> = {}
+  const errors: Partial<Record<keyof typeof REQUIRED_FIELDS, string>> = {}
 
   REQUIRED_STRING_FIELDS.forEach(field => {
     const value = product[field]
@@ -106,14 +127,6 @@ const collectMissingFields = (product: InventoryProduct) => {
       errors[field] = REQUIRED_FIELDS[field]
     }
   })
-
-  if (!product.purchaseDate || product.purchaseDate.trim() === '') {
-    errors.purchaseDate = 'Seleziona la data di acquisto'
-  }
-
-  if (!product.expiryDate || product.expiryDate.trim() === '') {
-    errors.expiryDate = 'Seleziona la data di scadenza'
-  }
 
   return errors
 }
@@ -300,18 +313,18 @@ export const normalizeInventoryProduct = (
   categoryId: product.categoryId || undefined,
   departmentId: product.departmentId || undefined,
   conservationPointId: product.conservationPointId || undefined,
-  sku: product.sku || undefined,
-  barcode: product.barcode || undefined,
-  supplierName: product.supplierName || undefined,
-  purchaseDate: product.purchaseDate || undefined,
-  expiryDate: product.expiryDate || undefined,
+  sku: product.sku?.trim() || undefined,
+  barcode: product.barcode?.trim() || undefined,
+  supplierName: product.supplierName?.trim() || undefined,
+  purchaseDate: product.purchaseDate?.trim() || undefined,
+  expiryDate: product.expiryDate?.trim() || undefined,
   quantity: product.quantity,
-  unit: product.unit || undefined,
+  unit: product.unit?.trim() || undefined,
   allergens: product.allergens ?? [],
-  labelPhotoUrl: product.labelPhotoUrl || undefined,
+  labelPhotoUrl: product.labelPhotoUrl?.trim() || undefined,
   status: product.status,
   complianceStatus: product.complianceStatus,
-  notes: product.notes || undefined,
+  notes: product.notes?.trim() || undefined,
 })
 
 export const getAllergenLabel = (allergen: AllergenType): string => {

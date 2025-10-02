@@ -82,7 +82,12 @@ export const useDashboardData = () => {
             100
           : 100
 
-      const taskCompletionRate = 85 // Mock completion rate since MaintenanceTask doesn't have status
+      const completedTasks = maintenanceTasks.filter(
+        task => task.status === 'completed'
+      ).length
+      const taskCompletionRate = maintenanceTasks.length
+        ? (completedTasks / maintenanceTasks.length) * 100
+        : 100
 
       const overallCompliance = Math.round(
         (temperatureComplianceRate + taskCompletionRate) / 2
@@ -137,7 +142,7 @@ export const useDashboardData = () => {
         point => point.status === 'critical'
       ).length
       const maintenanceDue = maintenanceTasks.filter(
-        task => new Date(task.next_due_date) <= new Date()
+        task => new Date(task.next_due) <= new Date()
       ).length
 
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
@@ -159,10 +164,15 @@ export const useDashboardData = () => {
         },
         task_completion_rate: {
           total_tasks: maintenanceTasks.length,
-          completed_on_time: Math.floor(maintenanceTasks.length * 0.85), // Mock completed tasks
-          overdue: maintenanceTasks.filter(
-            task => new Date(task.next_due_date) < new Date()
-          ).length,
+          completed_on_time: completedTasks,
+          overdue: maintenanceTasks.filter(task => {
+            if (!task.next_due) return false
+            const nextDueDate =
+              task.next_due instanceof Date
+                ? task.next_due
+                : new Date(task.next_due)
+            return nextDueDate < new Date()
+          }).length,
           completion_rate: Math.round(taskCompletionRate),
           trend:
             taskCompletionRate >= 80

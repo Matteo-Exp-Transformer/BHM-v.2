@@ -55,7 +55,7 @@ export function CreateConservationPointModal({
       type: formData.type,
       is_blast_chiller: formData.is_blast_chiller,
       product_categories: formData.product_categories,
-      department_id: formData.department_id || undefined,
+      department_id: formData.department_id ?? '',
     })
   }
 

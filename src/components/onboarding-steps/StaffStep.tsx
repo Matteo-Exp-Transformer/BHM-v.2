@@ -36,32 +36,42 @@ const EMPTY_FORM: StaffStepFormData = {
   surname: '',
   email: '',
   phone: '',
-  role: STAFF_ROLES[0].value,
+  role: STAFF_ROLES[0].value as StaffRole,
   categories: [STAFF_CATEGORIES[0].value],
   departmentAssignments: [],
   haccpExpiry: '',
   notes: '',
 }
 
-const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProps) => {
+const StaffStep = ({
+  data,
+  departments,
+  onUpdate,
+  onValidChange,
+}: StaffStepProps) => {
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>(data || [])
-  const [formData, setFormData] = useState<StaffStepFormData>(EMPTY_FORM)
+  const [formData, setFormData] = useState<StaffStepFormData>({ ...EMPTY_FORM })
   const [editingId, setEditingId] = useState<string | null>(null)
   const [errors, setErrors] = useState<StaffValidationErrors>({})
 
-  const { formRef, scrollToForm } = useScrollToForm(Boolean(editingId), 'staff-step-form')
+  const { formRef, scrollToForm } = useScrollToForm(
+    Boolean(editingId),
+    'staff-step-form'
+  )
 
   useEffect(() => {
     onUpdate(staffMembers)
   }, [staffMembers, onUpdate])
 
   useEffect(() => {
-    const allValid = staffMembers.length > 0 && staffMembers.every(member => validateStaffMember(member).success)
+    const allValid =
+      staffMembers.length > 0 &&
+      staffMembers.every(member => validateStaffMember(member).success)
     onValidChange(allValid)
   }, [staffMembers, onValidChange])
 
   const departmentOptions = useMemo(
-    () => departments.filter(department => department.is_active),
+    () => departments.filter(department => department.is_active !== false),
     [departments]
   )
 
@@ -97,7 +107,9 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
 
     setStaffMembers(prev => {
       if (editingId) {
-        return prev.map(existing => (existing.id === editingId ? member : existing))
+        return prev.map(existing =>
+          existing.id === editingId ? member : existing
+        )
       }
       return [...prev, member]
     })
@@ -106,11 +118,16 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
   }
 
   const prefillSampleData = () => {
-    const cucina = departments.find(dept => dept.name.toLowerCase() === 'cucina')
+    const cucina = departments.find(
+      dept => dept.name.toLowerCase() === 'cucina'
+    )
     const sala = departments.find(dept => dept.name.toLowerCase() === 'sala')
-    const bancone = departments.find(dept => dept.name.toLowerCase() === 'bancone')
+    const bancone = departments.find(
+      dept => dept.name.toLowerCase() === 'bancone'
+    )
 
-    const generateId = () => `staff_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+    const generateId = () =>
+      `staff_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
     const samples: StaffMember[] = [
       {
@@ -156,13 +173,22 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
     if (staffMembers.length === 0) return null
 
     const requiringCertification = staffMembers.filter(member =>
-      member.categories.some(category => HACCP_CERT_REQUIRED_CATEGORIES.includes(category))
+      member.categories.some(category =>
+        HACCP_CERT_REQUIRED_CATEGORIES.includes(category)
+      )
     )
 
-    const compliant = requiringCertification.filter(member => validateStaffMember(member).success && Boolean(member.haccpExpiry))
+    const compliant = requiringCertification.filter(
+      member =>
+        validateStaffMember(member).success && Boolean(member.haccpExpiry)
+    )
 
-    const expiringSoon = requiringCertification.filter(member => getHaccpExpiryStatus(member.haccpExpiry).level === 'warning')
-    const expired = requiringCertification.filter(member => getHaccpExpiryStatus(member.haccpExpiry).level === 'expired')
+    const expiringSoon = requiringCertification.filter(
+      member => getHaccpExpiryStatus(member.haccpExpiry).level === 'warning'
+    )
+    const expired = requiringCertification.filter(
+      member => getHaccpExpiryStatus(member.haccpExpiry).level === 'expired'
+    )
 
     return {
       total: staffMembers.length,
@@ -176,9 +202,12 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
   return (
     <div className="space-y-6" id="staff-step">
       <header className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900">Gestione del Personale</h2>
+        <h2 className="text-2xl font-bold text-gray-900">
+          Gestione del Personale
+        </h2>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Registra ruoli, categorie operative e certificazioni HACCP del personale per garantire la conformità normativa.
+          Registra ruoli, categorie operative e certificazioni HACCP del
+          personale per garantire la conformità normativa.
         </p>
       </header>
 
@@ -192,7 +221,9 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
       {haccpSummary && (
         <section className="grid gap-4 md:grid-cols-2">
           <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
-            <h3 className="text-sm font-semibold text-blue-900 mb-2">Panoramica HACCP</h3>
+            <h3 className="text-sm font-semibold text-blue-900 mb-2">
+              Panoramica HACCP
+            </h3>
             <dl className="space-y-1 text-sm text-blue-800">
               <div className="flex justify-between">
                 <dt>Membri registrati</dt>
@@ -200,7 +231,9 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
               </div>
               <div className="flex justify-between">
                 <dt>Richiedono certificazione</dt>
-                <dd className="font-semibold">{haccpSummary.requiringCertification}</dd>
+                <dd className="font-semibold">
+                  {haccpSummary.requiringCertification}
+                </dd>
               </div>
               <div className="flex justify-between">
                 <dt>Certificazioni valide</dt>
@@ -210,7 +243,9 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
           </div>
 
           <div className="rounded-lg border border-amber-100 bg-amber-50 p-4">
-            <h3 className="text-sm font-semibold text-amber-900 mb-2">Scadenze monitorate</h3>
+            <h3 className="text-sm font-semibold text-amber-900 mb-2">
+              Scadenze monitorate
+            </h3>
             <dl className="space-y-1 text-sm text-amber-800">
               <div className="flex justify-between">
                 <dt>Certificati in scadenza</dt>
@@ -229,7 +264,9 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
         <header className="border-b border-gray-100 px-4 py-3 flex items-center justify-between">
           <div>
             <h3 className="font-semibold text-gray-900">Staff configurato</h3>
-            <p className="text-sm text-gray-500">Elenco dei membri registrati durante l'onboarding</p>
+            <p className="text-sm text-gray-500">
+              Elenco dei membri registrati durante l'onboarding
+            </p>
           </div>
           <Button variant="ghost" className="gap-2" onClick={scrollToForm}>
             <Plus className="h-4 w-4" />
@@ -240,7 +277,8 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
         <div className="divide-y divide-gray-100">
           {staffMembers.length === 0 && (
             <p className="px-4 py-8 text-center text-sm text-gray-500">
-              Nessun membro dello staff registrato. Aggiungi almeno un membro per procedere.
+              Nessun membro dello staff registrato. Aggiungi almeno un membro
+              per procedere.
             </p>
           )}
 
@@ -264,8 +302,12 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
                   </div>
 
                   <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-                    {member.email && <Badge variant="secondary">{member.email}</Badge>}
-                    {member.phone && <Badge variant="secondary">{member.phone}</Badge>}
+                    {member.email && (
+                      <Badge variant="secondary">{member.email}</Badge>
+                    )}
+                    {member.phone && (
+                      <Badge variant="secondary">{member.phone}</Badge>
+                    )}
                   </div>
 
                   <div className="flex flex-wrap gap-2 text-xs text-gray-600">
@@ -279,7 +321,9 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
                   {member.department_assignments.length > 0 && (
                     <div className="flex flex-wrap gap-2 text-xs text-gray-600">
                       {member.department_assignments.map(deptId => {
-                        const department = departments.find(dept => dept.id === deptId)
+                        const department = departments.find(
+                          dept => dept.id === deptId
+                        )
                         return department ? (
                           <Badge key={deptId} variant="outline">
                             {department.name}
@@ -292,9 +336,15 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
                   {requiresHaccp && (
                     <div className="mt-3 flex items-center gap-2 text-sm">
                       {expiryStatus.level === 'ok' ? (
-                        <ShieldCheck className="h-4 w-4 text-green-600" aria-hidden />
+                        <ShieldCheck
+                          className="h-4 w-4 text-green-600"
+                          aria-hidden
+                        />
                       ) : (
-                        <ShieldAlert className="h-4 w-4 text-amber-600" aria-hidden />
+                        <ShieldAlert
+                          className="h-4 w-4 text-amber-600"
+                          aria-hidden
+                        />
                       )}
                       <span
                         className={
@@ -318,10 +368,20 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
                 </div>
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="icon" onClick={() => handleEditMember(member)} aria-label="Modifica membro">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleEditMember(member)}
+                    aria-label="Modifica membro"
+                  >
                     <Edit2 className="h-4 w-4" aria-hidden />
                   </Button>
-                  <Button variant="destructive" size="icon" onClick={() => handleDeleteMember(member.id)} aria-label="Elimina membro">
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleDeleteMember(member.id)}
+                    aria-label="Elimina membro"
+                  >
                     <Trash2 className="h-4 w-4" aria-hidden />
                   </Button>
                 </div>
@@ -331,13 +391,20 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
         </div>
       </section>
 
-      <section id="staff-step-form" ref={formRef} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+      <section
+        id="staff-step-form"
+        ref={formRef}
+        className="rounded-lg border border-gray-200 bg-gray-50 p-4"
+      >
         <header className="mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
-            {editingId ? 'Modifica membro dello staff' : 'Aggiungi nuovo membro'}
+            {editingId
+              ? 'Modifica membro dello staff'
+              : 'Aggiungi nuovo membro'}
           </h3>
           <p className="text-sm text-gray-500">
-            Compila i campi obbligatori per registrare il personale. Le certificazioni HACCP sono richieste solo per le categorie operative.
+            Compila i campi obbligatori per registrare il personale. Le
+            certificazioni HACCP sono richieste solo per le categorie operative.
           </p>
         </header>
 
@@ -348,22 +415,33 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
               <Input
                 id="staff-name"
                 value={formData.name}
-                onChange={event => setFormData(prev => ({ ...prev, name: event.target.value }))}
+                onChange={event =>
+                  setFormData(prev => ({ ...prev, name: event.target.value }))
+                }
                 placeholder="Mario"
                 aria-invalid={Boolean(errors.name)}
               />
-              {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="staff-surname">Cognome *</Label>
               <Input
                 id="staff-surname"
                 value={formData.surname}
-                onChange={event => setFormData(prev => ({ ...prev, surname: event.target.value }))}
+                onChange={event =>
+                  setFormData(prev => ({
+                    ...prev,
+                    surname: event.target.value,
+                  }))
+                }
                 placeholder="Rossi"
                 aria-invalid={Boolean(errors.surname)}
               />
-              {errors.surname && <p className="mt-1 text-sm text-red-600">{errors.surname}</p>}
+              {errors.surname && (
+                <p className="mt-1 text-sm text-red-600">{errors.surname}</p>
+              )}
             </div>
           </div>
 
@@ -374,22 +452,30 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
                 id="staff-email"
                 type="email"
                 value={formData.email}
-                onChange={event => setFormData(prev => ({ ...prev, email: event.target.value }))}
+                onChange={event =>
+                  setFormData(prev => ({ ...prev, email: event.target.value }))
+                }
                 placeholder="email@azienda.it"
                 aria-invalid={Boolean(errors.email)}
               />
-              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="staff-phone">Telefono</Label>
               <Input
                 id="staff-phone"
                 value={formData.phone}
-                onChange={event => setFormData(prev => ({ ...prev, phone: event.target.value }))}
+                onChange={event =>
+                  setFormData(prev => ({ ...prev, phone: event.target.value }))
+                }
                 placeholder="+39 340 1234567"
                 aria-invalid={Boolean(errors.phone)}
               />
-              {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+              )}
             </div>
           </div>
 
@@ -397,9 +483,10 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
             <div>
               <Label htmlFor="staff-role">Ruolo *</Label>
               <Select
-                id="staff-role"
                 value={formData.role}
-                onValueChange={value => setFormData(prev => ({ ...prev, role: value as StaffRole }))}
+                onValueChange={value =>
+                  setFormData(prev => ({ ...prev, role: value as StaffRole }))
+                }
               >
                 {STAFF_ROLES.map(role => (
                   <SelectOption key={role.value} value={role.value}>
@@ -412,7 +499,10 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
               <Label>Categorie operative *</Label>
               <div className="space-y-2">
                 {formData.categories.map((category, index) => (
-                  <div key={`category-${index}`} className="flex items-center gap-2">
+                  <div
+                    key={`category-${index}`}
+                    className="flex items-center gap-2"
+                  >
                     <Select
                       value={category}
                       onValueChange={value =>
@@ -438,7 +528,9 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
                         onClick={() =>
                           setFormData(prev => ({
                             ...prev,
-                            categories: prev.categories.filter((_, idx) => idx !== index),
+                            categories: prev.categories.filter(
+                              (_, idx) => idx !== index
+                            ),
                           }))
                         }
                         aria-label="Rimuovi categoria"
@@ -454,7 +546,10 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
                   onClick={() =>
                     setFormData(prev => ({
                       ...prev,
-                      categories: [...prev.categories, STAFF_CATEGORIES[0].value],
+                      categories: [
+                        ...prev.categories,
+                        STAFF_CATEGORIES[0].value,
+                      ],
                     }))
                   }
                   className="w-full"
@@ -475,14 +570,18 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
                 >
                   <input
                     type="checkbox"
-                    checked={formData.departmentAssignments.includes(department.id)}
+                    checked={formData.departmentAssignments.includes(
+                      department.id
+                    )}
                     onChange={event => {
                       const isChecked = event.target.checked
                       setFormData(prev => ({
                         ...prev,
                         departmentAssignments: isChecked
                           ? [...prev.departmentAssignments, department.id]
-                          : prev.departmentAssignments.filter(id => id !== department.id),
+                          : prev.departmentAssignments.filter(
+                              id => id !== department.id
+                            ),
                       }))
                     }}
                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -494,15 +593,24 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
           </div>
 
           <div>
-            <Label htmlFor="staff-haccp-expiry">Scadenza certificazione HACCP *</Label>
+            <Label htmlFor="staff-haccp-expiry">
+              Scadenza certificazione HACCP *
+            </Label>
             <Input
               id="staff-haccp-expiry"
               type="date"
               value={formData.haccpExpiry}
-              onChange={event => setFormData(prev => ({ ...prev, haccpExpiry: event.target.value }))}
+              onChange={event =>
+                setFormData(prev => ({
+                  ...prev,
+                  haccpExpiry: event.target.value,
+                }))
+              }
               aria-invalid={Boolean(errors.haccpExpiry)}
             />
-            {errors.haccpExpiry && <p className="mt-1 text-sm text-red-600">{errors.haccpExpiry}</p>}
+            {errors.haccpExpiry && (
+              <p className="mt-1 text-sm text-red-600">{errors.haccpExpiry}</p>
+            )}
           </div>
 
           <div>
@@ -510,7 +618,9 @@ const StaffStep = ({ data, departments, onUpdate, onValidChange }: StaffStepProp
             <Textarea
               id="staff-notes"
               value={formData.notes}
-              onChange={event => setFormData(prev => ({ ...prev, notes: event.target.value }))}
+              onChange={event =>
+                setFormData(prev => ({ ...prev, notes: event.target.value }))
+              }
               placeholder="Aggiungi note sulla certificazione HACCP o sul membro"
             />
           </div>

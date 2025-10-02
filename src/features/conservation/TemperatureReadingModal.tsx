@@ -3,7 +3,6 @@ import { X, Thermometer, Camera, Clock } from 'lucide-react'
 import type {
   ConservationPoint,
   CreateTemperatureReadingRequest,
-  TemperatureMethod,
 } from '@/types/conservation'
 
 interface TemperatureReadingModalProps {
@@ -25,9 +24,16 @@ export function TemperatureReadingModal({
   onCreate,
   isCreating,
 }: TemperatureReadingModalProps) {
-  const [formData, setFormData] = useState({
+  interface TemperatureFormState {
+    temperature: number
+    method: CreateTemperatureReadingRequest['method']
+    notes: string
+    photo_evidence: string
+  }
+
+  const [formData, setFormData] = useState<TemperatureFormState>({
     temperature: conservationPoint.setpoint_temp,
-    method: 'manual' as TemperatureMethod,
+    method: 'manual',
     notes: '',
     photo_evidence: '',
   })
@@ -221,13 +227,22 @@ export function TemperatureReadingModal({
                   accept="image/*"
                   onChange={e => {
                     const file = e.target.files?.[0]
-                    if (file) {
-                      // In a real app, you would upload the file and get a URL
+                    if (!file) {
+                      setFormData(prev => ({ ...prev, photo_evidence: '' }))
+                      return
+                    }
+
+                    const reader = new FileReader()
+                    reader.onloadend = () => {
                       setFormData(prev => ({
                         ...prev,
-                        photo_evidence: file.name,
+                        photo_evidence:
+                          typeof reader.result === 'string'
+                            ? reader.result
+                            : '',
                       }))
                     }
+                    reader.readAsDataURL(file)
                   }}
                   className="hidden"
                   id="photo-input"

@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { X, User, Plus } from 'lucide-react'
-import type { TypedCalendarEvent, CalendarEventType } from '@/types/calendar'
+import type { CalendarEventType, CalendarEvent } from '@/types/calendar'
 
 interface CreateEventModalProps {
   selectedDate: Date | null
@@ -17,401 +17,127 @@ const eventTypes = [
     color: '#F59E0B',
   },
   { value: 'custom', label: 'Personalizzato', color: '#8B5CF6' },
-]
+] as const
 
 const priorities = [
-  { value: 'low', label: 'Bassa', color: 'text-green-600' },
-  { value: 'medium', label: 'Media', color: 'text-yellow-600' },
-  { value: 'high', label: 'Alta', color: 'text-orange-600' },
-  { value: 'critical', label: 'Critica', color: 'text-red-600' },
-]
+  { value: 'low', label: 'Bassa' },
+  { value: 'medium', label: 'Media' },
+  { value: 'high', label: 'Alta' },
+  { value: 'critical', label: 'Critica' },
+] as const
 
-const maintenanceTypes = [
-  { value: 'temperature', label: 'Controllo Temperatura' },
-  { value: 'sanitization', label: 'Sanificazione' },
-  { value: 'defrosting', label: 'Sbrinamento' },
-  { value: 'repair', label: 'Riparazione' },
-]
-
-const frequencies = [
+const frequencyOptions = [
   { value: 'daily', label: 'Giornaliera' },
   { value: 'weekly', label: 'Settimanale' },
   { value: 'monthly', label: 'Mensile' },
-  { value: 'quarterly', label: 'Trimestrale' },
   { value: 'yearly', label: 'Annuale' },
-  { value: 'custom', label: 'Personalizzata' },
-]
+] as const
 
 export function CreateEventModal({
   selectedDate,
   onClose,
   onCreate,
 }: CreateEventModalProps) {
+  const initialStart = useMemo(
+    () => selectedDate?.toISOString().slice(0, 16) ?? '',
+    [selectedDate]
+  )
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     type: 'maintenance' as CalendarEventType,
-    start: selectedDate ? selectedDate.toISOString().slice(0, 16) : '',
+    start: initialStart,
     end: '',
     allDay: false,
-    priority: 'medium' as const,
+    priority: 'medium' as CalendarEvent['priority'],
     location: '',
-    assignedTo: [] as string[],
-    // Maintenance specific
-    maintenanceType: 'temperature' as const,
-    frequency: 'weekly' as const,
-    estimatedDuration: 30,
-    checklist: [] as string[],
-    conservationPointId: '',
-    // Task specific
-    taskType: 'haccp_check' as const,
+    assignees: [] as string[],
     departmentId: '',
-    // Temperature reading specific
-    temperatureType: 'daily' as const,
-    targetTemperature: 0,
-    // Custom specific
-    customType: 'general' as const,
-    customData: '',
+    conservationPointId: '',
+    recurrence: 'weekly' as (typeof frequencyOptions)[number]['value'],
+    estimatedDuration: 60,
   })
 
-  const [checklistItem, setChecklistItem] = useState('')
   const [assigneeEmail, setAssigneeEmail] = useState('')
+  const [checklistItem, setChecklistItem] = useState('')
+  const [checklist, setChecklist] = useState<string[]>([])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const baseEvent = {
+    const startDate = formData.start ? new Date(formData.start) : new Date()
+    const endDate = formData.end ? new Date(formData.end) : undefined
+
+    const eventData: Partial<CalendarEvent> = {
       title: formData.title,
-      start: new Date(formData.start),
-      end: formData.end ? new Date(formData.end) : undefined,
+      description: formData.description,
+      start: startDate,
+      end: endDate,
       allDay: formData.allDay,
       type: formData.type,
-      description: formData.description,
+      status: 'pending',
       priority: formData.priority,
-      status: 'pending' as const,
-      assigned_to: formData.assignedTo,
-      department_id: formData.departmentId,
-      recurring: false,
-      backgroundColor:
-        eventTypes.find(t => t.value === formData.type)?.color || '#3B82F6',
-      borderColor:
-        eventTypes.find(t => t.value === formData.type)?.color || '#3B82F6',
-      textColor: '#FFFFFF',
+      assigned_to: formData.assignees,
+      department_id: formData.departmentId || undefined,
+      conservation_point_id: formData.conservationPointId || undefined,
+      recurring: formData.type === 'maintenance',
+      recurrence_pattern:
+        formData.type === 'maintenance'
+          ? {
+              frequency: formData.recurrence,
+              interval: 1,
+            }
+          : undefined,
       metadata: {},
-      created_at: new Date(),
-      updated_at: new Date(),
-      created_by: 'current-user',
-      company_id: 'default-company',
-    }
-
-    const specificProps = getSourceSpecificProps()
-    const eventData = {
-      ...baseEvent,
-      ...specificProps,
+      extendedProps: {
+        priority: formData.priority,
+        assignedTo: formData.assignees,
+        location: formData.location || undefined,
+        metadata: {
+          checklist: checklist.length ? checklist : undefined,
+          estimatedDuration: formData.estimatedDuration,
+        },
+      },
     }
 
     onCreate(eventData)
     onClose()
   }
 
-  const getSourceSpecificProps = () => {
-    switch (formData.type) {
-      case 'maintenance':
-        return {
-          maintenanceType: formData.maintenanceType,
-          frequency: formData.frequency,
-          estimatedDuration: formData.estimatedDuration,
-          checklist: formData.checklist,
-          conservationPointId: formData.conservationPointId || undefined,
-        }
-      case 'general_task':
-        return {
-          taskType: formData.taskType,
-          departmentId: formData.departmentId || undefined,
-          estimatedDuration: formData.estimatedDuration,
-        }
-      case 'temperature_reading':
-        return {
-          temperatureType: formData.temperatureType,
-          conservationPointId: formData.conservationPointId || undefined,
-          targetTemperature: formData.targetTemperature,
-        }
-      case 'custom':
-        return {
-          customType: formData.customType,
-          customData: formData.customData,
-        }
-      default:
-        return {}
-    }
-  }
+  const addAssignee = () => {
+    const normalized = assigneeEmail.trim()
+    if (!normalized || formData.assignees.includes(normalized)) return
 
-  const addChecklistItem = () => {
-    if (checklistItem.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        checklist: [...prev.checklist, checklistItem.trim()],
-      }))
-      setChecklistItem('')
-    }
-  }
-
-  const removeChecklistItem = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      checklist: prev.checklist.filter((_, i) => i !== index),
+      assignees: [...prev.assignees, normalized],
     }))
-  }
-
-  const addAssignee = () => {
-    if (assigneeEmail.trim() && !formData.assignedTo.includes(assigneeEmail)) {
-      setFormData(prev => ({
-        ...prev,
-        assignedTo: [...prev.assignedTo, assigneeEmail.trim()],
-      }))
-      setAssigneeEmail('')
-    }
+    setAssigneeEmail('')
   }
 
   const removeAssignee = (email: string) => {
     setFormData(prev => ({
       ...prev,
-      assignedTo: prev.assignedTo.filter(a => a !== email),
+      assignees: prev.assignees.filter(assignee => assignee !== email),
     }))
   }
 
-  const renderSourceSpecificFields = () => {
-    switch (formData.type) {
-      case 'maintenance':
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo Manutenzione
-                </label>
-                <select
-                  value={formData.maintenanceType}
-                  onChange={e =>
-                    setFormData(prev => ({
-                      ...prev,
-                      maintenanceType: e.target.value as any,
-                    }))
-                  }
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  {maintenanceTypes.map(type => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Frequenza
-                </label>
-                <select
-                  value={formData.frequency}
-                  onChange={e =>
-                    setFormData(prev => ({
-                      ...prev,
-                      frequency: e.target.value as any,
-                    }))
-                  }
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  {frequencies.map(freq => (
-                    <option key={freq.value} value={freq.value}>
-                      {freq.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+  const addChecklistItem = () => {
+    const normalized = checklistItem.trim()
+    if (!normalized) return
+    setChecklist(prev => [...prev, normalized])
+    setChecklistItem('')
+  }
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Durata Stimata (minuti)
-              </label>
-              <input
-                type="number"
-                value={formData.estimatedDuration}
-                onChange={e =>
-                  setFormData(prev => ({
-                    ...prev,
-                    estimatedDuration: parseInt(e.target.value) || 30,
-                  }))
-                }
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                min="5"
-                step="5"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Checklist
-              </label>
-              <div className="flex gap-2 mb-2">
-                <input
-                  type="text"
-                  value={checklistItem}
-                  onChange={e => setChecklistItem(e.target.value)}
-                  placeholder="Aggiungi elemento checklist"
-                  className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  onKeyPress={e =>
-                    e.key === 'Enter' &&
-                    (e.preventDefault(), addChecklistItem())
-                  }
-                />
-                <button
-                  type="button"
-                  onClick={addChecklistItem}
-                  className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-              {formData.checklist.length > 0 && (
-                <ul className="space-y-1">
-                  {formData.checklist.map((item, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center justify-between bg-gray-50 p-2 rounded"
-                    >
-                      <span className="text-sm">{item}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeChecklistItem(index)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        )
-
-      case 'temperature_reading':
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo Lettura Temperatura
-                </label>
-                <select
-                  value={formData.temperatureType}
-                  onChange={e =>
-                    setFormData(prev => ({
-                      ...prev,
-                      temperatureType: e.target.value as any,
-                    }))
-                  }
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="daily">Giornaliera</option>
-                  <option value="weekly">Settimanale</option>
-                  <option value="monthly">Mensile</option>
-                  <option value="quarterly">Trimestrale</option>
-                  <option value="yearly">Annuale</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Temperatura Target
-                </label>
-                <input
-                  type="number"
-                  value={formData.targetTemperature}
-                  onChange={e =>
-                    setFormData(prev => ({
-                      ...prev,
-                      targetTemperature: parseFloat(e.target.value) || 0,
-                    }))
-                  }
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  step="0.1"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Punto di Conservazione
-              </label>
-              <input
-                type="text"
-                value={formData.conservationPointId}
-                onChange={e =>
-                  setFormData(prev => ({
-                    ...prev,
-                    conservationPointId: e.target.value,
-                  }))
-                }
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="ID punto di conservazione"
-              />
-            </div>
-          </div>
-        )
-
-      case 'custom':
-        return (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo Personalizzato
-              </label>
-              <select
-                value={formData.customType}
-                onChange={e =>
-                  setFormData(prev => ({
-                    ...prev,
-                    customType: e.target.value as any,
-                  }))
-                }
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="general">Generale</option>
-                <option value="special">Speciale</option>
-                <option value="urgent">Urgente</option>
-                <option value="routine">Routine</option>
-                <option value="emergency">Emergenza</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dati Personalizzati
-              </label>
-              <textarea
-                value={formData.customData}
-                onChange={e =>
-                  setFormData(prev => ({ ...prev, customData: e.target.value }))
-                }
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Inserisci dati personalizzati..."
-                rows={3}
-              />
-            </div>
-          </div>
-        )
-
-      default:
-        return null
-    }
+  const removeChecklistItem = (index: number) => {
+    setChecklist(prev => prev.filter((_, idx) => idx !== index))
   }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
-          {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900">
               Nuovo Evento
@@ -425,9 +151,7 @@ export function CreateEventModal({
             </button>
           </div>
 
-          {/* Content */}
           <div className="p-6 space-y-6">
-            {/* Basic Info */}
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -457,7 +181,7 @@ export function CreateEventModal({
                       onClick={() =>
                         setFormData(prev => ({
                           ...prev,
-                          type: type.value as CalendarEventType,
+                          type: type.value,
                         }))
                       }
                       className={`p-3 border-2 rounded-lg text-sm font-medium transition-colors ${
@@ -497,7 +221,6 @@ export function CreateEventModal({
               </div>
             </div>
 
-            {/* Date and Time */}
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -545,7 +268,6 @@ export function CreateEventModal({
               </div>
             </div>
 
-            {/* Priority and Location */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -556,7 +278,7 @@ export function CreateEventModal({
                   onChange={e =>
                     setFormData(prev => ({
                       ...prev,
-                      priority: e.target.value as any,
+                      priority: e.target.value as CalendarEvent['priority'],
                     }))
                   }
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -584,7 +306,6 @@ export function CreateEventModal({
               </div>
             </div>
 
-            {/* Assigned Users */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Assegna a
@@ -596,9 +317,12 @@ export function CreateEventModal({
                   onChange={e => setAssigneeEmail(e.target.value)}
                   placeholder="Email utente"
                   className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  onKeyPress={e =>
-                    e.key === 'Enter' && (e.preventDefault(), addAssignee())
-                  }
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      addAssignee()
+                    }
+                  }}
                 />
                 <button
                   type="button"
@@ -608,47 +332,188 @@ export function CreateEventModal({
                   <Plus className="w-4 h-4" />
                 </button>
               </div>
-              {formData.assignedTo.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {formData.assignedTo.map(email => (
-                    <div
+              {formData.assignees.length > 0 && (
+                <ul className="space-y-1">
+                  {formData.assignees.map(email => (
+                    <li
                       key={email}
-                      className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm"
+                      className="flex items-center justify-between bg-gray-50 p-2 rounded"
                     >
-                      <User className="w-3 h-3" />
-                      {email}
+                      <span className="text-sm">{email}</span>
                       <button
                         type="button"
                         onClick={() => removeAssignee(email)}
-                        className="ml-1 text-blue-600 hover:text-blue-800"
+                        className="text-red-600 hover:text-red-800"
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-4 h-4" />
                       </button>
-                    </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
             </div>
 
-            {/* Source-specific fields */}
-            {renderSourceSpecificFields()}
+            {formData.type === 'maintenance' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Frequenza
+                  </label>
+                  <select
+                    value={formData.recurrence}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        recurrence: e.target
+                          .value as (typeof frequencyOptions)[number]['value'],
+                      }))
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {frequencyOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Durata Stimata (minuti)
+                  </label>
+                  <input
+                    type="number"
+                    min={5}
+                    step={5}
+                    value={formData.estimatedDuration}
+                    onChange={e => {
+                      const value = parseInt(e.target.value, 10)
+                      setFormData(prev => ({
+                        ...prev,
+                        estimatedDuration: Number.isNaN(value)
+                          ? prev.estimatedDuration
+                          : value,
+                      }))
+                    }}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Checklist
+                  </label>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={checklistItem}
+                      onChange={e => setChecklistItem(e.target.value)}
+                      placeholder="Aggiungi elemento checklist"
+                      className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          addChecklistItem()
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={addChecklistItem}
+                      className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {checklist.length > 0 && (
+                    <ul className="space-y-1">
+                      {checklist.map((item, index) => (
+                        <li
+                          key={`check-${item}-${index}`}
+                          className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                        >
+                          <span className="text-sm">{item}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeChecklistItem(index)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {formData.type === 'temperature_reading' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Punto di Conservazione
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.conservationPointId}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        conservationPointId: e.target.value,
+                      }))
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="ID punto di conservazione"
+                  />
+                </div>
+              </div>
+            )}
+
+            {formData.type === 'custom' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Dettagli Evento Personalizzato
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                  rows={4}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Inserisci i dettagli dell'evento personalizzato"
+                />
+              </div>
+            )}
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              Annulla
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Crea Evento
-            </button>
+          <div className="flex justify-between items-center p-6 border-t border-gray-200">
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <User className="w-4 h-4" />
+              {formData.assignees.length > 0
+                ? `${formData.assignees.length} assegnatari`
+                : 'Nessun assegnatario'}
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                Annulla
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+              >
+                Crea Evento
+              </button>
+            </div>
           </div>
         </form>
       </div>

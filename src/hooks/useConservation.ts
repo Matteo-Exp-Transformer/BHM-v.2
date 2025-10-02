@@ -107,16 +107,9 @@ export function useConservation(options: UseConservationOptions = {}) {
           ),
           maintenance_tasks: point.maintenance_tasks?.map((task: any) => ({
             ...task,
-            next_due_date: new Date(task.next_due_date),
+            next_due: new Date(task.next_due),
             created_at: new Date(task.created_at),
             updated_at: new Date(task.updated_at),
-            completions: task.completions?.map((completion: any) => ({
-              ...completion,
-              completed_at: new Date(completion.completed_at),
-              next_due_date: completion.next_due_date
-                ? new Date(completion.next_due_date)
-                : undefined,
-            })),
           })),
         })) || []
       )
@@ -160,13 +153,20 @@ export function useConservation(options: UseConservationOptions = {}) {
       if (temperatureFilter.status && temperatureFilter.status.length > 0) {
         query = query.in('status', temperatureFilter.status)
       }
-      if (temperatureFilter.method && temperatureFilter.method.length > 0) {
-        query = query.in('method', temperatureFilter.method)
+      if (temperatureFilter.method) {
+        query = query.eq('method', temperatureFilter.method)
       }
-      if (temperatureFilter.date_range) {
-        query = query
-          .gte('recorded_at', temperatureFilter.date_range.start.toISOString())
-          .lte('recorded_at', temperatureFilter.date_range.end.toISOString())
+      if (temperatureFilter.date_from) {
+        query = query.gte(
+          'recorded_at',
+          temperatureFilter.date_from.toISOString()
+        )
+      }
+      if (temperatureFilter.date_to) {
+        query = query.lte(
+          'recorded_at',
+          temperatureFilter.date_to.toISOString()
+        )
       }
       if (temperatureFilter.recorded_by) {
         query = query.eq('recorded_by', temperatureFilter.recorded_by)
@@ -209,14 +209,10 @@ export function useConservation(options: UseConservationOptions = {}) {
           `
           *,
           conservation_point:conservation_points(*),
-          assigned_user:staff(id, name),
-          completions:maintenance_completions(
-            *,
-            completed_by_user:user_profiles(id, name)
-          )
+          assigned_user:staff(id, name)
         `
         )
-        .order('next_due_date', { ascending: true })
+        .order('next_due', { ascending: true })
 
       // Apply filters
       if (maintenanceFilter.conservation_point_id) {
@@ -225,23 +221,20 @@ export function useConservation(options: UseConservationOptions = {}) {
           maintenanceFilter.conservation_point_id
         )
       }
-      if (maintenanceFilter.kind && maintenanceFilter.kind.length > 0) {
-        query = query.in('kind', maintenanceFilter.kind)
+      if (maintenanceFilter.type) {
+        query = query.eq('type', maintenanceFilter.type)
       }
-      if (
-        maintenanceFilter.frequency &&
-        maintenanceFilter.frequency.length > 0
-      ) {
-        query = query.in('frequency', maintenanceFilter.frequency)
+      if (maintenanceFilter.frequency) {
+        query = query.eq('frequency', maintenanceFilter.frequency)
       }
       if (maintenanceFilter.assigned_to) {
         query = query.eq('assigned_to', maintenanceFilter.assigned_to)
       }
-      if (maintenanceFilter.is_active !== undefined) {
-        query = query.eq('is_active', maintenanceFilter.is_active)
+      if (maintenanceFilter.status) {
+        query = query.eq('status', maintenanceFilter.status)
       }
-      if (maintenanceFilter.overdue) {
-        query = query.lt('next_due_date', new Date().toISOString())
+      if (maintenanceFilter.priority) {
+        query = query.eq('priority', maintenanceFilter.priority)
       }
 
       const { data, error } = await query
@@ -250,16 +243,9 @@ export function useConservation(options: UseConservationOptions = {}) {
       return (
         data?.map((task: any) => ({
           ...task,
-          next_due_date: new Date(task.next_due_date),
+          next_due: new Date(task.next_due),
           created_at: new Date(task.created_at),
           updated_at: new Date(task.updated_at),
-          completions: task.completions?.map((completion: any) => ({
-            ...completion,
-            completed_at: new Date(completion.completed_at),
-            next_due_date: completion.next_due_date
-              ? new Date(completion.next_due_date)
-              : undefined,
-          })),
         })) || []
       )
     },
@@ -295,10 +281,7 @@ export function useConservation(options: UseConservationOptions = {}) {
 
     const totalTasks = maintenanceTasks.length
     const completedTasks = maintenanceTasks.filter(
-      t =>
-        t.completions &&
-        t.completions.length > 0 &&
-        t.completions[0].status === 'completed'
+      task => task.status === 'completed'
     ).length
     const maintenance_compliance_rate =
       totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
@@ -306,8 +289,14 @@ export function useConservation(options: UseConservationOptions = {}) {
     const alerts_count =
       conservationPoints.filter(p => p.status !== 'normal').length +
       temperatureReadings.filter(r => r.status === 'critical').length +
-      maintenanceTasks.filter(t => new Date(t.next_due_date) < new Date())
-        .length
+      maintenanceTasks.filter(task => {
+        if (!task.next_due) return false
+        const nextDueDate =
+          task.next_due instanceof Date
+            ? task.next_due
+            : new Date(task.next_due)
+        return !Number.isNaN(nextDueDate.getTime()) && nextDueDate < new Date()
+      }).length
 
     return {
       total_points,
@@ -434,30 +423,19 @@ export function useConservation(options: UseConservationOptions = {}) {
         }
       }
 
-      const target_temperature =
-        data.target_temperature || conservationPoint?.setpoint_temp
       const tolerance = getToleranceRange(conservationPoint?.type || 'fridge')
 
       const reading_data = {
         ...data,
         id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         company_id: 'temp-company',
-        target_temperature,
-        tolerance_range: {
-          min: data.tolerance_range_min || target_temperature - tolerance,
-          max: data.tolerance_range_max || target_temperature + tolerance,
-        },
-        tolerance_range_min:
-          data.tolerance_range_min || target_temperature - tolerance,
-        tolerance_range_max:
-          data.tolerance_range_max || target_temperature + tolerance,
         status: determineTemperatureStatus(
           data.temperature,
-          target_temperature - tolerance,
-          target_temperature + tolerance
+          (conservationPoint?.setpoint_temp ?? data.temperature) - tolerance,
+          (conservationPoint?.setpoint_temp ?? data.temperature) + tolerance
         ),
         recorded_by: 'temp-user',
-        validation_status: 'pending' as any,
+        validation_status: 'pending' as const,
         recorded_at: new Date(),
         created_at: new Date(),
       }
@@ -506,14 +484,26 @@ export function useConservation(options: UseConservationOptions = {}) {
     mutationFn: async (
       data: CreateMaintenanceTaskRequest
     ): Promise<MaintenanceTask> => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
       const { data: result, error } = await supabase
         .from('maintenance_tasks')
         .insert({
-          ...data,
-          estimated_duration: data.estimated_duration || 30,
-          assignment_type: data.assignment_type || 'user',
-          checklist: data.checklist || [],
-          is_active: true,
+          conservation_point_id: data.conservation_point_id,
+          title: data.name,
+          description: data.description,
+          type: data.type,
+          frequency: data.frequency,
+          estimated_duration: data.estimated_duration,
+          next_due: data.next_due.toISOString(),
+          assigned_to: data.assigned_to,
+          priority: data.priority,
+          checklist: data.instructions,
+          company_id: user.company_id,
+          status: 'scheduled',
         })
         .select()
         .single()
@@ -521,7 +511,7 @@ export function useConservation(options: UseConservationOptions = {}) {
       if (error) throw error
       return {
         ...result,
-        next_due_date: new Date(result.next_due_date),
+        next_due: new Date(result.next_due),
         created_at: new Date(result.created_at),
         updated_at: new Date(result.updated_at),
       }
@@ -535,32 +525,30 @@ export function useConservation(options: UseConservationOptions = {}) {
     mutationFn: async (
       data: CreateMaintenanceCompletionRequest
     ): Promise<MaintenanceCompletion> => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
       const { data: result, error } = await supabase
         .from('maintenance_completions')
         .insert({
-          ...data,
-          checklist_completed: data.checklist_completed || [],
-          photo_evidence: data.photo_evidence || [],
+          maintenance_task_id: data.maintenance_task_id,
+          notes: data.notes,
+          photos: data.photos,
+          next_due: data.next_due?.toISOString(),
+          company_id: user.company_id,
+          completed_at: new Date().toISOString(),
         })
         .select()
         .single()
 
       if (error) throw error
 
-      // Update next due date for the task if provided
-      if (data.next_due_date) {
-        await supabase
-          .from('maintenance_tasks')
-          .update({ next_due_date: data.next_due_date })
-          .eq('id', data.maintenance_task_id)
-      }
-
       return {
         ...result,
         completed_at: new Date(result.completed_at),
-        next_due_date: result.next_due_date
-          ? new Date(result.next_due_date)
-          : undefined,
+        next_due: result.next_due ? new Date(result.next_due) : undefined,
       }
     },
     onSuccess: () => {
@@ -590,8 +578,9 @@ export function useConservation(options: UseConservationOptions = {}) {
     min: number,
     max: number
   ): TemperatureReading['status'] => {
-    if (temperature < min - 2 || temperature > max + 2) return 'critical'
-    if (temperature < min || temperature > max) return 'warning'
+    if (temperature < min) return 'critical'
+    if (temperature > max) return 'critical'
+    if (temperature === min || temperature === max) return 'warning'
     return 'compliant'
   }
 

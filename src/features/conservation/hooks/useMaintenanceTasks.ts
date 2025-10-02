@@ -1,13 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import {
+import type {
   MaintenanceTask,
   MaintenanceCompletion,
-  // MaintenanceType,
-  // MaintenanceFrequency,
-  MAINTENANCE_TASK_TYPES,
+  MaintenanceStats,
 } from '@/types/conservation'
+import { MAINTENANCE_TASK_TYPES } from '@/types/conservation'
 import { toast } from 'react-toastify'
 
 export function useMaintenanceTasks(conservationPointId?: string) {
@@ -28,8 +27,9 @@ export function useMaintenanceTasks(conservationPointId?: string) {
       estimated_duration: 15,
       priority: 'high',
       status: 'scheduled',
-      instructions:
-        MAINTENANCE_TASK_TYPES.temperature_calibration.defaultChecklist,
+      checklist: [
+        ...MAINTENANCE_TASK_TYPES.temperature_calibration.defaultChecklist,
+      ],
       created_at: new Date(),
       updated_at: new Date(),
       assigned_user: {
@@ -49,7 +49,7 @@ export function useMaintenanceTasks(conservationPointId?: string) {
       estimated_duration: 30,
       priority: 'medium',
       status: 'scheduled',
-      instructions: MAINTENANCE_TASK_TYPES.deep_cleaning.defaultChecklist,
+      checklist: [...MAINTENANCE_TASK_TYPES.deep_cleaning.defaultChecklist],
       created_at: new Date(),
       updated_at: new Date(),
       assigned_user: {
@@ -69,7 +69,7 @@ export function useMaintenanceTasks(conservationPointId?: string) {
       estimated_duration: 45,
       priority: 'high',
       status: 'overdue',
-      instructions: MAINTENANCE_TASK_TYPES.defrosting.defaultChecklist,
+      checklist: [...MAINTENANCE_TASK_TYPES.defrosting.defaultChecklist],
       created_at: new Date(),
       updated_at: new Date(),
       assigned_user: {
@@ -89,7 +89,7 @@ export function useMaintenanceTasks(conservationPointId?: string) {
       estimated_duration: 20,
       priority: 'medium',
       status: 'scheduled',
-      instructions: MAINTENANCE_TASK_TYPES.deep_cleaning.defaultChecklist,
+      checklist: [...MAINTENANCE_TASK_TYPES.deep_cleaning.defaultChecklist],
       created_at: new Date(),
       updated_at: new Date(),
       assigned_user: {
@@ -109,7 +109,7 @@ export function useMaintenanceTasks(conservationPointId?: string) {
       console.log('🔧 Using mock data for maintenance tasks')
       if (conservationPointId) {
         return mockTasks.filter(
-          t => t.conservation_point_id === conservationPointId
+          task => task.conservation_point_id === conservationPointId
         )
       }
       return mockTasks
@@ -131,6 +131,7 @@ export function useMaintenanceTasks(conservationPointId?: string) {
         .insert([
           {
             ...data,
+            checklist: data.checklist ?? [],
             company_id: user.company_id,
           },
         ])
@@ -246,50 +247,37 @@ export function useMaintenanceTasks(conservationPointId?: string) {
     return 'scheduled'
   }
 
-  // Statistics
-  const stats = {
-    total: maintenanceTasks?.length || 0,
-    overdue:
-      maintenanceTasks?.filter(t => getTaskStatus(t) === 'overdue').length || 0,
-    pending:
-      maintenanceTasks?.filter(t => getTaskStatus(t) === 'pending').length || 0,
-    scheduled:
-      maintenanceTasks?.filter(t => getTaskStatus(t) === 'scheduled').length ||
-      0,
-    byType: {
-      temperature_calibration:
-        maintenanceTasks?.filter(t => t.type === 'temperature_calibration')
-          .length || 0,
-      deep_cleaning:
-        maintenanceTasks?.filter(t => t.type === 'deep_cleaning').length || 0,
-      defrosting:
-        maintenanceTasks?.filter(t => t.type === 'defrosting').length || 0,
-      filter_replacement:
-        maintenanceTasks?.filter(t => t.type === 'filter_replacement').length ||
-        0,
-      seal_inspection:
-        maintenanceTasks?.filter(t => t.type === 'seal_inspection').length || 0,
-      compressor_check:
-        maintenanceTasks?.filter(t => t.type === 'compressor_check').length ||
-        0,
-      general_inspection:
-        maintenanceTasks?.filter(t => t.type === 'general_inspection').length ||
-        0,
-      other: maintenanceTasks?.filter(t => t.type === 'other').length || 0,
-    },
-    byFrequency: {
-      daily: maintenanceTasks?.filter(t => t.frequency === 'daily').length || 0,
-      weekly:
-        maintenanceTasks?.filter(t => t.frequency === 'weekly').length || 0,
-      monthly:
-        maintenanceTasks?.filter(t => t.frequency === 'monthly').length || 0,
-      custom:
-        maintenanceTasks?.filter(t => t.frequency === 'custom').length || 0,
-    },
+  const tasks = (maintenanceTasks ?? []) as MaintenanceTask[]
+
+  const stats: MaintenanceStats = {
+    total_tasks: tasks.length,
+    completed_tasks: tasks.filter(task => task.status === 'completed').length,
+    overdue_tasks: tasks.filter(task => getTaskStatus(task) === 'overdue')
+      .length,
+    completion_rate: tasks.length
+      ? (tasks.filter(task => task.status === 'completed').length /
+          tasks.length) *
+        100
+      : 0,
+    average_completion_time: 0,
+    tasks_by_type: tasks.reduce<MaintenanceStats['tasks_by_type']>(
+      (acc, task) => {
+        acc[task.type] = (acc[task.type] ?? 0) + 1
+        return acc
+      },
+      {} as MaintenanceStats['tasks_by_type']
+    ),
+    upcoming_tasks: tasks
+      .filter(task => getTaskStatus(task) !== 'overdue')
+      .sort(
+        (a, b) =>
+          new Date(a.next_due).getTime() - new Date(b.next_due).getTime()
+      )
+      .slice(0, 5),
   }
 
   return {
-    maintenanceTasks: maintenanceTasks || [],
+    maintenanceTasks: tasks,
     isLoading,
     error,
     stats,

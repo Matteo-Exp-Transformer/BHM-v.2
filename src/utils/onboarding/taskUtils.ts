@@ -11,23 +11,24 @@ import type {
 export const HACCP_TASK_CATEGORIES: {
   value: HaccpTaskCategory
   label: string
+  icon: string
 }[] = [
-  { value: 'temperature', label: 'Controllo Temperature' },
-  { value: 'hygiene', label: 'Igiene e Sanificazione' },
-  { value: 'maintenance', label: 'Manutenzione' },
-  { value: 'documentation', label: 'Documentazione' },
-  { value: 'training', label: 'Formazione' },
-  { value: 'other', label: 'Altro' },
+  { value: 'temperature', label: 'Controllo Temperature', icon: '🌡️' },
+  { value: 'hygiene', label: 'Igiene e Sanificazione', icon: '🧼' },
+  { value: 'maintenance', label: 'Manutenzione', icon: '🛠️' },
+  { value: 'documentation', label: 'Documentazione', icon: '📄' },
+  { value: 'training', label: 'Formazione', icon: '🎓' },
+  { value: 'other', label: 'Altro', icon: '📝' },
 ]
 
 export const TASK_FREQUENCIES: { value: TaskFrequency; label: string }[] = [
-  { value: 'hourly', label: 'Ogni ora' },
   { value: 'daily', label: 'Giornaliera' },
   { value: 'weekly', label: 'Settimanale' },
   { value: 'monthly', label: 'Mensile' },
   { value: 'quarterly', label: 'Trimestrale' },
-  { value: 'annually', label: 'Annuale' },
+  { value: 'annual', label: 'Annuale' },
   { value: 'custom', label: 'Personalizzata' },
+  { value: 'as_needed', label: 'Al bisogno' },
 ]
 
 export const TASK_PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
@@ -43,13 +44,13 @@ const taskSchema = z.object({
   name: z.string().min(2, 'Il nome del task è obbligatorio'),
   description: z.string().optional(),
   frequency: z.enum([
-    'hourly',
     'daily',
     'weekly',
     'monthly',
     'quarterly',
-    'annually',
+    'annual',
     'custom',
+    'as_needed',
   ]),
   departmentId: z.string().optional(),
   conservationPointId: z.string().optional(),

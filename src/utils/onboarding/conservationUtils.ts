@@ -1,6 +1,12 @@
 import { z } from 'zod'
 
-import type { ConservationPoint, MaintenanceTask } from '@/types/onboarding'
+import type {
+  ConservationPoint,
+  MaintenanceTask,
+  MaintenanceTaskType,
+  TaskFrequency,
+} from '@/types/onboarding'
+import { MAINTENANCE_TASK_TYPES } from '@/types/conservation'
 
 export const CONSERVATION_POINT_TYPES = {
   ambient: {
@@ -86,6 +92,40 @@ export const CONSERVATION_CATEGORIES = [
   },
 ]
 
+const maintenanceTaskTypeValues = Object.keys(MAINTENANCE_TASK_TYPES) as [
+  MaintenanceTaskType,
+  ...MaintenanceTaskType[],
+]
+
+const taskFrequencyValues: [TaskFrequency, ...TaskFrequency[]] = [
+  'daily',
+  'weekly',
+  'monthly',
+  'quarterly',
+  'annual',
+  'custom',
+  'as_needed',
+]
+
+const maintenanceTaskSchema = z.object({
+  id: z.string(),
+  conservationPointId: z.string().min(1, 'Associa il punto di conservazione'),
+  conservationPointName: z.string().optional(),
+  title: z.string().min(2, 'Il titolo è obbligatorio'),
+  type: z.enum(maintenanceTaskTypeValues),
+  frequency: z.enum(taskFrequencyValues),
+  assignedRole: z.string().optional(),
+  assignedStaffIds: z.array(z.string()).default([]),
+  notes: z.string().optional(),
+  estimatedDuration: z.number().min(1).optional(),
+  priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+  nextDue: z.string().optional(),
+  instructions: z.array(z.string()).optional(),
+  status: z
+    .enum(['scheduled', 'in_progress', 'completed', 'overdue', 'skipped'])
+    .optional(),
+})
+
 const conservationPointSchema = z.object({
   id: z.string(),
   name: z.string().min(2, 'Il nome deve essere di almeno 2 caratteri'),
@@ -102,22 +142,7 @@ const conservationPointSchema = z.object({
     .array(z.string())
     .min(1, 'Seleziona almeno una categoria'),
   source: z.enum(['manual', 'prefill', 'import']),
-  maintenanceTasks: z
-    .array(
-      z.object({
-        id: z.string(),
-        title: z.string().min(2, 'Il titolo è obbligatorio'),
-        type: z.string(),
-        frequency: z.string(),
-        estimatedDuration: z.number().optional(),
-        priority: z.string().optional(),
-        assignedStaffIds: z.array(z.string()).optional(),
-        nextDue: z.string().optional(),
-        instructions: z.array(z.string()).optional(),
-        notes: z.string().optional(),
-      })
-    )
-    .optional(),
+  maintenanceTasks: z.array(maintenanceTaskSchema).optional(),
 })
 
 export const validateConservationPoint = (
@@ -195,28 +220,27 @@ export const validateConservationPoint = (
 export const validateMaintenanceTask = (
   task: MaintenanceTask
 ): { success: boolean; errors?: Record<string, string> } => {
-  const errors: Record<string, string> = {}
+  const parsed = maintenanceTaskSchema.safeParse(task)
 
-  if (!task.title || task.title.trim().length < 2) {
-    errors.title = 'Inserisci un titolo per il task di manutenzione'
+  if (!parsed.success) {
+    const errors: Record<string, string> = {}
+    parsed.error.issues.forEach(issue => {
+      const field = issue.path.join('.')
+      errors[field] = issue.message
+    })
+    return { success: false, errors }
   }
 
-  if (!task.type) {
-    errors.type = 'Seleziona un tipo di manutenzione'
+  if (!task.nextDue || task.nextDue.trim().length === 0) {
+    return {
+      success: false,
+      errors: {
+        nextDue: 'Specificare la prossima scadenza è obbligatorio',
+      },
+    }
   }
 
-  if (!task.frequency) {
-    errors.frequency = 'Indica la frequenza del task'
-  }
-
-  if (!task.nextDue || task.nextDue.trim() === '') {
-    errors.nextDue = 'Specificare la prossima scadenza è obbligatorio'
-  }
-
-  return {
-    success: Object.keys(errors).length === 0,
-    errors: Object.keys(errors).length > 0 ? errors : undefined,
-  }
+  return { success: true }
 }
 
 export const generateConservationPointId = () =>
@@ -232,8 +256,9 @@ export const createDraftConservationPoint = (
       maintenanceTasks: point.maintenanceTasks
         ? point.maintenanceTasks.map(task => ({
             ...task,
-            assignedStaffIds: [...(task.assignedStaffIds ?? [])],
+            assignedStaffIds: [...task.assignedStaffIds],
             instructions: [...(task.instructions ?? [])],
+            status: task.status ?? 'scheduled',
           }))
         : [],
     }
@@ -273,6 +298,10 @@ export const createDraftMaintenanceTask = (): MaintenanceTask => ({
   title: 'Nuova manutenzione',
   type: 'general_inspection',
   frequency: 'weekly',
+  priority: 'medium',
+  estimatedDuration: 30,
+  instructions: [],
+  status: 'scheduled',
   assignedStaffIds: [],
   notes: '',
 })
@@ -287,12 +316,13 @@ export const normalizeMaintenanceTask = (
   type: task.type,
   frequency: task.frequency,
   assignedRole: task.assignedRole,
-  assignedStaffIds: task.assignedStaffIds ?? [],
+  assignedStaffIds: [...task.assignedStaffIds],
   notes: task.notes,
   estimatedDuration: task.estimatedDuration,
   priority: task.priority,
   nextDue: task.nextDue,
-  instructions: task.instructions ?? [],
+  instructions: [...(task.instructions ?? [])],
+  status: task.status ?? 'scheduled',
 })
 
 export const getCategoryById = (id: string) =>

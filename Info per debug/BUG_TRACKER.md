@@ -69,6 +69,24 @@ _Nessuno_
 - **Status**: 📋 Aperto
 - **Priorità**: Media
 
+#### B006 - Errori TypeScript modulo Calendar (nuovo)
+
+- **Descrizione**: Proprietà `weekStart`/`reminderMinutes` non allineate al tipo `CalendarSettings`; riferimento a `TypedCalendarEvent` e object literal `task` non più validi.
+- **File coinvolti**: `src/features/calendar/CalendarSettings.tsx`, `src/features/calendar/CreateEventModal.tsx`, `src/features/calendar/hooks/useCalendarEvents.ts`.
+- **Impatto**: Type-check fallisce impedendo il push; nessun blocco runtime noto.
+- **Assegnazione**: 🎯 CURSOR (allineamento tipizzazioni calendar).
+- **Status**: 📋 Aperto (analisi in corso).
+- **Priorità**: Media.
+
+#### B007 - Errori TypeScript in moduli legacy (inventory, automation, multi-tenant, security, offline)
+
+- **Descrizione**: Errori di compilazione persistenti nei moduli non direttamente correlati a onboarding/calendar/conservation. Sono emersi durante `npm run type-check -- --pretty false --skipLibCheck --noEmit` del 02/10/2025, includendo `implicit any`, duplicati di identificatori e tipizzazioni mancanti nei servizi automation / multi-tenant / security, oltre a hook export/offline.
+- **File coinvolti**: `src/features/inventory/hooks/useProducts.ts`, `src/features/inventory/InventoryPage.tsx`, `src/hooks/useExportManager.ts`, `src/hooks/useRealtime.ts`, `src/services/automation/*`, `src/services/multi-tenant/*`, `src/services/security/*`, `src/services/offline/*`, `src/services/export/*`, `src/services/pwa/*`, `src/utils/performance.ts`.
+- **Impatto**: Il `type-check` globale fallisce ma non blocca il flusso onboarding/calendar/conservation completato. Richiede refactor dedicato multi-modulo.
+- **Assegnazione**: 🎯 CLAUDE / Team legacy
+- **Status**: 📋 Aperto
+- **Priorità**: Media
+
 ## ✅ BUG RISOLTI (Ultimi 10)
 
 ### 25/01/2025 - CORS Conflict Sentry/Clerk - RISOLTO

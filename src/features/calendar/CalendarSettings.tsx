@@ -26,7 +26,10 @@ export function CalendarSettings({
   settings,
   onSettingsChange,
 }: CalendarSettingsProps) {
-  const updateBusinessHours = (field: string, value: any) => {
+  const updateBusinessHours = (
+    field: keyof CalendarSettingsType['businessHours'],
+    value: CalendarSettingsType['businessHours'][typeof field]
+  ) => {
     onSettingsChange({
       businessHours: {
         ...settings.businessHours,
@@ -44,7 +47,10 @@ export function CalendarSettings({
     })
   }
 
-  const updateNotifications = (field: string, value: any) => {
+  const updateNotifications = (
+    field: keyof CalendarSettingsType['notifications'],
+    value: CalendarSettingsType['notifications'][typeof field]
+  ) => {
     onSettingsChange({
       notifications: {
         ...settings.notifications,
@@ -69,7 +75,10 @@ export function CalendarSettings({
             <select
               value={settings.defaultView}
               onChange={e =>
-                onSettingsChange({ defaultView: e.target.value as any })
+                onSettingsChange({
+                  defaultView: e.target
+                    .value as CalendarSettingsType['defaultView'],
+                })
               }
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -86,12 +95,14 @@ export function CalendarSettings({
               Inizio Settimana
             </label>
             <select
-              value={settings.weekStart}
-              onChange={e =>
+              value={settings.weekStartsOn}
+              onChange={e => {
+                const value = parseInt(e.target.value, 10) as 0 | 1
                 onSettingsChange({
-                  weekStart: parseInt(e.target.value) as 0 | 1,
+                  weekStartsOn: value,
+                  firstDayOfWeek: value,
                 })
-              }
+              }}
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               {weekStartOptions.map(option => (
@@ -118,7 +129,10 @@ export function CalendarSettings({
             <select
               value={settings.timeFormat}
               onChange={e =>
-                onSettingsChange({ timeFormat: e.target.value as any })
+                onSettingsChange({
+                  timeFormat: e.target
+                    .value as CalendarSettingsType['timeFormat'],
+                })
               }
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -222,19 +236,17 @@ export function CalendarSettings({
           onClick={() => {
             const defaultSettings: CalendarSettingsType = {
               defaultView: 'dayGridMonth',
-              weekStart: 1,
+              weekStartsOn: 1,
               timeFormat: '24h',
+              firstDayOfWeek: 1,
               businessHours: {
-                enabled: true,
                 daysOfWeek: [1, 2, 3, 4, 5],
                 startTime: '08:00',
                 endTime: '18:00',
               },
               notifications: {
                 enabled: true,
-                reminderMinutes: [15, 30],
-                emailNotifications: true,
-                pushNotifications: true,
+                defaultTimings: ['minutes_before', 'hours_before'],
               },
               colorScheme: {
                 maintenance: '#3B82F6',

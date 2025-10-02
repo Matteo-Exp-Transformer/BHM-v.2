@@ -7,23 +7,10 @@ import {
   FileText,
   Calendar,
 } from 'lucide-react'
-
-interface BusinessData {
-  name: string
-  address: string
-  phone: string
-  email: string
-  vat_number: string
-  business_type: string
-  established_date: string
-  license_number: string
-}
-
-interface BusinessInfoStepProps {
-  data?: BusinessData
-  onUpdate: (data: BusinessData) => void
-  onValidChange: (isValid: boolean) => void
-}
+import type {
+  BusinessInfoData,
+  BusinessInfoStepProps,
+} from '@/types/onboarding'
 
 const BUSINESS_TYPES = [
   'ristorante',
@@ -41,7 +28,7 @@ const BusinessInfoStep = ({
   onUpdate,
   onValidChange,
 }: BusinessInfoStepProps) => {
-  const formData: BusinessData = {
+  const formData: BusinessInfoData = {
     name: '',
     address: '',
     phone: '',
@@ -55,7 +42,7 @@ const BusinessInfoStep = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const updateField = (field: keyof BusinessData, value: string) => {
+  const updateField = (field: keyof BusinessInfoData, value: string) => {
     onUpdate({
       ...formData,
       [field]: value,
@@ -106,12 +93,12 @@ const BusinessInfoStep = ({
     setErrors(newErrors)
     onValidChange(
       Object.keys(newErrors).length === 0 &&
-        dataToValidate.name.trim() &&
-        dataToValidate.address.trim()
+        !!dataToValidate.name.trim() &&
+        !!dataToValidate.address.trim()
     )
   }, [formData, onValidChange])
 
-  const handleInputChange = (field: keyof BusinessData, value: string) => {
+  const handleInputChange = (field: keyof BusinessInfoData, value: string) => {
     updateField(field, value)
   }
 

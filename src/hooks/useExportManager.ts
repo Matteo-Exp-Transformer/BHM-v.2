@@ -17,6 +17,19 @@ import {
 import { useAuth } from './useAuth'
 import { toast } from 'react-toastify'
 
+interface DateRange {
+  start: Date
+  end: Date
+}
+
+export interface HaccpReportConfig {
+  dateRange?: DateRange
+  reportType?: Parameters<typeof haccpReportGenerator.generateReport>[0]['reportType']
+  includeCharts?: boolean
+  language?: Parameters<typeof haccpReportGenerator.generateReport>[0]['language']
+  sections?: Parameters<typeof haccpReportGenerator.generateReport>[0]['sections']
+}
+
 export interface ExportProgress {
   status: 'idle' | 'generating' | 'downloading' | 'complete' | 'error'
   progress: number
@@ -24,28 +37,18 @@ export interface ExportProgress {
 }
 
 export interface UseExportManagerReturn {
-  // Export actions
-  exportHACCPReport: (config: any) => Promise<void>
+  exportHACCPReport: (config: HaccpReportConfig) => Promise<void>
   exportExcelData: (config: ExcelExportConfig) => Promise<void>
-  exportCSV: (
-    table: string,
-    dateRange: { start: Date; end: Date }
-  ) => Promise<void>
-
-  // Email scheduling
+  exportCSV: (table: string, dateRange: DateRange) => Promise<void>
   schedules: EmailSchedule[]
   createSchedule: (
     schedule: Omit<EmailSchedule, 'id' | 'createdAt' | 'nextSend'>
-  ) => Promise<void>
+  ) => Promise<string>
   updateSchedule: (id: string, updates: Partial<EmailSchedule>) => Promise<void>
   deleteSchedule: (id: string) => Promise<void>
-
-  // Status
   exportProgress: ExportProgress
   isExporting: boolean
   lastExportError?: string
-
-  // Utilities
   downloadBlob: (blob: Blob, fileName: string) => void
   getRecommendedSchedules: () => EmailSchedule[]
 }
@@ -61,7 +64,6 @@ export function useExportManager(): UseExportManagerReturn {
 
   const [lastExportError, setLastExportError] = useState<string>()
 
-  // Fetch email schedules
   const { data: schedules = [] } = useQuery({
     queryKey: ['email-schedules', companyId],
     queryFn: async () => {
@@ -69,12 +71,11 @@ export function useExportManager(): UseExportManagerReturn {
       return emailScheduler.getSchedules(companyId)
     },
     enabled: !!companyId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   })
 
-  // Export HACCP PDF Report
   const exportHACCPReport = useCallback(
-    async (config: any) => {
+    async (config: HaccpReportConfig) => {
       if (!companyId) {
         toast.error('Autenticazione richiesta')
         return
@@ -96,20 +97,23 @@ export function useExportManager(): UseExportManagerReturn {
 
         const blob = await haccpReportGenerator.generateReport({
           companyId,
-          dateRange: config.dateRange || {
-            start: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-            end: new Date(),
-          },
+          dateRange:
+            config.dateRange ||
+            {
+              start: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+              end: new Date(),
+            },
           reportType: config.reportType || 'monthly',
           includeCharts: config.includeCharts ?? true,
           language: config.language || 'it',
-          sections: config.sections || {
-            temperatureReadings: true,
-            maintenanceTasks: true,
-            staffTraining: true,
-            correctiveActions: true,
-            criticalControlPoints: true,
-          },
+          sections:
+            config.sections || {
+              temperatureReadings: true,
+              maintenanceTasks: true,
+              staffTraining: true,
+              correctiveActions: true,
+              criticalControlPoints: true,
+            },
         })
 
         setExportProgress({
@@ -139,7 +143,6 @@ export function useExportManager(): UseExportManagerReturn {
     [companyId]
   )
 
-  // Export Excel Data
   const exportExcelData = useCallback(
     async (config: ExcelExportConfig) => {
       if (!companyId) {
@@ -203,9 +206,8 @@ export function useExportManager(): UseExportManagerReturn {
     [companyId]
   )
 
-  // Export CSV
   const exportCSV = useCallback(
-    async (table: string, dateRange: { start: Date; end: Date }) => {
+    async (table: string, dateRange: DateRange) => {
       if (!companyId) {
         toast.error('Autenticazione richiesta')
         return
@@ -219,11 +221,7 @@ export function useExportManager(): UseExportManagerReturn {
       setLastExportError(undefined)
 
       try {
-        const blob = await excelExporter.exportCSV(
-          companyId,
-          table as any,
-          dateRange
-        )
+        const blob = await excelExporter.exportCSV(companyId, table as any, dateRange)
 
         setExportProgress({
           status: 'downloading',
@@ -252,11 +250,12 @@ export function useExportManager(): UseExportManagerReturn {
     [companyId]
   )
 
-  // Create email schedule
-  const createScheduleMutation = useMutation({
-    mutationFn: async (
-      schedule: Omit<EmailSchedule, 'id' | 'createdAt' | 'nextSend'>
-    ) => {
+  const createScheduleMutation = useMutation<
+    string,
+    Error,
+    Omit<EmailSchedule, 'id' | 'createdAt' | 'nextSend'>
+  >({
+    mutationFn: async schedule => {
       if (!companyId || !userId) throw new Error('Autenticazione richiesta')
 
       return emailScheduler.createSchedule({
@@ -275,16 +274,13 @@ export function useExportManager(): UseExportManagerReturn {
     },
   })
 
-  // Update email schedule
-  const updateScheduleMutation = useMutation({
-    mutationFn: async ({
-      id,
-      updates,
-    }: {
-      id: string
-      updates: Partial<EmailSchedule>
-    }) => {
-      return emailScheduler.updateSchedule(id, updates)
+  const updateScheduleMutation = useMutation<
+    void,
+    Error,
+    { id: string; updates: Partial<EmailSchedule> }
+  >({
+    mutationFn: async ({ id, updates }) => {
+      await emailScheduler.updateSchedule(id, updates)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-schedules'] })
@@ -296,10 +292,9 @@ export function useExportManager(): UseExportManagerReturn {
     },
   })
 
-  // Delete email schedule
-  const deleteScheduleMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return emailScheduler.deleteSchedule(id)
+  const deleteScheduleMutation = useMutation<void, Error, string>({
+    mutationFn: async id => {
+      await emailScheduler.deleteSchedule(id)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-schedules'] })
@@ -311,7 +306,6 @@ export function useExportManager(): UseExportManagerReturn {
     },
   })
 
-  // Download blob utility
   const downloadBlob = useCallback((blob: Blob, fileName: string) => {
     try {
       const url = URL.createObjectURL(blob)
@@ -330,7 +324,6 @@ export function useExportManager(): UseExportManagerReturn {
     }
   }, [])
 
-  // Get recommended schedules based on company activity
   const getRecommendedSchedules = useCallback((): EmailSchedule[] => {
     if (!companyId || !userId) return []
 
@@ -341,13 +334,13 @@ export function useExportManager(): UseExportManagerReturn {
         dayOfMonth: 1,
         time: '09:00',
         reportType: 'haccp_pdf',
-        recipients: [], // User would fill this
+        recipients: [],
         isActive: false,
       },
       {
         name: 'Controlli Temperatura Settimanali',
         frequency: 'weekly',
-        dayOfWeek: 1, // Monday
+        dayOfWeek: 1,
         time: '08:00',
         reportType: 'excel_temperature',
         recipients: [],
@@ -374,7 +367,24 @@ export function useExportManager(): UseExportManagerReturn {
     })) as EmailSchedule[]
   }, [companyId, userId])
 
-  // Quick export actions
+  const createSchedule = useCallback(
+    (
+      schedule: Omit<EmailSchedule, 'id' | 'createdAt' | 'nextSend'>
+    ): Promise<string> => createScheduleMutation.mutateAsync(schedule),
+    [createScheduleMutation]
+  )
+
+  const updateSchedule = useCallback(
+    (id: string, updates: Partial<EmailSchedule>): Promise<void> =>
+      updateScheduleMutation.mutateAsync({ id, updates }),
+    [updateScheduleMutation]
+  )
+
+  const deleteSchedule = useCallback(
+    (id: string): Promise<void> => deleteScheduleMutation.mutateAsync(id),
+    [deleteScheduleMutation]
+  )
+
   const quickExports = {
     monthlyHACCP: () =>
       exportHACCPReport({
@@ -384,7 +394,6 @@ export function useExportManager(): UseExportManagerReturn {
           end: new Date(),
         },
       }),
-
     temperatureReadings: () =>
       exportExcelData({
         companyId: companyId!,
@@ -397,7 +406,6 @@ export function useExportManager(): UseExportManagerReturn {
         format: 'xlsx',
         fileName: 'Controlli_Temperatura_30gg',
       }),
-
     allData: () =>
       exportExcelData({
         companyId: companyId!,
@@ -419,30 +427,20 @@ export function useExportManager(): UseExportManagerReturn {
   }
 
   return {
-    // Export actions
     exportHACCPReport,
     exportExcelData,
     exportCSV,
-
-    // Email scheduling
     schedules,
-    createSchedule: createScheduleMutation.mutate,
-    updateSchedule: (id: string, updates: Partial<EmailSchedule>) =>
-      updateScheduleMutation.mutate({ id, updates }),
-    deleteSchedule: deleteScheduleMutation.mutate,
-
-    // Status
+    createSchedule,
+    updateSchedule,
+    deleteSchedule,
     exportProgress,
     isExporting:
       exportProgress.status === 'generating' ||
       exportProgress.status === 'downloading',
     lastExportError,
-
-    // Utilities
     downloadBlob,
     getRecommendedSchedules,
-
-    // Quick actions
     ...quickExports,
   }
 }

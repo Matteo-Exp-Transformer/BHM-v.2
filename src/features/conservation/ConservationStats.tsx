@@ -19,7 +19,13 @@ export function ConservationStats({ stats }: ConservationStatsProps) {
     return 'bg-red-100 text-red-800'
   }
 
-  const statCards = [
+  const statCards: Array<{
+    title: string
+    value: string | number
+    icon: React.ComponentType<{ className?: string }>
+    color: string
+    description: string
+  }> = [
     {
       title: 'Punti Totali',
       value: stats.total_points,
@@ -113,7 +119,7 @@ export function ConservationStats({ stats }: ConservationStatsProps) {
       })}
 
       {/* Detailed breakdown */}
-      {Object.keys(stats.by_type).length > 0 && (
+      {Object.keys(stats.by_type ?? {}).length > 0 && (
         <div className="md:col-span-2 lg:col-span-4">
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -122,7 +128,7 @@ export function ConservationStats({ stats }: ConservationStatsProps) {
             </h3>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Object.entries(stats.by_type).map(([type, count]) => {
+              {Object.entries(stats.by_type ?? {}).map(([type, count]) => {
                 const typeLabels: Record<string, string> = {
                   fridge: 'Frigoriferi',
                   freezer: 'Congelatori',
@@ -160,7 +166,7 @@ export function ConservationStats({ stats }: ConservationStatsProps) {
       )}
 
       {/* Status breakdown */}
-      {Object.keys(stats.by_status).length > 0 && (
+      {Object.keys(stats.by_status ?? {}).length > 0 && (
         <div className="md:col-span-2 lg:col-span-4">
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -169,7 +175,7 @@ export function ConservationStats({ stats }: ConservationStatsProps) {
             </h3>
 
             <div className="grid grid-cols-3 gap-4">
-              {Object.entries(stats.by_status).map(([status, count]) => {
+              {Object.entries(stats.by_status ?? {}).map(([status, count]) => {
                 const statusConfig = {
                   normal: {
                     label: 'Normale',

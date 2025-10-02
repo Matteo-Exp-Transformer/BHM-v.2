@@ -3,7 +3,15 @@
  * Tests offline storage capabilities and sync queue management
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  beforeAll,
+} from 'vitest'
 import {
   indexedDBManager,
   type OfflineData,
@@ -30,40 +38,84 @@ const mockDB = {
   }),
 }
 
-const mockOpenDBRequest = {
-  result: mockDB,
-  onsuccess: null as any,
-  onerror: null as any,
-  onupgradeneeded: null as any,
+const createMockObjectStore = () => ({
+  createIndex: vi.fn(),
+  add: vi.fn(() => createMockRequest()),
+  put: vi.fn(() => createMockRequest()),
+  get: vi.fn(() => createMockRequest()),
+  getAll: vi.fn(() => createMockRequest()),
+  delete: vi.fn(() => createMockRequest()),
+  index: vi.fn(() => ({ openCursor: vi.fn(() => createMockRequest()) })),
+})
+
+const createMockRequest = () => {
+  const request: any = {
+    onsuccess: null,
+    onerror: null,
+    onupgradeneeded: null,
+    result: mockDB,
+  }
+  request.triggerSuccess = () => request.onsuccess?.call(request)
+  request.triggerError = () => {
+    request.error = new Error('indexedDB error')
+    request.onerror?.call(request, new Event('error'))
+  }
+  request.triggerUpgrade = () =>
+    request.onupgradeneeded?.call(request, {
+      target: {
+        result: {
+          objectStoreNames: mockDB.objectStoreNames,
+          createObjectStore: mockDB.createObjectStore,
+        },
+      },
+    })
+  return request
 }
 
-// Mock global indexedDB
-global.indexedDB = {
-  open: vi.fn().mockReturnValue(mockOpenDBRequest),
-} as any
+let mockOpenDBRequest: any
+let mockStore: any
+let mockTransaction: any
+
+beforeAll(() => {
+  mockStore = createMockObjectStore()
+
+  mockTransaction = {
+    objectStore: vi.fn(() => mockStore),
+  }
+
+  mockDB.objectStoreNames.contains.mockReturnValue(false)
+  mockDB.createObjectStore.mockImplementation(() => createMockObjectStore())
+  mockDB.transaction = vi.fn(() => mockTransaction)
+
+  mockOpenDBRequest = createMockRequest()
+
+  global.indexedDB = {
+    open: vi.fn(() => mockOpenDBRequest),
+  } as any
+})
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  ;(indexedDBManager as any).db = null
+  mockStore = createMockObjectStore()
+  mockTransaction = {
+    objectStore: vi.fn(() => mockStore),
+  }
+  mockDB.transaction = vi.fn(() => mockTransaction)
+  mockDB.createObjectStore.mockImplementation(() => createMockObjectStore())
+  mockOpenDBRequest = createMockRequest()
+  ;(global.indexedDB.open as any).mockReturnValue(mockOpenDBRequest)
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 describe('IndexedDBManager', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    // Reset singleton state
-    ;(indexedDBManager as any).db = null
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   describe('init', () => {
     it('should initialize database successfully', async () => {
       const initPromise = indexedDBManager.init()
-
-      // Simulate successful database opening
-      setTimeout(() => {
-        if (mockOpenDBRequest.onsuccess) {
-          mockOpenDBRequest.onsuccess()
-        }
-      }, 0)
-
+      mockOpenDBRequest.triggerSuccess()
       await expect(initPromise).resolves.toBeUndefined()
       expect(global.indexedDB.open).toHaveBeenCalledWith(
         'HACCPBusinessManager',
@@ -73,33 +125,15 @@ describe('IndexedDBManager', () => {
 
     it('should handle database errors during init', async () => {
       const initPromise = indexedDBManager.init()
-
-      // Simulate database error
-      setTimeout(() => {
-        if (mockOpenDBRequest.onerror) {
-          mockOpenDBRequest.onerror()
-        }
-      }, 0)
-
-      await expect(initPromise).rejects.toBeUndefined()
+      mockOpenDBRequest.triggerError()
+      await expect(initPromise).rejects.toBeDefined()
     })
 
     it('should create object stores on upgrade', async () => {
       const initPromise = indexedDBManager.init()
-
-      // Simulate upgrade needed
-      setTimeout(() => {
-        if (mockOpenDBRequest.onupgradeneeded) {
-          const event = { target: { result: mockDB } }
-          mockOpenDBRequest.onupgradeneeded(event)
-        }
-        if (mockOpenDBRequest.onsuccess) {
-          mockOpenDBRequest.onsuccess()
-        }
-      }, 0)
-
+      mockOpenDBRequest.triggerUpgrade()
+      mockOpenDBRequest.triggerSuccess()
       await initPromise
-
       expect(mockDB.createObjectStore).toHaveBeenCalledWith('offlineData', {
         keyPath: 'id',
       })

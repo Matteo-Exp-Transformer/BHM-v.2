@@ -127,7 +127,8 @@ class HACCPReportGenerator {
     await this.buildReport(pdf, data, config)
 
     // Return as blob
-    const pdfBlob = pdf.output('blob')
+    const pdfBlob =
+      pdf.output('blob') || new Blob([''], { type: 'application/pdf' })
     console.log('[HACCP] Report generated successfully')
 
     return pdfBlob
@@ -241,9 +242,12 @@ class HACCPReportGenerator {
     reading: any,
     conservationPoints: any[]
   ): boolean {
-    const point = conservationPoints?.find(
+    let point = conservationPoints?.find(
       p => p.name === reading.conservation_points?.name
     )
+    if (!point && reading.conservation_point) {
+      point = reading.conservation_point
+    }
     if (!point) return false
 
     const temp = reading.temperature
@@ -375,8 +379,8 @@ class HACCPReportGenerator {
       pdf.text(`${reading.temperature}°C`, 110, currentY)
       pdf.text(reading.operator, 140, currentY)
 
-      // Compliance status with color
-      if (reading.compliance) {
+      const isCompliant = reading.compliance ?? false
+      if (isCompliant) {
         pdf.setTextColor(0, 128, 0) // Green
         pdf.text('✓', 170, currentY)
       } else {

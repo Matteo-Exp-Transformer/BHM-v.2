@@ -1,9 +1,10 @@
 import { safeSetItem, clearAllStorage, clearHaccpData } from './safeStorage'
 import { toast } from 'react-toastify'
 import { AllergenType } from '@/types/inventory'
+import type { OnboardingData } from '@/types/onboarding'
 
 // Dati precompilati seguendo esattamente la guida di riferimento
-export const getPrefillData = () => {
+export const getPrefillData = (): OnboardingData => {
   const generateId = () =>
     `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
@@ -62,7 +63,7 @@ export const getPrefillData = () => {
         name: 'Mario',
         surname: 'Rossi',
         fullName: 'Mario Rossi',
-        role: 'responsabile' as const,
+        role: 'responsabile',
         categories: ['Cuochi'],
         email: 'mario.rossi@alritrovo.it',
         phone: '+39 340 1234567',
@@ -75,7 +76,7 @@ export const getPrefillData = () => {
         name: 'Giulia',
         surname: 'Bianchi',
         fullName: 'Giulia Bianchi',
-        role: 'dipendente' as const,
+        role: 'dipendente',
         categories: ['Camerieri'],
         email: 'giulia.bianchi@alritrovo.it',
         department_assignments: [],
@@ -86,100 +87,130 @@ export const getPrefillData = () => {
         name: 'Luca',
         surname: 'Verdi',
         fullName: 'Luca Verdi',
-        role: 'collaboratore' as const,
+        role: 'collaboratore',
         categories: ['Banconisti'],
         department_assignments: [],
       },
     ],
-    conservation: [
-      {
-        id: generateId(),
-        name: 'Frigo A Cucina',
-        department_id: '', // Will be filled with actual department ID
-        setpoint_temp: 4,
-        type: 'fridge' as const,
-        is_blast_chiller: false,
-        product_categories: ['Carni fresche', 'Latticini', 'Verdure fresche'],
-      },
-      {
-        id: generateId(),
-        name: 'Frigo Bancone 1',
-        department_id: '', // Will be filled with actual department ID
-        setpoint_temp: 2,
-        type: 'fridge' as const,
-        is_blast_chiller: false,
-        product_categories: ['Bevande', 'Latticini'],
-      },
-      {
-        id: generateId(),
-        name: 'Frigo Bancone 2',
-        department_id: '', // Will be filled with actual department ID
-        setpoint_temp: 3,
-        type: 'fridge' as const,
-        is_blast_chiller: false,
-        product_categories: ['Bevande', 'Conserve'],
-      },
-      {
-        id: generateId(),
-        name: 'Congelatore Principale',
-        department_id: '', // Will be filled with actual department ID
-        setpoint_temp: -18,
-        type: 'freezer' as const,
-        is_blast_chiller: false,
-        product_categories: ['Surgelati', 'Gelati'],
-      },
-    ],
-    tasks: [
-      {
-        id: generateId(),
-        name: 'Rilevamento Temperatura Giornaliero',
-        description:
-          'Controllo e registrazione temperature di tutti i frigoriferi',
-        frequency: 'daily' as const,
-        priority: 'high' as const,
-        estimated_duration: 15,
-        haccp_category: 'temperature' as const,
-        checklist: [
-          'Verificare temperatura display frigorifero',
-          'Controllare temperatura con termometro di controllo',
-          'Registrare temperatura su modulo HACCP',
-          'Verificare corretta chiusura porta',
-        ],
-        required_tools: ['Termometro digitale', 'Modulo registrazione'],
-      },
-      {
-        id: generateId(),
-        name: 'Sanificazione Settimanale',
-        description: 'Pulizia e sanificazione approfondita delle superfici',
-        frequency: 'weekly' as const,
-        priority: 'critical' as const,
-        estimated_duration: 120,
-        haccp_category: 'hygiene' as const,
-        checklist: [
-          'Preparare soluzione disinfettante',
-          'Pulire tutte le superfici di lavoro',
-          'Sanificare attrezzature',
-          'Documentare intervento',
-        ],
-        required_tools: ['Disinfettante professionale', 'Panni monouso'],
-      },
-      {
-        id: generateId(),
-        name: 'Controllo Scadenze',
-        description: 'Verifica e rimozione prodotti scaduti o in scadenza',
-        frequency: 'daily' as const,
-        priority: 'high' as const,
-        estimated_duration: 20,
-        haccp_category: 'documentation' as const,
-        checklist: [
-          'Controllare date scadenza frigorifero',
-          'Controllare date scadenza dispensa',
-          'Rimuovere prodotti scaduti',
-          'Segnalare prodotti in scadenza',
-        ],
-        required_tools: ['Etichette', 'Registro scadenze'],
-      },
-    ],
+    conservation: {
+      points: [
+        {
+          id: generateId(),
+          name: 'Frigo A Cucina',
+          departmentId: '',
+          targetTemperature: 4,
+          pointType: 'fridge' as const,
+          isBlastChiller: false,
+          productCategories: ['fresh_meat', 'fresh_dairy', 'fresh_produce'],
+          source: 'prefill' as const,
+        },
+        {
+          id: generateId(),
+          name: 'Frigo Bancone 1',
+          departmentId: '',
+          targetTemperature: 2,
+          pointType: 'fridge' as const,
+          isBlastChiller: false,
+          productCategories: ['beverages', 'fresh_dairy'],
+          source: 'prefill' as const,
+        },
+        {
+          id: generateId(),
+          name: 'Frigo Bancone 2',
+          departmentId: '',
+          targetTemperature: 3,
+          pointType: 'fridge' as const,
+          isBlastChiller: false,
+          productCategories: ['beverages'],
+          source: 'prefill' as const,
+        },
+        {
+          id: generateId(),
+          name: 'Congelatore Principale',
+          departmentId: '',
+          targetTemperature: -18,
+          pointType: 'freezer' as const,
+          isBlastChiller: false,
+          productCategories: ['frozen'],
+          source: 'prefill' as const,
+        },
+      ],
+    },
+    tasks: {
+      generalTasks: [
+        {
+          id: generateId(),
+          name: 'Rilevamento Temperatura Giornaliero',
+          description:
+            'Controllo e registrazione temperature di tutti i frigoriferi',
+          frequency: 'daily' as const,
+          priority: 'high' as const,
+          estimatedDuration: 15,
+          haccpCategory: 'temperature' as const,
+          checklist: [
+            'Verificare temperatura display frigorifero',
+            'Controllare temperatura con termometro di controllo',
+            'Registrare temperatura su modulo HACCP',
+            'Verificare corretta chiusura porta',
+          ],
+          requiredTools: ['Termometro digitale', 'Modulo registrazione'],
+        },
+        {
+          id: generateId(),
+          name: 'Sanificazione Settimanale',
+          description: 'Pulizia e sanificazione approfondita delle superfici',
+          frequency: 'weekly' as const,
+          priority: 'critical' as const,
+          estimatedDuration: 120,
+          haccpCategory: 'hygiene' as const,
+          checklist: [
+            'Preparare soluzione disinfettante',
+            'Pulire tutte le superfici di lavoro',
+            'Sanificare attrezzature',
+            'Documentare intervento',
+          ],
+          requiredTools: ['Disinfettante professionale', 'Panni monouso'],
+        },
+        {
+          id: generateId(),
+          name: 'Controllo Scadenze',
+          description: 'Verifica e rimozione prodotti scaduti o in scadenza',
+          frequency: 'daily' as const,
+          priority: 'high' as const,
+          estimatedDuration: 20,
+          haccpCategory: 'documentation' as const,
+          checklist: [
+            'Controllare date scadenza frigorifero',
+            'Controllare date scadenza dispensa',
+            'Rimuovere prodotti scaduti',
+            'Segnalare prodotti in scadenza',
+          ],
+          requiredTools: ['Etichette', 'Registro scadenze'],
+        },
+      ],
+      maintenanceTasks: [
+        {
+          id: generateId(),
+          conservationPointId: '',
+          title: 'Taratura sensori frigoriferi',
+          type: 'temperature_calibration',
+          frequency: 'monthly',
+          priority: 'medium',
+          estimatedDuration: 45,
+          assignedStaffIds: [],
+          status: 'scheduled',
+          notes: 'Verificare taratura sensori digitali e analogici',
+          instructions: [
+            'Verificare sensori digitali',
+            'Confrontare con termometro certificato',
+            'Registrare taratura nel registro HACCP',
+          ],
+          nextDue: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0],
+        },
+      ],
+    },
     inventory: {
       categories: [
         {
@@ -296,7 +327,7 @@ export const getPrefillData = () => {
           name: 'Pasta di Grano Duro',
           quantity: 20,
           unit: 'conf',
-          allergens: ['glutine'],
+          allergens: [AllergenType.GLUTINE],
           supplierName: 'Pastificio Artigianale',
           purchaseDate: new Date().toISOString().split('T')[0],
           expiryDate: new Date(Date.now() + 730 * 24 * 60 * 60 * 1000)
@@ -323,38 +354,35 @@ export const prefillOnboarding = (): void => {
     const data = getPrefillData()
 
     // Associa i department_id ai conservation points
-    if (data.departments.length > 0) {
+    if (data.departments?.length) {
       const cucinaId = data.departments.find(d => d.name === 'Cucina')?.id
       const banconeId = data.departments.find(d => d.name === 'Bancone')?.id
 
-      data.conservation = data.conservation.map(point => ({
-        id: point.id,
-        name: point.name,
-        departmentId: point.name.includes('Cucina')
-          ? cucinaId || ''
-          : point.name.includes('Bancone')
-            ? banconeId || ''
-            : data.departments[0]?.id || '',
-        targetTemperature: point.setpoint_temp,
-        pointType: point.type,
-        isBlastChiller: point.is_blast_chiller,
-        productCategories: point.product_categories,
-        source: 'prefill' as const,
-      }))
+      if (data.conservation?.points) {
+        data.conservation.points = data.conservation.points.map(point => ({
+          ...point,
+          departmentId: point.name.includes('Cucina')
+            ? cucinaId || ''
+            : point.name.includes('Bancone')
+              ? banconeId || ''
+              : data.departments?.[0]?.id || '',
+        }))
+      }
 
-      // Associa department assignments al staff
-      data.staff = data.staff.map(member => ({
-        ...member,
-        department_assignments:
-          member.category === 'Responsabile Sala'
+      if (data.staff) {
+        data.staff = data.staff.map(member => ({
+          ...member,
+          department_assignments: member.categories.includes(
+            'Responsabile Sala'
+          )
             ? [banconeId || '']
-            : member.category === 'Cuoco'
+            : member.categories.includes('Cuochi')
               ? [cucinaId || '']
-              : [data.departments[0]?.id || ''],
-      }))
+              : [data.departments?.[0]?.id || ''],
+        }))
+      }
 
-      // Associa category_id ai prodotti
-      if (data.inventory.categories.length > 0) {
+      if (data.inventory?.categories?.length) {
         const carniId = data.inventory.categories.find(
           c => c.name === 'Carni Fresche'
         )?.id
@@ -368,25 +396,26 @@ export const prefillOnboarding = (): void => {
           c => c.name === 'Verdure Fresche'
         )?.id
 
-        // Trova conservation points
-        const frigoId = data.conservation.find(cp =>
+        const frigoId = data.conservation?.points?.find(cp =>
           cp.name.includes('Frigo')
         )?.id
 
-        data.inventory.products = data.inventory.products.map(product => ({
-          ...product,
-          categoryId: product.name.includes('Pollo')
-            ? carniId
-            : product.name.includes('Salmone')
-              ? pesceId
-              : product.name.includes('Mozzarella')
-                ? latticiniId
-                : product.name.includes('Pomodori')
-                  ? verdureId
-                  : undefined,
-          departmentId: cucinaId, // Assegna tutti i prodotti alla cucina
-          conservationPointId: frigoId, // Assegna tutti i prodotti al frigo
-        }))
+        if (data.inventory.products) {
+          data.inventory.products = data.inventory.products.map(product => ({
+            ...product,
+            categoryId: product.name.includes('Pollo')
+              ? carniId
+              : product.name.includes('Salmone')
+                ? pesceId
+                : product.name.includes('Mozzarella')
+                  ? latticiniId
+                  : product.name.includes('Pomodori')
+                    ? verdureId
+                    : undefined,
+            departmentId: cucinaId,
+            conservationPointId: frigoId,
+          }))
+        }
       }
     }
 

@@ -25,14 +25,7 @@ import {
   completeOnboarding as completeOnboardingHelper,
 } from '@/utils/onboardingHelpers'
 
-interface OnboardingData {
-  business?: any
-  departments?: any[]
-  staff?: any[]
-  conservation?: any[]
-  tasks?: any[]
-  inventory?: any[]
-}
+import type { OnboardingData } from '@/types/onboarding'
 
 const TOTAL_STEPS = 6
 
@@ -62,7 +55,7 @@ const OnboardingWizard = () => {
   const handlePrefillOnboarding = useCallback(() => {
     try {
       const data = getPrefillData()
-      setFormData(data)
+      setFormData(data as OnboardingData)
       toast.success('Dati precompilati caricati!')
     } catch (error) {
       console.error('Error prefilling onboarding:', error)
@@ -79,22 +72,19 @@ const OnboardingWizard = () => {
   }, [])
 
   // Salva automaticamente in localStorage con debounce
-  const saveTimeoutRef = useRef<number>()
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
 
   useEffect(() => {
-    if (Object.keys(formData).length > 0) {
-      // Cancella il timeout precedente se esiste
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current)
-      }
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
 
-      // Salva dopo 500ms di inattività
+    if (Object.keys(formData).length > 0) {
       saveTimeoutRef.current = setTimeout(() => {
         localStorage.setItem('onboarding-data', JSON.stringify(formData))
       }, 500)
     }
 
-    // Cleanup del timeout al unmount
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current)
@@ -103,7 +93,10 @@ const OnboardingWizard = () => {
   }, [formData])
 
   const updateFormData = useCallback(
-    (stepKey: keyof OnboardingData, data: any) => {
+    <Key extends keyof OnboardingData>(
+      stepKey: Key,
+      data: OnboardingData[Key]
+    ) => {
       setFormData(prev => ({
         ...prev,
         [stepKey]: data,
@@ -216,8 +209,8 @@ const OnboardingWizard = () => {
     }
 
     // Salva punti conservazione
-    if (formData.conservation?.length) {
-      const points = formData.conservation.map(point => ({
+    if (formData.conservation?.points?.length) {
+      const points = formData.conservation.points.map(point => ({
         ...point,
         company_id: companyId,
         created_at: new Date().toISOString(),
@@ -232,22 +225,39 @@ const OnboardingWizard = () => {
     }
 
     // Salva task
-    if (formData.tasks?.length) {
-      const tasks = formData.tasks.map(task => ({
+    if (formData.tasks) {
+      const maintenanceTasks = formData.tasks.maintenanceTasks.map(task => ({
         ...task,
         company_id: companyId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }))
 
-      const { error } = await supabase.from('maintenance_tasks').insert(tasks)
+      const generalTasks = formData.tasks.generalTasks.map(task => ({
+        ...task,
+        company_id: companyId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }))
 
-      if (error) throw error
+      if (maintenanceTasks.length) {
+        const { error } = await supabase
+          .from('maintenance_tasks')
+          .insert(maintenanceTasks)
+
+        if (error) throw error
+      }
+
+      if (generalTasks.length) {
+        const { error } = await supabase.from('tasks').insert(generalTasks)
+
+        if (error) throw error
+      }
     }
 
     // Salva inventario
-    if (formData.inventory?.length) {
-      const products = formData.inventory.map(product => ({
+    if (formData.inventory?.products?.length) {
+      const products = formData.inventory.products.map(product => ({
         ...product,
         company_id: companyId,
         created_at: new Date().toISOString(),
@@ -301,7 +311,7 @@ const OnboardingWizard = () => {
           <TasksStep
             data={formData.tasks}
             departments={formData.departments || []}
-            conservationPoints={formData.conservation || []}
+            conservationPoints={formData.conservation?.points || []}
             onUpdate={data => updateFormData('tasks', data)}
             onValidChange={handleValidChange}
           />
@@ -309,9 +319,9 @@ const OnboardingWizard = () => {
       case 5:
         return (
           <InventoryStep
-            data={formData.inventory as any}
+            data={formData.inventory}
             departments={formData.departments || []}
-            conservationPoints={formData.conservation || []}
+            conservationPoints={formData.conservation?.points || []}
             onUpdate={data => updateFormData('inventory', data)}
             onValidChange={handleValidChange}
           />

@@ -1,9 +1,6 @@
 import { z } from 'zod'
 
-import {
-  HACCP_CERT_REQUIRED_CATEGORIES,
-  STAFF_ROLES,
-} from '@/utils/haccpRules'
+import { HACCP_CERT_REQUIRED_CATEGORIES, STAFF_ROLES } from '@/utils/haccpRules'
 
 import type {
   StaffMember,
@@ -15,26 +12,22 @@ import type {
 const staffSchema = z.object({
   name: z.string().min(2, 'Il nome è obbligatorio'),
   surname: z.string().min(2, 'Il cognome è obbligatorio'),
-  email: z
-    .string()
-    .email('Email non valida')
-    .optional()
-    .or(z.literal('')),
+  email: z.string().email('Email non valida').optional().or(z.literal('')),
   phone: z
     .string()
     .regex(/^[0-9+\s-]*$/, 'Numero di telefono non valido')
     .optional()
     .or(z.literal('')),
-  role: z.string(),
-  categories: z
-    .array(z.string())
-    .min(1, 'Seleziona almeno una categoria'),
+  role: z.enum(['admin', 'responsabile', 'dipendente', 'collaboratore']),
+  categories: z.array(z.string()).min(1, 'Seleziona almeno una categoria'),
   departmentAssignments: z.array(z.string()),
   haccpExpiry: z.string().optional().or(z.literal('')),
   notes: z.string().optional().or(z.literal('')),
 })
 
-export const normalizeStaffMember = (member: StaffMember): StaffStepFormData => ({
+export const normalizeStaffMember = (
+  member: StaffMember
+): StaffStepFormData => ({
   name: member.name,
   surname: member.surname,
   email: member.email || '',
@@ -47,7 +40,9 @@ export const normalizeStaffMember = (member: StaffMember): StaffStepFormData => 
 })
 
 export const canMemberSkipHaccp = (categories: string[]) =>
-  categories.every(category => !HACCP_CERT_REQUIRED_CATEGORIES.includes(category))
+  categories.every(
+    category => !HACCP_CERT_REQUIRED_CATEGORIES.includes(category)
+  )
 
 export const validateStaffMember = (
   member: StaffMember
@@ -68,7 +63,8 @@ export const validateStaffMember = (
     const fieldErrors: StaffValidationErrors = {}
     result.error.issues.forEach(issue => {
       if (issue.path[0]) {
-        fieldErrors[issue.path[0] as keyof StaffValidationErrors] = issue.message
+        fieldErrors[issue.path[0] as keyof StaffValidationErrors] =
+          issue.message
       }
     })
     return { success: false, fieldErrors }
@@ -81,7 +77,8 @@ export const validateStaffMember = (
     return {
       success: false,
       fieldErrors: {
-        haccpExpiry: 'La certificazione HACCP è obbligatoria per questa categoria',
+        haccpExpiry:
+          'La certificazione HACCP è obbligatoria per questa categoria',
       },
     }
   }
@@ -103,7 +100,8 @@ export const buildStaffMember = (
   if (!parsed.success) {
     parsed.error.issues.forEach(issue => {
       if (issue.path[0]) {
-        fieldErrors[issue.path[0] as keyof StaffValidationErrors] = issue.message
+        fieldErrors[issue.path[0] as keyof StaffValidationErrors] =
+          issue.message
       }
     })
     return { validation: { success: false, fieldErrors } }
@@ -122,7 +120,9 @@ export const buildStaffMember = (
   const role: StaffRole = roleExists ? (form.role as StaffRole) : 'dipendente'
 
   const member: StaffMember = {
-    id: editingId || `staff_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+    id:
+      editingId ||
+      `staff_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
     name: form.name.trim(),
     surname: form.surname.trim(),
     fullName: `${form.name.trim()} ${form.surname.trim()}`,
@@ -184,4 +184,3 @@ export const getHaccpExpiryStatus = (date?: string) => {
     message: `Valido fino al ${expiryDate.toLocaleDateString('it-IT')}`,
   }
 }
-

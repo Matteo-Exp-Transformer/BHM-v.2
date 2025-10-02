@@ -302,7 +302,6 @@ export function AddPointModal({
   const [maintenanceTasks, setMaintenanceTasks] = useState<
     MaintenanceTaskData[]
   >([])
-  const [showMaintenanceForm, setShowMaintenanceForm] = useState(false)
 
   const [predictedType, setPredictedType] =
     useState<ConservationPointType>('fridge')
@@ -395,7 +394,6 @@ export function AddPointModal({
       instructions: [],
     }
     setMaintenanceTasks([...maintenanceTasks, newTask])
-    setShowMaintenanceForm(true)
   }
 
   const updateMaintenanceTask = (
