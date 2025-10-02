@@ -206,69 +206,109 @@ export function useCalendarEvents() {
         )
 
         // Convert maintenance tasks to calendar events
-        const calendarEvents: CalendarEvent[] = (tasks || []).map(task => {
-          const startDate = new Date(task.next_due)
-          const endDate = new Date(
-            startDate.getTime() + (task.estimated_duration || 60) * 60 * 1000
-          )
+        type SupabaseMaintenanceTask = {
+          id: string
+          title?: string
+          instructions?: string
+          next_due: string
+          estimated_duration?: number
+          status?: 'pending' | 'completed' | 'overdue'
+          priority?: CalendarEvent['priority']
+          assigned_to?: string
+          conservation_point_id?: string
+          frequency: string
+          created_at: string
+          updated_at: string
+          created_by?: string
+          company_id: string
+          conservation_point?: {
+            id: string
+            name?: string
+            department?: { id: string; name?: string } | null
+          } | null
+        }
 
-          const event: CalendarEvent = {
-            id: `task-${task.id}`,
-            title: task.title || 'Manutenzione',
-            description: task.instructions || task.type,
-            start: startDate,
-            end: endDate,
-            allDay: false,
-            type: 'maintenance',
-            status:
-              task.status === 'completed'
-                ? 'completed'
-                : startDate < new Date()
-                  ? 'overdue'
-                  : 'pending',
-            priority: task.priority || 'medium',
-            assigned_to: task.assigned_to ? [task.assigned_to] : [],
-            department_id: task.conservation_point?.department?.id,
-            conservation_point_id: task.conservation_point_id,
-            recurring: task.frequency !== 'once',
-            recurrence_pattern:
-              task.frequency === 'daily'
-                ? { frequency: 'daily', interval: 1 }
-                : task.frequency === 'weekly'
-                  ? { frequency: 'weekly', interval: 1 }
-                  : task.frequency === 'monthly'
-                    ? { frequency: 'monthly', interval: 1 }
-                    : undefined,
-            backgroundColor: '#FEF3C7',
-            borderColor: '#F59E0B',
-            textColor: '#92400E',
-            metadata: {
+        const calendarEvents: CalendarEvent[] = (tasks || []).map(
+          (task: SupabaseMaintenanceTask) => {
+            const startDate = new Date(task.next_due)
+            const endDate = new Date(
+              startDate.getTime() + (task.estimated_duration || 60) * 60 * 1000
+            )
+
+            const event: CalendarEvent = {
+              id: `task-${task.id}`,
+              title: task.title || 'Manutenzione',
+              description:
+                task.instructions || 'Attività di manutenzione programmata',
+              start: startDate,
+              end: endDate,
+              allDay: false,
+              type: 'maintenance',
+              status:
+                task.status === 'completed'
+                  ? 'completed'
+                  : startDate < new Date()
+                    ? 'overdue'
+                    : 'pending',
+              priority: task.priority || 'medium',
+              assigned_to: task.assigned_to ? [task.assigned_to] : [],
+              department_id: task.conservation_point?.department?.id,
               conservation_point_id: task.conservation_point_id,
-              notes: task.instructions,
-              task_id: task.id,
-            },
-            source: 'maintenance',
-            sourceId: task.id,
-            extendedProps: { task },
-            created_at: new Date(task.created_at),
-            updated_at: new Date(task.updated_at),
-            created_by: task.created_by || 'system',
-            company_id: task.company_id,
-          }
+              recurring: task.frequency !== 'once',
+              recurrence_pattern:
+                task.frequency === 'daily'
+                  ? { frequency: 'daily', interval: 1 }
+                  : task.frequency === 'weekly'
+                    ? { frequency: 'weekly', interval: 1 }
+                    : task.frequency === 'monthly'
+                      ? { frequency: 'monthly', interval: 1 }
+                      : undefined,
+              backgroundColor: '#FEF3C7',
+              borderColor: '#F59E0B',
+              textColor: '#92400E',
+              metadata: {
+                conservation_point_id: task.conservation_point_id,
+                notes: task.instructions,
+                task_id: task.id,
+              },
+              source: 'maintenance',
+              sourceId: task.id,
+              extendedProps: {
+                status:
+                  task.status === 'completed'
+                    ? 'completed'
+                    : startDate < new Date()
+                      ? 'overdue'
+                      : 'scheduled',
+                priority: task.priority || 'medium',
+                assignedTo: task.assigned_to ? [task.assigned_to] : [],
+                metadata: {
+                  id: task.id,
+                  notes: task.instructions,
+                  conservationPoint: task.conservation_point?.name,
+                  estimatedDuration: task.estimated_duration,
+                },
+              },
+              created_at: new Date(task.created_at),
+              updated_at: new Date(task.updated_at),
+              created_by: task.created_by || 'system',
+              company_id: task.company_id,
+            }
 
-          // Apply colors based on status
-          const colors = getEventColors(
-            event.type,
-            event.status,
-            event.priority
-          )
-          return {
-            ...event,
-            backgroundColor: colors.backgroundColor,
-            borderColor: colors.borderColor,
-            textColor: colors.textColor,
+            // Apply colors based on status
+            const colors = getEventColors(
+              event.type,
+              event.status,
+              event.priority
+            )
+            return {
+              ...event,
+              backgroundColor: colors.backgroundColor,
+              borderColor: colors.borderColor,
+              textColor: colors.textColor,
+            }
           }
-        })
+        )
 
         return calendarEvents
       } catch (error) {

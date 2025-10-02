@@ -47,8 +47,8 @@ Coordinamento per la risoluzione degli errori di lint e TypeScript rilevati nell
 - **Attività:**
   1. [x] Sostituire interfacce vuote con type alias (`InputProps`, `LabelProps`, `TextareaProps`) e uniformare tipizzazioni degli helper UI.
   2. [x] Uniformare l’uso di `setTimeout`/`setInterval` per evitare riferimenti a `NodeJS.Timeout` nei componenti browser-only.
-  3. [ ] Allineare le tipizzazioni (`InventoryStepData`, `InventoryProduct`, `HaccpTask`, ecc.) alle esigenze dei modal principali, così che gli step possano riutilizzare tutte le funzioni di validazione senza cast impropri.
-  4. [ ] Aggiornare `inventoryUtils.ts`, `staffUtils.ts`, `conservationUtils.ts` e relativi test/validazioni per esporre helper coerenti con i modal.
+  3. [x] Allineare le tipizzazioni (`InventoryStepData`, `InventoryProduct`, `HaccpTask`, ecc.) alle esigenze dei modal principali, così che gli step possano riutilizzare tutte le funzioni di validazione senza cast impropri.
+  4. [x] Aggiornare `inventoryUtils.ts`, `staffUtils.ts`, `conservationUtils.ts` e relativi test/validazioni per esporre helper coerenti con i modal.
   5. [ ] Eseguire `npm run lint -- src/components/ui src/types/onboarding.ts src/utils/onboarding` e riportare l’esito nel `WORK_LOG`.
 - **Nota layout:** ogni refactor deve preservare la struttura UI dell’onboarding; le modifiche a componenti condivisi non devono alterare lo stile esistente.
 
@@ -67,6 +67,23 @@ Coordinamento per la risoluzione degli errori di lint e TypeScript rilevati nell
   - ✅ Prima integrazione `InventoryStep` con struttura modale del main app (ancora da completare per parity totale e validazione).
   - ⛔ Lint globale ancora fallisce per warning/unused legacy fuori scope agent B.
 - **Aggiornamenti (sessione corrente):**
-  - ✅ Aggiornati helper `inventoryUtils.ts` e `onboardingHelpers.ts` per allineare tipi e validazioni a `AddProductModal` (Zod schema, campi obbligatori, compliance HACCP).
-  - ✅ Riscritto `InventoryStep.tsx` per riutilizzare le validazioni, gli errori e i campi obbligatori del modal principale mantenendo il layout dello step wizard.
-  - ⛔ Lint generale (`npm run lint -- src/components/onboarding-steps/InventoryStep.tsx`) fallisce per warning/unused legacy in moduli non toccati da questa sessione.
+  - ✅ Consolidate le tipizzazioni condivise (`src/types/onboarding.ts`) e aggiornati tutti gli helper onboarding (`conservationUtils`, `inventoryUtils`, `staffUtils`, `taskUtils`, `onboardingHelpers`).
+  - ✅ Eliminati i cast `any` negli step (`BusinessInfoStep`, `DepartmentsStep`, `StaffStep`, `TasksStep`, `ConservationStep`, `OnboardingWizard`) ripristinando la parità con i modal.
+  - ⛔ Lint generale (`npm run lint -- src/components/onboarding-steps`) fallisce per warning/unused legacy fuori scope (calendar, automation, multi-tenant, offline).
+
+## SITUAZIONE ATTUALE - Branch GPT
+
+**Problema:** Push fallito per errori TypeScript nel pre-push hook.
+**Build:** ✅ Funzionante (`npm run build:clean` completato)
+**Commit:** ✅ Locale aggiornato (`0f5d34d`)
+**Remote:** ❌ Branch GPT non esiste ancora
+
+### Errori TypeScript da risolvere:
+
+✅ Nessun errore aperto sugli step di onboarding. Il type-check fallisce ancora per moduli legacy (calendar, automation, multi-tenant, offline).
+
+### Prossimi passi:
+
+1. **Documentazione**: Aggiornare `WORK_LOG.md` con il resoconto della sessione e annotare nel bug tracker i moduli legacy ancora bloccanti.
+2. **Verifica legacy**: Preparare piano di mitigazione per gli errori `calendar/*`, `automation/*`, `offline/*` identificati dal type-check.
+3. **Lint mirato**: Rieseguire `npm run lint -- src/components/ui src/types/onboarding.ts src/utils/onboarding` e registrare outcome appena il backlog legacy viene ridotto.

@@ -1,3 +1,20 @@
+export interface BusinessInfoData {
+  name: string
+  address: string
+  phone: string
+  email: string
+  vat_number: string
+  business_type: string
+  established_date: string
+  license_number: string
+}
+
+export interface BusinessInfoStepProps {
+  data?: BusinessInfoData
+  onUpdate: (data: BusinessInfoData) => void
+  onValidChange: (valid: boolean) => void
+}
+
 export interface DepartmentSummary {
   id: string
   name: string
@@ -20,7 +37,7 @@ export interface StaffMember {
   categories: string[]
   email?: string
   phone?: string
-  department_assignments: string[]
+  department_assignments: DepartmentSummary['id'][]
   haccpExpiry?: string
   notes?: string
 }
@@ -32,7 +49,7 @@ export interface StaffStepFormData {
   phone: string
   role: StaffRole
   categories: string[]
-  departmentAssignments: string[]
+  departmentAssignments: DepartmentSummary['id'][]
   haccpExpiry: string
   notes: string
 }
@@ -55,27 +72,67 @@ export interface StaffStepProps {
   onValidChange: (valid: boolean) => void
 }
 
+export type PointSource = 'manual' | 'prefill' | 'import'
+
+export type ConservationPointType = 'ambient' | 'fridge' | 'freezer' | 'blast'
+
+export type MaintenanceTaskType =
+  | 'temperature_calibration'
+  | 'deep_cleaning'
+  | 'defrosting'
+  | 'filter_replacement'
+  | 'seal_inspection'
+  | 'compressor_check'
+  | 'general_inspection'
+  | 'other'
+
+export type MaintenanceTaskStatus =
+  | 'scheduled'
+  | 'in_progress'
+  | 'completed'
+  | 'overdue'
+  | 'skipped'
+
+export interface ConservationMaintenanceTask {
+  id: string
+  title: string
+  conservationPointId: ConservationPoint['id']
+  conservationPointName?: string
+  type: MaintenanceTaskType
+  frequency: TaskFrequency
+  priority?: TaskPriority
+  estimatedDuration?: number
+  assignedRole?: StaffRole | string
+  assignedStaffIds: StaffMember['id'][]
+  nextDue?: string
+  instructions?: string[]
+  notes?: string
+  status?: MaintenanceTaskStatus
+}
+
+export type MaintenanceTask = ConservationMaintenanceTask
+
 export interface ConservationPoint {
   id: string
   name: string
-  departmentId: string
+  departmentId: DepartmentSummary['id']
   targetTemperature: number
-  pointType: 'ambient' | 'fridge' | 'freezer' | 'blast'
+  pointType: ConservationPointType
   isBlastChiller: boolean
   productCategories: string[]
   maintenanceTasks?: ConservationMaintenanceTask[]
   maintenanceDue?: string
-  source: 'manual' | 'prefill' | 'import'
+  source: PointSource
 }
 
 export interface ConservationStepFormData {
   name: string
-  departmentId: string
+  departmentId: DepartmentSummary['id']
   targetTemperature: string
-  pointType: 'ambient' | 'fridge' | 'freezer' | 'blast'
+  pointType: ConservationPointType
   isBlastChiller: boolean
   productCategories: string[]
-  source: 'manual' | 'prefill' | 'import'
+  source: PointSource
 }
 
 export interface ConservationStepProps {
@@ -94,6 +151,8 @@ export type TaskFrequency =
   | 'monthly'
   | 'quarterly'
   | 'annual'
+  | 'custom'
+  | 'as_needed'
 
 export type TaskPriority = 'low' | 'medium' | 'high' | 'critical'
 
@@ -110,41 +169,16 @@ export interface GeneralTask {
   name: string
   description?: string
   frequency: TaskFrequency
-  departmentId?: string
-  conservationPointId?: string
+  departmentId?: DepartmentSummary['id']
+  conservationPointId?: ConservationPoint['id']
   priority: TaskPriority
   estimatedDuration: number
   checklist: string[]
   requiredTools: string[]
   haccpCategory: HaccpTaskCategory
-  responsibleStaffIds?: string[]
+  responsibleStaffIds?: StaffMember['id'][]
   documentationUrl?: string
   validationNotes?: string
-}
-
-export type MaintenanceTaskType =
-  | 'temperature_monitoring'
-  | 'sanitization'
-  | 'defrosting'
-
-export interface MaintenanceTask {
-  id: string
-  conservationPointId: string
-  conservationPointName?: string
-  type: MaintenanceTaskType
-  frequency: TaskFrequency
-  assignedRole?: string
-  assignedStaffIds: string[]
-  notes?: string
-  estimatedDuration?: number
-  priority?: TaskPriority
-  nextDue?: string
-  instructions?: string[]
-}
-
-export interface ConservationMaintenanceTask extends MaintenanceTask {
-  title: string
-  status?: 'pending' | 'completed' | 'overdue'
 }
 
 export interface TasksStepData {
@@ -181,9 +215,9 @@ export interface ProductCategory {
 export interface InventoryProduct {
   id: string
   name: string
-  categoryId?: string
-  departmentId?: string
-  conservationPointId?: string
+  categoryId?: ProductCategory['id']
+  departmentId?: DepartmentSummary['id']
+  conservationPointId?: ConservationPoint['id']
   sku?: string
   barcode?: string
   supplierName?: string
@@ -209,4 +243,19 @@ export interface InventoryStepProps {
   conservationPoints: ConservationPoint[]
   onUpdate: (data: InventoryStepData) => void
   onValidChange: (valid: boolean) => void
+}
+
+export interface OnboardingData {
+  business?: BusinessInfoData
+  departments?: DepartmentSummary[]
+  staff?: StaffMember[]
+  conservation?: { points: ConservationPoint[] }
+  tasks?: TasksStepData
+  inventory?: InventoryStepData
+}
+
+export type OnboardingStepKey = keyof OnboardingData
+
+export type StepValidationMap = {
+  [Key in OnboardingStepKey]?: boolean
 }

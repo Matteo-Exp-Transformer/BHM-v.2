@@ -118,22 +118,26 @@ class ExcelExporter {
         .order('recorded_at', { ascending: false })
 
       data.temperatureReadings =
-        temperatureReadings?.map(reading => ({
-          ID: reading.id,
-          'Data/Ora': new Date(reading.recorded_at).toLocaleString('it-IT'),
-          Postazione: reading.conservation_points?.name,
-          'Temperatura (°C)': reading.temperature,
-          'Min Consentita': reading.conservation_points?.temperature_min,
-          'Max Consentita': reading.conservation_points?.temperature_max,
-          Conforme:
-            reading.temperature >=
-              reading.conservation_points?.temperature_min &&
-            reading.temperature <= reading.conservation_points?.temperature_max
-              ? 'Sì'
-              : 'No',
-          Operatore: reading.staff?.name,
-          Note: reading.notes || '',
-        })) || []
+        temperatureReadings?.map(reading => {
+          const point = reading.conservation_points
+          const compliant = this.isTemperatureCompliant(
+            reading.temperature,
+            point?.temperature_min,
+            point?.temperature_max
+          )
+
+          return {
+            ID: reading.id,
+            'Recorded At': this.formatDate(reading.recorded_at),
+            Temperature: reading.temperature,
+            'Min Allowed': point?.temperature_min ?? '',
+            'Max Allowed': point?.temperature_max ?? '',
+            Compliance: compliant ? 'Compliant' : 'Non-Compliant',
+            Location: point?.name ?? '',
+            Operator: reading.staff?.name ?? '',
+            Notes: reading.notes ?? '',
+          }
+        }) || []
     }
 
     // Fetch tasks
@@ -294,7 +298,7 @@ class ExcelExporter {
     return data
   }
 
-  private async calculateSummary(
+  async calculateSummary(
     companyId: string,
     dateRange: { start: Date; end: Date }
   ) {
@@ -309,21 +313,9 @@ class ExcelExporter {
       .gte('recorded_at', dateRange.start.toISOString())
       .lte('recorded_at', dateRange.end.toISOString())
 
-    let compliantReadings = 0
-    if (tempReadings) {
-      compliantReadings = tempReadings.filter(reading => {
-        const point = reading.conservation_points
-        return (
-          point &&
-          reading.temperature >= point.temperature_min &&
-          reading.temperature <= point.temperature_max
-        )
-      }).length
-    }
-
-    const complianceRate = totalReadings
-      ? Math.round((compliantReadings / totalReadings) * 100)
-      : 0
+    const stats = this.calculateComplianceStats(tempReadings ?? [])
+    const complianceRate = stats.complianceRate
+    const totalTemperatureReadings = totalReadings ?? stats.totalReadings ?? 0
 
     // Get tasks status
     const { count: completedTasks } = await supabase
@@ -343,14 +335,14 @@ class ExcelExporter {
       .lte('created_at', dateRange.end.toISOString())
 
     return {
-      totalReadings: totalReadings || 0,
+      totalReadings: totalTemperatureReadings,
       complianceRate,
       completedTasks: completedTasks || 0,
       overdueItems: overdueTasks || 0,
     }
   }
 
-  private addTemperatureSheet(workbook: XLSX.WorkBook, data: any[]): void {
+  addTemperatureSheet(workbook: XLSX.WorkBook, data: any[]): void {
     const worksheet = XLSX.utils.json_to_sheet(data)
 
     // Add styling and formatting
@@ -370,15 +362,15 @@ class ExcelExporter {
 
     // Conditional formatting for compliance column
     for (let row = 1; row <= range.e.r; row++) {
-      const complianceCol = this.findColumnIndex(data[0], 'Conforme')
+      const complianceCol = this.findColumnIndex(data[0], 'Compliance')
       if (complianceCol >= 0) {
         const cellRef = XLSX.utils.encode_cell({ r: row, c: complianceCol })
-        if (worksheet[cellRef] && worksheet[cellRef].v === 'No') {
+        if (worksheet[cellRef] && worksheet[cellRef].v === 'Non-Compliant') {
           worksheet[cellRef].s = {
             fill: { fgColor: { rgb: 'FFE6E6' } },
             font: { color: { rgb: 'CC0000' } },
           }
-        } else if (worksheet[cellRef] && worksheet[cellRef].v === 'Sì') {
+        } else if (worksheet[cellRef] && worksheet[cellRef].v === 'Compliant') {
           worksheet[cellRef].s = {
             fill: { fgColor: { rgb: 'E6FFE6' } },
             font: { color: { rgb: '006600' } },
@@ -396,7 +388,7 @@ class ExcelExporter {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Controlli Temperatura')
   }
 
-  private addTasksSheet(workbook: XLSX.WorkBook, data: any[]): void {
+  addTasksSheet(workbook: XLSX.WorkBook, data: any[]): void {
     const worksheet = XLSX.utils.json_to_sheet(data)
 
     // Add conditional formatting for status
@@ -431,7 +423,7 @@ class ExcelExporter {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Attività')
   }
 
-  private addProductsSheet(workbook: XLSX.WorkBook, data: any[]): void {
+  addProductsSheet(workbook: XLSX.WorkBook, data: any[]): void {
     const worksheet = XLSX.utils.json_to_sheet(data)
 
     // Add expiry date highlighting
@@ -468,7 +460,7 @@ class ExcelExporter {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Prodotti')
   }
 
-  private addStaffSheet(workbook: XLSX.WorkBook, data: any[]): void {
+  addStaffSheet(workbook: XLSX.WorkBook, data: any[]): void {
     const worksheet = XLSX.utils.json_to_sheet(data)
 
     const cols = Object.keys(data[0] || {}).map(key => ({
@@ -479,7 +471,7 @@ class ExcelExporter {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Personale')
   }
 
-  private addDepartmentsSheet(workbook: XLSX.WorkBook, data: any[]): void {
+  addDepartmentsSheet(workbook: XLSX.WorkBook, data: any[]): void {
     const worksheet = XLSX.utils.json_to_sheet(data)
 
     const cols = Object.keys(data[0] || {}).map(key => ({
@@ -490,7 +482,7 @@ class ExcelExporter {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Dipartimenti')
   }
 
-  private addSummarySheet(
+  addSummarySheet(
     workbook: XLSX.WorkBook,
     summary: any,
     dateRange: { start: Date; end: Date }
@@ -542,24 +534,126 @@ class ExcelExporter {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Riepilogo')
   }
 
-  private findColumnIndex(sampleRow: any, columnName: string): number {
+  findColumnIndex(sampleRow: any, columnName: string): number {
     const keys = Object.keys(sampleRow || {})
     return keys.findIndex(key => key === columnName)
   }
 
   // Quick export methods
-  async exportTemperatureReadings(
+  formatDate(date: Date | string): string {
+    const value = typeof date === 'string' ? new Date(date) : date
+    if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+      return ''
+    }
+
+    const day = String(value.getUTCDate()).padStart(2, '0')
+    const month = String(value.getUTCMonth() + 1).padStart(2, '0')
+    const year = value.getUTCFullYear()
+    const hours = String(value.getUTCHours()).padStart(2, '0')
+    const minutes = String(value.getUTCMinutes()).padStart(2, '0')
+
+    return `${day}/${month}/${year} ${hours}:${minutes}`
+  }
+
+  isTemperatureCompliant(
+    temperature: number | undefined,
+    min?: number | null,
+    max?: number | null
+  ): boolean {
+    if (typeof temperature !== 'number') return false
+    if (typeof min !== 'number' || typeof max !== 'number') return false
+    return temperature >= min && temperature <= max
+  }
+
+  calculateComplianceStats(
+    readings: Array<{
+      temperature?: number
+      conservation_points?: {
+        temperature_min?: number
+        temperature_max?: number
+      }
+    }>
+  ): {
+    totalReadings: number
+    compliantReadings: number
+    nonCompliantReadings: number
+    complianceRate: number
+    averageTemperature: number
+    minTemperature: number
+    maxTemperature: number
+  } {
+    if (!Array.isArray(readings) || readings.length === 0) {
+      return {
+        totalReadings: 0,
+        compliantReadings: 0,
+        nonCompliantReadings: 0,
+        complianceRate: 0,
+        averageTemperature: 0,
+        minTemperature: 0,
+        maxTemperature: 0,
+      }
+    }
+
+    let compliant = 0
+    let sum = 0
+    let min = Number.POSITIVE_INFINITY
+    let max = Number.NEGATIVE_INFINITY
+
+    for (const reading of readings) {
+      const temperature = reading?.temperature
+      if (typeof temperature === 'number') {
+        sum += temperature
+        if (temperature < min) min = temperature
+        if (temperature > max) max = temperature
+      }
+
+      if (
+        this.isTemperatureCompliant(
+          temperature,
+          reading?.conservation_points?.temperature_min,
+          reading?.conservation_points?.temperature_max
+        )
+      ) {
+        compliant += 1
+      }
+    }
+
+    const total = readings.length
+    const nonCompliant = total - compliant
+    const complianceRate = total ? Math.round((compliant / total) * 100) : 0
+    const averageTemperature = total ? sum / total : 0
+
+    return {
+      totalReadings: total,
+      compliantReadings: compliant,
+      nonCompliantReadings: nonCompliant,
+      complianceRate,
+      averageTemperature: Number(averageTemperature.toFixed(1)),
+      minTemperature: Number.isFinite(min) ? min : 0,
+      maxTemperature: Number.isFinite(max) ? max : 0,
+    }
+  }
+
+  async exportTemperatureData(
     companyId: string,
-    dateRange: { start: Date; end: Date }
+    dateRange: { start: Date; end: Date },
+    format: 'xlsx' | 'csv' = 'xlsx'
   ): Promise<Blob> {
     return this.exportData({
       companyId,
       dateRange,
       tables: ['temperature_readings'],
       includeCharts: false,
-      format: 'xlsx',
+      format,
       fileName: `Temperature_Readings_${dateRange.start.toISOString().split('T')[0]}`,
     })
+  }
+
+  async exportTemperatureReadings(
+    companyId: string,
+    dateRange: { start: Date; end: Date }
+  ): Promise<Blob> {
+    return this.exportTemperatureData(companyId, dateRange, 'xlsx')
   }
 
   async exportAllData(

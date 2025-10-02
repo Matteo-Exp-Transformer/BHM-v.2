@@ -281,8 +281,19 @@ export const formatTemperature = (temp: number): string => {
   return `${temp.toFixed(1)}°C`
 }
 
-// Classification function for conservation points
 export const classifyConservationPoint = (
+  setpointTemp: number,
+  isBlastChiller: boolean
+): ConservationPointType => {
+  if (isBlastChiller) return 'blast'
+  if (setpointTemp <= -15) return 'freezer'
+  if (setpointTemp <= 8) return 'fridge'
+  if (setpointTemp >= 15) return 'ambient'
+  return 'fridge'
+}
+
+// Classification function for conservation points
+export const classifyPointStatus = (
   point: ConservationPoint
 ): {
   status: ConservationStatus
@@ -443,7 +454,7 @@ export interface MaintenanceCompletion {
   completed_at: Date
   notes?: string
   photos?: string[]
-  next_due_date?: Date
+  next_due?: Date
   created_at: Date
 }
 
@@ -489,7 +500,7 @@ export interface CreateMaintenanceCompletionRequest {
   maintenance_task_id: string
   notes?: string
   photos?: string[]
-  next_due_date?: Date
+  next_due?: Date
 }
 
 // Filter interfaces
@@ -505,24 +516,28 @@ export interface TemperatureReadingsFilter {
   conservation_point_id?: string
   date_from?: Date
   date_to?: Date
-  status?: 'compliant' | 'warning' | 'critical'
+  status?: Array<'compliant' | 'warning' | 'critical'>
+  method?: TemperatureReading['method']
+  recorded_by?: string
 }
 
 export interface MaintenanceTasksFilter {
   conservation_point_id?: string
   assigned_to?: string
-  status?: 'scheduled' | 'in_progress' | 'completed' | 'overdue' | 'skipped'
+  status?: MaintenanceTask['status']
   type?: MaintenanceType
-  priority?: 'low' | 'medium' | 'high' | 'critical'
+  frequency?: MaintenanceFrequency
+  priority?: MaintenanceTask['priority']
 }
 
 // Statistics interfaces
 export interface ConservationStats {
   total_points: number
-  points_by_status: Record<ConservationStatus, number>
-  points_by_type: Record<ConservationPointType, number>
+  by_status: Record<ConservationStatus, number>
+  by_type: Record<ConservationPointType, number>
   temperature_compliance_rate: number
   maintenance_compliance_rate: number
+  alerts_count: number
 }
 
 export interface TemperatureStats {

@@ -18,14 +18,16 @@ const HomePage = () => {
     isLoadingConservation || isLoadingInventory || isLoadingEvents
 
   // Calculate compliance score based on real data
+  const totalConservationPoints = conservationStats?.total_points ?? 0
+  const compliantConservationPoints = conservationStats?.by_status.normal ?? 0
+
   const complianceScore = isLoading
     ? 0
     : Math.round(
-        (((conservationStats?.normal || 0) +
+        ((compliantConservationPoints +
           (inventoryStats?.active_products || 0)) /
           Math.max(
-            (conservationStats?.total || 1) +
-              (inventoryStats?.total_products || 1),
+            totalConservationPoints + (inventoryStats?.total_products || 1),
             1
           )) *
           100
@@ -53,7 +55,7 @@ const HomePage = () => {
       label: 'Punti Conservazione',
       value: isLoading
         ? '--'
-        : `${conservationStats?.normal || 0}/${conservationStats?.total || 0}`,
+        : `${compliantConservationPoints}/${totalConservationPoints}`,
       icon: CheckCircle,
       color: 'text-success-600',
       bgColor: 'bg-success-50',

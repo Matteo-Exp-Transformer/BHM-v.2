@@ -32,6 +32,22 @@ vi.mock('jspdf', () => ({
   jsPDF: vi.fn(() => mockPDF),
 }))
 
+const createQueryBuilder = (result: any) => {
+  const resolved = Promise.resolve(result)
+  const builder: any = {}
+  builder.select = vi.fn(() => builder)
+  builder.eq = vi.fn(() => builder)
+  builder.gte = vi.fn(() => builder)
+  builder.lte = vi.fn(() => builder)
+  builder.order = vi.fn(() => builder)
+  builder.single = vi.fn(() => resolved)
+  builder.then = (onFulfilled?: any, onRejected?: any) =>
+    resolved.then(onFulfilled, onRejected)
+  builder.catch = (onRejected?: any) => resolved.catch(onRejected)
+  builder.finally = (onFinally?: any) => resolved.finally(onFinally)
+  return builder
+}
+
 // Mock Supabase
 vi.mock('@/lib/supabase/client')
 
@@ -39,23 +55,26 @@ describe('HACCPReportGenerator', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    // Mock Supabase responses
-    vi.mocked(supabase.from).mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      gte: vi.fn().mockReturnThis(),
-      lte: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({
-        data: {
-          name: 'Test Company',
-          address: 'Via Test 123, Milano',
-          license_number: 'LIC123456',
-          responsible_person: 'Mario Rossi',
-        },
-        error: null,
-      }),
-    } as any)
+    vi.mocked(supabase.from).mockImplementation((table: string) => {
+      switch (table) {
+        case 'companies':
+          return createQueryBuilder({
+            data: {
+              name: 'Test Company',
+              address: 'Via Test 123, Milano',
+              license_number: 'LIC123456',
+              responsible_person: 'Mario Rossi',
+            },
+            error: null,
+          })
+        case 'temperature_readings':
+        case 'tasks':
+        case 'conservation_points':
+          return createQueryBuilder({ data: [], error: null })
+        default:
+          return createQueryBuilder({ data: [], error: null })
+      }
+    })
   })
 
   afterEach(() => {
@@ -131,34 +150,26 @@ describe('HACCPReportGenerator', () => {
       // Setup Supabase mock chain
       let callCount = 0
       vi.mocked(supabase.from).mockImplementation((table: string) => {
-        const mockChain = {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
-          gte: vi.fn().mockReturnThis(),
-          lte: vi.fn().mockReturnThis(),
-          order: vi.fn().mockReturnThis(),
-          single: vi.fn().mockImplementation(() => {
-            if (table === 'companies') {
-              return Promise.resolve({
-                data: {
-                  name: 'Test Company',
-                  address: 'Via Test 123, Milano',
-                  license_number: 'LIC123456',
-                  responsible_person: 'Mario Rossi',
-                },
-                error: null,
-              })
-            }
-
-            callCount++
-            if (callCount === 1) return Promise.resolve(mockTemperatureData)
-            if (callCount === 2) return Promise.resolve(mockMaintenanceData)
-            if (callCount === 3) return Promise.resolve(mockConservationData)
-
-            return Promise.resolve({ data: [], error: null })
-          }),
+        switch (table) {
+          case 'companies':
+            return createQueryBuilder({
+              data: {
+                name: 'Test Company',
+                address: 'Via Test 123, Milano',
+                license_number: 'LIC123456',
+                responsible_person: 'Mario Rossi',
+              },
+              error: null,
+            })
+          case 'temperature_readings':
+            return createQueryBuilder(mockTemperatureData)
+          case 'tasks':
+            return createQueryBuilder(mockMaintenanceData)
+          case 'conservation_points':
+            return createQueryBuilder(mockConservationData)
+          default:
+            return createQueryBuilder({ data: [], error: null })
         }
-        return mockChain as any
       })
 
       const result = await haccpReportGenerator.generateReport(mockConfig)
@@ -176,14 +187,9 @@ describe('HACCPReportGenerator', () => {
     it('should handle English language reports', async () => {
       const englishConfig = { ...mockConfig, language: 'en' as const }
 
-      vi.mocked(supabase.from).mockReturnValue({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockReturnThis(),
-        lte: vi.fn().mockReturnThis(),
-        order: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({ data: [], error: null }),
-      } as any)
+      vi.mocked(supabase.from).mockImplementation(() =>
+        createQueryBuilder({ data: [], error: null })
+      )
 
       await haccpReportGenerator.generateReport(englishConfig)
 
@@ -195,14 +201,12 @@ describe('HACCPReportGenerator', () => {
     })
 
     it('should handle missing company data gracefully', async () => {
-      vi.mocked(supabase.from).mockReturnValue({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockReturnThis(),
-        lte: vi.fn().mockReturnThis(),
-        order: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({ data: null, error: null }),
-      } as any)
+      vi.mocked(supabase.from).mockImplementation((table: string) => {
+        if (table === 'companies') {
+          return createQueryBuilder({ data: null, error: null })
+        }
+        return createQueryBuilder({ data: [], error: null })
+      })
 
       const result = await haccpReportGenerator.generateReport(mockConfig)
 
@@ -215,63 +219,62 @@ describe('HACCPReportGenerator', () => {
     })
 
     it('should include temperature compliance indicators', async () => {
-      const mockData = {
-        data: [
-          {
-            recorded_at: '2025-01-15T10:00:00Z',
-            temperature: 4.2, // Within range
-            conservation_points: { name: 'Frigorifero 1' },
-            staff: { name: 'Test User' },
-          },
-          {
-            recorded_at: '2025-01-15T14:00:00Z',
-            temperature: 8.5, // Out of range
-            conservation_points: { name: 'Frigorifero 1' },
-            staff: { name: 'Test User' },
-          },
-        ],
-        error: null,
-      }
-
-      const mockConservationPoints = {
-        data: [
-          {
-            name: 'Frigorifero 1',
-            temperature_min: 2,
-            temperature_max: 6,
-            temperature_readings: [],
-          },
-        ],
-        error: null,
-      }
-
-      let callCount = 0
-      vi.mocked(supabase.from).mockImplementation(() => {
-        const mockChain = {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
-          gte: vi.fn().mockReturnThis(),
-          lte: vi.fn().mockReturnThis(),
-          order: vi.fn().mockReturnThis(),
-          single: vi.fn().mockImplementation(() => {
-            callCount++
-            if (callCount === 1)
-              return Promise.resolve({ data: mockData.data[0], error: null })
-            if (callCount === 2) return Promise.resolve(mockData)
-            if (callCount === 3)
-              return Promise.resolve({ data: [], error: null })
-            if (callCount === 4) return Promise.resolve(mockConservationPoints)
-            return Promise.resolve({ data: [], error: null })
-          }),
+      vi.mocked(supabase.from).mockImplementation((table: string) => {
+        switch (table) {
+          case 'companies':
+            return createQueryBuilder({
+              data: {
+                name: 'Test Company',
+                address: 'Via Test 123',
+                license_number: 'LIC123',
+                responsible_person: 'Mario Rossi',
+              },
+              error: null,
+            })
+          case 'temperature_readings':
+            return createQueryBuilder({
+              data: [
+                {
+                  recorded_at: '2025-01-15T10:00:00Z',
+                  temperature: 4,
+                  conservation_points: { name: 'Frigo 1' },
+                  staff: { name: 'Operatore A' },
+                },
+                {
+                  recorded_at: '2025-01-15T16:00:00Z',
+                  temperature: 10,
+                  conservation_points: { name: 'Frigo 1' },
+                  staff: { name: 'Operatore B' },
+                },
+              ],
+              error: null,
+            })
+          case 'conservation_points':
+            return createQueryBuilder({
+              data: [
+                {
+                  name: 'Frigo 1',
+                  temperature_min: 2,
+                  temperature_max: 6,
+                  tolerance_range: 1,
+                  temperature_readings: [
+                    { temperature: 4 },
+                    { temperature: 10 },
+                  ],
+                },
+              ],
+              error: null,
+            })
+          case 'tasks':
+            return createQueryBuilder({ data: [], error: null })
+          default:
+            return createQueryBuilder({ data: [], error: null })
         }
-        return mockChain as any
       })
 
       await haccpReportGenerator.generateReport(mockConfig)
 
-      // Should set green color for compliant readings
       expect(mockPDF.setTextColor).toHaveBeenCalledWith(0, 128, 0)
-      // Should set red color for non-compliant readings
       expect(mockPDF.setTextColor).toHaveBeenCalledWith(255, 0, 0)
     })
   })

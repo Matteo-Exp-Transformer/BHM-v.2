@@ -21,6 +21,7 @@ import type {
   ConservationStepProps,
   MaintenanceTask,
   MaintenanceTaskType,
+  PointSource,
   TaskFrequency,
 } from '@/types/onboarding'
 import {
@@ -36,6 +37,11 @@ import {
   normalizeMaintenanceTask,
   validateMaintenanceTask,
 } from '@/utils/onboarding/conservationUtils'
+import { MAINTENANCE_TASK_TYPES } from '@/types/conservation'
+import {
+  getFrequencyLabel,
+  TASK_FREQUENCIES,
+} from '@/utils/onboarding/taskUtils'
 
 const EMPTY_FORM: ConservationStepFormData = {
   name: '',
@@ -319,8 +325,11 @@ const ConservationStep = ({
                   {task.title || 'Nuova manutenzione'}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {task.type} • {task.frequency} •{' '}
-                  {task.estimatedDuration || 30} min
+                  {MAINTENANCE_TASK_TYPES[
+                    task.type as keyof typeof MAINTENANCE_TASK_TYPES
+                  ]?.label ?? task.type}{' '}
+                  • {getFrequencyLabel(task.frequency)} •{' '}
+                  {task.estimatedDuration ?? 30} min
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -362,45 +371,42 @@ const ConservationStep = ({
                   </div>
                   <div>
                     <Label>Tipo *</Label>
-                    <select
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    <Select
                       value={task.type}
-                      onChange={event =>
+                      onValueChange={value =>
                         handleUpdateMaintenanceTask(index, {
-                          type: event.target.value as MaintenanceTaskType,
+                          type: value as MaintenanceTaskType,
                         })
                       }
                     >
-                      {Object.entries(CONSERVATION_POINT_TYPES).map(
-                        ([key, info]) => (
-                          <option key={key} value={key}>
-                            {info.label}
-                          </option>
+                      {Object.entries(MAINTENANCE_TASK_TYPES).map(
+                        ([value, config]) => (
+                          <SelectOption key={value} value={value}>
+                            {config.label}
+                          </SelectOption>
                         )
                       )}
-                    </select>
+                    </Select>
                   </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
                   <div>
                     <Label>Frequenza *</Label>
-                    <select
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    <Select
                       value={task.frequency}
-                      onChange={event =>
+                      onValueChange={value =>
                         handleUpdateMaintenanceTask(index, {
-                          frequency: event.target.value as TaskFrequency,
+                          frequency: value as TaskFrequency,
                         })
                       }
                     >
-                      <option value="daily">Giornaliera</option>
-                      <option value="weekly">Settimanale</option>
-                      <option value="monthly">Mensile</option>
-                      <option value="quarterly">Trimestrale</option>
-                      <option value="annually">Annuale</option>
-                      <option value="custom">Personalizzata</option>
-                    </select>
+                      {TASK_FREQUENCIES.map(option => (
+                        <SelectOption key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectOption>
+                      ))}
+                    </Select>
                   </div>
                   <div>
                     <Label>Durata stimata (min)</Label>
@@ -436,7 +442,25 @@ const ConservationStep = ({
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div>
+                    <Label>Ruolo assegnato</Label>
+                    <select
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                      value={task.assignedRole ?? ''}
+                      onChange={event =>
+                        handleUpdateMaintenanceTask(index, {
+                          assignedRole: event.target.value || undefined,
+                        })
+                      }
+                    >
+                      <option value="">Seleziona ruolo</option>
+                      <option value="responsabile">Responsabile</option>
+                      <option value="dipendente">Dipendente</option>
+                      <option value="collaboratore">Collaboratore</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
                   <div>
                     <Label>Assegnato a</Label>
                     <select
@@ -478,7 +502,7 @@ const ConservationStep = ({
                   </div>
                 </div>
 
-                <div>
+                <div className="md:col-span-3">
                   <Label>Checklist / istruzioni</Label>
                   <Textarea
                     rows={3}
@@ -495,7 +519,7 @@ const ConservationStep = ({
                   />
                 </div>
 
-                <div>
+                <div className="md:col-span-3">
                   <Label>Note operatore</Label>
                   <Textarea
                     rows={2}
@@ -701,9 +725,8 @@ const ConservationStep = ({
             </div>
 
             <div>
-              <Label htmlFor="point-department">Reparto *</Label>
+              <Label>Reparto *</Label>
               <Select
-                id="point-department"
                 value={formData.departmentId}
                 onValueChange={value =>
                   setFormData(prev => ({ ...prev, departmentId: value }))
@@ -838,7 +861,10 @@ const ConservationStep = ({
               <Select
                 value={formData.source}
                 onValueChange={value =>
-                  setFormData(prev => ({ ...prev, source: value }))
+                  setFormData(prev => ({
+                    ...prev,
+                    source: value as PointSource,
+                  }))
                 }
               >
                 <SelectOption value="manual">Inserimento manuale</SelectOption>

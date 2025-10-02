@@ -89,14 +89,48 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
     },
   ]
 
+  const transformProductRecord = (record: any): Product => {
+    return {
+      id: record.id,
+      company_id: record.company_id,
+      name: record.name,
+      category_id: record.category_id ?? undefined,
+      department_id: record.department_id ?? undefined,
+      conservation_point_id: record.conservation_point_id ?? undefined,
+      barcode: record.barcode ?? undefined,
+      sku: record.sku ?? undefined,
+      supplier_name: record.supplier_name ?? undefined,
+      purchase_date: record.purchase_date
+        ? new Date(record.purchase_date)
+        : undefined,
+      expiry_date: record.expiry_date
+        ? new Date(record.expiry_date)
+        : undefined,
+      quantity:
+        record.quantity === null || record.quantity === undefined
+          ? undefined
+          : Number(record.quantity),
+      unit: record.unit ?? undefined,
+      allergens: Array.isArray(record.allergens)
+        ? (record.allergens as AllergenType[])
+        : [],
+      label_photo_url: record.label_photo_url ?? undefined,
+      notes: record.notes ?? undefined,
+      status: record.status,
+      compliance_status: record.compliance_status ?? undefined,
+      created_at: record.created_at ? new Date(record.created_at) : new Date(),
+      updated_at: record.updated_at ? new Date(record.updated_at) : new Date(),
+    }
+  }
+
   const {
     data: products = [],
     isLoading,
     error,
     refetch,
-  } = useQuery({
+  } = useQuery<Product[]>({
     queryKey: QUERY_KEYS.products(companyId || '', searchParams?.filters),
-    queryFn: async () => {
+    queryFn: async (): Promise<Product[]> => {
       if (!companyId) {
         console.log('🔧 No company_id, using mock data for products')
         return mockProducts
@@ -123,8 +157,9 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
         return mockProducts
       }
 
-      console.log('✅ Loaded products from Supabase:', data?.length || 0)
-      return data || []
+      const transformed = (data || []).map(transformProductRecord)
+      console.log('✅ Loaded products from Supabase:', transformed.length)
+      return transformed
     },
     enabled: !!companyId && !!user,
   })
@@ -155,26 +190,56 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
 
       const stats: InventoryStats = {
         total_products: products.length,
-        active_products: products.filter(p => p.status === 'active').length,
-        expiring_soon: products.filter(
-          p =>
-            p.status === 'active' &&
-            new Date(p.expiry_date) <= soon &&
-            new Date(p.expiry_date) > now
+        active_products: products.filter(
+          (product: Product) => product.status === 'active'
         ).length,
-        expired: products.filter(
-          p => new Date(p.expiry_date) <= now || p.status === 'expired'
-        ).length,
-        by_category: {},
-        by_department: {},
+        expiring_soon: products.filter((product: Product) => {
+          if (!product.expiry_date) return false
+          return (
+            product.status === 'active' &&
+            product.expiry_date <= soon &&
+            product.expiry_date > now
+          )
+        }).length,
+        expired: products.filter((product: Product) => {
+          if (!product.expiry_date) return product.status === 'expired'
+          return product.expiry_date <= now || product.status === 'expired'
+        }).length,
+        by_category: products.reduce<Record<string, number>>(
+          (acc, product: Product) => {
+            if (product.category_id) {
+              acc[product.category_id] = (acc[product.category_id] || 0) + 1
+            }
+            return acc
+          },
+          {}
+        ),
+        by_department: products.reduce<Record<string, number>>(
+          (acc, product: Product) => {
+            if (product.department_id) {
+              acc[product.department_id] = (acc[product.department_id] || 0) + 1
+            }
+            return acc
+          },
+          {}
+        ),
         by_status: {
-          active: products.filter(p => p.status === 'active').length,
-          expired: products.filter(p => p.status === 'expired').length,
-          consumed: products.filter(p => p.status === 'consumed').length,
-          waste: products.filter(p => p.status === 'waste').length,
+          active: products.filter(
+            (product: Product) => product.status === 'active'
+          ).length,
+          expired: products.filter(
+            (product: Product) => product.status === 'expired'
+          ).length,
+          consumed: products.filter(
+            (product: Product) => product.status === 'consumed'
+          ).length,
+          waste: products.filter(
+            (product: Product) => product.status === 'waste'
+          ).length,
         },
         compliance_rate: Math.round(
-          (products.filter(p => p.status === 'active').length /
+          (products.filter((product: Product) => product.status === 'active')
+            .length /
             Math.max(products.length, 1)) *
             100
         ),
@@ -188,13 +253,21 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
   // Create product mutation
   const createProductMutation = useMutation({
     mutationFn: async (productData: CreateProductForm): Promise<Product> => {
+      const payload = {
+        ...productData,
+        company_id: companyId,
+        allergens: productData.allergens || [],
+        purchase_date: productData.purchase_date
+          ? productData.purchase_date.toISOString()
+          : null,
+        expiry_date: productData.expiry_date
+          ? productData.expiry_date.toISOString()
+          : null,
+      }
+
       const { data, error } = await supabase
         .from('products')
-        .insert({
-          ...productData,
-          company_id: companyId,
-          allergens: productData.allergens || [],
-        })
+        .insert(payload)
         .select()
         .single()
 
@@ -203,7 +276,7 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
         throw error
       }
 
-      return data as Product
+      return transformProductRecord(data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -226,13 +299,21 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
       id,
       ...productData
     }: CreateProductForm & { id: string }): Promise<Product> => {
+      const payload = {
+        ...productData,
+        allergens: productData.allergens || [],
+        updated_at: new Date().toISOString(),
+        purchase_date: productData.purchase_date
+          ? productData.purchase_date.toISOString()
+          : null,
+        expiry_date: productData.expiry_date
+          ? productData.expiry_date.toISOString()
+          : null,
+      }
+
       const { data, error } = await supabase
         .from('products')
-        .update({
-          ...productData,
-          allergens: productData.allergens || [],
-          updated_at: new Date().toISOString(),
-        })
+        .update(payload)
         .eq('id', id)
         .eq('company_id', companyId)
         .select()
@@ -243,7 +324,7 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
         throw error
       }
 
-      return data as Product
+      return transformProductRecord(data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -314,7 +395,7 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
         throw error
       }
 
-      return data as Product
+      return transformProductRecord(data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

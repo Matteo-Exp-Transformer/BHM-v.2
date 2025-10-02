@@ -16,12 +16,12 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Select, SelectOption } from '@/components/ui/Select'
 
 import type {
-  TasksStepProps,
-  TasksStepData,
   GeneralTask,
+  HaccpTaskCategory,
   TaskFrequency,
   TaskPriority,
-  HaccpTaskCategory,
+  TasksStepData,
+  TasksStepProps,
 } from '@/types/onboarding'
 import {
   createDraftTask,

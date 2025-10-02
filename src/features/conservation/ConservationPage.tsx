@@ -18,10 +18,10 @@ import { AddTemperatureModal } from './components/AddTemperatureModal'
 import { TemperatureReadingCard } from './components/TemperatureReadingCard'
 import { MaintenanceTaskCard } from './components/MaintenanceTaskCard'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
-import {
+import type {
   ConservationPoint,
-  TemperatureReading,
   MaintenanceTask,
+  TemperatureReading,
 } from '@/types/conservation'
 
 export default function ConservationPage() {
@@ -216,22 +216,30 @@ export default function ConservationPage() {
           <div className="text-center">
             <div className="text-2xl mb-1">🌡️</div>
             <div className="text-sm text-gray-600">Ambiente</div>
-            <div className="text-lg font-semibold">{stats.byType.ambient}</div>
+            <div className="text-lg font-semibold">
+              {stats.by_type.ambient ?? 0}
+            </div>
           </div>
           <div className="text-center">
             <div className="text-2xl mb-1">❄️</div>
             <div className="text-sm text-gray-600">Frigorifero</div>
-            <div className="text-lg font-semibold">{stats.byType.fridge}</div>
+            <div className="text-lg font-semibold">
+              {stats.by_type.fridge ?? 0}
+            </div>
           </div>
           <div className="text-center">
             <div className="text-2xl mb-1">🧊</div>
             <div className="text-sm text-gray-600">Freezer</div>
-            <div className="text-lg font-semibold">{stats.byType.freezer}</div>
+            <div className="text-lg font-semibold">
+              {stats.by_type.freezer ?? 0}
+            </div>
           </div>
           <div className="text-center">
             <div className="text-2xl mb-1">⚡</div>
             <div className="text-sm text-gray-600">Abbattitore</div>
-            <div className="text-lg font-semibold">{stats.byType.blast}</div>
+            <div className="text-lg font-semibold">
+              {stats.by_type.blast ?? 0}
+            </div>
           </div>
         </div>
       </div>
@@ -239,7 +247,7 @@ export default function ConservationPage() {
       {/* Conservation Points List */}
       <CollapsibleCard
         title="Punti di Conservazione"
-        subtitle={`${stats.total} punti configurati`}
+        subtitle={`${stats.total_points} punti configurati`}
         defaultExpanded={true}
         icon={Thermometer}
         actions={
@@ -262,7 +270,7 @@ export default function ConservationPage() {
               <div>
                 <p className="text-xs text-blue-700">Frigoriferi</p>
                 <p className="text-lg font-bold text-blue-900">
-                  {stats.byType.fridge}
+                  {stats.by_type.fridge ?? 0}
                 </p>
               </div>
               <div className="text-xl">❄️</div>
@@ -274,7 +282,7 @@ export default function ConservationPage() {
               <div>
                 <p className="text-xs text-cyan-700">Freezer</p>
                 <p className="text-lg font-bold text-cyan-900">
-                  {stats.byType.freezer}
+                  {stats.by_type.freezer ?? 0}
                 </p>
               </div>
               <div className="text-xl">🧊</div>
@@ -286,7 +294,7 @@ export default function ConservationPage() {
               <div>
                 <p className="text-xs text-purple-700">Abbattitore</p>
                 <p className="text-lg font-bold text-purple-900">
-                  {stats.byType.blast}
+                  {stats.by_type.blast ?? 0}
                 </p>
               </div>
               <div className="text-xl">⚡</div>
@@ -298,7 +306,7 @@ export default function ConservationPage() {
               <div>
                 <p className="text-xs text-orange-700">Dispensa</p>
                 <p className="text-lg font-bold text-orange-900">
-                  {stats.byType.ambient}
+                  {stats.by_type.ambient ?? 0}
                 </p>
               </div>
               <div className="text-xl">🌡️</div>
@@ -487,7 +495,7 @@ export default function ConservationPage() {
       {/* Maintenance Tasks List */}
       <CollapsibleCard
         title="Manutenzioni Programmate"
-        subtitle={`${maintenanceStats.total} task configurati`}
+        subtitle={`${maintenanceStats.total_tasks} task configurati`}
         defaultExpanded={true}
         icon={Wrench}
         actions={
@@ -510,7 +518,7 @@ export default function ConservationPage() {
               <div>
                 <p className="text-xs text-blue-700">Totale</p>
                 <p className="text-lg font-bold text-blue-900">
-                  {maintenanceStats.total}
+                  {maintenanceStats.total_tasks}
                 </p>
               </div>
               <Wrench className="w-5 h-5 text-blue-600" />
@@ -522,7 +530,7 @@ export default function ConservationPage() {
               <div>
                 <p className="text-xs text-red-700">In Ritardo</p>
                 <p className="text-lg font-bold text-red-900">
-                  {maintenanceStats.overdue}
+                  {maintenanceStats.overdue_tasks}
                 </p>
               </div>
               <AlertTriangle className="w-5 h-5 text-red-600" />
@@ -534,7 +542,11 @@ export default function ConservationPage() {
               <div>
                 <p className="text-xs text-yellow-700">Urgenti</p>
                 <p className="text-lg font-bold text-yellow-900">
-                  {maintenanceStats.pending}
+                  {Math.max(
+                    maintenanceStats.total_tasks -
+                      maintenanceStats.overdue_tasks,
+                    0
+                  )}
                 </p>
               </div>
               <Clock className="w-5 h-5 text-yellow-600" />
@@ -546,7 +558,7 @@ export default function ConservationPage() {
               <div>
                 <p className="text-xs text-green-700">Programmate</p>
                 <p className="text-lg font-bold text-green-900">
-                  {maintenanceStats.scheduled}
+                  {maintenanceStats.completed_tasks}
                 </p>
               </div>
               <CheckCircle className="w-5 h-5 text-green-600" />
@@ -565,21 +577,21 @@ export default function ConservationPage() {
               <div className="text-lg mb-1">🌡️</div>
               <div className="text-xs text-gray-600">Controllo Temperature</div>
               <div className="text-sm font-semibold">
-                {maintenanceStats.byType.temperature_calibration}
+                {maintenanceStats.tasks_by_type.temperature_calibration ?? 0}
               </div>
             </div>
             <div className="text-center">
               <div className="text-lg mb-1">🧼</div>
               <div className="text-xs text-gray-600">Pulizia Profonda</div>
               <div className="text-sm font-semibold">
-                {maintenanceStats.byType.deep_cleaning}
+                {maintenanceStats.tasks_by_type.deep_cleaning ?? 0}
               </div>
             </div>
             <div className="text-center">
               <div className="text-lg mb-1">❄️</div>
               <div className="text-xs text-gray-600">Sbrinamento</div>
               <div className="text-sm font-semibold">
-                {maintenanceStats.byType.defrosting}
+                {maintenanceStats.tasks_by_type.defrosting ?? 0}
               </div>
             </div>
           </div>

@@ -322,8 +322,8 @@ export const DashboardPage: React.FC = () => {
             },
             upcoming: maintenanceTasks.slice(0, 5).map(task => ({
               id: task.id,
-              title: `Manutenzione ${task.kind}`,
-              due_date: task.next_due_date.toISOString(),
+              title: `Manutenzione ${task.title} (${task.type})`,
+              due_date: task.next_due.toISOString(),
               assigned_to: task.assigned_to || 'Unassigned',
               priority: 'medium' as 'low' | 'medium' | 'high' | 'critical',
               type: 'Maintenance',

@@ -1,16 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Building2, Plus, Trash2, Edit2 } from 'lucide-react'
 
-interface Department {
-  id: string
-  name: string
-  description: string
-  is_active: boolean
-}
+import type { DepartmentSummary } from '@/types/onboarding'
 
 interface DepartmentsStepProps {
-  data?: Department[]
-  onUpdate: (data: Department[]) => void
+  data?: DepartmentSummary[]
+  onUpdate: (data: DepartmentSummary[]) => void
   onValidChange: (isValid: boolean) => void
 }
 
@@ -65,7 +60,7 @@ const DepartmentsStep = ({
     setErrors(newErrors)
 
     if (Object.keys(newErrors).length === 0) {
-      const newDepartment: Department = {
+      const newDepartment: DepartmentSummary = {
         id: generateId(),
         name: formData.name.trim(),
         description: formData.description.trim(),
@@ -118,12 +113,12 @@ const DepartmentsStep = ({
     onUpdate(departments.filter(dept => dept.id !== id))
   }
 
-  const startEdit = (department: Department) => {
+  const startEdit = (department: DepartmentSummary) => {
     setEditingId(department.id)
     setFormData({
       name: department.name,
-      description: department.description,
-      is_active: department.is_active,
+      description: department.description ?? '',
+      is_active: department.is_active ?? true,
     })
     setErrors({})
   }
@@ -135,7 +130,7 @@ const DepartmentsStep = ({
   }
 
   const prefillSampleData = () => {
-    const sampleDepartments: Department[] = [
+    const sampleDepartments: DepartmentSummary[] = [
       {
         id: generateId(),
         name: 'Cucina',
