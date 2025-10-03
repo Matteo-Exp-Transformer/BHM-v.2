@@ -191,10 +191,10 @@ export class AutomatedReportingService {
   private templates: Map<string, ReportTemplate> = new Map()
   private generatedReports: Map<string, GeneratedReport> = new Map()
   private automationRules: Map<string, AutomationRule> = new Map()
-  private scheduledJobs: Map<string, NodeJS.Timeout> = new Map()
+  private scheduledJobs: Map<string, ReturnType<typeof setTimeout>> = new Map()
   private reportQueue: ReportGenerationQueue
   private deliveryService: ReportDeliveryService
-  private isInitialized = false
+  private _isInitialized = false
 
   constructor() {
     this.reportQueue = new ReportGenerationQueue()
@@ -223,7 +223,7 @@ export class AutomatedReportingService {
       // Setup scheduled reports
       await this.setupScheduledReports()
 
-      this.isInitialized = true
+      this._isInitialized = true
       console.log('✅ Automated Reporting Service initialized successfully')
     } catch (error) {
       console.error(
@@ -380,7 +380,7 @@ export class AutomatedReportingService {
    */
   public async executeAutomationRule(
     ruleId: string,
-    context?: Record<string, any>
+    _context?: Record<string, any>
   ): Promise<GeneratedReport> {
     const rule = this.automationRules.get(ruleId)
     if (!rule) {
@@ -699,33 +699,6 @@ export class AutomatedReportingService {
 
   private async loadAutomationRules(): Promise<void> {
     console.log('🤖 Loading automation rules...')
-
-    // Create default automation rules
-    const criticalTempRule: Omit<
-      AutomationRule,
-      'id' | 'lastTriggered' | 'executionCount'
-    > = {
-      name: 'Critical Temperature Alert Report',
-      description:
-        'Generate immediate report when critical temperature is detected',
-      trigger: {
-        type: 'threshold',
-        config: {
-          metric: 'temperature',
-          operator: '>',
-          value: 8,
-          duration: 0,
-        } as ThresholdTrigger,
-      },
-      templateId: '', // Would be set to actual template ID
-      parameters: {},
-      filters: {},
-      enabled: true,
-      priority: 'critical',
-    }
-
-    // Note: In real implementation, template ID would be properly linked
-    // await this.createAutomationRule(criticalTempRule)
   }
 
   private async setupScheduledReports(): Promise<void> {
@@ -1073,7 +1046,7 @@ class ReportDeliveryService {
 
   private async deliverByEmail(
     delivery: ReportDelivery,
-    report: GeneratedReport
+    _report: GeneratedReport
   ): Promise<void> {
     // In a real implementation, this would send actual emails
     console.log(`📧 Email sent to ${delivery.recipient.address}`)
@@ -1082,7 +1055,7 @@ class ReportDeliveryService {
 
   private async deliverToDashboard(
     delivery: ReportDelivery,
-    report: GeneratedReport
+    _report: GeneratedReport
   ): Promise<void> {
     // In a real implementation, this would update dashboard notifications
     console.log(
@@ -1093,7 +1066,7 @@ class ReportDeliveryService {
 
   private async deliverByWebhook(
     delivery: ReportDelivery,
-    report: GeneratedReport
+    _report: GeneratedReport
   ): Promise<void> {
     // In a real implementation, this would make HTTP POST requests
     console.log(`🔗 Webhook called: ${delivery.recipient.address}`)
@@ -1102,7 +1075,7 @@ class ReportDeliveryService {
 
   private async deliverToFileShare(
     delivery: ReportDelivery,
-    report: GeneratedReport
+    _report: GeneratedReport
   ): Promise<void> {
     // In a real implementation, this would upload to file sharing services
     console.log(`📁 File uploaded to ${delivery.recipient.address}`)
