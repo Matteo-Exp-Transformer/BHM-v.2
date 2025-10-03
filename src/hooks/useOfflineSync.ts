@@ -1,22 +1,66 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import {
-  backgroundSyncService,
-  type SyncResult,
-  type SyncProgress,
-} from '@/services/offline/BackgroundSync'
-import { indexedDBManager } from '@/services/offline/IndexedDBManager'
-import {
-  conflictResolver,
-  type ConflictData,
-} from '@/services/offline/ConflictResolver'
-import { useAuth } from './useAuth'
 
-interface SyncOperation {
+const OFFLINE_ENTITIES = [
+  'temperature-reading',
+  'maintenance-task',
+  'conservation-point',
+  'calendar-event',
+  'staff',
+  'department',
+  'product',
+] as const
+
+type OfflineEntity = (typeof OFFLINE_ENTITIES)[number]
+
+interface OfflineEntityMap {
+  'temperature-reading': {
+    id?: string
+    temperature: number
+    recorded_at?: string | Date
+    [key: string]: unknown
+  }
+  'maintenance-task': {
+    id?: string
+    title: string
+    [key: string]: unknown
+  }
+  'conservation-point': {
+    id?: string
+    name: string
+    [key: string]: unknown
+  }
+  'calendar-event': {
+    id?: string
+    title: string
+    [key: string]: unknown
+  }
+  staff: {
+    id?: string
+    name: string
+    [key: string]: unknown
+  }
+  department: {
+    id?: string
+    name: string
+    [key: string]: unknown
+  }
+  product: {
+    id?: string
+    name: string
+    [key: string]: unknown
+  }
+}
+
+type SyncOperationType = 'CREATE' | 'UPDATE' | 'DELETE'
+
+type SyncOperationPayload<Entity extends OfflineEntity> = OfflineEntityMap[Entity]
+
+interface SyncOperation<Entity extends OfflineEntity = OfflineEntity> {
   id: string
-  type: 'CREATE' | 'UPDATE' | 'DELETE'
-  entity: string
-  data: any
+  type: SyncOperationType
+  entity: Entity
+  data: SyncOperationPayload<Entity>
   timestamp: number
   retryCount: number
   maxRetries: number
@@ -36,33 +80,129 @@ interface UseOfflineSyncOptions {
   maxRetries?: number
 }
 
+const isOfflineEntity = (value: string): value is OfflineEntity =>
+  OFFLINE_ENTITIES.includes(value as OfflineEntity)
+
+const getEndpointForEntity = (entity: OfflineEntity): string => {
+  const endpoints: Record<OfflineEntity, string> = {
+    'temperature-reading': '/api/temperature-readings',
+    'maintenance-task': '/api/maintenance-tasks',
+    'conservation-point': '/api/conservation-points',
+    'calendar-event': '/api/calendar-events',
+    staff: '/api/staff',
+    department: '/api/departments',
+    product: '/api/products',
+  }
+
+  return endpoints[entity]
+}
+
 export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
   const {
     autoSync = true,
-    syncInterval = 30000, // 30 seconds
+    syncInterval = 30000,
     maxRetries = 3,
   } = options
 
   const queryClient = useQueryClient()
   const [state, setState] = useState<OfflineSyncState>({
-    isOnline: navigator.onLine,
+    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     isSyncing: false,
     pendingOperations: [],
     lastSyncTime: null,
     syncErrors: [],
   })
 
-  // Load pending operations from storage
-  useEffect(() => {
-    loadPendingOperations()
+  const savePendingOperations = useCallback((operations: SyncOperation[]) => {
+    try {
+      localStorage.setItem('haccp_pending_operations', JSON.stringify(operations))
+    } catch (error) {
+      console.error('Failed to save pending operations:', error)
+    }
   }, [])
 
-  // Network status monitoring
+  const syncPendingOperations = useCallback(async () => {
+    if (state.isSyncing || state.pendingOperations.length === 0 || !state.isOnline) {
+      return
+    }
+
+    setState(prev => ({ ...prev, isSyncing: true, syncErrors: [] }))
+
+    const results = await Promise.allSettled(
+      state.pendingOperations.map(operation => syncSingleOperation(operation, queryClient))
+    )
+
+    const successfulOperations: string[] = []
+    const failedOperations: Array<{ operation: SyncOperation; error: string }> = []
+
+    results.forEach((result, index) => {
+      const operation = state.pendingOperations[index]
+
+      if (result.status === 'fulfilled' && result.value) {
+        successfulOperations.push(operation.id)
+      } else {
+        const errorMessage =
+          result.status === 'rejected'
+            ? result.reason instanceof Error
+              ? result.reason.message
+              : String(result.reason)
+            : 'Unknown error'
+
+        const shouldRemove = operation.retryCount + 1 >= operation.maxRetries
+
+        if (shouldRemove) {
+          failedOperations.push({ operation, error: errorMessage })
+          successfulOperations.push(operation.id)
+        } else {
+          operation.retryCount += 1
+        }
+      }
+    })
+
+    setState(prev => {
+      const remainingOperations = prev.pendingOperations.filter(
+        op => !successfulOperations.includes(op.id)
+      )
+      savePendingOperations(remainingOperations)
+
+      return {
+        ...prev,
+        pendingOperations: remainingOperations,
+        syncErrors: failedOperations,
+        isSyncing: false,
+        lastSyncTime: new Date(),
+      }
+    })
+
+    if (successfulOperations.length > 0) {
+      queryClient.invalidateQueries({ queryKey: ['conservation'] })
+      queryClient.invalidateQueries({ queryKey: ['calendar'] })
+      queryClient.invalidateQueries({ queryKey: ['maintenance'] })
+    }
+  }, [queryClient, savePendingOperations, state])
+
+  const loadPendingOperations = useCallback(() => {
+    try {
+      const stored = localStorage.getItem('haccp_pending_operations')
+      if (stored) {
+        const operations = JSON.parse(stored) as Array<SyncOperation>
+        const validOperations = operations.filter(op => isOfflineEntity(op.entity))
+        setState(prev => ({ ...prev, pendingOperations: validOperations }))
+      }
+    } catch (error) {
+      console.error('Failed to load pending operations:', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadPendingOperations()
+  }, [loadPendingOperations])
+
   useEffect(() => {
     const handleOnline = () => {
       setState(prev => ({ ...prev, isOnline: true }))
       if (autoSync) {
-        syncPendingOperations()
+        void syncPendingOperations()
       }
     }
 
@@ -77,32 +217,29 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [autoSync])
+  }, [autoSync, syncPendingOperations])
 
-  // Auto sync interval
   useEffect(() => {
     if (!autoSync || !state.isOnline) return
 
     const interval = setInterval(() => {
       if (state.pendingOperations.length > 0) {
-        syncPendingOperations()
+        void syncPendingOperations()
       }
     }, syncInterval)
 
     return () => clearInterval(interval)
-  }, [autoSync, state.isOnline, state.pendingOperations.length, syncInterval])
+  }, [autoSync, state.isOnline, state.pendingOperations.length, syncInterval, syncPendingOperations])
 
-  // Service Worker message handling
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       const handleMessage = (event: MessageEvent) => {
-        if (event.data.type === 'SYNC_COMPLETE') {
+        if (event.data?.type === 'SYNC_COMPLETE') {
           setState(prev => ({
             ...prev,
             lastSyncTime: new Date(),
             isSyncing: false,
           }))
-          // Refresh relevant queries
           queryClient.invalidateQueries({ queryKey: ['conservation'] })
           queryClient.invalidateQueries({ queryKey: ['calendar'] })
           queryClient.invalidateQueries({ queryKey: ['maintenance'] })
@@ -116,40 +253,17 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
     }
   }, [queryClient])
 
-  const loadPendingOperations = async () => {
-    try {
-      const stored = localStorage.getItem('haccp_pending_operations')
-      if (stored) {
-        const operations = JSON.parse(stored)
-        setState(prev => ({ ...prev, pendingOperations: operations }))
-      }
-    } catch (error) {
-      console.error('Failed to load pending operations:', error)
-    }
-  }
-
-  const savePendingOperations = async (operations: SyncOperation[]) => {
-    try {
-      localStorage.setItem(
-        'haccp_pending_operations',
-        JSON.stringify(operations)
-      )
-    } catch (error) {
-      console.error('Failed to save pending operations:', error)
-    }
-  }
-
   const queueOperation = useCallback(
-    async (
-      type: SyncOperation['type'],
-      entity: string,
-      data: any,
+    async <Entity extends OfflineEntity>(
+      type: SyncOperationType,
+      entity: Entity,
+      data: SyncOperationPayload<Entity>,
       id?: string
     ): Promise<string> => {
-      const operation: SyncOperation = {
+      const operation: SyncOperation<Entity> = {
         id:
           id ||
-          `${entity}_${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          `${entity}_${type}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
         type,
         entity,
         data,
@@ -159,7 +273,7 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
       }
 
       setState(prev => {
-        const newOperations = [...prev.pendingOperations, operation]
+        const newOperations: SyncOperation[] = [...prev.pendingOperations, operation]
         savePendingOperations(newOperations)
         return {
           ...prev,
@@ -167,42 +281,60 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
         }
       })
 
-      // Register background sync if available
-      if (
-        'serviceWorker' in navigator &&
-        'sync' in window.ServiceWorkerRegistration.prototype
-      ) {
-        try {
-          // const registration = await navigator.serviceWorker.ready
-          // await registration.sync.register('general-data-sync')
-        } catch (error) {
-          console.error('Failed to register background sync:', error)
-        }
-      }
-
       return operation.id
     },
-    [maxRetries]
+    [maxRetries, savePendingOperations]
   )
 
-  const syncPendingOperations = useCallback(async () => {
-    if (
-      !state.isOnline ||
-      state.isSyncing ||
-      state.pendingOperations.length === 0
-    ) {
+  const syncSingleOperation = useCallback(async (
+    operation: SyncOperation,
+    client: ReturnType<typeof useQueryClient>
+  ): Promise<boolean> => {
+    const endpoint = getEndpointForEntity(operation.entity)
+    const baseData = operation.data as { id?: string }
+    const url =
+      operation.type === 'CREATE' ? endpoint : `${endpoint}/${baseData?.id ?? ''}`
+
+    const methodMap: Record<SyncOperationType, 'POST' | 'PUT' | 'DELETE'> = {
+      CREATE: 'POST',
+      UPDATE: 'PUT',
+      DELETE: 'DELETE',
+    }
+
+    const response = await fetch(url, {
+      method: methodMap[operation.type],
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: operation.type !== 'DELETE' ? JSON.stringify(operation.data) : undefined,
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+
+    client.invalidateQueries({ queryKey: [operation.entity] })
+    return true
+  }, [])
+
+  const syncSingleOperationMemo = useCallback(
+    (operation: SyncOperation) => syncSingleOperation(operation, queryClient),
+    [queryClient, syncSingleOperation]
+  )
+
+  const syncOperationsWrapper = useCallback(async () => {
+    if (state.isSyncing || state.pendingOperations.length === 0 || !state.isOnline) {
       return
     }
 
     setState(prev => ({ ...prev, isSyncing: true, syncErrors: [] }))
 
     const results = await Promise.allSettled(
-      state.pendingOperations.map(operation => syncSingleOperation(operation))
+      state.pendingOperations.map(operation => syncSingleOperationMemo(operation))
     )
 
     const successfulOperations: string[] = []
-    const failedOperations: Array<{ operation: SyncOperation; error: string }> =
-      []
+    const failedOperations: Array<{ operation: SyncOperation; error: string }> = []
 
     results.forEach((result, index) => {
       const operation = state.pendingOperations[index]
@@ -210,17 +342,20 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
       if (result.status === 'fulfilled' && result.value) {
         successfulOperations.push(operation.id)
       } else {
-        const error =
-          result.status === 'rejected' ? result.reason : 'Unknown error'
+        const errorMessage =
+          result.status === 'rejected'
+            ? result.reason instanceof Error
+              ? result.reason.message
+              : String(result.reason)
+            : 'Unknown error'
 
-        // Increment retry count
-        operation.retryCount++
+        const shouldRemove = operation.retryCount + 1 >= operation.maxRetries
 
-        if (operation.retryCount >= operation.maxRetries) {
-          failedOperations.push({ operation, error: error.toString() })
-          successfulOperations.push(operation.id) // Remove from queue
+        if (shouldRemove) {
+          failedOperations.push({ operation, error: errorMessage })
+          successfulOperations.push(operation.id)
         } else {
-          // Keep in queue for retry
+          operation.retryCount += 1
         }
       }
     })
@@ -229,7 +364,6 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
       const remainingOperations = prev.pendingOperations.filter(
         op => !successfulOperations.includes(op.id)
       )
-
       savePendingOperations(remainingOperations)
 
       return {
@@ -241,66 +375,24 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
       }
     })
 
-    // Invalidate relevant queries
     if (successfulOperations.length > 0) {
       queryClient.invalidateQueries({ queryKey: ['conservation'] })
       queryClient.invalidateQueries({ queryKey: ['calendar'] })
       queryClient.invalidateQueries({ queryKey: ['maintenance'] })
     }
-  }, [state.isOnline, state.isSyncing, state.pendingOperations, queryClient])
+  }, [queryClient, savePendingOperations, state, syncSingleOperationMemo])
 
-  const syncSingleOperation = async (
-    operation: SyncOperation
-  ): Promise<boolean> => {
-    try {
-      const endpoint = getEndpointForEntity(operation.entity)
-      const url =
-        operation.type === 'CREATE'
-          ? endpoint
-          : `${endpoint}/${operation.data.id}`
+  useEffect(() => {
+    if (!autoSync || !state.isOnline) return
 
-      const method = {
-        CREATE: 'POST',
-        UPDATE: 'PUT',
-        DELETE: 'DELETE',
-      }[operation.type]
-
-      const body =
-        operation.type !== 'DELETE' ? JSON.stringify(operation.data) : undefined
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          // Add auth headers here
-        },
-        body,
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    const interval = setInterval(() => {
+      if (state.pendingOperations.length > 0) {
+        void syncOperationsWrapper()
       }
+    }, syncInterval)
 
-      return true
-    } catch (error) {
-      console.error(`Failed to sync operation ${operation.id}:`, error)
-      throw error
-    }
-  }
-
-  const getEndpointForEntity = (entity: string): string => {
-    const endpoints: Record<string, string> = {
-      'temperature-reading': '/api/temperature-readings',
-      'maintenance-task': '/api/maintenance-tasks',
-      'conservation-point': '/api/conservation-points',
-      'calendar-event': '/api/calendar-events',
-      staff: '/api/staff',
-      department: '/api/departments',
-      product: '/api/products',
-    }
-
-    return endpoints[entity] || `/api/${entity}`
-  }
+    return () => clearInterval(interval)
+  }, [autoSync, state.isOnline, state.pendingOperations.length, syncInterval, syncOperationsWrapper])
 
   const clearSyncErrors = useCallback(() => {
     setState(prev => ({ ...prev, syncErrors: [] }))
@@ -308,46 +400,37 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
 
   const retrySyncOperation = useCallback(
     async (operationId: string) => {
-      const operation = state.pendingOperations.find(
-        op => op.id === operationId
-      )
+      const operation = state.pendingOperations.find(op => op.id === operationId)
       if (!operation) return
 
-      operation.retryCount = 0 // Reset retry count
-      await syncPendingOperations()
+      operation.retryCount = 0
+      await syncOperationsWrapper()
     },
-    [state.pendingOperations, syncPendingOperations]
+    [state.pendingOperations, syncOperationsWrapper]
   )
 
   const removeOperation = useCallback((operationId: string) => {
     setState(prev => {
-      const newOperations = prev.pendingOperations.filter(
-        op => op.id !== operationId
-      )
+      const newOperations = prev.pendingOperations.filter(op => op.id !== operationId)
       savePendingOperations(newOperations)
       return {
         ...prev,
         pendingOperations: newOperations,
       }
     })
-  }, [])
+  }, [savePendingOperations])
 
   return {
-    // State
     isOnline: state.isOnline,
     isSyncing: state.isSyncing,
     pendingOperations: state.pendingOperations,
     lastSyncTime: state.lastSyncTime,
     syncErrors: state.syncErrors,
-
-    // Actions
     queueOperation,
-    syncPendingOperations,
+    syncPendingOperations: syncOperationsWrapper,
     clearSyncErrors,
     retrySyncOperation,
     removeOperation,
-
-    // Utilities
     hasPendingOperations: state.pendingOperations.length > 0,
     hasErrors: state.syncErrors.length > 0,
   }

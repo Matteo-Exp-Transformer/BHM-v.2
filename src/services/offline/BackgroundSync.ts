@@ -3,7 +3,7 @@
  * Handles synchronization of offline data when connection is restored
  */
 
-import { indexedDBManager, type SyncQueue } from './IndexedDBManager'
+import { indexedDBManager, type SyncQueue, type SyncPayload, type SyncOperationType } from './IndexedDBManager'
 import { supabase } from '@/lib/supabase/client'
 
 export interface SyncResult {
@@ -17,6 +17,121 @@ export interface SyncProgress {
   total: number
   completed: number
   current?: string
+}
+
+type SyncTable =
+  | 'temperature_readings'
+  | 'tasks'
+  | 'products'
+  | 'task_completions'
+  | string
+
+interface OperationHandler {
+  create?: (payload: SyncPayload) => Promise<void>
+  update?: (payload: SyncPayload) => Promise<void>
+  delete?: (payload: SyncPayload) => Promise<void>
+}
+
+const handlers: Record<SyncTable, OperationHandler> = {
+  temperature_readings: {
+    create: async payload => {
+      const { error } = await supabase.from('temperature_readings').insert(payload)
+      if (error) throw error
+    },
+    update: async payload => {
+      const { error } = await supabase
+        .from('temperature_readings')
+        .update(payload)
+        .eq('id', payload.id as string)
+      if (error) throw error
+    },
+    delete: async payload => {
+      const { error } = await supabase
+        .from('temperature_readings')
+        .delete()
+        .eq('id', payload.id as string)
+      if (error) throw error
+    },
+  },
+  tasks: {
+    create: async payload => {
+      const { error } = await supabase.from('tasks').insert(payload)
+      if (error) throw error
+    },
+    update: async payload => {
+      const { error } = await supabase
+        .from('tasks')
+        .update(payload)
+        .eq('id', payload.id as string)
+      if (error) throw error
+    },
+    delete: async payload => {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', payload.id as string)
+      if (error) throw error
+    },
+  },
+  products: {
+    create: async payload => {
+      const { error } = await supabase.from('products').insert(payload)
+      if (error) throw error
+    },
+    update: async payload => {
+      const { error } = await supabase
+        .from('products')
+        .update(payload)
+        .eq('id', payload.id as string)
+      if (error) throw error
+    },
+    delete: async payload => {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', payload.id as string)
+      if (error) throw error
+    },
+  },
+  task_completions: {
+    create: async payload => {
+      const { error } = await supabase.from('task_completions').insert(payload)
+      if (error) throw error
+    },
+    update: async payload => {
+      const { error } = await supabase
+        .from('task_completions')
+        .update(payload)
+        .eq('id', payload.id as string)
+      if (error) throw error
+    },
+  },
+}
+
+const getHandler = (table: string): OperationHandler => {
+  if (handlers[table as SyncTable]) {
+    return handlers[table as SyncTable]
+  }
+  return {
+    create: async payload => {
+      const { error } = await supabase.from(table).insert(payload)
+      if (error) throw error
+    },
+    update: async payload => {
+      const { error } = await supabase
+        .from(table)
+        .update(payload)
+        .eq('id', payload.id as string)
+      if (error) throw error
+    },
+    delete: async payload => {
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq('id', payload.id as string)
+      if (error) throw error
+    },
+  }
 }
 
 class BackgroundSyncService {
@@ -82,13 +197,8 @@ class BackgroundSyncService {
       const groupedOperations = this.groupOperationsByTable(sortedQueue)
 
       for (const [table, operations] of Object.entries(groupedOperations)) {
-        console.log(
-          `[Sync] Processing ${operations.length} operations for table: ${table}`
-        )
-
-        for (let i = 0; i < operations.length; i++) {
-          const operation = operations[i]
-
+        const handler = getHandler(table)
+        for (const operation of operations) {
           this.notifyProgress({
             total: syncQueue.length,
             completed: result.syncedCount + result.failedCount,
@@ -96,26 +206,18 @@ class BackgroundSyncService {
           })
 
           try {
-            await this.processSyncOperation(operation)
+            await this.processSyncOperation(operation, handler)
             await indexedDBManager.removeSyncItem(operation.id)
             result.syncedCount++
-            console.log(
-              `[Sync] Successfully synced: ${operation.operation} ${table}`
-            )
           } catch (error) {
-            console.error(`[Sync] Failed to sync operation:`, error)
             result.failedCount++
             result.errors.push({
               item: operation,
-              error: error instanceof Error ? error.message : 'Unknown error',
+              error: error instanceof Error ? error.message : String(error),
             })
 
-            // Increment retry count or remove if max retries reached
             if (operation.retryCount >= 2) {
               await indexedDBManager.removeSyncItem(operation.id)
-              console.log(
-                `[Sync] Removed operation after max retries: ${operation.id}`
-              )
             }
           }
         }
@@ -152,192 +254,26 @@ class BackgroundSyncService {
   private groupOperationsByTable(
     operations: SyncQueue[]
   ): Record<string, SyncQueue[]> {
-    const grouped: Record<string, SyncQueue[]> = {}
-
-    for (const operation of operations) {
-      if (!grouped[operation.table]) {
-        grouped[operation.table] = []
+    return operations.reduce<Record<string, SyncQueue[]>>((acc, operation) => {
+      const table = operation.table
+      if (!acc[table]) {
+        acc[table] = []
       }
-      grouped[operation.table].push(operation)
-    }
-
-    return grouped
+      acc[table].push(operation)
+      return acc
+    }, {})
   }
 
-  private async processSyncOperation(operation: SyncQueue): Promise<void> {
-    const { table, operation: op, data } = operation
-
-    switch (table) {
-      case 'temperature_readings':
-        await this.syncTemperatureReading(op, data)
-        break
-
-      case 'tasks':
-        await this.syncTask(op, data)
-        break
-
-      case 'products':
-        await this.syncProduct(op, data)
-        break
-
-      case 'task_completions':
-        await this.syncTaskCompletion(op, data)
-        break
-
-      default:
-        await this.syncGenericOperation(table, op, data)
-    }
-  }
-
-  private async syncTemperatureReading(
-    operation: string,
-    data: any
+  private async processSyncOperation(
+    operation: SyncQueue,
+    handler: OperationHandler
   ): Promise<void> {
-    switch (operation) {
-      case 'create':
-        const { data: created, error: createError } = await supabase
-          .from('temperature_readings')
-          .insert(data)
-
-        if (createError) throw createError
-        break
-
-      case 'update':
-        const { error: updateError } = await supabase
-          .from('temperature_readings')
-          .update(data)
-          .eq('id', data.id)
-
-        if (updateError) throw updateError
-        break
-
-      case 'delete':
-        const { error: deleteError } = await supabase
-          .from('temperature_readings')
-          .delete()
-          .eq('id', data.id)
-
-        if (deleteError) throw deleteError
-        break
+    const payload = operation.data
+    const executor = handler[operation.operation as SyncOperationType]
+    if (!executor) {
+      throw new Error(`Unsupported operation ${operation.operation}`)
     }
-  }
-
-  private async syncTask(operation: string, data: any): Promise<void> {
-    switch (operation) {
-      case 'create':
-        const { data: created, error: createError } = await supabase
-          .from('tasks')
-          .insert(data)
-
-        if (createError) throw createError
-        break
-
-      case 'update':
-        const { error: updateError } = await supabase
-          .from('tasks')
-          .update(data)
-          .eq('id', data.id)
-
-        if (updateError) throw updateError
-        break
-
-      case 'delete':
-        const { error: deleteError } = await supabase
-          .from('tasks')
-          .delete()
-          .eq('id', data.id)
-
-        if (deleteError) throw deleteError
-        break
-    }
-  }
-
-  private async syncProduct(operation: string, data: any): Promise<void> {
-    switch (operation) {
-      case 'create':
-        const { data: created, error: createError } = await supabase
-          .from('products')
-          .insert(data)
-
-        if (createError) throw createError
-        break
-
-      case 'update':
-        const { error: updateError } = await supabase
-          .from('products')
-          .update(data)
-          .eq('id', data.id)
-
-        if (updateError) throw updateError
-        break
-
-      case 'delete':
-        const { error: deleteError } = await supabase
-          .from('products')
-          .delete()
-          .eq('id', data.id)
-
-        if (deleteError) throw deleteError
-        break
-    }
-  }
-
-  private async syncTaskCompletion(
-    operation: string,
-    data: any
-  ): Promise<void> {
-    switch (operation) {
-      case 'create':
-        const { data: created, error: createError } = await supabase
-          .from('task_completions')
-          .insert(data)
-
-        if (createError) throw createError
-        break
-
-      case 'update':
-        const { error: updateError } = await supabase
-          .from('task_completions')
-          .update(data)
-          .eq('id', data.id)
-
-        if (updateError) throw updateError
-        break
-    }
-  }
-
-  private async syncGenericOperation(
-    table: string,
-    operation: string,
-    data: any
-  ): Promise<void> {
-    switch (operation) {
-      case 'create':
-        const { data: created, error: createError } = await supabase
-          .from(table)
-          .insert(data)
-
-        if (createError) throw createError
-        break
-
-      case 'update':
-        const { error: updateError } = await supabase
-          .from(table)
-          .update(data)
-          .eq('id', data.id)
-
-        if (updateError) throw updateError
-        break
-
-      case 'delete':
-        const { error: deleteError } = await supabase
-          .from(table)
-          .delete()
-          .eq('id', data.id)
-
-        if (deleteError) throw deleteError
-        break
-    }
+    await executor(payload)
   }
 
   private notifyProgress(progress: SyncProgress): void {
@@ -348,21 +284,16 @@ class BackgroundSyncService {
 
   async queueForSync(
     table: string,
-    operation: 'create' | 'update' | 'delete',
-    data: any
+    operation: SyncOperationType,
+    data: SyncPayload
   ): Promise<void> {
     await indexedDBManager.init()
-    await indexedDBManager.addToSyncQueue({
-      operation,
-      table,
-      data,
-    })
+    await indexedDBManager.addToSyncQueue({ operation, table, data })
 
-    console.log(`[Sync] Queued ${operation} operation for ${table}`)
-
-    // Try to sync immediately if online
     if (this.isOnline && !this.syncInProgress) {
-      setTimeout(() => this.startSync(), 1000)
+      setTimeout(() => {
+        void this.startSync()
+      }, 1000)
     }
   }
 

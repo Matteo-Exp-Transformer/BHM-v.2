@@ -3,12 +3,16 @@
  * Handles offline data storage with schema versioning
  */
 
+export type SyncOperationType = 'create' | 'update' | 'delete'
+
+export type SyncPayload = Record<string, unknown>
+
 export interface OfflineData {
   id: string
   table: string
-  data: any
+  data: SyncPayload
   timestamp: number
-  action: 'create' | 'update' | 'delete'
+  action: SyncOperationType
   synced: boolean
   userId: string
   companyId: string
@@ -16,9 +20,9 @@ export interface OfflineData {
 
 export interface SyncQueue {
   id: string
-  operation: 'create' | 'update' | 'delete'
+  operation: SyncOperationType
   table: string
-  data: any
+  data: SyncPayload
   timestamp: number
   retryCount: number
   lastError?: string

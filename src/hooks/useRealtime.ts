@@ -7,12 +7,17 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useAuth } from './useAuth'
 import {
   realtimeManager,
-  type RealtimeSubscription,
   type ConnectionStatus,
   type PresenceState,
   type TableName,
   type RealtimeEvent,
 } from '@/services/realtime/RealtimeConnectionManager'
+import type {
+  RealtimePostgresInsertPayload,
+  RealtimePostgresUpdatePayload,
+  RealtimeChannel,
+  RealtimePostgresChangesPayload,
+} from '@supabase/supabase-js'
 
 interface UseRealtimeOptions {
   autoConnect?: boolean
@@ -21,30 +26,23 @@ interface UseRealtimeOptions {
 }
 
 export interface RealtimeHookReturn {
-  // Connection management
   isConnected: boolean
   isReconnecting: boolean
   connectionError?: string
   connect: () => Promise<void>
   disconnect: () => void
-
-  // Subscription management
   subscribe: (
     table: TableName,
     event: RealtimeEvent | '*',
-    callback: (payload: any) => void,
+    callback: (payload: unknown) => void,
     filter?: string
   ) => string
   unsubscribe: (subscriptionId: string) => void
-
-  // Presence features
   onlineUsers: PresenceState[]
   updateActivity: (
-    status: 'active' | 'idle' | 'away',
+    status: PresenceState['activity_status'],
     currentPage?: string
   ) => Promise<void>
-
-  // Connection status
   connectionStatus: ConnectionStatus
   lastConnected?: Date
   connectionAttempts: number
@@ -58,9 +56,13 @@ export function useRealtime(
     trackPresence = true,
     activityTracking = true,
   } = options
-  const { user, userData } = useAuth()
 
-  // State management
+  const {
+    user,
+    userProfile,
+    companyId,
+  } = useAuth()
+
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
     connected: false,
     reconnecting: false,
@@ -68,124 +70,91 @@ export function useRealtime(
   })
   const [onlineUsers, setOnlineUsers] = useState<PresenceState[]>([])
 
-  // Track activity for idle detection
   const lastActivityRef = useRef<Date>(new Date())
-  const activityTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
-  const idleTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
+  const activityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  /**
-   * Connect to real-time services
-   */
-  const connect = useCallback(async (): Promise<void> => {
-    if (!user || !userData?.company_id) {
-      console.warn('Cannot connect to real-time: user or company not available')
-      return
-    }
-
-    try {
-      await realtimeManager.connect(
-        userData.company_id,
-        user.id,
-        user.emailAddresses[0]?.emailAddress || userData.email
-      )
-    } catch (error) {
-      console.error('Failed to connect to real-time services:', error)
-    }
-  }, [user, userData])
-
-  /**
-   * Disconnect from real-time services
-   */
-  const disconnect = useCallback((): void => {
-    realtimeManager.disconnect()
-
-    // Clear activity tracking timers
+  const clearTimers = useCallback(() => {
     if (activityTimeoutRef.current) {
       clearTimeout(activityTimeoutRef.current)
+      activityTimeoutRef.current = null
     }
     if (idleTimeoutRef.current) {
       clearTimeout(idleTimeoutRef.current)
+      idleTimeoutRef.current = null
     }
   }, [])
 
-  /**
-   * Subscribe to table changes
-   */
-  const subscribe = useCallback(
-    (
-      table: TableName,
-      event: RealtimeEvent | '*',
-      callback: (payload: any) => void,
-      filter?: string
-    ): string => {
-      return realtimeManager.subscribe({
-        table,
-        event,
-        callback,
-        filter,
-      })
-    },
-    []
-  )
-
-  /**
-   * Unsubscribe from table changes
-   */
-  const unsubscribe = useCallback((subscriptionId: string): void => {
-    realtimeManager.unsubscribe(subscriptionId)
-  }, [])
-
-  /**
-   * Update user activity status
-   */
   const updateActivity = useCallback(
     async (
-      status: 'active' | 'idle' | 'away',
+      status: PresenceState['activity_status'],
       currentPage?: string
-    ): Promise<void> => {
+    ) => {
       lastActivityRef.current = new Date()
       await realtimeManager.updateActivity(status, currentPage)
     },
     []
   )
 
-  /**
-   * Track user activity for automatic idle detection
-   */
-  const setupActivityTracking = useCallback((): void => {
-    if (!activityTracking) return
-
-    const handleActivity = (): void => {
-      lastActivityRef.current = new Date()
-      updateActivity('active', window.location.pathname)
-
-      // Clear existing timers
-      if (activityTimeoutRef.current) {
-        clearTimeout(activityTimeoutRef.current)
-      }
-      if (idleTimeoutRef.current) {
-        clearTimeout(idleTimeoutRef.current)
-      }
-
-      // Set idle timer (5 minutes)
-      idleTimeoutRef.current = setTimeout(
-        () => {
-          updateActivity('idle', window.location.pathname)
-        },
-        5 * 60 * 1000
-      )
-
-      // Set away timer (15 minutes)
-      activityTimeoutRef.current = setTimeout(
-        () => {
-          updateActivity('away', window.location.pathname)
-        },
-        15 * 60 * 1000
-      )
+  const connect = useCallback(async () => {
+    const companyIdentifier = companyId ?? userProfile?.company_id
+    if (!user || !companyIdentifier) {
+      console.warn('Cannot connect to real-time: user or company not available')
+      return
     }
 
-    // Listen for user activity
-    const events = [
+    const email =
+      user.emailAddresses?.[0]?.emailAddress || userProfile?.email || ''
+
+    try {
+      await realtimeManager.connect(companyIdentifier, user.id, email)
+    } catch (error) {
+      console.error('Failed to connect to real-time services:', error)
+    }
+  }, [companyId, user, userProfile])
+
+  const disconnect = useCallback(() => {
+    realtimeManager.disconnect()
+    clearTimers()
+  }, [clearTimers])
+
+  const subscribe = useCallback(
+    (
+      table: TableName,
+      event: RealtimeEvent | '*',
+      callback: (payload: unknown) => void,
+      filter?: string
+    ) =>
+      realtimeManager.subscribe({
+        table,
+        event,
+        callback,
+        filter,
+      }),
+    []
+  )
+
+  const unsubscribe = useCallback((subscriptionId: string) => {
+    realtimeManager.unsubscribe(subscriptionId)
+  }, [])
+
+  const setupActivityTracking = useCallback(() => {
+    if (!activityTracking) return undefined
+
+    const handleActivity = () => {
+      clearTimers()
+      void updateActivity('active', window.location.pathname)
+
+      idleTimeoutRef.current = setTimeout(() => {
+        void updateActivity('idle', window.location.pathname)
+      }, 5 * 60 * 1000)
+
+      activityTimeoutRef.current = setTimeout(() => {
+        void updateActivity('away', window.location.pathname)
+      }, 15 * 60 * 1000)
+    }
+
+    const events: Array<keyof DocumentEventMap> = [
       'mousedown',
       'mousemove',
       'keypress',
@@ -193,38 +162,27 @@ export function useRealtime(
       'touchstart',
       'click',
     ]
+
     events.forEach(event => {
       document.addEventListener(event, handleActivity, { passive: true })
     })
 
-    // Initial activity
     handleActivity()
 
-    // Cleanup function
-    return (): void => {
+    return () => {
       events.forEach(event => {
         document.removeEventListener(event, handleActivity)
       })
-      if (activityTimeoutRef.current) {
-        clearTimeout(activityTimeoutRef.current)
-      }
-      if (idleTimeoutRef.current) {
-        clearTimeout(idleTimeoutRef.current)
-      }
+      clearTimers()
     }
-  }, [activityTracking, updateActivity])
+  }, [activityTracking, clearTimers, updateActivity])
 
-  /**
-   * Setup event listeners on mount
-   */
   useEffect(() => {
-    // Listen for connection status changes
-    const handleStatusChange = (status: ConnectionStatus): void => {
+    const handleStatusChange = (status: ConnectionStatus) => {
       setConnectionStatus(status)
     }
 
-    // Listen for presence changes
-    const handlePresenceChange = (users: PresenceState[]): void => {
+    const handlePresenceChange = (users: PresenceState[]) => {
       setOnlineUsers(users)
     }
 
@@ -233,19 +191,15 @@ export function useRealtime(
       realtimeManager.onPresenceChange(handlePresenceChange)
     }
 
-    // Initial status
     setConnectionStatus(realtimeManager.getConnectionStatus())
 
-    // Setup activity tracking
     const cleanupActivity = setupActivityTracking()
 
-    // Auto-connect if enabled
-    if (autoConnect && user && userData?.company_id) {
-      connect()
+    if (autoConnect && user && (companyId || userProfile?.company_id)) {
+      void connect()
     }
 
-    // Cleanup on unmount
-    return (): void => {
+    return () => {
       realtimeManager.removeStatusCallback(handleStatusChange)
       if (trackPresence) {
         realtimeManager.removePresenceCallback(handlePresenceChange)
@@ -253,102 +207,98 @@ export function useRealtime(
       if (cleanupActivity) {
         cleanupActivity()
       }
+      clearTimers()
     }
   }, [
     autoConnect,
-    trackPresence,
+    clearTimers,
     connect,
+    trackPresence,
     setupActivityTracking,
     user,
-    userData?.company_id,
+    companyId,
+    userProfile?.company_id,
   ])
 
-  /**
-   * Handle page visibility changes
-   */
   useEffect(() => {
-    const handleVisibilityChange = (): void => {
-      if (document.hidden) {
-        updateActivity('away', window.location.pathname)
-      } else {
-        updateActivity('active', window.location.pathname)
-      }
+    const handleVisibilityChange = () => {
+      const status = document.hidden ? 'away' : 'active'
+      void updateActivity(status, window.location.pathname)
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
-    return (): void => {
+    return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [updateActivity])
 
-  /**
-   * Handle beforeunload to update status
-   */
   useEffect(() => {
-    const handleBeforeUnload = (): void => {
-      updateActivity('away')
+    const handleBeforeUnload = () => {
+      void updateActivity('away')
     }
 
     window.addEventListener('beforeunload', handleBeforeUnload)
 
-    return (): void => {
+    return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
     }
   }, [updateActivity])
 
   return {
-    // Connection management
     isConnected: connectionStatus.connected,
     isReconnecting: connectionStatus.reconnecting,
     connectionError: connectionStatus.error,
     connect,
     disconnect,
-
-    // Subscription management
     subscribe,
     unsubscribe,
-
-    // Presence features
     onlineUsers,
     updateActivity,
-
-    // Connection status
     connectionStatus,
     lastConnected: connectionStatus.lastConnected,
     connectionAttempts: connectionStatus.connectionAttempts,
   }
 }
 
-/**
- * Specialized hook for temperature monitoring
- */
+export interface TemperatureAlert {
+  id: number
+  type: 'temperature_violation'
+  reading: Record<string, unknown>
+  timestamp: Date
+  severity: 'low' | 'medium' | 'high'
+}
+
 export function useTemperatureRealtime(companyId?: string) {
   const { subscribe, unsubscribe, isConnected } = useRealtime()
-  const [temperatureReadings, setTemperatureReadings] = useState<any[]>([])
-  const [criticalAlerts, setCriticalAlerts] = useState<any[]>([])
+  const [temperatureReadings, setTemperatureReadings] = useState<
+    Record<string, unknown>[]
+  >([])
+  const [criticalAlerts, setCriticalAlerts] = useState<TemperatureAlert[]>([])
 
   useEffect(() => {
-    if (!isConnected || !companyId) return
+    if (!isConnected || !companyId) return undefined
 
-    // Subscribe to temperature readings
     const tempSubscriptionId = subscribe(
       'temperature_readings',
       'INSERT',
       payload => {
-        const newReading = payload.new
-        setTemperatureReadings(prev => [newReading, ...prev.slice(0, 99)]) // Keep last 100 readings
+        const newReading = (
+          payload as RealtimePostgresInsertPayload<Record<string, unknown>>
+        ).new
+        if (!newReading) return
 
-        // Check for critical temperature violations
-        const isViolation = checkTemperatureViolation(newReading)
-        if (isViolation) {
+        setTemperatureReadings(prev => [newReading, ...prev.slice(0, 99)])
+
+        const violation = checkTemperatureViolation(newReading)
+        if (violation) {
           setCriticalAlerts(prev => [
             {
               id: Date.now(),
               type: 'temperature_violation',
               reading: newReading,
               timestamp: new Date(),
-              severity: isViolation.severity,
+              severity: violation,
             },
             ...prev,
           ])
@@ -362,10 +312,21 @@ export function useTemperatureRealtime(companyId?: string) {
     }
   }, [isConnected, companyId, subscribe, unsubscribe])
 
-  const checkTemperatureViolation = (reading: any) => {
-    // Implementation of temperature violation logic
-    // This would check against conservation point thresholds
-    return null // Placeholder
+  const checkTemperatureViolation = (
+    reading: Record<string, unknown>
+  ): TemperatureAlert['severity'] | null => {
+    const temperature = typeof reading.temperature === 'number'
+      ? reading.temperature
+      : undefined
+
+    if (temperature === undefined) {
+      return null
+    }
+
+    if (temperature >= 10) return 'high'
+    if (temperature >= 6) return 'medium'
+    if (temperature >= 4) return 'low'
+    return null
   }
 
   return {
@@ -375,32 +336,41 @@ export function useTemperatureRealtime(companyId?: string) {
   }
 }
 
-/**
- * Specialized hook for task collaboration
- */
+export interface TaskActivityEntry {
+  id: number
+  event: string
+  data: unknown
+  timestamp: Date
+}
+
 export function useTaskCollaboration(taskId?: string) {
   const { subscribe, unsubscribe, onlineUsers, isConnected } = useRealtime()
-  const [taskActivity, setTaskActivity] = useState<any[]>([])
-  const [activeCollaborators, setActiveCollaborators] = useState<
-    PresenceState[]
-  >([])
+  const [taskActivity, setTaskActivity] = useState<TaskActivityEntry[]>([])
+  const [activeCollaborators, setActiveCollaborators] = useState<PresenceState[]>(
+    []
+  )
 
   useEffect(() => {
-    if (!isConnected || !taskId) return
+    if (!isConnected || !taskId) return undefined
 
-    // Subscribe to task updates
     const taskSubscriptionId = subscribe(
       'maintenance_tasks',
       '*',
       payload => {
+        const realtimePayload = payload as RealtimePostgresChangesPayload<Record<string, unknown>>
+
+        const eventType = realtimePayload.eventType ?? 'UNKNOWN'
+        const newData = 'new' in realtimePayload ? realtimePayload.new : undefined
+        const oldData = 'old' in realtimePayload ? realtimePayload.old : undefined
+
         setTaskActivity(prev => [
           {
             id: Date.now(),
-            event: payload.eventType,
-            data: payload.new || payload.old,
+            event: eventType,
+            data: newData ?? oldData ?? null,
             timestamp: new Date(),
           },
-          ...prev.slice(0, 49), // Keep last 50 activities
+          ...prev.slice(0, 49),
         ])
       },
       `id=eq.${taskId}`
@@ -412,12 +382,15 @@ export function useTaskCollaboration(taskId?: string) {
   }, [isConnected, taskId, subscribe, unsubscribe])
 
   useEffect(() => {
-    // Filter users working on current task
-    const collaborators = onlineUsers.filter(
-      user =>
-        user.current_page?.includes(taskId || '') &&
-        user.activity_status === 'active'
-    )
+    if (!taskId) {
+      setActiveCollaborators([])
+      return
+    }
+
+    const collaborators = onlineUsers.filter(user => {
+      const currentPage = user.current_page ?? ''
+      return currentPage.includes(taskId) && user.activity_status === 'active'
+    })
     setActiveCollaborators(collaborators)
   }, [onlineUsers, taskId])
 

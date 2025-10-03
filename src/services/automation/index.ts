@@ -3,6 +3,11 @@
  * Comprehensive automation services for enterprise HACCP management
  */
 
+import { workflowAutomationEngine } from './WorkflowAutomationEngine'
+import { smartSchedulingService } from './SmartSchedulingService'
+import { automatedReportingService } from './AutomatedReportingService'
+import { intelligentAlertManager } from './IntelligentAlertManager'
+
 export {
   workflowAutomationEngine,
   type AutomationRule,
@@ -84,6 +89,66 @@ export {
  */
 class EnterpriseAutomationManager {
   private initialized = false
+  private servicesLoadPromise: Promise<void> | null = null
+  private workflowEngine?: (typeof import('./WorkflowAutomationEngine'))['workflowAutomationEngine']
+  private schedulingService?: (typeof import('./SmartSchedulingService'))['smartSchedulingService']
+  private reportingService?: (typeof import('./AutomatedReportingService'))['automatedReportingService']
+  private alertManager?: (typeof import('./IntelligentAlertManager'))['intelligentAlertManager']
+
+  private async ensureServicesLoaded(): Promise<void> {
+    if (
+      this.workflowEngine &&
+      this.schedulingService &&
+      this.reportingService &&
+      this.alertManager
+    ) {
+      return
+    }
+
+    if (!this.servicesLoadPromise) {
+      this.servicesLoadPromise = Promise.all([
+        import('./WorkflowAutomationEngine'),
+        import('./SmartSchedulingService'),
+        import('./AutomatedReportingService'),
+        import('./IntelligentAlertManager'),
+      ]).then(([workflowModule, schedulingModule, reportingModule, alertModule]) => {
+        this.workflowEngine = workflowModule.workflowAutomationEngine
+        this.schedulingService = schedulingModule.smartSchedulingService
+        this.reportingService = reportingModule.automatedReportingService
+        this.alertManager = alertModule.intelligentAlertManager
+      })
+    }
+
+    await this.servicesLoadPromise
+  }
+
+  private getWorkflowEngine() {
+    if (!this.workflowEngine) {
+      throw new Error('Workflow automation engine not loaded')
+    }
+    return this.workflowEngine
+  }
+
+  private getSchedulingService() {
+    if (!this.schedulingService) {
+      throw new Error('Smart scheduling service not loaded')
+    }
+    return this.schedulingService
+  }
+
+  private getReportingService() {
+    if (!this.reportingService) {
+      throw new Error('Automated reporting service not loaded')
+    }
+    return this.reportingService
+  }
+
+  private getAlertManager() {
+    if (!this.alertManager) {
+      throw new Error('Intelligent alert manager not loaded')
+    }
+    return this.alertManager
+  }
 
   /**
    * Initialize all automation services
@@ -94,21 +159,24 @@ class EnterpriseAutomationManager {
     console.log('🤖 Initializing B.10.3 Enterprise Automation Services...')
 
     try {
-      // Initialize workflow automation engine
+      await this.ensureServicesLoaded()
+
+      const workflowEngine = this.getWorkflowEngine()
+      const schedulingService = this.getSchedulingService()
+      const reportingService = this.getReportingService()
+      const alertManager = this.getAlertManager()
+
       console.log('🔄 Initializing Workflow Automation Engine...')
-      await workflowAutomationEngine.initialize()
+      await workflowEngine.initialize()
 
-      // Initialize smart scheduling service
       console.log('🧠 Initializing Smart Scheduling Service...')
-      await smartSchedulingService.initialize()
+      await schedulingService.initialize()
 
-      // Initialize automated reporting service
       console.log('📊 Initializing Automated Reporting Service...')
-      await automatedReportingService.initialize()
+      await reportingService.initialize()
 
-      // Initialize intelligent alert manager
       console.log('🚨 Initializing Intelligent Alert Manager...')
-      await intelligentAlertManager.initialize()
+      await alertManager.initialize()
 
       this.initialized = true
       console.log(
@@ -135,17 +203,19 @@ class EnterpriseAutomationManager {
       throw new Error('Enterprise Automation Manager not initialized')
     }
 
+    await this.ensureServicesLoaded()
+
     console.log(`🤖 Processing automation event: ${eventType} from ${source}`)
 
     try {
-      // Process workflow automation triggers
-      await workflowAutomationEngine.triggerEvent(eventType, data, source)
+      const workflowEngine = this.getWorkflowEngine()
+      const schedulingService = this.getSchedulingService()
+      const reportingService = this.getReportingService()
+      const alertManager = this.getAlertManager()
 
-      // Process alert conditions
-      await intelligentAlertManager.processData(source, data)
-
-      // Process reporting triggers
-      await automatedReportingService.triggerEventBasedReports(eventType, data)
+      await workflowEngine.triggerEvent(eventType, data, source)
+      await alertManager.processData(source, data)
+      await reportingService.triggerEventBasedReports(eventType, data)
     } catch (error) {
       console.error(`Failed to process automation event ${eventType}:`, error)
       throw error
@@ -162,14 +232,16 @@ class EnterpriseAutomationManager {
       throw new Error('Enterprise Automation Manager not initialized')
     }
 
+    await this.ensureServicesLoaded()
+
     console.log('🤖 Processing threshold-based automation...')
 
     try {
-      // Check workflow automation thresholds
-      await workflowAutomationEngine.checkThresholds(metrics)
+      const workflowEngine = this.getWorkflowEngine()
+      const reportingService = this.getReportingService()
 
-      // Check reporting thresholds
-      await automatedReportingService.checkThresholdReports(metrics)
+      await workflowEngine.checkThresholds(metrics)
+      await reportingService.checkThresholdReports(metrics)
     } catch (error) {
       console.error('Failed to process thresholds:', error)
       throw error
@@ -190,10 +262,19 @@ class EnterpriseAutomationManager {
       throw new Error('Enterprise Automation Manager not initialized')
     }
 
-    const workflowStats = workflowAutomationEngine.getAutomationStats()
-    const schedulingMetrics = smartSchedulingService.getSchedulingMetrics()
-    const reportingMetrics = automatedReportingService.getReportingMetrics()
-    const alertMetrics = intelligentAlertManager.getAlertMetrics()
+    if (
+      !this.workflowEngine ||
+      !this.schedulingService ||
+      !this.reportingService ||
+      !this.alertManager
+    ) {
+      throw new Error('Automation services not loaded')
+    }
+
+    const workflowStats = this.workflowEngine.getAutomationStats()
+    const schedulingMetrics = this.schedulingService.getSchedulingMetrics()
+    const reportingMetrics = this.reportingService.getReportingMetrics()
+    const alertMetrics = this.alertManager.getAlertMetrics()
 
     // Determine overall system health
     let systemHealth: 'healthy' | 'warning' | 'critical' = 'healthy'
@@ -242,11 +323,12 @@ class EnterpriseAutomationManager {
   }> {
     console.log('🏥 Running comprehensive automation health check...')
 
+    await this.ensureServicesLoaded()
+
     const issues: string[] = []
     const recommendations: string[] = []
     let score = 100
 
-    // Check service availability
     const services = {
       workflow: this.initialized,
       scheduling: this.initialized,
@@ -260,10 +342,8 @@ class EnterpriseAutomationManager {
       score -= 50
     }
 
-    // Get automation status
     const status = this.getAutomationStatus()
 
-    // Check workflow automation health
     if (status.workflows.successRate < 90) {
       issues.push(
         `Workflow success rate below threshold: ${status.workflows.successRate}%`
@@ -272,7 +352,6 @@ class EnterpriseAutomationManager {
       score -= 10
     }
 
-    // Check scheduling health
     if (status.scheduling.conflictRate > 0.1) {
       issues.push(
         `High scheduling conflict rate: ${status.scheduling.conflictRate * 100}%`
@@ -283,7 +362,6 @@ class EnterpriseAutomationManager {
       score -= 10
     }
 
-    // Check reporting health
     if (status.reporting.successRate < 90) {
       issues.push(
         `Reporting success rate below threshold: ${status.reporting.successRate}%`
@@ -292,7 +370,6 @@ class EnterpriseAutomationManager {
       score -= 10
     }
 
-    // Check alert health
     if (status.alerts.escalationRate > 0.2) {
       issues.push(
         `High alert escalation rate: ${status.alerts.escalationRate * 100}%`
@@ -301,7 +378,6 @@ class EnterpriseAutomationManager {
       score -= 10
     }
 
-    // Determine overall health status
     let healthStatus: 'healthy' | 'warning' | 'critical' = 'healthy'
     if (score < 90) healthStatus = 'warning'
     if (score < 70) healthStatus = 'critical'
@@ -361,10 +437,19 @@ class EnterpriseAutomationManager {
       falsePositiveRate: number
     }
   } {
-    const workflowStats = workflowAutomationEngine.getAutomationStats()
-    const schedulingMetrics = smartSchedulingService.getSchedulingMetrics()
-    const reportingMetrics = automatedReportingService.getReportingMetrics()
-    const alertMetrics = intelligentAlertManager.getAlertMetrics()
+    if (
+      !this.workflowEngine ||
+      !this.schedulingService ||
+      !this.reportingService ||
+      !this.alertManager
+    ) {
+      throw new Error('Automation services not loaded')
+    }
+
+    const workflowStats = this.workflowEngine.getAutomationStats()
+    const schedulingMetrics = this.schedulingService.getSchedulingMetrics()
+    const reportingMetrics = this.reportingService.getReportingMetrics()
+    const alertMetrics = this.alertManager.getAlertMetrics()
 
     // Calculate summary metrics
     const totalAutomations =
@@ -439,12 +524,18 @@ class EnterpriseAutomationManager {
   public async stop(): Promise<void> {
     if (!this.initialized) return
 
+    await this.ensureServicesLoaded()
+
     console.log('🤖 Stopping B.10.3 Enterprise Automation Services...')
 
     try {
-      await workflowAutomationEngine.stop()
-      await automatedReportingService.stop()
-      await intelligentAlertManager.stop()
+      const workflowEngine = this.getWorkflowEngine()
+      const reportingService = this.getReportingService()
+      const alertManager = this.getAlertManager()
+
+      await workflowEngine.stop()
+      await reportingService.stop()
+      await alertManager.stop()
 
       this.initialized = false
       console.log(

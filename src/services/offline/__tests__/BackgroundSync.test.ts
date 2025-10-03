@@ -3,36 +3,41 @@
  * Tests offline synchronization capabilities and conflict handling
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { indexedDBManager } from '../IndexedDBManager'
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest'
+import { indexedDBManager, type SyncQueue } from '../IndexedDBManager'
 import { supabase } from '@/lib/supabase/client'
 
-// Mock dependencies
 vi.mock('../IndexedDBManager')
 vi.mock('@/lib/supabase/client')
 
-let mockAddEventListener: ReturnType<typeof vi.fn>
-let mockRemoveEventListener: ReturnType<typeof vi.fn>
+const mockNavigator: Partial<typeof navigator> = {}
+const mockWindow: Partial<typeof window> = {}
 
-let currentOnline = true
-Object.defineProperty(navigator, 'onLine', {
-  configurable: true,
-  get: () => currentOnline,
-})
+let addEventListenerSpy: ReturnType<typeof vi.fn>
+let removeEventListenerSpy: ReturnType<typeof vi.fn>
 
 const setOnlineStatus = (online: boolean) => {
-  currentOnline = online
+  Object.defineProperty(mockNavigator, 'onLine', {
+    configurable: true,
+    value: online,
+  })
 }
 
-const setupWindowMocks = () => {
-  mockAddEventListener = vi.fn()
-  mockRemoveEventListener = vi.fn()
-  Object.defineProperty(global, 'window', {
+const setupEnvironment = () => {
+  addEventListenerSpy = vi.fn()
+  removeEventListenerSpy = vi.fn()
+
+  Object.defineProperty(globalThis, 'window', {
     configurable: true,
     value: {
-      addEventListener: mockAddEventListener,
-      removeEventListener: mockRemoveEventListener,
-    },
+      addEventListener: addEventListenerSpy,
+      removeEventListener: removeEventListenerSpy,
+    } as typeof window,
+  })
+
+  Object.defineProperty(globalThis, 'navigator', {
+    configurable: true,
+    value: mockNavigator as Navigator,
   })
 }
 
@@ -42,24 +47,34 @@ const importService = async () => {
 }
 
 const simulateEvent = async (type: 'online' | 'offline') => {
-  const handler = mockAddEventListener.mock.calls.find(
-    ([event]) => event === type
-  )?.[1]
-  await handler?.()
+  const handler = addEventListenerSpy.mock.calls.find(([event]) => event === type)?.[1]
+  if (typeof handler === 'function') {
+    await handler(new Event(type))
+  }
 }
 
-let backgroundSyncService:
-  | (typeof import('../BackgroundSync'))['backgroundSyncService']
-  | undefined
+let backgroundSyncService: (typeof import('../BackgroundSync'))['backgroundSyncService'] | undefined
+
+beforeAll(() => {
+  setupEnvironment()
+})
 
 afterEach(() => {
   vi.restoreAllMocks()
+  setOnlineStatus(true)
 })
 
 describe('BackgroundSyncService', () => {
   beforeEach(async () => {
     vi.resetModules()
-    setupWindowMocks()
+    Object.defineProperty(mockWindow, 'addEventListener', {
+      configurable: true,
+      value: addEventListenerSpy,
+    })
+    Object.defineProperty(mockWindow, 'removeEventListener', {
+      configurable: true,
+      value: removeEventListenerSpy,
+    })
     setOnlineStatus(true)
     backgroundSyncService = await importService()
     vi.mocked(indexedDBManager.init).mockResolvedValue()
@@ -69,11 +84,11 @@ describe('BackgroundSyncService', () => {
 
   describe('constructor', () => {
     it('should setup online listeners', () => {
-      expect(mockAddEventListener).toHaveBeenCalledWith(
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
         'online',
         expect.any(Function)
       )
-      expect(mockAddEventListener).toHaveBeenCalledWith(
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
         'offline',
         expect.any(Function)
       )
@@ -115,10 +130,10 @@ describe('BackgroundSyncService', () => {
     })
 
     it('should process sync queue items', async () => {
-      const mockSyncItems = [
+      const mockSyncItems: SyncQueue[] = [
         {
           id: 'sync1',
-          operation: 'create' as const,
+          operation: 'create',
           table: 'temperature_readings',
           data: { temperature: 4.5, conservation_point_id: 'cp1' },
           timestamp: Date.now(),
@@ -126,7 +141,7 @@ describe('BackgroundSyncService', () => {
         },
         {
           id: 'sync2',
-          operation: 'update' as const,
+          operation: 'update',
           table: 'tasks',
           data: { id: 'task1', status: 'completed' },
           timestamp: Date.now(),
@@ -137,12 +152,14 @@ describe('BackgroundSyncService', () => {
       vi.mocked(indexedDBManager.getSyncQueue).mockResolvedValue(mockSyncItems)
 
       // Mock successful Supabase operations
+      const mockInsert = vi.fn().mockResolvedValue({ error: null })
+      const mockUpdateEq = vi.fn().mockResolvedValue({ error: null })
+      const mockUpdate = vi.fn().mockReturnValue({ eq: mockUpdateEq })
       vi.mocked(supabase.from).mockReturnValue({
-        insert: vi.fn().mockResolvedValue({ data: {}, error: null }),
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ data: {}, error: null }),
-        }),
-      } as any)
+        insert: mockInsert,
+        update: mockUpdate,
+        delete: vi.fn().mockReturnValue({ eq: mockUpdateEq }),
+      } as unknown as ReturnType<typeof supabase.from>)
 
       const progressCallback = vi.fn()
       const result = await backgroundSyncService!.startSync(progressCallback)
@@ -155,21 +172,23 @@ describe('BackgroundSyncService', () => {
     })
 
     it('should handle sync failures and retry logic', async () => {
-      const mockSyncItem = {
+      const mockSyncItem: SyncQueue = {
         id: 'sync1',
-        operation: 'create' as const,
+        operation: 'create',
         table: 'temperature_readings',
         data: { temperature: 4.5 },
         timestamp: Date.now(),
-        retryCount: 2, // Already at max retries
+        retryCount: 2,
       }
 
       vi.mocked(indexedDBManager.getSyncQueue).mockResolvedValue([mockSyncItem])
 
-      // Mock failed Supabase operation
+      const mockInsert = vi.fn().mockRejectedValue(new Error('Network error'))
       vi.mocked(supabase.from).mockReturnValue({
-        insert: vi.fn().mockRejectedValue(new Error('Network error')),
-      } as any)
+        insert: mockInsert,
+        update: vi.fn().mockReturnValue({ eq: vi.fn() }),
+        delete: vi.fn().mockReturnValue({ eq: vi.fn() }),
+      } as unknown as ReturnType<typeof supabase.from>)
 
       const result = await backgroundSyncService!.startSync()
 
@@ -184,10 +203,10 @@ describe('BackgroundSyncService', () => {
     })
 
     it('should call progress callback with correct data', async () => {
-      const mockSyncItems = [
+      const mockSyncItems: SyncQueue[] = [
         {
           id: 'sync1',
-          operation: 'create' as const,
+          operation: 'create',
           table: 'temperature_readings',
           data: { temperature: 4.5 },
           timestamp: Date.now(),
@@ -197,8 +216,10 @@ describe('BackgroundSyncService', () => {
 
       vi.mocked(indexedDBManager.getSyncQueue).mockResolvedValue(mockSyncItems)
       vi.mocked(supabase.from).mockReturnValue({
-        insert: vi.fn().mockResolvedValue({ data: {}, error: null }),
-      } as any)
+        insert: vi.fn().mockResolvedValue({ error: null }),
+        update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+        delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+      } as unknown as ReturnType<typeof supabase.from>)
 
       const progressCallback = vi.fn()
       await backgroundSyncService!.startSync(progressCallback)
