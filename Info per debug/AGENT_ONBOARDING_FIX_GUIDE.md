@@ -8,11 +8,14 @@
 ## Sequenza Operativa
 1. **Allineamento**
    - Leggi `fixing_onboarding_multiagent.md` per lo stato attività e ruoli (Agente A/B/C).
-   - _Stato ultimo aggiornamento (01/10/2025 16:10)_
+   - _Stato ultimo aggiornamento (03/10/2025 15:45)_
      - Agente B ha completato il riallineamento funzionale di `InventoryStep` con i modal principali (validazioni e salvataggi allineati).
      - Agente C ha uniformato tutte le tipizzazioni condivise (`src/types/onboarding.ts`) e gli helper (`conservationUtils`, `inventoryUtils`, `staffUtils`, `onboardingHelpers`), eliminando i cast `any` negli step.
-     - Modulo calendar: errori TypeScript risolti (`CalendarSettings`, `CreateEventModal`, `useCalendarEvents`). Prossimo focus: errori legacy su `conservation` e hook correlati.
-     - Il type-check globale fallisce ancora per moduli legacy (conservation, automation, multi-tenant, offline, security). Nessun nuovo errore sugli step di onboarding.
+     - Modulo calendar: errori TypeScript risolti (`CalendarSettings`, `CreateEventModal`, `useCalendarEvents`).
+     - Modulo conservation/inventory: form e hook riallineati; hook offline (`useOfflineSync`, `BackgroundSync`, `IndexedDBManager`) ora tipizzati e test aggiornati.
+     - Modulo export/realtime: `useExportManager` e `useRealtime` aggiornati (config HACCP, payload Supabase, temperature alerts) insieme al `RealtimeConnectionManager` tipizzato.
+     - Modulo automation: `enterpriseAutomationManager` ora carica i servizi in modo lazy; in corso la rimozione delle variabili inutilizzate nelle singole service.
+     - Il type-check globale fallisce ancora per moduli legacy (automation, multi-tenant, security, export test suites). Nessun nuovo errore sugli step di onboarding.
    - Aggiorna `Info per debug/WORK_LOG.md` prima di chiudere la sessione.
 2. **Analisi mirata**
    - Esegui `npm run type-check -- --pretty false --skipLibCheck --noEmit | findstr Onboarding` per isolare i nuovi errori dopo ogni modifica.

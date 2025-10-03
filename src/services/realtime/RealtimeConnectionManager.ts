@@ -3,7 +3,11 @@
  * Handles WebSocket connections, subscriptions, and real-time data flow
  */
 
-import { RealtimeChannel, RealtimeClient } from '@supabase/supabase-js'
+import type {
+  RealtimeChannel,
+  RealtimeClient,
+  RealtimePostgresChangesPayload,
+} from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
 
 export type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE'
@@ -18,7 +22,7 @@ export interface RealtimeSubscription {
   id: string
   table: TableName
   event: RealtimeEvent | '*'
-  callback: (payload: any) => void
+  callback: (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => void
   filter?: string
   channel?: RealtimeChannel
 }
@@ -254,13 +258,16 @@ class RealtimeConnectionManager {
   /**
    * Handle connection errors with exponential backoff
    */
-  private handleConnectionError(error: any): void {
+  private handleConnectionError(error: unknown): void {
+    console.error('Real-time connection error:', error)
     this.connectionStatus.connectionAttempts++
 
     if (this.connectionStatus.connectionAttempts <= this.maxReconnectAttempts) {
       setTimeout(
         () => {
-          this.attemptReconnection()
+          this.attemptReconnection().catch(err => {
+            console.error('Failed reconnection attempt:', err)
+          })
         },
         this.reconnectInterval *
           Math.pow(2, this.connectionStatus.connectionAttempts - 1)
@@ -283,18 +290,17 @@ class RealtimeConnectionManager {
     this.updateConnectionStatus({ reconnecting: true })
 
     try {
-      // Reconnect all subscriptions
       const currentSubscriptions = Array.from(this.subscriptions.values())
       this.subscriptions.clear()
 
-      for (const sub of currentSubscriptions) {
+      currentSubscriptions.forEach(subscription => {
         this.subscribe({
-          table: sub.table,
-          event: sub.event,
-          callback: sub.callback,
-          filter: sub.filter,
+          table: subscription.table,
+          event: subscription.event,
+          callback: subscription.callback,
+          filter: subscription.filter,
         })
-      }
+      })
     } catch (error) {
       this.handleConnectionError(error)
     }
@@ -322,19 +328,23 @@ class RealtimeConnectionManager {
    * Transform Supabase presence state to our format
    */
   private transformPresenceState(
-    presenceState: Record<string, any[]>
+    presenceState: Record<string, Array<Record<string, unknown>>>
   ): PresenceState[] {
     const users: PresenceState[] = []
 
     Object.entries(presenceState).forEach(([key, presences]) => {
       presences.forEach(presence => {
+        const typedPresence = presence as PresenceState & {
+          last_activity?: string
+        }
+
         users.push({
-          userId: presence.userId,
-          userEmail: presence.userEmail,
+          userId: String(typedPresence.userId ?? ''),
+          userEmail: String(typedPresence.userEmail ?? ''),
           presence_ref: key,
-          online_at: presence.online_at,
-          current_page: presence.current_page,
-          activity_status: presence.activity_status || 'active',
+          online_at: typedPresence.online_at ?? new Date().toISOString(),
+          current_page: typedPresence.current_page,
+          activity_status: typedPresence.activity_status ?? 'active',
         })
       })
     })
