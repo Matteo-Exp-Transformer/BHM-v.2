@@ -3,11 +3,6 @@
  * Comprehensive automation services for enterprise HACCP management
  */
 
-import { workflowAutomationEngine } from './WorkflowAutomationEngine'
-import { smartSchedulingService } from './SmartSchedulingService'
-import { automatedReportingService } from './AutomatedReportingService'
-import { intelligentAlertManager } from './IntelligentAlertManager'
-
 export {
   workflowAutomationEngine,
   type AutomationRule,
@@ -111,12 +106,14 @@ class EnterpriseAutomationManager {
         import('./SmartSchedulingService'),
         import('./AutomatedReportingService'),
         import('./IntelligentAlertManager'),
-      ]).then(([workflowModule, schedulingModule, reportingModule, alertModule]) => {
-        this.workflowEngine = workflowModule.workflowAutomationEngine
-        this.schedulingService = schedulingModule.smartSchedulingService
-        this.reportingService = reportingModule.automatedReportingService
-        this.alertManager = alertModule.intelligentAlertManager
-      })
+      ]).then(
+        ([workflowModule, schedulingModule, reportingModule, alertModule]) => {
+          this.workflowEngine = workflowModule.workflowAutomationEngine
+          this.schedulingService = schedulingModule.smartSchedulingService
+          this.reportingService = reportingModule.automatedReportingService
+          this.alertManager = alertModule.intelligentAlertManager
+        }
+      )
     }
 
     await this.servicesLoadPromise
@@ -209,7 +206,6 @@ class EnterpriseAutomationManager {
 
     try {
       const workflowEngine = this.getWorkflowEngine()
-      const schedulingService = this.getSchedulingService()
       const reportingService = this.getReportingService()
       const alertManager = this.getAlertManager()
 
