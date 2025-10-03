@@ -80,6 +80,7 @@ export default function SettingsPage() {
             icon={Building2}
             defaultExpanded={true}
             className="bg-white"
+            showEmpty={false}
           >
             <CompanyConfiguration />
           </CollapsibleCard>
@@ -90,6 +91,7 @@ export default function SettingsPage() {
             icon={Users}
             defaultExpanded={false}
             className="bg-white"
+            showEmpty={false}
           >
             <UserManagement />
           </CollapsibleCard>
@@ -100,6 +102,7 @@ export default function SettingsPage() {
             icon={Shield}
             defaultExpanded={false}
             className="bg-white"
+            showEmpty={false}
           >
             <HACCPSettings />
           </CollapsibleCard>
@@ -110,6 +113,7 @@ export default function SettingsPage() {
             icon={Bell}
             defaultExpanded={false}
             className="bg-white"
+            showEmpty={false}
           >
             <NotificationPreferences />
           </CollapsibleCard>
