@@ -5,7 +5,7 @@
 
 export interface SchedulingConstraint {
   type: 'time' | 'resource' | 'dependency' | 'availability' | 'priority'
-  value: any
+  value: string | number | boolean | Date | string[]
   weight: number // 0-1, importance of this constraint
   required: boolean
 }
@@ -116,7 +116,7 @@ export interface SchedulingMetrics {
 export class SmartSchedulingService {
   private scheduledTasks: Map<string, ScheduledTask> = new Map()
   private resourceCapacities: Map<string, ResourceCapacity> = new Map()
-  private constraints: Map<string, SchedulingConstraint[]> = new Map()
+  private _constraints: Map<string, SchedulingConstraint[]> = new Map()
   private optimizationEngine: ScheduleOptimizationEngine
   private isInitialized = false
 
@@ -306,7 +306,7 @@ export class SmartSchedulingService {
     console.log(`Found ${conflicts.length} schedule conflicts`)
 
     // Auto-resolve resolvable conflicts
-    const autoResolved = []
+    const autoResolved: ScheduleConflict[] = []
     for (const conflict of conflicts) {
       if (conflict.autoResolvable) {
         try {
@@ -680,7 +680,11 @@ export class SmartSchedulingService {
     priority: number
   ): 'low' | 'medium' | 'high' | 'critical' {
     const priorities = ['low', 'medium', 'high', 'critical']
-    return priorities[Math.max(0, Math.min(3, priority - 1))] as any
+    return priorities[Math.max(0, Math.min(3, priority - 1))] as
+      | 'low'
+      | 'medium'
+      | 'high'
+      | 'critical'
   }
 
   private convertAssignedToRequired(
@@ -711,7 +715,7 @@ export class SmartSchedulingService {
     return requirements
   }
 
-  private getTaskCompanyId(taskId: string): string {
+  private getTaskCompanyId(_taskId: string): string {
     // In a real implementation, this would lookup the company ID from the task
     return 'default'
   }
@@ -740,8 +744,8 @@ export class SmartSchedulingService {
   }
 
   private calculateImprovements(
-    original: ScheduledTask[],
-    optimized: ScheduledTask[]
+    _original: ScheduledTask[],
+    _optimized: ScheduledTask[]
   ): OptimizationResult['improvements'] {
     // Mock improvement calculations
     return {
@@ -855,10 +859,10 @@ class ScheduleOptimizationEngine {
  * Genetic Algorithm for Schedule Optimization
  */
 class GeneticScheduleOptimizer {
-  private populationSize = 50
-  private generations = 100
-  private mutationRate = 0.1
-  private crossoverRate = 0.8
+  private _populationSize = 50
+  private _generations = 100
+  private _mutationRate = 0.1
+  private _crossoverRate = 0.8
 
   public async initialize(): Promise<void> {
     console.log('🧬 Initializing Genetic Schedule Optimizer...')
@@ -866,7 +870,7 @@ class GeneticScheduleOptimizer {
 
   public async optimize(
     tasks: ScheduledTask[],
-    resources: ResourceCapacity[]
+    _resources: ResourceCapacity[]
   ): Promise<ScheduledTask[]> {
     console.log('🧬 Running genetic algorithm optimization...')
 
@@ -889,7 +893,7 @@ class ConstraintSolver {
 
   public async solve(
     tasks: ScheduledTask[],
-    resources: ResourceCapacity[]
+    _resources: ResourceCapacity[]
   ): Promise<ScheduledTask[]> {
     console.log('🔧 Solving scheduling constraints...')
 

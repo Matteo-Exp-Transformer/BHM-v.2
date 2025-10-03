@@ -44,7 +44,7 @@ export interface AlertCondition {
     | 'matches'
     | 'in'
     | 'between'
-  value: any
+  value: string | number | boolean | string[] | number[]
   duration?: number // Minutes for sustained conditions
   lookbackPeriod?: number // Minutes to look back for pattern detection
   sensitivity?: number // 0-1 for anomaly detection
@@ -97,7 +97,7 @@ export interface WebhookConfig {
   url: string
   method: 'POST' | 'PUT' | 'PATCH'
   headers: Record<string, string>
-  payload: Record<string, any>
+  payload: Record<string, unknown>
   retries: number
 }
 
@@ -114,7 +114,7 @@ export interface TaskCreationConfig {
 
 export interface SystemActionConfig {
   action: 'log' | 'metric' | 'flag' | 'shutdown' | 'restart' | 'custom'
-  parameters: Record<string, any>
+  parameters: Record<string, unknown>
 }
 
 export interface EscalationConfig {
@@ -183,7 +183,7 @@ export interface Alert {
   title: string
   message: string
   source: string
-  sourceData: any
+  sourceData: Record<string, unknown>
   triggeredAt: Date
   acknowledgedAt?: Date
   acknowledgedBy?: string
@@ -202,7 +202,7 @@ export interface AlertActionResult {
   actionType: string
   executedAt: Date
   status: 'success' | 'failure' | 'pending'
-  result?: any
+  result?: unknown
   error?: string
   retryCount: number
 }
@@ -211,7 +211,7 @@ export interface AlertMetadata {
   confidence: number // 0-1, confidence in alert accuracy
   impact: number // 0-1, estimated business impact
   urgency: number // 0-1, time sensitivity
-  context: Record<string, any>
+  context: Record<string, unknown>
   relatedAlerts: string[]
   trends: {
     frequency: number // Alerts per hour in last 24h
@@ -238,7 +238,8 @@ export class IntelligentAlertManager {
   private alertRules: Map<string, AlertRule> = new Map()
   private activeAlerts: Map<string, Alert> = new Map()
   private alertHistory: Alert[] = []
-  private escalationTimers: Map<string, NodeJS.Timeout> = new Map()
+  private escalationTimers: Map<string, ReturnType<typeof setTimeout>> =
+    new Map()
   private suppressionCache: Map<string, Date> = new Map()
   private anomalyDetector: AnomalyDetector
   private patternAnalyzer: PatternAnalyzer
@@ -299,7 +300,10 @@ export class IntelligentAlertManager {
   /**
    * Process incoming data and check for alert conditions
    */
-  public async processData(source: string, data: any): Promise<Alert[]> {
+  public async processData(
+    source: string,
+    data: Record<string, unknown>
+  ): Promise<Alert[]> {
     if (!this.isInitialized) {
       throw new Error('Alert Manager not initialized')
     }
@@ -550,7 +554,7 @@ export class IntelligentAlertManager {
    */
   public async testAlertRule(
     ruleId: string,
-    testData: any
+    testData: Record<string, unknown>
   ): Promise<{
     wouldTrigger: boolean
     conditions: Array<{ condition: AlertCondition; result: boolean }>
@@ -835,7 +839,7 @@ export class IntelligentAlertManager {
 
   private async evaluateAlertRule(
     rule: AlertRule,
-    data: any
+    data: Record<string, unknown>
   ): Promise<boolean> {
     // Check schedule first
     if (rule.schedule && !this.isWithinSchedule(rule.schedule)) {
@@ -854,7 +858,7 @@ export class IntelligentAlertManager {
 
   private async evaluateCondition(
     condition: AlertCondition,
-    data: any
+    data: Record<string, unknown>
   ): Promise<boolean> {
     const fieldValue = this.getFieldValue(data, condition.field)
 
@@ -880,7 +884,7 @@ export class IntelligentAlertManager {
 
   private evaluateThresholdCondition(
     condition: AlertCondition,
-    value: any
+    value: unknown
   ): boolean {
     switch (condition.operator) {
       case '>':
@@ -912,7 +916,7 @@ export class IntelligentAlertManager {
 
   private async evaluatePatternCondition(
     condition: AlertCondition,
-    data: any
+    data: Record<string, unknown>
   ): Promise<boolean> {
     return await this.patternAnalyzer.detectPattern(
       condition.field,
@@ -923,7 +927,7 @@ export class IntelligentAlertManager {
 
   private async evaluateAnomalyCondition(
     condition: AlertCondition,
-    value: any
+    value: unknown
   ): Promise<boolean> {
     return await this.anomalyDetector.isAnomaly(
       condition.field,
@@ -933,22 +937,22 @@ export class IntelligentAlertManager {
   }
 
   private evaluateDurationCondition(
-    condition: AlertCondition,
-    data: any
+    _condition: AlertCondition,
+    _data: Record<string, unknown>
   ): boolean {
     // In a real implementation, this would check if condition has been true for the specified duration
     return true
   }
 
   private evaluateFrequencyCondition(
-    condition: AlertCondition,
-    data: any
+    _condition: AlertCondition,
+    _data: Record<string, unknown>
   ): boolean {
     // In a real implementation, this would check frequency over the lookback period
     return true
   }
 
-  private getFieldValue(data: any, field: string): any {
+  private getFieldValue(data: Record<string, unknown>, field: string): unknown {
     const parts = field.split('.')
     let value = data
 
@@ -1005,7 +1009,10 @@ export class IntelligentAlertManager {
     return hours * 100 + minutes
   }
 
-  private isAlertSuppressed(rule: AlertRule, data: any): boolean {
+  private isAlertSuppressed(
+    rule: AlertRule,
+    data: Record<string, unknown>
+  ): boolean {
     if (!rule.suppressionRules) {
       return false
     }
@@ -1022,7 +1029,7 @@ export class IntelligentAlertManager {
   private evaluateSuppressionRule(
     suppressionRule: SuppressionRule,
     rule: AlertRule,
-    data: any
+    data: Record<string, unknown>
   ): boolean {
     switch (suppressionRule.type) {
       case 'frequency':
@@ -1071,7 +1078,7 @@ export class IntelligentAlertManager {
   private evaluateDuplicateSuppressionRule(
     config: DuplicateSuppressionConfig,
     rule: AlertRule,
-    data: any
+    data: Record<string, unknown>
   ): boolean {
     // Check for duplicate alerts based on specified fields
     const cacheKey = config.fields
@@ -1128,7 +1135,10 @@ export class IntelligentAlertManager {
     return false
   }
 
-  private async triggerAlert(rule: AlertRule, data: any): Promise<Alert> {
+  private async triggerAlert(
+    rule: AlertRule,
+    data: Record<string, unknown>
+  ): Promise<Alert> {
     const alert: Alert = {
       id: this.generateId(),
       ruleId: rule.id,
@@ -1221,10 +1231,8 @@ export class IntelligentAlertManager {
     alert: Alert,
     action: AlertAction
   ): Promise<void> {
-    const startTime = Date.now()
-
     try {
-      let result: any
+      let result: unknown
 
       switch (action.type) {
         case 'notification':
@@ -1279,7 +1287,7 @@ export class IntelligentAlertManager {
   private async sendNotification(
     config: NotificationConfig,
     alert: Alert
-  ): Promise<any> {
+  ): Promise<{ sent: boolean; channels: string[]; recipients: string[] }> {
     console.log(`📱 Sending notification: ${alert.title}`)
     // In a real implementation, this would send actual notifications
     return {
@@ -1289,19 +1297,28 @@ export class IntelligentAlertManager {
     }
   }
 
-  private async sendEmail(config: EmailConfig, alert: Alert): Promise<any> {
+  private async sendEmail(
+    config: EmailConfig,
+    _alert: Alert
+  ): Promise<{ sent: boolean; recipients: string[] }> {
     console.log(`📧 Sending email: ${config.subject}`)
     // In a real implementation, this would send actual emails
     return { sent: true, recipients: config.recipients }
   }
 
-  private async sendSMS(config: SMSConfig, alert: Alert): Promise<any> {
+  private async sendSMS(
+    config: SMSConfig,
+    _alert: Alert
+  ): Promise<{ sent: boolean; recipients: string[] }> {
     console.log(`📱 Sending SMS: ${config.message}`)
     // In a real implementation, this would send actual SMS
     return { sent: true, recipients: config.recipients }
   }
 
-  private async callWebhook(config: WebhookConfig, alert: Alert): Promise<any> {
+  private async callWebhook(
+    config: WebhookConfig,
+    _alert: Alert
+  ): Promise<{ called: boolean; url: string; status: number }> {
     console.log(`🔗 Calling webhook: ${config.url}`)
     // In a real implementation, this would make actual HTTP calls
     return { called: true, url: config.url, status: 200 }
@@ -1309,8 +1326,13 @@ export class IntelligentAlertManager {
 
   private async createTask(
     config: TaskCreationConfig,
-    alert: Alert
-  ): Promise<any> {
+    _alert: Alert
+  ): Promise<{
+    taskId: string
+    title: string
+    assignedTo?: string
+    priority: string
+  }> {
     console.log(`📋 Creating task: ${config.title}`)
     // In a real implementation, this would create actual tasks
     return {
@@ -1323,8 +1345,8 @@ export class IntelligentAlertManager {
 
   private async executeSystemAction(
     config: SystemActionConfig,
-    alert: Alert
-  ): Promise<any> {
+    _alert: Alert
+  ): Promise<{ executed: boolean; action: string }> {
     console.log(`⚙️ Executing system action: ${config.action}`)
     // In a real implementation, this would execute actual system actions
     return { executed: true, action: config.action }
@@ -1401,19 +1423,28 @@ export class IntelligentAlertManager {
     }
   }
 
-  private generateAlertTitle(rule: AlertRule, data: any): string {
+  private generateAlertTitle(
+    rule: AlertRule,
+    _data: Record<string, unknown>
+  ): string {
     // Generate intelligent alert title based on rule and data
     const severity = rule.severity.toUpperCase()
     const category = rule.category.replace('_', ' ')
     return `${severity} ${category}: ${rule.name}`
   }
 
-  private generateAlertMessage(rule: AlertRule, data: any): string {
+  private generateAlertMessage(
+    rule: AlertRule,
+    data: Record<string, unknown>
+  ): string {
     // Generate detailed alert message
     return `${rule.description}\n\nTriggered by: ${JSON.stringify(data, null, 2)}`
   }
 
-  private calculateImpact(rule: AlertRule, data: any): number {
+  private calculateImpact(
+    rule: AlertRule,
+    _data: Record<string, unknown>
+  ): number {
     // Calculate business impact (0-1)
     const severityImpact = {
       low: 0.2,
@@ -1424,9 +1455,12 @@ export class IntelligentAlertManager {
     return severityImpact[rule.severity] || 0.5
   }
 
-  private calculateUrgency(rule: AlertRule, data: any): number {
+  private calculateUrgency(
+    rule: AlertRule,
+    _data: Record<string, unknown>
+  ): number {
     // Calculate time urgency (0-1)
-    const categoryUrgency = {
+    const categoryUrgency: Record<string, number> = {
       temperature: 0.9,
       security: 0.8,
       compliance: 0.6,
@@ -1446,7 +1480,7 @@ export class IntelligentAlertManager {
  * Machine learning-based anomaly detection for smart alerts
  */
 class AnomalyDetector {
-  private models: Map<string, any> = new Map()
+  private _models: Map<string, unknown> = new Map()
 
   public async initialize(): Promise<void> {
     console.log('🤖 Initializing Anomaly Detector...')
@@ -1454,9 +1488,9 @@ class AnomalyDetector {
   }
 
   public async isAnomaly(
-    field: string,
-    value: any,
-    sensitivity: number
+    _field: string,
+    _value: unknown,
+    _sensitivity: number
   ): Promise<boolean> {
     // In a real implementation, this would use ML models to detect anomalies
     // For now, simple statistical approach
@@ -1469,7 +1503,7 @@ class AnomalyDetector {
  * Pattern recognition for complex alert conditions
  */
 class PatternAnalyzer {
-  private patterns: Map<string, any> = new Map()
+  private patterns: Map<string, unknown> = new Map()
 
   public async initialize(): Promise<void> {
     console.log('🔍 Initializing Pattern Analyzer...')
@@ -1477,9 +1511,9 @@ class PatternAnalyzer {
   }
 
   public async detectPattern(
-    field: string,
-    data: any,
-    pattern: any
+    _field: string,
+    _data: Record<string, unknown>,
+    _pattern: string | number | boolean | string[] | number[]
   ): Promise<boolean> {
     // In a real implementation, this would analyze complex patterns
     return Math.random() < 0.2 // 20% chance of pattern match

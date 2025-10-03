@@ -100,11 +100,11 @@ export const ShoppingListManager = () => {
         actions={cardActions}
         loading={isLoading}
         error={null}
-        showEmpty={shoppingLists.length === 0}
+        showEmpty={!isLoading && shoppingLists.length === 0}
         emptyMessage="Nessuna lista della spesa creata. Crea la tua prima lista per iniziare."
         className="mb-6"
       >
-        {shoppingLists.length > 0 && (
+        {!isLoading && shoppingLists.length > 0 && (
           <div className="p-4">
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 md:grid-cols-4 gap-4">

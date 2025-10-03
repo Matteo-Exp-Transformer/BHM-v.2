@@ -256,12 +256,16 @@ export default function InventoryPage() {
 
       {/* Expiry Alerts */}
       {expiryAlerts.length > 0 && (
-        <CollapsibleCard
-          title="Prodotti in Scadenza"
-          icon={AlertTriangle}
-          counter={expiryAlerts.length}
-          defaultExpanded={true}
-        >
+      <CollapsibleCard
+        title="Prodotti in Scadenza"
+        icon={AlertTriangle}
+        counter={expiryAlerts.length}
+        defaultExpanded={true}
+        loading={isLoadingExpiry}
+        showEmpty={!isLoadingExpiry && expiryAlerts.length === 0}
+        emptyMessage="Nessun prodotto in scadenza nei prossimi giorni."
+      >
+        {!isLoadingExpiry && expiryAlerts.length > 0 && (
           <div className="space-y-3">
             {expiryAlerts.map(alert => (
               <ExpiryAlert
@@ -271,7 +275,8 @@ export default function InventoryPage() {
               />
             ))}
           </div>
-        </CollapsibleCard>
+        )}
+      </CollapsibleCard>
       )}
 
       {/* Products List */}
@@ -280,23 +285,11 @@ export default function InventoryPage() {
         icon={Package}
         counter={products.length}
         defaultExpanded={true}
+        loading={isLoading}
+        showEmpty={!isLoading && products.length === 0}
+        emptyMessage="Nessun prodotto presente. Aggiungi il primo dal pulsante in alto."
       >
-        {isLoading ? (
-          <div className="flex justify-center items-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        ) : products.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>Nessun prodotto trovato</p>
-            <button
-              onClick={() => setShowAddProductModal(true)}
-              className="mt-2 text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Aggiungi il primo prodotto
-            </button>
-          </div>
-        ) : (
+        {!isLoading && products.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {products.map((product: Product) => (
               <ProductCard
@@ -309,6 +302,16 @@ export default function InventoryPage() {
                 }
               />
             ))}
+          </div>
+        )}
+        {!isLoading && products.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <button
+              onClick={() => setShowAddProductModal(true)}
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Aggiungi il primo prodotto
+            </button>
           </div>
         )}
       </CollapsibleCard>
@@ -328,23 +331,11 @@ export default function InventoryPage() {
         icon={FileText}
         counter={categories.length}
         defaultExpanded={false}
+        loading={isLoadingCategories}
+        showEmpty={!isLoadingCategories && categories.length === 0}
+        emptyMessage="Nessuna categoria creata. Usa il pulsante in alto per aggiungerne una."
       >
-        {isLoadingCategories ? (
-          <div className="flex justify-center items-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
-          </div>
-        ) : categories.length === 0 ? (
-          <div className="text-center py-6 text-gray-500">
-            <FileText className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-            <p>Nessuna categoria creata</p>
-            <button
-              onClick={() => setShowAddCategoryModal(true)}
-              className="mt-2 text-green-600 hover:text-green-700 font-medium"
-            >
-              Aggiungi la prima categoria
-            </button>
-          </div>
-        ) : (
+        {!isLoadingCategories && categories.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {categories.map(category => (
               <div
@@ -379,6 +370,16 @@ export default function InventoryPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+        {!isLoadingCategories && categories.length === 0 && (
+          <div className="text-center py-6 text-gray-500">
+            <button
+              onClick={() => setShowAddCategoryModal(true)}
+              className="text-green-600 hover:text-green-700 font-medium"
+            >
+              Aggiungi la prima categoria
+            </button>
           </div>
         )}
       </CollapsibleCard>
