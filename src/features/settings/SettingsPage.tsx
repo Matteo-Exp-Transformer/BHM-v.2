@@ -56,24 +56,26 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Settings className="w-8 h-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">
-              Impostazioni Sistema
-            </h1>
+        <div className="space-y-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <Settings className="w-7 h-7 text-blue-600 sm:w-8 sm:h-8" />
+              <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
+                Impostazioni Sistema
+              </h1>
+            </div>
           </div>
-          <p className="text-gray-600">
+          <p className="text-sm text-gray-600 sm:text-base">
             Gestisci la configurazione dell'azienda, utenti, compliance HACCP e
             preferenze.
           </p>
         </div>
 
         {/* Settings Sections */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Company Configuration */}
           <CollapsibleCard
             title="Configurazione Azienda"

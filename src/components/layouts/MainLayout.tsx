@@ -109,17 +109,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         role="navigation"
         aria-label="Main navigation"
       >
-        <div
-          className={`grid h-16 ${
-            tabs.length === 4
-              ? 'grid-cols-4'
-              : tabs.length === 5
-                ? 'grid-cols-5'
-                : tabs.length === 6
-                  ? 'grid-cols-6'
-                  : `grid-cols-${tabs.length}`
-          }`}
-        >
+        <div className="flex h-16 items-stretch gap-1 overflow-x-auto px-2 pb-1">
           {tabs.map(tab => {
             const Icon = tab.icon
             const isActive = location.pathname === tab.path
@@ -128,7 +118,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
               <Link
                 key={tab.id}
                 to={tab.path}
-                className={`flex flex-col items-center justify-center space-y-1 touch-manipulation transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+                className={`flex min-w-[80px] flex-1 flex-col items-center justify-center space-y-1 rounded-md touch-manipulation transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
                   isActive
                     ? 'text-primary-600 bg-primary-50'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
@@ -137,7 +127,9 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                 aria-current={isActive ? 'page' : undefined}
               >
                 <Icon size={20} aria-hidden="true" />
-                <span className="text-xs font-medium">{tab.label}</span>
+                <span className="text-[10px] font-medium sm:text-xs">
+                  {tab.label}
+                </span>
               </Link>
             )
           })}

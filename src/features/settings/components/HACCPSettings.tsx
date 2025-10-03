@@ -264,14 +264,14 @@ export function HACCPSettings() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2">
           <Shield className="w-6 h-6 text-blue-600" />
           <h3 className="text-lg font-semibold text-gray-900">
             Configurazione HACCP
           </h3>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {isEditing ? (
             <>
               <button
@@ -322,13 +322,13 @@ export function HACCPSettings() {
       )}
 
       {/* Temperature Thresholds */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
+      <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
         <div className="flex items-center gap-2 mb-4">
           <Thermometer className="w-5 h-5 text-blue-600" />
           <h4 className="font-medium text-gray-900">Soglie di Temperatura</h4>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Fridge */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -548,13 +548,13 @@ export function HACCPSettings() {
       </div>
 
       {/* Alert Settings */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
+      <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
         <div className="flex items-center gap-2 mb-4">
           <AlertTriangle className="w-5 h-5 text-orange-600" />
           <h4 className="font-medium text-gray-900">Impostazioni Allerte</h4>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Giorni preavviso scadenza prodotti

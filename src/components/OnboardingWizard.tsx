@@ -333,18 +333,18 @@ const OnboardingWizard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto py-8 px-4">
+      <div className="max-w-4xl mx-auto py-6 px-4 sm:py-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="text-center mb-6 space-y-3 sm:mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
             Configurazione Iniziale HACCP
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm text-gray-600 sm:text-base">
             Configura la tua azienda per iniziare a utilizzare il sistema HACCP
           </p>
 
           {/* Control Buttons for Development and Testing */}
-          <div className="mt-6 flex justify-center">
+          <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
             <DevButtons
               onPrefillOnboarding={handlePrefillOnboarding}
               onResetOnboarding={handleResetOnboarding}
@@ -362,7 +362,7 @@ const OnboardingWizard = () => {
         />
 
         {/* Step Content */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
           {renderCurrentStep()}
         </div>
 
