@@ -187,7 +187,6 @@ export class WorkflowAutomationEngine {
   private executions: Map<string, AutomationExecution> = new Map()
   private scheduledJobs: Map<string, NodeJS.Timeout> = new Map()
   private eventListeners: Map<string, Function[]> = new Map()
-  private isRunning = false
 
   /**
    * Initialize automation engine
@@ -205,7 +204,6 @@ export class WorkflowAutomationEngine {
       // Schedule recurring jobs
       await this.scheduleJobs()
 
-      this.isRunning = true
       console.log('✅ Workflow Automation Engine initialized successfully')
     } catch (error) {
       console.error('❌ Failed to initialize automation engine:', error)
@@ -435,8 +433,6 @@ export class WorkflowAutomationEngine {
    * Stop automation engine
    */
   public async stop(): Promise<void> {
-    this.isRunning = false
-
     // Clear all scheduled jobs
     for (const timeout of this.scheduledJobs.values()) {
       clearTimeout(timeout)
@@ -805,8 +801,8 @@ export class WorkflowAutomationEngine {
   }
 
   private evaluateUserCondition(
-    condition: UserCondition,
-    context?: Record<string, any>
+    _condition: UserCondition,
+    _context?: Record<string, any>
   ): boolean {
     // In a real implementation, this would check user roles, departments, etc.
     return true
@@ -834,7 +830,7 @@ export class WorkflowAutomationEngine {
   private async executeAction(
     action: AutomationAction,
     context?: Record<string, any>,
-    rule?: AutomationRule
+    _rule?: AutomationRule
   ): Promise<AutomationResult> {
     const startTime = Date.now()
     const actionId = this.generateId()
@@ -897,7 +893,7 @@ export class WorkflowAutomationEngine {
 
   private async executeCreateTaskAction(
     config: CreateTaskAction,
-    context?: Record<string, any>
+    _context?: Record<string, any>
   ): Promise<any> {
     console.log(`📋 Creating automated task: ${config.title}`)
 
@@ -922,7 +918,7 @@ export class WorkflowAutomationEngine {
 
   private async executeNotificationAction(
     config: NotificationAction,
-    context?: Record<string, any>
+    _context?: Record<string, any>
   ): Promise<any> {
     console.log(`📧 Sending automated notification: ${config.subject}`)
 
@@ -944,7 +940,7 @@ export class WorkflowAutomationEngine {
 
   private async executeReportAction(
     config: ReportAction,
-    context?: Record<string, any>
+    _context?: Record<string, any>
   ): Promise<any> {
     console.log(`📊 Generating automated report: ${config.reportType}`)
 
@@ -965,7 +961,7 @@ export class WorkflowAutomationEngine {
 
   private async executeUpdateDataAction(
     config: UpdateDataAction,
-    context?: Record<string, any>
+    _context?: Record<string, any>
   ): Promise<any> {
     console.log(
       `🔄 Executing data update: ${config.operation} on ${config.target}`
@@ -985,7 +981,7 @@ export class WorkflowAutomationEngine {
 
   private async executeWorkflowAction(
     config: WorkflowAction,
-    context?: Record<string, any>
+    _context?: Record<string, any>
   ): Promise<any> {
     console.log(`🔗 Triggering workflow: ${config.workflowId}`)
 
