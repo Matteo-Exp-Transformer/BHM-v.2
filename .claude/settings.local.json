@@ -44,7 +44,8 @@
       "Bash(Select-String \"no-explicit-any\")",
       "Bash(Select-Object -First 50)",
       "Bash(npm run lint:*)",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

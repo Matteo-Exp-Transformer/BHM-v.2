@@ -212,7 +212,7 @@ export default function ConservationPage() {
           <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
           Distribuzione per Tipo
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
           <div className="text-center">
             <div className="text-2xl mb-1">🌡️</div>
             <div className="text-sm text-gray-600">Ambiente</div>
@@ -264,7 +264,7 @@ export default function ConservationPage() {
         }
       >
         {/* Mini Statistics - Punti di Conservazione per Tipo */}
-        <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
           <div className="bg-blue-50 rounded-lg border border-blue-200 p-3">
             <div className="flex items-center justify-between">
               <div>
@@ -387,7 +387,7 @@ export default function ConservationPage() {
         }
       >
         {/* Mini Statistics - Letture Temperature */}
-        <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
           <div className="bg-blue-50 rounded-lg border border-blue-200 p-3">
             <div className="flex items-center justify-between">
               <div>
@@ -512,7 +512,7 @@ export default function ConservationPage() {
         }
       >
         {/* Mini Statistics - Manutenzioni */}
-        <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
           <div className="bg-blue-50 rounded-lg border border-blue-200 p-3">
             <div className="flex items-center justify-between">
               <div>

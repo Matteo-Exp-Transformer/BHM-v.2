@@ -95,7 +95,7 @@ const StepNavigator = ({
     <div className="mb-8">
       {/* Desktop Navigation */}
       <div className="hidden md:block">
-        <div className="grid grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
           {stepInfo.map(step => {
             const status = getStepStatus(step.id)
             const styles = getStepStyles(status)

@@ -242,7 +242,7 @@ export function UserManagement() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4 mb-4">
                   {/* Role */}
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -357,11 +357,11 @@ export function UserManagement() {
 
                 {/* Staff Details */}
                 {user.staff && (
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                     <h5 className="font-medium text-gray-900 mb-2">
                       Dettagli Staff
                     </h5>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
                       <div>
                         <span className="text-gray-500">Categoria:</span>
                         <p className="font-medium">{user.staff.category}</p>
