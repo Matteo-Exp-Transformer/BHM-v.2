@@ -28,14 +28,13 @@ import type {
 } from '@/types/onboarding'
 import {
   CONSERVATION_POINT_TYPES,
-  CONSERVATION_CATEGORIES,
   getCategoryById,
-  isCategoryCompatibleWithType,
   validateConservationPoint,
   generateConservationPointId,
   createDraftConservationPoint,
   normalizeConservationPoint,
   validateTemperatureForType,
+  getCompatibleCategories,
 } from '@/utils/onboarding/conservationUtils'
 
 const EMPTY_FORM: ConservationStepFormData = {
@@ -105,6 +104,13 @@ const ConservationStep = ({
     () => CONSERVATION_POINT_TYPES[formData.pointType],
     [formData.pointType]
   )
+
+  const compatibleCategories = useMemo(() => {
+    const temperature = formData.targetTemperature
+      ? Number(formData.targetTemperature)
+      : null
+    return getCompatibleCategories(temperature, formData.pointType)
+  }, [formData.targetTemperature, formData.pointType])
 
   const resetForm = () => {
     setFormData(EMPTY_FORM)
@@ -570,13 +576,9 @@ const ConservationStep = ({
           <div>
             <Label>Categorie prodotti *</Label>
             <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-              {CONSERVATION_CATEGORIES.map(category => {
+              {compatibleCategories.map(category => {
                 const isSelected = formData.productCategories.includes(
                   category.id
-                )
-                const supportsType = isCategoryCompatibleWithType(
-                  category.id,
-                  formData.pointType
                 )
                 return (
                   <button
@@ -586,9 +588,8 @@ const ConservationStep = ({
                       isSelected
                         ? 'border-blue-400 bg-blue-50 text-blue-900'
                         : 'border-gray-200 bg-white hover:border-blue-200'
-                    } ${supportsType ? '' : 'pointer-events-none opacity-40'}`}
+                    }`}
                     onClick={() => {
-                      if (!supportsType) return
                       setFormData(prev => ({
                         ...prev,
                         productCategories: isSelected
@@ -600,6 +601,11 @@ const ConservationStep = ({
                     }}
                   >
                     <span>{category.label}</span>
+                    {category.range && (
+                      <span className="text-xs text-gray-500">
+                        {category.range.min}°C - {category.range.max}°C
+                      </span>
+                    )}
                     {isSelected && (
                       <ShieldCheck
                         className="h-4 w-4 text-blue-600"
@@ -610,6 +616,13 @@ const ConservationStep = ({
                 )
               })}
             </div>
+            {compatibleCategories.length === 0 &&
+              formData.targetTemperature && (
+                <p className="mt-1 text-sm text-amber-600">
+                  Nessuna categoria compatibile con la temperatura{' '}
+                  {formData.targetTemperature}°C
+                </p>
+              )}
             {validationErrors.productCategories && (
               <p className="mt-1 text-sm text-red-600">
                 {validationErrors.productCategories}

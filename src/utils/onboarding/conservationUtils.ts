@@ -367,6 +367,38 @@ export const validateTemperatureForType = (
   return { valid: true }
 }
 
+export const getCompatibleCategories = (
+  temperature: number | null,
+  pointType: ConservationPoint['pointType']
+) => {
+  if (!temperature) {
+    return CONSERVATION_CATEGORIES
+  }
+
+  return CONSERVATION_CATEGORIES.filter(category => {
+    // Controlla compatibilità con il tipo di punto
+    if (
+      category.compatibleTypes &&
+      !category.compatibleTypes.includes(pointType)
+    ) {
+      return false
+    }
+
+    if (category.incompatible && category.incompatible.includes(pointType)) {
+      return false
+    }
+
+    // Controlla compatibilità con la temperatura
+    if (category.range) {
+      return (
+        temperature >= category.range.min && temperature <= category.range.max
+      )
+    }
+
+    return true
+  })
+}
+
 export const isCategoryCompatibleWithType = (
   categoryId: string,
   type: ConservationPoint['pointType']
