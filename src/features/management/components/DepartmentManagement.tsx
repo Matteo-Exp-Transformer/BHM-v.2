@@ -107,14 +107,21 @@ export const DepartmentManagement = () => {
         icon={Building2}
         counter={stats.total}
         actions={cardActions}
-        loading={isLoading}
+        isLoading={isLoading}
         error={null}
-        showEmpty={departments.length === 0}
+        isEmpty={departments.length === 0}
         emptyMessage="Nessun reparto configurato. Crea il primo reparto o usa i predefiniti."
         className="mb-6"
+        contentClassName="px-4 py-6 sm:px-6"
+        emptyActionLabel={
+          departments.length === 0 ? 'Aggiungi predefiniti' : 'Crea reparto'
+        }
+        onEmptyAction={
+          departments.length === 0 ? handleCreatePresets : handleCreateNew
+        }
       >
         {departments.length > 0 && (
-          <div className="p-4">
+          <div className="space-y-4">
             {/* Stats */}
             <div className="mb-4 grid grid-cols-3 gap-4">
               <div className="text-center">
