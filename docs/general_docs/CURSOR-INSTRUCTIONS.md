@@ -205,6 +205,8 @@ Project_Knowledge/
 - ✅ Aggiunto `data-testid="onboarding-wizard"` per sbloccare test E2E
 - ✅ Verificato ultimo update multi-agente (`CURSOR-MULTIAGENT-2025-10-03.md`) e consolidato istruzioni correnti (`CURSOR-INSTRUCTIONS-CURRENT.md`)
 - ✅ Refactor `CollapsibleCard` completato: gestione controllata/stati, padding responsive e azioni empty integrate nei consumer principali (Inventory, Settings, Management)
+- ✅ Ripulite le dipendenze dai tipi `NodeJS.Timeout` e accessi non tipizzati alla navigator API (InstallPromptManager, UpdateManager, WorkflowAutomationEngine, utils/performance)
+- ✅ Allineate le esportazioni centralizzate di `src/services/security/index.ts` per evitare riferimenti indefiniti
 
 **Commit rilevanti**
 
@@ -226,11 +228,11 @@ Project_Knowledge/
 
 **Stato Errori Rimanenti:**
 
-- 📊 226 errori TypeScript totali (da 245 iniziali)
-- 🔴 98 errori TS6133 (variabili non utilizzate) - **facili da fixare**
-- 🟠 ~40 errori nei test ExcelExporter (problemi mock types)
-- 🟡 ~30 errori integration services (tipi e comparazioni)
-- 🟢 45 warning 'any' (non bloccanti, max 20 per pre-commit)
+- 📊 ~217 errori TypeScript totali (post cleanup timer e navigator)
+- 🔴 ~90 errori TS6133/TS6138 (variabili e parametri inutilizzati)
+- 🟠 ~40 errori nei test ExcelExporter (mock types)
+- 🟡 ~30 errori integration/realtime (tipi e comparazioni)
+- 🟢 ~45 warning `any` (non bloccanti, obiettivo <20 per pre-commit)
 
 ### Prossimi Step Suggeriti
 

@@ -185,7 +185,8 @@ export interface AutomationLog {
 export class WorkflowAutomationEngine {
   private rules: Map<string, AutomationRule> = new Map()
   private executions: Map<string, AutomationExecution> = new Map()
-  private scheduledJobs: Map<string, NodeJS.Timeout> = new Map()
+  private scheduledJobs: Map<string, ReturnType<typeof setInterval>> =
+    new Map()
   private eventListeners: Map<string, Function[]> = new Map()
 
   /**

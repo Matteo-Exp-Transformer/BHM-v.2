@@ -51,7 +51,7 @@ export class AutomationCacheManager {
   private cache: Map<string, CacheEntry> = new Map()
   private config: CacheConfig
   private stats: CacheStats
-  private cleanupTimer: NodeJS.Timeout | null = null
+  private cleanupTimer: number | null = null
   private db: IDBDatabase | null = null
   private isInitialized = false
 
@@ -521,7 +521,7 @@ export class AutomationCacheManager {
 
   private async refreshInBackground(
     key: string,
-    strategy: CacheStrategy
+    _strategy: CacheStrategy
   ): Promise<void> {
     // In real implementation, this would fetch fresh data from server
     console.log(`💾 Refreshing cache entry in background: ${key}`)

@@ -4,9 +4,7 @@
  */
 
 import {
-  multiTenantManager,
   type DataSharingAgreement,
-  type CompanyTenant,
 } from './MultiTenantManager'
 import { permissionManager } from './PermissionManager'
 
@@ -181,7 +179,7 @@ class CrossCompanyReportingManager {
       }
 
       // Process and aggregate data
-      const sections = await this.processReportData(report, anonymizedData)
+      const _sections = await this.processReportData(report, anonymizedData)
 
       // Store report
       this.reports.set(report.id, report)

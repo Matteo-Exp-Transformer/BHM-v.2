@@ -921,7 +921,7 @@ export class ProductionDeploymentManager {
 
   private async executeDeploymentStage(
     stage: DeploymentStage,
-    options?: any
+    _options?: any
   ): Promise<void> {
     // Simulate stage execution
     await new Promise(resolve => setTimeout(resolve, 2000))
@@ -950,15 +950,15 @@ export class ProductionDeploymentManager {
   }
 
   private async executeScalingAction(
-    component: string,
-    action: string,
-    factor: number
+    _component: string,
+    _action: string,
+    _factor: number
   ): Promise<void> {
     // Simulate scaling action
     await new Promise(resolve => setTimeout(resolve, 5000))
   }
 
-  private async executeBackup(type: string): Promise<void> {
+  private async executeBackup(_type: string): Promise<void> {
     // Simulate backup execution
     await new Promise(resolve => setTimeout(resolve, 10000))
   }
