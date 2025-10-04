@@ -123,106 +123,6 @@ const StaffStep = ({
     resetForm()
   }
 
-  const prefillSampleData = () => {
-    const sala = departments.find(dept => dept.name.toLowerCase() === 'sala')
-    const salaB = departments.find(dept => dept.name.toLowerCase() === 'sala b')
-    const bancone = departments.find(
-      dept => dept.name.toLowerCase() === 'bancone'
-    )
-    const deoor = departments.find(
-      dept => dept.name.toLowerCase() === 'deoor / esterno'
-    )
-    const plonge = departments.find(
-      dept => dept.name.toLowerCase() === 'plonge / lavaggio piatti'
-    )
-
-    const sampleData = [
-      {
-        name: 'Matteo',
-        surname: 'Cavallaro',
-        email: 'Neo@gmail.com',
-        phone: '3334578536',
-        role: 'responsabile' as const,
-        categories: ['Banconisti'],
-        departmentAssignments: departments
-          .filter(d => d.is_active)
-          .map(d => d.id), // Tutti i reparti
-        haccpExpiry: '2025-10-01',
-        notes: 'Responsabile con accesso a tutti i reparti',
-      },
-      {
-        name: 'Fabrizio',
-        surname: 'Dettori',
-        email: 'Fabri@gmail.com',
-        phone: '3334578535',
-        role: 'admin' as const,
-        categories: ['Amministratore'],
-        departmentAssignments: [
-          ...(sala ? [sala.id] : []),
-          ...(salaB ? [salaB.id] : []),
-          ...(deoor ? [deoor.id] : []),
-          ...(plonge ? [plonge.id] : []),
-        ], // Sala + Sala B + Deoor + Plonge
-        haccpExpiry: '2026-10-01',
-        notes: 'Amministratore con accesso a Sala, Sala B, Deoor e Plonge',
-      },
-      {
-        name: 'Paolo',
-        surname: 'Dettori',
-        email: 'Pablo@gmail.com',
-        phone: '3334578534',
-        role: 'admin' as const,
-        categories: ['Cuochi', 'Amministratore'],
-        departmentAssignments: departments
-          .filter(d => d.is_active)
-          .map(d => d.id), // Tutti i reparti
-        haccpExpiry: '2025-10-01',
-        notes: 'Amministratore con competenze di cucina',
-      },
-      {
-        name: 'Eddy',
-        surname: 'TheQueen',
-        email: 'Eddy@gmail.com',
-        phone: '3334578533',
-        role: 'dipendente' as const,
-        categories: ['Banconisti'],
-        departmentAssignments: bancone ? [bancone.id] : [], // Bancone
-        haccpExpiry: '2026-10-01',
-        notes: 'Dipendente specializzato al bancone',
-      },
-      {
-        name: 'Elena',
-        surname: 'Compagna',
-        email: 'Ele@gmail.com',
-        phone: '3334578532',
-        role: 'dipendente' as const,
-        categories: ['Banconisti', 'Camerieri'],
-        departmentAssignments: [
-          ...(bancone ? [bancone.id] : []),
-          ...(sala ? [sala.id] : []),
-          ...(salaB ? [salaB.id] : []),
-          ...(deoor ? [deoor.id] : []),
-          ...(plonge ? [plonge.id] : []),
-        ], // Bancone + Sala + Sala B + Deoor + Plonge
-        haccpExpiry: '2026-10-01',
-        notes: 'Dipendente multiruolo con accesso a più reparti',
-      },
-    ]
-
-    // Processa ogni dipendente attraverso buildStaffMember per assicurarsi che abbiano la struttura corretta
-    const processedMembers: StaffMember[] = []
-
-    sampleData.forEach(data => {
-      const { member } = buildStaffMember(data, null)
-      if (member) {
-        processedMembers.push(member)
-      }
-    })
-
-    setStaffMembers(processedMembers)
-    resetForm()
-  }
-
   const haccpSummary = useMemo(() => {
     if (staffMembers.length === 0) return null
 
@@ -264,13 +164,6 @@ const StaffStep = ({
           personale per garantire la conformità normativa.
         </p>
       </header>
-
-      <div className="flex justify-center">
-        <Button variant="outline" onClick={prefillSampleData} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Carica staff di esempio
-        </Button>
-      </div>
 
       {haccpSummary && (
         <section className="grid gap-4 md:grid-cols-2">

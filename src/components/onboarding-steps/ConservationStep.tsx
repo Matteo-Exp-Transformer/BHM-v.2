@@ -12,17 +12,19 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
-import { Select, SelectOption } from '@/components/ui/Select'
+import {
+  Select,
+  SelectOption,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+} from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
 
 import type {
   ConservationPoint,
   ConservationStepFormData,
   ConservationStepProps,
-  MaintenanceTask,
-  MaintenanceTaskType,
-  PointSource,
-  TaskFrequency,
 } from '@/types/onboarding'
 import {
   CONSERVATION_POINT_TYPES,
@@ -33,15 +35,7 @@ import {
   generateConservationPointId,
   createDraftConservationPoint,
   normalizeConservationPoint,
-  createDraftMaintenanceTask,
-  normalizeMaintenanceTask,
-  validateMaintenanceTask,
 } from '@/utils/onboarding/conservationUtils'
-import { MAINTENANCE_TASK_TYPES } from '@/types/conservation'
-import {
-  getFrequencyLabel,
-  TASK_FREQUENCIES,
-} from '@/utils/onboarding/taskUtils'
 
 const EMPTY_FORM: ConservationStepFormData = {
   name: '',
@@ -50,20 +44,14 @@ const EMPTY_FORM: ConservationStepFormData = {
   pointType: 'fridge',
   isBlastChiller: false,
   productCategories: [],
-  source: 'manual',
-}
-
-interface MaintenanceDraft extends MaintenanceTask {
-  isExpanded: boolean
 }
 
 const ConservationStep = ({
   data,
   departments,
-  staff,
   onUpdate,
   onValidChange,
-}: ConservationStepProps) => {
+}: Omit<ConservationStepProps, 'staff'>) => {
   const [points, setPoints] = useState<ConservationPoint[]>(
     (data?.points ?? []).map(normalizeConservationPoint)
   )
@@ -74,9 +62,6 @@ const ConservationStep = ({
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({})
-  const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceDraft[]>(
-    []
-  )
 
   useEffect(() => {
     onUpdate({ points })
@@ -94,16 +79,6 @@ const ConservationStep = ({
     [departments]
   )
 
-  const staffOptions = useMemo(
-    () =>
-      (staff ?? []).map(member => ({
-        id: member.id,
-        label: member.fullName,
-        role: member.role,
-      })),
-    [staff]
-  )
-
   const typeInfo = useMemo(
     () => CONSERVATION_POINT_TYPES[formData.pointType],
     [formData.pointType]
@@ -112,7 +87,6 @@ const ConservationStep = ({
   const resetForm = () => {
     setFormData(EMPTY_FORM)
     setEditingId(null)
-    setMaintenanceTasks([])
     setValidationErrors({})
   }
 
@@ -126,14 +100,7 @@ const ConservationStep = ({
       pointType: draft.pointType,
       isBlastChiller: draft.isBlastChiller,
       productCategories: draft.productCategories,
-      source: draft.source,
     })
-    setMaintenanceTasks(
-      (draft.maintenanceTasks ?? []).map(task => ({
-        ...task,
-        isExpanded: false,
-      }))
-    )
     setValidationErrors({})
   }
 
@@ -142,31 +109,6 @@ const ConservationStep = ({
     if (editingId === id) {
       resetForm()
     }
-  }
-
-  const handleAddMaintenanceTask = () => {
-    setMaintenanceTasks(prev => [
-      ...prev,
-      {
-        ...createDraftMaintenanceTask(),
-        isExpanded: true,
-      },
-    ])
-  }
-
-  const handleUpdateMaintenanceTask = (
-    index: number,
-    partial: Partial<MaintenanceDraft>
-  ) => {
-    setMaintenanceTasks(prev => {
-      const next = [...prev]
-      next[index] = { ...next[index], ...partial }
-      return next
-    })
-  }
-
-  const handleRemoveMaintenanceTask = (index: number) => {
-    setMaintenanceTasks(prev => prev.filter((_, idx) => idx !== index))
   }
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -180,31 +122,13 @@ const ConservationStep = ({
       pointType: formData.pointType,
       isBlastChiller: formData.isBlastChiller,
       productCategories: [...new Set(formData.productCategories)],
-      source: formData.source,
-      maintenanceTasks: maintenanceTasks.map(normalizeMaintenanceTask),
+      maintenanceTasks: [],
     })
 
     const result = validateConservationPoint(normalized)
 
-    const maintenanceErrors = maintenanceTasks.flatMap((task, index) => {
-      const validation = validateMaintenanceTask(task)
-      if (!validation.success) {
-        return Object.entries(validation.errors ?? {}).map(
-          ([field, message]) => ({
-            key: `maintenance.${index}.${field}`,
-            message,
-          })
-        )
-      }
-      return []
-    })
-
-    if (!result.success || maintenanceErrors.length > 0) {
-      const errors: Record<string, string> = { ...(result.errors ?? {}) }
-      maintenanceErrors.forEach(error => {
-        errors[error.key] = error.message
-      })
-      setValidationErrors(errors)
+    if (!result.success) {
+      setValidationErrors(result.errors ?? {})
       return
     }
 
@@ -226,318 +150,80 @@ const ConservationStep = ({
     const cucina = departmentOptions.find(
       dep => dep.name.toLowerCase() === 'cucina'
     )
-    const sala = departmentOptions.find(
-      dep => dep.name.toLowerCase() === 'sala'
+
+    const bancone = departmentOptions.find(
+      dep => dep.name.toLowerCase() === 'bancone'
     )
 
     const samples: ConservationPoint[] = [
       normalizeConservationPoint({
         id: generateConservationPointId(),
-        name: 'Frigorifero Cucina 1',
+        name: 'Frigo A',
         departmentId: cucina?.id ?? departmentOptions[0].id,
         targetTemperature: 4,
         pointType: 'fridge',
         isBlastChiller: false,
         productCategories: ['fresh_meat', 'fresh_dairy'],
-        source: 'prefill',
       }),
       normalizeConservationPoint({
         id: generateConservationPointId(),
-        name: 'Congelatore principale',
+        name: 'Freezer A',
         departmentId: cucina?.id ?? departmentOptions[0].id,
         targetTemperature: -18,
         pointType: 'freezer',
         isBlastChiller: false,
         productCategories: ['frozen', 'deep_frozen'],
-        source: 'prefill',
       }),
       normalizeConservationPoint({
         id: generateConservationPointId(),
-        name: 'Abbattitore rapido',
+        name: 'Freezer B',
         departmentId: cucina?.id ?? departmentOptions[0].id,
-        targetTemperature: -18,
+        targetTemperature: -20,
+        pointType: 'freezer',
+        isBlastChiller: false,
+        productCategories: ['frozen', 'deep_frozen'],
+      }),
+      normalizeConservationPoint({
+        id: generateConservationPointId(),
+        name: 'Abbattitore',
+        departmentId: cucina?.id ?? departmentOptions[0].id,
+        targetTemperature: -25,
         pointType: 'blast',
         isBlastChiller: true,
         productCategories: ['blast_chilling'],
-        source: 'prefill',
       }),
       normalizeConservationPoint({
         id: generateConservationPointId(),
-        name: 'Vetrina refrigerata sala',
-        departmentId: sala?.id ?? departmentOptions[0].id,
-        targetTemperature: 6,
+        name: 'Frigo 1',
+        departmentId: bancone?.id ?? departmentOptions[0].id,
+        targetTemperature: 2,
         pointType: 'fridge',
         isBlastChiller: false,
         productCategories: ['beverages', 'fresh_produce'],
-        source: 'prefill',
+      }),
+      normalizeConservationPoint({
+        id: generateConservationPointId(),
+        name: 'Frigo 2',
+        departmentId: bancone?.id ?? departmentOptions[0].id,
+        targetTemperature: 3,
+        pointType: 'fridge',
+        isBlastChiller: false,
+        productCategories: ['beverages', 'fresh_produce'],
+      }),
+      normalizeConservationPoint({
+        id: generateConservationPointId(),
+        name: 'Frigo 3',
+        departmentId: bancone?.id ?? departmentOptions[0].id,
+        targetTemperature: 5,
+        pointType: 'fridge',
+        isBlastChiller: false,
+        productCategories: ['beverages', 'fresh_produce'],
       }),
     ]
 
     setPoints(samples)
     resetForm()
   }
-
-  const renderMaintenanceEditor = () => (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-900">
-          Task di manutenzione programmata
-        </h4>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleAddMaintenanceTask}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Aggiungi task
-        </Button>
-      </div>
-
-      {maintenanceTasks.length === 0 && (
-        <p className="text-sm text-gray-500">
-          Nessun task configurato – facoltativo ma consigliato.
-        </p>
-      )}
-
-      {maintenanceTasks.map((task, index) => {
-        const errors = Object.entries(validationErrors)
-          .filter(([key]) => key.startsWith(`maintenance.${index}`))
-          .reduce<Record<string, string>>((acc, [key, message]) => {
-            acc[key.split('.').pop() ?? key] = message
-            return acc
-          }, {})
-
-        return (
-          <div
-            key={task.id}
-            className="rounded-lg border border-gray-200 bg-white"
-          >
-            <header
-              className="flex items-center justify-between border-b border-gray-100 p-3"
-              onClick={() =>
-                handleUpdateMaintenanceTask(index, {
-                  isExpanded: !task.isExpanded,
-                })
-              }
-            >
-              <div>
-                <p className="text-sm font-medium text-gray-900">
-                  {task.title || 'Nuova manutenzione'}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {MAINTENANCE_TASK_TYPES[
-                    task.type as keyof typeof MAINTENANCE_TASK_TYPES
-                  ]?.label ?? task.type}{' '}
-                  • {getFrequencyLabel(task.frequency)} •{' '}
-                  {task.estimatedDuration ?? 30} min
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {!task.isExpanded && (
-                  <Badge tone="warning" variant="outline">
-                    Clicca per espandere
-                  </Badge>
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleRemoveMaintenanceTask(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </header>
-
-            {task.isExpanded && (
-              <div className="space-y-4 p-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label>Titolo *</Label>
-                    <Input
-                      value={task.title}
-                      onChange={event =>
-                        handleUpdateMaintenanceTask(index, {
-                          title: event.target.value,
-                        })
-                      }
-                      aria-invalid={Boolean(errors.title)}
-                    />
-                    {errors.title && (
-                      <p className="mt-1 text-xs text-red-600">
-                        {errors.title}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label>Tipo *</Label>
-                    <Select
-                      value={task.type}
-                      onValueChange={value =>
-                        handleUpdateMaintenanceTask(index, {
-                          type: value as MaintenanceTaskType,
-                        })
-                      }
-                    >
-                      {Object.entries(MAINTENANCE_TASK_TYPES).map(
-                        ([value, config]) => (
-                          <SelectOption key={value} value={value}>
-                            {config.label}
-                          </SelectOption>
-                        )
-                      )}
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div>
-                    <Label>Frequenza *</Label>
-                    <Select
-                      value={task.frequency}
-                      onValueChange={value =>
-                        handleUpdateMaintenanceTask(index, {
-                          frequency: value as TaskFrequency,
-                        })
-                      }
-                    >
-                      {TASK_FREQUENCIES.map(option => (
-                        <SelectOption key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectOption>
-                      ))}
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Durata stimata (min)</Label>
-                    <Input
-                      type="number"
-                      min={5}
-                      step={5}
-                      value={task.estimatedDuration ?? 30}
-                      onChange={event =>
-                        handleUpdateMaintenanceTask(index, {
-                          estimatedDuration: Number(event.target.value),
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label>Priorità</Label>
-                    <select
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                      value={task.priority ?? 'medium'}
-                      onChange={event =>
-                        handleUpdateMaintenanceTask(index, {
-                          priority: event.target
-                            .value as MaintenanceDraft['priority'],
-                        })
-                      }
-                    >
-                      <option value="low">Bassa</option>
-                      <option value="medium">Media</option>
-                      <option value="high">Alta</option>
-                      <option value="critical">Critica</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div>
-                    <Label>Ruolo assegnato</Label>
-                    <select
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                      value={task.assignedRole ?? ''}
-                      onChange={event =>
-                        handleUpdateMaintenanceTask(index, {
-                          assignedRole: event.target.value || undefined,
-                        })
-                      }
-                    >
-                      <option value="">Seleziona ruolo</option>
-                      <option value="responsabile">Responsabile</option>
-                      <option value="dipendente">Dipendente</option>
-                      <option value="collaboratore">Collaboratore</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
-                  <div>
-                    <Label>Assegnato a</Label>
-                    <select
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                      value={task.assignedStaffIds?.[0] ?? ''}
-                      onChange={event =>
-                        handleUpdateMaintenanceTask(index, {
-                          assignedStaffIds: event.target.value
-                            ? [event.target.value]
-                            : [],
-                        })
-                      }
-                    >
-                      <option value="">Assegnazione automatica</option>
-                      {staffOptions.map(member => (
-                        <option key={member.id} value={member.id}>
-                          {member.label} ({member.role})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <Label>Prossima scadenza *</Label>
-                    <Input
-                      type="datetime-local"
-                      value={task.nextDue ?? ''}
-                      onChange={event =>
-                        handleUpdateMaintenanceTask(index, {
-                          nextDue: event.target.value,
-                        })
-                      }
-                      aria-invalid={Boolean(errors.nextDue)}
-                    />
-                    {errors.nextDue && (
-                      <p className="mt-1 text-xs text-red-600">
-                        {errors.nextDue}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="md:col-span-3">
-                  <Label>Checklist / istruzioni</Label>
-                  <Textarea
-                    rows={3}
-                    value={(task.instructions ?? []).join('\n')}
-                    onChange={event =>
-                      handleUpdateMaintenanceTask(index, {
-                        instructions: event.target.value
-                          .split('\n')
-                          .map(entry => entry.trim())
-                          .filter(Boolean),
-                      })
-                    }
-                    placeholder="Inserisci ogni istruzione HACCP su una riga"
-                  />
-                </div>
-
-                <div className="md:col-span-3">
-                  <Label>Note operatore</Label>
-                  <Textarea
-                    rows={2}
-                    value={task.notes ?? ''}
-                    onChange={event =>
-                      handleUpdateMaintenanceTask(index, {
-                        notes: event.target.value,
-                      })
-                    }
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        )
-      })}
-    </div>
-  )
 
   return (
     <div className="space-y-6">
@@ -727,17 +413,21 @@ const ConservationStep = ({
             <div>
               <Label>Reparto *</Label>
               <Select
-                value={formData.departmentId}
+                value={formData.departmentId || undefined}
                 onValueChange={value =>
                   setFormData(prev => ({ ...prev, departmentId: value }))
                 }
               >
-                <SelectOption value="">Seleziona un reparto</SelectOption>
-                {departmentOptions.map(department => (
-                  <SelectOption key={department.id} value={department.id}>
-                    {department.name}
-                  </SelectOption>
-                ))}
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona un reparto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departmentOptions.map(department => (
+                    <SelectOption key={department.id} value={department.id}>
+                      {department.name}
+                    </SelectOption>
+                  ))}
+                </SelectContent>
               </Select>
               {validationErrors.departmentId && (
                 <p className="mt-1 text-sm text-red-600">
@@ -787,7 +477,11 @@ const ConservationStep = ({
                       key={type.value}
                       type="button"
                       variant={isActive ? 'default' : 'outline'}
-                      className="justify-start gap-2"
+                      className={`justify-start gap-2 transition-all duration-200 ${
+                        isActive
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700'
+                      }`}
                       onClick={() =>
                         setFormData(prev => ({
                           ...prev,
@@ -796,8 +490,10 @@ const ConservationStep = ({
                         }))
                       }
                     >
-                      <Thermometer className={type.color} />
-                      {type.label}
+                      <Thermometer
+                        className={`h-4 w-4 ${isActive ? 'text-white' : type.color}`}
+                      />
+                      <span className="font-medium">{type.label}</span>
                     </Button>
                   )
                 })}
@@ -855,25 +551,7 @@ const ConservationStep = ({
             )}
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <Label>Fonte dati</Label>
-              <Select
-                value={formData.source}
-                onValueChange={value =>
-                  setFormData(prev => ({
-                    ...prev,
-                    source: value as PointSource,
-                  }))
-                }
-              >
-                <SelectOption value="manual">Inserimento manuale</SelectOption>
-                <SelectOption value="prefill">
-                  Precompilazione guidata
-                </SelectOption>
-                <SelectOption value="import">Importazione dati</SelectOption>
-              </Select>
-            </div>
+          <div className="grid gap-4 md:grid-cols-1">
             <div>
               <Label>Note operative</Label>
               <Textarea
@@ -884,8 +562,6 @@ const ConservationStep = ({
               />
             </div>
           </div>
-
-          {renderMaintenanceEditor()}
 
           <Button type="submit" className="w-full">
             {editingId ? 'Salva modifiche' : 'Aggiungi punto'}
