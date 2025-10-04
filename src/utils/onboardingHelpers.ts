@@ -74,6 +74,14 @@ export const getPrefillData = (): OnboardingData => {
     return departments.filter(dept => dept.is_active).map(dept => dept.id)
   }
 
+  // Funzione helper per trovare un reparto per nome
+  const getDepartmentId = (name: string) => {
+    const dept = departments.find(dept =>
+      dept.name.toLowerCase().includes(name.toLowerCase())
+    )
+    return dept?.id || ''
+  }
+
   const staff = [
     {
       id: generateId(),
@@ -170,42 +178,72 @@ export const getPrefillData = (): OnboardingData => {
       points: [
         {
           id: generateId(),
-          name: 'Frigo A Cucina',
-          departmentId: '',
+          name: 'Frigo A',
+          departmentId: getDepartmentId('Cucina'),
           targetTemperature: 4,
           pointType: 'fridge' as const,
           isBlastChiller: false,
-          productCategories: ['fresh_meat', 'fresh_dairy', 'fresh_produce'],
+          productCategories: ['fresh_meat', 'fresh_dairy'],
           source: 'prefill' as const,
         },
         {
           id: generateId(),
-          name: 'Frigo Bancone 1',
-          departmentId: '',
-          targetTemperature: 2,
-          pointType: 'fridge' as const,
-          isBlastChiller: false,
-          productCategories: ['beverages', 'fresh_dairy'],
-          source: 'prefill' as const,
-        },
-        {
-          id: generateId(),
-          name: 'Frigo Bancone 2',
-          departmentId: '',
-          targetTemperature: 3,
-          pointType: 'fridge' as const,
-          isBlastChiller: false,
-          productCategories: ['beverages'],
-          source: 'prefill' as const,
-        },
-        {
-          id: generateId(),
-          name: 'Congelatore Principale',
-          departmentId: '',
+          name: 'Freezer A',
+          departmentId: getDepartmentId('Cucina'),
           targetTemperature: -18,
           pointType: 'freezer' as const,
           isBlastChiller: false,
-          productCategories: ['frozen'],
+          productCategories: ['frozen', 'deep_frozen'],
+          source: 'prefill' as const,
+        },
+        {
+          id: generateId(),
+          name: 'Freezer B',
+          departmentId: getDepartmentId('Cucina'),
+          targetTemperature: -20,
+          pointType: 'freezer' as const,
+          isBlastChiller: false,
+          productCategories: ['frozen', 'deep_frozen'],
+          source: 'prefill' as const,
+        },
+        {
+          id: generateId(),
+          name: 'Abbattitore',
+          departmentId: getDepartmentId('Cucina'),
+          targetTemperature: -25,
+          pointType: 'blast' as const,
+          isBlastChiller: true,
+          productCategories: ['blast_chilling'],
+          source: 'prefill' as const,
+        },
+        {
+          id: generateId(),
+          name: 'Frigo 1',
+          departmentId: getDepartmentId('Bancone'),
+          targetTemperature: 2,
+          pointType: 'fridge' as const,
+          isBlastChiller: false,
+          productCategories: ['beverages', 'fresh_produce'],
+          source: 'prefill' as const,
+        },
+        {
+          id: generateId(),
+          name: 'Frigo 2',
+          departmentId: getDepartmentId('Bancone'),
+          targetTemperature: 3,
+          pointType: 'fridge' as const,
+          isBlastChiller: false,
+          productCategories: ['beverages', 'fresh_produce'],
+          source: 'prefill' as const,
+        },
+        {
+          id: generateId(),
+          name: 'Frigo 3',
+          departmentId: getDepartmentId('Bancone'),
+          targetTemperature: 5,
+          pointType: 'fridge' as const,
+          isBlastChiller: false,
+          productCategories: ['beverages', 'fresh_produce'],
           source: 'prefill' as const,
         },
       ],

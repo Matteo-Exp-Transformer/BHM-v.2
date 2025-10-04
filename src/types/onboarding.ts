@@ -132,7 +132,6 @@ export interface ConservationStepFormData {
   pointType: ConservationPointType
   isBlastChiller: boolean
   productCategories: string[]
-  source: PointSource
 }
 
 export interface ConservationStepProps {
