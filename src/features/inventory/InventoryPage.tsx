@@ -256,27 +256,28 @@ export default function InventoryPage() {
 
       {/* Expiry Alerts */}
       {expiryAlerts.length > 0 && (
-      <CollapsibleCard
-        title="Prodotti in Scadenza"
-        icon={AlertTriangle}
-        counter={expiryAlerts.length}
-        defaultExpanded={true}
-        loading={isLoadingExpiry}
-        showEmpty={!isLoadingExpiry && expiryAlerts.length === 0}
-        emptyMessage="Nessun prodotto in scadenza nei prossimi giorni."
-      >
-        {!isLoadingExpiry && expiryAlerts.length > 0 && (
-          <div className="space-y-3">
-            {expiryAlerts.map(alert => (
-              <ExpiryAlert
-                key={alert.product_id}
-                alert={alert}
-                onMarkAsExpired={() => markAsExpired(alert.product_id)}
-              />
-            ))}
-          </div>
-        )}
-      </CollapsibleCard>
+        <CollapsibleCard
+          title="Prodotti in Scadenza"
+          icon={AlertTriangle}
+          counter={expiryAlerts.length}
+          defaultExpanded={true}
+          isLoading={isLoadingExpiry}
+          isEmpty={!isLoadingExpiry && expiryAlerts.length === 0}
+          emptyMessage="Nessun prodotto in scadenza nei prossimi giorni."
+          contentClassName="px-4 py-6 sm:px-6"
+        >
+          {!isLoadingExpiry && expiryAlerts.length > 0 && (
+            <div className="space-y-3">
+              {expiryAlerts.map(alert => (
+                <ExpiryAlert
+                  key={alert.product_id}
+                  alert={alert}
+                  onMarkAsExpired={() => markAsExpired(alert.product_id)}
+                />
+              ))}
+            </div>
+          )}
+        </CollapsibleCard>
       )}
 
       {/* Products List */}
@@ -285,9 +286,12 @@ export default function InventoryPage() {
         icon={Package}
         counter={products.length}
         defaultExpanded={true}
-        loading={isLoading}
-        showEmpty={!isLoading && products.length === 0}
+        isLoading={isLoading}
+        isEmpty={!isLoading && products.length === 0}
         emptyMessage="Nessun prodotto presente. Aggiungi il primo dal pulsante in alto."
+        contentClassName="px-4 py-6 sm:px-6"
+        emptyActionLabel="Aggiungi il primo prodotto"
+        onEmptyAction={() => setShowAddProductModal(true)}
       >
         {!isLoading && products.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -331,9 +335,12 @@ export default function InventoryPage() {
         icon={FileText}
         counter={categories.length}
         defaultExpanded={false}
-        loading={isLoadingCategories}
-        showEmpty={!isLoadingCategories && categories.length === 0}
+        isLoading={isLoadingCategories}
+        isEmpty={!isLoadingCategories && categories.length === 0}
         emptyMessage="Nessuna categoria creata. Usa il pulsante in alto per aggiungerne una."
+        contentClassName="px-4 py-6 sm:px-6"
+        emptyActionLabel="Aggiungi la prima categoria"
+        onEmptyAction={() => setShowAddCategoryModal(true)}
       >
         {!isLoadingCategories && categories.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

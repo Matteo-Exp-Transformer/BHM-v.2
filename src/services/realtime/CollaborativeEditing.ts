@@ -88,7 +88,7 @@ class CollaborativeEditing {
     []
 
   // Operational Transformation parameters
-  private readonly maxOperationHistory = 1000
+  private readonly _maxOperationHistory = 1000
   private readonly conflictTimeWindow = 5000 // 5 seconds
   private readonly autoSaveInterval = 30000 // 30 seconds
 
@@ -421,7 +421,7 @@ class CollaborativeEditing {
    * Resolve conflicts using specified strategy
    */
   private async resolveConflicts(
-    session: CollaborativeSession,
+    _session: CollaborativeSession,
     newOperation: EditOperation,
     conflicts: EditConflict[]
   ): Promise<void> {
@@ -432,7 +432,7 @@ class CollaborativeEditing {
           conflict.resolved = true
           break
 
-        case 'merge':
+        case 'merge': {
           // Attempt automatic merge
           const merged = this.mergeOperations(conflict.operation1, newOperation)
           if (merged) {
@@ -440,6 +440,7 @@ class CollaborativeEditing {
             conflict.resolved = true
           }
           break
+        }
 
         case 'manual':
           // Notify for manual resolution
@@ -472,7 +473,7 @@ class CollaborativeEditing {
    * Broadcast operation to other collaborators
    */
   private async broadcastOperation(
-    session: CollaborativeSession,
+    _session: CollaborativeSession,
     operation: EditOperation
   ): Promise<void> {
     // In a real implementation, this would send through WebSocket or Supabase realtime
@@ -504,7 +505,7 @@ class CollaborativeEditing {
    * Broadcast lock status
    */
   private broadcastLockStatus(
-    session: CollaborativeSession,
+    _session: CollaborativeSession,
     userId: string,
     locked: boolean
   ): void {
@@ -633,27 +634,27 @@ class CollaborativeEditing {
     return `conflict_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   }
 
-  private async getDocumentLock(documentId: string): Promise<any> {
+  private async getDocumentLock(_documentId: string): Promise<any> {
     // Implementation would query database for lock status
     return null
   }
 
   private async setDocumentLock(
-    documentId: string,
-    userId: string,
-    duration: number
+    _documentId: string,
+    _userId: string,
+    _duration: number
   ): Promise<void> {
     // Implementation would set lock in database
   }
 
   private async removeDocumentLock(
-    documentId: string,
-    userId: string
+    _documentId: string,
+    _userId: string
   ): Promise<void> {
     // Implementation would remove lock from database
   }
 
-  private getBaseDocumentState(documentId: string): DocumentState | null {
+  private getBaseDocumentState(_documentId: string): DocumentState | null {
     // Implementation would fetch base state from database
     return null
   }

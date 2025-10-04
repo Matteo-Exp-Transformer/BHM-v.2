@@ -15,7 +15,7 @@ export interface IntegrationTestResult {
   status: 'PASSED' | 'FAILED' | 'SKIPPED'
   duration: number
   details: string
-  metrics?: Record<string, number>
+  metrics?: Record<string, number | string>
   errors?: string[]
 }
 

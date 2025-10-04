@@ -210,12 +210,39 @@ Project_Knowledge/
 - `ddec190` – `fix(responsive): improve mobile layout for onboarding navigation and settings`
 - `9ec333f` – `test(e2e): add onboarding wizard test id`
 - `3d97ae5` – `fix: cleanup TypeScript errors in automation services` (Claude)
+- `b697d07` – `fix: resolve critical type errors in export and integration services` (Claude)
+
+### ✅ Progressi Claude (4 Ottobre 2025)
+
+**Errori TypeScript Risolti:**
+
+- ✅ Moduli mancanti in AdvancedAnalyticsIntegration (stub temporanei con TODO)
+- ✅ Parametri impliciti 'any' in ExcelExporter (reading, task, product, member, dept)
+- ✅ Parametri impliciti 'any' in HACCPReportGenerator (reading, task, point)
+- ✅ Errori TS7006 e TS2307 bloccanti risolti
+
+**Stato Errori Rimanenti:**
+
+- 📊 226 errori TypeScript totali (da 245 iniziali)
+- 🔴 98 errori TS6133 (variabili non utilizzate) - **facili da fixare**
+- 🟠 ~40 errori nei test ExcelExporter (problemi mock types)
+- 🟡 ~30 errori integration services (tipi e comparazioni)
+- 🟢 45 warning 'any' (non bloccanti, max 20 per pre-commit)
 
 ### Prossimi Step Suggeriti
+
+**Per Cursor (priorità alta):**
 
 - B5: Hardening `CollapsibleCard` component con gestione stati (empty/loading/error) e consolidamento padding responsive
 - B8: Ridurre warning `exhaustive-deps` nelle pagine Inventory/Settings dopo refactor
 - B9: Eliminare warning `react-refresh` nei componenti condivisi
-- Coordinarsi con Claude per abbattere i 160+ errori/326 warning riportati da `npm run lint`
 
-> Stato branch: `fix/cursor-functional` pulito dopo gli ultimi commit; stash `save-pre-responsive-tweaks` conserva artefatti E2E locali.
+**Per Claude (in corso):**
+
+- 🔄 Fix integration service type errors (TS2322, TS2367)
+- 🔄 Fix realtime service type errors (TS7006, TS2345)
+- 🔄 Fix offline sync type errors (TS2345)
+- 📋 Clean up 98 unused variables (TS6133)
+- 🎯 Ridurre warning 'any' da 45 a <20
+
+> Stato branch: `fix/cursor-functional` pulito dopo commit Claude; coordinamento attivo per TypeScript cleanup completo.

@@ -1,74 +1,251 @@
-import React, { ReactNode, useState } from 'react'
+import React, { ReactNode, useId, useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
-interface CollapsibleCardProps {
+export interface CollapsibleCardProps {
   title: string
   subtitle?: string
+  description?: string
   icon?: React.ComponentType<{ className?: string }>
   children: ReactNode
   defaultExpanded?: boolean
+  defaultOpen?: boolean
+  expanded?: boolean
+  onExpandedChange?: (expanded: boolean) => void
   counter?: number
   actions?: ReactNode
   className?: string
+  headerClassName?: string
+  contentClassName?: string
   loading?: boolean
+  isLoading?: boolean
+  loadingMessage?: string
+  loadingContent?: ReactNode
   error?: string | null
+  onRetry?: () => void
+  errorActionLabel?: string
   emptyMessage?: string
   showEmpty?: boolean
+  isEmpty?: boolean
+  emptyContent?: ReactNode
+  emptyActionLabel?: string
+  onEmptyAction?: () => void
+  collapseDisabled?: boolean
+  id?: string
 }
 
 export const CollapsibleCard = ({
   title,
   subtitle,
+  description,
   icon: Icon,
   children,
   defaultExpanded = true,
+  defaultOpen,
+  expanded,
+  onExpandedChange,
   counter,
   actions,
   className = '',
+  headerClassName = '',
+  contentClassName,
   loading = false,
+  isLoading,
+  loadingMessage = 'Caricamento...',
+  loadingContent,
   error = null,
+  onRetry,
+  errorActionLabel = 'Riprova',
   emptyMessage = 'Nessun elemento disponibile',
   showEmpty = false,
+  isEmpty,
+  emptyContent,
+  emptyActionLabel = 'Aggiungi elemento',
+  onEmptyAction,
+  collapseDisabled = false,
+  id,
 }: CollapsibleCardProps) => {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+  const generatedId = useId()
+  const cardId = id ?? `collapsible-card-${generatedId}`
+  const headerId = `${cardId}-header`
+  const contentId = `${cardId}-content`
+
+  const resolvedLoading = isLoading ?? loading
+  const resolvedEmpty = useMemo(
+    () => (isEmpty ?? showEmpty) && !resolvedLoading && !error,
+    [isEmpty, showEmpty, resolvedLoading, error]
+  )
+
+  const initialExpanded = useMemo(() => {
+    if (expanded !== undefined) {
+      return expanded
+    }
+
+    if (defaultOpen !== undefined) {
+      return defaultOpen
+    }
+
+    return defaultExpanded
+  }, [defaultExpanded, defaultOpen, expanded])
+
+  const [internalExpanded, setInternalExpanded] = useState(initialExpanded)
+
+  const isControlled = expanded !== undefined
+  const isExpanded = isControlled ? expanded : internalExpanded
 
   const toggleExpanded = () => {
-    setIsExpanded(!isExpanded)
+    if (collapseDisabled) {
+      return
+    }
+
+    const nextValue = !isExpanded
+
+    if (!isControlled) {
+      setInternalExpanded(nextValue)
+    }
+
+    onExpandedChange?.(nextValue)
   }
+
+  const handleHeaderKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      toggleExpanded()
+    }
+  }
+
+  const renderStateContent = () => {
+    if (resolvedLoading) {
+      return (
+        <div
+          className={
+            contentClassName ??
+            'flex flex-col items-center justify-center gap-3 py-10 px-4 sm:px-6 text-sm text-gray-600'
+          }
+          role="status"
+          aria-live="polite"
+        >
+          {loadingContent ?? (
+            <>
+              <div
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border-2 border-b-transparent border-blue-600/60"
+                aria-hidden="true"
+              >
+                <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-blue-600"></div>
+              </div>
+              <span>{loadingMessage}</span>
+            </>
+          )}
+        </div>
+      )
+    }
+
+    if (error) {
+      return (
+        <div
+          className={
+            contentClassName ??
+            'flex flex-col gap-4 rounded-lg border border-red-200 bg-red-50 px-4 py-6 sm:px-6'
+          }
+          role="alert"
+          aria-live="assertive"
+        >
+          <div className="flex items-start gap-2 text-sm text-red-800">
+            <div
+              className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-red-500"
+              aria-hidden="true"
+            ></div>
+            <p>{error}</p>
+          </div>
+          {onRetry && (
+            <div>
+              <button
+                type="button"
+                onClick={e => {
+                  e.stopPropagation()
+                  onRetry()
+                }}
+                className="inline-flex items-center gap-2 rounded-md border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 shadow-sm transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              >
+                <span>{errorActionLabel}</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    if (resolvedEmpty) {
+      if (emptyContent) {
+        return (
+          <div className={contentClassName ?? 'px-4 py-10 sm:px-6'}>
+            {emptyContent}
+          </div>
+        )
+      }
+
+      return (
+        <div
+          className={
+            contentClassName ??
+            'flex flex-col items-center gap-4 px-4 py-12 text-center text-gray-500 sm:px-6'
+          }
+        >
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+            {Icon && (
+              <Icon className="h-7 w-7 text-gray-400" aria-hidden="true" />
+            )}
+          </div>
+          <p className="text-sm sm:text-base">{emptyMessage}</p>
+          {onEmptyAction && (
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation()
+                onEmptyAction()
+              }}
+              className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              {emptyActionLabel}
+            </button>
+          )}
+        </div>
+      )
+    }
+
+    return null
+  }
+
+  const stateContent = renderStateContent()
+  const shouldWrapChildren = Boolean(contentClassName)
 
   return (
     <div
-      className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className}`}
+      className={`rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow duration-200 focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-1 ${className}`}
+      data-expanded={isExpanded}
       role="region"
-      aria-labelledby={`card-title-${title.replace(/\s+/g, '-').toLowerCase()}`}
+      aria-labelledby={headerId}
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2 rounded-t-lg"
+        className={`flex cursor-pointer items-start justify-between gap-4 rounded-t-lg px-4 py-4 transition-colors hover:bg-gray-50 sm:px-6 ${headerClassName}`}
         onClick={toggleExpanded}
         role="button"
         tabIndex={0}
-        onKeyDown={e => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            toggleExpanded()
-          }
-        }}
+        onKeyDown={handleHeaderKeyDown}
         aria-expanded={isExpanded}
-        aria-controls={`card-content-${title.replace(/\s+/g, '-').toLowerCase()}`}
+        aria-controls={contentId}
+        id={headerId}
+        data-collapsible-disabled={collapseDisabled}
       >
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-1 items-start gap-3">
           {Icon && (
-            <Icon className="h-5 w-5 text-gray-500" aria-hidden="true" />
+            <Icon className="mt-1 h-5 w-5 text-gray-500" aria-hidden="true" />
           )}
           <div className="flex flex-col space-y-1">
             <div className="flex items-center space-x-2">
-              <h3
-                id={`card-title-${title.replace(/\s+/g, '-').toLowerCase()}`}
-                className="text-lg font-semibold text-gray-900"
-              >
-                {title}
-              </h3>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+              </div>
               {counter !== undefined && (
                 <span
                   className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
@@ -79,6 +256,9 @@ export const CollapsibleCard = ({
               )}
             </div>
             {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+            {description && (
+              <p className="text-xs text-gray-400 sm:text-sm">{description}</p>
+            )}
           </div>
         </div>
 
@@ -94,12 +274,16 @@ export const CollapsibleCard = ({
               toggleExpanded()
             }}
             aria-label={isExpanded ? 'Collapse section' : 'Expand section'}
+            disabled={collapseDisabled}
           >
             {isExpanded ? (
-              <ChevronUp className="h-4 w-4 text-gray-500" aria-hidden="true" />
+              <ChevronUp
+                className="h-4 w-4 text-gray-500 transition-transform duration-200"
+                aria-hidden="true"
+              />
             ) : (
               <ChevronDown
-                className="h-4 w-4 text-gray-500"
+                className="h-4 w-4 text-gray-500 transition-transform duration-200"
                 aria-hidden="true"
               />
             )}
@@ -110,55 +294,29 @@ export const CollapsibleCard = ({
       {/* Content */}
       {isExpanded && (
         <div
-          id={`card-content-${title.replace(/\s+/g, '-').toLowerCase()}`}
-          className="border-t border-gray-200"
+          id={contentId}
+          className="border-t border-gray-200" // maintain border separation
           role="region"
-          aria-labelledby={`card-title-${title.replace(/\s+/g, '-').toLowerCase()}`}
+          aria-labelledby={headerId}
+          data-state={
+            resolvedLoading
+              ? 'loading'
+              : error
+                ? 'error'
+                : resolvedEmpty
+                  ? 'empty'
+                  : 'default'
+          }
         >
-          {loading && (
-            <div className="p-6 text-center" role="status" aria-live="polite">
-              <div className="inline-flex items-center space-x-2">
-                <div
-                  className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"
-                  aria-hidden="true"
-                ></div>
-                <span className="text-gray-600">Caricamento...</span>
-              </div>
-            </div>
-          )}
+          {stateContent}
 
-          {error && (
-            <div
-              className="p-4 m-4 bg-red-50 border border-red-200 rounded-lg"
-              role="alert"
-              aria-live="assertive"
-            >
-              <div className="flex items-center space-x-2">
-                <div
-                  className="w-4 h-4 bg-red-500 rounded-full flex-shrink-0"
-                  aria-hidden="true"
-                ></div>
-                <p className="text-red-800 text-sm">{error}</p>
-              </div>
-            </div>
-          )}
-
-          {!loading && !error && (
+          {!stateContent && (
             <>
-              {showEmpty && (
-                <div className="p-8 text-center text-gray-500">
-                  <div className="w-12 h-12 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                    {Icon && (
-                      <Icon
-                        className="h-6 w-6 text-gray-400"
-                        aria-hidden="true"
-                      />
-                    )}
-                  </div>
-                  <p className="text-sm">{emptyMessage}</p>
-                </div>
+              {shouldWrapChildren ? (
+                <div className={contentClassName}>{children}</div>
+              ) : (
+                children
               )}
-              {!showEmpty && children}
             </>
           )}
         </div>

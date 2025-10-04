@@ -8,11 +8,26 @@
 // import { reportBuilder, dataAggregator } from '../reporting'
 // import { executiveDashboard, benchmarkAnalyzer } from '../businessIntelligence'
 
-const analyticsProcessor = { process: () => ({}) }
-const reportBuilder = { build: () => ({}) }
-const dataAggregator = { aggregate: () => ({}) }
-const executiveDashboard = { update: () => ({}) }
-const benchmarkAnalyzer = { analyze: () => ({}) }
+const analyticsProcessor = {
+  process: () => ({}),
+  initialize: async () => Promise.resolve(),
+}
+const reportBuilder = {
+  build: () => ({}),
+  initialize: async () => Promise.resolve(),
+}
+const dataAggregator = {
+  aggregate: () => ({}),
+  initialize: async () => Promise.resolve(),
+}
+const executiveDashboard = {
+  update: () => ({}),
+  initialize: async () => Promise.resolve(),
+}
+const benchmarkAnalyzer = {
+  analyze: () => ({}),
+  initialize: async () => Promise.resolve(),
+}
 
 // Import existing services (these would be actual imports in real implementation)
 // import { dashboardService } from '../dashboard' // B.8.2

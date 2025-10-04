@@ -47,6 +47,7 @@ export type AuditEvent =
   | 'SECURITY_VIOLATION'
   | 'COMPLIANCE_CHECK'
   | 'AUDIT_TRAIL_ACCESSED'
+  | 'INTEGRATION_TEST'
 
 export type AuditCategory =
   | 'AUTHENTICATION'
@@ -462,7 +463,7 @@ class AuditLoggerService {
 
   private determineComplianceStandards(
     category: AuditCategory,
-    event: AuditEvent
+    _event: AuditEvent
   ): string[] {
     const standards: string[] = []
 
@@ -512,7 +513,7 @@ class AuditLoggerService {
 
   private analyzeViolations(
     logs: AuditLog[],
-    reportType: string
+    _reportType: string
   ): AuditViolation[] {
     const violations: AuditViolation[] = []
 
