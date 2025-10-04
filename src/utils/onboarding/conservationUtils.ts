@@ -350,14 +350,14 @@ export const validateTemperatureForType = (
   }
 
   // Controlla se la temperatura è nel range valido
-  if (range.min !== null && temperature <= range.min) {
+  if (range.min !== null && temperature < range.min) {
     return {
       valid: false,
       message: `Temperatura troppo bassa. Minimo consentito: ${range.min}°C`,
     }
   }
 
-  if (range.max !== null && temperature >= range.max) {
+  if (range.max !== null && temperature > range.max) {
     return {
       valid: false,
       message: `Temperatura troppo alta. Massimo consentito: ${range.max}°C`,
