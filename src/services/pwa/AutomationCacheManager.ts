@@ -183,7 +183,7 @@ export class AutomationCacheManager {
         ...this.config.defaultStrategy,
         ...options?.strategy,
       }
-      const ttl = options?.tttl || effectiveStrategy.maxAge
+      const ttl = options?.ttl || effectiveStrategy.maxAge
       const tags = options?.tags || []
 
       // Calculate size
@@ -405,8 +405,8 @@ export class AutomationCacheManager {
     }
   }
 
-  private async getFromIndexedDB(key: string): Promise<CacheEntry | null> {
-    if (!this.db) return null
+  private async getFromIndexedDB(key: string): Promise<CacheEntry | undefined> {
+    if (!this.db) return undefined
 
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['cache'], 'readonly')

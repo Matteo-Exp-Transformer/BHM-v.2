@@ -44,7 +44,7 @@ export class AutomationServiceWorker {
       cacheStrategy: 'staleWhileRevalidate',
     }
 
-    this.setupServiceWorker()
+    // this.setupServiceWorker() // Method doesn't exist, removing call
   }
 
   /**

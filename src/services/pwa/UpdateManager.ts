@@ -304,7 +304,7 @@ export class UpdateManager {
   private async getServiceWorkerRegistration(): Promise<void> {
     if ('serviceWorker' in navigator) {
       this.serviceWorkerRegistration =
-        await navigator.serviceWorker.getRegistration()
+        (await navigator.serviceWorker.getRegistration()) || null
     }
   }
 
