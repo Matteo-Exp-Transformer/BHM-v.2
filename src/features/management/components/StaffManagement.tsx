@@ -90,14 +90,17 @@ export const StaffManagement = () => {
         icon={Users}
         counter={stats.total}
         actions={cardActions}
-        loading={isLoading}
+        isLoading={isLoading}
         error={null}
-        showEmpty={staff.length === 0}
+        isEmpty={staff.length === 0}
         emptyMessage="Nessun membro dello staff configurato. Aggiungi il primo dipendente per iniziare."
         className="mb-6"
+        contentClassName="px-4 py-6 sm:px-6"
+        emptyActionLabel="Aggiungi staff"
+        onEmptyAction={handleCreateNew}
       >
         {staff.length > 0 && (
-          <div className="p-4">
+          <div className="space-y-4">
             {/* Stats */}
             <div className="mb-4 grid grid-cols-4 gap-4">
               <div className="text-center">
