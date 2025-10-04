@@ -178,8 +178,8 @@ class CrossCompanyReportingManager {
         },
       }
 
-      // Process and aggregate data
-      const _sections = await this.processReportData(report, anonymizedData)
+      // Process and aggregate data - sections unused in current implementation
+      // const _sections = await this.processReportData(report, anonymizedData)
 
       // Store report
       this.reports.set(report.id, report)
@@ -437,8 +437,8 @@ class CrossCompanyReportingManager {
   }
 
   private async verifyDataSharingAgreements(
-    companies: string[],
-    reportType: ReportType
+    _companies: string[],
+    _reportType: ReportType
   ): Promise<DataSharingAgreement[]> {
     // Mock implementation - would check actual agreements
     return []

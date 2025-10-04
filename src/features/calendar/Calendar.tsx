@@ -113,12 +113,12 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   // Handle event drag and drop
   const handleEventDrop = useCallback(
-    (dropInfo: { event: { extendedProps?: { originalEvent?: any }; start: Date; end?: Date } }) => {
+    (dropInfo: { event: { extendedProps?: { originalEvent?: any }; start: Date | null; end?: Date | null } }) => {
       const originalEvent = dropInfo.event.extendedProps?.originalEvent
       if (originalEvent && onEventUpdate) {
         const updatedEvent: CalendarEvent = {
           ...originalEvent,
-          start: new Date(dropInfo.event.start),
+          start: dropInfo.event.start ? new Date(dropInfo.event.start) : new Date(),
           end: dropInfo.event.end ? new Date(dropInfo.event.end) : undefined,
           updated_at: new Date(),
         }
@@ -130,15 +130,13 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   // Handle event resize
   const handleEventResize = useCallback(
-    (resizeInfo: { event: { extendedProps?: { originalEvent?: any }; start: Date; end?: Date } }) => {
+    (resizeInfo: { event: { extendedProps?: { originalEvent?: any }; start: Date | null; end?: Date | null } }) => {
       const originalEvent = resizeInfo.event.extendedProps?.originalEvent
       if (originalEvent && onEventUpdate) {
         const updatedEvent: CalendarEvent = {
           ...originalEvent,
-          start: new Date(resizeInfo.event.start),
-          end: resizeInfo.event.end
-            ? new Date(resizeInfo.event.end)
-            : undefined,
+          start: resizeInfo.event.start ? new Date(resizeInfo.event.start) : new Date(),
+          end: resizeInfo.event.end ? new Date(resizeInfo.event.end) : undefined,
           updated_at: new Date(),
         }
         onEventUpdate(updatedEvent)

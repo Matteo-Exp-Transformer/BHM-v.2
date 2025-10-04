@@ -259,13 +259,22 @@ class MultiTenantDashboardService {
           date_format: 'DD/MM/YYYY',
           currency: 'EUR',
           language: 'it',
-          theme: 'light',
-          notifications: {
-            email: true,
-            push: true,
-            sms: false,
+          haccp_standards: ['EU_852_2004', 'ISO_22000'],
+          notification_preferences: {
+            email_alerts: true,
+            sms_alerts: false,
+            push_notifications: true,
+            digest_frequency: 'daily',
+          },
+          branding: {
+            logo_url: '',
+            primary_color: '#2563eb',
+            secondary_color: '#10b981',
+            custom_css: '',
           },
           integrations: {
+            email_provider: 'sendgrid',
+            storage_provider: 'aws_s3',
             analytics_provider: 'google_analytics',
           },
         },
