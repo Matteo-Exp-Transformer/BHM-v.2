@@ -16,18 +16,18 @@ vi.mock('xlsx', async () => {
     utils: {
       ...actual.utils,
       book_new: vi.fn(() => actual.utils.book_new()),
-      json_to_sheet: vi.fn((...args) => actual.utils.json_to_sheet(...args)),
-      aoa_to_sheet: vi.fn((...args) => actual.utils.aoa_to_sheet(...args)),
-      book_append_sheet: vi.fn((...args) =>
-        actual.utils.book_append_sheet(...args)
+      json_to_sheet: vi.fn((data: any[], opts?: any) => actual.utils.json_to_sheet(data, opts)),
+      aoa_to_sheet: vi.fn((data: any[][], opts?: any) => actual.utils.aoa_to_sheet(data, opts)),
+      book_append_sheet: vi.fn((workbook: any, worksheet: any, name?: string) =>
+        actual.utils.book_append_sheet(workbook, worksheet, name)
       ),
-      sheet_add_aoa: vi.fn((...args) => actual.utils.sheet_add_aoa(...args)),
-      sheet_set_array_formula: vi.fn((...args) =>
-        actual.utils.sheet_set_array_formula(...args)
+      sheet_add_aoa: vi.fn((sheet: any, data: any[][], opts?: any) => actual.utils.sheet_add_aoa(sheet, data, opts)),
+      sheet_set_array_formula: vi.fn((sheet: any, range: string, formula: string) =>
+        actual.utils.sheet_set_array_formula(sheet, range, formula)
       ),
-      sheet_to_csv: vi.fn((...args) => actual.utils.sheet_to_csv(...args)),
-      decode_range: vi.fn((...args) => actual.utils.decode_range(...args)),
-      encode_cell: vi.fn((...args) => actual.utils.encode_cell(...args)),
+      sheet_to_csv: vi.fn((sheet: any, opts?: any) => actual.utils.sheet_to_csv(sheet, opts)),
+      decode_range: vi.fn((range: string) => actual.utils.decode_range(range)),
+      encode_cell: vi.fn((cell: any) => actual.utils.encode_cell(cell)),
     },
     writeFile: vi.fn(),
     write: vi.fn(() => new ArrayBuffer(8)),
@@ -141,20 +141,20 @@ describe('ExcelExporter', () => {
       expect(mockXLSX.utils.book_new).toHaveBeenCalled()
       expect(mockXLSX.utils.json_to_sheet).toHaveBeenCalled()
 
-      const writeCall = mockXLSX.write.mock.calls.at(-1)
+      const writeCall = mockXLSX.write.mock.calls[mockXLSX.write.mock.calls.length - 1]
       expect(writeCall?.[1]).toEqual({ bookType: 'xlsx', type: 'array' })
 
-      const jsonCall = mockXLSX.utils.json_to_sheet.mock.calls.find(([rows]) =>
+      const jsonCall = (mockXLSX.utils.json_to_sheet as any).mock.calls.find(([rows]: [any]) =>
         Array.isArray(rows)
       )
       expect(Array.isArray(jsonCall?.[0])).toBe(true)
     })
 
     it('should export data to CSV format', async () => {
-      const csvConfig = {
+      const csvConfig: ExcelExportConfig = {
         ...mockConfig,
         format: 'csv' as const,
-        tables: ['temperature_readings'],
+        tables: ['temperature_readings'] as const,
       }
 
       vi.mocked(supabase.from).mockReturnValue({
@@ -179,7 +179,7 @@ describe('ExcelExporter', () => {
       const result = await excelExporter.exportData(csvConfig)
 
       expect(result).toBeInstanceOf(Blob)
-      const writeCall = mockXLSX.write.mock.calls.at(-1)
+      const writeCall = mockXLSX.write.mock.calls[mockXLSX.write.mock.calls.length - 1]
       if (writeCall) {
         expect(writeCall[1]).toEqual({ bookType: 'csv', type: 'array' })
       }
@@ -199,8 +199,8 @@ describe('ExcelExporter', () => {
 
       await excelExporter.exportData(configWithCharts)
 
-      const summaryCall = mockXLSX.utils.book_append_sheet.mock.calls.find(
-        ([, , name]) => name === 'Riepilogo'
+      const summaryCall = (mockXLSX.utils.book_append_sheet as any).mock.calls.find(
+        ([, , name]: [any, any, string]) => name === 'Riepilogo'
       )
       expect(summaryCall).toBeDefined()
     })
@@ -239,10 +239,10 @@ describe('ExcelExporter', () => {
         single: vi.fn().mockResolvedValue(mockTemperatureData),
       } as any)
 
-      const tempConfig = { ...mockConfig, tables: ['temperature_readings'] }
+      const tempConfig: ExcelExportConfig = { ...mockConfig, tables: ['temperature_readings'] }
       await excelExporter.exportData(tempConfig)
 
-      const call = mockXLSX.utils.json_to_sheet.mock.calls.find(([rows]) =>
+      const call = (mockXLSX.utils.json_to_sheet as any).mock.calls.find(([rows]: [any]) =>
         Array.isArray(rows)
       )
 
@@ -284,7 +284,7 @@ describe('ExcelExporter', () => {
       })
 
       expect(result).toBeInstanceOf(Blob)
-      const call = mockXLSX.utils.json_to_sheet.mock.calls.find(([rows]) =>
+      const call = (mockXLSX.utils.json_to_sheet as any).mock.calls.find(([rows]: [any]) =>
         Array.isArray(rows)
       )
       expect(Array.isArray(call?.[0])).toBe(true)
@@ -323,8 +323,8 @@ describe('ExcelExporter', () => {
         end: new Date(),
       })
 
-      const summaryCall = mockXLSX.utils.book_append_sheet.mock.calls.find(
-        ([, , name]) => name === 'Riepilogo'
+      const summaryCall = (mockXLSX.utils.book_append_sheet as any).mock.calls.find(
+        ([, , name]: [any, any, string]) => name === 'Riepilogo'
       )
       expect(summaryCall).toBeDefined()
     })

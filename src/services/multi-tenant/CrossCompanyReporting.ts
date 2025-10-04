@@ -468,13 +468,7 @@ class CrossCompanyReportingManager {
     return dataSources
   }
 
-  private async anonymizeData(
-    _dataSources: DataSource[],
-    _agreements: DataSharingAgreement[]
-  ): Promise<any[]> {
-    // Apply data anonymization based on sharing agreements
-    return []
-  }
+  // private async anonymizeData method removed - unused in current implementation
 
   private getRequiredFields(
     tableName: string,
@@ -533,20 +527,7 @@ class CrossCompanyReportingManager {
     ]
   }
 
-  private async calculateDataQualityScore(
-    _dataSources: DataSource[]
-  ): Promise<number> {
-    // Calculate data quality score based on completeness, accuracy, timeliness
-    return 0.95 // Mock score
-  }
-
-  private async processReportData(
-    _report: CrossCompanyReport,
-    _data: any[]
-  ): Promise<ReportSection[]> {
-    // Process and aggregate data into report sections
-    return []
-  }
+  // Removed unused methods: calculateDataQualityScore, processReportData - stub implementations
 
   private generateReportId(): string {
     return `cross_report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
