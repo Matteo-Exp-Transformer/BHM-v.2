@@ -204,6 +204,7 @@ Project_Knowledge/
 - ✅ Conservation & Settings cards ora `grid-cols-1 sm:grid-cols-2 md:grid-cols-4`
 - ✅ Aggiunto `data-testid="onboarding-wizard"` per sbloccare test E2E
 - ✅ Verificato ultimo update multi-agente (`CURSOR-MULTIAGENT-2025-10-03.md`) e consolidato istruzioni correnti (`CURSOR-INSTRUCTIONS-CURRENT.md`)
+- ✅ Refactor `CollapsibleCard` completato: gestione controllata/stati, padding responsive e azioni empty integrate nei consumer principali (Inventory, Settings, Management)
 
 **Commit rilevanti**
 
@@ -211,6 +212,8 @@ Project_Knowledge/
 - `9ec333f` – `test(e2e): add onboarding wizard test id`
 - `3d97ae5` – `fix: cleanup TypeScript errors in automation services` (Claude)
 - `b697d07` – `fix: resolve critical type errors in export and integration services` (Claude)
+- `17abb1a` – `feat(ui): harden CollapsibleCard state handling`
+- `2b17ebd` – `docs: log B5 completion and next steps`
 
 ### ✅ Progressi Claude (4 Ottobre 2025)
 
@@ -233,7 +236,7 @@ Project_Knowledge/
 
 **Per Cursor (priorità alta):**
 
-- ✅ B5 completata: `CollapsibleCard` ora gestisce loading/error/empty states in modo accessibile e i consumer principali (Inventory, Settings, Management) sono allineati
+- ✅ B5 completata: `CollapsibleCard` ora gestisce loading/error/empty states in modo accessibile e i consumer principali (Inventory, Settings, Management) sono allineati (commit `17abb1a`)
 - 🔄 B8 in corso: riduzione warning `exhaustive-deps` partendo da Inventory/Settings
 - 🟡 B9 in coda: ripulire warning `react-refresh` nei componenti condivisi (es. `ProtectedRoute`, `Badge`)
 
