@@ -18,19 +18,19 @@ export const CONSERVATION_POINT_TYPES = {
   fridge: {
     value: 'fridge' as const,
     label: 'Frigorifero',
-    temperatureRange: { min: 1, max: 14 }, // 1°C - 14°C
+    temperatureRange: { min: 1, max: 15 }, // 1°C - 15°C
     color: 'text-blue-600',
   },
   freezer: {
     value: 'freezer' as const,
     label: 'Congelatore',
-    temperatureRange: { min: -20, max: -15 }, // -20°C a -15°C
+    temperatureRange: { min: -25, max: -1 }, // -25°C a -1°C
     color: 'text-cyan-600',
   },
   blast: {
     value: 'blast' as const,
     label: 'Abbattitore',
-    temperatureRange: { min: -90, max: -15 }, // -15°C a -90°C
+    temperatureRange: { min: -90, max: -15 }, // -90°C a -15°C
     color: 'text-emerald-600',
   },
 }
@@ -39,55 +39,55 @@ export const CONSERVATION_CATEGORIES = [
   {
     id: 'fresh_meat',
     label: 'Carni fresche',
-    range: { min: 0, max: 4 },
+    range: { min: 1, max: 4 }, // Compatibile con frigorifero 1-15°C
     incompatible: ['ambient', 'blast'],
   },
   {
     id: 'fresh_fish',
     label: 'Pesce fresco',
-    range: { min: 0, max: 2 },
+    range: { min: 1, max: 2 }, // Compatibile con frigorifero 1-15°C
     incompatible: ['ambient', 'blast'],
   },
   {
     id: 'fresh_dairy',
     label: 'Latticini',
-    range: { min: 2, max: 6 },
+    range: { min: 2, max: 6 }, // Compatibile con frigorifero 1-15°C
     incompatible: ['ambient'],
   },
   {
     id: 'fresh_produce',
     label: 'Verdure fresche',
-    range: { min: 2, max: 8 },
+    range: { min: 2, max: 8 }, // Compatibile con frigorifero 1-15°C
     incompatible: ['ambient'],
   },
   {
     id: 'beverages',
     label: 'Bevande',
-    range: { min: 2, max: 12 },
+    range: { min: 2, max: 12 }, // Compatibile con frigorifero 1-15°C
     incompatible: [],
   },
   {
     id: 'dry_goods',
     label: 'Dispensa secca',
-    range: { min: 15, max: 25 },
+    range: { min: 15, max: 25 }, // Solo per ambiente
     compatibleTypes: ['ambient'],
   },
   {
     id: 'frozen',
     label: 'Congelati',
-    range: { min: -25, max: -18 },
+    range: { min: -25, max: -1 }, // Compatibile con congelatore -25 a -1°C
     compatibleTypes: ['freezer'],
   },
   {
     id: 'deep_frozen',
     label: 'Ultracongelati',
-    range: { min: -35, max: -25 },
+    range: { min: -25, max: -1 }, // Compatibile con congelatore -25 a -1°C
     compatibleTypes: ['freezer'],
   },
   {
     id: 'blast_chilling',
     label: 'Abbattimento rapido',
-    range: { min: -40, max: 3 },
+    range: { min: -90, max: -15 }, // Compatibile con abbattitore -90 a -15°C
     compatibleTypes: ['blast'],
   },
 ]
