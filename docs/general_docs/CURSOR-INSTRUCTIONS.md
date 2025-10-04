@@ -233,9 +233,9 @@ Project_Knowledge/
 
 **Per Cursor (priorità alta):**
 
-- B5: Hardening `CollapsibleCard` component con gestione stati (empty/loading/error) e consolidamento padding responsive
-- B8: Ridurre warning `exhaustive-deps` nelle pagine Inventory/Settings dopo refactor
-- B9: Eliminare warning `react-refresh` nei componenti condivisi
+- ✅ B5 completata: `CollapsibleCard` ora gestisce loading/error/empty states in modo accessibile e i consumer principali (Inventory, Settings, Management) sono allineati
+- 🔄 B8 in corso: riduzione warning `exhaustive-deps` partendo da Inventory/Settings
+- 🟡 B9 in coda: ripulire warning `react-refresh` nei componenti condivisi (es. `ProtectedRoute`, `Badge`)
 
 **Per Claude (in corso):**
 
@@ -245,4 +245,4 @@ Project_Knowledge/
 - 📋 Clean up 98 unused variables (TS6133)
 - 🎯 Ridurre warning 'any' da 45 a <20
 
-> Stato branch: `fix/cursor-functional` pulito dopo commit Claude; coordinamento attivo per TypeScript cleanup completo.
+> Stato branch: `fix/cursor-functional` aggiornato con refactor B5; coordinamento attivo per cleanup TypeScript (Claude) e warning hook/refresh (Cursor).
