@@ -332,7 +332,7 @@ const OnboardingWizard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" data-testid="onboarding-wizard">
       <div className="max-w-4xl mx-auto py-6 px-4 sm:py-8">
         {/* Header */}
         <div className="text-center mb-6 space-y-3 sm:mb-8">
