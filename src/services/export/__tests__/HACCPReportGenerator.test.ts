@@ -148,7 +148,7 @@ describe('HACCPReportGenerator', () => {
       }
 
       // Setup Supabase mock chain
-      let _callCount = 0
+      // let _callCount = 0 // Removed unused variable
       vi.mocked(supabase.from).mockImplementation((table: string) => {
         switch (table) {
           case 'companies':

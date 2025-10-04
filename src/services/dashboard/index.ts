@@ -190,10 +190,8 @@ export const dashboardOptimizer = {
 }
 
 // Export everything for Cursor's dashboard implementation
-const dashboardRealtime = new DashboardRealtimeService()
-
 export default {
-  multiTenantDashboard,
+  multiTenantDashboard: multiTenantDashboard,
   dashboardRealtime,
   dashboardWidgets,
   dashboardLayouts,
