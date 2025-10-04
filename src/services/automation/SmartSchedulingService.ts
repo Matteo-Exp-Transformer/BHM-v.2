@@ -116,7 +116,6 @@ export interface SchedulingMetrics {
 export class SmartSchedulingService {
   private scheduledTasks: Map<string, ScheduledTask> = new Map()
   private resourceCapacities: Map<string, ResourceCapacity> = new Map()
-  private _constraints: Map<string, SchedulingConstraint[]> = new Map()
   private optimizationEngine: ScheduleOptimizationEngine
   private isInitialized = false
 
@@ -859,11 +858,6 @@ class ScheduleOptimizationEngine {
  * Genetic Algorithm for Schedule Optimization
  */
 class GeneticScheduleOptimizer {
-  private _populationSize = 50
-  private _generations = 100
-  private _mutationRate = 0.1
-  private _crossoverRate = 0.8
-
   public async initialize(): Promise<void> {
     console.log('🧬 Initializing Genetic Schedule Optimizer...')
   }

@@ -886,28 +886,52 @@ export class IntelligentAlertManager {
     condition: AlertCondition,
     value: unknown
   ): boolean {
+    const conditionVal = condition.value
+
     switch (condition.operator) {
       case '>':
-        return value > condition.value
+        return (
+          typeof value === 'number' &&
+          typeof conditionVal === 'number' &&
+          value > conditionVal
+        )
       case '<':
-        return value < condition.value
+        return (
+          typeof value === 'number' &&
+          typeof conditionVal === 'number' &&
+          value < conditionVal
+        )
       case '>=':
-        return value >= condition.value
+        return (
+          typeof value === 'number' &&
+          typeof conditionVal === 'number' &&
+          value >= conditionVal
+        )
       case '<=':
-        return value <= condition.value
+        return (
+          typeof value === 'number' &&
+          typeof conditionVal === 'number' &&
+          value <= conditionVal
+        )
       case '==':
-        return value === condition.value
+        return value === conditionVal
       case '!=':
-        return value !== condition.value
+        return value !== conditionVal
       case 'contains':
-        return String(value).includes(String(condition.value))
+        return String(value).includes(String(conditionVal))
       case 'in':
-        return Array.isArray(condition.value) && condition.value.includes(value)
+        return (
+          Array.isArray(conditionVal) && conditionVal.includes(value as never)
+        )
       case 'between':
         return (
-          Array.isArray(condition.value) &&
-          value >= condition.value[0] &&
-          value <= condition.value[1]
+          Array.isArray(conditionVal) &&
+          conditionVal.length === 2 &&
+          typeof value === 'number' &&
+          typeof conditionVal[0] === 'number' &&
+          typeof conditionVal[1] === 'number' &&
+          value >= conditionVal[0] &&
+          value <= conditionVal[1]
         )
       default:
         return false
@@ -954,13 +978,17 @@ export class IntelligentAlertManager {
 
   private getFieldValue(data: Record<string, unknown>, field: string): unknown {
     const parts = field.split('.')
-    let value = data
+    let value: unknown = data
 
     for (const part of parts) {
       if (value === null || value === undefined) {
         return undefined
       }
-      value = value[part]
+      if (typeof value === 'object' && value !== null && part in value) {
+        value = (value as Record<string, unknown>)[part]
+      } else {
+        return undefined
+      }
     }
 
     return value
@@ -1480,8 +1508,6 @@ export class IntelligentAlertManager {
  * Machine learning-based anomaly detection for smart alerts
  */
 class AnomalyDetector {
-  private _models: Map<string, unknown> = new Map()
-
   public async initialize(): Promise<void> {
     console.log('🤖 Initializing Anomaly Detector...')
     // In a real implementation, this would load ML models
@@ -1503,8 +1529,6 @@ class AnomalyDetector {
  * Pattern recognition for complex alert conditions
  */
 class PatternAnalyzer {
-  private patterns: Map<string, unknown> = new Map()
-
   public async initialize(): Promise<void> {
     console.log('🔍 Initializing Pattern Analyzer...')
     // In a real implementation, this would load pattern recognition models

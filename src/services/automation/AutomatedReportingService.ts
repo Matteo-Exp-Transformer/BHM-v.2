@@ -46,16 +46,16 @@ export interface VisualizationConfig {
   groupBy?: string
   aggregation?: 'sum' | 'avg' | 'min' | 'max' | 'count'
   colors?: string[]
-  options?: Record<string, any>
+  options?: Record<string, unknown>
 }
 
 export interface ReportParameter {
   name: string
   type: 'string' | 'number' | 'date' | 'boolean' | 'select'
-  defaultValue?: any
+  defaultValue?: string | number | boolean | Date
   required: boolean
   description: string
-  options?: { label: string; value: any }[]
+  options?: { label: string; value: string | number | boolean }[]
 }
 
 export interface ReportFilter {
@@ -71,14 +71,14 @@ export interface ReportFilter {
     | 'not_in'
     | 'contains'
     | 'between'
-  value: any
+  value: string | number | boolean | Date | string[] | number[]
   optional: boolean
 }
 
 export interface ReportCondition {
   field: string
   operator: string
-  value: any
+  value: string | number | boolean | Date | string[] | number[]
   action: 'show' | 'hide' | 'highlight' | 'alert'
 }
 
@@ -106,8 +106,8 @@ export interface GeneratedReport {
   templateName: string
   generatedAt: Date
   generatedBy: string
-  parameters: Record<string, any>
-  filters: Record<string, any>
+  parameters: Record<string, unknown>
+  filters: Record<string, unknown>
   status: 'generating' | 'completed' | 'failed' | 'cancelled'
   progress: number
   outputs: ReportOutput[]
@@ -153,8 +153,8 @@ export interface AutomationRule {
   description: string
   trigger: ReportTrigger
   templateId: string
-  parameters?: Record<string, any>
-  filters?: Record<string, any>
+  parameters?: Record<string, unknown>
+  filters?: Record<string, unknown>
   recipients?: ReportRecipient[]
   enabled: boolean
   priority: 'low' | 'medium' | 'high' | 'critical'
@@ -173,7 +173,7 @@ export interface ScheduleTrigger {
 
 export interface EventTrigger {
   eventType: string
-  conditions?: Record<string, any>
+  conditions?: Record<string, unknown>
 }
 
 export interface ThresholdTrigger {
@@ -194,7 +194,6 @@ export class AutomatedReportingService {
   private scheduledJobs: Map<string, ReturnType<typeof setTimeout>> = new Map()
   private reportQueue: ReportGenerationQueue
   private deliveryService: ReportDeliveryService
-  private _isInitialized = false
 
   constructor() {
     this.reportQueue = new ReportGenerationQueue()
@@ -223,7 +222,6 @@ export class AutomatedReportingService {
       // Setup scheduled reports
       await this.setupScheduledReports()
 
-      this._isInitialized = true
       console.log('✅ Automated Reporting Service initialized successfully')
     } catch (error) {
       console.error(
@@ -262,8 +260,8 @@ export class AutomatedReportingService {
    */
   public async generateReport(
     templateId: string,
-    parameters?: Record<string, any>,
-    filters?: Record<string, any>,
+    parameters?: Record<string, unknown>,
+    filters?: Record<string, unknown>,
     requestedBy?: string
   ): Promise<GeneratedReport> {
     const template = this.templates.get(templateId)
@@ -380,7 +378,7 @@ export class AutomatedReportingService {
    */
   public async executeAutomationRule(
     ruleId: string,
-    _context?: Record<string, any>
+    _context?: Record<string, unknown>
   ): Promise<GeneratedReport> {
     const rule = this.automationRules.get(ruleId)
     if (!rule) {
@@ -480,7 +478,7 @@ export class AutomatedReportingService {
    */
   public async triggerEventBasedReports(
     eventType: string,
-    data: any
+    data: unknown
   ): Promise<void> {
     const eventRules = Array.from(this.automationRules.values()).filter(
       rule =>

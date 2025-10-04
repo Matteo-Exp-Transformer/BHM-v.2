@@ -19,7 +19,7 @@ HACCP Business Manager è una PWA per digitalizzare la sicurezza alimentare nei 
 - ✅ Inventory & Shopping Lists (B.3)
 - ✅ Settings & Dashboard (B.5)
 
-**Current Priority:** Fix 5 TypeScript errors blocking commits + Performance optimization.
+**Current Priority:** Fix TypeScript errors blocking commits + Performance optimization (vedi log progressi sotto).
 
 ---
 
@@ -192,3 +192,27 @@ Project_Knowledge/
 ---
 
 **⚠️ CRITICAL REMINDER:** TypeScript errors are currently blocking git commits. This is the HIGHEST PRIORITY for Cursor to resolve immediately.
+
+---
+
+## 📝 Cursor Progress Log
+
+### 4 Ottobre 2025 – Branch `fix/cursor-functional`
+
+- ✅ Task B1–B4 completati (Inventory/Settings CollapsibleCard, audit responsive e fix principali)
+- ✅ UI mobile onboarding migliorata (`StepNavigator` responsive, bottom nav scrollabile, dev buttons stack)
+- ✅ Conservation & Settings cards ora `grid-cols-1 sm:grid-cols-2 md:grid-cols-4`
+- ✅ Aggiunto `data-testid="onboarding-wizard"` per sbloccare test E2E
+
+**Commit rilevanti**
+
+- `ddec190` – `fix(responsive): improve mobile layout for onboarding navigation and settings`
+- `9ec333f` – `test(e2e): add onboarding wizard test id`
+
+### Prossimi Step Suggeriti
+
+- B5: Hardening `CollapsibleCard` component con gestione stati (empty/loading/error)
+- B6–B9: Risolvere warning `exhaustive-deps`, `react-refresh`, tipi `any`
+- Coordinarsi con Claude per abbattere i 160+ errori/326 warning riportati da `npm run lint`
+
+> Stato branch: `fix/cursor-functional` pulito dopo gli ultimi commit; stash `save-pre-responsive-tweaks` conserva artefatti E2E locali.
