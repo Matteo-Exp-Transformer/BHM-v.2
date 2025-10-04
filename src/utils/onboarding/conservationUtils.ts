@@ -18,19 +18,19 @@ export const CONSERVATION_POINT_TYPES = {
   fridge: {
     value: 'fridge' as const,
     label: 'Frigorifero',
-    temperatureRange: { min: 0.1, max: 14.9 }, // >0°C e <15°C
+    temperatureRange: { min: 1, max: 14 }, // 1°C - 14°C
     color: 'text-blue-600',
   },
   freezer: {
     value: 'freezer' as const,
     label: 'Congelatore',
-    temperatureRange: { min: -22, max: -0.1 }, // <0°C e non superiore a -22°C
+    temperatureRange: { min: -20, max: -15 }, // -20°C a -15°C
     color: 'text-cyan-600',
   },
   blast: {
     value: 'blast' as const,
     label: 'Abbattitore',
-    temperatureRange: { min: -90, max: -5.1 }, // <-5°C e non superiore a -90°C
+    temperatureRange: { min: -90, max: -15 }, // -15°C a -90°C
     color: 'text-emerald-600',
   },
 }
