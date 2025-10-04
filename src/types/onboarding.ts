@@ -153,6 +153,40 @@ export type TaskFrequency =
   | 'custom'
   | 'as_needed'
 
+export type MaintenanceFrequency =
+  | 'annuale'
+  | 'mensile'
+  | 'settimanale'
+  | 'giornaliera'
+  | 'custom'
+
+export type CustomFrequencyDays =
+  | 'lunedi'
+  | 'martedi'
+  | 'mercoledi'
+  | 'giovedi'
+  | 'venerdi'
+  | 'sabato'
+  | 'domenica'
+
+export type StandardMaintenanceType =
+  | 'rilevamento_temperatura'
+  | 'sanificazione'
+  | 'sbrinamento'
+  | 'controllo_scadenze'
+
+export interface ConservationMaintenancePlan {
+  id: string
+  conservationPointId: ConservationPoint['id']
+  manutenzione: StandardMaintenanceType
+  frequenza: MaintenanceFrequency
+  assegnatoARuolo: StaffRole | 'specifico'
+  assegnatoACategoria?: string // opzionale
+  assegnatoADipendenteSpecifico?: StaffMember['id'] // quando assegnatoARuolo è 'specifico'
+  giorniCustom?: CustomFrequencyDays[] // quando frequenza è 'custom'
+  note?: string
+}
+
 export type TaskPriority = 'low' | 'medium' | 'high' | 'critical'
 
 export type HaccpTaskCategory =
@@ -181,6 +215,7 @@ export interface GeneralTask {
 }
 
 export interface TasksStepData {
+  conservationMaintenancePlans: ConservationMaintenancePlan[]
   generalTasks: GeneralTask[]
   maintenanceTasks: MaintenanceTask[]
 }

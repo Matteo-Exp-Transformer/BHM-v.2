@@ -109,6 +109,13 @@ const OnboardingWizard = () => {
     setIsValid(valid)
   }, [])
 
+  const updateFormDataTasks = useCallback(
+    (data: OnboardingData['tasks']) => {
+      updateFormData('tasks', data)
+    },
+    [updateFormData]
+  )
+
   const handleNext = async () => {
     if (!isValid) {
       toast.error('Completa tutti i campi obbligatori prima di continuare')
@@ -224,6 +231,24 @@ const OnboardingWizard = () => {
       if (error) throw error
     }
 
+    // Salva manutenzioni punti conservazione
+    if (formData.tasks?.conservationMaintenancePlans?.length) {
+      const maintenancePlans = formData.tasks.conservationMaintenancePlans.map(
+        plan => ({
+          ...plan,
+          company_id: companyId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+      )
+
+      const { error } = await supabase
+        .from('conservation_maintenance_plans')
+        .insert(maintenancePlans)
+
+      if (error) throw error
+    }
+
     // Salva task
     if (formData.tasks) {
       const maintenanceTasks = formData.tasks.maintenanceTasks.map(task => ({
@@ -312,7 +337,8 @@ const OnboardingWizard = () => {
             data={formData.tasks}
             departments={formData.departments || []}
             conservationPoints={formData.conservation?.points || []}
-            onUpdate={data => updateFormData('tasks', data)}
+            staff={formData.staff || []}
+            onUpdate={updateFormDataTasks}
             onValidChange={handleValidChange}
           />
         )
