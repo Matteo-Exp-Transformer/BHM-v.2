@@ -3,6 +3,10 @@
  * Unified interface for multi-tenant HACCP Business Manager
  */
 
+import { multiTenantManager } from './MultiTenantManager'
+import { permissionManager } from './PermissionManager'
+import { crossCompanyReporting } from './CrossCompanyReporting'
+
 export {
   multiTenantManager,
   type CompanyTenant,
@@ -189,8 +193,7 @@ class MultiTenantServices {
 // Export singleton instance
 export const multiTenantServices = new MultiTenantServices()
 
-// Export individual services for direct access
-export { multiTenantManager, permissionManager, crossCompanyReporting }
+// Individual services already exported above
 
 // Auto-initialize in development mode
 if (import.meta.env?.DEV) {
