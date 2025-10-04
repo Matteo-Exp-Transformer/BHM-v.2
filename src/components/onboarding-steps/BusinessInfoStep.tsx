@@ -28,7 +28,7 @@ const BusinessInfoStep = ({
   onUpdate,
   onValidChange,
 }: BusinessInfoStepProps) => {
-  const formData: BusinessInfoData = {
+  const [formData, setFormData] = useState<BusinessInfoData>({
     name: '',
     address: '',
     phone: '',
@@ -38,15 +38,25 @@ const BusinessInfoStep = ({
     established_date: '',
     license_number: '',
     ...data,
-  }
+  })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  // Sincronizza con i dati esterni quando cambiano
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      ...data,
+    }))
+  }, [data])
+
   const updateField = (field: keyof BusinessInfoData, value: string) => {
-    onUpdate({
+    const newFormData = {
       ...formData,
       [field]: value,
-    })
+    }
+    setFormData(newFormData)
+    onUpdate(newFormData)
   }
 
   useEffect(() => {
@@ -103,7 +113,7 @@ const BusinessInfoStep = ({
   }
 
   const prefillSampleData = () => {
-    onUpdate({
+    const sampleData = {
       name: 'Al Ritrovo SRL',
       address: 'Via Roma 123, 40121 Bologna BO',
       phone: '+39 051 1234567',
@@ -112,7 +122,9 @@ const BusinessInfoStep = ({
       business_type: 'ristorante',
       established_date: '2020-01-15',
       license_number: 'RIS-2020-001',
-    })
+    }
+    setFormData(sampleData)
+    onUpdate(sampleData)
   }
 
   return (

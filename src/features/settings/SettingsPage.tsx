@@ -11,8 +11,8 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div>
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded mb-6"></div>
             <div className="space-y-4">
@@ -29,8 +29,8 @@ export default function SettingsPage() {
   // Only admin can access settings
   if (!hasRole(['admin'])) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div>
           <div className="text-center py-12">
             <Shield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -56,8 +56,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="space-y-6">
         {/* Header */}
         <div className="space-y-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

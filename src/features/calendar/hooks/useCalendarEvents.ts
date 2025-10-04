@@ -189,7 +189,7 @@ export function useCalendarEvents() {
           .select(
             `
             *,
-            conservation_point:conservation_points(id, name, department:departments(id, name))
+            conservation_points(id, name, departments(id, name))
           `
           )
           .eq('company_id', user.company_id)
@@ -221,10 +221,10 @@ export function useCalendarEvents() {
           updated_at: string
           created_by?: string
           company_id: string
-          conservation_point?: {
+          conservation_points?: {
             id: string
             name?: string
-            department?: { id: string; name?: string } | null
+            departments?: { id: string; name?: string } | null
           } | null
         }
 
@@ -252,7 +252,7 @@ export function useCalendarEvents() {
                     : 'pending',
               priority: task.priority || 'medium',
               assigned_to: task.assigned_to ? [task.assigned_to] : [],
-              department_id: task.conservation_point?.department?.id,
+              department_id: task.conservation_points?.departments?.id,
               conservation_point_id: task.conservation_point_id,
               recurring: task.frequency !== 'once',
               recurrence_pattern:
@@ -285,7 +285,7 @@ export function useCalendarEvents() {
                 metadata: {
                   id: task.id,
                   notes: task.instructions,
-                  conservationPoint: task.conservation_point?.name,
+                  conservationPoint: task.conservation_points?.name,
                   estimatedDuration: task.estimated_duration,
                 },
               },

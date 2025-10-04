@@ -419,7 +419,7 @@ export function AddPointModal({
   }
 
   const getTypeInfo = () => {
-    const range = TEMPERATURE_RANGES[predictedType]
+    const range = TEMPERATURE_RANGES[predictedType] || TEMPERATURE_RANGES.fridge
     const typeNames = {
       ambient: 'Ambiente',
       fridge: 'Frigorifero',
@@ -428,7 +428,7 @@ export function AddPointModal({
     }
 
     return {
-      name: typeNames[predictedType],
+      name: typeNames[predictedType] || 'Frigorifero',
       range: `${range.min}°C - ${range.max}°C`,
       optimal: `${range.optimal}°C`,
       icon:

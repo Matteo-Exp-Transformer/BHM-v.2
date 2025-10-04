@@ -8,90 +8,164 @@ export const getPrefillData = (): OnboardingData => {
   const generateId = () =>
     `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
+  // Genera i reparti prima per poterli referenziare
+  const departments = [
+    {
+      id: generateId(),
+      name: 'Cucina',
+      description: 'Area di preparazione e cottura cibi',
+      is_active: true,
+    },
+    {
+      id: generateId(),
+      name: 'Bancone',
+      description: 'Area di servizio clienti',
+      is_active: true,
+    },
+    {
+      id: generateId(),
+      name: 'Sala',
+      description: 'Area di servizio ai tavoli',
+      is_active: true,
+    },
+    {
+      id: generateId(),
+      name: 'Magazzino',
+      description: 'Area di stoccaggio merci',
+      is_active: true,
+    },
+    {
+      id: generateId(),
+      name: 'Magazzino B',
+      description: 'Area di stoccaggio secondaria',
+      is_active: true,
+    },
+    {
+      id: generateId(),
+      name: 'Sala B',
+      description: 'Area di servizio secondaria',
+      is_active: true,
+    },
+    {
+      id: generateId(),
+      name: 'Deoor / Esterno',
+      description: 'Area deoor e servizi esterni',
+      is_active: true,
+    },
+    {
+      id: generateId(),
+      name: 'Plonge / Lavaggio Piatti',
+      description: 'Area lavaggio stoviglie e piatti',
+      is_active: true,
+    },
+  ]
+
+  // Funzione helper per trovare reparti per nome
+  const getDepartmentIds = (names: string[]) => {
+    return departments
+      .filter(dept =>
+        names.some(name => dept.name.toLowerCase().includes(name.toLowerCase()))
+      )
+      .map(dept => dept.id)
+  }
+
+  // Funzione helper per tutti i reparti attivi
+  const getAllDepartmentIds = () => {
+    return departments.filter(dept => dept.is_active).map(dept => dept.id)
+  }
+
+  const staff = [
+    {
+      id: generateId(),
+      name: 'Matteo',
+      surname: 'Cavallaro',
+      fullName: 'Matteo Cavallaro',
+      role: 'responsabile' as const,
+      categories: ['Banconisti'],
+      email: 'Neo@gmail.com',
+      phone: '3334578536',
+      department_assignments: getAllDepartmentIds(), // Tutti i reparti
+      haccpExpiry: '2025-10-01',
+      notes: 'Responsabile con accesso a tutti i reparti',
+    },
+    {
+      id: generateId(),
+      name: 'Fabrizio',
+      surname: 'Dettori',
+      fullName: 'Fabrizio Dettori',
+      role: 'admin' as const,
+      categories: ['Amministratore'],
+      email: 'Fabri@gmail.com',
+      phone: '3334578535',
+      department_assignments: getDepartmentIds([
+        'Sala',
+        'Sala B',
+        'Deoor',
+        'Plonge',
+      ]), // Sala + Sala B + Deoor + Plonge
+      haccpExpiry: '2026-10-01',
+      notes: 'Amministratore con accesso a Sala, Sala B, Deoor e Plonge',
+    },
+    {
+      id: generateId(),
+      name: 'Paolo',
+      surname: 'Dettori',
+      fullName: 'Paolo Dettori',
+      role: 'admin' as const,
+      categories: ['Cuochi', 'Amministratore'],
+      email: 'Pablo@gmail.com',
+      phone: '3334578534',
+      department_assignments: getAllDepartmentIds(), // Tutti i reparti
+      haccpExpiry: '2025-10-01',
+      notes: 'Amministratore con competenze di cucina',
+    },
+    {
+      id: generateId(),
+      name: 'Eddy',
+      surname: 'TheQueen',
+      fullName: 'Eddy TheQueen',
+      role: 'dipendente' as const,
+      categories: ['Banconisti'],
+      email: 'Eddy@gmail.com',
+      phone: '3334578533',
+      department_assignments: getDepartmentIds(['Bancone']), // Bancone
+      haccpExpiry: '2026-10-01',
+      notes: 'Dipendente specializzato al bancone',
+    },
+    {
+      id: generateId(),
+      name: 'Elena',
+      surname: 'Compagna',
+      fullName: 'Elena Compagna',
+      role: 'dipendente' as const,
+      categories: ['Banconisti', 'Camerieri'],
+      email: 'Ele@gmail.com',
+      phone: '3334578532',
+      department_assignments: getDepartmentIds([
+        'Bancone',
+        'Sala',
+        'Sala B',
+        'Deoor',
+        'Plonge',
+      ]), // Bancone + Sala + Sala B + Deoor + Plonge
+      haccpExpiry: '2026-10-01',
+      notes: 'Dipendente multiruolo con accesso a più reparti',
+    },
+  ]
+
   return {
     business: {
       name: 'Al Ritrovo SRL',
       address: 'Via centotrecento 1/1b Bologna 40128',
       phone: '0511234567',
       email: '000@gmail.com',
-      vat_number: '001255668899101',
+      vat_number: 'IT01234567890',
       business_type: 'ristorante',
       established_date: '2020-01-15',
       license_number: 'RIS-2020-001',
     },
-    departments: [
-      {
-        id: generateId(),
-        name: 'Cucina',
-        description: 'Area di preparazione e cottura cibi',
-        is_active: true,
-      },
-      {
-        id: generateId(),
-        name: 'Bancone',
-        description: 'Area di servizio clienti',
-        is_active: true,
-      },
-      {
-        id: generateId(),
-        name: 'Sala',
-        description: 'Area di servizio ai tavoli',
-        is_active: true,
-      },
-      {
-        id: generateId(),
-        name: 'Magazzino',
-        description: 'Area di stoccaggio merci',
-        is_active: true,
-      },
-      {
-        id: generateId(),
-        name: 'Magazzino B',
-        description: 'Area di stoccaggio secondaria',
-        is_active: true,
-      },
-      {
-        id: generateId(),
-        name: 'Sala B',
-        description: 'Area di servizio secondaria',
-        is_active: true,
-      },
-    ],
-    staff: [
-      {
-        id: generateId(),
-        name: 'Mario',
-        surname: 'Rossi',
-        fullName: 'Mario Rossi',
-        role: 'responsabile',
-        categories: ['Cuochi'],
-        email: 'mario.rossi@alritrovo.it',
-        phone: '+39 340 1234567',
-        department_assignments: [],
-        haccpExpiry: '2025-12-31',
-        notes: 'Responsabile HACCP cucina',
-      },
-      {
-        id: generateId(),
-        name: 'Giulia',
-        surname: 'Bianchi',
-        fullName: 'Giulia Bianchi',
-        role: 'dipendente',
-        categories: ['Camerieri'],
-        email: 'giulia.bianchi@alritrovo.it',
-        department_assignments: [],
-        haccpExpiry: '2025-06-30',
-      },
-      {
-        id: generateId(),
-        name: 'Luca',
-        surname: 'Verdi',
-        fullName: 'Luca Verdi',
-        role: 'collaboratore',
-        categories: ['Banconisti'],
-        department_assignments: [],
-      },
-    ],
+    departments: departments,
+    staff: staff,
     conservation: {
       points: [
         {
