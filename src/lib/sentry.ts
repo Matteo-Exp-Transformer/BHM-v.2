@@ -37,7 +37,7 @@ export const initSentry = () => {
     replaysOnErrorSampleRate: 1.0, // 100% of error sessions
     // Enable logs
     enableLogs: true,
-    beforeSend(event, hint) {
+    beforeSend(event, _hint) {
       if (import.meta.env.MODE === 'development') {
         console.log('🔍 Sentry event:', event.exception || event.message)
       }

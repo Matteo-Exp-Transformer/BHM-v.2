@@ -14,8 +14,6 @@ import {
 } from '@/services/realtime/RealtimeConnectionManager'
 import type {
   RealtimePostgresInsertPayload,
-  RealtimePostgresUpdatePayload,
-  RealtimeChannel,
   RealtimePostgresChangesPayload,
 } from '@supabase/supabase-js'
 
@@ -57,11 +55,7 @@ export function useRealtime(
     activityTracking = true,
   } = options
 
-  const {
-    user,
-    userProfile,
-    companyId,
-  } = useAuth()
+  const { user, userProfile, companyId } = useAuth()
 
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
     connected: false,
@@ -86,10 +80,7 @@ export function useRealtime(
   }, [])
 
   const updateActivity = useCallback(
-    async (
-      status: PresenceState['activity_status'],
-      currentPage?: string
-    ) => {
+    async (status: PresenceState['activity_status'], currentPage?: string) => {
       lastActivityRef.current = new Date()
       await realtimeManager.updateActivity(status, currentPage)
     },
@@ -145,16 +136,29 @@ export function useRealtime(
       clearTimers()
       void updateActivity('active', window.location.pathname)
 
-      idleTimeoutRef.current = setTimeout(() => {
-        void updateActivity('idle', window.location.pathname)
-      }, 5 * 60 * 1000)
+      idleTimeoutRef.current = setTimeout(
+        () => {
+          void updateActivity('idle', window.location.pathname)
+        },
+        5 * 60 * 1000
+      )
 
-      activityTimeoutRef.current = setTimeout(() => {
-        void updateActivity('away', window.location.pathname)
-      }, 15 * 60 * 1000)
+      activityTimeoutRef.current = setTimeout(
+        () => {
+          void updateActivity('away', window.location.pathname)
+        },
+        15 * 60 * 1000
+      )
     }
 
-    const events: Array<keyof DocumentEventMap> = [
+    const events: (
+      | 'mousedown'
+      | 'mousemove'
+      | 'keypress'
+      | 'scroll'
+      | 'touchstart'
+      | 'click'
+    )[] = [
       'mousedown',
       'mousemove',
       'keypress',
@@ -315,9 +319,8 @@ export function useTemperatureRealtime(companyId?: string) {
   const checkTemperatureViolation = (
     reading: Record<string, unknown>
   ): TemperatureAlert['severity'] | null => {
-    const temperature = typeof reading.temperature === 'number'
-      ? reading.temperature
-      : undefined
+    const temperature =
+      typeof reading.temperature === 'number' ? reading.temperature : undefined
 
     if (temperature === undefined) {
       return null
@@ -346,9 +349,9 @@ export interface TaskActivityEntry {
 export function useTaskCollaboration(taskId?: string) {
   const { subscribe, unsubscribe, onlineUsers, isConnected } = useRealtime()
   const [taskActivity, setTaskActivity] = useState<TaskActivityEntry[]>([])
-  const [activeCollaborators, setActiveCollaborators] = useState<PresenceState[]>(
-    []
-  )
+  const [activeCollaborators, setActiveCollaborators] = useState<
+    PresenceState[]
+  >([])
 
   useEffect(() => {
     if (!isConnected || !taskId) return undefined
@@ -357,11 +360,15 @@ export function useTaskCollaboration(taskId?: string) {
       'maintenance_tasks',
       '*',
       payload => {
-        const realtimePayload = payload as RealtimePostgresChangesPayload<Record<string, unknown>>
+        const realtimePayload = payload as RealtimePostgresChangesPayload<
+          Record<string, unknown>
+        >
 
         const eventType = realtimePayload.eventType ?? 'UNKNOWN'
-        const newData = 'new' in realtimePayload ? realtimePayload.new : undefined
-        const oldData = 'old' in realtimePayload ? realtimePayload.old : undefined
+        const newData =
+          'new' in realtimePayload ? realtimePayload.new : undefined
+        const oldData =
+          'old' in realtimePayload ? realtimePayload.old : undefined
 
         setTaskActivity(prev => [
           {
