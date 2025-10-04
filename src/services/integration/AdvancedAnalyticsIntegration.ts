@@ -3,9 +3,16 @@
  * Integration service to connect B.10.2 with existing B.8.2, B.9.1, and B.10.1 systems
  */
 
-import { analyticsProcessor } from '../analytics'
-import { reportBuilder, dataAggregator } from '../reporting'
-import { executiveDashboard, benchmarkAnalyzer } from '../businessIntelligence'
+// TODO: These modules don't exist yet - commented out until implemented
+// import { analyticsProcessor } from '../analytics'
+// import { reportBuilder, dataAggregator } from '../reporting'
+// import { executiveDashboard, benchmarkAnalyzer } from '../businessIntelligence'
+
+const analyticsProcessor = { process: () => ({}) }
+const reportBuilder = { build: () => ({}) }
+const dataAggregator = { aggregate: () => ({}) }
+const executiveDashboard = { update: () => ({}) }
+const benchmarkAnalyzer = { analyze: () => ({}) }
 
 // Import existing services (these would be actual imports in real implementation)
 // import { dashboardService } from '../dashboard' // B.8.2
@@ -326,7 +333,7 @@ export class AdvancedAnalyticsIntegration {
       { name: 'benchmark', service: benchmarkAnalyzer },
     ]
 
-    for (const { name, service } of services) {
+    for (const { name } of services) {
       try {
         // Mock health check - in real implementation would call actual health methods
         this.integrationStatus.set(`b102_${name}`, {
@@ -518,7 +525,7 @@ export class AdvancedAnalyticsIntegration {
 
   private async triggerAnalyticsAlerts(
     alertType: string,
-    data: any
+    _data: unknown
   ): Promise<void> {
     // Mock analytics alert triggering
     console.log(`🚨 Analytics alert: ${alertType}`)
@@ -526,7 +533,7 @@ export class AdvancedAnalyticsIntegration {
 
   private async triggerSecurityAlerts(
     alertType: string,
-    data: any
+    _data: unknown
   ): Promise<void> {
     // Mock security alert triggering
     console.log(`🚨 Security alert: ${alertType}`)
@@ -534,7 +541,7 @@ export class AdvancedAnalyticsIntegration {
 
   private async triggerIntegrationAlerts(
     alertType: string,
-    data: any
+    _data: unknown
   ): Promise<void> {
     // Mock integration alert triggering
     console.log(`🚨 Integration alert: ${alertType}`)
