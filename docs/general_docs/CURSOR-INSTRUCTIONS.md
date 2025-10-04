@@ -203,16 +203,19 @@ Project_Knowledge/
 - ✅ UI mobile onboarding migliorata (`StepNavigator` responsive, bottom nav scrollabile, dev buttons stack)
 - ✅ Conservation & Settings cards ora `grid-cols-1 sm:grid-cols-2 md:grid-cols-4`
 - ✅ Aggiunto `data-testid="onboarding-wizard"` per sbloccare test E2E
+- ✅ Verificato ultimo update multi-agente (`CURSOR-MULTIAGENT-2025-10-03.md`) e consolidato istruzioni correnti (`CURSOR-INSTRUCTIONS-CURRENT.md`)
 
 **Commit rilevanti**
 
 - `ddec190` – `fix(responsive): improve mobile layout for onboarding navigation and settings`
 - `9ec333f` – `test(e2e): add onboarding wizard test id`
+- `3d97ae5` – `fix: cleanup TypeScript errors in automation services` (Claude)
 
 ### Prossimi Step Suggeriti
 
-- B5: Hardening `CollapsibleCard` component con gestione stati (empty/loading/error)
-- B6–B9: Risolvere warning `exhaustive-deps`, `react-refresh`, tipi `any`
+- B5: Hardening `CollapsibleCard` component con gestione stati (empty/loading/error) e consolidamento padding responsive
+- B8: Ridurre warning `exhaustive-deps` nelle pagine Inventory/Settings dopo refactor
+- B9: Eliminare warning `react-refresh` nei componenti condivisi
 - Coordinarsi con Claude per abbattere i 160+ errori/326 warning riportati da `npm run lint`
 
 > Stato branch: `fix/cursor-functional` pulito dopo gli ultimi commit; stash `save-pre-responsive-tweaks` conserva artefatti E2E locali.

@@ -74,10 +74,6 @@ class ExcelExporter {
     }
 
     // Generate file
-    const fileName =
-      config.fileName ||
-      `HACCP_Export_${new Date().toISOString().split('T')[0]}`
-
     if (config.format === 'csv') {
       // For CSV, export only the first sheet
       const sheetName = workbook.SheetNames[0]
@@ -118,7 +114,7 @@ class ExcelExporter {
         .order('recorded_at', { ascending: false })
 
       data.temperatureReadings =
-        temperatureReadings?.map(reading => {
+        temperatureReadings?.map((reading: any) => {
           const point = reading.conservation_points
           const compliant = this.isTemperatureCompliant(
             reading.temperature,
@@ -166,7 +162,7 @@ class ExcelExporter {
         .order('created_at', { ascending: false })
 
       data.tasks =
-        tasks?.map(task => ({
+        tasks?.map((task: any) => ({
           ID: task.id,
           Titolo: task.title,
           Descrizione: task.description,
@@ -211,7 +207,7 @@ class ExcelExporter {
         .order('name', { ascending: true })
 
       data.products =
-        products?.map(product => ({
+        products?.map((product: any) => ({
           ID: product.id,
           Nome: product.name,
           Codice: product.code,
@@ -249,7 +245,7 @@ class ExcelExporter {
         .order('name', { ascending: true })
 
       data.staff =
-        staff?.map(member => ({
+        staff?.map((member: any) => ({
           ID: member.id,
           Nome: member.name,
           Email: member.email,
@@ -284,7 +280,7 @@ class ExcelExporter {
         .order('name', { ascending: true })
 
       data.departments =
-        departments?.map(dept => ({
+        departments?.map((dept: any) => ({
           ID: dept.id,
           Nome: dept.name,
           Descrizione: dept.description || '',

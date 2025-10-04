@@ -205,7 +205,7 @@ class HACCPReportGenerator {
         responsiblePerson: company?.responsible_person || 'N/A',
       },
       temperatureReadings:
-        temperatureReadings?.map(reading => ({
+        temperatureReadings?.map((reading: any) => ({
           date: new Date(reading.recorded_at).toLocaleDateString('it-IT'),
           location: reading.conservation_points?.name || 'N/A',
           temperature: reading.temperature,
@@ -216,7 +216,7 @@ class HACCPReportGenerator {
           ),
         })) || [],
       maintenanceTasks:
-        maintenanceTasks?.map(task => ({
+        maintenanceTasks?.map((task: any) => ({
           date: new Date(task.created_at).toLocaleDateString('it-IT'),
           task: task.title,
           equipment: task.conservation_points?.name || 'N/A',
@@ -224,7 +224,7 @@ class HACCPReportGenerator {
           status: task.status,
         })) || [],
       criticalControlPoints:
-        conservationPoints?.map(point => ({
+        conservationPoints?.map((point: any) => ({
           ccp: point.name,
           criticalLimits: `${point.temperature_min}°C - ${point.temperature_max}°C`,
           monitoringProcedure: 'Controllo temperatura ogni 4 ore',
