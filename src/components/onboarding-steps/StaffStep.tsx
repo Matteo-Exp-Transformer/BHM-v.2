@@ -6,7 +6,13 @@ import { useScrollToForm } from '@/hooks/useScrollToForm'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
-import { Select, SelectOption } from '@/components/ui/Select'
+import {
+  Select,
+  SelectOption,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+} from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
 import { Badge } from '@/components/ui/Badge'
 
@@ -118,12 +124,16 @@ const StaffStep = ({
   }
 
   const prefillSampleData = () => {
-    const cucina = departments.find(
-      dept => dept.name.toLowerCase() === 'cucina'
-    )
     const sala = departments.find(dept => dept.name.toLowerCase() === 'sala')
+    const salaB = departments.find(dept => dept.name.toLowerCase() === 'sala b')
     const bancone = departments.find(
       dept => dept.name.toLowerCase() === 'bancone'
+    )
+    const deoor = departments.find(
+      dept => dept.name.toLowerCase() === 'deoor / esterno'
+    )
+    const plonge = departments.find(
+      dept => dept.name.toLowerCase() === 'plonge / lavaggio piatti'
     )
 
     const generateId = () =>
@@ -132,36 +142,83 @@ const StaffStep = ({
     const samples: StaffMember[] = [
       {
         id: generateId(),
-        name: 'Mario',
-        surname: 'Rossi',
-        fullName: 'Mario Rossi',
-        email: 'mario.rossi@alritrovo.it',
-        phone: '+39 340 1234567',
-        role: 'responsabile',
-        categories: ['Cuochi'],
-        department_assignments: cucina ? [cucina.id] : [],
-        haccpExpiry: '2025-12-31',
-        notes: 'Responsabile HACCP cucina',
-      },
-      {
-        id: generateId(),
-        name: 'Giulia',
-        surname: 'Bianchi',
-        fullName: 'Giulia Bianchi',
-        email: 'giulia.bianchi@alritrovo.it',
-        role: 'dipendente',
-        categories: ['Camerieri'],
-        department_assignments: sala ? [sala.id] : [],
-        haccpExpiry: '2025-06-30',
-      },
-      {
-        id: generateId(),
-        name: 'Luca',
-        surname: 'Verdi',
-        fullName: 'Luca Verdi',
-        role: 'collaboratore',
+        name: 'Matteo',
+        surname: 'Cavallaro',
+        fullName: 'Matteo Cavallaro',
+        email: 'Neo@gmail.com',
+        phone: '3334578536',
+        role: 'responsabile' as const,
         categories: ['Banconisti'],
-        department_assignments: bancone ? [bancone.id] : [],
+        department_assignments: departments
+          .filter(d => d.is_active)
+          .map(d => d.id), // Tutti i reparti
+        haccpExpiry: '2025-10-01',
+        notes: 'Responsabile con accesso a tutti i reparti',
+      },
+      {
+        id: generateId(),
+        name: 'Fabrizio',
+        surname: 'Dettori',
+        fullName: 'Fabrizio Dettori',
+        email: 'Fabri@gmail.com',
+        phone: '3334578535',
+        role: 'admin' as const,
+        categories: ['Amministratore'],
+        department_assignments: [
+          ...(sala ? [sala.id] : []),
+          ...(salaB ? [salaB.id] : []),
+          ...(deoor ? [deoor.id] : []),
+          ...(plonge ? [plonge.id] : []),
+        ], // Sala + Sala B + Deoor + Plonge
+        haccpExpiry: '2026-10-01',
+        notes: 'Amministratore con accesso a Sala, Sala B, Deoor e Plonge',
+      },
+      {
+        id: generateId(),
+        name: 'Paolo',
+        surname: 'Dettori',
+        fullName: 'Paolo Dettori',
+        email: 'Pablo@gmail.com',
+        phone: '3334578534',
+        role: 'admin' as const,
+        categories: ['Cuochi', 'Amministratore'],
+        department_assignments: departments
+          .filter(d => d.is_active)
+          .map(d => d.id), // Tutti i reparti
+        haccpExpiry: '2025-10-01',
+        notes: 'Amministratore con competenze di cucina',
+      },
+      {
+        id: generateId(),
+        name: 'Eddy',
+        surname: 'TheQueen',
+        fullName: 'Eddy TheQueen',
+        email: 'Eddy@gmail.com',
+        phone: '3334578533',
+        role: 'dipendente' as const,
+        categories: ['Banconisti'],
+        department_assignments: bancone ? [bancone.id] : [], // Bancone
+        haccpExpiry: '2026-10-01',
+        notes: 'Dipendente specializzato al bancone',
+      },
+      {
+        id: generateId(),
+        name: 'Elena',
+        surname: 'Compagna',
+        fullName: 'Elena Compagna',
+        email: 'Ele@gmail.com',
+        phone: '3334578532',
+        role: 'dipendente' as const,
+        categories: ['Banconisti', 'Camerieri'],
+        department_assignments: [
+          ...(bancone ? [bancone.id] : []),
+          ...(sala ? [sala.id] : []),
+          ...(salaB ? [salaB.id] : []),
+          ...(deoor ? [deoor.id] : []),
+          ...(plonge ? [plonge.id] : []),
+        ], // Bancone + Sala + Sala B + Deoor + Plonge
+        haccpExpiry: '2026-10-01',
+        notes: 'Dipendente multiruolo con accesso a più reparti',
       },
     ]
 
@@ -488,15 +545,20 @@ const StaffStep = ({
                   setFormData(prev => ({ ...prev, role: value as StaffRole }))
                 }
               >
-                {STAFF_ROLES.map(role => (
-                  <SelectOption key={role.value} value={role.value}>
-                    {role.label}
-                  </SelectOption>
-                ))}
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona ruolo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STAFF_ROLES.map(role => (
+                    <SelectOption key={role.value} value={role.value}>
+                      {role.label}
+                    </SelectOption>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Categorie operative *</Label>
+              <Label>Categorie *</Label>
               <div className="space-y-2">
                 {formData.categories.map((category, index) => (
                   <div
@@ -514,11 +576,16 @@ const StaffStep = ({
                         }))
                       }
                     >
-                      {STAFF_CATEGORIES.map(option => (
-                        <SelectOption key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectOption>
-                      ))}
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleziona categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STAFF_CATEGORIES.map(option => (
+                          <SelectOption key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectOption>
+                        ))}
+                      </SelectContent>
                     </Select>
                     {formData.categories.length > 1 && (
                       <Button
@@ -562,33 +629,58 @@ const StaffStep = ({
 
           <div>
             <Label>Assegnazione reparti</Label>
-            <div className="mt-2 grid gap-2 md:grid-cols-2">
-              {departmentOptions.map(department => (
-                <label
-                  key={department.id}
-                  className="flex items-center gap-2 rounded border border-gray-200 bg-white px-3 py-2 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    checked={formData.departmentAssignments.includes(
-                      department.id
-                    )}
-                    onChange={event => {
-                      const isChecked = event.target.checked
-                      setFormData(prev => ({
-                        ...prev,
-                        departmentAssignments: isChecked
-                          ? [...prev.departmentAssignments, department.id]
-                          : prev.departmentAssignments.filter(
-                              id => id !== department.id
-                            ),
-                      }))
-                    }}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span>{department.name}</span>
-                </label>
-              ))}
+            <div className="mt-2 space-y-2">
+              {/* Opzione "Tutti" */}
+              <label className="flex items-center gap-2 rounded border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium">
+                <input
+                  type="checkbox"
+                  checked={
+                    formData.departmentAssignments.length ===
+                      departmentOptions.length && departmentOptions.length > 0
+                  }
+                  onChange={event => {
+                    const isChecked = event.target.checked
+                    setFormData(prev => ({
+                      ...prev,
+                      departmentAssignments: isChecked
+                        ? departmentOptions.map(dept => dept.id)
+                        : [],
+                    }))
+                  }}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-blue-800">🎯 Tutti i reparti</span>
+              </label>
+
+              {/* Reparti individuali */}
+              <div className="grid gap-2 md:grid-cols-2">
+                {departmentOptions.map(department => (
+                  <label
+                    key={department.id}
+                    className="flex items-center gap-2 rounded border border-gray-200 bg-white px-3 py-2 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.departmentAssignments.includes(
+                        department.id
+                      )}
+                      onChange={event => {
+                        const isChecked = event.target.checked
+                        setFormData(prev => ({
+                          ...prev,
+                          departmentAssignments: isChecked
+                            ? [...prev.departmentAssignments, department.id]
+                            : prev.departmentAssignments.filter(
+                                id => id !== department.id
+                              ),
+                        }))
+                      }}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>{department.name}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
 

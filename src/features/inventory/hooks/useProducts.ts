@@ -142,9 +142,9 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
         .select(
           `
           *,
-          category:product_categories(id, name, color),
-          department:departments(id, name),
-          conservation_point:conservation_points(id, name)
+          product_categories(id, name, color),
+          departments(id, name),
+          conservation_points(id, name)
         `
         )
         .eq('company_id', companyId)

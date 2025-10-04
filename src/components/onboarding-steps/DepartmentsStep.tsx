@@ -157,14 +157,20 @@ const DepartmentsStep = ({
       },
       {
         id: generateId(),
-        name: 'Dispensa',
-        description: 'Conservazione prodotti secchi',
+        name: 'Lavaggio',
+        description: 'Area lavaggio stoviglie',
         is_active: true,
       },
       {
         id: generateId(),
-        name: 'Lavaggio',
-        description: 'Area lavaggio stoviglie',
+        name: 'Deoor / Esterno',
+        description: 'Area deoor e servizi esterni',
+        is_active: true,
+      },
+      {
+        id: generateId(),
+        name: 'Plonge / Lavaggio Piatti',
+        description: 'Area lavaggio stoviglie e piatti',
         is_active: true,
       },
     ]

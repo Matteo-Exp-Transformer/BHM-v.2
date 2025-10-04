@@ -26,8 +26,8 @@ export function ConservationPointCard({
   onDelete,
 }: ConservationPointCardProps) {
   const [showDetails, setShowDetails] = useState(false)
-  const colors = CONSERVATION_COLORS[point.status]
-  const tempRange = TEMPERATURE_RANGES[point.type]
+  const colors = CONSERVATION_COLORS[point.status] || CONSERVATION_COLORS.normal
+  const tempRange = TEMPERATURE_RANGES[point.type] || TEMPERATURE_RANGES.ambient
 
   const getTypeIcon = () => {
     switch (point.type) {
