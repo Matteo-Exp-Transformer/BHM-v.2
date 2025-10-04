@@ -262,7 +262,6 @@ class HACCPAlertSystem {
       tag: alert.id,
       requireInteraction:
         alert.severity === 'critical' || alert.severity === 'emergency',
-      timestamp: alert.timestamp.getTime(),
     })
 
     notification.onclick = () => {
@@ -282,8 +281,8 @@ class HACCPAlertSystem {
    * Show toast notification
    */
   private showToastNotification(alert: HACCPAlert): void {
-    const toastOptions = {
-      position: 'top-right' as const,
+    const toastOptions: Parameters<typeof toast.error>[1] = {
+      position: 'top-right',
       autoClose: alert.auto_dismiss ? alert.dismiss_timeout || 5000 : false,
       hideProgressBar: false,
       closeOnClick: true,
@@ -518,7 +517,7 @@ class HACCPAlertSystem {
     }
   }
 
-  private getAffectedUsers(alert: HACCPAlert): string[] {
+  private getAffectedUsers(_alert: HACCPAlert): string[] {
     // This would typically query user preferences
     return []
   }
@@ -551,9 +550,9 @@ class HACCPAlertSystem {
     console.log(`🔊 Playing ${type} alert sound`)
   }
 
-  private handleAlertClick(_alert: HACCPAlert): void {
+  private handleAlertClick(alert: HACCPAlert): void {
     // Navigate to relevant page based on alert type
-    console.log(`🖱️ Alert clicked: ${_alert.id}`)
+    console.log(`🖱️ Alert clicked: ${alert.id}`)
   }
 
   private navigateToTask(taskId: string): void {

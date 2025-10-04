@@ -302,9 +302,10 @@ export const ExpiredProductsManager: React.FC<ExpiredProductsManagerProps> = ({
       icon={AlertTriangle}
       counter={expiredProducts.length}
       defaultExpanded={true}
-      loading={isLoading}
-      showEmpty={!isLoading && expiredProducts.length === 0}
+      isLoading={isLoading}
+      isEmpty={!isLoading && expiredProducts.length === 0}
       emptyMessage="Ottimo lavoro! Non ci sono prodotti scaduti da gestire."
+      contentClassName="px-4 py-6 sm:px-6"
     >
       {!isLoading && expiredProducts.length > 0 && (
         <div className="space-y-4">

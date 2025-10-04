@@ -98,11 +98,14 @@ export const ShoppingListManager = () => {
         icon={ShoppingCart}
         counter={stats.total}
         actions={cardActions}
-        loading={isLoading}
+        isLoading={isLoading}
         error={null}
-        showEmpty={!isLoading && shoppingLists.length === 0}
+        isEmpty={!isLoading && shoppingLists.length === 0}
         emptyMessage="Nessuna lista della spesa creata. Crea la tua prima lista per iniziare."
+        contentClassName="px-4 py-6 sm:px-6"
         className="mb-6"
+        emptyActionLabel="Crea una nuova lista"
+        onEmptyAction={handleCreateNew}
       >
         {!isLoading && shoppingLists.length > 0 && (
           <div className="p-4">
