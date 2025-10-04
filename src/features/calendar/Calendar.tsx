@@ -90,7 +90,7 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   // Handle event click
   const handleEventClick = useCallback(
-    (clickInfo: any) => {
+    (clickInfo: { event: { extendedProps?: { originalEvent?: any } } }) => {
       const originalEvent = clickInfo.event.extendedProps?.originalEvent
       if (originalEvent) {
         setSelectedEvent(originalEvent)
@@ -103,7 +103,7 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   // Handle date selection for new events
   const handleDateSelect = useCallback(
-    (selectInfo: any) => {
+    (selectInfo: { start: Date; end: Date }) => {
       const start = new Date(selectInfo.start)
       const end = new Date(selectInfo.end)
       onDateSelect?.(start, end)
@@ -113,7 +113,7 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   // Handle event drag and drop
   const handleEventDrop = useCallback(
-    (dropInfo: any) => {
+    (dropInfo: { event: { extendedProps?: { originalEvent?: any }; start: Date; end?: Date } }) => {
       const originalEvent = dropInfo.event.extendedProps?.originalEvent
       if (originalEvent && onEventUpdate) {
         const updatedEvent: CalendarEvent = {
@@ -130,7 +130,7 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   // Handle event resize
   const handleEventResize = useCallback(
-    (resizeInfo: any) => {
+    (resizeInfo: { event: { extendedProps?: { originalEvent?: any }; start: Date; end?: Date } }) => {
       const originalEvent = resizeInfo.event.extendedProps?.originalEvent
       if (originalEvent && onEventUpdate) {
         const updatedEvent: CalendarEvent = {
