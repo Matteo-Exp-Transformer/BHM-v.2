@@ -3,7 +3,19 @@
  * Handles offline caching, background sync, and push notifications
  */
 
-declare const self: ServiceWorkerGlobalScope
+declare const self: ServiceWorkerGlobalScope & {
+  skipWaiting(): void;
+  clients: {
+    claim(): Promise<void>;
+    openWindow(url: string): Promise<WindowClient>;
+  };
+  registration: ServiceWorkerRegistration & {
+    sync: {
+      register(tag: string): Promise<void>;
+    };
+    showNotification(title: string, options?: NotificationOptions): Promise<void>;
+  };
+}
 
 const CACHE_VERSION = 'v1.2.0'
 const STATIC_CACHE_NAME = `haccp-static-${CACHE_VERSION}`
@@ -42,7 +54,7 @@ interface SyncData {
 }
 
 // Install event - cache static assets
-self.addEventListener('install', (event: ExtendableEvent) => {
+self.addEventListener('install', (event: any) => {
   console.log('[SW] Installing service worker version:', CACHE_VERSION)
 
   event.waitUntil(
@@ -57,7 +69,7 @@ self.addEventListener('install', (event: ExtendableEvent) => {
 })
 
 // Activate event - clean up old caches
-self.addEventListener('activate', (event: ExtendableEvent) => {
+self.addEventListener('activate', (event: any) => {
   console.log('[SW] Activating service worker')
 
   event.waitUntil(
@@ -82,7 +94,7 @@ self.addEventListener('activate', (event: ExtendableEvent) => {
 })
 
 // Fetch event - implement caching strategies
-self.addEventListener('fetch', (event: FetchEvent) => {
+self.addEventListener('fetch', (event: any) => {
   const { request } = event
   const url = new URL(request.url)
 
@@ -257,7 +269,11 @@ async function processBackgroundSync(): Promise<void> {
     const db = await openIndexedDB()
     const transaction = db.transaction(['syncQueue'], 'readonly')
     const store = transaction.objectStore('syncQueue')
-    const syncItems = await store.getAll()
+    const syncItems = await new Promise<any[]>((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
 
     console.log(`[SW] Processing ${syncItems.length} sync items`)
 
@@ -311,7 +327,11 @@ async function incrementRetryCount(id: string): Promise<void> {
   const db = await openIndexedDB()
   const transaction = db.transaction(['syncQueue'], 'readwrite')
   const store = transaction.objectStore('syncQueue')
-  const item = await store.get(id)
+  const item = await new Promise<any>((resolve, reject) => {
+    const request = store.get(id);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
 
   if (item) {
     item.retryCount = (item.retryCount || 0) + 1

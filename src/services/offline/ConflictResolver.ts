@@ -274,7 +274,7 @@ class ConflictResolverService {
   }
 
   private resolveTaskCompletionConflict(
-    conflict: ConflictData
+    _conflict: ConflictData
   ): ResolutionStrategy {
     // Task completions: always prefer local (user performed the work)
     return {
