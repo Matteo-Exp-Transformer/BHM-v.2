@@ -3,6 +3,8 @@
  * Provides unified interface for Cursor's dashboard components
  */
 
+import { multiTenantDashboard } from './MultiTenantDashboard'
+
 export {
   multiTenantDashboard,
   type DashboardMetrics,

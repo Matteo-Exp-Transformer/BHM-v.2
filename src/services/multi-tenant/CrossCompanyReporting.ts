@@ -145,10 +145,7 @@ class CrossCompanyReportingManager {
       )
 
       // Apply data anonymization based on agreements
-      const anonymizedData = await this.anonymizeData(
-        dataSources,
-        validAgreements
-      )
+      // const _anonymizedData = await this.anonymizeData(dataSources, validAgreements) // Unused in current implementation
 
       // Generate report
       const report: CrossCompanyReport = {
@@ -472,8 +469,8 @@ class CrossCompanyReportingManager {
   }
 
   private async anonymizeData(
-    dataSources: DataSource[],
-    agreements: DataSharingAgreement[]
+    _dataSources: DataSource[],
+    _agreements: DataSharingAgreement[]
   ): Promise<any[]> {
     // Apply data anonymization based on sharing agreements
     return []
@@ -481,7 +478,7 @@ class CrossCompanyReportingManager {
 
   private getRequiredFields(
     tableName: string,
-    reportType: ReportType
+    _reportType: ReportType
   ): string[] {
     // Return required fields based on table and report type
     const fieldMap: Record<string, string[]> = {
@@ -537,15 +534,15 @@ class CrossCompanyReportingManager {
   }
 
   private async calculateDataQualityScore(
-    dataSources: DataSource[]
+    _dataSources: DataSource[]
   ): Promise<number> {
     // Calculate data quality score based on completeness, accuracy, timeliness
     return 0.95 // Mock score
   }
 
   private async processReportData(
-    report: CrossCompanyReport,
-    data: any[]
+    _report: CrossCompanyReport,
+    _data: any[]
   ): Promise<ReportSection[]> {
     // Process and aggregate data into report sections
     return []
