@@ -575,6 +575,11 @@ const ConservationStep = ({
 
           <div>
             <Label>Categorie prodotti *</Label>
+            <p className="mb-3 text-sm text-gray-600">
+              Seleziona le categorie di prodotti che verranno conservate in
+              questo punto di conservazione. Solo le categorie compatibili con
+              la temperatura impostata sono disponibili.
+            </p>
             <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
               {compatibleCategories.map(category => {
                 const isSelected = formData.productCategories.includes(
