@@ -241,7 +241,7 @@ class IntegrationServicesManager {
     const score = (completedItems / checklist.length) * 100
 
     const blockers = checklist
-      .filter(item => item.status === 'FAILED' || item.status === 'PENDING')
+      .filter(item => item.status !== 'COMPLETED')
       .map(item => `${item.category}: ${item.item}`)
 
     // Note: pendingItems calculation removed as unused

@@ -11,9 +11,9 @@ export {
 } from './MultiTenantDashboard'
 
 // Real-time dashboard updates service
-export class DashboardRealtimeService {
+class DashboardRealtimeService {
   private subscribers = new Set<(data: any) => void>()
-  private updateInterval: NodeJS.Timeout | null = null
+  private updateInterval: number | null = null
 
   /**
    * Subscribe to real-time dashboard updates
@@ -36,7 +36,7 @@ export class DashboardRealtimeService {
   }
 
   private startRealtimeUpdates(): void {
-    this.updateInterval = setInterval(async () => {
+    this.updateInterval = Number(setInterval(async () => {
       try {
         const { multiTenantDashboard } = await import('./MultiTenantDashboard')
         const updates = await multiTenantDashboard.getRealtimeUpdates()
@@ -51,7 +51,7 @@ export class DashboardRealtimeService {
       } catch (error) {
         console.error('Dashboard realtime update error:', error)
       }
-    }, 5000) // Update every 5 seconds
+    }, 5000)) // Update every 5 seconds
   }
 
   private stopRealtimeUpdates(): void {
@@ -190,8 +190,10 @@ export const dashboardOptimizer = {
 }
 
 // Export everything for Cursor's dashboard implementation
+const dashboardRealtime = new DashboardRealtimeService()
+
 export default {
-  multiTenantDashboard: multiTenantDashboard,
+  multiTenantDashboard,
   dashboardRealtime,
   dashboardWidgets,
   dashboardLayouts,

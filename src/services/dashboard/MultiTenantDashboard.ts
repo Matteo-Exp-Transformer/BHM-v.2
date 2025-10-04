@@ -222,7 +222,7 @@ class MultiTenantDashboardService {
     }
 
     // Check if user has admin features
-    const hasAdminAccess = this.accessibleCompanies.some(company =>
+    const hasAdminAccess = this.accessibleCompanies.some(_company =>
       multiTenantServices.hasFeature('advanced_analytics')
     )
 
@@ -242,7 +242,7 @@ class MultiTenantDashboardService {
   }
 
   private async getUserAccessibleCompanies(
-    userId: string
+    _userId: string
   ): Promise<CompanyTenant[]> {
     // This would query the database for user's company access
     // For now, return mock data
@@ -250,18 +250,51 @@ class MultiTenantDashboardService {
       {
         id: 'company_1',
         name: 'HACCP Restaurant Alpha',
+        subdomain: 'haccp-alpha',
         plan: 'enterprise',
         status: 'active',
+        created_at: new Date(),
+        settings: {
+          timezone: 'Europe/Rome',
+          date_format: 'DD/MM/YYYY',
+          currency: 'EUR',
+          language: 'it',
+          theme: 'light',
+          notifications: {
+            email: true,
+            push: true,
+            sms: false,
+          },
+          integrations: {
+            analytics_provider: 'google_analytics',
+          },
+        },
         limits: {
           max_users: 50,
-          max_locations: 10,
-          storage_gb: 100,
+          max_conservation_points: 10,
+          max_products: 1000,
+          max_monthly_reports: 20,
+          max_storage_mb: 1000,
+          max_export_requests_per_day: 50,
+          data_retention_days: 365,
+          api_calls_per_hour: 1000,
         },
         features: {
-          advanced_analytics: true,
-          cross_company_reporting: true,
+          offline_mode: true,
+          real_time_monitoring: true,
+          advanced_reporting: true,
+          multi_location: true,
           api_access: true,
           custom_branding: true,
+          sso_integration: true,
+          audit_trails: true,
+          data_sharing: true,
+          backup_export: true,
+        },
+        metadata: {
+          created_by: 'system',
+          last_updated: new Date().toISOString(),
+          version: '1.0.0',
         },
       },
     ]
@@ -294,7 +327,7 @@ class MultiTenantDashboardService {
   /**
    * Get dashboard layout preferences for multi-tenant
    */
-  public getDashboardLayout(userId: string, companyId?: string) {
+  public getDashboardLayout(_userId: string, companyId?: string) {
     return {
       showCrossCompanyView: this.accessibleCompanies.length > 1,
       defaultView: companyId || this.accessibleCompanies[0]?.id,

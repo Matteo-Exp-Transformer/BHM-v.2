@@ -4,17 +4,20 @@
  */
 
 declare const self: ServiceWorkerGlobalScope & {
-  skipWaiting(): void;
+  skipWaiting(): void
   clients: {
-    claim(): Promise<void>;
-    openWindow(url: string): Promise<WindowClient>;
-  };
+    claim(): Promise<void>
+    openWindow(url: string): Promise<WindowClient>
+  }
   registration: ServiceWorkerRegistration & {
     sync: {
-      register(tag: string): Promise<void>;
-    };
-    showNotification(title: string, options?: NotificationOptions): Promise<void>;
-  };
+      register(tag: string): Promise<void>
+    }
+    showNotification(
+      title: string,
+      options?: NotificationOptions
+    ): Promise<void>
+  }
 }
 
 const CACHE_VERSION = 'v1.2.0'
@@ -32,15 +35,15 @@ const STATIC_ASSETS = [
   '/offline.html', // Fallback page
 ]
 
-// API endpoints to cache for offline access
-const CACHEABLE_APIS = [
-  '/api/conservation-points',
-  '/api/temperature-readings',
-  '/api/tasks',
-  '/api/products',
-  '/api/staff',
-  '/api/departments',
-]
+// API endpoints to cache for offline access (currently unused in this implementation)
+// const CACHEABLE_APIS = [
+//   '/api/conservation-points',
+//   '/api/temperature-readings',
+//   '/api/tasks',
+//   '/api/products',
+//   '/api/staff',
+//   '/api/departments',
+// ]
 
 // Background sync events
 const BACKGROUND_SYNC_TAG = 'haccp-background-sync'
@@ -132,7 +135,7 @@ async function handleAPIRequest(request: Request): Promise<Response> {
     }
 
     return networkResponse
-  } catch (error) {
+  } catch {
     console.log('[SW] Network failed for API request:', url.pathname)
 
     // Fall back to cache for GET requests
@@ -178,7 +181,7 @@ async function handleStaticRequest(request: Request): Promise<Response> {
     cache.put(request, networkResponse.clone())
 
     return networkResponse
-  } catch (error) {
+  } catch {
     console.log('[SW] Failed to load static asset:', request.url)
     return createOfflineResponse()
   }
@@ -196,7 +199,7 @@ async function handleDynamicRequest(request: Request): Promise<Response> {
     }
 
     return networkResponse
-  } catch (error) {
+  } catch {
     console.log('[SW] Network failed for dynamic request:', request.url)
 
     // Try cache fallback
@@ -270,10 +273,10 @@ async function processBackgroundSync(): Promise<void> {
     const transaction = db.transaction(['syncQueue'], 'readonly')
     const store = transaction.objectStore('syncQueue')
     const syncItems = await new Promise<any[]>((resolve, reject) => {
-      const request = store.getAll();
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
+      const request = store.getAll()
+      request.onsuccess = () => resolve(request.result)
+      request.onerror = () => reject(request.error)
+    })
 
     console.log(`[SW] Processing ${syncItems.length} sync items`)
 
@@ -328,10 +331,10 @@ async function incrementRetryCount(id: string): Promise<void> {
   const transaction = db.transaction(['syncQueue'], 'readwrite')
   const store = transaction.objectStore('syncQueue')
   const item = await new Promise<any>((resolve, reject) => {
-    const request = store.get(id);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+    const request = store.get(id)
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
 
   if (item) {
     item.retryCount = (item.retryCount || 0) + 1

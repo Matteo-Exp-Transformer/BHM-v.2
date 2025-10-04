@@ -45,7 +45,7 @@ export class InstallPromptManager {
   private config: InstallPromptConfig
   private promptData: InstallPromptData
   private analytics: InstallAnalytics
-  private promptTimer: NodeJS.Timeout | null = null
+  private promptTimer: ReturnType<typeof setTimeout> | null = null
   private isInitialized = false
   private deferredPrompt: BeforeInstallPromptEvent | null = null
 
@@ -244,7 +244,8 @@ export class InstallPromptManager {
     // Check if running in standalone mode (installed)
     this.promptData.isInstalled =
       window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true
+      (window.navigator as unknown as { standalone?: boolean }).standalone ===
+        true
 
     // Check if installable
     this.promptData.isInstallable =

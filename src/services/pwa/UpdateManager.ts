@@ -54,7 +54,7 @@ export class UpdateManager {
   private config: UpdateConfig
   private updateStatus: UpdateStatus
   private analytics: UpdateAnalytics
-  private checkTimer: NodeJS.Timeout | null = null
+  private checkTimer: ReturnType<typeof setInterval> | null = null
   private isInitialized = false
   private serviceWorkerRegistration: ServiceWorkerRegistration | null = null
   private updateInfo: UpdateInfo | null = null
