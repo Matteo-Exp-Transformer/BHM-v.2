@@ -35,6 +35,7 @@ import {
   generateConservationPointId,
   createDraftConservationPoint,
   normalizeConservationPoint,
+  validateTemperatureForType,
 } from '@/utils/onboarding/conservationUtils'
 
 const EMPTY_FORM: ConservationStepFormData = {
@@ -62,6 +63,7 @@ const ConservationStep = ({
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({})
+  const [temperatureError, setTemperatureError] = useState<string | null>(null)
 
   useEffect(() => {
     onUpdate({ points })
@@ -73,6 +75,26 @@ const ConservationStep = ({
       points.every(point => validateConservationPoint(point).success)
     onValidChange(allValid)
   }, [points, onValidChange])
+
+  // Validazione temperatura in tempo reale
+  useEffect(() => {
+    if (formData.targetTemperature && formData.pointType !== 'ambient') {
+      const temperature = Number(formData.targetTemperature)
+      if (!isNaN(temperature)) {
+        const validation = validateTemperatureForType(
+          temperature,
+          formData.pointType
+        )
+        setTemperatureError(
+          validation.valid ? null : validation.message || null
+        )
+      } else {
+        setTemperatureError(null)
+      }
+    } else {
+      setTemperatureError(null)
+    }
+  }, [formData.targetTemperature, formData.pointType])
 
   const departmentOptions = useMemo(
     () => departments.filter(department => department.is_active !== false),
@@ -88,6 +110,7 @@ const ConservationStep = ({
     setFormData(EMPTY_FORM)
     setEditingId(null)
     setValidationErrors({})
+    setTemperatureError(null)
   }
 
   const handleEditPoint = (point: ConservationPoint) => {
@@ -102,6 +125,7 @@ const ConservationStep = ({
       productCategories: draft.productCategories,
     })
     setValidationErrors({})
+    setTemperatureError(null)
   }
 
   const handleDeletePoint = (id: string) => {
@@ -126,6 +150,25 @@ const ConservationStep = ({
     })
 
     const result = validateConservationPoint(normalized)
+
+    // Validazione temperatura aggiuntiva
+    if (formData.pointType !== 'ambient' && formData.targetTemperature) {
+      const temperature = Number(formData.targetTemperature)
+      if (!isNaN(temperature)) {
+        const tempValidation = validateTemperatureForType(
+          temperature,
+          formData.pointType
+        )
+        if (!tempValidation.valid) {
+          setValidationErrors({
+            ...result.errors,
+            targetTemperature:
+              tempValidation.message || 'Temperatura non valida',
+          })
+          return
+        }
+      }
+    }
 
     if (!result.success) {
       setValidationErrors(result.errors ?? {})
@@ -439,7 +482,9 @@ const ConservationStep = ({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="point-temperature">Temperatura target *</Label>
+              <Label htmlFor="point-temperature">
+                Temperatura target {formData.pointType === 'ambient' ? '' : '*'}
+              </Label>
               <Input
                 id="point-temperature"
                 type="number"
@@ -453,17 +498,38 @@ const ConservationStep = ({
                     targetTemperature: event.target.value,
                   }))
                 }
-                placeholder={String(typeInfo.temperatureRange.min)}
-                aria-invalid={Boolean(validationErrors.targetTemperature)}
+                placeholder={
+                  formData.pointType === 'ambient'
+                    ? 'Non impostabile'
+                    : String(typeInfo.temperatureRange.min)
+                }
+                disabled={formData.pointType === 'ambient'}
+                className={
+                  formData.pointType === 'ambient'
+                    ? 'bg-gray-100 cursor-not-allowed'
+                    : ''
+                }
+                aria-invalid={Boolean(
+                  validationErrors.targetTemperature || temperatureError
+                )}
               />
-              <p className="mt-1 text-xs text-gray-500">
-                Range consigliato {typeInfo.temperatureRange.min}°C -{' '}
-                {typeInfo.temperatureRange.max}°C
-              </p>
+              {formData.pointType !== 'ambient' ? (
+                <p className="mt-1 text-xs text-gray-500">
+                  Range consigliato {typeInfo.temperatureRange.min}°C -{' '}
+                  {typeInfo.temperatureRange.max}°C
+                </p>
+              ) : (
+                <p className="mt-1 text-xs text-gray-500">
+                  La temperatura non è impostabile per i punti di tipo Ambiente
+                </p>
+              )}
               {validationErrors.targetTemperature && (
                 <p className="mt-1 text-sm text-red-600">
                   {validationErrors.targetTemperature}
                 </p>
+              )}
+              {temperatureError && (
+                <p className="mt-1 text-sm text-red-600">{temperatureError}</p>
               )}
             </div>
 

@@ -12,25 +12,25 @@ export const CONSERVATION_POINT_TYPES = {
   ambient: {
     value: 'ambient' as const,
     label: 'Ambiente (dispense)',
-    temperatureRange: { min: 15, max: 25 },
+    temperatureRange: { min: null, max: null }, // Temperatura non impostabile
     color: 'text-amber-600',
   },
   fridge: {
     value: 'fridge' as const,
     label: 'Frigorifero',
-    temperatureRange: { min: 0, max: 8 },
+    temperatureRange: { min: 0.1, max: 14.9 }, // >0°C e <15°C
     color: 'text-blue-600',
   },
   freezer: {
     value: 'freezer' as const,
     label: 'Congelatore',
-    temperatureRange: { min: -25, max: -15 },
+    temperatureRange: { min: -22, max: -0.1 }, // <0°C e non superiore a -22°C
     color: 'text-cyan-600',
   },
   blast: {
     value: 'blast' as const,
     label: 'Abbattitore',
-    temperatureRange: { min: -40, max: 3 },
+    temperatureRange: { min: -90, max: -5.1 }, // <-5°C e non superiore a -90°C
     color: 'text-emerald-600',
   },
 }
@@ -332,6 +332,39 @@ export const getConservationPointType = (
   type: ConservationPoint['pointType']
 ) => {
   return CONSERVATION_POINT_TYPES[type]
+}
+
+export const validateTemperatureForType = (
+  temperature: number,
+  type: ConservationPoint['pointType']
+): { valid: boolean; message?: string } => {
+  const typeInfo = CONSERVATION_POINT_TYPES[type]
+  const range = typeInfo.temperatureRange
+
+  // Ambiente: temperatura non impostabile
+  if (type === 'ambient') {
+    return {
+      valid: false,
+      message: 'La temperatura non è impostabile per i punti di tipo Ambiente',
+    }
+  }
+
+  // Controlla se la temperatura è nel range valido
+  if (range.min !== null && temperature <= range.min) {
+    return {
+      valid: false,
+      message: `Temperatura troppo bassa. Minimo consentito: ${range.min}°C`,
+    }
+  }
+
+  if (range.max !== null && temperature >= range.max) {
+    return {
+      valid: false,
+      message: `Temperatura troppo alta. Massimo consentito: ${range.max}°C`,
+    }
+  }
+
+  return { valid: true }
 }
 
 export const isCategoryCompatibleWithType = (
