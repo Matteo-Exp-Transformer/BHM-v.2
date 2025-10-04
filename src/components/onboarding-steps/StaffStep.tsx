@@ -136,35 +136,28 @@ const StaffStep = ({
       dept => dept.name.toLowerCase() === 'plonge / lavaggio piatti'
     )
 
-    const generateId = () =>
-      `staff_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-
-    const samples: StaffMember[] = [
+    const sampleData = [
       {
-        id: generateId(),
         name: 'Matteo',
         surname: 'Cavallaro',
-        fullName: 'Matteo Cavallaro',
         email: 'Neo@gmail.com',
         phone: '3334578536',
         role: 'responsabile' as const,
         categories: ['Banconisti'],
-        department_assignments: departments
+        departmentAssignments: departments
           .filter(d => d.is_active)
           .map(d => d.id), // Tutti i reparti
         haccpExpiry: '2025-10-01',
         notes: 'Responsabile con accesso a tutti i reparti',
       },
       {
-        id: generateId(),
         name: 'Fabrizio',
         surname: 'Dettori',
-        fullName: 'Fabrizio Dettori',
         email: 'Fabri@gmail.com',
         phone: '3334578535',
         role: 'admin' as const,
         categories: ['Amministratore'],
-        department_assignments: [
+        departmentAssignments: [
           ...(sala ? [sala.id] : []),
           ...(salaB ? [salaB.id] : []),
           ...(deoor ? [deoor.id] : []),
@@ -174,43 +167,37 @@ const StaffStep = ({
         notes: 'Amministratore con accesso a Sala, Sala B, Deoor e Plonge',
       },
       {
-        id: generateId(),
         name: 'Paolo',
         surname: 'Dettori',
-        fullName: 'Paolo Dettori',
         email: 'Pablo@gmail.com',
         phone: '3334578534',
         role: 'admin' as const,
         categories: ['Cuochi', 'Amministratore'],
-        department_assignments: departments
+        departmentAssignments: departments
           .filter(d => d.is_active)
           .map(d => d.id), // Tutti i reparti
         haccpExpiry: '2025-10-01',
         notes: 'Amministratore con competenze di cucina',
       },
       {
-        id: generateId(),
         name: 'Eddy',
         surname: 'TheQueen',
-        fullName: 'Eddy TheQueen',
         email: 'Eddy@gmail.com',
         phone: '3334578533',
         role: 'dipendente' as const,
         categories: ['Banconisti'],
-        department_assignments: bancone ? [bancone.id] : [], // Bancone
+        departmentAssignments: bancone ? [bancone.id] : [], // Bancone
         haccpExpiry: '2026-10-01',
         notes: 'Dipendente specializzato al bancone',
       },
       {
-        id: generateId(),
         name: 'Elena',
         surname: 'Compagna',
-        fullName: 'Elena Compagna',
         email: 'Ele@gmail.com',
         phone: '3334578532',
         role: 'dipendente' as const,
         categories: ['Banconisti', 'Camerieri'],
-        department_assignments: [
+        departmentAssignments: [
           ...(bancone ? [bancone.id] : []),
           ...(sala ? [sala.id] : []),
           ...(salaB ? [salaB.id] : []),
@@ -222,7 +209,17 @@ const StaffStep = ({
       },
     ]
 
-    setStaffMembers(samples)
+    // Processa ogni dipendente attraverso buildStaffMember per assicurarsi che abbiano la struttura corretta
+    const processedMembers: StaffMember[] = []
+
+    sampleData.forEach(data => {
+      const { member } = buildStaffMember(data, null)
+      if (member) {
+        processedMembers.push(member)
+      }
+    })
+
+    setStaffMembers(processedMembers)
     resetForm()
   }
 
