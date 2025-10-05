@@ -11,7 +11,7 @@ const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
   // Manutenzioni standard per ogni punto di conservazione (da PRECOMPILATION_AND_RESET_GUIDE.md righe 166-197)
   const standardMaintenances = [
     {
-      manutenzione: 'Rilevamento Temperatura',
+      manutenzione: 'rilevamento_temperatura' as const, // ✅ Corretto: inglese
       frequenza: 'giornaliera' as const,
       assegnatoARuolo: 'responsabile' as const,
       assegnatoACategoria: 'Banconisti',
@@ -20,7 +20,7 @@ const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
       note: 'Controllo temperatura giornaliero obbligatorio',
     },
     {
-      manutenzione: 'Sanificazione',
+      manutenzione: 'sanificazione' as const, // ✅ Corretto: inglese
       frequenza: 'settimanale' as const,
       assegnatoARuolo: 'dipendente' as const,
       assegnatoACategoria: 'Cuochi',
@@ -29,7 +29,7 @@ const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
       note: 'Sanificazione settimanale completa',
     },
     {
-      manutenzione: 'Sbrinamento',
+      manutenzione: 'sbrinamento' as const, // ✅ Corretto: inglese
       frequenza: 'annuale' as const,
       assegnatoARuolo: 'admin' as const,
       assegnatoACategoria: 'Amministratore',
@@ -38,7 +38,7 @@ const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
       note: 'Sbrinamento annuale profondo',
     },
     {
-      manutenzione: 'Controllo Scadenze',
+      manutenzione: 'controllo_scadenze' as const, // ✅ Corretto: inglese
       frequenza: 'custom' as const,
       assegnatoARuolo: 'dipendente' as const,
       assegnatoACategoria: 'all',
@@ -52,8 +52,11 @@ const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
 
   conservationPoints.forEach(point => {
     standardMaintenances.forEach(maintenance => {
-      // I punti di tipo "ambiente" non hanno "Sbrinamento"
-      if (point.pointType === 'ambiente' && maintenance.manutenzione === 'Sbrinamento') {
+      // I punti di tipo "ambiente" non hanno "sbrinamento" ✅ Corretto: inglese
+      if (
+        point.pointType === 'ambiente' &&
+        maintenance.manutenzione === 'sbrinamento'
+      ) {
         return
       }
 
@@ -64,7 +67,8 @@ const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
         frequenza: maintenance.frequenza,
         assegnatoARuolo: maintenance.assegnatoARuolo,
         assegnatoACategoria: maintenance.assegnatoACategoria,
-        assegnatoADipendenteSpecifico: maintenance.assegnatoADipendenteSpecifico,
+        assegnatoADipendenteSpecifico:
+          maintenance.assegnatoADipendenteSpecifico,
         giorniCustom: maintenance.giorniCustom,
         note: maintenance.note,
       })
@@ -322,7 +326,8 @@ export const getPrefillData = (): OnboardingData => {
       points: conservationPoints,
     },
     tasks: {
-      conservationMaintenancePlans: generateConservationMaintenancePlans(conservationPoints),
+      conservationMaintenancePlans:
+        generateConservationMaintenancePlans(conservationPoints),
       genericTasks: [
         {
           id: generateId(),

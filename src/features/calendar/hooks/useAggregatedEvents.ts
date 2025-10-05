@@ -139,7 +139,11 @@ function convertMaintenanceTaskToEvent(
         ? 'overdue'
         : 'pending'
 
-  const colors = getEventColors('maintenance', status, task.priority || 'medium')
+  const colors = getEventColors(
+    'maintenance',
+    status,
+    task.priority || 'medium'
+  )
 
   return {
     id: `maintenance-${task.id}`,
@@ -168,7 +172,12 @@ function convertMaintenanceTaskToEvent(
       notes: task.description,
     },
     extendedProps: {
-      status: status as 'scheduled' | 'in_progress' | 'completed' | 'overdue' | 'cancelled',
+      status: status as
+        | 'scheduled'
+        | 'in_progress'
+        | 'completed'
+        | 'overdue'
+        | 'cancelled',
       priority: task.priority || 'medium',
       assignedTo: task.assigned_to ? [task.assigned_to] : [],
       metadata: {
@@ -234,7 +243,12 @@ function convertHaccpExpiryToEvent(
       notes: `Scadenza certificazione HACCP - ${staffMember.name}`,
     },
     extendedProps: {
-      status: status as 'scheduled' | 'in_progress' | 'completed' | 'overdue' | 'cancelled',
+      status: status as
+        | 'scheduled'
+        | 'in_progress'
+        | 'completed'
+        | 'overdue'
+        | 'cancelled',
       priority,
       assignedTo: [staffMember.id],
       metadata: {
@@ -261,11 +275,7 @@ function convertProductExpiryToEvent(
   )
 
   const priority: CalendarEvent['priority'] =
-    daysUntilExpiry <= 1
-      ? 'critical'
-      : daysUntilExpiry <= 3
-        ? 'high'
-        : 'medium'
+    daysUntilExpiry <= 1 ? 'critical' : daysUntilExpiry <= 3 ? 'high' : 'medium'
 
   const status: CalendarEvent['status'] =
     expiryDate < now ? 'overdue' : 'pending'
@@ -284,8 +294,8 @@ function convertProductExpiryToEvent(
     priority,
     source: 'custom',
     sourceId: product.id,
-    assigned_to: [],
-    department_id: product.department_id,
+    assigned_to: [], // Rimane vuoto per assigned_to
+    department_id: product.department_id, // ✅ Reparto del prodotto
     conservation_point_id: product.conservation_point_id,
     recurring: false,
     backgroundColor: colors.backgroundColor,
@@ -294,15 +304,25 @@ function convertProductExpiryToEvent(
     metadata: {
       product_id: product.id,
       conservation_point_id: product.conservation_point_id,
+      // ✅ Assegnazione per reparto specifico invece di 'all'
+      assigned_to_category: product.department_id
+        ? `department:${product.department_id}`
+        : 'all',
       notes: `Scadenza prodotto: ${product.name}`,
     },
     extendedProps: {
-      status: status as 'scheduled' | 'in_progress' | 'completed' | 'overdue' | 'cancelled',
+      status: status as
+        | 'scheduled'
+        | 'in_progress'
+        | 'completed'
+        | 'overdue'
+        | 'cancelled',
       priority,
       metadata: {
         productName: product.name,
         quantity: product.quantity,
         unit: product.unit,
+        departmentId: product.department_id,
       },
     },
     created_at: product.created_at,

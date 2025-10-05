@@ -46,7 +46,9 @@
       "Bash(npm run lint:*)",
       "Bash(git diff:*)",
       "Bash(curl:*)",
-      "Bash(npx vitest run:*)"
+      "Bash(npx vitest run:*)",
+      "Bash(Select-String \"onboardingHelpers\" -Context 2,2)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

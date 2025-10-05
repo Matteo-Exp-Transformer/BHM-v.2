@@ -55,10 +55,7 @@ export function useFilteredEvents(
         assigned_to: event.assigned_to,
       }
 
-      const isAssignedToUser = checkEventAssignment(
-        assignment,
-        userStaffMember
-      )
+      const isAssignedToUser = checkEventAssignment(assignment, userStaffMember)
 
       return isAssignedToUser
     })
@@ -76,6 +73,22 @@ function checkEventAssignment(
   assignment: EventAssignment,
   staffMember: NonNullable<ReturnType<typeof useStaff>['staff'][0]>
 ): boolean {
+  // ✅ Se assegnato a categoria 'all', tutti vedono
+  if (assignment.assigned_to_category === 'all') {
+    return true
+  }
+
+  // ✅ Se assegnato a reparto specifico, controlla department_assignments
+  if (assignment.assigned_to_category?.startsWith('department:')) {
+    const departmentId = assignment.assigned_to_category.replace(
+      'department:',
+      ''
+    )
+    if (staffMember.department_assignments?.includes(departmentId)) {
+      return true
+    }
+  }
+
   if (assignment.assigned_to_staff_id === staffMember.id) {
     return true
   }
@@ -110,7 +123,9 @@ export function getAssignmentLabel(
   staff: ReturnType<typeof useStaff>['staff']
 ): string {
   if (assignment.assigned_to_staff_id) {
-    const staffMember = staff.find(s => s.id === assignment.assigned_to_staff_id)
+    const staffMember = staff.find(
+      s => s.id === assignment.assigned_to_staff_id
+    )
     return staffMember?.name || 'Dipendente specifico'
   }
 
@@ -121,7 +136,9 @@ export function getAssignmentLabel(
       dipendente: 'Dipendente',
       collaboratore: 'Collaboratore',
     }
-    return roleLabels[assignment.assigned_to_role] || assignment.assigned_to_role
+    return (
+      roleLabels[assignment.assigned_to_role] || assignment.assigned_to_role
+    )
   }
 
   if (assignment.assigned_to_category) {

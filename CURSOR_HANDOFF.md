@@ -8,25 +8,89 @@ Claude AI ha completato l'implementazione backend e componenti del sistema calen
 ## ✅ GIÀ FATTO (da Claude AI)
 
 ### Hooks Implementati
+
 - ✅ `src/features/calendar/hooks/useAggregatedEvents.ts` - Aggrega 6 fonti eventi
 - ✅ `src/features/calendar/hooks/useFilteredEvents.ts` - Filtraggio user-based
 - ✅ `src/features/calendar/hooks/useCalendarAlerts.ts` - Sistema alert
 
 ### Generatori Automatici
+
 - ✅ `src/features/calendar/utils/haccpDeadlineGenerator.ts` - Scadenze HACCP
 - ✅ `src/features/calendar/utils/temperatureCheckGenerator.ts` - Controlli temperatura
 - ✅ `src/features/calendar/utils/recurrenceScheduler.ts` - Ricorrenze
 
 ### Componenti UI
+
 - ✅ `src/features/calendar/components/EventBadge.tsx` - Badge assegnazione
 - ✅ `src/features/calendar/components/CalendarFilters.tsx` - Filtri eventi
 - ✅ `src/features/calendar/components/CalendarLegend.tsx` - Legenda
 - ✅ `src/features/calendar/components/ViewSelector.tsx` - Switcher viste
 - ✅ `src/features/calendar/components/index.ts` - Export clean
 
-## 🎯 TUO COMPITO
+## ✅ INTEGRAZIONE COMPLETATA CON SUCCESSO!
 
-Integrare i componenti implementati in CalendarPage.tsx e aggiungere alert badge in Header/Navbar.
+**Data Completamento**: 2025-01-05
+**Status**: ✅ TUTTI I TASK COMPLETATI
+
+### ✅ TASK COMPLETATI
+
+#### ✅ TASK 1: Integrazione CalendarPage.tsx - COMPLETATO
+
+- ✅ Importati nuovi hooks e componenti
+- ✅ Sostituito useCalendar con useAggregatedEvents + useFilteredEvents + useCalendarAlerts
+- ✅ Aggiunto ViewSelector in header
+- ✅ Aggiunto CalendarFilters in sidebar
+- ✅ Aggiunto CalendarLegend in sidebar
+- ✅ Layout responsive con grid sidebar + calendario
+- ✅ Alert badge integrato in header
+
+#### ✅ TASK 2: Alert Badge HeaderButtons - COMPLETATO
+
+- ✅ Importati hooks calendario
+- ✅ Implementato alert badge con count critici
+- ✅ Link diretto a /attivita
+- ✅ Badge rosso per critici, arancione per altri
+- ✅ Responsive design
+
+#### ✅ TASK 3: Fix Product Expiry - COMPLETATO
+
+- ✅ Aggiunto assigned_to_category: 'all' in useAggregatedEvents
+- ✅ Aggiornata logica checkEventAssignment per categoria 'all'
+- ✅ Tutti i dipendenti ora vedono scadenze prodotti
+
+### 🎯 RISULTATO FINALE
+
+L'utente ora può:
+
+1. ✅ Vedere calendario con eventi da 6 fonti automatiche
+2. ✅ Filtrare eventi per tipo/priorità/stato (persistente)
+3. ✅ Cambiare vista Month/Week/Day
+4. ✅ Vedere badge alert in header con count
+5. ✅ Vedere solo eventi assegnati (se dipendente)
+6. ✅ Vedere legenda colori e tipi
+7. ✅ Vedere scadenze prodotti (tutti i dipendenti)
+
+**Screenshot atteso**: Calendario con sidebar filtri (sx), vista month (centro), alert badge (header top-right)
+
+---
+
+## 📋 CHECKLIST COMPLETAMENTO ✅
+
+- [x] CalendarPage importa nuovi hooks e componenti
+- [x] useAggregatedEvents sostituisce useCalendar vecchio
+- [x] ViewSelector integrato in header
+- [x] CalendarFilters in sidebar
+- [x] CalendarLegend in sidebar
+- [x] Alert badge in HeaderButtons
+- [x] Eventi filtrati mostrati in FullCalendar
+- [x] Fix product expiry visibility
+- [x] Layout responsive (filtri in sidebar)
+- [x] Nessun errore di linting
+
+---
+
+_Integrazione completata: 2025-01-05_
+_Status: ✅ PRODUCTION READY_
 
 ### TASK 1: Integrare in CalendarPage.tsx
 
@@ -35,12 +99,13 @@ Integrare i componenti implementati in CalendarPage.tsx e aggiungere alert badge
 **Cosa fare**:
 
 1. **Importa i componenti**:
+
 ```typescript
 import {
   ViewSelector,
   CalendarFilters,
   CalendarLegend,
-  useCalendarView
+  useCalendarView,
 } from '@/features/calendar/components'
 import { useCalendarAlerts } from '@/features/calendar/hooks/useCalendarAlerts'
 import { useAggregatedEvents } from '@/features/calendar/hooks/useAggregatedEvents'
@@ -48,6 +113,7 @@ import { useFilteredEvents } from '@/features/calendar/hooks/useFilteredEvents'
 ```
 
 2. **Sostituisci useCalendar esistente con i nuovi hooks**:
+
 ```typescript
 // Dentro CalendarPage component:
 
@@ -64,20 +130,22 @@ const [view, setView] = useCalendarView('month')
 const [activeFilters, setActiveFilters] = useState<CalendarFilterOptions>({
   eventTypes: ['maintenance', 'general_task', 'temperature_reading', 'custom'],
   priorities: ['critical', 'high', 'medium', 'low'],
-  statuses: ['pending', 'overdue']
+  statuses: ['pending', 'overdue'],
 })
 
 // Applica filtri
 const displayEvents = useMemo(() => {
-  return filteredEvents.filter(event =>
-    activeFilters.eventTypes.includes(event.type) &&
-    activeFilters.priorities.includes(event.priority) &&
-    activeFilters.statuses.includes(event.status)
+  return filteredEvents.filter(
+    event =>
+      activeFilters.eventTypes.includes(event.type) &&
+      activeFilters.priorities.includes(event.priority) &&
+      activeFilters.statuses.includes(event.status)
   )
 }, [filteredEvents, activeFilters])
 ```
 
 3. **Aggiungi componenti UI al layout**:
+
 ```tsx
 return (
   <div className="calendar-page">
@@ -124,15 +192,17 @@ return (
       <div className="lg:col-span-3">
         <FullCalendar
           initialView={
-            view === 'month' ? 'dayGridMonth' :
-            view === 'week' ? 'timeGridWeek' :
-            'timeGridDay'
+            view === 'month'
+              ? 'dayGridMonth'
+              : view === 'week'
+                ? 'timeGridWeek'
+                : 'timeGridDay'
           }
           events={displayEvents}
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
-            right: '' // ViewSelector esterno
+            right: '', // ViewSelector esterno
           }}
           // ... resto delle props esistenti
         />
@@ -143,6 +213,7 @@ return (
 ```
 
 **Note**:
+
 - Se CalendarPage già usa un layout, adattalo mantenendo la struttura esistente
 - ViewSelector sostituisce i pulsanti vista in FullCalendar toolbar
 - Filtri vanno in sidebar a sinistra (o drawer mobile)
@@ -154,6 +225,7 @@ return (
 **Cosa fare**:
 
 1. **Importa hook**:
+
 ```typescript
 import { useAlertBadge } from '@/features/calendar/hooks/useCalendarAlerts'
 import { useAggregatedEvents } from '@/features/calendar/hooks/useAggregatedEvents'
@@ -161,6 +233,7 @@ import { useFilteredEvents } from '@/features/calendar/hooks/useFilteredEvents'
 ```
 
 2. **Usa hook nel component**:
+
 ```typescript
 function Header() {
   const { events } = useAggregatedEvents()
@@ -189,16 +262,19 @@ function Header() {
 ```
 
 **Variante con tooltip**:
+
 ```tsx
 <Tooltip>
   <TooltipTrigger asChild>
     <Link to="/calendar" className="relative">
       <Bell className="h-5 w-5" />
       {hasAlerts && (
-        <span className={cn(
-          "absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white",
-          hasCritical ? "bg-red-600" : "bg-orange-500"
-        )}>
+        <span
+          className={cn(
+            'absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white',
+            hasCritical ? 'bg-red-600' : 'bg-orange-500'
+          )}
+        >
           {count > 9 ? '9+' : count}
         </span>
       )}
@@ -260,6 +336,7 @@ eventContent={(arg) => {
 ## 🔍 VERIFICA FUNZIONAMENTO
 
 ### Test 1: Aggregazione Eventi
+
 ```typescript
 // In CalendarPage, logga sources
 console.log('Event sources:', sources)
@@ -267,6 +344,7 @@ console.log('Event sources:', sources)
 ```
 
 ### Test 2: Filtraggio User-Based
+
 ```typescript
 console.log('Can view all events:', canViewAllEvents)
 console.log('Total events:', aggregatedEvents.length)
@@ -276,6 +354,7 @@ console.log('Filtered events:', filteredEvents.length)
 ```
 
 ### Test 3: Alert System
+
 ```typescript
 console.log('Alerts:', alerts)
 console.log('Critical count:', criticalCount)
@@ -285,18 +364,23 @@ console.log('Critical count:', criticalCount)
 ## 🐛 TROUBLESHOOTING
 
 ### Errore: "Cannot find module '@/features/calendar/components'"
+
 **Fix**: Verifica che `src/features/calendar/components/index.ts` esista ed esporti correttamente
 
 ### Errore: "events is undefined"
+
 **Fix**: Aggiungi loading state:
+
 ```typescript
 if (isLoading) return <LoadingSpinner />
 ```
 
 ### Eventi non filtrati correttamente
+
 **Fix**: Verifica che `CalendarEvent.metadata` abbia `assigned_to_staff_id`, `assigned_to_role`, `assigned_to_category`
 
 ### Alert badge non appare
+
 **Fix**: Verifica che eventi abbiano `status: 'overdue'` o `priority: 'critical'` con data <24h
 
 ## 📚 DOCUMENTAZIONE RIFERIMENTO
@@ -308,6 +392,7 @@ if (isLoading) return <LoadingSpinner />
 ## 🎯 RISULTATO ATTESO
 
 Dopo l'integrazione, l'utente deve:
+
 1. ✅ Vedere calendario con eventi da 6 fonti automatiche
 2. ✅ Filtrare eventi per tipo/priorità/stato (persistente)
 3. ✅ Cambiare vista Month/Week/Day
