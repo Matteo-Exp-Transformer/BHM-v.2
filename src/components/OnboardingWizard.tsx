@@ -116,6 +116,20 @@ const OnboardingWizard = () => {
     [updateFormData]
   )
 
+  const updateFormDataConservation = useCallback(
+    (data: OnboardingData['conservation']) => {
+      updateFormData('conservation', data)
+    },
+    [updateFormData]
+  )
+
+  const updateFormDataStaff = useCallback(
+    (data: OnboardingData['staff']) => {
+      updateFormData('staff', data)
+    },
+    [updateFormData]
+  )
+
   const handleNext = async () => {
     if (!isValid) {
       toast.error('Completa tutti i campi obbligatori prima di continuare')
@@ -318,7 +332,7 @@ const OnboardingWizard = () => {
           <StaffStep
             data={formData.staff}
             departments={formData.departments || []}
-            onUpdate={data => updateFormData('staff', data)}
+            onUpdate={updateFormDataStaff}
             onValidChange={handleValidChange}
           />
         )
@@ -327,7 +341,7 @@ const OnboardingWizard = () => {
           <ConservationStep
             data={formData.conservation}
             departments={formData.departments || []}
-            onUpdate={data => updateFormData('conservation', data)}
+            onUpdate={updateFormDataConservation}
             onValidChange={handleValidChange}
           />
         )

@@ -191,6 +191,8 @@ const TasksStep = ({
         id: member.id,
         label: member.fullName,
         role: member.role,
+        categories: member.categories || [],
+        department: member.department_assignments,
       })),
     [staff]
   )
@@ -1069,7 +1071,7 @@ const MaintenanceAssignmentForm = ({
         newErrors[`plan-${index}-frequenza`] = 'Frequenza obbligatoria'
       }
       if (!plan.assegnatoARuolo) {
-        newErrors[`plan-${index}-ruolo`] = 'Ruolo/Dipendente obbligatorio'
+        newErrors[`plan-${index}-ruolo`] = 'Ruolo obbligatorio'
       }
       // Dipendente specifico non è più obbligatorio
       // if (plan.assegnatoARuolo === 'specifico' && !plan.assegnatoADipendenteSpecifico) {
@@ -1146,21 +1148,19 @@ const MaintenanceAssignmentForm = ({
               </div>
 
               <div>
-                <Label>Ruolo/Dipendente *</Label>
+                <Label>Ruolo *</Label>
                 <Select
-                  value={plan.assegnatoARuolo || 'role'}
+                  value={plan.assegnatoARuolo || ''}
                   onValueChange={value =>
                     updatePlan(index, {
-                      assegnatoARuolo: value as StaffRole | 'specifico',
-                      assegnatoADipendenteSpecifico:
-                        value === 'specifico'
-                          ? undefined
-                          : plan.assegnatoADipendenteSpecifico,
+                      assegnatoARuolo: value as StaffRole,
+                      // Reset dipendente specifico quando cambia il ruolo
+                      assegnatoADipendenteSpecifico: undefined,
                     })
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Seleziona tipo assegnazione" />
+                    <SelectValue placeholder="Seleziona ruolo" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectOption value="admin">Amministratore</SelectOption>
@@ -1171,9 +1171,6 @@ const MaintenanceAssignmentForm = ({
                     <SelectOption value="collaboratore">
                       Collaboratore
                     </SelectOption>
-                    <SelectOption value="specifico">
-                      Dipendente specifico
-                    </SelectOption>
                   </SelectContent>
                 </Select>
                 {errors[`plan-${index}-ruolo`] && (
@@ -1183,27 +1180,89 @@ const MaintenanceAssignmentForm = ({
                 )}
               </div>
 
-              {plan.assegnatoARuolo === 'specifico' && (
+              <div>
+                <Label>Categoria</Label>
+                <Select
+                  value={plan.assegnatoACategoria || 'all'}
+                  onValueChange={value =>
+                    updatePlan(index, {
+                      assegnatoACategoria: value,
+                      // Reset dipendente specifico quando cambia categoria
+                      assegnatoADipendenteSpecifico: undefined,
+                    })
+                  }
+                  disabled={!plan.assegnatoARuolo}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        plan.assegnatoARuolo
+                          ? 'Seleziona categoria'
+                          : 'Prima seleziona un ruolo'
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectOption value="all">Tutte le categorie</SelectOption>
+                    {staffOptions
+                      .filter(staff => staff.role === plan.assegnatoARuolo)
+                      .flatMap(staff => staff.categories) // Estrai tutte le categorie
+                      .filter(category => category && category.trim() !== '') // Solo categorie valide
+                      .filter(
+                        (category, index, arr) =>
+                          arr.indexOf(category) === index
+                      ) // Rimuovi duplicati
+                      .map(category => (
+                        <SelectOption key={category} value={category}>
+                          {category}
+                        </SelectOption>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {plan.assegnatoARuolo && (
                 <div className="md:col-span-2">
                   <Label>Dipendente specifico</Label>
                   <Select
-                    value={plan.assegnatoADipendenteSpecifico ?? ''}
+                    value={plan.assegnatoADipendenteSpecifico ?? 'none'}
                     onValueChange={value =>
                       updatePlan(index, {
                         assegnatoADipendenteSpecifico: value,
                       })
                     }
+                    disabled={false}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Seleziona dipendente" />
+                      <SelectValue placeholder="Opzionale: seleziona dipendente specifico" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectOption value="">Seleziona dipendente</SelectOption>
-                      {staffOptions.map(staff => (
-                        <SelectOption key={staff.id} value={staff.id}>
-                          {staff.label} ({staff.role})
-                        </SelectOption>
-                      ))}
+                      <SelectOption value="none">
+                        Nessun dipendente specifico
+                      </SelectOption>
+                      {staffOptions
+                        .filter(staff => {
+                          // Filtra per ruolo
+                          if (staff.role !== plan.assegnatoARuolo) return false
+
+                          // Se categoria è specifica, filtra anche per categoria
+                          if (
+                            plan.assegnatoACategoria &&
+                            plan.assegnatoACategoria !== 'all'
+                          ) {
+                            return staff.categories.includes(
+                              plan.assegnatoACategoria
+                            )
+                          }
+
+                          // Altrimenti mostra tutti i dipendenti di quel ruolo
+                          return true
+                        })
+                        .map(staff => (
+                          <SelectOption key={staff.id} value={staff.id}>
+                            {staff.label} - {staff.categories.join(', ')}
+                          </SelectOption>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -1243,19 +1302,6 @@ const MaintenanceAssignmentForm = ({
                   )}
                 </div>
               )}
-
-              <div className="md:col-span-2">
-                <Label>Categoria (opzionale)</Label>
-                <Input
-                  value={plan.assegnatoACategoria ?? ''}
-                  onChange={e =>
-                    updatePlan(index, {
-                      assegnatoACategoria: e.target.value,
-                    })
-                  }
-                  placeholder="es. Cuochi, Camière..."
-                />
-              </div>
 
               <div className="md:col-span-2">
                 <Label>Note (opzionale)</Label>
