@@ -8,13 +8,13 @@ const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
   const generateId = () =>
     `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-  // Manutenzioni standard per ogni punto di conservazione
+  // Manutenzioni standard per ogni punto di conservazione (da PRECOMPILATION_AND_RESET_GUIDE.md righe 166-197)
   const standardMaintenances = [
     {
       manutenzione: 'Rilevamento Temperatura',
       frequenza: 'giornaliera' as const,
-      assegnatoARuolo: 'dipendente' as const,
-      assegnatoACategoria: 'all',
+      assegnatoARuolo: 'responsabile' as const,
+      assegnatoACategoria: 'Banconisti',
       assegnatoADipendenteSpecifico: undefined,
       giorniCustom: undefined,
       note: 'Controllo temperatura giornaliero obbligatorio',
@@ -23,7 +23,7 @@ const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
       manutenzione: 'Sanificazione',
       frequenza: 'settimanale' as const,
       assegnatoARuolo: 'dipendente' as const,
-      assegnatoACategoria: 'all',
+      assegnatoACategoria: 'Cuochi',
       assegnatoADipendenteSpecifico: undefined,
       giorniCustom: undefined,
       note: 'Sanificazione settimanale completa',
@@ -31,8 +31,8 @@ const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
     {
       manutenzione: 'Sbrinamento',
       frequenza: 'annuale' as const,
-      assegnatoARuolo: 'dipendente' as const,
-      assegnatoACategoria: 'all',
+      assegnatoARuolo: 'admin' as const,
+      assegnatoACategoria: 'Amministratore',
       assegnatoADipendenteSpecifico: undefined,
       giorniCustom: undefined,
       note: 'Sbrinamento annuale profondo',
