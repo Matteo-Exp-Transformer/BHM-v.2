@@ -675,6 +675,99 @@ const calculateNextDue = (freq: string) => {
 
 ---
 
-_Ultima modifica: 2025-01-05_
-_Versione: 1.0_
+## 🗓️ APPENDICE: COMPONENTI CALENDARIO
+
+### Componenti Implementati (2025-01-05)
+
+#### Generatori Automatici Eventi
+
+##### **haccpDeadlineGenerator.ts**
+```typescript
+generateHaccpDeadlineEvents(staff[], companyId, userId, config?)
+```
+- Warning days: [90, 60, 30, 14, 7]
+- Critical threshold: 7 giorni
+- Eventi: overdue (scaduto), critical (<7d), warning (altri)
+
+##### **temperatureCheckGenerator.ts**
+```typescript
+generateTemperatureCheckEvents(conservationPoints[], companyId, userId, options?)
+```
+- Genera 90 giorni future
+- Frequenza: daily (fridge/blast), weekly (freezer)
+- Max 100 eventi per punto
+
+##### **recurrenceScheduler.ts**
+```typescript
+calculateNextOccurrences(startDate, pattern, count)
+expandRecurringEvent(startDate, pattern, rangeStart, rangeEnd)
+calculateNextDue(currentDate, frequency, customDays?)
+```
+- Frequenze: daily/weekly/monthly/yearly/custom
+- Supporto customDays: ['lunedi', 'giovedi', etc.]
+
+#### Hooks
+
+##### **useCalendarAlerts.ts**
+```typescript
+const { alerts, alertCount, criticalCount, dismissAlert } = useCalendarAlerts(events)
+```
+- Severity: critical (overdue | <24h), high (<72h), medium (<144h)
+- LocalStorage: 'calendar-dismissed-alerts'
+- Helper: `useAlertBadge(events)` per badge count
+
+#### Componenti UI
+
+##### **EventBadge.tsx**
+```typescript
+<EventBadge assignedTo="Cuochi" type="category" size="sm" />
+```
+- Icons: ChefHat (Cuochi), UtensilsCrossed (Camerieri), Store (Banconisti), Shield (Admin)
+- Colori pastello per categorie/ruoli
+
+##### **CalendarFilters.tsx**
+```typescript
+<CalendarFilters onFilterChange={setFilters} initialFilters={...} />
+```
+- Filtri: eventTypes[], priorities[], statuses[]
+- LocalStorage: 'calendar-filters'
+- Collapsible sections con reset
+
+##### **CalendarLegend.tsx**
+```typescript
+<CalendarLegend showPriority showEventType defaultExpanded={false} />
+```
+- Priorità: 🔴 Critico, 🟠 Alta, 🟡 Media, 🔵 Bassa, 🟢 Completato
+- Tipi: 🔧 Manutenzione, 📋 Mansioni, 🌡️ Temperatura, 📜 HACCP, 📦 Prodotti
+
+##### **ViewSelector.tsx**
+```typescript
+const [view, setView] = useCalendarView('month')
+<ViewSelector currentView={view} onChange={setView} />
+```
+- Views: month/week/day
+- LocalStorage: 'calendar-view-preference'
+- Icons: Calendar, CalendarDays, CalendarClock
+
+### Integrazione CalendarPage
+
+```typescript
+import { ViewSelector, CalendarFilters, CalendarLegend, useCalendarAlerts } from '@/features/calendar/components'
+import { useAggregatedEvents } from '@/features/calendar/hooks/useAggregatedEvents'
+
+const { events, sources } = useAggregatedEvents()
+const { alerts, alertCount } = useCalendarAlerts(events)
+```
+
+**Sources disponibili**:
+- `maintenance` - Task manutenzione
+- `haccpExpiry` - Scadenze HACCP staff
+- `productExpiry` - Scadenze prodotti
+- `haccpDeadlines` - Warning scadenze HACCP (90/60/30/14/7d)
+- `temperatureChecks` - Controlli temperatura generati
+
+---
+
+_Ultima modifica: 2025-01-05 (Aggiunta Appendice Calendario)_
+_Versione: 1.1_
 _Autore: AI Assistant_
