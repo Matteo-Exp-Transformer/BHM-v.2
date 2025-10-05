@@ -1,3 +1,4 @@
+import React, { useState, useMemo } from 'react'
 import {
   Calendar as CalendarIcon,
   Activity,
@@ -5,25 +6,93 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import Calendar from './Calendar'
-import { useCalendar } from './hooks/useCalendar'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
+// ✅ Importa nuovi componenti calendario
+import {
+  ViewSelector,
+  CalendarFilters,
+  CalendarLegend,
+  useCalendarView,
+} from './components'
+import { useCalendarAlerts } from './hooks/useCalendarAlerts'
+import { useAggregatedEvents } from './hooks/useAggregatedEvents'
+import { useFilteredEvents } from './hooks/useFilteredEvents'
 
 export const CalendarPage = () => {
-  const {
-    events,
-    isLoading,
-    error,
-    onEventClick,
-    onEventUpdate,
-    onEventDelete,
-    onDateSelect,
-    createEvent,
-    todayEvents,
-    upcomingEvents,
-    overdueEvents,
-    viewConfig,
-    eventSources,
-  } = useCalendar()
+  // ✅ Sostituisci useCalendar con nuovi hooks
+  const { events: aggregatedEvents, isLoading, sources } = useAggregatedEvents()
+  const { filteredEvents } = useFilteredEvents(aggregatedEvents)
+  const { alertCount, criticalCount } = useCalendarAlerts(filteredEvents)
+  const [view, setView] = useCalendarView('month')
+
+  // ✅ State per filtri
+  const [activeFilters, setActiveFilters] = useState({
+    eventTypes: [
+      'maintenance',
+      'general_task',
+      'temperature_reading',
+      'custom',
+    ],
+    priorities: ['critical', 'high', 'medium', 'low'],
+    statuses: ['pending', 'overdue'],
+  })
+
+  // ✅ Applica filtri
+  const displayEvents = useMemo(() => {
+    return filteredEvents.filter(
+      event =>
+        activeFilters.eventTypes.includes(event.type) &&
+        activeFilters.priorities.includes(event.priority) &&
+        activeFilters.statuses.includes(event.status)
+    )
+  }, [filteredEvents, activeFilters])
+
+  // ✅ Calcola statistiche
+  const todayEvents = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    return displayEvents.filter(
+      event => event.start >= today && event.start < tomorrow
+    )
+  }, [displayEvents])
+
+  const upcomingEvents = useMemo(() => {
+    const now = new Date()
+    const futureDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+    return displayEvents.filter(
+      event =>
+        event.start >= now &&
+        event.start <= futureDate &&
+        event.status === 'pending'
+    )
+  }, [displayEvents])
+
+  const overdueEvents = useMemo(() => {
+    return displayEvents.filter(event => event.status === 'overdue')
+  }, [displayEvents])
+
+  // ✅ Event handlers
+  const onEventClick = (event: any) => {
+    console.log('Event clicked:', event)
+  }
+
+  const onEventUpdate = (event: any) => {
+    console.log('Event updated:', event)
+  }
+
+  const onEventDelete = (eventId: string) => {
+    console.log('Event deleted:', eventId)
+  }
+
+  const onDateSelect = (start: Date, end: Date) => {
+    console.log('Date selected:', start, end)
+  }
+
+  const createEvent = (eventData: any) => {
+    console.log('Create event:', eventData)
+  }
 
   const handleCreateEvent = (eventData: any) => {
     createEvent({
@@ -46,17 +115,32 @@ export const CalendarPage = () => {
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="px-4 py-6">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Activity className="h-6 w-6 text-blue-600" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Activity className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Attività e Mansioni
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Calendario unificato per mansioni, manutenzioni e controlli
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Attività e Mansioni
-              </h1>
-              <p className="text-sm text-gray-600">
-                Calendario unificato per mansioni, manutenzioni e controlli
-              </p>
+
+            {/* ✅ Alert Badge e ViewSelector */}
+            <div className="flex items-center gap-4">
+              {alertCount > 0 && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
+                  <span className="text-sm font-medium text-red-700">
+                    {criticalCount > 0 ? '🔴' : '⚠️'} {alertCount} Alert
+                  </span>
+                </div>
+              )}
+
+              <ViewSelector currentView={view} onChange={setView} />
             </div>
           </div>
         </div>
@@ -68,7 +152,7 @@ export const CalendarPage = () => {
           <CollapsibleCard
             title="Statistiche"
             icon={TrendingUp}
-            counter={events.length}
+            counter={displayEvents.length}
             className="mb-4"
             defaultExpanded={true}
           >
@@ -77,19 +161,19 @@ export const CalendarPage = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-gray-900">
-                    {events.length}
+                    {displayEvents.length}
                   </div>
                   <div className="text-sm text-gray-500">Eventi Totali</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">
-                    {events.filter(e => e.status === 'completed').length}
+                    {displayEvents.filter(e => e.status === 'completed').length}
                   </div>
                   <div className="text-sm text-gray-500">Completati</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-600">
-                    {events.filter(e => e.status === 'pending').length}
+                    {displayEvents.filter(e => e.status === 'pending').length}
                   </div>
                   <div className="text-sm text-gray-500">In Attesa</div>
                 </div>
@@ -108,16 +192,22 @@ export const CalendarPage = () => {
                     Tasso di Completamento
                   </span>
                   <span className="text-sm text-gray-600">
-                    {events.length > 0
-                      ? ((events.filter(e => e.status === 'completed').length / events.length) * 100).toFixed(1)
-                      : '0.0'}%
+                    {displayEvents.length > 0
+                      ? (
+                          (displayEvents.filter(e => e.status === 'completed')
+                            .length /
+                            displayEvents.length) *
+                          100
+                        ).toFixed(1)
+                      : '0.0'}
+                    %
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-green-500 h-2 rounded-full transition-all duration-300"
                     style={{
-                      width: `${events.length > 0 ? Math.min(((events.filter(e => e.status === 'completed').length / events.length) * 100), 100) : 0}%`,
+                      width: `${displayEvents.length > 0 ? Math.min((displayEvents.filter(e => e.status === 'completed').length / displayEvents.length) * 100, 100) : 0}%`,
                     }}
                   />
                 </div>
@@ -132,19 +222,35 @@ export const CalendarPage = () => {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">🔧 Manutenzioni</span>
-                      <span className="font-medium">{eventSources?.maintenance || 0}</span>
+                      <span className="font-medium">
+                        {sources?.maintenance || 0}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">👥 Scadenze HACCP</span>
-                      <span className="font-medium">{eventSources?.haccpExpiry || 0}</span>
+                      <span className="font-medium">
+                        {sources?.haccpExpiry || 0}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">📦 Scadenze Prodotti</span>
-                      <span className="font-medium">{eventSources?.productExpiry || 0}</span>
+                      <span className="text-gray-600">
+                        📦 Scadenze Prodotti
+                      </span>
+                      <span className="font-medium">
+                        {sources?.productExpiry || 0}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">📌 Personalizzati</span>
-                      <span className="font-medium">{eventSources?.custom || 0}</span>
+                      <span className="text-gray-600">⏰ Alert HACCP</span>
+                      <span className="font-medium">
+                        {sources?.haccpDeadlines || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">🌡️ Controlli Temp</span>
+                      <span className="font-medium">
+                        {sources?.temperatureChecks || 0}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -175,19 +281,55 @@ export const CalendarPage = () => {
           </CollapsibleCard>
         </div>
 
-        {/* Main Calendar */}
-        <div className="mb-6">
-          <Calendar
-            events={events}
-            onEventClick={onEventClick}
-            onEventCreate={handleCreateEvent}
-            onEventUpdate={onEventUpdate}
-            onEventDelete={onEventDelete}
-            onDateSelect={onDateSelect}
-            config={viewConfig}
-            loading={isLoading}
-            error={typeof error === 'string' ? error : error?.message || null}
-          />
+        {/* ✅ Layout con Sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+          {/* Sidebar con Filtri e Legenda */}
+          <div className="lg:col-span-1 space-y-4">
+            <CalendarFilters
+              onFilterChange={setActiveFilters}
+              initialFilters={activeFilters}
+            />
+            <CalendarLegend defaultExpanded={false} />
+
+            {/* Stats Sources */}
+            <div className="bg-white rounded-lg border p-4">
+              <h3 className="text-sm font-semibold mb-2">Fonti Eventi</h3>
+              <div className="space-y-1 text-xs">
+                <div>🔧 Manutenzioni: {sources?.maintenance || 0}</div>
+                <div>📜 Scadenze HACCP: {sources?.haccpExpiry || 0}</div>
+                <div>📦 Scadenze Prodotti: {sources?.productExpiry || 0}</div>
+                <div>⏰ Alert HACCP: {sources?.haccpDeadlines || 0}</div>
+                <div>🌡️ Controlli Temp: {sources?.temperatureChecks || 0}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Calendario */}
+          <div className="lg:col-span-3">
+            <Calendar
+              events={displayEvents}
+              onEventClick={onEventClick}
+              onEventCreate={handleCreateEvent}
+              onEventUpdate={onEventUpdate}
+              onEventDelete={onEventDelete}
+              onDateSelect={onDateSelect}
+              config={{
+                defaultView:
+                  view === 'month'
+                    ? 'dayGridMonth'
+                    : view === 'week'
+                      ? 'timeGridWeek'
+                      : 'timeGridDay',
+                headerToolbar: {
+                  left: 'prev,next today',
+                  center: 'title',
+                  right: '', // ViewSelector esterno
+                },
+              }}
+              loading={isLoading}
+              error={null}
+            />
+          </div>
         </div>
 
         {/* Quick Overview Cards */}
