@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
+import { useConservationPoints } from '@/features/conservation/hooks/useConservationPoints'
 import { useStaff } from '@/features/management/hooks/useStaff'
 import { useProducts } from '@/features/inventory/hooks/useProducts'
 import type { CalendarEvent } from '@/types/calendar'
@@ -8,6 +9,8 @@ import type { MaintenanceTask } from '@/types/conservation'
 import type { Product } from '@/types/inventory'
 import type { StaffMember } from '@/features/management/hooks/useStaff'
 import { getEventColors } from '../utils/eventTransform'
+import { generateHaccpDeadlineEvents } from '../utils/haccpDeadlineGenerator'
+import { generateTemperatureCheckEvents } from '../utils/temperatureCheckGenerator'
 
 interface AggregatedEventsResult {
   events: CalendarEvent[]
@@ -17,6 +20,8 @@ interface AggregatedEventsResult {
     maintenance: number
     haccpExpiry: number
     productExpiry: number
+    haccpDeadlines: number
+    temperatureChecks: number
     custom: number
   }
 }
@@ -25,10 +30,13 @@ export function useAggregatedEvents(): AggregatedEventsResult {
   const { user, companyId } = useAuth()
   const { maintenanceTasks, isLoading: maintenanceLoading } =
     useMaintenanceTasks()
+  const { conservationPoints, isLoading: pointsLoading } =
+    useConservationPoints()
   const { staff, isLoading: staffLoading } = useStaff()
   const { products, isLoading: productsLoading } = useProducts()
 
-  const isLoading = maintenanceLoading || staffLoading || productsLoading
+  const isLoading =
+    maintenanceLoading || staffLoading || productsLoading || pointsLoading
 
   const maintenanceEvents = useMemo(() => {
     if (!maintenanceTasks || maintenanceTasks.length === 0) return []
@@ -69,9 +77,35 @@ export function useAggregatedEvents(): AggregatedEventsResult {
       )
   }, [products, companyId, user?.id])
 
+  const haccpDeadlineEvents = useMemo(() => {
+    if (!staff || staff.length === 0) return []
+    return generateHaccpDeadlineEvents(staff, companyId || '', user?.id || '')
+  }, [staff, companyId, user?.id])
+
+  const temperatureEvents = useMemo(() => {
+    if (!conservationPoints || conservationPoints.length === 0) return []
+    return generateTemperatureCheckEvents(
+      conservationPoints,
+      companyId || '',
+      user?.id || ''
+    )
+  }, [conservationPoints, companyId, user?.id])
+
   const allEvents = useMemo(() => {
-    return [...maintenanceEvents, ...haccpExpiryEvents, ...productExpiryEvents]
-  }, [maintenanceEvents, haccpExpiryEvents, productExpiryEvents])
+    return [
+      ...maintenanceEvents,
+      ...haccpExpiryEvents,
+      ...productExpiryEvents,
+      ...haccpDeadlineEvents,
+      ...temperatureEvents,
+    ]
+  }, [
+    maintenanceEvents,
+    haccpExpiryEvents,
+    productExpiryEvents,
+    haccpDeadlineEvents,
+    temperatureEvents,
+  ])
 
   return {
     events: allEvents,
@@ -81,6 +115,8 @@ export function useAggregatedEvents(): AggregatedEventsResult {
       maintenance: maintenanceEvents.length,
       haccpExpiry: haccpExpiryEvents.length,
       productExpiry: productExpiryEvents.length,
+      haccpDeadlines: haccpDeadlineEvents.length,
+      temperatureChecks: temperatureEvents.length,
       custom: 0,
     },
   }

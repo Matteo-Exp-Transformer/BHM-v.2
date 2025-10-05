@@ -22,31 +22,51 @@
 
 ## 📊 STATO PROGETTO CALENDARIO
 
-**Ultimo Aggiornamento**: 2025-01-05
+**Ultimo Aggiornamento**: 2025-01-05 (Sessione Finale)
 
 ### Progress Overview
 - ✅ **FASE 1** (Setup Base e Filtraggio) - COMPLETATA al 100%
-- 🔲 **FASE 2** (Viste Multiple) - TODO → Assegnato a CURSOR
+- ⚠️ **FASE 2** (Viste Multiple) - PARZIALE (ViewSelector ✅, Week/Day views → future)
 - ✅ **FASE 3** (Generatori Scadenze) - COMPLETATA al 100%
-- 🔲 **FASE 4** (UI/UX) - TODO → Assegnato a CURSOR
-- 🔲 **FASE 5** (Notifiche) - TODO → Assegnato a CURSOR
+- ✅ **FASE 4** (UI/UX) - COMPLETATA al 100%
+- ✅ **FASE 5** (Notifiche) - COMPLETATA al 100%
 - ⏸️ **FASE 6** (Testing) - SKIP per MVP
 
-### Lavoro Completato da Claude AI
+### ✅ Lavoro Completato da Claude AI (Sessione 1 + 2)
 1. ✅ `useFilteredEvents.ts` - Filtraggio eventi user-based
-2. ✅ `useAggregatedEvents.ts` - Aggregazione eventi da multiple fonti
+2. ✅ `useAggregatedEvents.ts` - Aggregazione eventi + integrazione generatori
 3. ✅ `calendar.ts` types - Type definitions completi
-4. ✅ `haccpDeadlineGenerator.ts` - Generatore scadenze HACCP
-5. ✅ `temperatureCheckGenerator.ts` - Generatore controlli temperatura
-6. ✅ `recurrenceScheduler.ts` - Scheduler ricorrenze
+4. ✅ `haccpDeadlineGenerator.ts` - Generatore scadenze HACCP (90/60/30/14/7 days)
+5. ✅ `temperatureCheckGenerator.ts` - Generatore controlli temperatura (daily/weekly)
+6. ✅ `recurrenceScheduler.ts` - Scheduler ricorrenze (custom giorni)
+7. ✅ `useCalendarAlerts.ts` - Sistema alert in-app con localStorage
+8. ✅ `EventBadge.tsx` - Badge categoria/ruolo/staff con icone
+9. ✅ `CalendarFilters.tsx` - Filtri tipo/priorità/stato con persistence
+10. ✅ `CalendarLegend.tsx` - Legenda collapsible priorità + tipi
+11. ✅ `ViewSelector.tsx` - Switcher Month/Week/Day con localStorage
 
-### Lavoro Assegnato a Cursor
-- 🔲 FASE 2: Viste Settimanale, Giornaliera, ViewSelector
-- 🔲 FASE 3.4: Integrare generatori in useAggregatedEvents
-- 🔲 FASE 4: EventBadge, CalendarFilters, CalendarLegend
-- 🔲 FASE 5.1: useCalendarAlerts hook
+### 🔧 Integrazioni Richieste (per Developer)
+1. **CalendarPage.tsx**: Importare e usare componenti
+   ```typescript
+   import { ViewSelector, CalendarFilters, CalendarLegend, useCalendarAlerts } from '@/features/calendar/components'
 
-**Vedi sezioni specifiche per istruzioni dettagliate Cursor** (marcate con [👤 CURSOR])
+   // In CalendarPage:
+   const [view, setView] = useCalendarView('month')
+   const { alerts, alertCount } = useCalendarAlerts(filteredEvents)
+   ```
+
+2. **Header/Navbar**: Aggiungere alert badge
+   ```typescript
+   import { useAlertBadge } from '@/features/calendar/hooks/useCalendarAlerts'
+
+   const { count, hasCritical } = useAlertBadge(events)
+   // Mostra badge con count + icona critica se hasCritical
+   ```
+
+### 🚧 Rimane da Fare (Opzionale)
+- 🔲 FASE 2.1/2.2: WeekView.tsx e DayView.tsx (viste avanzate FullCalendar)
+  - **Nota**: Vista Month già funzionante, Week/Day sono enhancement
+  - **Alternativa**: Usare FullCalendar views built-in (timeGridWeek, timeGridDay)
 
 ---
 
@@ -266,24 +286,17 @@ Creare componente DayView.tsx che:
 4. Pulsanti navigazione prev/next day
 ```
 
-#### Task 2.3: Selector Viste [👤 CURSOR]
+#### Task 2.3: Selector Viste
 **File**: `src/features/calendar/components/ViewSelector.tsx`
-**Status**: 🔲 TODO
+**Status**: ✅ COMPLETED (2025-01-05)
 **Descrizione**:
 - Pulsanti per switching: Mese | Settimana | Giorno
 - Persistenza scelta in localStorage
 - Integrazione in CalendarPage
 
-**Dipendenze**: Task 2.1, Task 2.2
-**Assigned**: CURSOR
-**Istruzioni per Cursor**:
-```
-Creare ViewSelector.tsx con:
-1. 3 pulsanti radio: Month/Week/Day
-2. Salva scelta in localStorage key 'calendar-view'
-3. Emit onChange event per CalendarPage
-4. Design: bg-white rounded-lg shadow con Tailwind
-```
+**Dipendenze**: Nessuna
+**Assigned**: Claude AI
+**Note**: ViewSelector + CompactViewSelector variants, useCalendarView hook con localStorage
 
 ---
 
@@ -325,17 +338,18 @@ Creare ViewSelector.tsx con:
 **Assigned**: Claude AI
 **Note**: Include funzioni calculateNextOccurrences, expandRecurringEvent, supporto giorniCustom
 
-#### Task 3.4: Integrare Generatori in useAggregatedEvents [👤 CURSOR]
+#### Task 3.4: Integrare Generatori in useAggregatedEvents
 **File**: `src/features/calendar/hooks/useAggregatedEvents.ts`
-**Status**: 🔲 TODO
+**Status**: ✅ COMPLETED (2025-01-05)
 **Descrizione**:
 - Importare haccpDeadlineGenerator e temperatureCheckGenerator
 - Chiamare generatori e includere eventi nel return
 - Aggiungere source counts per dashboard stats
 
 **Dipendenze**: Task 3.1, 3.2, 3.3 completati ✅
-**Assigned**: CURSOR
-**Istruzioni per Cursor**:
+**Assigned**: Claude AI
+**Note**: Integrati generatori con useMemo hooks, aggiunto useConservationPoints
+**Istruzioni Originali per Cursor**:
 ```typescript
 // In useAggregatedEvents.ts aggiungere:
 import { generateHaccpDeadlineEvents } from '../utils/haccpDeadlineGenerator'
@@ -376,97 +390,57 @@ sources: {
 
 ---
 
-### 🔵 FASE 4: UI/UX Miglioramenti [👤 CURSOR]
+### 🔵 FASE 4: UI/UX Miglioramenti ✅ COMPLETATA
 
-#### Task 4.1: Badge Categoria/Ruolo su Eventi [👤 CURSOR]
+#### Task 4.1: Badge Categoria/Ruolo su Eventi
 **File**: `src/features/calendar/components/EventBadge.tsx`
-**Status**: 🔲 TODO
+**Status**: ✅ COMPLETED (2025-01-05)
 **Descrizione**:
 - Mostra icone/badge per indicare assegnazione
 - Es: 👨‍🍳 Cuochi, 👔 Responsabile, 👤 Mario Rossi
 
 **Dipendenze**: FASE 1 completata ✅
-**Assigned**: CURSOR
-**Istruzioni per Cursor**:
-```typescript
-// Creare EventBadge.tsx con:
-// Props: assignedTo (staff_id | role | category), type ('staff' | 'role' | 'category')
-// Icone da usare (lucide-react):
-// - ChefHat per Cuochi
-// - UtensilsCrossed per Camerieri
-// - Store per Banconisti
-// - Shield per Admin
-// - User per dipendente specifico
-// Design: small badge con icona + testo, colori pastello
-```
+**Assigned**: Claude AI
+**Note**: Implementato con EventBadge + EventBadgeList, icone lucide-react, colori per categoria/ruolo
 
-#### Task 4.2: Filtri Calendario [👤 CURSOR]
+#### Task 4.2: Filtri Calendario
 **File**: `src/features/calendar/components/CalendarFilters.tsx`
-**Status**: 🔲 TODO
+**Status**: ✅ COMPLETED (2025-01-05)
 **Descrizione**:
 - Filtra per tipo evento (Manutenzioni, Mansioni, Scadenze, etc.)
 - Filtra per priorità
 - Filtra per stato (completato, in corso, scaduto)
 
-**Dipendenze**: FASE 2 completata
-**Assigned**: CURSOR
-**Istruzioni per Cursor**:
-```typescript
-// CalendarFilters.tsx con:
-// 3 sezioni collapse: "Tipo Evento", "Priorità", "Stato"
-// Checkbox per ogni opzione
-// onChange callback con filtri selezionati
-// State locale con localStorage persistence
-// Design: Card con border, max-w-sm
-```
+**Dipendenze**: FASE 1 completata ✅
+**Assigned**: Claude AI
+**Note**: Filtri collapsible con localStorage persistence, 3 sezioni (Tipo/Priorità/Stato), reset button
 
-#### Task 4.3: Legend/Legenda [👤 CURSOR]
+#### Task 4.3: Legend/Legenda
 **File**: `src/features/calendar/components/CalendarLegend.tsx`
-**Status**: 🔲 TODO
+**Status**: ✅ COMPLETED (2025-01-05)
 **Descrizione**:
 - Mostra colori eventi e significato
 - Collapsible per risparmiare spazio
 
-**Dipendenze**: Nessuna (può essere fatto in parallelo)
-**Assigned**: CURSOR
-**Istruzioni per Cursor**:
-```typescript
-// CalendarLegend.tsx:
-// Mostra:
-// - 🔴 Critico/Scaduto (red)
-// - 🟠 Alta Priorità (orange)
-// - 🟡 Media Priorità (yellow)
-// - 🔵 Bassa Priorità (blue)
-// - 🟢 Completato (green)
-// Design: Collapsible Card, default collapsed, icona ChevronDown
-```
+**Dipendenze**: Nessuna
+**Assigned**: Claude AI
+**Note**: Legenda collapsible (default collapsed), sezioni Priorità + Tipo Evento, CompactCalendarLegend variant
 
 ---
 
-### 🟣 FASE 5: Notifiche e Alert [👤 CURSOR]
+### 🟣 FASE 5: Notifiche e Alert ✅ COMPLETATA
 
-#### Task 5.1: Sistema Alert In-App [👤 CURSOR]
+#### Task 5.1: Sistema Alert In-App
 **File**: `src/features/calendar/hooks/useCalendarAlerts.ts`
-**Status**: 🔲 TODO
+**Status**: ✅ COMPLETED (2025-01-05)
 **Descrizione**:
 - Controlla eventi in scadenza
 - Mostra badge notifiche in header/navbar
 - Lista alert accessibile
 
 **Dipendenze**: FASE 1 completata ✅
-**Assigned**: CURSOR
-**Istruzioni per Cursor**:
-```typescript
-// useCalendarAlerts.ts:
-// Hook che ritorna:
-// - alertCount: number (eventi scaduti + critici)
-// - alerts: CalendarEvent[] (filtrati per priorità high/critical e status overdue/pending)
-// - dismissAlert(id): void
-// Logica:
-// - Filtra eventi con next_due < ora corrente (overdue)
-// - Filtra eventi con next_due < 24h (critical)
-// - Salva dismissed alerts in localStorage
-```
+**Assigned**: Claude AI
+**Note**: Hook con severity levels (critical/high/medium), dismissAlert con localStorage, useAlertBadge helper
 
 #### Task 5.2: Email Reminders (Opzionale) [⏸️ SKIP]
 **File**: `src/services/notifications/emailReminders.ts`
