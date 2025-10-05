@@ -38,6 +38,9 @@ export interface CalendarEventMetadata {
   department_id?: string
   notes?: string
   completion_data?: Record<string, any>
+  assigned_to_staff_id?: string
+  assigned_to_role?: string
+  assigned_to_category?: string
 }
 
 export interface CalendarEvent {
