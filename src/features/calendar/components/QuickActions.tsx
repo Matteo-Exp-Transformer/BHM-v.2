@@ -23,7 +23,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
   onUpdate,
   onClose,
 }) => {
-  const { user } = useAuth()
+  const { userRole, userId } = useAuth()
   const [showRescheduleModal, setShowRescheduleModal] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState<string | null>(null)
   const [newDateTime, setNewDateTime] = useState<string>('')
@@ -31,7 +31,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
   // Filter available actions based on user role and event properties
   const availableActions = DEFAULT_QUICK_ACTIONS.filter(action => {
     // Check role permissions
-    const hasRole = user?.role && action.allowedRoles.includes(user.role)
+    const hasRole = userRole && action.allowedRoles.includes(userRole)
     if (!hasRole) return false
 
     // Check if action applies to this event type and status
@@ -50,7 +50,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
         ...event.metadata,
         completion_data: {
           completed_at: new Date(),
-          completed_by: user?.id || 'unknown',
+          completed_by: userId || 'unknown',
           method: 'quick_action',
         },
       },

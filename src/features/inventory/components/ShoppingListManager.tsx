@@ -15,58 +15,45 @@ export const ShoppingListManager = () => {
     templates,
     stats,
     isLoading,
-    isCreating,
-    isCreatingFromTemplate,
-    isDeleting,
     createShoppingList,
     createFromTemplate,
     deleteShoppingList,
   } = useShoppingLists()
 
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showProductSelector, setShowProductSelector] = useState(false)
-  const [editingList, setEditingList] = useState<ShoppingList | null>(null)
-  const [selectedTemplate, setSelectedTemplate] = useState<ShoppingList | null>(null)
+  const [selectedTemplate, setSelectedTemplate] = useState<ShoppingList | null>(
+    null
+  )
 
   const handleCreateNew = () => {
-    setEditingList(null)
     setSelectedTemplate(null)
     setShowCreateModal(true)
   }
 
   const handleCreateFromTemplate = (template: ShoppingList) => {
     setSelectedTemplate(template)
-    setEditingList(null)
     setShowCreateModal(true)
-  }
-
-  const handleAddProducts = (list: ShoppingList) => {
-    setEditingList(list)
-    setShowProductSelector(true)
   }
 
   const handleCloseModal = () => {
     setShowCreateModal(false)
-    setEditingList(null)
     setSelectedTemplate(null)
-  }
-
-  const handleCloseProductSelector = () => {
-    setShowProductSelector(false)
-    setEditingList(null)
   }
 
   const handleSubmit = (input: any) => {
     if (selectedTemplate) {
-      createFromTemplate({
-        templateId: selectedTemplate.id,
-        name: input.name,
-        description: input.description,
-      }, {
-        onSuccess: () => {
-          handleCloseModal()
+      createFromTemplate(
+        {
+          templateId: selectedTemplate.id,
+          name: input.name,
+          description: input.description,
         },
-      })
+        {
+          onSuccess: () => {
+            handleCloseModal()
+          },
+        }
+      )
     } else {
       createShoppingList(input, {
         onSuccess: () => {
@@ -111,13 +98,16 @@ export const ShoppingListManager = () => {
         icon={ShoppingCart}
         counter={stats.total}
         actions={cardActions}
-        loading={isLoading}
+        isLoading={isLoading}
         error={null}
-        showEmpty={shoppingLists.length === 0}
+        isEmpty={!isLoading && shoppingLists.length === 0}
         emptyMessage="Nessuna lista della spesa creata. Crea la tua prima lista per iniziare."
+        contentClassName="px-4 py-6 sm:px-6"
         className="mb-6"
+        emptyActionLabel="Crea una nuova lista"
+        onEmptyAction={handleCreateNew}
       >
-        {shoppingLists.length > 0 && (
+        {!isLoading && shoppingLists.length > 0 && (
           <div className="p-4">
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -183,9 +173,8 @@ export const ShoppingListManager = () => {
                     <ShoppingListCard
                       key={list.id}
                       list={list}
-                      onAddProducts={() => handleAddProducts(list)}
+                      onEdit={() => {}}
                       onDelete={() => handleDelete(list.id)}
-                      isDeleting={isDeleting}
                     />
                   ))}
                 </div>
@@ -206,10 +195,8 @@ export const ShoppingListManager = () => {
                     <ShoppingListCard
                       key={list.id}
                       list={list}
-                      onAddProducts={() => handleAddProducts(list)}
+                      onEdit={() => {}}
                       onDelete={() => handleDelete(list.id)}
-                      isDeleting={isDeleting}
-                      isCompleted={true}
                     />
                   ))}
                 </div>
@@ -246,7 +233,10 @@ export const ShoppingListManager = () => {
                               {template.item_count} prodotti
                             </span>
                             <span className="text-xs text-purple-500">
-                              Creata il {new Date(template.created_at).toLocaleDateString('it-IT')}
+                              Creata il{' '}
+                              {new Date(template.created_at).toLocaleDateString(
+                                'it-IT'
+                              )}
                             </span>
                           </div>
                         </div>
@@ -297,15 +287,16 @@ export const ShoppingListManager = () => {
       <CreateListModal
         isOpen={showCreateModal}
         onClose={handleCloseModal}
-        onSubmit={handleSubmit}
-        template={selectedTemplate}
-        isLoading={isCreating || isCreatingFromTemplate}
+        onCreate={handleSubmit}
+        templates={templates}
       />
 
       <ProductSelector
-        isOpen={showProductSelector}
-        onClose={handleCloseProductSelector}
-        list={editingList}
+        products={[]}
+        selectedProducts={[]}
+        onToggleProduct={() => {}}
+        onClose={() => {}}
+        onConfirm={() => {}}
       />
     </>
   )

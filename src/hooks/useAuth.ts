@@ -1,11 +1,19 @@
 import { useUser } from '@clerk/clerk-react'
-import type { User } from '@clerk/clerk-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 
-// Extended User with company_id
-interface ExtendedUser extends User {
+// Define our own User interface based on what we actually use from Clerk
+interface ClerkUser {
+  id: string
+  firstName?: string | null
+  lastName?: string | null
+  emailAddresses?: Array<{ emailAddress: string }>
+}
+
+// Extended User with company_id and role
+interface ExtendedUser extends ClerkUser {
   company_id?: string
+  role?: UserRole
 }
 
 // Role types
@@ -97,6 +105,7 @@ const getPermissionsFromRole = (role: UserRole): UserPermissions => {
 // Main useAuth hook
 export const useAuth = () => {
   const { user, isLoaded: isClerkLoaded, isSignedIn } = useUser()
+  const clerkUser = user as ClerkUser | null
 
   // Debug logs removed for cleaner console
 
@@ -107,19 +116,19 @@ export const useAuth = () => {
     error: profileError,
     refetch: refetchProfile,
   } = useQuery({
-    queryKey: ['userProfile', user?.id],
+    queryKey: ['userProfile', clerkUser?.id],
     queryFn: async (): Promise<UserProfile | null> => {
-      if (!user?.emailAddresses?.[0]?.emailAddress) {
+      if (!clerkUser?.emailAddresses?.[0]?.emailAddress) {
         return null
       }
 
-      const userEmail = user.emailAddresses[0].emailAddress
+      const userEmail = clerkUser.emailAddresses[0].emailAddress
 
       // First, check if user profile already exists
       const { data: existingProfile } = await supabase
         .from('user_profiles')
         .select('*, staff_id, role')
-        .eq('clerk_user_id', user.id)
+        .eq('clerk_user_id', clerkUser.id)
         .single()
 
       if (existingProfile) {
@@ -147,10 +156,10 @@ export const useAuth = () => {
       const { data: newProfile, error: createError } = await supabase
         .from('user_profiles')
         .insert({
-          clerk_user_id: user.id,
+          clerk_user_id: clerkUser.id,
           email: userEmail,
-          first_name: user.firstName,
-          last_name: user.lastName,
+          first_name: clerkUser.firstName,
+          last_name: clerkUser.lastName,
           company_id,
           staff_id,
           role,
@@ -165,7 +174,7 @@ export const useAuth = () => {
 
       return newProfile as UserProfile
     },
-    enabled: !!user?.id && isSignedIn,
+    enabled: !!clerkUser?.id && isSignedIn,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 3,
   })
@@ -201,17 +210,20 @@ export const useAuth = () => {
   const displayName =
     userProfile?.first_name && userProfile?.last_name
       ? `${userProfile.first_name} ${userProfile.last_name}`
-      : user?.firstName && user?.lastName
-        ? `${user.firstName} ${user.lastName}`
+      : clerkUser?.firstName && clerkUser?.lastName
+        ? `${clerkUser.firstName} ${clerkUser.lastName}`
         : userProfile?.email || 'User'
 
   // Error handling
   const authError = profileError ? 'Failed to load user profile' : null
 
-  // Extended user with company_id
-  const extendedUser = user as ExtendedUser
+  // Extended user with company_id and role
+  const extendedUser = clerkUser as ExtendedUser
   if (extendedUser && userProfile?.company_id) {
     extendedUser.company_id = userProfile.company_id
+  }
+  if (extendedUser && userProfile?.role) {
+    extendedUser.role = userProfile.role
   }
 
   return {
@@ -227,6 +239,7 @@ export const useAuth = () => {
 
     // User data
     user: extendedUser,
+    userId: clerkUser?.id || null,
     userProfile,
     userRole,
     permissions,

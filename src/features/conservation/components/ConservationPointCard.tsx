@@ -26,8 +26,8 @@ export function ConservationPointCard({
   onDelete,
 }: ConservationPointCardProps) {
   const [showDetails, setShowDetails] = useState(false)
-  const colors = CONSERVATION_COLORS[point.status]
-  const tempRange = TEMPERATURE_RANGES[point.type]
+  const colors = CONSERVATION_COLORS[point.status] || CONSERVATION_COLORS.normal
+  const tempRange = TEMPERATURE_RANGES[point.type] || TEMPERATURE_RANGES.ambient
 
   const getTypeIcon = () => {
     switch (point.type) {
@@ -93,7 +93,7 @@ export function ConservationPointCard({
             <h3 className={`font-semibold ${colors.text}`}>{point.name}</h3>
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <MapPin className="w-4 h-4" />
-              <span>{point.departments?.name || 'Reparto non assegnato'}</span>
+              <span>{point.department?.name || 'Reparto non assegnato'}</span>
               <span className="mx-1">•</span>
               <span>{getTypeName()}</span>
             </div>
@@ -120,7 +120,7 @@ export function ConservationPointCard({
       {/* Temperature Info */}
       <div className="grid grid-cols-2 gap-4 mb-3">
         <div className="flex items-center space-x-2">
-          <Thermometer className={`w-4 h-4 ${colors.icon}`} />
+          <Thermometer className={`w-4 h-4 ${colors.text}`} />
           <div>
             <div className="text-sm text-gray-600">Temperatura target</div>
             <div className={`font-semibold ${colors.text}`}>

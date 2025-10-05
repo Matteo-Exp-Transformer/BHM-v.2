@@ -1,11 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
+import type { ConservationPoint, ConservationStats } from '@/types/conservation'
 import {
-  ConservationPoint,
-  // ConservationPointType,
   classifyConservationPoint,
-  // getConservationStatus,
+  classifyPointStatus,
 } from '@/types/conservation'
 import { toast } from 'react-toastify'
 
@@ -26,7 +25,7 @@ export function useConservationPoints() {
       is_blast_chiller: false,
       created_at: new Date(),
       updated_at: new Date(),
-      departments: { id: '1', name: 'Cucina' },
+      department: { id: '1', name: 'Cucina' },
       status: 'normal',
     },
     {
@@ -40,7 +39,7 @@ export function useConservationPoints() {
       is_blast_chiller: false,
       created_at: new Date(),
       updated_at: new Date(),
-      departments: { id: '1', name: 'Cucina' },
+      department: { id: '1', name: 'Cucina' },
       status: 'normal',
     },
     {
@@ -54,7 +53,7 @@ export function useConservationPoints() {
       is_blast_chiller: false,
       created_at: new Date(),
       updated_at: new Date(),
-      departments: { id: '2', name: 'Bancone' },
+      department: { id: '2', name: 'Bancone' },
       status: 'warning',
     },
     {
@@ -68,7 +67,7 @@ export function useConservationPoints() {
       is_blast_chiller: true,
       created_at: new Date(),
       updated_at: new Date(),
-      departments: { id: '1', name: 'Cucina' },
+      department: { id: '1', name: 'Cucina' },
       status: 'critical',
     },
   ]
@@ -78,18 +77,50 @@ export function useConservationPoints() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['conservation-points'],
+    queryKey: ['conservation-points', user?.company_id],
     queryFn: async () => {
-      // FORCE MOCK DATA FOR TESTING
-      console.log('🔧 Using mock data for conservation points')
-      return mockData
+      if (!user?.company_id) {
+        console.log('🔧 No company_id, using mock data for conservation points')
+        return mockData
+      }
+
+      console.log(
+        '🔧 Loading conservation points from Supabase for company:',
+        user.company_id
+      )
+      const { data, error } = await supabase
+        .from('conservation_points')
+        .select(
+          `
+          *,
+          department:departments(id, name)
+        `
+        )
+        .eq('company_id', user.company_id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error loading conservation points:', error)
+        // Fallback to mock data if there's an error
+        console.log('🔧 Fallback to mock data due to error')
+        return mockData
+      }
+
+      console.log(
+        '✅ Loaded conservation points from Supabase:',
+        data?.length || 0
+      )
+      return data || []
     },
-    enabled: true, // Always enabled for testing
+    enabled: !!user, // Only run when user is available
   })
 
   const createConservationPointMutation = useMutation({
-    mutationFn: async (
-      data: Omit<
+    mutationFn: async ({
+      conservationPoint,
+      maintenanceTasks,
+    }: {
+      conservationPoint: Omit<
         ConservationPoint,
         | 'id'
         | 'company_id'
@@ -98,32 +129,62 @@ export function useConservationPoints() {
         | 'status'
         | 'last_temperature_reading'
       >
-    ) => {
+      maintenanceTasks: any[]
+    }) => {
       if (!user?.company_id) throw new Error('No company ID available')
 
       // Auto-classify based on temperature
-      const type = classifyConservationPoint(
-        data.setpoint_temp,
-        data.is_blast_chiller
+      const typeClassification = classifyConservationPoint(
+        conservationPoint.setpoint_temp,
+        conservationPoint.is_blast_chiller
       )
 
-      const { data: result, error } = await supabase
+      // Create conservation point
+      const { data: pointResult, error: pointError } = await supabase
         .from('conservation_points')
         .insert([
           {
-            ...data,
+            ...conservationPoint,
             company_id: user.company_id,
-            type,
+            type: typeClassification,
           },
         ])
         .select()
         .single()
 
-      if (error) throw error
-      return result
+      if (pointError) throw pointError
+
+      // Create maintenance tasks if any
+      if (maintenanceTasks.length > 0) {
+        const tasksToInsert = maintenanceTasks.map(task => ({
+          company_id: user.company_id,
+          conservation_point_id: pointResult.id,
+          title: task.title,
+          type: task.type,
+          frequency: task.frequency,
+          estimated_duration: task.estimated_duration,
+          assigned_to: task.assigned_to,
+          priority: task.priority,
+          next_due: task.next_due.toISOString(),
+          status: 'scheduled',
+          instructions: task.instructions,
+        }))
+
+        const { error: tasksError } = await supabase
+          .from('maintenance_tasks')
+          .insert(tasksToInsert)
+
+        if (tasksError) {
+          console.error('Error creating maintenance tasks:', tasksError)
+          // Don't throw here - the point was created successfully
+        }
+      }
+
+      return pointResult
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conservation-points'] })
+      queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] })
       toast.success('Punto di conservazione creato con successo')
     },
     onError: error => {
@@ -189,25 +250,48 @@ export function useConservationPoints() {
     },
   })
 
-  const stats = {
-    total: conservationPoints?.length || 0,
-    normal: conservationPoints?.filter(p => p.status === 'normal').length || 0,
-    warning:
-      conservationPoints?.filter(p => p.status === 'warning').length || 0,
-    critical:
-      conservationPoints?.filter(p => p.status === 'critical').length || 0,
-    byType: {
-      ambient:
-        conservationPoints?.filter(p => p.type === 'ambient').length || 0,
-      fridge: conservationPoints?.filter(p => p.type === 'fridge').length || 0,
-      freezer:
-        conservationPoints?.filter(p => p.type === 'freezer').length || 0,
-      blast: conservationPoints?.filter(p => p.type === 'blast').length || 0,
+  const points = (conservationPoints ?? []) as ConservationPoint[]
+
+  const initialStatusCount: ConservationStats['by_status'] = {
+    normal: 0,
+    warning: 0,
+    critical: 0,
+  }
+
+  const initialTypeCount: ConservationStats['by_type'] = {
+    ambient: 0,
+    fridge: 0,
+    freezer: 0,
+    blast: 0,
+  }
+
+  const byStatus = points.reduce<ConservationStats['by_status']>(
+    (acc, point) => {
+      acc[point.status] = (acc[point.status] ?? 0) + 1
+      return acc
     },
+    initialStatusCount
+  )
+
+  const byType = points.reduce<ConservationStats['by_type']>((acc, point) => {
+    acc[point.type] = (acc[point.type] ?? 0) + 1
+    return acc
+  }, initialTypeCount)
+
+  const stats: ConservationStats = {
+    total_points: points.length,
+    by_status: byStatus,
+    by_type: byType,
+    temperature_compliance_rate: 0,
+    maintenance_compliance_rate: 0,
+    alerts_count: points.filter(point => {
+      const status = classifyPointStatus(point).status
+      return status !== 'normal'
+    }).length,
   }
 
   return {
-    conservationPoints: conservationPoints || [],
+    conservationPoints: points,
     isLoading,
     error,
     stats,

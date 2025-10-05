@@ -1,4 +1,3 @@
-import React from 'react'
 import { Clock, Globe, Bell, Palette } from 'lucide-react'
 import type { CalendarSettings as CalendarSettingsType } from '@/types/calendar'
 
@@ -27,7 +26,10 @@ export function CalendarSettings({
   settings,
   onSettingsChange,
 }: CalendarSettingsProps) {
-  const updateBusinessHours = (field: string, value: any) => {
+  const updateBusinessHours = (
+    field: keyof CalendarSettingsType['businessHours'],
+    value: CalendarSettingsType['businessHours'][typeof field]
+  ) => {
     onSettingsChange({
       businessHours: {
         ...settings.businessHours,
@@ -45,7 +47,10 @@ export function CalendarSettings({
     })
   }
 
-  const updateNotifications = (field: string, value: any) => {
+  const updateNotifications = (
+    field: keyof CalendarSettingsType['notifications'],
+    value: CalendarSettingsType['notifications'][typeof field]
+  ) => {
     onSettingsChange({
       notifications: {
         ...settings.notifications,
@@ -70,7 +75,10 @@ export function CalendarSettings({
             <select
               value={settings.defaultView}
               onChange={e =>
-                onSettingsChange({ defaultView: e.target.value as any })
+                onSettingsChange({
+                  defaultView: e.target
+                    .value as CalendarSettingsType['defaultView'],
+                })
               }
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -87,10 +95,14 @@ export function CalendarSettings({
               Inizio Settimana
             </label>
             <select
-              value={settings.firstDayOfWeek}
-              onChange={e =>
-                onSettingsChange({ firstDayOfWeek: parseInt(e.target.value) })
-              }
+              value={settings.weekStartsOn}
+              onChange={e => {
+                const value = parseInt(e.target.value, 10) as 0 | 1
+                onSettingsChange({
+                  weekStartsOn: value,
+                  firstDayOfWeek: value,
+                })
+              }}
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               {weekStartOptions.map(option => (
@@ -117,7 +129,10 @@ export function CalendarSettings({
             <select
               value={settings.timeFormat}
               onChange={e =>
-                onSettingsChange({ timeFormat: e.target.value as any })
+                onSettingsChange({
+                  timeFormat: e.target
+                    .value as CalendarSettingsType['timeFormat'],
+                })
               }
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -194,6 +209,9 @@ export function CalendarSettings({
               training: 'Formazione',
               inventory: 'Inventario',
               meeting: 'Riunioni',
+              temperature_reading: 'Letture Temperatura',
+              general_task: 'Attività Generali',
+              custom: 'Personalizzato',
             }
 
             return (
@@ -228,7 +246,7 @@ export function CalendarSettings({
               },
               notifications: {
                 enabled: true,
-                defaultTimings: ['minutes_before'],
+                defaultTimings: ['minutes_before', 'hours_before'],
               },
               colorScheme: {
                 maintenance: '#3B82F6',
@@ -236,6 +254,9 @@ export function CalendarSettings({
                 training: '#F59E0B',
                 inventory: '#8B5CF6',
                 meeting: '#EF4444',
+                temperature_reading: '#06B6D4',
+                general_task: '#6366F1',
+                custom: '#EC4899',
               },
             }
             onSettingsChange(defaultSettings)

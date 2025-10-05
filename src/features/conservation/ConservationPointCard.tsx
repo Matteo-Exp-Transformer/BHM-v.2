@@ -1,13 +1,10 @@
-import React from 'react'
 import {
   Thermometer,
   Clock,
   AlertTriangle,
   CheckCircle,
-  Plus,
   Wrench,
   TrendingUp,
-  Calendar,
 } from 'lucide-react'
 import type { ConservationPoint } from '@/types/conservation'
 
@@ -78,19 +75,35 @@ export function ConservationPointCard({
     }
   }
 
-  const latestReading = point.temperature_readings?.[0]
+  const latestReading = point.last_temperature_reading
   const pendingMaintenance =
-    point.maintenance_tasks?.filter(
-      task => task.is_active && new Date(task.next_due_date) <= new Date()
-    ) || []
+    point.maintenance_tasks?.filter(task => {
+      if (!task.next_due) return false
 
-  const formatDate = (date: Date) => {
+      const nextDueDate =
+        typeof task.next_due === 'string'
+          ? new Date(task.next_due)
+          : task.next_due
+
+      if (Number.isNaN(nextDueDate.getTime())) {
+        return false
+      }
+
+      return task.status !== 'completed' && nextDueDate <= new Date()
+    }) || []
+
+  const formatDate = (date: Date | string | undefined) => {
+    if (!date) return '-'
+
+    const parsedDate = typeof date === 'string' ? new Date(date) : date
+    if (Number.isNaN(parsedDate.getTime())) return '-'
+
     return new Intl.DateTimeFormat('it-IT', {
       day: '2-digit',
       month: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
-    }).format(date)
+    }).format(parsedDate)
   }
 
   return (
@@ -198,15 +211,25 @@ export function ConservationPointCard({
                 key={task.id}
                 className="flex items-center justify-between text-xs"
               >
-                <span className="text-gray-600 capitalize">{task.kind}</span>
+                <span className="text-gray-600 capitalize">{task.type}</span>
                 <span
                   className={`font-medium ${
-                    new Date(task.next_due_date) <= new Date()
+                    (() => {
+                      if (!task.next_due) return false
+                      const nextDueDate =
+                        typeof task.next_due === 'string'
+                          ? new Date(task.next_due)
+                          : task.next_due
+                      return (
+                        !Number.isNaN(nextDueDate.getTime()) &&
+                        nextDueDate <= new Date()
+                      )
+                    })()
                       ? 'text-red-600'
                       : 'text-gray-500'
                   }`}
                 >
-                  {formatDate(task.next_due_date)}
+                  {formatDate(task.next_due)}
                 </span>
               </div>
             ))}

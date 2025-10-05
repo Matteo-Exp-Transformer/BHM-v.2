@@ -1,8 +1,7 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   X,
   Calendar,
-  Clock,
   MapPin,
   User,
   AlertTriangle,
@@ -10,15 +9,12 @@ import {
   Edit,
   Trash2,
 } from 'lucide-react'
-import type { TypedCalendarEvent } from '@/types/calendar'
+import type { CalendarEvent } from '@/types/calendar'
 
 interface EventDetailsModalProps {
-  event: TypedCalendarEvent
+  event: CalendarEvent
   onClose: () => void
-  onUpdate: (data: {
-    eventId: string
-    updates: Partial<TypedCalendarEvent>
-  }) => void
+  onUpdate: (data: { eventId: string; updates: Partial<CalendarEvent> }) => void
   onDelete: (eventId: string) => void
 }
 
@@ -28,6 +24,9 @@ const sourceLabels = {
   training: 'Formazione',
   inventory: 'Inventario',
   meeting: 'Riunione',
+  temperature_reading: 'Lettura Temperatura',
+  general_task: 'Attività Generale',
+  custom: 'Personalizzato',
 }
 
 const priorityLabels = {
@@ -66,7 +65,6 @@ export function EventDetailsModal({
   onUpdate,
   onDelete,
 }: EventDetailsModalProps) {
-  const [isEditing, setIsEditing] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const formatDate = (date: Date) => {
@@ -180,7 +178,8 @@ export function EventDetailsModal({
                 {event.title}
               </h2>
               <p className="text-sm text-gray-600">
-                {sourceLabels[event.source]} • {formatDate(event.start)}
+                {event.source ? sourceLabels[event.source] : 'Sconosciuto'} •{' '}
+                {formatDate(event.start)}
               </p>
             </div>
           </div>
@@ -202,10 +201,14 @@ export function EventDetailsModal({
               </span>
               <span
                 className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  priorityColors[event.extendedProps.priority]
+                  event.extendedProps.priority
+                    ? priorityColors[event.extendedProps.priority]
+                    : ''
                 }`}
               >
-                {priorityLabels[event.extendedProps.priority]}
+                {event.extendedProps.priority
+                  ? priorityLabels[event.extendedProps.priority]
+                  : 'N/A'}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -213,7 +216,7 @@ export function EventDetailsModal({
               <select
                 value={event.extendedProps.status}
                 onChange={e => handleStatusChange(e.target.value)}
-                className={`px-2 py-1 rounded-full text-xs font-medium border-0 ${statusColors[event.extendedProps.status]}`}
+                className={`px-2 py-1 rounded-full text-xs font-medium border-0 ${event.extendedProps.status ? statusColors[event.extendedProps.status] : ''}`}
               >
                 {Object.entries(statusLabels).map(([value, label]) => (
                   <option key={value} value={value}>
@@ -316,7 +319,9 @@ export function EventDetailsModal({
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setIsEditing(true)}
+              onClick={() => {
+                /* TODO: Implement editing mode */
+              }}
               className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
               <Edit className="w-4 h-4" />

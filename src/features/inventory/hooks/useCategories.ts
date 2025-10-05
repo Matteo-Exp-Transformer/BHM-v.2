@@ -22,7 +22,7 @@ export const useCategories = () => {
     error,
     refetch,
   } = useQuery({
-    queryKey: QUERY_KEYS.categories(companyId),
+    queryKey: QUERY_KEYS.categories(companyId || ''),
     queryFn: async () => {
       if (!companyId) return []
 
@@ -65,7 +65,7 @@ export const useCategories = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.categories(companyId),
+        queryKey: QUERY_KEYS.categories(companyId || ''),
       })
       toast.success('Categoria creata con successo')
     },
@@ -101,7 +101,7 @@ export const useCategories = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.categories(companyId),
+        queryKey: QUERY_KEYS.categories(companyId || ''),
       })
       toast.success('Categoria aggiornata con successo')
     },
@@ -141,7 +141,7 @@ export const useCategories = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.categories(companyId),
+        queryKey: QUERY_KEYS.categories(companyId || ''),
       })
       toast.success('Categoria eliminata con successo')
     },

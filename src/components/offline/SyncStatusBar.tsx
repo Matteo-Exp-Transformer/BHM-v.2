@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   Wifi,
   WifiOff,
@@ -7,7 +6,6 @@ import {
   CheckCircle,
   Clock,
   Upload,
-  Download,
 } from 'lucide-react'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'

@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Home,
   Snowflake,
@@ -8,11 +8,10 @@ import {
   Settings,
   Users,
 } from 'lucide-react'
-<<<<<<< HEAD
 import { SyncStatusBar } from '@/components/offline/SyncStatusBar'
-=======
-import { useAuth } from '@/hooks/useAuth'
->>>>>>> Curs
+import { useAuth, UserRole } from '@/hooks/useAuth'
+import HeaderButtons from '@/components/HeaderButtons'
+import { resetApp } from '@/utils/onboardingHelpers'
 
 interface MainLayoutProps {
   children: ReactNode
@@ -20,7 +19,13 @@ interface MainLayoutProps {
 
 const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation()
+  const navigate = useNavigate()
   const { hasRole, isLoading } = useAuth()
+
+  // Funzione per aprire l'onboarding
+  const handleOpenOnboarding = () => {
+    navigate('/onboarding')
+  }
 
   const allTabs = [
     { id: 'home', label: 'Home', icon: Home, path: '/', requiresAuth: true },
@@ -51,7 +56,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       icon: Settings,
       path: '/impostazioni',
       requiresAuth: true,
-      requiredRole: ['admin'],
+      requiredRole: ['admin'] as UserRole[],
     },
     {
       id: 'management',
@@ -59,7 +64,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       icon: Users,
       path: '/gestione',
       requiresAuth: true,
-      requiredRole: ['admin', 'responsabile'],
+      requiredRole: ['admin', 'responsabile'] as UserRole[],
     },
   ]
 
@@ -76,30 +81,35 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   })
 
   return (
-<<<<<<< HEAD
-    <div className="min-h-screen bg-gray-50 pt-20">
-      {/* Top Navigation */}
-      <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 safe-area-top z-50">
-        <div className="grid grid-cols-6 h-16">
-=======
-    <div className="min-h-screen bg-gray-50 pb-16">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header with Control Buttons */}
+      <header className="bg-white border-b border-gray-200 px-4 py-3 safe-area-top">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <h1 className="text-lg font-semibold text-gray-900">
+              HACCP Manager
+            </h1>
+          </div>
+          <HeaderButtons
+            onResetApp={resetApp}
+            onOpenOnboarding={handleOpenOnboarding}
+            showResetApp={import.meta.env.DEV}
+          />
+        </div>
+      </header>
+
       {/* Main Content */}
-      <main className="safe-area-top">{children}</main>
+      <main className="pb-20 pt-0" role="main" aria-label="Main content">
+        {children}
+      </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-area-bottom">
-        <div
-          className={`grid h-16 ${
-            tabs.length === 4
-              ? 'grid-cols-4'
-              : tabs.length === 5
-                ? 'grid-cols-5'
-                : tabs.length === 6
-                  ? 'grid-cols-6'
-                  : `grid-cols-${tabs.length}`
-          }`}
-        >
->>>>>>> Curs
+      <nav
+        className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-area-bottom z-50"
+        role="navigation"
+        aria-label="Main navigation"
+      >
+        <div className="flex h-16 items-stretch gap-1 overflow-x-auto px-2 pb-1">
           {tabs.map(tab => {
             const Icon = tab.icon
             const isActive = location.pathname === tab.path
@@ -108,22 +118,23 @@ const MainLayout = ({ children }: MainLayoutProps) => {
               <Link
                 key={tab.id}
                 to={tab.path}
-                className={`flex flex-col items-center justify-center space-y-1 touch-manipulation ${
+                className={`flex min-w-[80px] flex-1 flex-col items-center justify-center space-y-1 rounded-md touch-manipulation transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
                   isActive
                     ? 'text-primary-600 bg-primary-50'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
+                aria-label={`Navigate to ${tab.label}`}
+                aria-current={isActive ? 'page' : undefined}
               >
-                <Icon size={20} />
-                <span className="text-xs font-medium">{tab.label}</span>
+                <Icon size={20} aria-hidden="true" />
+                <span className="text-[10px] font-medium sm:text-xs">
+                  {tab.label}
+                </span>
               </Link>
             )
           })}
         </div>
       </nav>
-
-      {/* Main Content */}
-      <main className="min-h-screen">{children}</main>
 
       {/* Offline Sync Status Bar */}
       <SyncStatusBar position="bottom" />

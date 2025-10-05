@@ -1,5 +1,4 @@
-import React from 'react'
-import { Check, X } from 'lucide-react'
+import { Check } from 'lucide-react'
 import type { CalendarFilter as CalendarFilterType } from '@/types/calendar'
 
 interface CalendarFilterProps {

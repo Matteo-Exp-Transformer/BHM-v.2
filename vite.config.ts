@@ -102,6 +102,44 @@ export default defineConfig({
     },
   },
   build: {
-    target: 'es2020',
+    target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks
+          'react-vendor': ['react', 'react-dom'],
+          'router-vendor': ['react-router-dom'],
+          'query-vendor': ['@tanstack/react-query'],
+          'auth-vendor': ['@clerk/clerk-react'],
+          'ui-vendor': ['lucide-react', 'react-toastify'],
+          'calendar-vendor': [
+            '@fullcalendar/react',
+            '@fullcalendar/core',
+            '@fullcalendar/daygrid',
+            '@fullcalendar/timegrid',
+            '@fullcalendar/interaction',
+          ],
+
+          // Feature chunks
+          'calendar-features': [
+            './src/features/calendar/CalendarPage',
+            './src/features/calendar/Calendar',
+            './src/hooks/useCalendar.ts',
+          ],
+          'inventory-features': [
+            './src/features/inventory/InventoryPage',
+            './src/types/inventory.ts',
+          ],
+          'conservation-features': [
+            './src/features/conservation/ConservationPage',
+            './src/hooks/useConservation.ts',
+          ],
+          'management-features': ['./src/features/management/ManagementPage'],
+          'dashboard-features': ['./src/features/dashboard/DashboardPage'],
+          'settings-features': ['./src/features/settings/SettingsPage'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
   },
 })
