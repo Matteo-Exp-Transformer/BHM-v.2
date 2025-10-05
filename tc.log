@@ -1,0 +1,453 @@
+
+> haccp-business-manager@1.0.0 type-check
+> tsc --noEmit --skipLibCheck --pretty false --skipLibCheck --noEmit
+
+src/features/conservation/components/AddPointModal.tsx(305,10): error TS6133: 'showMaintenanceForm' is declared but its value is never read.
+src/features/conservation/ConservationPage.tsx(329,37): error TS7006: Parameter 'point' implicitly has an 'any' type.
+src/features/conservation/ConservationPage.tsx(353,21): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/conservation/ConservationPage.tsx(371,41): error TS7006: Parameter 'point' implicitly has an 'any' type.
+src/features/conservation/ConservationPage.tsx(453,43): error TS7006: Parameter 'point' implicitly has an 'any' type.
+src/features/conservation/ConservationStats.tsx(46,20): error TS2339: Property 'alerts_count' does not exist on type 'ConservationStats'.
+src/features/conservation/ConservationStats.tsx(49,15): error TS2339: Property 'alerts_count' does not exist on type 'ConservationStats'.
+src/features/conservation/ConservationStats.tsx(116,26): error TS2339: Property 'by_type' does not exist on type 'ConservationStats'.
+src/features/conservation/ConservationStats.tsx(125,37): error TS2339: Property 'by_type' does not exist on type 'ConservationStats'.
+src/features/conservation/ConservationStats.tsx(149,23): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+src/features/conservation/ConservationStats.tsx(163,26): error TS2339: Property 'by_status' does not exist on type 'ConservationStats'.
+src/features/conservation/ConservationStats.tsx(172,37): error TS2339: Property 'by_status' does not exist on type 'ConservationStats'.
+src/features/conservation/ConservationStats.tsx(210,25): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+src/features/conservation/CreateConservationPointModal.tsx(58,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/features/conservation/hooks/useConservationPoints.ts(140,9): error TS2554: Expected 1 arguments, but got 2.
+src/features/conservation/hooks/useConservationPoints.ts(209,9): error TS2322: Type '{ status: ConservationStatus; message: string; priority: number; }' is not assignable to type 'ConservationPointType | undefined'.
+src/features/conservation/hooks/useConservationPoints.ts(211,11): error TS2554: Expected 1 arguments, but got 2.
+src/features/conservation/hooks/useConservationPoints.ts(256,40): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/conservation/hooks/useConservationPoints.ts(258,34): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/conservation/hooks/useConservationPoints.ts(260,34): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/conservation/hooks/useConservationPoints.ts(263,36): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/conservation/hooks/useConservationPoints.ts(264,42): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/conservation/hooks/useConservationPoints.ts(266,36): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/conservation/hooks/useConservationPoints.ts(267,41): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/conservation/hooks/useMaintenanceTasks.ts(31,7): error TS2353: Object literal may only specify known properties, and 'instructions' does not exist in type 'MaintenanceTask'.
+src/features/conservation/hooks/useMaintenanceTasks.ts(52,7): error TS2353: Object literal may only specify known properties, and 'instructions' does not exist in type 'MaintenanceTask'.
+src/features/conservation/hooks/useMaintenanceTasks.ts(72,7): error TS2353: Object literal may only specify known properties, and 'instructions' does not exist in type 'MaintenanceTask'.
+src/features/conservation/hooks/useMaintenanceTasks.ts(92,7): error TS2353: Object literal may only specify known properties, and 'instructions' does not exist in type 'MaintenanceTask'.
+src/features/conservation/MaintenanceTaskModal.tsx(81,7): error TS2353: Object literal may only specify known properties, and 'kind' does not exist in type 'CreateMaintenanceTaskRequest'.
+src/features/conservation/TemperatureReadingModal.tsx(6,3): error TS2305: Module '"@/types/conservation"' has no exported member 'TemperatureMethod'.
+src/features/dashboard/DashboardPage.tsx(325,43): error TS2339: Property 'kind' does not exist on type 'MaintenanceTask'.
+src/features/dashboard/DashboardPage.tsx(326,30): error TS2339: Property 'next_due_date' does not exist on type 'MaintenanceTask'.
+src/features/dashboard/hooks/useDashboardData.ts(131,9): error TS7006: Parameter 'point' implicitly has an 'any' type.
+src/features/dashboard/hooks/useDashboardData.ts(134,9): error TS7006: Parameter 'point' implicitly has an 'any' type.
+src/features/dashboard/hooks/useDashboardData.ts(137,9): error TS7006: Parameter 'point' implicitly has an 'any' type.
+src/features/dashboard/hooks/useDashboardData.ts(140,31): error TS2339: Property 'next_due_date' does not exist on type 'MaintenanceTask'.
+src/features/dashboard/hooks/useDashboardData.ts(164,35): error TS2339: Property 'next_due_date' does not exist on type 'MaintenanceTask'.
+src/features/inventory/hooks/useProducts.ts(158,42): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/inventory/hooks/useProducts.ts(160,11): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/inventory/hooks/useProducts.ts(166,11): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/inventory/hooks/useProducts.ts(171,35): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/inventory/hooks/useProducts.ts(172,36): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/inventory/hooks/useProducts.ts(173,37): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/inventory/hooks/useProducts.ts(174,34): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/inventory/hooks/useProducts.ts(177,28): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/features/inventory/InventoryPage.tsx(301,27): error TS7006: Parameter 'product' implicitly has an 'any' type.
+src/hooks/useConservation.ts(163,29): error TS2339: Property 'method' does not exist on type 'TemperatureReadingsFilter'.
+src/hooks/useConservation.ts(163,57): error TS2339: Property 'method' does not exist on type 'TemperatureReadingsFilter'.
+src/hooks/useConservation.ts(164,54): error TS2339: Property 'method' does not exist on type 'TemperatureReadingsFilter'.
+src/hooks/useConservation.ts(166,29): error TS2339: Property 'date_range' does not exist on type 'TemperatureReadingsFilter'.
+src/hooks/useConservation.ts(168,49): error TS2339: Property 'date_range' does not exist on type 'TemperatureReadingsFilter'.
+src/hooks/useConservation.ts(169,49): error TS2339: Property 'date_range' does not exist on type 'TemperatureReadingsFilter'.
+src/hooks/useConservation.ts(171,29): error TS2339: Property 'recorded_by' does not exist on type 'TemperatureReadingsFilter'.
+src/hooks/useConservation.ts(172,59): error TS2339: Property 'recorded_by' does not exist on type 'TemperatureReadingsFilter'.
+src/hooks/useConservation.ts(228,29): error TS2339: Property 'kind' does not exist on type 'MaintenanceTasksFilter'.
+src/hooks/useConservation.ts(228,55): error TS2339: Property 'kind' does not exist on type 'MaintenanceTasksFilter'.
+src/hooks/useConservation.ts(229,52): error TS2339: Property 'kind' does not exist on type 'MaintenanceTasksFilter'.
+src/hooks/useConservation.ts(232,27): error TS2339: Property 'frequency' does not exist on type 'MaintenanceTasksFilter'.
+src/hooks/useConservation.ts(233,27): error TS2339: Property 'frequency' does not exist on type 'MaintenanceTasksFilter'.
+src/hooks/useConservation.ts(235,57): error TS2339: Property 'frequency' does not exist on type 'MaintenanceTasksFilter'.
+src/hooks/useConservation.ts(240,29): error TS2339: Property 'is_active' does not exist on type 'MaintenanceTasksFilter'.
+src/hooks/useConservation.ts(241,57): error TS2339: Property 'is_active' does not exist on type 'MaintenanceTasksFilter'.
+src/hooks/useConservation.ts(243,29): error TS2339: Property 'overdue' does not exist on type 'MaintenanceTasksFilter'.
+src/hooks/useConservation.ts(299,11): error TS2339: Property 'completions' does not exist on type 'MaintenanceTask'.
+src/hooks/useConservation.ts(300,11): error TS2339: Property 'completions' does not exist on type 'MaintenanceTask'.
+src/hooks/useConservation.ts(301,11): error TS2339: Property 'completions' does not exist on type 'MaintenanceTask'.
+src/hooks/useConservation.ts(309,47): error TS2339: Property 'next_due_date' does not exist on type 'MaintenanceTask'.
+src/hooks/useConservation.ts(314,7): error TS2353: Object literal may only specify known properties, and 'by_type' does not exist in type 'ConservationStats'.
+src/hooks/useConservation.ts(438,14): error TS2339: Property 'target_temperature' does not exist on type 'CreateTemperatureReadingRequest'.
+src/hooks/useConservation.ts(447,21): error TS2339: Property 'tolerance_range_min' does not exist on type 'CreateTemperatureReadingRequest'.
+src/hooks/useConservation.ts(448,21): error TS2339: Property 'tolerance_range_max' does not exist on type 'CreateTemperatureReadingRequest'.
+src/hooks/useConservation.ts(451,16): error TS2339: Property 'tolerance_range_min' does not exist on type 'CreateTemperatureReadingRequest'.
+src/hooks/useConservation.ts(453,16): error TS2339: Property 'tolerance_range_max' does not exist on type 'CreateTemperatureReadingRequest'.
+src/hooks/useConservation.ts(514,33): error TS2339: Property 'assignment_type' does not exist on type 'CreateMaintenanceTaskRequest'.
+src/hooks/useConservation.ts(515,27): error TS2339: Property 'checklist' does not exist on type 'CreateMaintenanceTaskRequest'.
+src/hooks/useConservation.ts(542,37): error TS2339: Property 'checklist_completed' does not exist on type 'CreateMaintenanceCompletionRequest'.
+src/hooks/useConservation.ts(543,32): error TS2339: Property 'photo_evidence' does not exist on type 'CreateMaintenanceCompletionRequest'.
+src/hooks/useExportManager.ts(429,5): error TS2322: Type 'UseMutateFunction<string, Error, Omit<EmailSchedule, "id" | "createdAt" | "nextSend">, unknown>' is not assignable to type '(schedule: Omit<EmailSchedule, "id" | "createdAt" | "nextSend">) => Promise<void>'.
+  Type 'void' is not assignable to type 'Promise<void>'.
+src/hooks/useExportManager.ts(430,5): error TS2322: Type '(id: string, updates: Partial<EmailSchedule>) => void' is not assignable to type '(id: string, updates: Partial<EmailSchedule>) => Promise<void>'.
+  Type 'void' is not assignable to type 'Promise<void>'.
+src/hooks/useExportManager.ts(432,5): error TS2322: Type 'UseMutateFunction<void, Error, string, unknown>' is not assignable to type '(id: string) => Promise<void>'.
+  Type 'void' is not assignable to type 'Promise<void>'.
+src/hooks/useOfflineSync.ts(3,1): error TS6192: All imports in import declaration are unused.
+src/hooks/useOfflineSync.ts(8,1): error TS6133: 'indexedDBManager' is declared but its value is never read.
+src/hooks/useOfflineSync.ts(9,1): error TS6192: All imports in import declaration are unused.
+src/hooks/useOfflineSync.ts(13,1): error TS6133: 'useAuth' is declared but its value is never read.
+src/hooks/useRealtime.ts(10,8): error TS6133: 'RealtimeSubscription' is declared but its value is never read.
+src/hooks/useRealtime.ts(61,17): error TS2339: Property 'userData' does not exist on type '{ isLoading: boolean; isClerkLoaded: boolean; isProfileLoading: boolean; isSignedIn: boolean | undefined; isAuthenticated: boolean | undefined; isAuthorized: boolean; user: ExtendedUser; ... 10 more ...; authError: string | null; }'.
+src/hooks/useRealtime.ts(89,9): error TS18048: 'user.emailAddresses' is possibly 'undefined'.
+src/hooks/useRealtime.ts(204,12): error TS2322: Type '() => void' is not assignable to type 'void'.
+src/hooks/useRealtime.ts(253,11): error TS1345: An expression of type 'void' cannot be tested for truthiness.
+src/hooks/useRealtime.ts(254,9): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.
+src/hooks/useRealtime.ts(351,37): error TS2339: Property 'severity' does not exist on type 'never'.
+src/hooks/useRealtime.ts(365,38): error TS6133: 'reading' is declared but its value is never read.
+src/lib/sentry.ts(40,23): error TS6133: 'hint' is declared but its value is never read.
+src/services/automation/AutomatedReportingService.ts(197,11): error TS6133: 'isInitialized' is declared but its value is never read.
+src/services/automation/AutomatedReportingService.ts(383,5): error TS6133: 'context' is declared but its value is never read.
+src/services/automation/AutomatedReportingService.ts(704,11): error TS6133: 'criticalTempRule' is declared but its value is never read.
+src/services/automation/AutomatedReportingService.ts(1076,5): error TS6133: 'report' is declared but its value is never read.
+src/services/automation/AutomatedReportingService.ts(1085,5): error TS6133: 'report' is declared but its value is never read.
+src/services/automation/AutomatedReportingService.ts(1096,5): error TS6133: 'report' is declared but its value is never read.
+src/services/automation/AutomatedReportingService.ts(1105,5): error TS6133: 'report' is declared but its value is never read.
+src/services/automation/index.ts(99,13): error TS2304: Cannot find name 'workflowAutomationEngine'.
+src/services/automation/index.ts(103,13): error TS2304: Cannot find name 'smartSchedulingService'.
+src/services/automation/index.ts(107,13): error TS2304: Cannot find name 'automatedReportingService'.
+src/services/automation/index.ts(111,13): error TS2304: Cannot find name 'intelligentAlertManager'.
+src/services/automation/index.ts(142,13): error TS2304: Cannot find name 'workflowAutomationEngine'.
+src/services/automation/index.ts(145,13): error TS2304: Cannot find name 'intelligentAlertManager'.
+src/services/automation/index.ts(148,13): error TS2304: Cannot find name 'automatedReportingService'.
+src/services/automation/index.ts(169,13): error TS2304: Cannot find name 'workflowAutomationEngine'.
+src/services/automation/index.ts(172,13): error TS2304: Cannot find name 'automatedReportingService'.
+src/services/automation/index.ts(193,27): error TS2304: Cannot find name 'workflowAutomationEngine'.
+src/services/automation/index.ts(194,31): error TS2304: Cannot find name 'smartSchedulingService'.
+src/services/automation/index.ts(195,30): error TS2304: Cannot find name 'automatedReportingService'.
+src/services/automation/index.ts(196,26): error TS2304: Cannot find name 'intelligentAlertManager'.
+src/services/automation/index.ts(364,27): error TS2304: Cannot find name 'workflowAutomationEngine'.
+src/services/automation/index.ts(365,31): error TS2304: Cannot find name 'smartSchedulingService'.
+src/services/automation/index.ts(366,30): error TS2304: Cannot find name 'automatedReportingService'.
+src/services/automation/index.ts(367,26): error TS2304: Cannot find name 'intelligentAlertManager'.
+src/services/automation/index.ts(445,13): error TS2304: Cannot find name 'workflowAutomationEngine'.
+src/services/automation/index.ts(446,13): error TS2304: Cannot find name 'automatedReportingService'.
+src/services/automation/index.ts(447,13): error TS2304: Cannot find name 'intelligentAlertManager'.
+src/services/automation/IntelligentAlertManager.ts(936,5): error TS6133: 'condition' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(937,5): error TS6133: 'data' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(944,5): error TS6133: 'condition' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(945,5): error TS6133: 'data' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1224,11): error TS6133: 'startTime' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1292,48): error TS6133: 'alert' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1298,44): error TS6133: 'alert' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1304,52): error TS6133: 'alert' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1312,5): error TS6133: 'alert' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1326,5): error TS6133: 'alert' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1404,47): error TS6133: 'data' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1416,44): error TS6133: 'data' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1427,45): error TS6133: 'data' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1436,12): error TS7053: Element implicitly has an 'any' type because expression of type '"custom" | "temperature" | "maintenance" | "security" | "compliance" | "operational"' can't be used to index type '{ temperature: number; security: number; compliance: number; maintenance: number; operational: number; }'.
+  Property 'custom' does not exist on type '{ temperature: number; security: number; compliance: number; maintenance: number; operational: number; }'.
+src/services/automation/IntelligentAlertManager.ts(1449,11): error TS6133: 'models' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1457,5): error TS6133: 'field' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1458,5): error TS6133: 'value' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1459,5): error TS6133: 'sensitivity' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1472,11): error TS6133: 'patterns' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1480,5): error TS6133: 'field' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1481,5): error TS6133: 'data' is declared but its value is never read.
+src/services/automation/IntelligentAlertManager.ts(1482,5): error TS6133: 'pattern' is declared but its value is never read.
+src/services/automation/SmartSchedulingService.ts(119,11): error TS6133: 'constraints' is declared but its value is never read.
+src/services/automation/SmartSchedulingService.ts(309,11): error TS7034: Variable 'autoResolved' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/services/automation/SmartSchedulingService.ts(324,35): error TS7005: Variable 'autoResolved' implicitly has an 'any[]' type.
+src/services/automation/SmartSchedulingService.ts(714,28): error TS6133: 'taskId' is declared but its value is never read.
+src/services/automation/SmartSchedulingService.ts(743,5): error TS6133: 'original' is declared but its value is never read.
+src/services/automation/SmartSchedulingService.ts(744,5): error TS6133: 'optimized' is declared but its value is never read.
+src/services/automation/SmartSchedulingService.ts(858,11): error TS6133: 'populationSize' is declared but its value is never read.
+src/services/automation/SmartSchedulingService.ts(859,11): error TS6133: 'generations' is declared but its value is never read.
+src/services/automation/SmartSchedulingService.ts(860,11): error TS6133: 'mutationRate' is declared but its value is never read.
+src/services/automation/SmartSchedulingService.ts(861,11): error TS6133: 'crossoverRate' is declared but its value is never read.
+src/services/automation/SmartSchedulingService.ts(869,5): error TS6133: 'resources' is declared but its value is never read.
+src/services/automation/SmartSchedulingService.ts(892,5): error TS6133: 'resources' is declared but its value is never read.
+src/services/automation/WorkflowAutomationEngine.ts(190,11): error TS6133: 'isRunning' is declared but its value is never read.
+src/services/automation/WorkflowAutomationEngine.ts(808,5): error TS6133: 'condition' is declared but its value is never read.
+src/services/automation/WorkflowAutomationEngine.ts(809,5): error TS6133: 'context' is declared but its value is never read.
+src/services/automation/WorkflowAutomationEngine.ts(837,5): error TS6133: 'rule' is declared but its value is never read.
+src/services/automation/WorkflowAutomationEngine.ts(900,5): error TS6133: 'context' is declared but its value is never read.
+src/services/automation/WorkflowAutomationEngine.ts(925,5): error TS6133: 'context' is declared but its value is never read.
+src/services/automation/WorkflowAutomationEngine.ts(947,5): error TS6133: 'context' is declared but its value is never read.
+src/services/automation/WorkflowAutomationEngine.ts(968,5): error TS6133: 'context' is declared but its value is never read.
+src/services/automation/WorkflowAutomationEngine.ts(988,5): error TS6133: 'context' is declared but its value is never read.
+src/services/dashboard/index.ts(194,3): error TS18004: No value exists in scope for the shorthand property 'multiTenantDashboard'. Either declare one or provide an initializer.
+src/services/dashboard/MultiTenantDashboard.ts(225,58): error TS6133: 'company' is declared but its value is never read.
+src/services/dashboard/MultiTenantDashboard.ts(245,5): error TS6133: 'userId' is declared but its value is never read.
+src/services/dashboard/MultiTenantDashboard.ts(257,11): error TS2353: Object literal may only specify known properties, and 'max_locations' does not exist in type 'TenantLimits'.
+src/services/dashboard/MultiTenantDashboard.ts(261,11): error TS2353: Object literal may only specify known properties, and 'advanced_analytics' does not exist in type 'TenantFeatures'.
+src/services/dashboard/MultiTenantDashboard.ts(297,29): error TS6133: 'userId' is declared but its value is never read.
+src/services/deployment/ProductionDeploymentManager.ts(924,5): error TS6133: 'options' is declared but its value is never read.
+src/services/deployment/ProductionDeploymentManager.ts(953,5): error TS6133: 'component' is declared but its value is never read.
+src/services/deployment/ProductionDeploymentManager.ts(954,5): error TS6133: 'action' is declared but its value is never read.
+src/services/deployment/ProductionDeploymentManager.ts(955,5): error TS6133: 'factor' is declared but its value is never read.
+src/services/deployment/ProductionDeploymentManager.ts(961,31): error TS6133: 'type' is declared but its value is never read.
+src/services/export/__tests__/ExcelExporter.test.ts(19,68): error TS2556: A spread argument must either have a tuple type or be passed to a rest parameter.
+src/services/export/__tests__/ExcelExporter.test.ts(20,66): error TS2556: A spread argument must either have a tuple type or be passed to a rest parameter.
+src/services/export/__tests__/ExcelExporter.test.ts(22,40): error TS2556: A spread argument must either have a tuple type or be passed to a rest parameter.
+src/services/export/__tests__/ExcelExporter.test.ts(24,68): error TS2556: A spread argument must either have a tuple type or be passed to a rest parameter.
+src/services/export/__tests__/ExcelExporter.test.ts(26,46): error TS2556: A spread argument must either have a tuple type or be passed to a rest parameter.
+src/services/export/__tests__/ExcelExporter.test.ts(28,66): error TS2556: A spread argument must either have a tuple type or be passed to a rest parameter.
+src/services/export/__tests__/ExcelExporter.test.ts(29,66): error TS2556: A spread argument must either have a tuple type or be passed to a rest parameter.
+src/services/export/__tests__/ExcelExporter.test.ts(30,64): error TS2556: A spread argument must either have a tuple type or be passed to a rest parameter.
+src/services/export/__tests__/ExcelExporter.test.ts(136,51): error TS2550: Property 'at' does not exist on type '[data: WorkBook, opts: WritingOptions][]'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2022' or later.
+src/services/export/__tests__/ExcelExporter.test.ts(139,53): error TS2339: Property 'mock' does not exist on type '{ <T>(data: T[], opts?: JSON2SheetOpts | undefined): WorkSheet; (data: any[], opts?: JSON2SheetOpts | undefined): WorkSheet; }'.
+src/services/export/__tests__/ExcelExporter.test.ts(140,11): error TS7031: Binding element 'rows' implicitly has an 'any' type.
+src/services/export/__tests__/ExcelExporter.test.ts(171,53): error TS2345: Argument of type '{ format: "csv"; tables: string[]; companyId: string; dateRange: { start: Date; end: Date; }; includeCharts: boolean; fileName?: string; }' is not assignable to parameter of type 'ExcelExportConfig'.
+  Types of property 'tables' are incompatible.
+    Type 'string[]' is not assignable to type '("departments" | "staff" | "tasks" | "products" | "temperature_readings")[]'.
+      Type 'string' is not assignable to type '"departments" | "staff" | "tasks" | "products" | "temperature_readings"'.
+src/services/export/__tests__/ExcelExporter.test.ts(174,51): error TS2550: Property 'at' does not exist on type '[data: WorkBook, opts: WritingOptions][]'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2022' or later.
+src/services/export/__tests__/ExcelExporter.test.ts(194,60): error TS2339: Property 'mock' does not exist on type '(workbook: WorkBook, worksheet: WorkSheet, name?: string | undefined, roll?: boolean | undefined) => void'.
+src/services/export/__tests__/ExcelExporter.test.ts(195,15): error TS7031: Binding element 'name' implicitly has an 'any' type.
+src/services/export/__tests__/ExcelExporter.test.ts(235,38): error TS2345: Argument of type '{ tables: string[]; companyId: string; dateRange: { start: Date; end: Date; }; includeCharts: boolean; format: "xlsx" | "csv"; fileName?: string; }' is not assignable to parameter of type 'ExcelExportConfig'.
+  Types of property 'tables' are incompatible.
+    Type 'string[]' is not assignable to type '("departments" | "staff" | "tasks" | "products" | "temperature_readings")[]'.
+      Type 'string' is not assignable to type '"departments" | "staff" | "tasks" | "products" | "temperature_readings"'.
+src/services/export/__tests__/ExcelExporter.test.ts(237,49): error TS2339: Property 'mock' does not exist on type '{ <T>(data: T[], opts?: JSON2SheetOpts | undefined): WorkSheet; (data: any[], opts?: JSON2SheetOpts | undefined): WorkSheet; }'.
+src/services/export/__tests__/ExcelExporter.test.ts(237,67): error TS7031: Binding element 'rows' implicitly has an 'any' type.
+src/services/export/__tests__/ExcelExporter.test.ts(279,49): error TS2339: Property 'mock' does not exist on type '{ <T>(data: T[], opts?: JSON2SheetOpts | undefined): WorkSheet; (data: any[], opts?: JSON2SheetOpts | undefined): WorkSheet; }'.
+src/services/export/__tests__/ExcelExporter.test.ts(279,67): error TS7031: Binding element 'rows' implicitly has an 'any' type.
+src/services/export/__tests__/ExcelExporter.test.ts(318,60): error TS2339: Property 'mock' does not exist on type '(workbook: WorkBook, worksheet: WorkSheet, name?: string | undefined, roll?: boolean | undefined) => void'.
+src/services/export/__tests__/ExcelExporter.test.ts(319,15): error TS7031: Binding element 'name' implicitly has an 'any' type.
+src/services/export/__tests__/HACCPReportGenerator.test.ts(151,11): error TS6133: 'callCount' is declared but its value is never read.
+src/services/export/ExcelExporter.ts(77,11): error TS6133: 'fileName' is declared but its value is never read.
+src/services/export/ExcelExporter.ts(121,34): error TS7006: Parameter 'reading' implicitly has an 'any' type.
+src/services/export/ExcelExporter.ts(169,20): error TS7006: Parameter 'task' implicitly has an 'any' type.
+src/services/export/ExcelExporter.ts(214,23): error TS7006: Parameter 'product' implicitly has an 'any' type.
+src/services/export/ExcelExporter.ts(252,20): error TS7006: Parameter 'member' implicitly has an 'any' type.
+src/services/export/ExcelExporter.ts(287,26): error TS7006: Parameter 'dept' implicitly has an 'any' type.
+src/services/export/HACCPReportGenerator.ts(207,34): error TS7006: Parameter 'reading' implicitly has an 'any' type.
+src/services/export/HACCPReportGenerator.ts(218,31): error TS7006: Parameter 'task' implicitly has an 'any' type.
+src/services/export/HACCPReportGenerator.ts(226,33): error TS7006: Parameter 'point' implicitly has an 'any' type.
+src/services/integration/AdvancedAnalyticsIntegration.ts(6,36): error TS2307: Cannot find module '../analytics' or its corresponding type declarations.
+src/services/integration/AdvancedAnalyticsIntegration.ts(7,47): error TS2307: Cannot find module '../reporting' or its corresponding type declarations.
+src/services/integration/AdvancedAnalyticsIntegration.ts(8,55): error TS2307: Cannot find module '../businessIntelligence' or its corresponding type declarations.
+src/services/integration/AdvancedAnalyticsIntegration.ts(329,24): error TS6133: 'service' is declared but its value is never read.
+src/services/integration/AdvancedAnalyticsIntegration.ts(521,5): error TS6133: 'data' is declared but its value is never read.
+src/services/integration/AdvancedAnalyticsIntegration.ts(529,5): error TS6133: 'data' is declared but its value is never read.
+src/services/integration/AdvancedAnalyticsIntegration.ts(537,5): error TS6133: 'data' is declared but its value is never read.
+src/services/integration/index.ts(244,23): error TS2367: This comparison appears to be unintentional because the types '"COMPLETED"' and '"FAILED"' have no overlap.
+src/services/integration/SystemIntegrationTester.ts(111,9): error TS2322: Type '"INTEGRATION_TEST"' is not assignable to type 'AuditEvent'.
+src/services/integration/SystemIntegrationTester.ts(188,9): error TS2322: Type '{ dashboardLoadTime: number; securityDataPoints: number; threatLevel: ThreatLevel; realTimeLatency: number; }' is not assignable to type 'Record<string, number>'.
+  Property 'threatLevel' is incompatible with index signature.
+    Type 'string' is not assignable to type 'number'.
+      Type 'string' is not assignable to type 'number'.
+src/services/multi-tenant/CrossCompanyReporting.ts(7,3): error TS6133: 'multiTenantManager' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(9,8): error TS6133: 'CompanyTenant' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(184,13): error TS6133: 'sections' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(442,5): error TS6133: 'companies' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(443,5): error TS6133: 'reportType' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(477,5): error TS6133: 'dataSources' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(478,5): error TS6133: 'agreements' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(486,5): error TS6133: 'reportType' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(529,5): error TS6133: 'agreements' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(542,5): error TS6133: 'dataSources' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(549,5): error TS6133: 'report' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(550,5): error TS6133: 'data' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(597,5): error TS6133: 'report' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(598,5): error TS6133: 'options' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(605,5): error TS6133: 'report' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(606,5): error TS6133: 'options' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(615,5): error TS6133: 'report' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(616,5): error TS6133: 'options' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(624,5): error TS6133: 'options' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(633,5): error TS6133: 'report' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(634,5): error TS6133: 'options' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(642,5): error TS6133: 'userId' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(643,5): error TS6133: 'report' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(644,5): error TS6133: 'options' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(650,5): error TS6133: 'userId' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(651,5): error TS6133: 'report' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(652,5): error TS6133: 'targetCompanyId' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(658,5): error TS6133: 'report' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(659,5): error TS6133: 'targetCompanyId' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(664,37): error TS6133: 'sharingRecord' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(668,33): error TS6133: 'report' is declared but its value is never read.
+src/services/multi-tenant/CrossCompanyReporting.ts(678,5): error TS6133: 'report' is declared but its value is never read.
+src/services/multi-tenant/index.ts(7,3): error TS2300: Duplicate identifier 'multiTenantManager'.
+src/services/multi-tenant/index.ts(16,3): error TS2300: Duplicate identifier 'permissionManager'.
+src/services/multi-tenant/index.ts(24,3): error TS2300: Duplicate identifier 'crossCompanyReporting'.
+src/services/multi-tenant/index.ts(50,35): error TS2304: Cannot find name 'multiTenantManager'.
+src/services/multi-tenant/index.ts(57,37): error TS2304: Cannot find name 'permissionManager'.
+src/services/multi-tenant/index.ts(66,32): error TS2304: Cannot find name 'multiTenantManager'.
+src/services/multi-tenant/index.ts(90,18): error TS2304: Cannot find name 'permissionManager'.
+src/services/multi-tenant/index.ts(102,12): error TS2304: Cannot find name 'multiTenantManager'.
+src/services/multi-tenant/index.ts(114,18): error TS2304: Cannot find name 'crossCompanyReporting'.
+src/services/multi-tenant/index.ts(131,18): error TS2304: Cannot find name 'multiTenantManager'.
+src/services/multi-tenant/index.ts(149,18): error TS2304: Cannot find name 'permissionManager'.
+src/services/multi-tenant/index.ts(162,18): error TS2304: Cannot find name 'multiTenantManager'.
+src/services/multi-tenant/index.ts(193,10): error TS2300: Duplicate identifier 'multiTenantManager'.
+src/services/multi-tenant/index.ts(193,10): error TS2304: Cannot find name 'multiTenantManager'.
+src/services/multi-tenant/index.ts(193,30): error TS2300: Duplicate identifier 'permissionManager'.
+src/services/multi-tenant/index.ts(193,30): error TS2304: Cannot find name 'permissionManager'.
+src/services/multi-tenant/index.ts(193,49): error TS2300: Duplicate identifier 'crossCompanyReporting'.
+src/services/multi-tenant/index.ts(193,49): error TS2304: Cannot find name 'crossCompanyReporting'.
+src/services/multi-tenant/MultiTenantManager.ts(100,11): error TS6133: 'currentTenant' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(508,31): error TS6133: 'branding' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(514,5): error TS6133: 'integrations' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(520,29): error TS6133: 'features' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(541,5): error TS6133: 'agreement' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(548,5): error TS6133: 'companyId' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(549,5): error TS6133: 'role' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(556,5): error TS6133: 'agreement' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(557,5): error TS6133: 'dataType' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(564,5): error TS6133: 'agreementId' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(587,5): error TS6133: 'sourceId' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(588,5): error TS6133: 'targetId' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(594,5): error TS6133: 'sourceId' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(595,5): error TS6133: 'targetId' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(596,5): error TS6133: 'dataTypes' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(602,5): error TS6133: 'plan' is declared but its value is never read.
+src/services/multi-tenant/MultiTenantManager.ts(603,5): error TS6133: 'options' is declared but its value is never read.
+src/services/multi-tenant/PermissionManager.ts(490,16): error TS18046: 'error' is of type 'unknown'.
+src/services/multi-tenant/PermissionManager.ts(734,5): error TS6133: 'userId' is declared but its value is never read.
+src/services/multi-tenant/PermissionManager.ts(735,5): error TS6133: 'context' is declared but its value is never read.
+src/services/multi-tenant/PermissionManager.ts(757,5): error TS6133: 'restrictions' is declared but its value is never read.
+src/services/multi-tenant/PermissionManager.ts(758,5): error TS6133: 'context' is declared but its value is never read.
+src/services/multi-tenant/PermissionManager.ts(766,5): error TS6133: 'roleId' is declared but its value is never read.
+src/services/multi-tenant/PermissionManager.ts(775,5): error TS6133: 'companyId' is declared but its value is never read.
+src/services/offline/__tests__/BackgroundSync.test.ts(289,13): error TS6133: 'result' is declared but its value is never read.
+src/services/offline/__tests__/BackgroundSync.test.ts(343,66): error TS2345: Argument of type '{ id: string; operation: string; table: string; data: {}; timestamp: number; retryCount: number; }[]' is not assignable to parameter of type 'SyncQueue[]'.
+  Type '{ id: string; operation: string; table: string; data: {}; timestamp: number; retryCount: number; }' is not assignable to type 'SyncQueue'.
+    Types of property 'operation' are incompatible.
+      Type 'string' is not assignable to type '"create" | "update" | "delete"'.
+src/services/offline/__tests__/BackgroundSync.test.ts(373,66): error TS2345: Argument of type '{ id: string; operation: string; table: string; data: {}; timestamp: number; retryCount: number; }[]' is not assignable to parameter of type 'SyncQueue[]'.
+  Type '{ id: string; operation: string; table: string; data: {}; timestamp: number; retryCount: number; }' is not assignable to type 'SyncQueue'.
+    Types of property 'operation' are incompatible.
+      Type 'string' is not assignable to type '"create" | "update" | "delete"'.
+src/services/offline/__tests__/IndexedDBManager.test.ts(9,8): error TS6133: 'OfflineData' is declared but its value is never read.
+src/services/offline/__tests__/IndexedDBManager.test.ts(10,8): error TS6133: 'SyncQueue' is declared but its value is never read.
+src/services/offline/AdvancedServiceWorker.ts(6,15): error TS2451: Cannot redeclare block-scoped variable 'self'.
+src/services/offline/AdvancedServiceWorker.ts(6,21): error TS2304: Cannot find name 'ServiceWorkerGlobalScope'.
+src/services/offline/AdvancedServiceWorker.ts(45,42): error TS2304: Cannot find name 'ExtendableEvent'.
+src/services/offline/AdvancedServiceWorker.ts(55,24): error TS2339: Property 'skipWaiting' does not exist on type 'Window & typeof globalThis'.
+src/services/offline/AdvancedServiceWorker.ts(60,43): error TS2304: Cannot find name 'ExtendableEvent'.
+src/services/offline/AdvancedServiceWorker.ts(80,24): error TS2339: Property 'clients' does not exist on type 'Window & typeof globalThis'.
+src/services/offline/AdvancedServiceWorker.ts(85,40): error TS2304: Cannot find name 'FetchEvent'.
+src/services/offline/AdvancedServiceWorker.ts(230,16): error TS2339: Property 'registration' does not exist on type 'Window & typeof globalThis'.
+src/services/offline/AdvancedServiceWorker.ts(262,46): error TS2339: Property 'length' does not exist on type 'IDBRequest<any[]>'.
+src/services/offline/AdvancedServiceWorker.ts(264,24): error TS2488: Type 'IDBRequest<any[]>' must have a '[Symbol.iterator]()' method that returns an iterator.
+src/services/offline/AdvancedServiceWorker.ts(317,10): error TS2339: Property 'retryCount' does not exist on type 'IDBRequest<any>'.
+src/services/offline/AdvancedServiceWorker.ts(317,29): error TS2339: Property 'retryCount' does not exist on type 'IDBRequest<any>'.
+src/services/offline/AdvancedServiceWorker.ts(320,14): error TS2339: Property 'retryCount' does not exist on type 'IDBRequest<any>'.
+src/services/offline/AdvancedServiceWorker.ts(370,10): error TS2339: Property 'registration' does not exist on type 'Window & typeof globalThis'.
+src/services/offline/AdvancedServiceWorker.ts(382,12): error TS2339: Property 'clients' does not exist on type 'Window & typeof globalThis'.
+src/services/offline/BackgroundSync.ts(198,23): error TS6133: 'created' is declared but its value is never read.
+src/services/offline/BackgroundSync.ts(228,23): error TS6133: 'created' is declared but its value is never read.
+src/services/offline/BackgroundSync.ts(258,23): error TS6133: 'created' is declared but its value is never read.
+src/services/offline/BackgroundSync.ts(291,23): error TS6133: 'created' is declared but its value is never read.
+src/services/offline/BackgroundSync.ts(316,23): error TS6133: 'created' is declared but its value is never read.
+src/services/offline/ConflictResolver.ts(277,5): error TS6133: 'conflict' is declared but its value is never read.
+src/services/pwa/AutomationCacheManager.ts(128,9): error TS2322: Type 'CacheEntry<any> | null' is not assignable to type 'CacheEntry<any> | undefined'.
+  Type 'null' is not assignable to type 'CacheEntry<any> | undefined'.
+src/services/pwa/AutomationCacheManager.ts(186,28): error TS2551: Property 'tttl' does not exist on type '{ ttl?: number | undefined; tags?: string[] | undefined; strategy?: Partial<CacheStrategy> | undefined; }'. Did you mean 'ttl'?
+src/services/pwa/AutomationCacheManager.ts(524,5): error TS6133: 'strategy' is declared but its value is never read.
+src/services/pwa/AutomationServiceWorker.ts(47,10): error TS2339: Property 'setupServiceWorker' does not exist on type 'AutomationServiceWorker'.
+src/services/pwa/AutomationServiceWorker.ts(403,11): error TS6133: 'loadCacheFromStorage' is declared but its value is never read.
+src/services/pwa/InstallPromptManager.ts(278,45): error TS6133: 'event' is declared but its value is never read.
+src/services/pwa/UpdateManager.ts(306,7): error TS2322: Type 'ServiceWorkerRegistration | undefined' is not assignable to type 'ServiceWorkerRegistration | null'.
+  Type 'undefined' is not assignable to type 'ServiceWorkerRegistration | null'.
+src/services/realtime/CollaborativeEditing.ts(91,20): error TS6133: 'maxOperationHistory' is declared but its value is never read.
+src/services/realtime/CollaborativeEditing.ts(424,5): error TS6133: 'session' is declared but its value is never read.
+src/services/realtime/CollaborativeEditing.ts(475,5): error TS6133: 'session' is declared but its value is never read.
+src/services/realtime/CollaborativeEditing.ts(507,5): error TS6133: 'session' is declared but its value is never read.
+src/services/realtime/CollaborativeEditing.ts(636,33): error TS6133: 'documentId' is declared but its value is never read.
+src/services/realtime/CollaborativeEditing.ts(642,5): error TS6133: 'documentId' is declared but its value is never read.
+src/services/realtime/CollaborativeEditing.ts(643,5): error TS6133: 'userId' is declared but its value is never read.
+src/services/realtime/CollaborativeEditing.ts(644,5): error TS6133: 'duration' is declared but its value is never read.
+src/services/realtime/CollaborativeEditing.ts(650,5): error TS6133: 'documentId' is declared but its value is never read.
+src/services/realtime/CollaborativeEditing.ts(651,5): error TS6133: 'userId' is declared but its value is never read.
+src/services/realtime/CollaborativeEditing.ts(656,32): error TS6133: 'documentId' is declared but its value is never read.
+src/services/realtime/HACCPAlertSystem.ts(265,7): error TS2353: Object literal may only specify known properties, and 'timestamp' does not exist in type 'NotificationOptions'.
+src/services/realtime/HACCPAlertSystem.ts(299,35): error TS2345: Argument of type '{ position: "top-right"; autoClose: number | boolean; hideProgressBar: boolean; closeOnClick: boolean; pauseOnHover: boolean; draggable: boolean; }' is not assignable to parameter of type 'ToastOptions<unknown>'.
+  Types of property 'autoClose' are incompatible.
+    Type 'number | boolean' is not assignable to type 'number | false | undefined'.
+      Type 'true' is not assignable to type 'number | false | undefined'.
+src/services/realtime/HACCPAlertSystem.ts(303,35): error TS2345: Argument of type '{ position: "top-right"; autoClose: number | boolean; hideProgressBar: boolean; closeOnClick: boolean; pauseOnHover: boolean; draggable: boolean; }' is not assignable to parameter of type 'ToastOptions<unknown>'.
+  Types of property 'autoClose' are incompatible.
+    Type 'number | boolean' is not assignable to type 'number | false | undefined'.
+      Type 'true' is not assignable to type 'number | false | undefined'.
+src/services/realtime/HACCPAlertSystem.ts(307,34): error TS2345: Argument of type '{ position: "top-right"; autoClose: number | boolean; hideProgressBar: boolean; closeOnClick: boolean; pauseOnHover: boolean; draggable: boolean; }' is not assignable to parameter of type 'ToastOptions<unknown>'.
+  Types of property 'autoClose' are incompatible.
+    Type 'number | boolean' is not assignable to type 'number | false | undefined'.
+      Type 'true' is not assignable to type 'number | false | undefined'.
+src/services/realtime/HACCPAlertSystem.ts(310,34): error TS2345: Argument of type '{ position: "top-right"; autoClose: number | boolean; hideProgressBar: boolean; closeOnClick: boolean; pauseOnHover: boolean; draggable: boolean; }' is not assignable to parameter of type 'ToastOptions<unknown>'.
+  Types of property 'autoClose' are incompatible.
+    Type 'number | boolean' is not assignable to type 'number | false | undefined'.
+      Type 'true' is not assignable to type 'number | false | undefined'.
+src/services/realtime/HACCPAlertSystem.ts(521,28): error TS6133: 'alert' is declared but its value is never read.
+src/services/realtime/RealtimeConnectionManager.ts(53,11): error TS6133: 'client' is declared but its value is never read.
+src/services/realtime/RealtimeConnectionManager.ts(58,20): error TS6133: 'heartbeatInterval' is declared but its value is never read.
+src/services/realtime/RealtimeConnectionManager.ts(114,9): error TS7006: Parameter 'payload' implicitly has an 'any' type.
+src/services/realtime/RealtimeConnectionManager.ts(125,18): error TS7006: Parameter 'status' implicitly has an 'any' type.
+src/services/realtime/RealtimeConnectionManager.ts(192,45): error TS7031: Binding element 'key' implicitly has an 'any' type.
+src/services/realtime/RealtimeConnectionManager.ts(192,50): error TS7031: Binding element 'newPresences' implicitly has an 'any' type.
+src/services/realtime/RealtimeConnectionManager.ts(195,46): error TS7031: Binding element 'key' implicitly has an 'any' type.
+src/services/realtime/RealtimeConnectionManager.ts(195,51): error TS7031: Binding element 'leftPresences' implicitly has an 'any' type.
+src/services/realtime/RealtimeConnectionManager.ts(199,11): error TS2531: Object is possibly 'null'.
+src/services/realtime/RealtimeConnectionManager.ts(248,31): error TS7006: Parameter 'error' implicitly has an 'any' type.
+src/services/realtime/RealtimeConnectionManager.ts(257,33): error TS6133: 'error' is declared but its value is never read.
+src/services/realtime/TemperatureMonitor.ts(279,9): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/services/realtime/TemperatureMonitor.ts(280,9): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/services/security/AuditLogger.ts(465,5): error TS6133: 'event' is declared but its value is never read.
+src/services/security/AuditLogger.ts(515,5): error TS6133: 'reportType' is declared but its value is never read.
+src/services/security/ComplianceMonitor.ts(152,13): error TS6133: 'failedChecks' is declared but its value is never read.
+src/services/security/ComplianceMonitor.ts(155,13): error TS6133: 'warningChecks' is declared but its value is never read.
+src/services/security/ComplianceMonitor.ts(673,5): error TS6133: 'requirement' is declared but its value is never read.
+src/services/security/ComplianceMonitor.ts(680,5): error TS6133: 'requirement' is declared but its value is never read.
+src/services/security/ComplianceMonitor.ts(687,5): error TS6133: 'requirement' is declared but its value is never read.
+src/services/security/index.ts(7,3): error TS2300: Duplicate identifier 'securityManager'.
+src/services/security/index.ts(15,3): error TS2300: Duplicate identifier 'auditLogger'.
+src/services/security/index.ts(23,3): error TS2300: Duplicate identifier 'complianceMonitor'.
+src/services/security/index.ts(31,3): error TS2300: Duplicate identifier 'securityDashboard'.
+src/services/security/index.ts(61,13): error TS2304: Cannot find name 'securityManager'.
+src/services/security/index.ts(68,13): error TS2304: Cannot find name 'auditLogger'.
+src/services/security/index.ts(76,13): error TS2304: Cannot find name 'complianceMonitor'.
+src/services/security/index.ts(87,13): error TS2304: Cannot find name 'auditLogger'.
+src/services/security/index.ts(96,13): error TS2304: Cannot find name 'auditLogger'.
+src/services/security/index.ts(124,9): error TS2304: Cannot find name 'securityManager'.
+src/services/security/index.ts(125,9): error TS2304: Cannot find name 'auditLogger'.
+src/services/security/index.ts(126,9): error TS2304: Cannot find name 'complianceMonitor'.
+src/services/security/index.ts(151,7): error TS7006: Parameter 'audit' implicitly has an 'any' type.
+src/services/security/index.ts(194,18): error TS2304: Cannot find name 'complianceMonitor'.
+src/services/security/index.ts(201,18): error TS2304: Cannot find name 'securityDashboard'.
+src/services/security/index.ts(209,13): error TS2304: Cannot find name 'securityManager'.
+src/services/security/index.ts(210,13): error TS2304: Cannot find name 'auditLogger'.
+src/services/security/index.ts(211,13): error TS2304: Cannot find name 'complianceMonitor'.
+src/services/security/index.ts(254,10): error TS2300: Duplicate identifier 'securityManager'.
+src/services/security/index.ts(254,10): error TS2304: Cannot find name 'securityManager'.
+src/services/security/index.ts(254,27): error TS2300: Duplicate identifier 'auditLogger'.
+src/services/security/index.ts(254,27): error TS2304: Cannot find name 'auditLogger'.
+src/services/security/index.ts(254,40): error TS2300: Duplicate identifier 'complianceMonitor'.
+src/services/security/index.ts(254,40): error TS2304: Cannot find name 'complianceMonitor'.
+src/services/security/index.ts(254,59): error TS2300: Duplicate identifier 'securityDashboard'.
+src/services/security/index.ts(254,59): error TS2304: Cannot find name 'securityDashboard'.
+src/services/security/SecurityDashboard.ts(94,11): error TS6133: 'lastUpdateTime' is declared but its value is never read.
+src/services/security/SecurityDashboard.ts(263,5): error TS6133: 'metricId' is declared but its value is never read.
+src/services/security/SecurityDashboard.ts(505,7): error TS2322: Type '{ date: Date; score?: number | undefined; count?: number | undefined; }[]' is not assignable to type '{ date: Date; score: number; }[]'.
+  Type '{ date: Date; score?: number | undefined; count?: number | undefined; }' is not assignable to type '{ date: Date; score: number; }'.
+    Types of property 'score' are incompatible.
+      Type 'number | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+src/services/security/SecurityDashboard.ts(506,7): error TS2322: Type '{ date: Date; score?: number | undefined; count?: number | undefined; }[]' is not assignable to type '{ date: Date; score: number; }[]'.
+  Type '{ date: Date; score?: number | undefined; count?: number | undefined; }' is not assignable to type '{ date: Date; score: number; }'.
+    Types of property 'score' are incompatible.
+      Type 'number | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+src/services/security/SecurityDashboard.ts(507,7): error TS2322: Type '{ date: Date; score?: number | undefined; count?: number | undefined; }[]' is not assignable to type '{ date: Date; count: number; }[]'.
+  Type '{ date: Date; score?: number | undefined; count?: number | undefined; }' is not assignable to type '{ date: Date; count: number; }'.
+    Types of property 'count' are incompatible.
+      Type 'number | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+src/services/security/SecurityDashboard.ts(508,7): error TS2322: Type '{ date: Date; score?: number | undefined; count?: number | undefined; }[]' is not assignable to type '{ date: Date; count: number; }[]'.
+  Type '{ date: Date; score?: number | undefined; count?: number | undefined; }' is not assignable to type '{ date: Date; count: number; }'.
+    Types of property 'count' are incompatible.
+      Type 'number | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+src/utils/performance.ts(50,21): error TS2345: Argument of type '(value: Blob | PromiseLike<Blob>) => void' is not assignable to parameter of type 'BlobCallback'.
+  Types of parameters 'value' and 'blob' are incompatible.
+    Type 'Blob | null' is not assignable to type 'Blob | PromiseLike<Blob>'.
+      Type 'null' is not assignable to type 'Blob | PromiseLike<Blob>'.
