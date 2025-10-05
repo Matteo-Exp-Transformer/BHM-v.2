@@ -187,6 +187,17 @@ export interface ConservationMaintenancePlan {
   note?: string
 }
 
+export interface GenericTask {
+  id: string
+  name: string
+  frequenza: MaintenanceFrequency
+  assegnatoARuolo: StaffRole | 'specifico'
+  assegnatoACategoria?: string // opzionale
+  assegnatoADipendenteSpecifico?: StaffMember['id'] // quando assegnatoARuolo è 'specifico'
+  giorniCustom?: CustomFrequencyDays[] // quando frequenza è 'custom'
+  note?: string
+}
+
 export type TaskPriority = 'low' | 'medium' | 'high' | 'critical'
 
 export type HaccpTaskCategory =
@@ -218,6 +229,7 @@ export interface TasksStepData {
   conservationMaintenancePlans: ConservationMaintenancePlan[]
   generalTasks: GeneralTask[]
   maintenanceTasks: MaintenanceTask[]
+  genericTasks: GenericTask[]
 }
 
 export interface TasksStepProps {

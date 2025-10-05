@@ -3,6 +3,77 @@ import { toast } from 'react-toastify'
 import { AllergenType } from '@/types/inventory'
 import type { OnboardingData } from '@/types/onboarding'
 
+// Funzione per generare le manutenzioni precompilate per ogni punto di conservazione
+const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
+  const generateId = () =>
+    `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
+  // Manutenzioni standard per ogni punto di conservazione
+  const standardMaintenances = [
+    {
+      manutenzione: 'Rilevamento Temperatura',
+      frequenza: 'giornaliera' as const,
+      assegnatoARuolo: 'dipendente' as const,
+      assegnatoACategoria: 'all',
+      assegnatoADipendenteSpecifico: undefined,
+      giorniCustom: undefined,
+      note: 'Controllo temperatura giornaliero obbligatorio',
+    },
+    {
+      manutenzione: 'Sanificazione',
+      frequenza: 'settimanale' as const,
+      assegnatoARuolo: 'dipendente' as const,
+      assegnatoACategoria: 'all',
+      assegnatoADipendenteSpecifico: undefined,
+      giorniCustom: undefined,
+      note: 'Sanificazione settimanale completa',
+    },
+    {
+      manutenzione: 'Sbrinamento',
+      frequenza: 'annuale' as const,
+      assegnatoARuolo: 'dipendente' as const,
+      assegnatoACategoria: 'all',
+      assegnatoADipendenteSpecifico: undefined,
+      giorniCustom: undefined,
+      note: 'Sbrinamento annuale profondo',
+    },
+    {
+      manutenzione: 'Controllo Scadenze',
+      frequenza: 'custom' as const,
+      assegnatoARuolo: 'dipendente' as const,
+      assegnatoACategoria: 'all',
+      assegnatoADipendenteSpecifico: undefined,
+      giorniCustom: ['lunedi', 'giovedi'] as const,
+      note: 'Controllo scadenze Lunedì e Giovedì',
+    },
+  ]
+
+  const maintenancePlans = []
+
+  conservationPoints.forEach(point => {
+    standardMaintenances.forEach(maintenance => {
+      // I punti di tipo "ambiente" non hanno "Sbrinamento"
+      if (point.pointType === 'ambiente' && maintenance.manutenzione === 'Sbrinamento') {
+        return
+      }
+
+      maintenancePlans.push({
+        id: generateId(),
+        conservationPointId: point.id,
+        manutenzione: maintenance.manutenzione,
+        frequenza: maintenance.frequenza,
+        assegnatoARuolo: maintenance.assegnatoARuolo,
+        assegnatoACategoria: maintenance.assegnatoACategoria,
+        assegnatoADipendenteSpecifico: maintenance.assegnatoADipendenteSpecifico,
+        giorniCustom: maintenance.giorniCustom,
+        note: maintenance.note,
+      })
+    })
+  })
+
+  return maintenancePlans
+}
+
 // Dati precompilati seguendo esattamente la guida di riferimento
 export const getPrefillData = (): OnboardingData => {
   const generateId = () =>
@@ -322,6 +393,8 @@ export const getPrefillData = (): OnboardingData => {
             .split('T')[0],
         },
       ],
+      conservationMaintenancePlans: generateConservationMaintenancePlans(data.conservation.points),
+      genericTasks: [],
     },
     inventory: {
       categories: [

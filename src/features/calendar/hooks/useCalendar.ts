@@ -5,6 +5,8 @@ import {
   CalendarEvent,
 } from '@/types/calendar'
 import { useCalendarEvents } from './useCalendarEvents'
+import { useAggregatedEvents } from './useAggregatedEvents'
+import { useFilteredEvents } from './useFilteredEvents'
 import { filterEvents, sortEventsByPriority } from '../utils/eventTransform'
 
 const defaultFilters: CalendarFilters = {
@@ -60,11 +62,10 @@ export function useCalendar(config?: Partial<CalendarViewConfig>) {
   )
   const [currentDate, setCurrentDate] = useState<Date>(new Date())
 
-  // Use the calendar events hook
   const {
-    events: allEvents,
-    isLoading,
-    error,
+    events: customEvents,
+    isLoading: customLoading,
+    error: customError,
     createEvent,
     updateEvent,
     deleteEvent,
@@ -72,23 +73,37 @@ export function useCalendar(config?: Partial<CalendarViewConfig>) {
     isUpdating,
     isDeleting,
     refetch,
-    getEventStats,
-    getEventsForDate,
-    getUpcomingEvents,
-    getOverdueEvents,
   } = useCalendarEvents()
+
+  const {
+    events: aggregatedEvents,
+    isLoading: aggregatedLoading,
+    sources,
+  } = useAggregatedEvents()
+
+  const allEventsUnfiltered = useMemo(() => {
+    return [...customEvents, ...aggregatedEvents]
+  }, [customEvents, aggregatedEvents])
+
+  const {
+    filteredEvents: userFilteredEvents,
+    isLoading: filterLoading,
+    canViewAllEvents,
+    userStaffMember,
+  } = useFilteredEvents(allEventsUnfiltered)
+
+  const isLoading = customLoading || aggregatedLoading || filterLoading
+  const error = customError
 
   // Merge view configuration
   const viewConfig = useMemo(() => {
     return { ...defaultViewConfig, ...config }
   }, [config])
 
-  // Apply filters to events
   const filteredEvents = useMemo(() => {
-    if (!allEvents) return []
+    if (!userFilteredEvents) return []
 
-    // Apply filters
-    const filtered = filterEvents(allEvents, {
+    const filtered = filterEvents(userFilteredEvents, {
       types: filters.types.length > 0 ? filters.types : undefined,
       statuses: filters.statuses.length > 0 ? filters.statuses : undefined,
       priorities:
@@ -100,7 +115,7 @@ export function useCalendar(config?: Partial<CalendarViewConfig>) {
 
     // Sort by priority and time
     return sortEventsByPriority(filtered)
-  }, [allEvents, filters])
+  }, [userFilteredEvents, filters])
 
   // Calendar event handlers
   const handleEventClick = useCallback((event: CalendarEvent) => {
@@ -215,22 +230,30 @@ export function useCalendar(config?: Partial<CalendarViewConfig>) {
     setCurrentDate(new Date())
   }, [])
 
-  // Statistics and summaries
-  const stats = useMemo(() => {
-    return getEventStats()
-  }, [getEventStats])
-
   const todayEvents = useMemo(() => {
-    return getEventsForDate(new Date())
-  }, [getEventsForDate])
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    return filteredEvents.filter(
+      event => event.start >= today && event.start < tomorrow
+    )
+  }, [filteredEvents])
 
   const upcomingEvents = useMemo(() => {
-    return getUpcomingEvents(7)
-  }, [getUpcomingEvents])
+    const now = new Date()
+    const futureDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+    return filteredEvents.filter(
+      event =>
+        event.start >= now &&
+        event.start <= futureDate &&
+        event.status === 'pending'
+    )
+  }, [filteredEvents])
 
   const overdueEvents = useMemo(() => {
-    return getOverdueEvents()
-  }, [getOverdueEvents])
+    return filteredEvents.filter(event => event.status === 'overdue')
+  }, [filteredEvents])
 
   // Calendar utilities
   const getEventsForCurrentView = useCallback(() => {
@@ -261,19 +284,30 @@ export function useCalendar(config?: Partial<CalendarViewConfig>) {
           event => event.start >= weekStart && event.start <= weekEnd
         )
       }
-      case 'timeGridDay':
-        // Return events for the current day
-        return getEventsForDate(currentDate)
+      case 'timeGridDay': {
+        const dayStart = new Date(currentDate)
+        dayStart.setHours(0, 0, 0, 0)
+        const dayEnd = new Date(dayStart)
+        dayEnd.setDate(dayEnd.getDate() + 1)
+        return filteredEvents.filter(
+          event => event.start >= dayStart && event.start < dayEnd
+        )
+      }
       default:
         return filteredEvents
     }
-  }, [currentView, currentDate, filteredEvents, getEventsForDate])
+  }, [currentView, currentDate, filteredEvents])
 
   return {
     // Events data
     events: filteredEvents,
-    allEvents,
+    allEvents: allEventsUnfiltered,
     selectedEvent,
+
+    // User context
+    canViewAllEvents,
+    userStaffMember,
+    eventSources: sources,
 
     // Loading states
     isLoading,
@@ -311,7 +345,6 @@ export function useCalendar(config?: Partial<CalendarViewConfig>) {
     navigateToToday,
 
     // Statistics and summaries
-    stats,
     todayEvents,
     upcomingEvents,
     overdueEvents,

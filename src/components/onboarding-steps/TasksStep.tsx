@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import {
   ClipboardCheck,
-  CheckSquare,
   Plus,
   Trash2,
   Edit2,
-  UserCircle,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/Button'
@@ -22,10 +20,6 @@ import {
 } from '@/components/ui/Select'
 
 import type {
-  GeneralTask,
-  HaccpTaskCategory,
-  TaskFrequency,
-  TaskPriority,
   TasksStepData,
   TasksStepProps,
   ConservationMaintenancePlan,
@@ -34,61 +28,33 @@ import type {
   MaintenanceFrequency,
   CustomFrequencyDays,
   StaffRole,
+  GenericTask,
 } from '@/types/onboarding'
-import {
-  createDraftTask,
-  normalizeGeneralTask,
-  validateGeneralTask,
-  HACCP_TASK_CATEGORIES,
-  TASK_FREQUENCIES,
-  TASK_PRIORITY_OPTIONS,
-} from '@/utils/onboarding/taskUtils'
 
 // Costanti per le manutenzioni standard
 const STANDARD_MAINTENANCE_TYPES: Array<{
   value: StandardMaintenanceType
   label: string
-  description: string
   icon: string
 }> = [
-  {
-    value: 'rilevamento_temperatura',
-    label: 'Rilevamento Temperatura',
-    description: 'Controllo giornaliero delle temperature',
-    icon: '🌡️',
-  },
-  {
-    value: 'sanificazione',
-    label: 'Sanificazione',
-    description: 'Pulizia e sanificazione settimanale',
-    icon: '🧽',
-  },
-  {
-    value: 'sbrinamento',
-    label: 'Sbrinamento',
-    description: 'Sbrinamento annuale (escluso per ambiente)',
-    icon: '❄️',
-  },
-  {
-    value: 'controllo_scadenze',
-    label: 'Controllo Scadenze',
-    description: 'Verifica scadenze prodotti (giorni personalizzati)',
-    icon: '📅',
-  },
+  { value: 'rilevamento_temperatura', label: 'Rilevamento Temperatura', icon: '🌡️' },
+  { value: 'sanificazione', label: 'Sanificazione', icon: '🧽' },
+  { value: 'sbrinamento', label: 'Sbrinamento', icon: '❄️' },
+  { value: 'controllo_scadenze', label: 'Controllo Scadenze', icon: '📅' },
 ]
 
-const FREQUENCY_OPTIONS: Array<{
+const MAINTENANCE_FREQUENCIES: Array<{
   value: MaintenanceFrequency
   label: string
 }> = [
-  { value: 'giornaliera', label: 'Giornaliera' },
-  { value: 'settimanale', label: 'Settimanale' },
-  { value: 'mensile', label: 'Mensile' },
   { value: 'annuale', label: 'Annuale' },
+  { value: 'mensile', label: 'Mensile' },
+  { value: 'settimanale', label: 'Settimanale' },
+  { value: 'giornaliera', label: 'Giornaliera' },
   { value: 'custom', label: 'Personalizzata' },
 ]
 
-const WEEKDAYS: Array<{
+const CUSTOM_DAYS: Array<{
   value: CustomFrequencyDays
   label: string
 }> = [
@@ -103,32 +69,47 @@ const WEEKDAYS: Array<{
 
 const TasksStep = ({
   data,
-  departments,
   conservationPoints,
   staff,
   onUpdate,
   onValidChange,
 }: TasksStepProps) => {
-  const [tasks, setTasks] = useState<GeneralTask[]>(
-    (data?.generalTasks ?? []).map(normalizeGeneralTask)
-  )
-  const [draftTask, setDraftTask] = useState<GeneralTask | null>(null)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [editingId, setEditingId] = useState<string | 'maintenancePlans'>(null)
-
-  // Stati per manutenzioni punti conservazione
   const [maintenancePlans, setMaintenancePlans] = useState<
     ConservationMaintenancePlan[]
   >(data?.conservationMaintenancePlans ?? [])
+  const [genericTasks, setGenericTasks] = useState<GenericTask[]>(
+    data?.genericTasks ?? []
+  )
+  const [editingGenericTaskId, setEditingGenericTaskId] = useState<string | null>(null)
   const [selectedConservationPoint, setSelectedConservationPoint] =
     useState<ConservationPoint | null>(null)
 
-  // Sincronizza maintenancePlans con le props appena con cui i dati cambiano
+  // Sincronizza maintenancePlans con le props quando i dati cambiano
   useEffect(() => {
     if (data?.conservationMaintenancePlans !== undefined) {
       setMaintenancePlans(data.conservationMaintenancePlans)
     }
   }, [data?.conservationMaintenancePlans])
+
+  // Sincronizza genericTasks con le props quando i dati cambiano
+  useEffect(() => {
+    if (data?.genericTasks !== undefined) {
+      setGenericTasks(data.genericTasks)
+    }
+  }, [data?.genericTasks])
+
+
+  const staffOptions = useMemo(
+    () =>
+      (staff ?? []).map(member => ({
+        id: member.id,
+        label: member.fullName,
+        role: member.role,
+        categories: member.categories || [],
+        department: member.department_assignments,
+      })),
+    [staff]
+  )
 
   // Funzione di validazione per manutenzioni
   const validateAllMaintenanceAssigned = useCallback(() => {
@@ -147,7 +128,11 @@ const TasksStep = ({
       // Verifica che abbiano tutte le manutenziioni richieste assegnate
       return requiredMaintenances.every(requiredMaintenance =>
         pointMaintenances.some(
-          plan => plan.manutenzione === requiredMaintenance.value
+          plan => 
+            plan.manutenzione === requiredMaintenance.value &&
+            plan.frequenza && // Frequenza obbligatoria
+            plan.assegnatoARuolo && // Ruolo obbligatorio
+            (plan.frequenza !== 'custom' || (plan.giorniCustom && plan.giorniCustom.length > 0)) // Giorni custom se frequenza è custom
         )
       )
     })
@@ -156,817 +141,201 @@ const TasksStep = ({
   useEffect(() => {
     const payload: TasksStepData = {
       conservationMaintenancePlans: maintenancePlans,
-      generalTasks: tasks,
+      generalTasks: [],
       maintenanceTasks: data?.maintenanceTasks ?? [],
+      genericTasks: genericTasks,
     }
     onUpdate(payload)
-  }, [tasks, maintenancePlans, onUpdate, data?.maintenanceTasks])
+  }, [maintenancePlans, genericTasks, onUpdate, data?.maintenanceTasks])
 
   useEffect(() => {
     // Validazione aggiornata:
-    // 1. Almeno 1 attività generica deve essere presente
-    // 2. Tutte le attività devono essere valide
-    // 3. Tutte le manutenzioni dei punti di conservazione devono essere assegnate
-    const hasGeneralTasks = tasks.length > 0
-    const allTasksValid = tasks.every(task => validateGeneralTask(task).success)
+    // 1. Tutte le manutenzioni devono essere assegnate
+    // 2. Almeno 1 attività generica deve essere presente
     const allMaintenanceAssigned = validateAllMaintenanceAssigned()
-
-    const isValid = hasGeneralTasks && allTasksValid && allMaintenanceAssigned
+    const hasGenericTasks = genericTasks.length > 0
+    const isValid = allMaintenanceAssigned && hasGenericTasks
     onValidChange(isValid)
-  }, [tasks, validateAllMaintenanceAssigned, onValidChange])
-
-  const departmentOptions = useMemo(
-    () => departments.filter(department => department.is_active !== false),
-    [departments]
-  )
-
-  const conservationOptions = useMemo(
-    () => conservationPoints,
-    [conservationPoints]
-  )
-
-  const staffOptions = useMemo(
-    () =>
-      (staff ?? []).map(member => ({
-        id: member.id,
-        label: member.fullName,
-        role: member.role,
-        categories: member.categories || [],
-        department: member.department_assignments,
-      })),
-    [staff]
-  )
-
-  const handleResetForm = () => {
-    setDraftTask(null)
-    setEditingId(null)
-    setErrors({})
-  }
-
-  const handleSubmitTask = () => {
-    if (!draftTask) return
-    const normalized = normalizeGeneralTask(draftTask)
-    const validation = validateGeneralTask(normalized)
-    if (!validation.success) {
-      setErrors(validation.errors ?? {})
-      return
-    }
-
-    setTasks(prev => {
-      if (editingId) {
-        return prev.map(task => (task.id === editingId ? normalized : task))
-      }
-      return [...prev, normalized]
-    })
-
-    handleResetForm()
-  }
-
-  const handleEditTask = (task: GeneralTask) => {
-    setDraftTask({
-      ...task,
-      checklist: [...task.checklist],
-      requiredTools: [...task.requiredTools],
-    })
-    setEditingId(task.id)
-    setErrors({})
-  }
-
-  const handleDeleteTask = (id: string) => {
-    setTasks(prev => prev.filter(task => task.id !== id))
-    if (editingId === id) {
-      handleResetForm()
-    }
-  }
+  }, [validateAllMaintenanceAssigned, genericTasks, onValidChange])
 
   // Funzioni per gestire le manutenzioni
   const handleAssignMaintenanceToPoint = useCallback(
     (point: ConservationPoint) => {
       setSelectedConservationPoint(point)
-      setEditingId('maintenancePlans')
     },
     []
   )
 
   const handleCloseMaintenanceModal = useCallback(() => {
     setSelectedConservationPoint(null)
-    setEditingId(null)
   }, [])
-
-  // Funzione per creare default plans rimossa - non utilizzata in implementazione corrente
 
   const handleAssignMaintenancePlans = useCallback(
     (plans: ConservationMaintenancePlan[]) => {
-      setMaintenancePlans(prev => [
-        ...prev.filter(
+      setMaintenancePlans(prev => {
+        // Rimuovi i piani esistenti per questo punto di conservazione
+        const filtered = prev.filter(
           plan => plan.conservationPointId !== plans[0]?.conservationPointId
-        ),
-        ...plans,
-      ])
+        )
+        // Aggiungi i nuovi piani
+        return [...filtered, ...plans]
+      })
       setSelectedConservationPoint(null)
-      setEditingId(null)
     },
     []
   )
 
-  const handlePrefillTasks = () => {
-    if (departmentOptions.length === 0) return
-    const cucina = departmentOptions.find(
-      dep => dep.name.toLowerCase() === 'cucina'
+  // Funzioni per gestire le attività generiche
+  const handleAddGenericTask = useCallback(() => {
+    const newTask: GenericTask = {
+      id: `generic-${Date.now()}`,
+      name: '',
+      frequenza: 'settimanale',
+      assegnatoARuolo: 'dipendente',
+      note: '',
+    }
+    setGenericTasks(prev => [...prev, newTask])
+    setEditingGenericTaskId(newTask.id)
+  }, [])
+
+  const handleUpdateGenericTask = useCallback((id: string, updates: Partial<GenericTask>) => {
+    setGenericTasks(prev =>
+      prev.map(task => (task.id === id ? { ...task, ...updates } : task))
     )
-    const freezer = conservationOptions.find(
-      point => point.pointType === 'freezer'
-    )
-    const fridge = conservationOptions.find(
-      point => point.pointType === 'fridge'
-    )
+  }, [])
 
-    const samples: GeneralTask[] = [
-      normalizeGeneralTask({
-        id: `task_${Date.now()}`,
-        name: 'Controllo temperature frigoriferi',
-        description:
-          'Verifica e registrazione delle temperature di tutti i frigoriferi attivi',
-        frequency: 'daily',
-        departmentId: cucina?.id,
-        conservationPointId: fridge?.id,
-        priority: 'high',
-        estimatedDuration: 20,
-        checklist: [
-          'Rilevare temperatura display del frigorifero',
-          'Misurare temperatura interna con termometro campione',
-          'Registrare temperatura su modulo HACCP',
-          'Verificare pulizia guarnizioni e chiusura porte',
-        ],
-        requiredTools: ['Termometro campione', 'Modulo temperature'],
-        haccpCategory: 'temperature',
-        responsibleStaffIds: [],
-      }),
-      normalizeGeneralTask({
-        id: `task_${Date.now() + 1}`,
-        name: 'Sanificazione superfici di lavoro',
-        description:
-          'Pulizia e sanificazione completa delle superfici della cucina',
-        frequency: 'daily',
-        departmentId: cucina?.id,
-        priority: 'critical',
-        estimatedDuration: 45,
-        checklist: [
-          'Rimuovere residui alimentari',
-          'Applicare detergente professionale',
-          'Risciacquare e asciugare',
-          'Applicare disinfettante alimentare',
-          'Registrare nel modulo sanificazioni',
-        ],
-        requiredTools: ['Detergente HACCP', 'Disinfettante', 'Panni monouso'],
-        haccpCategory: 'hygiene',
-        responsibleStaffIds: [],
-      }),
-      normalizeGeneralTask({
-        id: `task_${Date.now() + 2}`,
-        name: 'Controllo scadenze prodotti congelati',
-        description: 'Verifica delle scadenze e rotazione stock congelatore',
-        frequency: 'weekly',
-        departmentId: cucina?.id,
-        conservationPointId: freezer?.id,
-        priority: 'medium',
-        estimatedDuration: 30,
-        checklist: [
-          'Controllare etichette di tutti i prodotti congelati',
-          'Segnalare prodotti in scadenza entro 7 giorni',
-          'Rimuovere prodotti scaduti',
-          'Aggiornare inventario congelatori',
-        ],
-        requiredTools: [
-          'Registro scadenze',
-          'Etichette',
-          'Pennarello indelebile',
-        ],
-        haccpCategory: 'documentation',
-        responsibleStaffIds: [],
-      }),
-    ]
+  const handleDeleteGenericTask = useCallback((id: string) => {
+    setGenericTasks(prev => prev.filter(task => task.id !== id))
+  }, [])
 
-    setTasks(samples)
-    handleResetForm()
-  }
+  const handleConfirmGenericTask = useCallback(() => {
+    // Chiude il form di modifica
+    setEditingGenericTaskId(null)
+  }, [])
 
-  const renderTaskForm = () => (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-      <header className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">
-          {editingId ? 'Modifica attività HACCP' : 'Nuova attività HACCP'}
-        </h3>
-        <p className="text-sm text-gray-500">
-          Configura checklist, priorità e assegnazione per automatizzare i
-          controlli periodici.
-        </p>
-      </header>
+  const renderMaintenanceAssignmentModal = () => {
+    if (!selectedConservationPoint) return null
 
-      {draftTask ? (
-        <div className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <Label>Nome attività *</Label>
-              <Input
-                value={draftTask.name}
-                onChange={event =>
-                  setDraftTask(prev =>
-                    prev ? { ...prev, name: event.target.value } : prev
-                  )
-                }
-                aria-invalid={Boolean(errors.name)}
-              />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-              )}
-            </div>
-            <div>
-              <Label>Categoria HACCP *</Label>
-              <Select
-                value={draftTask.haccpCategory}
-                onValueChange={value =>
-                  setDraftTask(prev =>
-                    prev
-                      ? { ...prev, haccpCategory: value as HaccpTaskCategory }
-                      : prev
-                  )
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  {HACCP_TASK_CATEGORIES.map(category => (
-                    <SelectOption key={category.value} value={category.value}>
-                      {category.icon} {category.label}
-                    </SelectOption>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div>
-            <Label>Descrizione</Label>
-            <Textarea
-              rows={3}
-              value={draftTask.description ?? ''}
-              onChange={event =>
-                setDraftTask(prev =>
-                  prev ? { ...prev, description: event.target.value } : prev
-                )
-              }
-              placeholder="Dettagli operativi dell'attività"
-            />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <div>
-              <Label>Frequenza *</Label>
-              <Select
-                value={draftTask.frequency}
-                onValueChange={value =>
-                  setDraftTask(prev =>
-                    prev ? { ...prev, frequency: value as TaskFrequency } : prev
-                  )
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona frequenza" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TASK_FREQUENCIES.map(freq => (
-                    <SelectOption key={freq.value} value={freq.value}>
-                      {freq.label}
-                    </SelectOption>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Priorità *</Label>
-              <Select
-                value={draftTask.priority}
-                onValueChange={value =>
-                  setDraftTask(prev =>
-                    prev ? { ...prev, priority: value as TaskPriority } : prev
-                  )
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona priorità" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TASK_PRIORITY_OPTIONS.map(priority => (
-                    <SelectOption key={priority.value} value={priority.value}>
-                      {priority.label}
-                    </SelectOption>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Durata stimata (min) *</Label>
-              <Input
-                type="number"
-                min={5}
-                step={5}
-                value={draftTask.estimatedDuration}
-                onChange={event =>
-                  setDraftTask(prev =>
-                    prev
-                      ? {
-                          ...prev,
-                          estimatedDuration: Number(event.target.value),
-                        }
-                      : prev
-                  )
-                }
-                aria-invalid={Boolean(errors.estimatedDuration)}
-              />
-              {errors.estimatedDuration && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.estimatedDuration}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <Label>Reparto</Label>
-              <Select
-                value={draftTask.departmentId ?? ''}
-                onValueChange={value =>
-                  setDraftTask(prev =>
-                    prev
-                      ? {
-                          ...prev,
-                          departmentId: value || undefined,
-                        }
-                      : prev
-                  )
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona reparto" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectOption value="">Tutti i reparti</SelectOption>
-                  {departmentOptions.map(department => (
-                    <SelectOption key={department.id} value={department.id}>
-                      {department.name}
-                    </SelectOption>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Punto di conservazione</Label>
-              <Select
-                value={draftTask.conservationPointId ?? ''}
-                onValueChange={value =>
-                  setDraftTask(prev =>
-                    prev
-                      ? {
-                          ...prev,
-                          conservationPointId: value || undefined,
-                        }
-                      : prev
-                  )
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona punto conservazione" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectOption value="">Nessuno specifico</SelectOption>
-                  {conservationOptions.map(point => (
-                    <SelectOption key={point.id} value={point.id}>
-                      {point.name} ({point.pointType})
-                    </SelectOption>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div>
-            <Label>Checklist operativa</Label>
-            <textarea
-              className="block h-24 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
-              value={draftTask.checklist.join('\n')}
-              onChange={event =>
-                setDraftTask(prev =>
-                  prev
-                    ? {
-                        ...prev,
-                        checklist: event.target.value
-                          .split('\n')
-                          .map(item => item.trim())
-                          .filter(Boolean),
-                      }
-                    : prev
-                )
-              }
-              placeholder="Inserisci un elemento per linea"
-            />
-          </div>
-
-          <div>
-            <Label>Strumenti necessari</Label>
-            <textarea
-              className="block h-20 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
-              value={draftTask.requiredTools.join('\n')}
-              onChange={event =>
-                setDraftTask(prev =>
-                  prev
-                    ? {
-                        ...prev,
-                        requiredTools: event.target.value
-                          .split('\n')
-                          .map(tool => tool.trim())
-                          .filter(Boolean),
-                      }
-                    : prev
-                )
-              }
-              placeholder="Inserisci uno strumento per linea"
-            />
-          </div>
-
-          <div>
-            <Label>Personale responsabile</Label>
-            <select
-              multiple
-              value={draftTask.responsibleStaffIds ?? []}
-              onChange={event =>
-                setDraftTask(prev =>
-                  prev
-                    ? {
-                        ...prev,
-                        responsibleStaffIds: Array.from(
-                          event.target.selectedOptions
-                        ).map(option => option.value),
-                      }
-                    : prev
-                )
-              }
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
-            >
-              {staffOptions.map(member => (
-                <option key={member.id} value={member.id}>
-                  {member.label} ({member.role})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex justify-end gap-2 border-t pt-4">
-            <Button type="button" variant="outline" onClick={handleResetForm}>
-              Annulla
-            </Button>
-            <Button type="button" onClick={handleSubmitTask}>
-              {editingId ? 'Salva modifiche' : 'Aggiungi attività'}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="rounded border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
-          Seleziona un'attività esistente per modificarla oppure creane una
-          nuova.
-        </div>
-      )}
-    </div>
-  )
-
-  const renderTaskList = () => (
-    <section className="rounded-lg border border-gray-200 bg-white">
-      <header className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-        <div>
-          <h3 className="font-semibold text-gray-900">Attività configurate</h3>
-          <p className="text-sm text-gray-500">
-            Automazione dei controlli HACCP con checklist e assegnazioni
-          </p>
-        </div>
-        <Button
-          type="button"
-          variant="ghost"
-          className="gap-2"
-          onClick={() => setDraftTask(createDraftTask())}
-        >
-          <Plus className="h-4 w-4" /> Aggiungi attività
-        </Button>
-      </header>
-
-      <div className="divide-y divide-gray-100">
-        {tasks.length === 0 && (
-          <p className="px-4 py-8 text-center text-sm text-gray-500">
-            Nessuna attività configurata. Aggiungi almeno un controllo per
-            procedere.
-          </p>
-        )}
-
-        {tasks.map(task => {
-          const category = HACCP_TASK_CATEGORIES.find(
-            cat => cat.value === task.haccpCategory
-          )
-          const dept = departments.find(
-            department => department.id === task.departmentId
-          )
-          const point = conservationPoints.find(
-            cp => cp.id === task.conservationPointId
-          )
-
-          return (
-            <article
-              key={task.id}
-              className="grid gap-4 px-4 py-3 md:grid-cols-[1fr_auto] md:items-start"
-            >
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-lg">{category?.icon ?? '📝'}</span>
-                  <h4 className="text-base font-semibold text-gray-900">
-                    {task.name}
-                  </h4>
-                  <Badge tone="info" variant="outline">
-                    {category?.label ?? 'Attività'}
-                  </Badge>
-                  <Badge tone="warning" variant="outline">
-                    {TASK_FREQUENCIES.find(
-                      freq => freq.value === task.frequency
-                    )?.label ?? task.frequency}
-                  </Badge>
-                  <Badge tone="danger" variant="outline">
-                    {TASK_PRIORITY_OPTIONS.find(
-                      priority => priority.value === task.priority
-                    )?.label ?? task.priority}
-                  </Badge>
-                </div>
-
-                {task.description && (
-                  <p className="text-sm text-gray-600">{task.description}</p>
-                )}
-
-                <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-                  {dept && <Badge variant="outline">{dept.name}</Badge>}
-                  {point && <Badge variant="outline">{point.name}</Badge>}
-                  <Badge variant="secondary">
-                    {task.estimatedDuration} min
-                  </Badge>
-                </div>
-
-                {task.checklist.length > 0 && (
-                  <div className="space-y-1 text-xs text-gray-600">
-                    <p className="font-semibold">
-                      Checklist ({task.checklist.length})
-                    </p>
-                    <ul className="space-y-1">
-                      {task.checklist.slice(0, 3).map(item => (
-                        <li key={item} className="flex items-center gap-2">
-                          <CheckSquare className="h-3 w-3 text-green-600" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                      {task.checklist.length > 3 && (
-                        <li className="text-gray-400">
-                          +{task.checklist.length - 3} ulteriori elementi...
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-                )}
-
-                {task.requiredTools.length > 0 && (
-                  <div className="flex flex-wrap gap-1 text-xs text-gray-500">
-                    {task.requiredTools.map(tool => (
-                      <span
-                        key={tool}
-                        className="rounded-full bg-gray-100 px-2 py-1"
-                      >
-                        {tool}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {task.responsibleStaffIds &&
-                  task.responsibleStaffIds.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
-                      <UserCircle className="h-4 w-4" />
-                      <span>
-                        Responsabili:{' '}
-                        {task.responsibleStaffIds
-                          .map(
-                            staffId =>
-                              staffOptions.find(member => member.id === staffId)
-                                ?.label
-                          )
-                          .filter(Boolean)
-                          .join(', ')}
-                      </span>
-                    </div>
-                  )}
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleEditTask(task)}
-                  aria-label="Modifica attività"
-                >
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => handleDeleteTask(task.id)}
-                  aria-label="Elimina attività"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </article>
-          )
-        })}
-      </div>
-    </section>
-  )
-
-  // Rendering della sezione manutenzioni punti conservazione
-  const renderConservationMaintenanceSection = () => (
-    <section className="rounded-lg border border-gray-200 bg-white">
-      <header className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-        <div>
-          <h3 className="font-semibold text-gray-900">
-            Manutenzioni Punti Conservazione
-          </h3>
-          <p className="text-sm text-gray-500">
-            Assegna le 4 manutenziioni obbligatorie per ogni punto di
-            conservazione
-          </p>
-        </div>
-      </header>
-
-      <div className="divide-y divide-gray-100 p-4">
-        {conservationPoints.length === 0 ? (
-          <p className="py-8 text-center text-sm text-gray-500">
-            Nessun punto di conservazione trovato. Configura prima i punti di
-            conservazione nello step precedente.
-          </p>
-        ) : (
-          conservationPoints.map(point => {
-            const pointMaintenances = maintenancePlans.filter(
-              plan => plan.conservationPointId === point.id
-            )
-            const requiredMaintenances =
-              point.pointType === 'ambient'
-                ? STANDARD_MAINTENANCE_TYPES.filter(
-                    m => m.value !== 'sbrinamento'
-                  )
-                : STANDARD_MAINTENANCE_TYPES
-            const isFullyConfigured = requiredMaintenances.every(
-              requiredMaintenance =>
-                pointMaintenances.some(
-                  plan => plan.manutenzione === requiredMaintenance.value
-                )
-            )
-
-            return (
-              <div key={point.id} className="py-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <h4 className="font-medium text-gray-900">
-                        {point.name}
-                      </h4>
-                      <div className="flex gap-2">
-                        <Badge variant="outline">
-                          {point.pointType === 'ambient'
-                            ? 'Ambiente'
-                            : point.pointType === 'fridge'
-                              ? 'Frigorifero'
-                              : point.pointType === 'freezer'
-                                ? 'Congelatore'
-                                : 'Blast Chiller'}
-                        </Badge>
-                        <Badge
-                          variant={
-                            isFullyConfigured ? 'default' : 'destructive'
-                          }
-                        >
-                          {isFullyConfigured
-                            ? 'Completamente configurato'
-                            : 'Da configurare'}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleAssignMaintenanceToPoint(point)}
-                  >
-                    {isFullyConfigured
-                      ? 'Modifica manutenzioni'
-                      : 'Assegna manutenzioni'}
-                  </Button>
-                </div>
-
-                {pointMaintenances.length > 0 && (
-                  <div className="mt-2 grid gap-2 md:grid-cols-2">
-                    {pointMaintenances.map(plan => {
-                      const maintenanceType = STANDARD_MAINTENANCE_TYPES.find(
-                        m => m.value === plan.manutenzione
-                      )
-                      return (
-                        <div
-                          key={plan.id}
-                          className="rounded border border-gray-200 bg-gray-50 p-2 text-xs"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span>{maintenanceType?.icon}</span>
-                            <span className="font-medium">
-                              {maintenanceType?.label}
-                            </span>
-                          </div>
-                          <div className="mt-1 text-gray-600">
-                            <span className="font-medium">Frequenza:</span>{' '}
-                            {plan.frequenza === 'custom' &&
-                            plan.giorniCustom?.length
-                              ? plan.giorniCustom
-                                  .map(
-                                    day =>
-                                      WEEKDAYS.find(w => w.value === day)?.label
-                                  )
-                                  .join(', ')
-                              : FREQUENCY_OPTIONS.find(
-                                  f => f.value === plan.frequenza
-                                )?.label}
-                          </div>
-                          <div className="text-gray-600">
-                            <span className="font-medium">Ruolo:</span>{' '}
-                            {plan.assegnatoARuolo === 'specifico' &&
-                            plan.assegnatoADipendenteSpecifico
-                              ? staffOptions.find(
-                                  s =>
-                                    s.id === plan.assegnatoADipendenteSpecifico
-                                )?.label
-                              : plan.assegnatoARuolo}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )
-          })
-        )}
-      </div>
-    </section>
-  )
-
-  // Rendering del modal per l'assegnazione maintenance
-  const renderMaintenanceAssignmentModal = () => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg bg-white shadow-xl">
-        <header className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Assegna manutenzioni - {selectedConservationPoint?.name}
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-lg font-semibold">
+              Assegna Manutenzioni - {selectedConservationPoint.name}
             </h3>
-            <p className="text-sm text-gray-500">
-              Configura le{' '}
-              {selectedConservationPoint?.pointType === 'ambient' ? '3' : '4'}{' '}
-              manutenziioni obbligatorie
-            </p>
+            <Button variant="outline" onClick={handleCloseMaintenanceModal}>
+              ✕
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleCloseMaintenanceModal}
-          >
-            ×
-          </Button>
-        </header>
-
-        <div className="p-6">
           <MaintenanceAssignmentForm
-            conservationPoint={selectedConservationPoint!}
+            conservationPoint={selectedConservationPoint}
             staffOptions={staffOptions}
+            maintenancePlans={maintenancePlans}
             onSave={handleAssignMaintenancePlans}
             onCancel={handleCloseMaintenanceModal}
           />
         </div>
-      </div>
     </div>
+  )
+  }
+
+  const renderGenericTasksSection = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-xl font-semibold text-gray-900">
+            👥 Attività/Mansioni Generiche
+        </h3>
+        <p className="text-sm text-gray-500">
+            Crea attività generiche e assegna responsabilità al personale
+          </p>
+        </div>
+        <Button onClick={handleAddGenericTask} className="gap-2">
+          <Plus className="h-4 w-4" /> Aggiungi Attività
+        </Button>
+      </div>
+
+      {genericTasks.length === 0 && (
+        <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center">
+          <p className="text-gray-500">
+            Nessuna attività generica configurata. Aggiungi almeno un'attività per procedere.
+          </p>
+        </div>
+      )}
+
+        {/* Form di modifica - mostra solo quando c'è un'attività in modifica */}
+      {genericTasks.filter(task => editingGenericTaskId === task.id).length > 0 && (
+        <div className="space-y-4">
+          {genericTasks
+            .filter(task => editingGenericTaskId === task.id)
+            .map(task => (
+              <GenericTaskForm
+                key={task.id}
+                task={task}
+                staffOptions={staffOptions}
+                isEditing={true}
+                onUpdate={(updates) => handleUpdateGenericTask(task.id, updates)}
+                onDelete={() => handleDeleteGenericTask(task.id)}
+                onConfirm={() => handleConfirmGenericTask()}
+              />
+            ))}
+        </div>
+      )}
+
+      {genericTasks.filter(task => editingGenericTaskId !== task.id).length > 0 && (
+        <div className="rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-gray-100 px-4 py-3">
+            <h4 className="font-semibold text-gray-900">Attività Configurate</h4>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {genericTasks
+              .filter(task => editingGenericTaskId !== task.id)
+              .map(task => (
+              <div key={task.id} className="px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h5 className="font-medium text-gray-900">{task.name}</h5>
+                    <div className="flex gap-4 text-sm text-gray-500">
+                      <span>🔄 {MAINTENANCE_FREQUENCIES.find(f => f.value === task.frequenza)?.label}</span>
+                      <span>👤 {task.assegnatoARuolo}</span>
+                      {task.assegnatoACategoria && task.assegnatoACategoria !== 'all' && (
+                        <span>📂 {task.assegnatoACategoria}</span>
+                      )}
+                      {task.assegnatoADipendenteSpecifico && (
+                        <span>👨‍💼 {staffOptions.find(s => s.id === task.assegnatoADipendenteSpecifico)?.label}</span>
+              )}
+            </div>
+                    {task.note && (
+                      <p className="text-sm text-gray-600">{task.note}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setEditingGenericTaskId(task.id)}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => handleDeleteGenericTask(task.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            </div>
+          </div>
+      )}
+      </div>
   )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <header className="space-y-2 text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
           <ClipboardCheck className="h-8 w-8 text-blue-600" />
@@ -976,25 +345,120 @@ const TasksStep = ({
         </h2>
         <p className="text-gray-600">
           Definisci le attività periodiche per garantire la conformità alle
-          procedure HACCP.
+          normative HACCP.
         </p>
       </header>
 
-      {/* Sezione Manutenzioni Punti Conservazione */}
-      {renderConservationMaintenanceSection()}
+      {/* Sezione 1: Manutenzioni Punti di Conservazione */}
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+          <div>
+              <h3 className="text-xl font-semibold text-gray-900">
+                🔧 Manutenzioni Punti di Conservazione
+              </h3>
+              <p className="text-sm text-gray-500">
+                Assegna le manutenzioni obbligatorie per ogni punto di conservazione
+              </p>
+            </div>
+          </div>
 
-      <div className="flex justify-center">
+          <div className="space-y-3">
+            {conservationPoints.length === 0 ? (
+              <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center">
+                <p className="text-gray-500">
+                  Nessun punto di conservazione configurato. Completa lo Step 4
+                  per procedere.
+                </p>
+              </div>
+            ) : (
+              conservationPoints.map(point => {
+                const pointMaintenances = maintenancePlans.filter(
+                  plan => plan.conservationPointId === point.id
+                )
+
+                const requiredMaintenances =
+                  point.pointType === 'ambient'
+                    ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value !== 'sbrinamento')
+                    : STANDARD_MAINTENANCE_TYPES
+
+                const allAssigned = requiredMaintenances.every(
+                  requiredMaintenance =>
+                    pointMaintenances.some(
+                      plan => plan.manutenzione === requiredMaintenance.value
+                    )
+                )
+
+                return (
+                  <div key={point.id} className="py-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <h4 className="font-medium text-gray-900">
+                            {point.name}
+                          </h4>
+                          <div className="flex gap-2">
+                            <Badge variant="outline">
+                              {point.pointType === 'ambient'
+                                ? 'Ambiente'
+                                : 'Attrezzatura'}
+                            </Badge>
+                            <Badge
+                              variant={allAssigned ? 'default' : 'destructive'}
+                            >
+                              {allAssigned ? 'Completato' : 'Incompleto'}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
         <Button
           variant="outline"
-          className="gap-2"
-          onClick={handlePrefillTasks}
+                        onClick={() => handleAssignMaintenanceToPoint(point)}
         >
-          <Plus className="h-4 w-4" /> Carica attività predefinite
+                        {allAssigned ? 'Modifica Manutenzioni' : 'Assegna manutenzioni'}
         </Button>
+                    </div>
+
+                    <div className="mt-2 grid gap-2 md:grid-cols-2">
+                      {pointMaintenances.map(plan => {
+                        const maintenanceType = STANDARD_MAINTENANCE_TYPES.find(
+                          m => m.value === plan.manutenzione
+                        )
+                        return (
+                          <div
+                            key={plan.id}
+                            className="rounded border border-gray-200 bg-gray-50 p-2 text-xs"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span>{maintenanceType?.icon}</span>
+                              <span className="font-medium">
+                                {maintenanceType?.label}
+                              </span>
+                            </div>
+                            <div className="mt-1 text-gray-600">
+                              {MAINTENANCE_FREQUENCIES.find(f => f.value === plan.frequenza)?.label}
+                              {' - '}
+                              {plan.assegnatoARuolo}
+                              {plan.assegnatoACategoria && plan.assegnatoACategoria !== 'all' && (
+                                <> - {plan.assegnatoACategoria}</>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        </div>
       </div>
 
-      {renderTaskForm()}
-      {renderTaskList()}
+      {/* Sezione 2: Attività Generiche */}
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
+        {renderGenericTasksSection()}
+      </div>
 
       {/* Modal per assegnazione manutenzioni */}
       {selectedConservationPoint && renderMaintenanceAssignmentModal()}
@@ -1011,7 +475,8 @@ const TasksStep = ({
 // Componente interno per l'assegnazione delle manutenzioni
 interface MaintenanceAssignmentFormProps {
   conservationPoint: ConservationPoint
-  staffOptions: Array<{ id: string; label: string; role: string }>
+  staffOptions: Array<{ id: string; label: string; role: string; categories: string[] }>
+  maintenancePlans: ConservationMaintenancePlan[]
   onSave: (plans: ConservationMaintenancePlan[]) => void
   onCancel: () => void
 }
@@ -1019,6 +484,7 @@ interface MaintenanceAssignmentFormProps {
 const MaintenanceAssignmentForm = ({
   conservationPoint,
   staffOptions,
+  maintenancePlans,
   onSave,
   onCancel,
 }: MaintenanceAssignmentFormProps) => {
@@ -1027,40 +493,41 @@ const MaintenanceAssignmentForm = ({
       ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value !== 'sbrinamento')
       : STANDARD_MAINTENANCE_TYPES
 
-  const [plans, setPlans] = useState<ConservationMaintenancePlan[]>(
-    requiredMaintenances.map((maintenance, index) => ({
-      id: `${conservationPoint.id}_${maintenance.value}_${Date.now() + index}`,
-      conservationPointId: conservationPoint.id,
-      manutenzione: maintenance.value,
-      frequenza:
-        maintenance.value === 'rilevamento_temperatura'
-          ? ('giornaliera' as MaintenanceFrequency)
-          : maintenance.value === 'sanificazione'
-            ? ('settimanale' as MaintenanceFrequency)
-            : maintenance.value === 'sbrinamento'
-              ? ('annuale' as MaintenanceFrequency)
-              : ('custom' as MaintenanceFrequency),
-      assegnatoARuolo: 'dipendente' as StaffRole,
-      note: '',
-      // Precompila giorni per controllo scadenze secondo i dati esempio (Lunedì + Giovedì)
-      ...(maintenance.value ===
-      ('controllo_scadenze' as StandardMaintenanceType)
-        ? {
-            giorniCustom: ['lunedi', 'giovedi'] as CustomFrequencyDays[],
-          }
-        : {}),
-    }))
+  // Precompila i dati esistenti se disponibili
+  const existingPlans = maintenancePlans.filter(
+    plan => plan.conservationPointId === conservationPoint.id
   )
+
+  const [plans, setPlans] = useState<ConservationMaintenancePlan[]>(() => {
+    return requiredMaintenances.map(maintenanceType => {
+      // Cerca se esiste già un piano per questa manutenzione
+      const existingPlan = existingPlans.find(
+        plan => plan.manutenzione === maintenanceType.value
+      )
+      
+      if (existingPlan) {
+        // Usa i dati esistenti
+        return existingPlan
+      } else {
+        // Crea un nuovo piano con valori di default
+        return {
+          id: `plan-${maintenanceType.value}-${conservationPoint.id}`,
+          conservationPointId: conservationPoint.id,
+          manutenzione: maintenanceType.value,
+          frequenza: maintenanceType.value === 'rilevamento_temperatura' ? 'giornaliera' :
+                     maintenanceType.value === 'sanificazione' ? 'settimanale' :
+                     maintenanceType.value === 'sbrinamento' ? 'annuale' : 'custom',
+          assegnatoARuolo: 'dipendente',
+          giorniCustom: maintenanceType.value === 'controllo_scadenze' ? ['lunedi', 'giovedi'] : undefined,
+        }
+      }
+    })
+  })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const updatePlan = (
-    index: number,
-    updates: Partial<ConservationMaintenancePlan>
-  ) => {
-    setPlans(prev =>
-      prev.map((plan, i) => (i === index ? { ...plan, ...updates } : plan))
-    )
+  const updatePlan = (index: number, updates: Partial<ConservationMaintenancePlan>) => {
+    setPlans(prev => prev.map((plan, i) => i === index ? { ...plan, ...updates } : plan))
   }
 
   const validatePlans = () => {
@@ -1073,16 +540,8 @@ const MaintenanceAssignmentForm = ({
       if (!plan.assegnatoARuolo) {
         newErrors[`plan-${index}-ruolo`] = 'Ruolo obbligatorio'
       }
-      // Dipendente specifico non è più obbligatorio
-      // if (plan.assegnatoARuolo === 'specifico' && !plan.assegnatoADipendenteSpecifico) {
-      //   newErrors[`plan-${index}-dipendente`] = 'Seleziona un dipendente specifico'
-      // }
-      if (
-        plan.frequenza === 'custom' &&
-        (!plan.giorniCustom || plan.giorniCustom.length === 0)
-      ) {
-        newErrors[`plan-${index}-giorni`] =
-          'Seleziona almeno un giorno per frequenza custom'
+      if (plan.frequenza === 'custom' && (!plan.giorniCustom || plan.giorniCustom.length === 0)) {
+        newErrors[`plan-${index}-giorni`] = 'Seleziona almeno un giorno per frequenza custom'
       }
     })
 
@@ -1111,21 +570,21 @@ const MaintenanceAssignmentForm = ({
                 <h4 className="font-semibold text-gray-900">
                   {maintenanceType.label}
                 </h4>
-                <p className="text-sm text-gray-600">
-                  {maintenanceType.description}
+                <p className="text-sm text-gray-500">
+                  Configura frequenza e assegnazione per questa manutenzione
                 </p>
               </div>
-            </div>
+          </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label>Frequenza *</Label>
-                <Select
+            <div>
+              <Label>Frequenza *</Label>
+              <Select
                   value={plan.frequenza}
-                  onValueChange={value =>
+                onValueChange={value =>
                     updatePlan(index, {
                       frequenza: value as MaintenanceFrequency,
-                      giorniCustom: value === 'custom' ? ['lunedi'] : undefined,
+                      giorniCustom: value === 'custom' ? ['lunedi'] : undefined
                     })
                   }
                 >
@@ -1133,29 +592,28 @@ const MaintenanceAssignmentForm = ({
                     <SelectValue placeholder="Seleziona frequenza" />
                   </SelectTrigger>
                   <SelectContent>
-                    {FREQUENCY_OPTIONS.map(freq => (
-                      <SelectOption key={freq.value} value={freq.value}>
-                        {freq.label}
-                      </SelectOption>
-                    ))}
+                    {MAINTENANCE_FREQUENCIES.map(freq => (
+                  <SelectOption key={freq.value} value={freq.value}>
+                    {freq.label}
+                  </SelectOption>
+                ))}
                   </SelectContent>
-                </Select>
+              </Select>
                 {errors[`plan-${index}-frequenza`] && (
                   <p className="mt-1 text-sm text-red-600">
                     {errors[`plan-${index}-frequenza`]}
                   </p>
                 )}
-              </div>
+            </div>
 
-              <div>
+            <div>
                 <Label>Ruolo *</Label>
-                <Select
+              <Select
                   value={plan.assegnatoARuolo || ''}
-                  onValueChange={value =>
+                onValueChange={value =>
                     updatePlan(index, {
                       assegnatoARuolo: value as StaffRole,
-                      // Reset dipendente specifico quando cambia il ruolo
-                      assegnatoADipendenteSpecifico: undefined,
+                      assegnatoADipendenteSpecifico: undefined
                     })
                   }
                 >
@@ -1164,69 +622,60 @@ const MaintenanceAssignmentForm = ({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectOption value="admin">Amministratore</SelectOption>
-                    <SelectOption value="responsabile">
-                      Responsabile
-                    </SelectOption>
+                    <SelectOption value="responsabile">Responsabile</SelectOption>
                     <SelectOption value="dipendente">Dipendente</SelectOption>
-                    <SelectOption value="collaboratore">
-                      Collaboratore
-                    </SelectOption>
+                    <SelectOption value="collaboratore">Collaboratore</SelectOption>
                   </SelectContent>
-                </Select>
+              </Select>
                 {errors[`plan-${index}-ruolo`] && (
-                  <p className="mt-1 text-sm text-red-600">
+                <p className="mt-1 text-sm text-red-600">
                     {errors[`plan-${index}-ruolo`]}
-                  </p>
-                )}
-              </div>
+                </p>
+              )}
+          </div>
 
-              <div>
+            <div>
                 <Label>Categoria</Label>
-                <Select
+              <Select
                   value={plan.assegnatoACategoria || 'all'}
-                  onValueChange={value =>
+                onValueChange={value =>
                     updatePlan(index, {
                       assegnatoACategoria: value,
-                      // Reset dipendente specifico quando cambia categoria
-                      assegnatoADipendenteSpecifico: undefined,
+                      assegnatoADipendenteSpecifico: undefined
                     })
                   }
                   disabled={!plan.assegnatoARuolo}
                 >
                   <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        plan.assegnatoARuolo
-                          ? 'Seleziona categoria'
-                          : 'Prima seleziona un ruolo'
-                      }
-                    />
+                    <SelectValue placeholder={
+                      plan.assegnatoARuolo
+                        ? "Seleziona categoria"
+                        : "Prima seleziona un ruolo"
+                    } />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectOption value="all">Tutte le categorie</SelectOption>
                     {staffOptions
                       .filter(staff => staff.role === plan.assegnatoARuolo)
-                      .flatMap(staff => staff.categories) // Estrai tutte le categorie
-                      .filter(category => category && category.trim() !== '') // Solo categorie valide
-                      .filter(
-                        (category, index, arr) =>
-                          arr.indexOf(category) === index
-                      ) // Rimuovi duplicati
+                      .flatMap(staff => staff.categories)
+                      .filter(category => category && category.trim() !== '')
+                      .filter((category, index, arr) => arr.indexOf(category) === index)
                       .map(category => (
                         <SelectOption key={category} value={category}>
                           {category}
-                        </SelectOption>
-                      ))}
+                  </SelectOption>
+                      ))
+                    }
                   </SelectContent>
-                </Select>
-              </div>
+              </Select>
+            </div>
 
               {plan.assegnatoARuolo && (
                 <div className="md:col-span-2">
                   <Label>Dipendente specifico</Label>
-                  <Select
+              <Select
                     value={plan.assegnatoADipendenteSpecifico ?? 'none'}
-                    onValueChange={value =>
+                onValueChange={value =>
                       updatePlan(index, {
                         assegnatoADipendenteSpecifico: value,
                       })
@@ -1237,53 +686,39 @@ const MaintenanceAssignmentForm = ({
                       <SelectValue placeholder="Opzionale: seleziona dipendente specifico" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectOption value="none">
-                        Nessun dipendente specifico
-                      </SelectOption>
+                      <SelectOption value="none">Nessun dipendente specifico</SelectOption>
                       {staffOptions
                         .filter(staff => {
-                          // Filtra per ruolo
                           if (staff.role !== plan.assegnatoARuolo) return false
-
-                          // Se categoria è specifica, filtra anche per categoria
-                          if (
-                            plan.assegnatoACategoria &&
-                            plan.assegnatoACategoria !== 'all'
-                          ) {
-                            return staff.categories.includes(
-                              plan.assegnatoACategoria
-                            )
+                          
+                          if (plan.assegnatoACategoria && plan.assegnatoACategoria !== 'all') {
+                            return staff.categories.includes(plan.assegnatoACategoria)
                           }
-
-                          // Altrimenti mostra tutti i dipendenti di quel ruolo
+                          
                           return true
                         })
                         .map(staff => (
                           <SelectOption key={staff.id} value={staff.id}>
                             {staff.label} - {staff.categories.join(', ')}
-                          </SelectOption>
-                        ))}
+                  </SelectOption>
+                        ))
+                      }
                     </SelectContent>
-                  </Select>
-                </div>
+              </Select>
+            </div>
               )}
 
               {plan.frequenza === 'custom' && (
                 <div className="md:col-span-2">
                   <Label>Giorni della settimana *</Label>
-                  <div className="grid grid-cols-4 gap-2 mt-2">
-                    {WEEKDAYS.map(day => (
-                      <label
-                        key={day.value}
-                        className="flex items-center gap-2"
-                      >
+                  <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                    {CUSTOM_DAYS.map(day => (
+                      <label key={day.value} className="flex items-center gap-2">
                         <input
                           type="checkbox"
-                          checked={
-                            plan.giorniCustom?.includes(day.value) ?? false
-                          }
+                          checked={plan.giorniCustom?.includes(day.value) ?? false}
                           onChange={e => {
-                            const currentDays = plan.giorniCustom ?? []
+                            const currentDays = plan.giorniCustom || []
                             const newDays = e.target.checked
                               ? [...currentDays, day.value]
                               : currentDays.filter(d => d !== day.value)
@@ -1294,7 +729,7 @@ const MaintenanceAssignmentForm = ({
                         <span className="text-sm">{day.label}</span>
                       </label>
                     ))}
-                  </div>
+          </div>
                   {errors[`plan-${index}-giorni`] && (
                     <p className="mt-1 text-sm text-red-600">
                       {errors[`plan-${index}-giorni`]}
@@ -1310,19 +745,267 @@ const MaintenanceAssignmentForm = ({
                   value={plan.note ?? ''}
                   onChange={e => updatePlan(index, { note: e.target.value })}
                   placeholder="Note aggiuntive..."
-                />
-              </div>
-            </div>
+            />
+          </div>
+          </div>
           </div>
         )
       })}
 
       <div className="flex justify-end gap-3 border-t pt-4">
         <Button variant="outline" onClick={onCancel}>
-          Annulla
-        </Button>
+              Annulla
+            </Button>
         <Button onClick={handleSave}>Salva Manutenzioni</Button>
-      </div>
+          </div>
+    </div>
+  )
+}
+
+// Componente per il form delle attività generiche
+interface GenericTaskFormProps {
+  task: GenericTask
+  staffOptions: Array<{ id: string; label: string; role: string; categories: string[] }>
+  isEditing: boolean
+  onUpdate: (updates: Partial<GenericTask>) => void
+  onDelete: () => void
+  onConfirm: () => void
+}
+
+const GenericTaskForm = ({
+  task,
+  staffOptions,
+  isEditing,
+  onUpdate,
+  onDelete,
+  onConfirm,
+}: GenericTaskFormProps) => {
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const updateTask = (updates: Partial<GenericTask>) => {
+    onUpdate(updates)
+    
+    // Validazione
+    const newErrors: Record<string, string> = {}
+    if (!updates.name && !task.name) {
+      newErrors.name = 'Nome attività obbligatorio'
+    }
+    if (!updates.frequenza && !task.frequenza) {
+      newErrors.frequenza = 'Frequenza obbligatoria'
+    }
+    if (!updates.assegnatoARuolo && !task.assegnatoARuolo) {
+      newErrors.ruolo = 'Ruolo obbligatorio'
+    }
+    if (updates.frequenza === 'custom' && (!updates.giorniCustom || updates.giorniCustom.length === 0)) {
+      newErrors.giorni = 'Seleziona almeno un giorno per frequenza custom'
+    }
+    
+    setErrors(newErrors)
+  }
+
+          return (
+    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+      {isEditing ? (
+        <>
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-semibold text-gray-900">
+              {task.name ? `Modifica: ${task.name}` : 'Nuova Attività Generica'}
+                  </h4>
+            <Button variant="destructive" size="icon" onClick={onDelete}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+                </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label>Nome attività *</Label>
+              <Input
+                value={task.name}
+                onChange={e => updateTask({ name: e.target.value })}
+                placeholder="Es: Pulizia cucina, Controllo fornelli..."
+                aria-invalid={Boolean(errors.name)}
+              />
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+              )}
+                </div>
+
+            <div>
+              <Label>Frequenza *</Label>
+              <Select
+                value={task.frequenza}
+                onValueChange={value =>
+                  updateTask({
+                    frequenza: value as MaintenanceFrequency,
+                    giorniCustom: value === 'custom' ? ['lunedi'] : undefined
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona frequenza" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MAINTENANCE_FREQUENCIES.map(freq => (
+                    <SelectOption key={freq.value} value={freq.value}>
+                      {freq.label}
+                    </SelectOption>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.frequenza && (
+                <p className="mt-1 text-sm text-red-600">{errors.frequenza}</p>
+              )}
+                  </div>
+
+            <div>
+              <Label>Ruolo *</Label>
+              <Select
+                value={task.assegnatoARuolo || ''}
+                onValueChange={value =>
+                  updateTask({
+                    assegnatoARuolo: value as StaffRole,
+                    assegnatoADipendenteSpecifico: undefined
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona ruolo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectOption value="admin">Amministratore</SelectOption>
+                  <SelectOption value="responsabile">Responsabile</SelectOption>
+                  <SelectOption value="dipendente">Dipendente</SelectOption>
+                  <SelectOption value="collaboratore">Collaboratore</SelectOption>
+                </SelectContent>
+              </Select>
+              {errors.ruolo && (
+                <p className="mt-1 text-sm text-red-600">{errors.ruolo}</p>
+              )}
+            </div>
+
+            <div>
+              <Label>Categoria</Label>
+              <Select
+                value={task.assegnatoACategoria || 'all'}
+                onValueChange={value =>
+                  updateTask({
+                    assegnatoACategoria: value,
+                    assegnatoADipendenteSpecifico: undefined
+                  })
+                }
+                disabled={!task.assegnatoARuolo}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={
+                    task.assegnatoARuolo
+                      ? "Seleziona categoria"
+                      : "Prima seleziona un ruolo"
+                  } />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectOption value="all">Tutte le categorie</SelectOption>
+                  {staffOptions
+                    .filter(staff => staff.role === task.assegnatoARuolo)
+                    .flatMap(staff => staff.categories)
+                    .filter(category => category && category.trim() !== '')
+                    .filter((category, index, arr) => arr.indexOf(category) === index)
+                    .map(category => (
+                      <SelectOption key={category} value={category}>
+                        {category}
+                      </SelectOption>
+                    ))
+                  }
+                </SelectContent>
+              </Select>
+            </div>
+
+            {task.assegnatoARuolo && (
+              <div className="md:col-span-2">
+                <Label>Dipendente specifico</Label>
+                <Select
+                  value={task.assegnatoADipendenteSpecifico ?? 'none'}
+                  onValueChange={value =>
+                    updateTask({
+                      assegnatoADipendenteSpecifico: value,
+                    })
+                  }
+                  disabled={false}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Opzionale: seleziona dipendente specifico" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectOption value="none">Nessun dipendente specifico</SelectOption>
+                    {staffOptions
+                      .filter(staff => {
+                        if (staff.role !== task.assegnatoARuolo) return false
+                        
+                        if (task.assegnatoACategoria && task.assegnatoACategoria !== 'all') {
+                          return staff.categories.includes(task.assegnatoACategoria)
+                        }
+                        
+                        return true
+                      })
+                      .map(staff => (
+                        <SelectOption key={staff.id} value={staff.id}>
+                          {staff.label} - {staff.categories.join(', ')}
+                        </SelectOption>
+                      ))
+                    }
+                  </SelectContent>
+                </Select>
+                  </div>
+                )}
+
+            {task.frequenza === 'custom' && (
+              <div className="md:col-span-2">
+                <Label>Giorni della settimana *</Label>
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                  {CUSTOM_DAYS.map(day => (
+                    <label key={day.value} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={task.giorniCustom?.includes(day.value) ?? false}
+                        onChange={e => {
+                          const currentDays = task.giorniCustom || []
+                          const newDays = e.target.checked
+                            ? [...currentDays, day.value]
+                            : currentDays.filter(d => d !== day.value)
+                          updateTask({ giorniCustom: newDays })
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                      <span className="text-sm">{day.label}</span>
+                    </label>
+                  ))}
+                    </div>
+                {errors.giorni && (
+                  <p className="mt-1 text-sm text-red-600">{errors.giorni}</p>
+                  )}
+              </div>
+            )}
+
+            <div className="md:col-span-2">
+              <Label>Note (opzionale)</Label>
+              <Textarea
+                rows={2}
+                value={task.note ?? ''}
+                onChange={e => updateTask({ note: e.target.value })}
+                placeholder="Note aggiuntive..."
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 border-t pt-4 mt-4">
+            <Button variant="outline" onClick={onDelete}>
+              Annulla
+                </Button>
+            <Button onClick={onConfirm}>
+              Conferma Attività
+                </Button>
+              </div>
+        </>
+      ) : null}
     </div>
   )
 }
