@@ -409,159 +409,19 @@ queryFn: async () => {
 
 ## 📝 SQL MIGRATION SCRIPT
 
-Creare file `supabase/migrations/YYYYMMDDHHMMSS_fix_calendar_compatibility.sql`:
+**Migrazione spostata in file dedicato**: `MIGRATION_SCHEMA_FIX.sql`
 
-```sql
--- Migration per compatibilità calendario e scadenze
+Eseguire lo script completo copiando e incollando l'intero contenuto del file `MIGRATION_SCHEMA_FIX.sql` nell'editor SQL di Supabase.
 
--- 1. FIX TABELLA PRODUCTS
-CREATE TABLE IF NOT EXISTS public.products (
-  id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  company_id uuid NOT NULL,
-  name character varying NOT NULL,
-  category_id uuid,
-  department_id uuid,
-  conservation_point_id uuid,
-  barcode character varying,
-  sku character varying,
-  supplier_name character varying,
-  purchase_date timestamp with time zone,
-  expiry_date timestamp with time zone,
-  quantity numeric,
-  unit character varying,
-  allergens text[],
-  label_photo_url character varying,
-  notes text,
-  status character varying NOT NULL DEFAULT 'active',
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT products_pkey PRIMARY KEY (id),
-  CONSTRAINT products_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE,
-  CONSTRAINT products_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.product_categories(id) ON DELETE SET NULL,
-  CONSTRAINT products_department_id_fkey FOREIGN KEY (department_id) REFERENCES public.departments(id) ON DELETE SET NULL,
-  CONSTRAINT products_conservation_point_id_fkey FOREIGN KEY (conservation_point_id) REFERENCES public.conservation_points(id) ON DELETE SET NULL,
-  CONSTRAINT products_status_check CHECK (status IN ('active', 'expired', 'consumed', 'waste'))
-);
-
--- 2. FIX STAFF - Aggiungere campi mancanti
-ALTER TABLE public.staff
-  ADD COLUMN IF NOT EXISTS phone character varying,
-  ADD COLUMN IF NOT EXISTS hire_date date,
-  ADD COLUMN IF NOT EXISTS status character varying DEFAULT 'active',
-  ADD COLUMN IF NOT EXISTS notes text,
-  ADD COLUMN IF NOT EXISTS haccp_certification jsonb,
-  ADD COLUMN IF NOT EXISTS department_assignments uuid[];
-
-ALTER TABLE public.staff
-  ADD CONSTRAINT IF NOT EXISTS staff_status_check CHECK (status IN ('active', 'inactive', 'suspended'));
-
--- 3. FIX CONSERVATION_POINTS
-ALTER TABLE public.conservation_points
-  ADD COLUMN IF NOT EXISTS product_categories text[],
-  ADD COLUMN IF NOT EXISTS is_blast_chiller boolean DEFAULT false,
-  ADD COLUMN IF NOT EXISTS status character varying DEFAULT 'normal',
-  ADD COLUMN IF NOT EXISTS maintenance_due timestamp with time zone;
-
-ALTER TABLE public.conservation_points
-  ADD CONSTRAINT IF NOT EXISTS conservation_points_status_check CHECK (status IN ('normal', 'warning', 'critical'));
-
--- 4. FIX MAINTENANCE_TASKS - Rinominare e aggiungere campi
--- BACKUP prima di modificare
-CREATE TABLE IF NOT EXISTS maintenance_tasks_backup AS SELECT * FROM public.maintenance_tasks;
-
--- Rinomina kind → type
-ALTER TABLE public.maintenance_tasks RENAME COLUMN kind TO type;
-
--- Aggiungere campi assegnazione strutturati
-ALTER TABLE public.maintenance_tasks
-  ADD COLUMN IF NOT EXISTS assigned_to_staff_id uuid REFERENCES public.staff(id),
-  ADD COLUMN IF NOT EXISTS assigned_to_role character varying,
-  ADD COLUMN IF NOT EXISTS assigned_to_category character varying,
-  ADD COLUMN IF NOT EXISTS title character varying,
-  ADD COLUMN IF NOT EXISTS description text,
-  ADD COLUMN IF NOT EXISTS priority character varying DEFAULT 'medium',
-  ADD COLUMN IF NOT EXISTS status character varying DEFAULT 'scheduled',
-  ADD COLUMN IF NOT EXISTS next_due timestamp with time zone,
-  ADD COLUMN IF NOT EXISTS estimated_duration integer DEFAULT 60,
-  ADD COLUMN IF NOT EXISTS instructions text[];
-
--- Migrazione dati esistenti
-UPDATE public.maintenance_tasks
-SET assigned_to_staff_id = CAST(assigned_to AS uuid)
-WHERE assigned_to IS NOT NULL AND assigned_to ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
-
--- Check constraint assegnazione
-ALTER TABLE public.maintenance_tasks
-  ADD CONSTRAINT IF NOT EXISTS maintenance_tasks_assignment_check
-  CHECK (
-    (assigned_to_staff_id IS NOT NULL) OR
-    (assigned_to_role IS NOT NULL) OR
-    (assigned_to_category IS NOT NULL)
-  );
-
-ALTER TABLE public.maintenance_tasks
-  ADD CONSTRAINT IF NOT EXISTS maintenance_tasks_priority_check CHECK (priority IN ('low', 'medium', 'high', 'critical'));
-
-ALTER TABLE public.maintenance_tasks
-  ADD CONSTRAINT IF NOT EXISTS maintenance_tasks_status_check CHECK (status IN ('scheduled', 'in_progress', 'completed', 'overdue', 'skipped'));
-
--- 5. FIX TASKS
-ALTER TABLE public.tasks
-  ADD COLUMN IF NOT EXISTS description text,
-  ADD COLUMN IF NOT EXISTS department_id uuid REFERENCES public.departments(id),
-  ADD COLUMN IF NOT EXISTS conservation_point_id uuid REFERENCES public.conservation_points(id),
-  ADD COLUMN IF NOT EXISTS priority character varying DEFAULT 'medium',
-  ADD COLUMN IF NOT EXISTS estimated_duration integer DEFAULT 60,
-  ADD COLUMN IF NOT EXISTS checklist text[],
-  ADD COLUMN IF NOT EXISTS required_tools text[],
-  ADD COLUMN IF NOT EXISTS haccp_category character varying,
-  ADD COLUMN IF NOT EXISTS documentation_url character varying,
-  ADD COLUMN IF NOT EXISTS validation_notes text,
-  ADD COLUMN IF NOT EXISTS next_due timestamp with time zone,
-  ADD COLUMN IF NOT EXISTS status character varying DEFAULT 'pending',
-  ADD COLUMN IF NOT EXISTS assigned_to_staff_id uuid REFERENCES public.staff(id),
-  ADD COLUMN IF NOT EXISTS assigned_to_role character varying,
-  ADD COLUMN IF NOT EXISTS assigned_to_category character varying;
-
-ALTER TABLE public.tasks
-  ADD CONSTRAINT IF NOT EXISTS tasks_priority_check CHECK (priority IN ('low', 'medium', 'high', 'critical'));
-
-ALTER TABLE public.tasks
-  ADD CONSTRAINT IF NOT EXISTS tasks_assignment_check
-  CHECK (
-    (assigned_to_staff_id IS NOT NULL) OR
-    (assigned_to_role IS NOT NULL) OR
-    (assigned_to_category IS NOT NULL)
-  );
-
--- 6. INDICI per performance
-CREATE INDEX IF NOT EXISTS idx_products_expiry_date ON public.products(expiry_date) WHERE status = 'active';
-CREATE INDEX IF NOT EXISTS idx_products_company_status ON public.products(company_id, status);
-CREATE INDEX IF NOT EXISTS idx_maintenance_tasks_next_due ON public.maintenance_tasks(next_due);
-CREATE INDEX IF NOT EXISTS idx_maintenance_tasks_company_status ON public.maintenance_tasks(company_id, status);
-CREATE INDEX IF NOT EXISTS idx_tasks_next_due ON public.tasks(next_due);
-CREATE INDEX IF NOT EXISTS idx_staff_haccp ON public.staff(company_id) WHERE haccp_certification IS NOT NULL;
-
--- 7. Trigger per updated_at automatico
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$ language 'plpgsql';
-
-CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON public.products
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_maintenance_tasks_updated_at BEFORE UPDATE ON public.maintenance_tasks
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON public.tasks
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-COMMENT ON MIGRATION IS 'Fix compatibilità schema DB con TypeScript types per sistema calendario e scadenze';
-```
+Lo script include:
+- ✅ Creazione tabella `products` completa
+- ✅ Aggiornamento `staff` con HACCP certification
+- ✅ Fix `maintenance_tasks` (kind→type + assegnazione strutturata)
+- ✅ Espansione `tasks` con campi mancanti
+- ✅ Fix `conservation_points`
+- ✅ Indici per performance
+- ✅ Trigger per `updated_at` automatico
+- ✅ Backup automatico prima delle modifiche
 
 ---
 
