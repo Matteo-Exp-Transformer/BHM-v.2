@@ -66,6 +66,13 @@ export function TemperatureReadingCard({
   }
 
   const getValidationInfo = () => {
+    if (!reading.validation_status) {
+      return {
+        icon: <Clock className="w-3 h-3 text-gray-400" />,
+        text: 'Non validata',
+        color: 'text-gray-400',
+      }
+    }
     switch (reading.validation_status) {
       case 'validated':
         return {
@@ -103,8 +110,8 @@ export function TemperatureReadingCard({
   const validationInfo = getValidationInfo()
 
   const isOutOfRange =
-    reading.temperature < reading.tolerance_range_min! ||
-    reading.temperature > reading.tolerance_range_max!
+    reading.temperature < (reading.tolerance_range_min ?? 0) ||
+    reading.temperature > (reading.tolerance_range_max ?? 0)
 
   return (
     <div
@@ -126,7 +133,7 @@ export function TemperatureReadingCard({
               {statusInfo.icon}
             </div>
             <div className="text-sm text-gray-600">
-              Target: {reading.target_temperature}°C
+              Target: {reading.target_temperature ?? 0}°C
             </div>
           </div>
         </div>
@@ -162,8 +169,11 @@ export function TemperatureReadingCard({
           <div
             className={`text-sm font-medium ${isOutOfRange ? 'text-red-600' : 'text-green-600'}`}
           >
-            {reading.temperature > reading.target_temperature ? '+' : ''}
-            {(reading.temperature - reading.target_temperature).toFixed(1)}°C
+            {reading.temperature > (reading.target_temperature ?? 0) ? '+' : ''}
+            {(reading.temperature - (reading.target_temperature ?? 0)).toFixed(
+              1
+            )}
+            °C
           </div>
         </div>
       </div>

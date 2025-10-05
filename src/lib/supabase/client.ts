@@ -9,8 +9,8 @@ const supabaseAnonKey =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjZHlhZHNsdXp6enN5YndybWx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyNzM3ODksImV4cCI6MjA3Mzg0OTc4OX0.m2Jxd5ZwnUtAGuxw_Sj0__kcJUlILdKTJJbwESZP9c4'
 
 // Create Supabase client (singleton pattern)
-let supabaseInstance: ReturnType<typeof createClient> | null = null
-let supabaseAdminInstance: ReturnType<typeof createClient> | null = null
+let supabaseInstance: any = null
+let supabaseAdminInstance: any = null
 
 export const supabase = (() => {
   if (!supabaseInstance) {
@@ -21,6 +21,13 @@ export const supabase = (() => {
         detectSessionInUrl: true,
         storage:
           typeof window !== 'undefined' ? window.localStorage : undefined,
+        storageKey: 'bhm-supabase-auth',
+      },
+      global: {
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
       },
     })
   }
@@ -44,540 +51,240 @@ export const supabaseAdmin = (() => {
   return supabaseAdminInstance
 })()
 
-// Database types (will be generated from schema)
-export type Database = {
-  public: {
-    Tables: {
-      companies: {
-        Row: {
-          id: string
-          name: string
-          address: string
-          staff_count: number
-          email: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          address: string
-          staff_count: number
-          email: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          address?: string
-          staff_count?: number
-          email?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      user_profiles: {
-        Row: {
-          id: string
-          clerk_user_id: string
-          company_id: string | null
-          email: string
-          first_name: string | null
-          last_name: string | null
-          staff_id: string | null
-          role: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          clerk_user_id: string
-          company_id?: string | null
-          email: string
-          first_name?: string | null
-          last_name?: string | null
-          staff_id?: string | null
-          role?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          clerk_user_id?: string
-          company_id?: string | null
-          email?: string
-          first_name?: string | null
-          last_name?: string | null
-          staff_id?: string | null
-          role?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      staff: {
-        Row: {
-          id: string
-          company_id: string
-          name: string
-          role: string
-          category: string
-          email: string | null
-          phone: string | null
-          hire_date: string | null
-          status: string
-          notes: string | null
-          haccp_certification: Record<string, unknown> | null
-          department_assignments: string[] | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          name: string
-          role: string
-          category: string
-          email?: string | null
-          phone?: string | null
-          hire_date?: string | null
-          status?: string
-          notes?: string | null
-          haccp_certification?: Record<string, unknown> | null
-          department_assignments?: string[] | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          name?: string
-          role?: string
-          category?: string
-          email?: string | null
-          phone?: string | null
-          hire_date?: string | null
-          status?: string
-          notes?: string | null
-          haccp_certification?: Record<string, unknown> | null
-          department_assignments?: string[] | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      departments: {
-        Row: {
-          id: string
-          company_id: string
-          name: string
-          description: string | null
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          name: string
-          description?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          name?: string
-          description?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      product_categories: {
-        Row: {
-          id: string
-          company_id: string
-          name: string
-          description: string | null
-          temperature_requirements: Record<string, unknown> | null
-          default_expiry_days: number | null
-          allergen_info: string[]
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          name: string
-          description?: string | null
-          temperature_requirements?: Record<string, unknown> | null
-          default_expiry_days?: number | null
-          allergen_info?: string[]
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          name?: string
-          description?: string | null
-          temperature_requirements?: Record<string, unknown> | null
-          default_expiry_days?: number | null
-          allergen_info?: string[]
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      products: {
-        Row: {
-          id: string
-          company_id: string
-          name: string
-          category_id: string | null
-          department_id: string | null
-          conservation_point_id: string | null
-          barcode: string | null
-          sku: string | null
-          supplier_name: string | null
-          purchase_date: string | null
-          expiry_date: string | null
-          quantity: number | null
-          unit: string | null
-          allergens: string[]
-          label_photo_url: string | null
-          status: string
-          notes: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          name: string
-          category_id?: string | null
-          department_id?: string | null
-          conservation_point_id?: string | null
-          barcode?: string | null
-          sku?: string | null
-          supplier_name?: string | null
-          purchase_date?: string | null
-          expiry_date?: string | null
-          quantity?: number | null
-          unit?: string | null
-          allergens?: string[]
-          label_photo_url?: string | null
-          status?: string
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          name?: string
-          category_id?: string | null
-          department_id?: string | null
-          conservation_point_id?: string | null
-          barcode?: string | null
-          sku?: string | null
-          supplier_name?: string | null
-          purchase_date?: string | null
-          expiry_date?: string | null
-          quantity?: number | null
-          unit?: string | null
-          allergens?: string[]
-          label_photo_url?: string | null
-          status?: string
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      conservation_points: {
-        Row: {
-          id: string
-          company_id: string
-          department_id: string | null
-          name: string
-          description: string | null
-          setpoint_temp: number | null
-          temp_min: number | null
-          temp_max: number | null
-          point_type: string
-          is_blast_chiller: boolean
-          product_categories: string[] | null
-          status: string
-          last_maintenance: string | null
-          next_maintenance: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          department_id?: string | null
-          name: string
-          description?: string | null
-          setpoint_temp?: number | null
-          temp_min?: number | null
-          temp_max?: number | null
-          point_type: string
-          is_blast_chiller?: boolean
-          product_categories?: string[] | null
-          status?: string
-          last_maintenance?: string | null
-          next_maintenance?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          department_id?: string | null
-          name?: string
-          description?: string | null
-          setpoint_temp?: number | null
-          temp_min?: number | null
-          temp_max?: number | null
-          point_type?: string
-          is_blast_chiller?: boolean
-          product_categories?: string[] | null
-          status?: string
-          last_maintenance?: string | null
-          next_maintenance?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      temperature_readings: {
-        Row: {
-          id: string
-          company_id: string
-          conservation_point_id: string
-          reading_value: number
-          target_temp: number
-          tolerance_range: number
-          reading_time: string
-          recorded_by: string
-          notes: string | null
-          photo_evidence: string[] | null
-          status: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          conservation_point_id: string
-          reading_value: number
-          target_temp: number
-          tolerance_range: number
-          reading_time: string
-          recorded_by: string
-          notes?: string | null
-          photo_evidence?: string[] | null
-          status?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          conservation_point_id?: string
-          reading_value?: number
-          target_temp?: number
-          tolerance_range?: number
-          reading_time?: string
-          recorded_by?: string
-          notes?: string | null
-          photo_evidence?: string[] | null
-          status?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      maintenance_tasks: {
-        Row: {
-          id: string
-          company_id: string
-          conservation_point_id: string
-          task_name: string
-          description: string | null
-          frequency: string
-          kind: string
-          is_active: boolean
-          assigned_to: string
-          last_completed: string | null
-          next_due: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          conservation_point_id: string
-          task_name: string
-          description?: string | null
-          frequency: string
-          kind: string
-          is_active?: boolean
-          assigned_to: string
-          last_completed?: string | null
-          next_due?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          conservation_point_id?: string
-          task_name?: string
-          description?: string | null
-          frequency?: string
-          kind?: string
-          is_active?: boolean
-          assigned_to?: string
-          last_completed?: string | null
-          next_due?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      maintenance_completions: {
-        Row: {
-          id: string
-          company_id: string
-          maintenance_task_id: string
-          status: string
-          notes: string | null
-          completed_by: string
-          completed_at: string
-          photo_evidence: string[] | null
-          next_due_date: string | null
-          temperature_value: number | null
-          checklist_completed: string[]
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          maintenance_task_id: string
-          status: string
-          notes?: string | null
-          completed_by: string
-          completed_at: string
-          photo_evidence?: string[] | null
-          next_due_date?: string | null
-          temperature_value?: number | null
-          checklist_completed: string[]
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          maintenance_task_id?: string
-          status?: string
-          notes?: string | null
-          completed_by?: string
-          completed_at?: string
-          photo_evidence?: string[] | null
-          next_due_date?: string | null
-          temperature_value?: number | null
-          checklist_completed?: string[]
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      calendar_events: {
-        Row: {
-          id: string
-          company_id: string
-          title: string
-          description: string | null
-          start_date: string
-          end_date: string | null
-          event_type: string
-          department_id: string | null
-          assigned_to: string | null
-          priority: string
-          status: string
-          is_recurring: boolean
-          recurrence_pattern: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          title: string
-          description?: string | null
-          start_date: string
-          end_date?: string | null
-          event_type: string
-          department_id?: string | null
-          assigned_to?: string | null
-          priority?: string
-          status?: string
-          is_recurring?: boolean
-          recurrence_pattern?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          title?: string
-          description?: string | null
-          start_date?: string
-          end_date?: string | null
-          event_type?: string
-          department_id?: string | null
-          assigned_to?: string | null
-          priority?: string
-          status?: string
-          is_recurring?: boolean
-          recurrence_pattern?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-    }
-  }
+// Database types for type safety in components
+export interface Company {
+  id: string
+  name: string
+  address?: string
+  phone?: string
+  email?: string
+  vat_number?: string
+  business_type?: string
+  established_date?: string
+  license_number?: string
+  created_at: string
+  updated_at: string
 }
 
-// Helper function to test connection
-export const testConnection = async () => {
-  try {
-    console.log('🔍 Testing Supabase connection...')
-    console.log('Supabase URL:', supabaseUrl)
-    console.log('Supabase instance:', !!supabase)
-
-    // Test basic connection first
-    const { data: healthData, error: healthError } = await supabase
-      .from('companies')
-      .select('count')
-      .limit(1)
-
-    if (healthError) {
-      console.error('❌ Health check failed:', healthError)
-      return { success: false, error: healthError }
-    }
-
-    console.log('✅ Supabase connection successful:', healthData)
-    return { success: true, data: healthData }
-  } catch (error) {
-    console.error('❌ Supabase connection failed:', error)
-    return { success: false, error }
-  }
+export interface UserProfile {
+  id: string
+  clerk_user_id: string
+  email: string
+  first_name?: string
+  last_name?: string
+  company_id?: string
+  staff_id?: string
+  role: 'admin' | 'responsabile' | 'dipendente' | 'collaboratore' | 'guest'
+  created_at: string
+  updated_at: string
 }
 
-// Export types for use in components
-export type Tables<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Row']
-export type Inserts<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Insert']
-export type Updates<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Update']
+export interface Staff {
+  id: string
+  company_id: string
+  name: string
+  role: 'admin' | 'responsabile' | 'dipendente' | 'collaboratore'
+  category: string
+  email?: string
+  phone?: string
+  haccp_certification?: {
+    level: 'base' | 'advanced'
+    expiry_date: string
+    issuing_authority: string
+    certificate_number: string
+  }
+  department_assignments: string[]
+  hire_date: string
+  status?: 'active' | 'inactive' | 'suspended'
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Department {
+  id: string
+  company_id: string
+  name: string
+  description?: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ProductCategory {
+  id: string
+  company_id: string
+  name: string
+  description?: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface Product {
+  id: string
+  company_id: string
+  name: string
+  category_id?: string
+  department_id?: string
+  conservation_point_id?: string
+  barcode?: string
+  sku?: string
+  supplier_name?: string
+  allergens: string[]
+  purchase_date?: Date
+  expiry_date?: Date
+  quantity: number
+  unit: string
+  status: 'active' | 'expired' | 'consumed' | 'waste'
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ConservationPoint {
+  id: string
+  company_id: string
+  name: string
+  type: 'fridge' | 'freezer' | 'ambient' | 'blast'
+  location: string
+  temperature_min?: number
+  temperature_max?: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface TemperatureReading {
+  id: string
+  company_id: string
+  conservation_point_id: string
+  temperature: number
+  reading_time: string
+  recorded_by: string
+  notes?: string
+  created_at: string
+}
+
+export interface MaintenanceTask {
+  id: string
+  company_id: string
+  conservation_point_id: string
+  task_type: 'cleaning' | 'calibration' | 'inspection' | 'repair'
+  title: string
+  description?: string
+  due_date: string
+  assigned_to?: string
+  status: 'pending' | 'in_progress' | 'completed' | 'overdue'
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  created_at: string
+  updated_at: string
+}
+
+export interface MaintenanceCompletion {
+  id: string
+  task_id: string
+  completed_by: string
+  completed_at: string
+  notes?: string
+  photos?: string[]
+  created_at: string
+}
+
+export interface CalendarEvent {
+  id: string
+  company_id: string
+  title: string
+  description?: string
+  start_date: string
+  end_date?: string
+  event_type: 'maintenance' | 'training' | 'inspection' | 'meeting' | 'other'
+  assigned_to?: string
+  is_all_day: boolean
+  location?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ShoppingList {
+  id: string
+  company_id: string
+  name: string
+  description?: string
+  created_by: string
+  is_template: boolean
+  is_completed: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ShoppingListItem {
+  id: string
+  shopping_list_id: string
+  product_id?: string
+  product_name: string
+  category_name: string
+  quantity: number
+  unit?: string
+  notes?: string
+  is_completed: boolean
+  completed_at?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface HACCPConfiguration {
+  id: string
+  company_id: string
+  temperature_thresholds?: {
+    fridge_min: number
+    fridge_max: number
+    freezer_min: number
+    freezer_max: number
+    ambient_min: number
+    ambient_max: number
+    blast_min: number
+    blast_max: number
+  }
+  alert_settings?: {
+    temperature_violations: boolean
+    expiry_alerts: boolean
+    maintenance_reminders: boolean
+    certification_expiry: boolean
+  }
+  compliance_requirements?: {
+    daily_temperature_checks: boolean
+    weekly_maintenance: boolean
+    monthly_audits: boolean
+    quarterly_training: boolean
+  }
+  created_at: string
+  updated_at: string
+}
+
+export interface NotificationPreferences {
+  id: string
+  company_id: string
+  user_id: string
+  email_notifications?: {
+    temperature_violations: boolean
+    expiry_alerts: boolean
+    maintenance_reminders: boolean
+    certification_expiry: boolean
+    system_updates: boolean
+    daily_summary: boolean
+    weekly_report: boolean
+  }
+  push_notifications?: {
+    temperature_violations: boolean
+    expiry_alerts: boolean
+    maintenance_reminders: boolean
+    certification_expiry: boolean
+  }
+  sms_notifications?: {
+    critical_alerts: boolean
+    emergency_contacts: string[]
+  }
+  created_at: string
+  updated_at: string
+}

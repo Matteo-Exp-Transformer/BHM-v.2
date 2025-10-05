@@ -4,7 +4,7 @@ import {
   CreateCalendarEventInput,
   UpdateCalendarEventInput,
 } from '@/types/calendar'
-// import { supabase } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'react-toastify'
 import {
@@ -41,6 +41,9 @@ const MOCK_EVENTS: CalendarEvent[] = [
       conservation_point_id: 'fridge1',
       notes: 'Controllo giornaliero temperatura',
     },
+    source: 'temperature_reading',
+    sourceId: 'temp1',
+    extendedProps: {},
     created_at: new Date(),
     updated_at: new Date(),
     created_by: 'user1',
@@ -72,6 +75,9 @@ const MOCK_EVENTS: CalendarEvent[] = [
       conservation_point_id: 'blast1',
       notes: 'Manutenzione settimanale programmata',
     },
+    source: 'maintenance',
+    sourceId: 'maint1',
+    extendedProps: {},
     created_at: new Date(),
     updated_at: new Date(),
     created_by: 'user1',
@@ -96,6 +102,9 @@ const MOCK_EVENTS: CalendarEvent[] = [
     metadata: {
       notes: 'Formazione obbligatoria nuovo personale',
     },
+    source: 'general_task',
+    sourceId: 'task1',
+    extendedProps: {},
     created_at: new Date(),
     updated_at: new Date(),
     created_by: 'user1',
@@ -124,6 +133,9 @@ const MOCK_EVENTS: CalendarEvent[] = [
     metadata: {
       notes: 'Controllo urgente prodotti in scadenza',
     },
+    source: 'general_task',
+    sourceId: 'task2',
+    extendedProps: {},
     created_at: new Date(),
     updated_at: new Date(),
     created_by: 'user1',
@@ -147,22 +159,179 @@ export function useCalendarEvents() {
   } = useQuery({
     queryKey: ['calendar-events', user?.company_id],
     queryFn: async (): Promise<CalendarEvent[]> => {
-      // TODO: Replace with real API call
-      // For now, return mock data with updated statuses
-      const updatedEvents = MOCK_EVENTS.map(updateEventStatus)
+      if (!user?.company_id) {
+        console.log('🔧 No company_id, using mock calendar events')
+        const updatedEvents = MOCK_EVENTS.map(updateEventStatus)
+        return updatedEvents.map(event => {
+          const colors = getEventColors(
+            event.type,
+            event.status,
+            event.priority
+          )
+          return {
+            ...event,
+            backgroundColor: colors.backgroundColor,
+            borderColor: colors.borderColor,
+            textColor: colors.textColor,
+          }
+        })
+      }
 
-      // Apply color based on current status
-      return updatedEvents.map(event => {
-        const colors = getEventColors(event.type, event.status, event.priority)
-        return {
-          ...event,
-          backgroundColor: colors.backgroundColor,
-          borderColor: colors.borderColor,
-          textColor: colors.textColor,
+      console.log(
+        '🔧 Loading calendar events from Supabase for company:',
+        user.company_id
+      )
+
+      try {
+        // Load maintenance tasks from Supabase and convert to calendar events
+        const { data: tasks, error: tasksError } = await supabase
+          .from('maintenance_tasks')
+          .select(
+            `
+            *,
+            conservation_points(id, name, departments(id, name))
+          `
+          )
+          .eq('company_id', user.company_id)
+          .order('next_due', { ascending: true })
+
+        if (tasksError) {
+          console.error('Error loading maintenance tasks:', tasksError)
+          throw tasksError
         }
-      })
+
+        console.log(
+          '✅ Loaded maintenance tasks from Supabase:',
+          tasks?.length || 0
+        )
+
+        // Convert maintenance tasks to calendar events
+        type SupabaseMaintenanceTask = {
+          id: string
+          title?: string
+          instructions?: string
+          next_due: string
+          estimated_duration?: number
+          status?: 'pending' | 'completed' | 'overdue'
+          priority?: CalendarEvent['priority']
+          assigned_to?: string
+          conservation_point_id?: string
+          frequency: string
+          created_at: string
+          updated_at: string
+          created_by?: string
+          company_id: string
+          conservation_points?: {
+            id: string
+            name?: string
+            departments?: { id: string; name?: string } | null
+          } | null
+        }
+
+        const calendarEvents: CalendarEvent[] = (tasks || []).map(
+          (task: SupabaseMaintenanceTask) => {
+            const startDate = new Date(task.next_due)
+            const endDate = new Date(
+              startDate.getTime() + (task.estimated_duration || 60) * 60 * 1000
+            )
+
+            const event: CalendarEvent = {
+              id: `task-${task.id}`,
+              title: task.title || 'Manutenzione',
+              description:
+                task.instructions || 'Attività di manutenzione programmata',
+              start: startDate,
+              end: endDate,
+              allDay: false,
+              type: 'maintenance',
+              status:
+                task.status === 'completed'
+                  ? 'completed'
+                  : startDate < new Date()
+                    ? 'overdue'
+                    : 'pending',
+              priority: task.priority || 'medium',
+              assigned_to: task.assigned_to ? [task.assigned_to] : [],
+              department_id: task.conservation_points?.departments?.id,
+              conservation_point_id: task.conservation_point_id,
+              recurring: task.frequency !== 'once',
+              recurrence_pattern:
+                task.frequency === 'daily'
+                  ? { frequency: 'daily', interval: 1 }
+                  : task.frequency === 'weekly'
+                    ? { frequency: 'weekly', interval: 1 }
+                    : task.frequency === 'monthly'
+                      ? { frequency: 'monthly', interval: 1 }
+                      : undefined,
+              backgroundColor: '#FEF3C7',
+              borderColor: '#F59E0B',
+              textColor: '#92400E',
+              metadata: {
+                conservation_point_id: task.conservation_point_id,
+                notes: task.instructions,
+                task_id: task.id,
+              },
+              source: 'maintenance',
+              sourceId: task.id,
+              extendedProps: {
+                status:
+                  task.status === 'completed'
+                    ? 'completed'
+                    : startDate < new Date()
+                      ? 'overdue'
+                      : 'scheduled',
+                priority: task.priority || 'medium',
+                assignedTo: task.assigned_to ? [task.assigned_to] : [],
+                metadata: {
+                  id: task.id,
+                  notes: task.instructions,
+                  conservationPoint: task.conservation_points?.name,
+                  estimatedDuration: task.estimated_duration,
+                },
+              },
+              created_at: new Date(task.created_at),
+              updated_at: new Date(task.updated_at),
+              created_by: task.created_by || 'system',
+              company_id: task.company_id,
+            }
+
+            // Apply colors based on status
+            const colors = getEventColors(
+              event.type,
+              event.status,
+              event.priority
+            )
+            return {
+              ...event,
+              backgroundColor: colors.backgroundColor,
+              borderColor: colors.borderColor,
+              textColor: colors.textColor,
+            }
+          }
+        )
+
+        return calendarEvents
+      } catch (error) {
+        console.error('Error loading calendar events from Supabase:', error)
+        // Fallback to mock data
+        console.log('🔧 Fallback to mock calendar events due to error')
+        const updatedEvents = MOCK_EVENTS.map(updateEventStatus)
+        return updatedEvents.map(event => {
+          const colors = getEventColors(
+            event.type,
+            event.status,
+            event.priority
+          )
+          return {
+            ...event,
+            backgroundColor: colors.backgroundColor,
+            borderColor: colors.borderColor,
+            textColor: colors.textColor,
+          }
+        })
+      }
     },
-    enabled: !!user?.company_id,
+    enabled: !!user,
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
   })
 
@@ -193,6 +362,9 @@ export function useCalendarEvents() {
         borderColor: colors.borderColor,
         textColor: colors.textColor,
         metadata: input.metadata || {},
+        source: input.type,
+        sourceId: `temp-${Date.now()}`,
+        extendedProps: {},
         created_at: new Date(),
         updated_at: new Date(),
         created_by: user?.id || 'unknown',

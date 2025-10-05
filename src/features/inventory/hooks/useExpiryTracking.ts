@@ -33,7 +33,7 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
     error: alertsError,
     refetch: refetchAlerts,
   } = useQuery({
-    queryKey: QUERY_KEYS.expiryAlerts(companyId, daysAhead),
+    queryKey: QUERY_KEYS.expiryAlerts(companyId || '', daysAhead),
     queryFn: async (): Promise<ExpiryAlert[]> => {
       console.log(
         '🔧 Using mock data for expiry alerts - database disabled temporarily'
@@ -45,8 +45,6 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
           expiry_date: new Date('2025-09-28'),
           days_until_expiry: 7,
           alert_level: 'warning' as const,
-          category: 'Latticini',
-          department: 'Cucina',
         },
       ]
     },
@@ -60,7 +58,7 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
     error: expiredError,
     refetch: refetchExpired,
   } = useQuery({
-    queryKey: QUERY_KEYS.expiredProducts(companyId),
+    queryKey: QUERY_KEYS.expiredProducts(companyId || ''),
     queryFn: async (): Promise<ExpiredProduct[]> => {
       console.log(
         '🔧 Using mock data for expired products - database disabled temporarily'
@@ -68,14 +66,27 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
       return [
         {
           id: '3',
+          company_id: 'company1',
           name: 'Latte Scaduto',
+          category_id: 'cat1',
+          department_id: 'dept1',
+          quantity: 1.0,
+          unit: 'litri',
           expiry_date: new Date('2025-09-19'),
           status: 'expired',
+          compliance_status: 'non_compliant',
+          allergens: [],
+          label_photo_url: undefined,
+          notes: 'Prodotto scaduto',
+          temperature_requirements: {
+            min_temp: 0,
+            max_temp: 4,
+            storage_type: 'fridge' as any,
+          },
+          expired_at: new Date('2025-09-19'),
+          reinsertion_count: 0,
           created_at: new Date(),
           updated_at: new Date(),
-          days_expired: 2,
-          category: 'Latticini',
-          department: 'Cucina',
         },
       ]
     },
@@ -84,18 +95,21 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
 
   // Fetch expiry statistics - DISABLED TEMPORARILY
   const { data: expiryStats } = useQuery({
-    queryKey: QUERY_KEYS.expiryStats(companyId),
+    queryKey: QUERY_KEYS.expiryStats(companyId || ''),
     queryFn: async (): Promise<ExpiryStats> => {
       console.log(
         '🔧 Using mock data for expiry stats - database disabled temporarily'
       )
       return {
-        expiring_soon: 1,
+        total_expiring: 1,
         expiring_today: 0,
         expiring_this_week: 1,
-        expired_products: 1,
-        average_shelf_life: 14,
-        waste_prevention_score: 85,
+        expired_count: 1,
+        by_alert_level: {
+          critical: 0,
+          warning: 1,
+          expired: 1,
+        },
       }
     },
     enabled: !!companyId && !!user,
@@ -112,13 +126,13 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.expiryAlerts(companyId),
+        queryKey: QUERY_KEYS.expiryAlerts(companyId || ''),
       })
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.expiredProducts(companyId),
+        queryKey: QUERY_KEYS.expiredProducts(companyId || ''),
       })
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.expiryStats(companyId),
+        queryKey: QUERY_KEYS.expiryStats(companyId || ''),
       })
       toast.success('Prodotto marcato come scaduto')
     },
@@ -180,10 +194,10 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.expiredProducts(companyId),
+        queryKey: QUERY_KEYS.expiredProducts(companyId || ''),
       })
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.expiryStats(companyId),
+        queryKey: QUERY_KEYS.expiryStats(companyId || ''),
       })
       toast.success('Prodotto reinserito con successo')
     },

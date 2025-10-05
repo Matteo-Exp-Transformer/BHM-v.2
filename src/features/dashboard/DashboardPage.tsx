@@ -322,11 +322,11 @@ export const DashboardPage: React.FC = () => {
             },
             upcoming: maintenanceTasks.slice(0, 5).map(task => ({
               id: task.id,
-              title: task.task_name,
-              due_date: task.next_due_date,
+              title: `Manutenzione ${task.title} (${task.type})`,
+              due_date: task.next_due.toISOString(),
               assigned_to: task.assigned_to || 'Unassigned',
-              priority: task.priority as 'low' | 'medium' | 'high' | 'critical',
-              type: task.task_type || 'Maintenance',
+              priority: 'medium' as 'low' | 'medium' | 'high' | 'critical',
+              type: 'Maintenance',
             })),
           }}
           title="Weekly Task Summary"
@@ -336,10 +336,10 @@ export const DashboardPage: React.FC = () => {
       {/* Temperature Trend - Full Width */}
       <TemperatureTrend
         data={temperatureReadings.slice(0, 50).map(reading => ({
-          date: reading.recorded_at,
+          date: reading.recorded_at.toISOString(),
           temperature: reading.temperature,
           status: reading.status as 'compliant' | 'warning' | 'critical',
-          point_name: reading.conservation_point_name || 'Unknown Point',
+          point_name: `Point ${reading.conservation_point_id}`,
         }))}
         title="Temperature Trends - Last 7 Days"
         className="w-full"

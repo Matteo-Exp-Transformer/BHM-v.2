@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ClerkProvider } from '@clerk/clerk-react'
-import { initSentry } from './lib/sentry'
+// Import Sentry only in production to avoid CORS conflicts
 import App from './App.tsx'
 import './styles/index.css'
 
@@ -14,8 +14,13 @@ if (import.meta.env.DEV) {
   import('./lib/supabase/test-connection')
 }
 
-// Initialize Sentry
-initSentry()
+// Initialize Sentry only in production to avoid CORS conflicts with Clerk
+if (import.meta.env.PROD) {
+  const { initSentry } = await import('./lib/sentry')
+  initSentry()
+} else {
+  console.log('🔧 Sentry disabled in development mode to avoid CORS conflicts')
+}
 
 // Register Service Worker for offline functionality
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
@@ -56,12 +61,19 @@ if (!PUBLISHABLE_KEY) {
   throw new Error('Missing Publishable Key')
 }
 
-// Create a client
+// Create a client with optimized cache settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 3,
+      gcTime: 10 * 60 * 1000, // 10 minutes - garbage collect after 10 minutes
+      retry: 2, // Reduced retries for better performance
+      refetchOnWindowFocus: false, // Prevent unnecessary refetches
+      refetchOnMount: true,
+      refetchOnReconnect: true,
+    },
+    mutations: {
+      retry: 1, // Less aggressive retries for mutations
     },
   },
 })

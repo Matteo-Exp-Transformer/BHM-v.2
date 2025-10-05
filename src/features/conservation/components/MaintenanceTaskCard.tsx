@@ -31,8 +31,8 @@ export function MaintenanceTaskCard({
   onDelete,
   showActions = true,
 }: MaintenanceTaskCardProps) {
-  const taskType = MAINTENANCE_TASK_TYPES[task.kind]
-  const colors = MAINTENANCE_COLORS[status] || MAINTENANCE_COLORS.pending
+  const taskType = MAINTENANCE_TASK_TYPES[task.type]
+  const colors = MAINTENANCE_COLORS[status] || MAINTENANCE_COLORS.scheduled
 
   const formatDateTime = (date: Date) => {
     return new Date(date).toLocaleDateString('it-IT', {
@@ -92,7 +92,7 @@ export function MaintenanceTaskCard({
         <div className="flex items-center space-x-3">
           <div className="text-2xl">{taskType.icon}</div>
           <div>
-            <h3 className={`font-semibold ${colors.text}`}>{taskType.name}</h3>
+            <h3 className="font-semibold">{taskType.label}</h3>
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <span>Frequenza: {getFrequencyText()}</span>
               <span className="mx-1">•</span>
@@ -149,7 +149,7 @@ export function MaintenanceTaskCard({
           <div
             className={`font-semibold ${isOverdue || isPending ? 'text-red-600' : 'text-gray-900'}`}
           >
-            {formatDateTime(task.next_due_date)}
+            {formatDateTime(task.next_due)}
           </div>
         </div>
       </div>
@@ -158,15 +158,12 @@ export function MaintenanceTaskCard({
       <div className="flex items-center space-x-2 text-sm mb-3">
         <User className="w-4 h-4 text-gray-600" />
         <span className="text-gray-600">
-          Assegnato a:{' '}
-          <strong>{task.assigned_staff?.name || 'Non assegnato'}</strong>
+          Assegnato a: <strong>{task.assigned_to || 'Non assegnato'}</strong>
         </span>
-        {task.assigned_staff?.role && (
+        {task.assigned_to && (
           <>
             <span className="mx-1 text-gray-400">•</span>
-            <span className="text-gray-500 capitalize">
-              {task.assigned_staff.role}
-            </span>
+            <span className="text-gray-500 capitalize">{task.assigned_to}</span>
           </>
         )}
       </div>
@@ -178,7 +175,7 @@ export function MaintenanceTaskCard({
             Checklist ({task.checklist.length} elementi):
           </div>
           <div className="space-y-1">
-            {task.checklist.slice(0, 3).map((item, index) => (
+            {task.checklist.slice(0, 3).map((item: string, index: number) => (
               <div key={index} className="flex items-start space-x-2 text-sm">
                 <div className="w-4 h-4 mt-0.5 rounded border border-gray-300 flex-shrink-0"></div>
                 <span className="text-gray-600 line-clamp-1">{item}</span>

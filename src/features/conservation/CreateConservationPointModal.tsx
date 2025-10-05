@@ -1,6 +1,9 @@
 import React, { useState } from 'react'
 import { X, Thermometer, Plus } from 'lucide-react'
-import type { CreateConservationPointRequest } from '@/types/conservation'
+import type {
+  CreateConservationPointRequest,
+  ConservationPointType,
+} from '@/types/conservation'
 
 interface CreateConservationPointModalProps {
   onClose: () => void
@@ -36,7 +39,7 @@ export function CreateConservationPointModal({
   const [formData, setFormData] = useState({
     name: '',
     setpoint_temp: 4,
-    type: 'fridge' as const,
+    type: 'fridge' as ConservationPointType,
     is_blast_chiller: false,
     product_categories: [] as string[],
     department_id: '',
@@ -52,7 +55,7 @@ export function CreateConservationPointModal({
       type: formData.type,
       is_blast_chiller: formData.is_blast_chiller,
       product_categories: formData.product_categories,
-      department_id: formData.department_id || undefined,
+      department_id: formData.department_id ?? '',
     })
   }
 

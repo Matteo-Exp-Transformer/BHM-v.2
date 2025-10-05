@@ -3,8 +3,6 @@ import {
   Thermometer,
   AlertTriangle,
   CheckCircle,
-  Clock,
-  TrendingUp,
   Activity,
   Target,
   Wrench,
@@ -16,19 +14,19 @@ interface ConservationStatsProps {
 }
 
 export function ConservationStats({ stats }: ConservationStatsProps) {
-  const getComplianceColor = (rate: number) => {
-    if (rate >= 95) return 'text-green-600'
-    if (rate >= 85) return 'text-yellow-600'
-    return 'text-red-600'
-  }
-
   const getComplianceBadge = (rate: number) => {
     if (rate >= 95) return 'bg-green-100 text-green-800'
     if (rate >= 85) return 'bg-yellow-100 text-yellow-800'
     return 'bg-red-100 text-red-800'
   }
 
-  const statCards = [
+  const statCards: Array<{
+    title: string
+    value: string | number
+    icon: React.ComponentType<{ className?: string }>
+    color: string
+    description: string
+  }> = [
     {
       title: 'Punti Totali',
       value: stats.total_points,
@@ -104,14 +102,14 @@ export function ConservationStats({ stats }: ConservationStatsProps) {
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className={`h-2 rounded-full transition-all ${
-                      parseFloat(stat.value) >= 95
+                      parseFloat(String(stat.value)) >= 95
                         ? 'bg-green-500'
-                        : parseFloat(stat.value) >= 85
+                        : parseFloat(String(stat.value)) >= 85
                           ? 'bg-yellow-500'
                           : 'bg-red-500'
                     }`}
                     style={{
-                      width: `${Math.min(parseFloat(stat.value), 100)}%`,
+                      width: `${Math.min(parseFloat(String(stat.value)), 100)}%`,
                     }}
                   ></div>
                 </div>
@@ -122,7 +120,7 @@ export function ConservationStats({ stats }: ConservationStatsProps) {
       })}
 
       {/* Detailed breakdown */}
-      {Object.keys(stats.by_type).length > 0 && (
+      {Object.keys(stats.by_type ?? {}).length > 0 && (
         <div className="md:col-span-2 lg:col-span-4">
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -131,7 +129,7 @@ export function ConservationStats({ stats }: ConservationStatsProps) {
             </h3>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Object.entries(stats.by_type).map(([type, count]) => {
+              {Object.entries(stats.by_type ?? {}).map(([type, count]) => {
                 const typeLabels: Record<string, string> = {
                   fridge: 'Frigoriferi',
                   freezer: 'Congelatori',
@@ -169,7 +167,7 @@ export function ConservationStats({ stats }: ConservationStatsProps) {
       )}
 
       {/* Status breakdown */}
-      {Object.keys(stats.by_status).length > 0 && (
+      {Object.keys(stats.by_status ?? {}).length > 0 && (
         <div className="md:col-span-2 lg:col-span-4">
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -178,7 +176,7 @@ export function ConservationStats({ stats }: ConservationStatsProps) {
             </h3>
 
             <div className="grid grid-cols-3 gap-4">
-              {Object.entries(stats.by_status).map(([status, count]) => {
+              {Object.entries(stats.by_status ?? {}).map(([status, count]) => {
                 const statusConfig = {
                   normal: {
                     label: 'Normale',

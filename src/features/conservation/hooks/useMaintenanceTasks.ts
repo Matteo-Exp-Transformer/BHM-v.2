@@ -1,13 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import {
+import type {
   MaintenanceTask,
   MaintenanceCompletion,
-  // MaintenanceType,
-  // MaintenanceFrequency,
-  MAINTENANCE_TASK_TYPES,
+  MaintenanceStats,
 } from '@/types/conservation'
+import { MAINTENANCE_TASK_TYPES } from '@/types/conservation'
 import { toast } from 'react-toastify'
 
 export function useMaintenanceTasks(conservationPointId?: string) {
@@ -20,80 +19,82 @@ export function useMaintenanceTasks(conservationPointId?: string) {
       id: '1',
       company_id: 'test',
       conservation_point_id: '1',
-      kind: 'temperature',
+      title: 'Calibrazione Termometro',
+      type: 'temperature_calibration',
       frequency: 'daily',
       assigned_to: 'user1',
-      assignment_type: 'user',
-      next_due_date: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
+      next_due: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
       estimated_duration: 15,
-      checklist: MAINTENANCE_TASK_TYPES.temperature.defaultChecklist,
-      is_active: true,
+      priority: 'high',
+      status: 'scheduled',
+      checklist: [
+        ...MAINTENANCE_TASK_TYPES.temperature_calibration.defaultChecklist,
+      ],
       created_at: new Date(),
       updated_at: new Date(),
-      assigned_staff: {
+      assigned_user: {
         id: 'user1',
         name: 'Matteo Cavallaro',
-        role: 'responsabile',
       },
     },
     {
       id: '2',
       company_id: 'test',
       conservation_point_id: '1',
-      kind: 'sanitization',
+      title: 'Pulizia Profonda',
+      type: 'deep_cleaning',
       frequency: 'weekly',
       assigned_to: 'user2',
-      assignment_type: 'user',
-      next_due_date: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day from now
+      next_due: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day from now
       estimated_duration: 30,
-      checklist: MAINTENANCE_TASK_TYPES.sanitization.defaultChecklist,
-      is_active: true,
+      priority: 'medium',
+      status: 'scheduled',
+      checklist: [...MAINTENANCE_TASK_TYPES.deep_cleaning.defaultChecklist],
       created_at: new Date(),
       updated_at: new Date(),
-      assigned_staff: {
+      assigned_user: {
         id: 'user2',
         name: 'Fabrizio Dettori',
-        role: 'responsabile',
       },
     },
     {
       id: '3',
       company_id: 'test',
       conservation_point_id: '2',
-      kind: 'defrosting',
+      title: 'Sbrinamento',
+      type: 'defrosting',
       frequency: 'monthly',
       assigned_to: 'user1',
-      assignment_type: 'user',
-      next_due_date: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago (overdue)
+      next_due: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago (overdue)
       estimated_duration: 45,
-      checklist: MAINTENANCE_TASK_TYPES.defrosting.defaultChecklist,
-      is_active: true,
+      priority: 'high',
+      status: 'overdue',
+      checklist: [...MAINTENANCE_TASK_TYPES.defrosting.defaultChecklist],
       created_at: new Date(),
       updated_at: new Date(),
-      assigned_staff: {
+      assigned_user: {
         id: 'user1',
         name: 'Matteo Cavallaro',
-        role: 'responsabile',
       },
     },
     {
       id: '4',
       company_id: 'test',
       conservation_point_id: '3',
-      kind: 'sanitization',
+      title: 'Pulizia Profonda',
+      type: 'deep_cleaning',
       frequency: 'daily',
       assigned_to: 'user3',
-      assignment_type: 'user',
-      next_due_date: new Date(Date.now() + 4 * 60 * 60 * 1000), // 4 hours from now
+      next_due: new Date(Date.now() + 4 * 60 * 60 * 1000), // 4 hours from now
       estimated_duration: 20,
-      checklist: MAINTENANCE_TASK_TYPES.sanitization.defaultChecklist,
-      is_active: true,
+      priority: 'medium',
+      status: 'scheduled',
+      checklist: [...MAINTENANCE_TASK_TYPES.deep_cleaning.defaultChecklist],
       created_at: new Date(),
       updated_at: new Date(),
-      assigned_staff: {
+      assigned_user: {
         id: 'user3',
         name: 'Elena Guaitoli',
-        role: 'dipendente',
       },
     },
   ]
@@ -108,7 +109,7 @@ export function useMaintenanceTasks(conservationPointId?: string) {
       console.log('🔧 Using mock data for maintenance tasks')
       if (conservationPointId) {
         return mockTasks.filter(
-          t => t.conservation_point_id === conservationPointId
+          task => task.conservation_point_id === conservationPointId
         )
       }
       return mockTasks
@@ -130,6 +131,7 @@ export function useMaintenanceTasks(conservationPointId?: string) {
         .insert([
           {
             ...data,
+            checklist: data.checklist ?? [],
             company_id: user.company_id,
           },
         ])
@@ -230,7 +232,7 @@ export function useMaintenanceTasks(conservationPointId?: string) {
   // Helper function to determine task status
   const getTaskStatus = (task: MaintenanceTask) => {
     const now = new Date()
-    const dueDate = new Date(task.next_due_date)
+    const dueDate = new Date(task.next_due)
 
     if (dueDate < now) {
       return 'overdue'
@@ -245,37 +247,37 @@ export function useMaintenanceTasks(conservationPointId?: string) {
     return 'scheduled'
   }
 
-  // Statistics
-  const stats = {
-    total: maintenanceTasks?.length || 0,
-    overdue:
-      maintenanceTasks?.filter(t => getTaskStatus(t) === 'overdue').length || 0,
-    pending:
-      maintenanceTasks?.filter(t => getTaskStatus(t) === 'pending').length || 0,
-    scheduled:
-      maintenanceTasks?.filter(t => getTaskStatus(t) === 'scheduled').length ||
-      0,
-    byType: {
-      temperature:
-        maintenanceTasks?.filter(t => t.kind === 'temperature').length || 0,
-      sanitization:
-        maintenanceTasks?.filter(t => t.kind === 'sanitization').length || 0,
-      defrosting:
-        maintenanceTasks?.filter(t => t.kind === 'defrosting').length || 0,
-    },
-    byFrequency: {
-      daily: maintenanceTasks?.filter(t => t.frequency === 'daily').length || 0,
-      weekly:
-        maintenanceTasks?.filter(t => t.frequency === 'weekly').length || 0,
-      monthly:
-        maintenanceTasks?.filter(t => t.frequency === 'monthly').length || 0,
-      custom:
-        maintenanceTasks?.filter(t => t.frequency === 'custom').length || 0,
-    },
+  const tasks = (maintenanceTasks ?? []) as MaintenanceTask[]
+
+  const stats: MaintenanceStats = {
+    total_tasks: tasks.length,
+    completed_tasks: tasks.filter(task => task.status === 'completed').length,
+    overdue_tasks: tasks.filter(task => getTaskStatus(task) === 'overdue')
+      .length,
+    completion_rate: tasks.length
+      ? (tasks.filter(task => task.status === 'completed').length /
+          tasks.length) *
+        100
+      : 0,
+    average_completion_time: 0,
+    tasks_by_type: tasks.reduce<MaintenanceStats['tasks_by_type']>(
+      (acc, task) => {
+        acc[task.type] = (acc[task.type] ?? 0) + 1
+        return acc
+      },
+      {} as MaintenanceStats['tasks_by_type']
+    ),
+    upcoming_tasks: tasks
+      .filter(task => getTaskStatus(task) !== 'overdue')
+      .sort(
+        (a, b) =>
+          new Date(a.next_due).getTime() - new Date(b.next_due).getTime()
+      )
+      .slice(0, 5),
   }
 
   return {
-    maintenanceTasks: maintenanceTasks || [],
+    maintenanceTasks: tasks,
     isLoading,
     error,
     stats,

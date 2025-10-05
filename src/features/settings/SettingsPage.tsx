@@ -1,4 +1,3 @@
-import React, { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 import { Settings, Building2, Users, Shield, Bell } from 'lucide-react'
@@ -9,26 +8,11 @@ import { NotificationPreferences } from './components/NotificationPreferences'
 
 export default function SettingsPage() {
   const { isLoading, hasRole, displayName } = useAuth()
-  const [expandedSections, setExpandedSections] = useState<
-    Record<string, boolean>
-  >({
-    company: true,
-    users: false,
-    haccp: false,
-    notifications: false,
-  })
-
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section],
-    }))
-  }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div>
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded mb-6"></div>
             <div className="space-y-4">
@@ -45,8 +29,8 @@ export default function SettingsPage() {
   // Only admin can access settings
   if (!hasRole(['admin'])) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div>
           <div className="text-center py-12">
             <Shield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -72,31 +56,33 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Settings className="w-8 h-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">
-              Impostazioni Sistema
-            </h1>
+        <div className="space-y-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <Settings className="w-7 h-7 text-blue-600 sm:w-8 sm:h-8" />
+              <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
+                Impostazioni Sistema
+              </h1>
+            </div>
           </div>
-          <p className="text-gray-600">
+          <p className="text-sm text-gray-600 sm:text-base">
             Gestisci la configurazione dell'azienda, utenti, compliance HACCP e
             preferenze.
           </p>
         </div>
 
         {/* Settings Sections */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Company Configuration */}
           <CollapsibleCard
             title="Configurazione Azienda"
             icon={Building2}
-            isExpanded={expandedSections.company}
-            onToggle={() => toggleSection('company')}
+            defaultExpanded={true}
             className="bg-white"
+            contentClassName="px-4 py-6 sm:px-6"
           >
             <CompanyConfiguration />
           </CollapsibleCard>
@@ -105,9 +91,9 @@ export default function SettingsPage() {
           <CollapsibleCard
             title="Gestione Utenti"
             icon={Users}
-            isExpanded={expandedSections.users}
-            onToggle={() => toggleSection('users')}
+            defaultExpanded={false}
             className="bg-white"
+            contentClassName="px-4 py-6 sm:px-6"
           >
             <UserManagement />
           </CollapsibleCard>
@@ -116,9 +102,9 @@ export default function SettingsPage() {
           <CollapsibleCard
             title="Impostazioni HACCP"
             icon={Shield}
-            isExpanded={expandedSections.haccp}
-            onToggle={() => toggleSection('haccp')}
+            defaultExpanded={false}
             className="bg-white"
+            contentClassName="px-4 py-6 sm:px-6"
           >
             <HACCPSettings />
           </CollapsibleCard>
@@ -127,9 +113,9 @@ export default function SettingsPage() {
           <CollapsibleCard
             title="Preferenze Notifiche"
             icon={Bell}
-            isExpanded={expandedSections.notifications}
-            onToggle={() => toggleSection('notifications')}
+            defaultExpanded={false}
             className="bg-white"
+            contentClassName="px-4 py-6 sm:px-6"
           >
             <NotificationPreferences />
           </CollapsibleCard>

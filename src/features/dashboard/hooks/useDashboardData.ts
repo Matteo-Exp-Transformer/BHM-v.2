@@ -60,9 +60,9 @@ export interface DashboardKPIs {
 export const useDashboardData = () => {
   const { companyId, isLoading: authLoading } = useAuth()
 
-  const { staff, getStaffStats } = useStaff()
-  const { products, getExpiredProducts } = useProducts()
-  const { expiringProducts } = useExpiryTracking()
+  const { staff } = useStaff()
+  const { products } = useProducts()
+  const { expiredProducts, expiryStats } = useExpiryTracking()
   const { conservationPoints } = useConservationPoints()
   const { temperatureReadings } = useTemperatureReadings()
   const { maintenanceTasks } = useMaintenanceTasks()
@@ -82,13 +82,12 @@ export const useDashboardData = () => {
             100
           : 100
 
-      const taskCompletionRate =
-        maintenanceTasks.length > 0
-          ? (maintenanceTasks.filter(task => task.status === 'completed')
-              .length /
-              maintenanceTasks.length) *
-            100
-          : 100
+      const completedTasks = maintenanceTasks.filter(
+        task => task.status === 'completed'
+      ).length
+      const taskCompletionRate = maintenanceTasks.length
+        ? (completedTasks / maintenanceTasks.length) * 100
+        : 100
 
       const overallCompliance = Math.round(
         (temperatureComplianceRate + taskCompletionRate) / 2
@@ -101,12 +100,20 @@ export const useDashboardData = () => {
             : 'down'
 
       const totalProducts = products.length
-      const expiredProducts = getExpiredProducts?.() || []
-      const expiringSoon = expiringProducts.length
+      const expiredCount = expiredProducts?.length || 0
+      const expiringSoon = expiryStats?.expiring_this_week || 0
       const wastePercentage =
-        totalProducts > 0 ? (expiredProducts.length / totalProducts) * 100 : 0
+        totalProducts > 0 ? (expiredCount / totalProducts) * 100 : 0
 
-      const staffStats = getStaffStats()
+      // Calculate department distribution
+      const departmentDistribution = staff.reduce(
+        (acc, member) => {
+          const dept = member.role || 'unknown'
+          acc[dept] = (acc[dept] || 0) + 1
+          return acc
+        },
+        {} as Record<string, number>
+      )
       const staffWithExpiringCerts = staff.filter(member => {
         if (!member.haccp_certification?.expiry_date) return false
         const expiryDate = new Date(member.haccp_certification.expiry_date)
@@ -135,7 +142,7 @@ export const useDashboardData = () => {
         point => point.status === 'critical'
       ).length
       const maintenanceDue = maintenanceTasks.filter(
-        task => new Date(task.next_due_date) <= new Date()
+        task => new Date(task.next_due) <= new Date()
       ).length
 
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
@@ -157,14 +164,15 @@ export const useDashboardData = () => {
         },
         task_completion_rate: {
           total_tasks: maintenanceTasks.length,
-          completed_on_time: maintenanceTasks.filter(
-            task => task.status === 'completed'
-          ).length,
-          overdue: maintenanceTasks.filter(
-            task =>
-              task.status !== 'completed' &&
-              new Date(task.next_due_date) < new Date()
-          ).length,
+          completed_on_time: completedTasks,
+          overdue: maintenanceTasks.filter(task => {
+            if (!task.next_due) return false
+            const nextDueDate =
+              task.next_due instanceof Date
+                ? task.next_due
+                : new Date(task.next_due)
+            return nextDueDate < new Date()
+          }).length,
           completion_rate: Math.round(taskCompletionRate),
           trend:
             taskCompletionRate >= 80
@@ -198,7 +206,7 @@ export const useDashboardData = () => {
           active_staff: staff.filter(member => member.status === 'active')
             .length,
           haccp_certifications_expiring: staffWithExpiringCerts,
-          department_distribution: staffStats.by_department || {},
+          department_distribution: departmentDistribution,
         },
         shopping_activity: {
           total_lists: totalLists,

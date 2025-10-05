@@ -296,41 +296,18 @@ export const ExpiredProductsManager: React.FC<ExpiredProductsManagerProps> = ({
     }, 0)
   }
 
-  if (isLoading) {
-    return (
-      <CollapsibleCard
-        title="Prodotti Scaduti"
-        icon={AlertTriangle}
-        counter={0}
-        defaultExpanded={true}
-      >
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-        </div>
-      </CollapsibleCard>
-    )
-  }
-
   return (
     <CollapsibleCard
       title="Prodotti Scaduti"
       icon={AlertTriangle}
       counter={expiredProducts.length}
       defaultExpanded={true}
+      isLoading={isLoading}
+      isEmpty={!isLoading && expiredProducts.length === 0}
+      emptyMessage="Ottimo lavoro! Non ci sono prodotti scaduti da gestire."
+      contentClassName="px-4 py-6 sm:px-6"
     >
-      {expiredProducts.length === 0 ? (
-        <div className="text-center py-8">
-          <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-            <Package className="h-8 w-8 text-green-600" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Nessun prodotto scaduto
-          </h3>
-          <p className="text-gray-600">
-            Ottimo lavoro! Non ci sono prodotti scaduti da gestire.
-          </p>
-        </div>
-      ) : (
+      {!isLoading && expiredProducts.length > 0 && (
         <div className="space-y-4">
           {/* Summary Statistics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
@@ -367,21 +344,6 @@ export const ExpiredProductsManager: React.FC<ExpiredProductsManagerProps> = ({
                 reinsertExpiredProduct={reinsertExpiredProduct}
               />
             ))}
-          </div>
-
-          {/* Waste Prevention Tips */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2">
-              💡 Suggerimenti per ridurre gli sprechi:
-            </h4>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Controlla regolarmente le date di scadenza</li>
-              <li>• Usa il sistema FIFO (First In, First Out)</li>
-              <li>• Pianifica i menu in base alle scadenze imminenti</li>
-              <li>
-                • Considera porzioni più piccole per prodotti a breve scadenza
-              </li>
-            </ul>
           </div>
         </div>
       )}

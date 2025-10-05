@@ -77,23 +77,27 @@ export const useShoppingLists = () => {
       // Fetch shopping lists with items count
       const { data, error } = await supabase
         .from('shopping_lists')
-        .select(`
+        .select(
+          `
           *,
           shopping_list_items (
             id,
             is_completed
           )
-        `)
+        `
+        )
         .eq('company_id', companyId)
         .order('created_at', { ascending: false })
 
       if (error) throw error
 
       // Transform data to include item counts
-      return (data || []).map(list => ({
+      return (data || []).map((list: any) => ({
         ...list,
         item_count: list.shopping_list_items?.length || 0,
-        completed_items: list.shopping_list_items?.filter((item: any) => item.is_completed).length || 0,
+        completed_items:
+          list.shopping_list_items?.filter((item: any) => item.is_completed)
+            .length || 0,
         items: [], // Will be loaded separately when needed
       }))
     },
@@ -102,17 +106,15 @@ export const useShoppingLists = () => {
   })
 
   // Fetch shopping list templates
-  const {
-    data: templates = [],
-    isLoading: isLoadingTemplates,
-  } = useQuery({
+  const { data: templates = [], isLoading: isLoadingTemplates } = useQuery({
     queryKey: QUERY_KEYS.templates(companyId || ''),
     queryFn: async (): Promise<ShoppingList[]> => {
       if (!companyId) throw new Error('Company ID not found')
 
       const { data, error } = await supabase
         .from('shopping_lists')
-        .select(`
+        .select(
+          `
           *,
           shopping_list_items (
             id,
@@ -123,14 +125,15 @@ export const useShoppingLists = () => {
             notes,
             is_completed
           )
-        `)
+        `
+        )
         .eq('company_id', companyId)
         .eq('is_template', true)
         .order('name', { ascending: true })
 
       if (error) throw error
 
-      return (data || []).map(list => ({
+      return (data || []).map((list: any) => ({
         ...list,
         items: list.shopping_list_items || [],
         item_count: list.shopping_list_items?.length || 0,
@@ -150,7 +153,8 @@ export const useShoppingLists = () => {
 
         const { data, error } = await supabase
           .from('shopping_lists')
-          .select(`
+          .select(
+            `
             *,
             shopping_list_items (
               id,
@@ -164,7 +168,8 @@ export const useShoppingLists = () => {
               added_at,
               completed_at
             )
-          `)
+          `
+          )
           .eq('id', listId)
           .single()
 
@@ -174,7 +179,9 @@ export const useShoppingLists = () => {
           ...data,
           items: data.shopping_list_items || [],
           item_count: data.shopping_list_items?.length || 0,
-          completed_items: data.shopping_list_items?.filter((item: any) => item.is_completed).length || 0,
+          completed_items:
+            data.shopping_list_items?.filter((item: any) => item.is_completed)
+              .length || 0,
         }
       },
       enabled: !!listId,
@@ -183,8 +190,11 @@ export const useShoppingLists = () => {
 
   // Create shopping list mutation
   const createShoppingList = useMutation({
-    mutationFn: async (input: CreateShoppingListInput): Promise<ShoppingList> => {
-      if (!companyId || !userProfile?.id) throw new Error('User not authenticated')
+    mutationFn: async (
+      input: CreateShoppingListInput
+    ): Promise<ShoppingList> => {
+      if (!companyId || !userProfile?.id)
+        throw new Error('User not authenticated')
 
       const { data: listData, error: listError } = await supabase
         .from('shopping_lists')
@@ -234,7 +244,7 @@ export const useShoppingLists = () => {
         QUERY_KEYS.shoppingLists(companyId || ''),
         (old: ShoppingList[] = []) => [newList, ...old]
       )
-      
+
       if (newList.is_template) {
         queryClient.setQueryData(
           QUERY_KEYS.templates(companyId || ''),
@@ -243,7 +253,9 @@ export const useShoppingLists = () => {
       }
 
       const listType = newList.is_template ? 'template' : 'lista della spesa'
-      toast.success(`${listType.charAt(0).toUpperCase() + listType.slice(1)} "${newList.name}" creata con successo`)
+      toast.success(
+        `${listType.charAt(0).toUpperCase() + listType.slice(1)} "${newList.name}" creata con successo`
+      )
     },
     onError: (error: Error) => {
       console.error('Error creating shopping list:', error)
@@ -262,12 +274,14 @@ export const useShoppingLists = () => {
       name: string
       description?: string
     }): Promise<ShoppingList> => {
-      if (!companyId || !userProfile?.id) throw new Error('User not authenticated')
+      if (!companyId || !userProfile?.id)
+        throw new Error('User not authenticated')
 
       // Get template with items
       const { data: template, error: templateError } = await supabase
         .from('shopping_lists')
-        .select(`
+        .select(
+          `
           *,
           shopping_list_items (
             product_id,
@@ -277,7 +291,8 @@ export const useShoppingLists = () => {
             unit,
             notes
           )
-        `)
+        `
+        )
         .eq('id', templateId)
         .single()
 
@@ -300,7 +315,10 @@ export const useShoppingLists = () => {
       if (listError) throw listError
 
       // Copy items from template
-      if (template.shopping_list_items && template.shopping_list_items.length > 0) {
+      if (
+        template.shopping_list_items &&
+        template.shopping_list_items.length > 0
+      ) {
         const { error: itemsError } = await supabase
           .from('shopping_list_items')
           .insert(
@@ -426,7 +444,7 @@ export const useShoppingLists = () => {
       if (error) throw error
       return data
     },
-    onSuccess: (updatedItem) => {
+    onSuccess: updatedItem => {
       // Update the specific list's items
       queryClient.setQueryData(
         QUERY_KEYS.shoppingList(updatedItem.shopping_list_id),
@@ -435,7 +453,9 @@ export const useShoppingLists = () => {
           const updatedItems = old.items.map(item =>
             item.id === updatedItem.id ? updatedItem : item
           )
-          const completedCount = updatedItems.filter(item => item.is_completed).length
+          const completedCount = updatedItems.filter(
+            item => item.is_completed
+          ).length
 
           return {
             ...old,
@@ -446,7 +466,9 @@ export const useShoppingLists = () => {
         }
       )
 
-      toast.success(`Prodotto ${updatedItem.is_completed ? 'segnato come completato' : 'rimosso dalla lista'}`)
+      toast.success(
+        `Prodotto ${updatedItem.is_completed ? 'segnato come completato' : 'rimosso dalla lista'}`
+      )
     },
     onError: (error: Error) => {
       console.error('Error toggling item completion:', error)
@@ -478,7 +500,9 @@ export const useShoppingLists = () => {
         QUERY_KEYS.shoppingLists(companyId || ''),
         (old: ShoppingList[] = []) => old.filter(list => list.id !== deletedId)
       )
-      queryClient.removeQueries({ queryKey: QUERY_KEYS.shoppingList(deletedId) })
+      queryClient.removeQueries({
+        queryKey: QUERY_KEYS.shoppingList(deletedId),
+      })
       toast.success('Lista eliminata con successo')
     },
     onError: (error: Error) => {
@@ -494,7 +518,10 @@ export const useShoppingLists = () => {
     completed: shoppingLists.filter(list => list.is_completed).length,
     templates: templates.length,
     totalItems: shoppingLists.reduce((sum, list) => sum + list.item_count, 0),
-    completedItems: shoppingLists.reduce((sum, list) => sum + list.completed_items, 0),
+    completedItems: shoppingLists.reduce(
+      (sum, list) => sum + list.completed_items,
+      0
+    ),
   }
 
   return {
@@ -527,7 +554,8 @@ export const useShoppingLists = () => {
 
     // Utils
     useShoppingListDetails,
-    getShoppingListById: (id: string) => shoppingLists.find(list => list.id === id),
+    getShoppingListById: (id: string) =>
+      shoppingLists.find(list => list.id === id),
     getActiveLists: () => shoppingLists.filter(list => !list.is_completed),
     getCompletedLists: () => shoppingLists.filter(list => list.is_completed),
     getTemplates: () => templates,
