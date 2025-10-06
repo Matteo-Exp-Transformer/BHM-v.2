@@ -13,108 +13,44 @@ export function useMaintenanceTasks(conservationPointId?: string) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
-  // MOCK DATA FOR TESTING - Remove when database works
-  const mockTasks: MaintenanceTask[] = [
-    {
-      id: '1',
-      company_id: 'test',
-      conservation_point_id: '1',
-      title: 'Calibrazione Termometro',
-      type: 'temperature_calibration',
-      frequency: 'daily',
-      assigned_to: 'user1',
-      next_due: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
-      estimated_duration: 15,
-      priority: 'high',
-      status: 'scheduled',
-      checklist: [
-        ...MAINTENANCE_TASK_TYPES.temperature_calibration.defaultChecklist,
-      ],
-      created_at: new Date(),
-      updated_at: new Date(),
-      assigned_user: {
-        id: 'user1',
-        name: 'Matteo Cavallaro',
-      },
-    },
-    {
-      id: '2',
-      company_id: 'test',
-      conservation_point_id: '1',
-      title: 'Pulizia Profonda',
-      type: 'deep_cleaning',
-      frequency: 'weekly',
-      assigned_to: 'user2',
-      next_due: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day from now
-      estimated_duration: 30,
-      priority: 'medium',
-      status: 'scheduled',
-      checklist: [...MAINTENANCE_TASK_TYPES.deep_cleaning.defaultChecklist],
-      created_at: new Date(),
-      updated_at: new Date(),
-      assigned_user: {
-        id: 'user2',
-        name: 'Fabrizio Dettori',
-      },
-    },
-    {
-      id: '3',
-      company_id: 'test',
-      conservation_point_id: '2',
-      title: 'Sbrinamento',
-      type: 'defrosting',
-      frequency: 'monthly',
-      assigned_to: 'user1',
-      next_due: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago (overdue)
-      estimated_duration: 45,
-      priority: 'high',
-      status: 'overdue',
-      checklist: [...MAINTENANCE_TASK_TYPES.defrosting.defaultChecklist],
-      created_at: new Date(),
-      updated_at: new Date(),
-      assigned_user: {
-        id: 'user1',
-        name: 'Matteo Cavallaro',
-      },
-    },
-    {
-      id: '4',
-      company_id: 'test',
-      conservation_point_id: '3',
-      title: 'Pulizia Profonda',
-      type: 'deep_cleaning',
-      frequency: 'daily',
-      assigned_to: 'user3',
-      next_due: new Date(Date.now() + 4 * 60 * 60 * 1000), // 4 hours from now
-      estimated_duration: 20,
-      priority: 'medium',
-      status: 'scheduled',
-      checklist: [...MAINTENANCE_TASK_TYPES.deep_cleaning.defaultChecklist],
-      created_at: new Date(),
-      updated_at: new Date(),
-      assigned_user: {
-        id: 'user3',
-        name: 'Elena Guaitoli',
-      },
-    },
-  ]
-
   const {
     data: maintenanceTasks,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['maintenance-tasks', conservationPointId],
+    queryKey: ['maintenance-tasks', user?.company_id, conservationPointId],
     queryFn: async () => {
-      console.log('🔧 Using mock data for maintenance tasks')
-      if (conservationPointId) {
-        return mockTasks.filter(
-          task => task.conservation_point_id === conservationPointId
-        )
+      if (!user?.company_id) {
+        console.warn('⚠️ No company_id available, cannot load maintenance tasks')
+        return []
       }
-      return mockTasks
+
+      console.log('🔧 Loading maintenance tasks from Supabase for company:', user.company_id)
+
+      let query = supabase
+        .from('maintenance_tasks')
+        .select(`
+          *,
+          conservation_point:conservation_points(id, name),
+          assigned_user:staff(id, name)
+        `)
+        .eq('company_id', user.company_id)
+
+      if (conservationPointId) {
+        query = query.eq('conservation_point_id', conservationPointId)
+      }
+
+      const { data, error } = await query.order('next_due', { ascending: true })
+
+      if (error) {
+        console.error('❌ Error loading maintenance tasks:', error)
+        throw error
+      }
+
+      console.log('✅ Loaded maintenance tasks from Supabase:', data?.length || 0)
+      return data || []
     },
-    enabled: true,
+    enabled: !!user?.company_id,
   })
 
   const createTaskMutation = useMutation({

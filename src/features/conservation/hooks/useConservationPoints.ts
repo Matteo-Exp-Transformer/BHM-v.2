@@ -12,66 +12,6 @@ export function useConservationPoints() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
-  // MOCK DATA FOR TESTING - Remove when database works
-  const mockData: ConservationPoint[] = [
-    {
-      id: '1',
-      company_id: 'test',
-      department_id: '1',
-      name: 'Frigorifero Cucina 1',
-      setpoint_temp: 4.0,
-      type: 'fridge',
-      product_categories: ['Carni fresche', 'Latticini'],
-      is_blast_chiller: false,
-      created_at: new Date(),
-      updated_at: new Date(),
-      department: { id: '1', name: 'Cucina' },
-      status: 'normal',
-    },
-    {
-      id: '2',
-      company_id: 'test',
-      department_id: '1',
-      name: 'Freezer Principale',
-      setpoint_temp: -18.0,
-      type: 'freezer',
-      product_categories: ['Surgelati', 'Gelati'],
-      is_blast_chiller: false,
-      created_at: new Date(),
-      updated_at: new Date(),
-      department: { id: '1', name: 'Cucina' },
-      status: 'normal',
-    },
-    {
-      id: '3',
-      company_id: 'test',
-      department_id: '2',
-      name: 'Vetrina Refrigerata',
-      setpoint_temp: 6.0,
-      type: 'fridge',
-      product_categories: ['Bevande'],
-      is_blast_chiller: false,
-      created_at: new Date(),
-      updated_at: new Date(),
-      department: { id: '2', name: 'Bancone' },
-      status: 'warning',
-    },
-    {
-      id: '4',
-      company_id: 'test',
-      department_id: '1',
-      name: 'Abbattitore Rapido',
-      setpoint_temp: -35.0,
-      type: 'blast',
-      product_categories: ['Preparazioni cotte'],
-      is_blast_chiller: true,
-      created_at: new Date(),
-      updated_at: new Date(),
-      department: { id: '1', name: 'Cucina' },
-      status: 'critical',
-    },
-  ]
-
   const {
     data: conservationPoints,
     isLoading,
@@ -80,8 +20,8 @@ export function useConservationPoints() {
     queryKey: ['conservation-points', user?.company_id],
     queryFn: async () => {
       if (!user?.company_id) {
-        console.log('🔧 No company_id, using mock data for conservation points')
-        return mockData
+        console.warn('⚠️ No company_id available, cannot load conservation points')
+        return []
       }
 
       console.log(
@@ -100,10 +40,8 @@ export function useConservationPoints() {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Error loading conservation points:', error)
-        // Fallback to mock data if there's an error
-        console.log('🔧 Fallback to mock data due to error')
-        return mockData
+        console.error('❌ Error loading conservation points:', error)
+        throw error
       }
 
       console.log(
@@ -112,7 +50,7 @@ export function useConservationPoints() {
       )
       return data || []
     },
-    enabled: !!user, // Only run when user is available
+    enabled: !!user?.company_id,
   })
 
   const createConservationPointMutation = useMutation({

@@ -1,113 +1,49 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
-// import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/useAuth'
 import { TemperatureReading } from '@/types/conservation'
 import { toast } from 'react-toastify'
 
 export function useTemperatureReadings(conservationPointId?: string) {
-  // const { } = useAuth()
+  const { user } = useAuth()
   const queryClient = useQueryClient()
 
-  // MOCK DATA FOR TESTING - Remove when database works
-  const mockReadings: TemperatureReading[] = [
-    {
-      id: '1',
-      company_id: 'test',
-      conservation_point_id: '1',
-      temperature: 4.2,
-      target_temperature: 4.0,
-      tolerance_range_min: 2.0,
-      tolerance_range_max: 6.0,
-      status: 'compliant',
-      recorded_by: 'user1',
-      recorded_at: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      method: 'digital_thermometer',
-      notes: 'Lettura regolare',
-      validation_status: 'validated',
-      created_at: new Date(),
-    },
-    {
-      id: '2',
-      company_id: 'test',
-      conservation_point_id: '1',
-      temperature: 6.5,
-      target_temperature: 4.0,
-      tolerance_range_min: 2.0,
-      tolerance_range_max: 6.0,
-      status: 'warning',
-      recorded_by: 'user2',
-      recorded_at: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-      method: 'manual',
-      notes: 'Temperatura leggermente alta',
-      validation_status: 'flagged',
-      created_at: new Date(),
-    },
-    {
-      id: '3',
-      company_id: 'test',
-      conservation_point_id: '2',
-      temperature: -18.1,
-      target_temperature: -18.0,
-      tolerance_range_min: -20.0,
-      tolerance_range_max: -16.0,
-      status: 'compliant',
-      recorded_by: 'user1',
-      recorded_at: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
-      method: 'automatic_sensor',
-      notes: 'Sensore automatico',
-      validation_status: 'validated',
-      created_at: new Date(),
-    },
-    {
-      id: '4',
-      company_id: 'test',
-      conservation_point_id: '3',
-      temperature: 8.2,
-      target_temperature: 6.0,
-      tolerance_range_min: 4.0,
-      tolerance_range_max: 8.0,
-      status: 'warning',
-      recorded_by: 'user3',
-      recorded_at: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-      method: 'digital_thermometer',
-      notes: 'Vetrina esposta al sole',
-      validation_status: 'pending',
-      created_at: new Date(),
-    },
-    {
-      id: '5',
-      company_id: 'test',
-      conservation_point_id: '4',
-      temperature: -32.0,
-      target_temperature: -35.0,
-      tolerance_range_min: -40.0,
-      tolerance_range_max: -30.0,
-      status: 'critical',
-      recorded_by: 'user1',
-      recorded_at: new Date(Date.now() - 10 * 60 * 1000), // 10 minutes ago
-      method: 'manual',
-      notes: 'Abbattitore non raggiunge temperatura',
-      validation_status: 'flagged',
-      created_at: new Date(),
-    },
-  ]
 
   const {
     data: temperatureReadings,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['temperature-readings', conservationPointId],
+    queryKey: ['temperature-readings', user?.company_id, conservationPointId],
     queryFn: async () => {
-      console.log('🔧 Using mock data for temperature readings')
-      if (conservationPointId) {
-        return mockReadings.filter(
-          r => r.conservation_point_id === conservationPointId
-        )
+      if (!user?.company_id) {
+        console.warn('⚠️ No company_id available, cannot load temperature readings')
+        throw new Error('No company ID available')
       }
-      return mockReadings
+
+      console.log('🔧 Loading temperature readings from Supabase for company:', user.company_id)
+
+      let query = supabase
+        .from('temperature_readings')
+        .select('*')
+        .eq('company_id', user.company_id)
+        .order('recorded_at', { ascending: false })
+
+      if (conservationPointId) {
+        query = query.eq('conservation_point_id', conservationPointId)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('❌ Error loading temperature readings:', error)
+        throw error
+      }
+
+      console.log('✅ Loaded temperature readings from Supabase:', data?.length || 0)
+      return data || []
     },
-    enabled: true,
+    enabled: !!user?.company_id,
   })
 
   const createReadingMutation = useMutation({
@@ -117,22 +53,27 @@ export function useTemperatureReadings(conservationPointId?: string) {
         'id' | 'company_id' | 'recorded_at' | 'validation_status'
       >
     ) => {
-      // MOCK SAVE FOR TESTING - Remove when database works
-      console.log('🔧 Mock saving temperature reading:', data)
+      if (!user?.company_id) throw new Error('No company ID available')
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      // Create mock result
-      const mockResult = {
-        id: `mock-${Date.now()}`,
-        company_id: 'test',
-        recorded_at: new Date(),
-        validation_status: 'pending' as const,
+      const payload = {
         ...data,
+        company_id: user.company_id,
+        recorded_at: new Date().toISOString(),
+        validation_status: 'pending' as const,
       }
 
-      return mockResult
+      const { data: result, error } = await supabase
+        .from('temperature_readings')
+        .insert([payload])
+        .select()
+        .single()
+
+      if (error) {
+        console.error('❌ Error creating temperature reading:', error)
+        throw error
+      }
+
+      return result
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['temperature-readings'] })
