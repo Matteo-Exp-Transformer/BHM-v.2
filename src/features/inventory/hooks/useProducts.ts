@@ -30,64 +30,6 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
   const queryClient = useQueryClient()
 
   // Fetch products with filters
-  // TEMPORARY: Mock data until database is fixed
-  const mockProducts: Product[] = [
-    {
-      id: '1',
-      company_id: companyId || '',
-      name: 'Latte Fresco Intero',
-      category_id: 'cat1',
-      department_id: 'dept1',
-      conservation_point_id: 'cp1',
-      barcode: '1234567890123',
-      supplier_name: 'Latteria Centrale',
-      purchase_date: new Date('2025-09-15'),
-      expiry_date: new Date('2025-09-28'),
-      quantity: 10.0,
-      unit: 'litri',
-      allergens: [AllergenType.LATTE],
-      status: 'active',
-      notes: 'Prodotto fresco di alta qualità',
-      created_at: new Date(),
-      updated_at: new Date(),
-    },
-    {
-      id: '2',
-      company_id: companyId || '',
-      name: 'Parmigiano Reggiano 24 mesi',
-      category_id: 'cat1',
-      department_id: 'dept1',
-      conservation_point_id: 'cp1',
-      supplier_name: 'Caseificio Emiliano',
-      purchase_date: new Date('2025-09-10'),
-      expiry_date: new Date('2025-12-15'),
-      quantity: 2.5,
-      unit: 'kg',
-      allergens: [AllergenType.LATTE],
-      status: 'active',
-      notes: 'Stagionato 24 mesi, qualità DOP',
-      created_at: new Date(),
-      updated_at: new Date(),
-    },
-    {
-      id: '3',
-      company_id: companyId || '',
-      name: 'Latte Scaduto',
-      category_id: 'cat1',
-      department_id: 'dept1',
-      conservation_point_id: 'cp1',
-      supplier_name: 'Latteria Centrale',
-      purchase_date: new Date('2025-09-01'),
-      expiry_date: new Date('2025-09-19'),
-      quantity: 1.0,
-      unit: 'litri',
-      allergens: [AllergenType.LATTE],
-      status: 'expired',
-      notes: 'Prodotto scaduto da rimuovere',
-      created_at: new Date(),
-      updated_at: new Date(),
-    },
-  ]
 
   const transformProductRecord = (record: any): Product => {
     return {
@@ -132,8 +74,8 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
     queryKey: QUERY_KEYS.products(companyId || '', searchParams?.filters),
     queryFn: async (): Promise<Product[]> => {
       if (!companyId) {
-        console.log('🔧 No company_id, using mock data for products')
-        return mockProducts
+        console.warn('⚠️ No company_id available, cannot load products')
+        throw new Error('No company ID available')
       }
 
       console.log('🔧 Loading products from Supabase for company:', companyId)
@@ -151,10 +93,8 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Error loading products:', error)
-        // Fallback to mock data if there's an error
-        console.log('🔧 Fallback to mock data due to error')
-        return mockProducts
+        console.error('❌ Error loading products:', error)
+        throw error
       }
 
       const transformed = (data || []).map(transformProductRecord)
@@ -169,17 +109,8 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
     queryKey: QUERY_KEYS.productStats(companyId || ''),
     queryFn: async (): Promise<InventoryStats> => {
       if (!companyId || !products) {
-        console.log('🔧 Using mock stats for products - no data available')
-        return {
-          total_products: 3,
-          active_products: 2,
-          expiring_soon: 1,
-          expired: 1,
-          by_category: { Latticini: 3 },
-          by_department: { Cucina: 3 },
-          by_status: { active: 2, expired: 1, consumed: 0, waste: 0 },
-          compliance_rate: 85,
-        }
+        console.warn('⚠️ Cannot compute stats: no company_id or products')
+        throw new Error('No company ID or products available')
       }
 
       console.log('🔧 Computing product stats from loaded data')
