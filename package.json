@@ -109,5 +109,9 @@
     "typescript"
   ],
   "author": "HACCP Business Manager Team",
-  "license": "MIT"
+  "license": "MIT",
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.50.2",
+    "@rollup/rollup-linux-x64-musl": "4.50.2"
+  }
 }
