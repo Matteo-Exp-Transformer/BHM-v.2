@@ -6,6 +6,7 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/BHM-v.2/',
   plugins: [
     react(),
     ...(process.env.SENTRY_AUTH_TOKEN
@@ -33,8 +34,8 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
+        scope: '/BHM-v.2/',
+        start_url: '/BHM-v.2/',
         icons: [
           {
             src: 'pwa-192x192.png',
