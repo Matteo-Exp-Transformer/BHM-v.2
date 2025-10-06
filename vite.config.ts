@@ -38,7 +38,7 @@ export default defineConfig({
         start_url: '/BHM-v.2/',
         icons: [
           {
-            src: 'icons/icon.svg',
+            src: '/BHM-v.2/icons/icon.svg',
             sizes: 'any',
             type: 'image/svg+xml',
             purpose: 'any maskable',
