@@ -1,11 +1,8 @@
 {
-  "buildCommand": "npm install --include=optional && npm run build",
-  "installCommand": "npm install --include=optional",
-  "framework": "vite",
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
