@@ -1,20 +1,11 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
+  "buildCommand": "npm install --include=optional && npm run build",
+  "installCommand": "npm install --include=optional",
+  "framework": "vite",
   "routes": [
     {
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "regions": ["iad1"],
-  "framework": "vite"
+  ]
 }
