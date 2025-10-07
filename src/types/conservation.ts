@@ -340,6 +340,34 @@ export const TEMPERATURE_RANGES = {
   blast: { min: -40, max: 3, optimal: -18 },
 } as const
 
+// Conservation point type colors
+export const CONSERVATION_TYPE_COLORS = {
+  fridge: {
+    bg: 'bg-blue-50',
+    text: 'text-blue-900',
+    border: 'border-blue-300',
+    badge: 'bg-blue-100 text-blue-800',
+  },
+  freezer: {
+    bg: 'bg-cyan-50',
+    text: 'text-cyan-900',
+    border: 'border-cyan-300',
+    badge: 'bg-cyan-100 text-cyan-800',
+  },
+  blast: {
+    bg: 'bg-purple-50',
+    text: 'text-purple-900',
+    border: 'border-purple-300',
+    badge: 'bg-purple-100 text-purple-800',
+  },
+  ambient: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-900',
+    border: 'border-amber-300',
+    badge: 'bg-amber-100 text-amber-800',
+  },
+} as const
+
 // Maintenance colors mapping
 export const MAINTENANCE_COLORS = {
   scheduled: {

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   ConservationPoint,
   CONSERVATION_COLORS,
+  CONSERVATION_TYPE_COLORS,
   TEMPERATURE_RANGES,
 } from '@/types/conservation'
 import {
@@ -26,7 +27,8 @@ export function ConservationPointCard({
   onDelete,
 }: ConservationPointCardProps) {
   const [showDetails, setShowDetails] = useState(false)
-  const colors = CONSERVATION_COLORS[point.status] || CONSERVATION_COLORS.normal
+  const typeColors = CONSERVATION_TYPE_COLORS[point.type] || CONSERVATION_TYPE_COLORS.ambient
+  const statusColors = CONSERVATION_COLORS[point.status] || CONSERVATION_COLORS.normal
   const tempRange = TEMPERATURE_RANGES[point.type] || TEMPERATURE_RANGES.ambient
 
   const getTypeIcon = () => {
@@ -83,19 +85,20 @@ export function ConservationPointCard({
 
   return (
     <div
-      className={`rounded-lg border-2 ${colors.border} ${colors.bg} p-4 transition-all duration-200 hover:shadow-md`}
+      className={`rounded-lg border-2 ${typeColors.border} ${typeColors.bg} p-4 transition-all duration-200 hover:shadow-md`}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
           <div className="text-2xl">{getTypeIcon()}</div>
           <div>
-            <h3 className={`font-semibold ${colors.text}`}>{point.name}</h3>
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <MapPin className="w-4 h-4" />
-              <span>{point.department?.name || 'Reparto non assegnato'}</span>
-              <span className="mx-1">•</span>
-              <span>{getTypeName()}</span>
+            <h3 className={`font-semibold ${typeColors.text}`}>{point.name}</h3>
+            <div className="flex items-center space-x-2 text-sm">
+              <MapPin className="w-4 h-4 text-gray-500" />
+              <span className="text-gray-600">{point.department?.name || 'Reparto non assegnato'}</span>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${typeColors.badge}`}>
+                {getTypeName()}
+              </span>
             </div>
           </div>
         </div>
@@ -120,10 +123,10 @@ export function ConservationPointCard({
       {/* Temperature Info */}
       <div className="grid grid-cols-2 gap-4 mb-3">
         <div className="flex items-center space-x-2">
-          <Thermometer className={`w-4 h-4 ${colors.text}`} />
+          <Thermometer className={`w-4 h-4 ${typeColors.text}`} />
           <div>
             <div className="text-sm text-gray-600">Temperatura target</div>
-            <div className={`font-semibold ${colors.text}`}>
+            <div className={`font-semibold ${typeColors.text}`}>
               {point.setpoint_temp}°C
             </div>
           </div>
