@@ -99,7 +99,7 @@ export function AddProductModal({
         purchase_date: undefined,
         expiry_date: undefined,
         quantity: undefined,
-        unit: 'pz',
+        unit: '',
         allergens: [],
         label_photo_url: '',
         notes: '',

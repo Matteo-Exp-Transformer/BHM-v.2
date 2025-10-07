@@ -77,8 +77,8 @@ export const AddStaffModal = ({
       } else {
         setFormData({
           name: '',
-          role: 'dipendente',
-          category: 'Altro',
+          role: '' as any,
+          category: '',
           email: '',
           phone: '',
           hire_date: '',
@@ -88,7 +88,7 @@ export const AddStaffModal = ({
         })
         setHasHaccpCert(false)
         setHaccpCert({
-          level: 'base',
+          level: '' as any,
           expiry_date: '',
           issuing_authority: '',
           certificate_number: '',

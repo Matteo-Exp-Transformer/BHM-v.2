@@ -28,24 +28,11 @@ export interface TemperatureReading {
   company_id: string
   conservation_point_id: string
   temperature: number
-  target_temperature?: number
-  tolerance_range_min?: number
-  tolerance_range_max?: number
-  status: 'compliant' | 'warning' | 'critical'
-  recorded_by?: string
   recorded_at: Date
-  method: 'manual' | 'digital_thermometer' | 'automatic_sensor'
-  notes?: string
-  photo_evidence?: string
   created_at: Date
-  validation_status?: 'validated' | 'flagged' | 'pending'
 
-  // Relazioni
+  // Optional computed/join fields
   conservation_point?: ConservationPoint
-  recorded_by_user?: {
-    id: string
-    name: string
-  }
 }
 
 export interface Product {
@@ -432,9 +419,7 @@ export interface UpdateConservationPointRequest
 export interface CreateTemperatureReadingRequest {
   conservation_point_id: string
   temperature: number
-  method: 'manual' | 'digital_thermometer' | 'automatic_sensor'
-  notes?: string
-  photo_evidence?: string
+  recorded_at?: Date // Optional, defaults to now() in database
 }
 
 export interface CreateMaintenanceTaskRequest {
@@ -472,9 +457,8 @@ export interface TemperatureReadingsFilter {
   conservation_point_id?: string
   date_from?: Date
   date_to?: Date
-  status?: Array<'compliant' | 'warning' | 'critical'>
-  method?: TemperatureReading['method']
-  recorded_by?: string
+  // TODO: Remove status and method filters as these fields don't exist in DB
+  // TODO: Add computed status based on conservation point setpoint_temp
 }
 
 export interface MaintenanceTasksFilter {
@@ -498,10 +482,11 @@ export interface ConservationStats {
 
 export interface TemperatureStats {
   total_readings: number
-  compliance_rate: number
-  readings_by_status: Record<'compliant' | 'warning' | 'critical', number>
   average_temperature: number
   temperature_trend: 'rising' | 'falling' | 'stable'
+  recent_readings: TemperatureReading[]
+  // TODO: Add computed compliance_rate based on conservation point setpoint_temp
+  // TODO: Add computed readings_by_status based on conservation point setpoint_temp
 }
 
 export interface MaintenanceStats {
@@ -551,7 +536,7 @@ export interface TemperatureChart {
     timestamp: Date
     temperature: number
     setpoint: number
-    status: TemperatureReading['status']
+    // TODO: Add computed status based on conservation point setpoint_temp
   }[]
   range: {
     min: number

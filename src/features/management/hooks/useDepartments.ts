@@ -39,7 +39,11 @@ export const useDepartments = () => {
   } = useQuery({
     queryKey: QUERY_KEYS.departments(companyId || ''),
     queryFn: async (): Promise<Department[]> => {
-      if (!companyId) throw new Error('Company ID not found')
+      // ✅ Check BEFORE query execution
+      if (!companyId) {
+        console.warn('⚠️ No company_id available, returning empty departments array')
+        return []
+      }
 
       const { data, error } = await supabase
         .from('departments')
@@ -47,10 +51,15 @@ export const useDepartments = () => {
         .eq('company_id', companyId)
         .order('name', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('❌ Error loading departments:', error)
+        throw error
+      }
+      
+      console.log('✅ Loaded departments:', data?.length || 0)
       return data || []
     },
-    enabled: !!companyId,
+    enabled: !!companyId, // ✅ Only run query if company_id exists
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 

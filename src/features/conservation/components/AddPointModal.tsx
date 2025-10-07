@@ -172,6 +172,7 @@ function MaintenanceTaskForm({
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
+            <option value="">Seleziona frequenza...</option>
             <option value="giornaliera">Giornaliera</option>
             <option value="settimanale">Settimanale</option>
             <option value="mensile">Mensile</option>
@@ -340,26 +341,27 @@ export function AddPointModal({
   >([
     {
       manutenzione: 'rilevamento_temperatura',
-      frequenza: 'giornaliera',
-      assegnatoARuolo: 'dipendente',
-      assegnatoACategoria: 'Cuochi',
+      frequenza: '' as MaintenanceFrequency,
+      assegnatoARuolo: '' as StaffRole,
+      assegnatoACategoria: undefined,
     },
     {
       manutenzione: 'sanificazione',
-      frequenza: 'settimanale',
-      assegnatoARuolo: 'dipendente',
-      assegnatoACategoria: 'Addetto Pulizie',
+      frequenza: '' as MaintenanceFrequency,
+      assegnatoARuolo: '' as StaffRole,
+      assegnatoACategoria: undefined,
     },
     {
       manutenzione: 'sbrinamento',
-      frequenza: 'mensile',
-      assegnatoARuolo: 'responsabile',
+      frequenza: '' as MaintenanceFrequency,
+      assegnatoARuolo: '' as StaffRole,
+      assegnatoACategoria: undefined,
     },
     {
       manutenzione: 'controllo_scadenze',
-      frequenza: 'giornaliera',
-      assegnatoARuolo: 'dipendente',
-      assegnatoACategoria: 'Magazziniere',
+      frequenza: '' as MaintenanceFrequency,
+      assegnatoARuolo: '' as StaffRole,
+      assegnatoACategoria: undefined,
     },
   ])
 
@@ -424,26 +426,27 @@ export function AddPointModal({
       setMaintenanceTasks([
         {
           manutenzione: 'rilevamento_temperatura',
-          frequenza: 'giornaliera',
-          assegnatoARuolo: 'dipendente',
-          assegnatoACategoria: 'Cuochi',
+          frequenza: '' as MaintenanceFrequency,
+          assegnatoARuolo: '' as StaffRole,
+          assegnatoACategoria: undefined,
         },
         {
           manutenzione: 'sanificazione',
-          frequenza: 'settimanale',
-          assegnatoARuolo: 'dipendente',
-          assegnatoACategoria: 'Addetto Pulizie',
+          frequenza: '' as MaintenanceFrequency,
+          assegnatoARuolo: '' as StaffRole,
+          assegnatoACategoria: undefined,
         },
         {
           manutenzione: 'sbrinamento',
-          frequenza: 'mensile',
-          assegnatoARuolo: 'responsabile',
+          frequenza: '' as MaintenanceFrequency,
+          assegnatoARuolo: '' as StaffRole,
+          assegnatoACategoria: undefined,
         },
         {
           manutenzione: 'controllo_scadenze',
-          frequenza: 'giornaliera',
-          assegnatoARuolo: 'dipendente',
-          assegnatoACategoria: 'Magazziniere',
+          frequenza: '' as MaintenanceFrequency,
+          assegnatoARuolo: '' as StaffRole,
+          assegnatoACategoria: undefined,
         },
       ])
     }
@@ -572,23 +575,40 @@ export function AddPointModal({
 
             <div>
               <Label>Reparto *</Label>
+              
+              {/* Warning if no departments available */}
+              {departmentOptions.length === 0 && (
+                <p className="mb-2 text-sm text-amber-600 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  Nessun reparto disponibile. Crea prima un reparto dalla sezione Gestione.
+                </p>
+              )}
+              
               <Select
-                value={formData.departmentId || undefined}
+                value={formData.departmentId || ''}
                 onValueChange={value =>
                   setFormData(prev => ({ ...prev, departmentId: value }))
                 }
+                disabled={departmentOptions.length === 0}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleziona un reparto" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departmentOptions.map(department => (
-                    <SelectOption key={department.id} value={department.id}>
-                      {department.name}
-                    </SelectOption>
-                  ))}
+                  {departmentOptions.length === 0 ? (
+                    <div className="p-2 text-sm text-gray-500 text-center">
+                      Nessun reparto disponibile
+                    </div>
+                  ) : (
+                    departmentOptions.map(department => (
+                      <SelectOption key={department.id} value={department.id}>
+                        {department.name}
+                      </SelectOption>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
+              
               {validationErrors.departmentId && (
                 <p className="mt-1 text-sm text-red-600">
                   {validationErrors.departmentId}

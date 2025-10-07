@@ -150,12 +150,13 @@ export function useConservation(options: UseConservationOptions = {}) {
           temperatureFilter.conservation_point_id
         )
       }
-      if (temperatureFilter.status && temperatureFilter.status.length > 0) {
-        query = query.in('status', temperatureFilter.status)
-      }
-      if (temperatureFilter.method) {
-        query = query.eq('method', temperatureFilter.method)
-      }
+      // TODO: Status and method filters disabled - fields don't exist in DB
+      // if (temperatureFilter.status && temperatureFilter.status.length > 0) {
+      //   query = query.in('status', temperatureFilter.status)
+      // }
+      // if (temperatureFilter.method) {
+      //   query = query.eq('method', temperatureFilter.method)
+      // }
       if (temperatureFilter.date_from) {
         query = query.gte(
           'recorded_at',
@@ -168,9 +169,10 @@ export function useConservation(options: UseConservationOptions = {}) {
           temperatureFilter.date_to.toISOString()
         )
       }
-      if (temperatureFilter.recorded_by) {
-        query = query.eq('recorded_by', temperatureFilter.recorded_by)
-      }
+      // TODO: recorded_by filter disabled - field doesn't exist in DB
+      // if (temperatureFilter.recorded_by) {
+      //   query = query.eq('recorded_by', temperatureFilter.recorded_by)
+      // }
 
       const { data, error } = await query
       if (error) throw error
@@ -273,11 +275,8 @@ export function useConservation(options: UseConservationOptions = {}) {
     )
 
     const totalReadings = temperatureReadings.length
-    const compliantReadings = temperatureReadings.filter(
-      r => r.status === 'compliant'
-    ).length
-    const temperature_compliance_rate =
-      totalReadings > 0 ? (compliantReadings / totalReadings) * 100 : 0
+    // TODO: Compute compliance based on conservation point setpoint_temp when needed
+    const temperature_compliance_rate = 0 // Disabled until status calculation is implemented
 
     const totalTasks = maintenanceTasks.length
     const completedTasks = maintenanceTasks.filter(
@@ -288,7 +287,7 @@ export function useConservation(options: UseConservationOptions = {}) {
 
     const alerts_count =
       conservationPoints.filter(p => p.status !== 'normal').length +
-      temperatureReadings.filter(r => r.status === 'critical').length +
+      // TODO: Add computed temperature alerts based on conservation point setpoint_temp
       maintenanceTasks.filter(task => {
         if (!task.next_due) return false
         const nextDueDate =

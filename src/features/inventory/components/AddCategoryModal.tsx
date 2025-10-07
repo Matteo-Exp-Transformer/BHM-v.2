@@ -73,7 +73,7 @@ export function AddCategoryModal({
         temperature_requirements: {
           min_temp: 0,
           max_temp: 25,
-          storage_type: ConservationPointType.AMBIENT,
+          storage_type: '' as any,
         },
         default_expiry_days: undefined,
         allergen_info: [],

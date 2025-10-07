@@ -88,7 +88,6 @@ function App() {
     <>
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
           <Route path="/sign-in" element={<LoginPage />} />
           <Route path="/sign-up" element={<RegisterPage />} />
           <Route
