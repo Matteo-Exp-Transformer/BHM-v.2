@@ -23,9 +23,18 @@ export function useTemperatureReadings(conservationPointId?: string) {
 
       console.log('🔧 Loading temperature readings from Supabase for company:', user.company_id)
 
+      // ✅ JOIN with conservation_points to enable computed status
       let query = supabase
         .from('temperature_readings')
-        .select('*')
+        .select(`
+          *,
+          conservation_point:conservation_points(
+            id,
+            name,
+            type,
+            setpoint_temp
+          )
+        `)
         .eq('company_id', user.company_id)
         .order('recorded_at', { ascending: false })
 
@@ -137,9 +146,32 @@ export function useTemperatureReadings(conservationPointId?: string) {
     total: temperatureReadings?.length || 0,
     recent: temperatureReadings?.slice(0, 10) || [],
     averageTemperature: temperatureReadings?.length
-      ? temperatureReadings.reduce((sum, r) => sum + r.temperature, 0) / temperatureReadings.length
+      ? temperatureReadings.reduce((sum: number, r: any) => sum + r.temperature, 0) / temperatureReadings.length
       : 0,
-    // TODO: Add computed compliance stats based on conservation point setpoint_temp
+    
+    // ✅ COMPUTED STATS based on conservation point setpoint
+    compliant: temperatureReadings?.filter((r: any) => {
+      if (!r.conservation_point) return false
+      const tolerance = r.conservation_point.type === 'blast' ? 5 : 
+                       r.conservation_point.type === 'ambient' ? 3 : 2
+      return Math.abs(r.temperature - r.conservation_point.setpoint_temp) <= tolerance
+    }).length || 0,
+    
+    warning: temperatureReadings?.filter((r: any) => {
+      if (!r.conservation_point) return false
+      const tolerance = r.conservation_point.type === 'blast' ? 5 : 
+                       r.conservation_point.type === 'ambient' ? 3 : 2
+      const diff = Math.abs(r.temperature - r.conservation_point.setpoint_temp)
+      return diff > tolerance && diff <= tolerance + 2
+    }).length || 0,
+    
+    critical: temperatureReadings?.filter((r: any) => {
+      if (!r.conservation_point) return false
+      const tolerance = r.conservation_point.type === 'blast' ? 5 : 
+                       r.conservation_point.type === 'ambient' ? 3 : 2
+      return Math.abs(r.temperature - r.conservation_point.setpoint_temp) > tolerance + 2
+    }).length || 0,
+    
     // TODO: Add method and validation status tracking when DB schema is updated
   }
 

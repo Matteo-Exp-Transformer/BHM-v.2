@@ -91,8 +91,10 @@ export function OfflineConservationDemo() {
     const reading: CreateTemperatureReadingRequest = {
       conservation_point_id: selectedPoint.id,
       temperature: selectedPoint.setpoint_temp + (Math.random() - 0.5) * 4,
-      method: 'manual',
-      notes: 'Lettura demo offline',
+      recorded_at: new Date(),
+      // TODO: Add these fields when DB schema is updated:
+      // method: 'manual',
+      // notes: 'Lettura demo offline',
     }
 
     try {
