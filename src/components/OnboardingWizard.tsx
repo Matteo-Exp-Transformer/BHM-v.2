@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { X } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -64,12 +65,47 @@ const OnboardingWizard = () => {
   }, [])
 
   const handleCompleteOnboarding = useCallback(async () => {
-    await completeOnboardingHelper(companyId)
+    if (companyId) {
+      await completeOnboardingHelper(companyId)
+    }
   }, [companyId])
 
   const handleResetOnboarding = useCallback(() => {
     resetOnboarding()
   }, [])
+
+  const handleSkipOnboarding = useCallback(() => {
+    const confirmed = window.confirm(
+      '⚠️ ATTENZIONE!\n\n' +
+        'Sei sicuro di voler saltare la configurazione iniziale?\n\n' +
+        'Potrai sempre completarla successivamente dalle impostazioni.\n\n' +
+        'Vuoi continuare?'
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      // Marca onboarding come completato nel localStorage
+      localStorage.setItem('onboarding-completed', 'true')
+      localStorage.setItem('onboarding-completed-at', new Date().toISOString())
+
+      // Pulisci localStorage onboarding data
+      localStorage.removeItem('onboarding-data')
+
+      toast.success('Configurazione saltata. Puoi completarla successivamente dalle impostazioni.', {
+        position: 'top-right',
+        autoClose: 3000,
+      })
+
+      // Reindirizza alla dashboard
+      navigate('/')
+    } catch (error) {
+      console.error('Error skipping onboarding:', error)
+      toast.error('Errore durante il salto della configurazione')
+    }
+  }, [navigate])
 
   // Salva automaticamente in localStorage con debounce
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
@@ -455,12 +491,28 @@ const OnboardingWizard = () => {
       <div className="max-w-4xl mx-auto py-6 px-4 sm:py-8">
         {/* Header */}
         <div className="text-center mb-6 space-y-3 sm:mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-            Configurazione Iniziale HACCP
-          </h1>
-          <p className="text-sm text-gray-600 sm:text-base">
-            Configura la tua azienda per iniziare a utilizzare il sistema HACCP
-          </p>
+          <div className="flex justify-between items-start">
+            <div className="flex-1"></div>
+            <div className="flex-1 text-center">
+              <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+                Configurazione Iniziale HACCP
+              </h1>
+              <p className="text-sm text-gray-600 sm:text-base">
+                Configura la tua azienda per iniziare a utilizzare il sistema HACCP
+              </p>
+            </div>
+            <div className="flex-1 flex justify-end">
+              <button
+                type="button"
+                onClick={handleSkipOnboarding}
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-800 transition-colors"
+                title="Salta configurazione"
+              >
+                <X size={16} />
+                <span className="hidden sm:inline">Salta</span>
+              </button>
+            </div>
+          </div>
 
           {/* Control Buttons for Development and Testing */}
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">

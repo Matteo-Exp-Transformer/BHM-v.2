@@ -46,6 +46,14 @@ const queryClient = new QueryClient({
   },
 })
 
+// Esponi queryClient globalmente per resetApp() e altri utilities
+declare global {
+  interface Window {
+    queryClient: QueryClient
+  }
+}
+window.queryClient = queryClient
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ClerkProvider
