@@ -7,6 +7,7 @@ import { useConservationPoints } from '@/features/conservation/hooks/useConserva
 import { useTemperatureReadings } from '@/features/conservation/hooks/useTemperatureReadings'
 import { useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
 import { useShoppingLists } from '@/features/inventory/hooks/useShoppingLists'
+import { getReadingStatus, calculateComplianceRate } from '@/utils/temperatureStatus'
 
 export interface DashboardKPIs {
   overall_compliance_score: {
@@ -73,14 +74,8 @@ export const useDashboardData = () => {
     queryFn: async () => {
       // Dashboard works with mock data when companyId is not available
 
-      const temperatureComplianceRate =
-        temperatureReadings.length > 0
-          ? (temperatureReadings.filter(
-              reading => reading.status === 'compliant'
-            ).length /
-              temperatureReadings.length) *
-            100
-          : 100
+      // ✅ FIXED: Calculate compliance dynamically
+      const temperatureComplianceRate = calculateComplianceRate(temperatureReadings)
 
       const completedTasks = maintenanceTasks.filter(
         task => task.status === 'completed'
@@ -146,10 +141,11 @@ export const useDashboardData = () => {
       ).length
 
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      // ✅ FIXED: Calculate violations dynamically
       const recentViolations = temperatureReadings.filter(
-        reading =>
+        (reading: any) =>
           new Date(reading.recorded_at) >= sevenDaysAgo &&
-          reading.status !== 'compliant'
+          getReadingStatus(reading) !== 'compliant'
       ).length
 
       return {
@@ -184,7 +180,7 @@ export const useDashboardData = () => {
         temperature_compliance: {
           total_readings: temperatureReadings.length,
           compliant_readings: temperatureReadings.filter(
-            reading => reading.status === 'compliant'
+            (reading: any) => getReadingStatus(reading) === 'compliant'
           ).length,
           compliance_rate: Math.round(temperatureComplianceRate),
           violations_trend: [

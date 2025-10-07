@@ -2,8 +2,6 @@ import { TemperatureReading } from '@/types/conservation'
 import {
   Thermometer,
   Clock,
-  User,
-  Camera,
   AlertTriangle,
   CheckCircle,
   Edit,
@@ -17,14 +15,44 @@ interface TemperatureReadingCardProps {
   showActions?: boolean
 }
 
+// ✅ HELPER: Calculate dynamic status based on temperature and setpoint
+const calculateTemperatureStatus = (
+  temperature: number,
+  setpoint: number,
+  type: 'ambient' | 'fridge' | 'freezer' | 'blast'
+): 'compliant' | 'warning' | 'critical' => {
+  const tolerance = type === 'blast' ? 5 : type === 'ambient' ? 3 : 2
+  const diff = Math.abs(temperature - setpoint)
+  
+  if (diff <= tolerance) return 'compliant'
+  if (diff <= tolerance + 2) return 'warning'
+  return 'critical'
+}
+
 export function TemperatureReadingCard({
   reading,
   onEdit,
   onDelete,
   showActions = true,
 }: TemperatureReadingCardProps) {
+  // ✅ COMPUTED: Calculate status dynamically
+  const status = reading.conservation_point 
+    ? calculateTemperatureStatus(
+        reading.temperature,
+        reading.conservation_point.setpoint_temp,
+        reading.conservation_point.type
+      )
+    : 'compliant'
+
+  // ✅ COMPUTED: Calculate tolerance range
+  const tolerance = reading.conservation_point?.type === 'blast' ? 5 :
+                   reading.conservation_point?.type === 'ambient' ? 3 : 2
+
+  const toleranceMin = (reading.conservation_point?.setpoint_temp || 0) - tolerance
+  const toleranceMax = (reading.conservation_point?.setpoint_temp || 0) + tolerance
+
   const getStatusInfo = () => {
-    switch (reading.status) {
+    switch (status) {
       case 'compliant':
         return {
           icon: <CheckCircle className="w-4 h-4 text-green-600" />,
@@ -52,198 +80,165 @@ export function TemperatureReadingCard({
     }
   }
 
-  const getMethodInfo = () => {
-    switch (reading.method) {
-      case 'manual':
-        return { icon: '✍️', text: 'Manuale' }
-      case 'digital_thermometer':
-        return { icon: '🌡️', text: 'Termometro Digitale' }
-      case 'automatic_sensor':
-        return { icon: '📡', text: 'Sensore Automatico' }
-      default:
-        return { icon: '❓', text: 'Non specificato' }
-    }
-  }
-
-  const getValidationInfo = () => {
-    if (!reading.validation_status) {
-      return {
-        icon: <Clock className="w-3 h-3 text-gray-400" />,
-        text: 'Non validata',
-        color: 'text-gray-400',
-      }
-    }
-    switch (reading.validation_status) {
-      case 'validated':
-        return {
-          icon: <CheckCircle className="w-3 h-3 text-green-600" />,
-          text: 'Validata',
-          color: 'text-green-600',
-        }
-      case 'flagged':
-        return {
-          icon: <AlertTriangle className="w-3 h-3 text-red-600" />,
-          text: 'Segnalata',
-          color: 'text-red-600',
-        }
-      case 'pending':
-        return {
-          icon: <Clock className="w-3 h-3 text-yellow-600" />,
-          text: 'In attesa',
-          color: 'text-yellow-600',
-        }
-    }
-  }
-
-  const formatDateTime = (date: Date) => {
-    return new Date(date).toLocaleDateString('it-IT', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-
   const statusInfo = getStatusInfo()
-  const methodInfo = getMethodInfo()
-  const validationInfo = getValidationInfo()
-
-  const isOutOfRange =
-    reading.temperature < (reading.tolerance_range_min ?? 0) ||
-    reading.temperature > (reading.tolerance_range_max ?? 0)
 
   return (
-    <div
-      className={`rounded-lg border-2 p-4 transition-all duration-200 hover:shadow-md ${statusInfo.bg} ${statusInfo.border}`}
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+      {/* Header with Status Badge */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-100">
         <div className="flex items-center space-x-3">
-          <div className={`p-2 rounded-full ${statusInfo.bg}`}>
-            <Thermometer
-              className={`w-5 h-5 ${reading.status === 'compliant' ? 'text-green-600' : reading.status === 'warning' ? 'text-yellow-600' : 'text-red-600'}`}
-            />
-          </div>
+          <Thermometer className="w-5 h-5 text-blue-600" />
           <div>
-            <div className="flex items-center space-x-2">
-              <span className={`text-2xl font-bold ${statusInfo.color}`}>
-                {reading.temperature}°C
-              </span>
-              {statusInfo.icon}
-            </div>
-            <div className="text-sm text-gray-600">
-              Target: {reading.target_temperature ?? 0}°C
-            </div>
+            <p className="font-medium text-gray-900">
+              {reading.temperature.toFixed(1)}°C
+            </p>
+            {reading.conservation_point && (
+              <p className="text-sm text-gray-500">
+                {reading.conservation_point.name}
+              </p>
+            )}
           </div>
         </div>
 
-        {showActions && onEdit && onDelete && (
-          <div className="flex items-center space-x-1">
-            <button
-              onClick={() => onEdit(reading)}
-              className="p-1 text-gray-600 hover:text-blue-600 transition-colors"
-            >
-              <Edit className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => onDelete(reading.id)}
-              className="p-1 text-gray-600 hover:text-red-600 transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+        {/* Status Badge */}
+        <div
+          className={`flex items-center space-x-1 px-3 py-1 rounded-full border ${statusInfo.bg} ${statusInfo.border}`}
+        >
+          {statusInfo.icon}
+          <span className={`text-sm font-medium ${statusInfo.color}`}>
+            {statusInfo.text}
+          </span>
+        </div>
+      </div>
+
+      {/* Temperature Details */}
+      <div className="p-4 space-y-3">
+        {/* Setpoint & Tolerance Range */}
+        {reading.conservation_point && (
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-gray-600">Temperatura target:</span>
+              <span className="ml-2 font-medium text-gray-900">
+                {reading.conservation_point.setpoint_temp}°C
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-600">Range tolleranza:</span>
+              <span className="ml-2 font-medium text-gray-900">
+                {toleranceMin.toFixed(1)}°C - {toleranceMax.toFixed(1)}°C
+              </span>
+            </div>
           </div>
         )}
-      </div>
 
-      {/* Temperature Analysis */}
-      <div className="grid grid-cols-2 gap-4 mb-3">
-        <div>
-          <div className="text-xs text-gray-600">Range tolleranza</div>
-          <div className="text-sm font-medium">
-            {reading.tolerance_range_min}°C - {reading.tolerance_range_max}°C
-          </div>
-        </div>
-        <div>
-          <div className="text-xs text-gray-600">Scostamento</div>
-          <div
-            className={`text-sm font-medium ${isOutOfRange ? 'text-red-600' : 'text-green-600'}`}
-          >
-            {reading.temperature > (reading.target_temperature ?? 0) ? '+' : ''}
-            {(reading.temperature - (reading.target_temperature ?? 0)).toFixed(
-              1
-            )}
-            °C
-          </div>
-        </div>
-      </div>
-
-      {/* Recording Details */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm">
+        {/* Temperature Difference Indicator */}
+        {reading.conservation_point && (
           <div className="flex items-center space-x-2">
-            <Clock className="w-4 h-4 text-gray-600" />
-            <span className="text-gray-600">
-              {formatDateTime(reading.recorded_at)}
-            </span>
-          </div>
-          <div className="flex items-center space-x-1">
-            {validationInfo.icon}
-            <span className={`text-xs ${validationInfo.color}`}>
-              {validationInfo.text}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center space-x-2">
-            <span className="text-lg">{methodInfo.icon}</span>
-            <span className="text-gray-600">{methodInfo.text}</span>
-          </div>
-          {reading.photo_evidence && (
-            <div className="flex items-center space-x-1">
-              <Camera className="w-4 h-4 text-blue-600" />
-              <a
-                href={reading.photo_evidence}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:text-blue-800"
-              >
-                Foto
-              </a>
+            <div className="flex-1 bg-gray-200 rounded-full h-2">
+              <div
+                className={`h-2 rounded-full transition-all ${
+                  status === 'compliant'
+                    ? 'bg-green-500'
+                    : status === 'warning'
+                      ? 'bg-yellow-500'
+                      : 'bg-red-500'
+                }`}
+                style={{
+                  width: `${Math.min(
+                    100,
+                    Math.max(
+                      0,
+                      100 -
+                        (Math.abs(
+                          reading.temperature -
+                            reading.conservation_point.setpoint_temp
+                        ) /
+                          tolerance) *
+                          100
+                    )
+                  )}%`,
+                }}
+              />
             </div>
-          )}
-        </div>
+            <span className="text-xs text-gray-600 whitespace-nowrap">
+              {reading.temperature > reading.conservation_point.setpoint_temp
+                ? '+'
+                : ''}
+              {(
+                reading.temperature - reading.conservation_point.setpoint_temp
+              ).toFixed(1)}
+              °C
+            </span>
+          </div>
+        )}
 
-        <div className="flex items-center space-x-2 text-sm">
-          <User className="w-4 h-4 text-gray-600" />
-          <span className="text-gray-600">
-            Operatore: {reading.recorded_by}
+        {/* Timestamp */}
+        <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <Clock className="w-4 h-4" />
+          <span>
+            {new Date(reading.recorded_at).toLocaleString('it-IT', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
           </span>
         </div>
 
-        {reading.notes && (
-          <div className="mt-2 p-2 bg-white bg-opacity-50 rounded text-sm">
-            <strong>Note:</strong> {reading.notes}
-          </div>
-        )}
+        {/* Status Message */}
+        <div className={`p-3 rounded-lg ${statusInfo.bg} ${statusInfo.border} border`}>
+          <p className={`text-sm ${statusInfo.color}`}>
+            {status === 'compliant' && (
+              <>
+                ✓ La temperatura è nel range di sicurezza. Tutto regolare.
+              </>
+            )}
+            {status === 'warning' && (
+              <>
+                ⚠ La temperatura si sta avvicinando al limite. Monitorare con attenzione.
+              </>
+            )}
+            {status === 'critical' && (
+              <>
+                ⚠ ATTENZIONE: La temperatura è fuori dal range di sicurezza. Intervento richiesto!
+              </>
+            )}
+          </p>
+        </div>
       </div>
 
-      {/* Status Alert */}
-      {reading.status !== 'compliant' && (
-        <div
-          className={`mt-3 p-2 rounded border ${statusInfo.bg} ${statusInfo.border}`}
-        >
-          <div className="flex items-center space-x-2">
-            {statusInfo.icon}
-            <span className={`text-sm font-medium ${statusInfo.color}`}>
-              {reading.status === 'warning'
-                ? 'Attenzione: Temperatura fuori dal range ottimale'
-                : 'Critico: Intervento richiesto immediatamente'}
-            </span>
-          </div>
+      {/* Actions */}
+      {showActions && (onEdit || onDelete) && (
+        <div className="flex items-center justify-end space-x-2 p-4 border-t border-gray-100 bg-gray-50">
+          {onEdit && (
+            <button
+              onClick={() => onEdit(reading)}
+              className="flex items-center space-x-1 px-3 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              <Edit className="w-4 h-4" />
+              <span>Modifica</span>
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={() => onDelete(reading.id)}
+              className="flex items-center space-x-1 px-3 py-1.5 text-sm text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Elimina</span>
+            </button>
+          )}
         </div>
       )}
+
+      {/* TODO: When DB schema is updated, add these features back:
+        - Method indicator (manual, digital_thermometer, automatic_sensor)
+        - Notes display
+        - Photo evidence display
+        - Recorded by (user who took the reading)
+        - Validation status (validated, flagged, pending)
+      */}
     </div>
   )
 }

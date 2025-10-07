@@ -17,10 +17,7 @@ interface AddTemperatureModalProps {
   isOpen: boolean
   onClose: () => void
   onSave: (
-    data: Omit<
-      TemperatureReading,
-      'id' | 'company_id' | 'recorded_at' | 'validation_status'
-    >
+    data: Omit<TemperatureReading, 'id' | 'company_id' | 'created_at'>
   ) => void
   conservationPoint: ConservationPoint
   isLoading?: boolean
@@ -125,18 +122,22 @@ export function AddTemperatureModal({
       return
     }
 
+    // ✅ FIXED: Only send fields that exist in temperature_readings table
+    // Schema has only: id, company_id, conservation_point_id, temperature, recorded_at, created_at
+    // company_id is injected by the hook, recorded_at defaults to now() in DB
     onSave({
       conservation_point_id: conservationPoint.id,
       temperature: formData.temperature,
-      target_temperature: conservationPoint.setpoint_temp,
-      tolerance_range_min: toleranceRange.min,
-      tolerance_range_max: toleranceRange.max,
-      status: predictedStatus,
-      recorded_by: user.id,
-      method: formData.method,
-      notes: formData.notes,
-      photo_evidence: formData.photo_evidence,
-      created_at: new Date(),
+      recorded_at: new Date(),
+      // TODO: When DB schema is updated, add these fields:
+      // - method: formData.method
+      // - notes: formData.notes
+      // - photo_evidence: formData.photo_evidence
+      // - status: predictedStatus
+      // - target_temperature: conservationPoint.setpoint_temp
+      // - tolerance_range_min: toleranceRange.min
+      // - tolerance_range_max: toleranceRange.max
+      // - recorded_by: user.id
     })
   }
 

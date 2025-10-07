@@ -16,6 +16,7 @@ import { TemperatureTrend } from './components/TemperatureTrend'
 import { TaskSummary } from './components/TaskSummary'
 import { useTemperatureReadings } from '@/features/conservation/hooks/useTemperatureReadings'
 import { useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
+import { getReadingStatus } from '@/utils/temperatureStatus'
 
 export const DashboardPage: React.FC = () => {
   const { isLoading: authLoading } = useAuth()
@@ -335,11 +336,11 @@ export const DashboardPage: React.FC = () => {
 
       {/* Temperature Trend - Full Width */}
       <TemperatureTrend
-        data={temperatureReadings.slice(0, 50).map(reading => ({
+        data={temperatureReadings.slice(0, 50).map((reading: any) => ({
           date: reading.recorded_at.toISOString(),
           temperature: reading.temperature,
-          status: reading.status as 'compliant' | 'warning' | 'critical',
-          point_name: `Point ${reading.conservation_point_id}`,
+          status: getReadingStatus(reading),
+          point_name: reading.conservation_point?.name || `Point ${reading.conservation_point_id}`,
         }))}
         title="Temperature Trends - Last 7 Days"
         className="w-full"

@@ -576,7 +576,7 @@ export function useConservation(options: UseConservationOptions = {}) {
     temperature: number,
     min: number,
     max: number
-  ): TemperatureReading['status'] => {
+  ): 'compliant' | 'warning' | 'critical' => {
     if (temperature < min) return 'critical'
     if (temperature > max) return 'critical'
     if (temperature === min || temperature === max) return 'warning'
