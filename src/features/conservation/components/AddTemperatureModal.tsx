@@ -110,7 +110,7 @@ export function AddTemperatureModal({
     if (isOpen) {
       setFormData({
         temperature: conservationPoint.setpoint_temp,
-        method: 'digital_thermometer',
+        method: '' as any,
         notes: '',
         photo_evidence: '',
       })

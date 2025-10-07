@@ -122,7 +122,7 @@ export interface ConservationPoint {
   productCategories: string[]
   maintenanceTasks?: ConservationMaintenanceTask[]
   maintenanceDue?: string
-  source: PointSource
+  source?: PointSource
 }
 
 export interface ConservationStepFormData {
@@ -149,101 +149,34 @@ export type TaskFrequency =
   | 'weekly'
   | 'monthly'
   | 'quarterly'
-  | 'annual'
-  | 'custom'
+  | 'annually'
   | 'as_needed'
 
-export type MaintenanceFrequency =
-  | 'annuale'
-  | 'mensile'
-  | 'settimanale'
-  | 'giornaliera'
-  | 'custom'
-
-export type CustomFrequencyDays =
-  | 'lunedi'
-  | 'martedi'
-  | 'mercoledi'
-  | 'giovedi'
-  | 'venerdi'
-  | 'sabato'
-  | 'domenica'
-
-export type StandardMaintenanceType =
-  | 'rilevamento_temperatura'
-  | 'sanificazione'
-  | 'sbrinamento'
-  | 'controllo_scadenze'
-
-export interface ConservationMaintenancePlan {
-  id: string
-  conservationPointId: ConservationPoint['id']
-  manutenzione: StandardMaintenanceType
-  frequenza: MaintenanceFrequency
-  assegnatoARuolo: StaffRole | 'specifico'
-  assegnatoACategoria?: string // opzionale
-  assegnatoADipendenteSpecifico?: StaffMember['id'] // quando assegnatoARuolo è 'specifico'
-  giorniCustom?: CustomFrequencyDays[] // quando frequenza è 'custom'
-  note?: string
-}
+export type TaskPriority = 'low' | 'medium' | 'high' | 'critical'
 
 export interface GenericTask {
   id: string
   name: string
-  frequenza: MaintenanceFrequency
-  assegnatoARuolo: StaffRole | 'specifico'
-  assegnatoACategoria?: string // opzionale
-  assegnatoADipendenteSpecifico?: StaffMember['id'] // quando assegnatoARuolo è 'specifico'
-  giorniCustom?: CustomFrequencyDays[] // quando frequenza è 'custom'
+  frequenza: TaskFrequency
+  assegnatoARuolo: StaffRole | 'specifico' | string
+  assegnatoACategoria?: string
+  assegnatoADipendenteSpecifico?: string
   note?: string
-}
-
-export type TaskPriority = 'low' | 'medium' | 'high' | 'critical'
-
-export type HaccpTaskCategory =
-  | 'temperature'
-  | 'hygiene'
-  | 'maintenance'
-  | 'documentation'
-  | 'training'
-  | 'other'
-
-export interface GeneralTask {
-  id: string
-  name: string
-  description?: string
-  frequency: TaskFrequency
-  departmentId?: DepartmentSummary['id']
-  conservationPointId?: ConservationPoint['id']
-  priority: TaskPriority
-  estimatedDuration: number
-  checklist: string[]
-  requiredTools: string[]
-  haccpCategory: HaccpTaskCategory
-  responsibleStaffIds?: StaffMember['id'][]
-  documentationUrl?: string
-  validationNotes?: string
+  priority?: TaskPriority
 }
 
 export interface TasksStepData {
-  conservationMaintenancePlans: ConservationMaintenancePlan[]
-  generalTasks: GeneralTask[]
-  maintenanceTasks: MaintenanceTask[]
+  conservationMaintenancePlans: ConservationMaintenanceTask[]
   genericTasks: GenericTask[]
 }
 
 export interface TasksStepProps {
   data?: TasksStepData
-  departments: DepartmentSummary[]
-  conservationPoints: ConservationPoint[]
+  conservationPoints?: ConservationPoint[]
   staff?: StaffMember[]
   onUpdate: (data: TasksStepData) => void
   onValidChange: (valid: boolean) => void
 }
-
-export type ProductStatus = 'active' | 'expired' | 'consumed' | 'waste'
-
-import type { AllergenType } from '@/types/inventory'
 
 export interface ProductCategory {
   id: string
@@ -261,21 +194,21 @@ export interface ProductCategory {
 export interface InventoryProduct {
   id: string
   name: string
-  categoryId?: ProductCategory['id']
-  departmentId?: DepartmentSummary['id']
-  conservationPointId?: ConservationPoint['id']
-  sku?: string
+  categoryId?: string
+  departmentId?: string
+  conservationPointId?: string
   barcode?: string
+  sku?: string
   supplierName?: string
   purchaseDate?: string
   expiryDate?: string
   quantity?: number
   unit?: string
-  allergens: AllergenType[]
+  allergens?: string[]
   labelPhotoUrl?: string
-  status: ProductStatus
-  complianceStatus?: 'compliant' | 'warning' | 'non_compliant'
   notes?: string
+  status?: 'active' | 'expired' | 'consumed' | 'waste'
+  complianceStatus?: 'compliant' | 'warning' | 'non_compliant'
 }
 
 export interface InventoryStepData {
@@ -285,8 +218,8 @@ export interface InventoryStepData {
 
 export interface InventoryStepProps {
   data?: InventoryStepData
-  departments: DepartmentSummary[]
-  conservationPoints: ConservationPoint[]
+  departments?: DepartmentSummary[]
+  conservationPoints?: ConservationPoint[]
   onUpdate: (data: InventoryStepData) => void
   onValidChange: (valid: boolean) => void
 }
@@ -295,13 +228,9 @@ export interface OnboardingData {
   business?: BusinessInfoData
   departments?: DepartmentSummary[]
   staff?: StaffMember[]
-  conservation?: { points: ConservationPoint[] }
+  conservation?: {
+    points: ConservationPoint[]
+  }
   tasks?: TasksStepData
   inventory?: InventoryStepData
-}
-
-export type OnboardingStepKey = keyof OnboardingData
-
-export type StepValidationMap = {
-  [Key in OnboardingStepKey]?: boolean
 }

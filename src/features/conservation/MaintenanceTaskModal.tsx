@@ -82,12 +82,10 @@ export function MaintenanceTaskModal({
   }
 
   const [formData, setFormData] = useState<MaintenanceFormState>({
-    kind: 'temperature',
-    type: 'temperature',
-    frequency: 'weekly',
-    next_due: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      .toISOString()
-      .slice(0, 16),
+    kind: '' as any,
+    type: '' as any,
+    frequency: '' as any,
+    next_due: '',
     estimated_duration: 30,
     checklist: [],
     assigned_to: '',

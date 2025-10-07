@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react'
 import { useAuth, UserRole, UserPermissions } from '@/hooks/useAuth'
-import { Loader2, AlertCircle, Lock, UserX } from 'lucide-react'
+import { Loader2, AlertCircle, UserX } from 'lucide-react'
 
 interface ProtectedRouteProps {
   children: ReactNode
@@ -10,7 +10,6 @@ interface ProtectedRouteProps {
   showLoadingSpinner?: boolean
 }
 
-// Loading component
 const LoadingFallback = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] p-8">
     <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
@@ -23,7 +22,6 @@ const LoadingFallback = () => (
   </div>
 )
 
-// Unauthorized component
 const UnauthorizedFallback = ({
   userRole,
   requiredRole,
@@ -107,12 +105,6 @@ const UnauthorizedFallback = ({
         </div>
 
         <div className="text-xs text-red-600 text-center">
-          <p>
-            Email corrente:{' '}
-            <code className="bg-red-100 px-2 py-1 rounded">
-              {/* user email will be passed here */}
-            </code>
-          </p>
           <p className="mt-1">
             Ruolo assegnato:{' '}
             <span className="font-medium">Guest (Accesso negato)</span>
@@ -124,7 +116,7 @@ const UnauthorizedFallback = ({
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 bg-yellow-50 border border-yellow-200 rounded-lg mx-4">
-      <Lock className="h-12 w-12 text-yellow-600 mb-4" />
+      <UserX className="h-12 w-12 text-yellow-600 mb-4" />
       <h2 className="text-xl font-bold text-yellow-900 mb-3 text-center">
         Permessi Insufficienti
       </h2>
@@ -164,7 +156,6 @@ const UnauthorizedFallback = ({
   )
 }
 
-// Main ProtectedRoute component
 export const ProtectedRoute = ({
   children,
   requiredRole,
@@ -174,7 +165,6 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const {
     isLoading,
-    isAuthenticated,
     isAuthorized,
     userRole,
     hasRole,
@@ -182,12 +172,10 @@ export const ProtectedRoute = ({
     authError,
   } = useAuth()
 
-  // Show loading state
   if (isLoading && showLoadingSpinner) {
     return fallback || <LoadingFallback />
   }
 
-  // Handle authentication errors
   if (authError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 bg-red-50 border border-red-200 rounded-lg mx-4">
@@ -206,22 +194,6 @@ export const ProtectedRoute = ({
     )
   }
 
-  // Check if user is authenticated
-  if (!isAuthenticated) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8">
-        <Lock className="h-12 w-12 text-gray-400 mb-4" />
-        <h2 className="text-xl font-bold text-gray-900 mb-3">
-          Accesso Richiesto
-        </h2>
-        <p className="text-gray-600 text-center">
-          Devi effettuare l'accesso per visualizzare questa pagina.
-        </p>
-      </div>
-    )
-  }
-
-  // Check if user is authorized (not guest)
   if (!isAuthorized) {
     return (
       <UnauthorizedFallback
@@ -233,7 +205,6 @@ export const ProtectedRoute = ({
     )
   }
 
-  // Check role requirements
   if (requiredRole && !hasRole(requiredRole)) {
     return (
       <UnauthorizedFallback
@@ -245,7 +216,6 @@ export const ProtectedRoute = ({
     )
   }
 
-  // Check permission requirements
   if (requiredPermission && !hasPermission(requiredPermission)) {
     return (
       <UnauthorizedFallback
@@ -257,11 +227,9 @@ export const ProtectedRoute = ({
     )
   }
 
-  // All checks passed, render children
   return <>{children}</>
 }
 
-// Higher-order component for role-based protection
 export const withRoleProtection = (
   Component: React.ComponentType<any>,
   requiredRole: UserRole | UserRole[]
@@ -273,7 +241,6 @@ export const withRoleProtection = (
   )
 }
 
-// Higher-order component for permission-based protection
 export const withPermissionProtection = (
   Component: React.ComponentType<any>,
   requiredPermission: keyof UserPermissions

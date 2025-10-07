@@ -12,6 +12,7 @@ interface TemperatureReadingModalProps {
   isCreating: boolean
 }
 
+// TODO: Method tracking will be added when DB schema is updated
 const methods = [
   { value: 'manual', label: 'Manuale', icon: '✍️' },
   { value: 'digital_thermometer', label: 'Termometro Digitale', icon: '🌡️' },
@@ -26,7 +27,9 @@ export function TemperatureReadingModal({
 }: TemperatureReadingModalProps) {
   interface TemperatureFormState {
     temperature: number
-    method: CreateTemperatureReadingRequest['method']
+    recorded_at?: Date
+    // TODO: These fields will be added when DB schema is updated
+    method: 'manual' | 'digital_thermometer' | 'automatic_sensor'
     notes: string
     photo_evidence: string
   }
@@ -43,9 +46,11 @@ export function TemperatureReadingModal({
     onCreate({
       conservation_point_id: conservationPoint.id,
       temperature: formData.temperature,
-      method: formData.method,
-      notes: formData.notes || undefined,
-      photo_evidence: formData.photo_evidence || undefined,
+      recorded_at: new Date(),
+      // TODO: Add these fields when DB schema is updated:
+      // method: formData.method,
+      // notes: formData.notes || undefined,
+      // photo_evidence: formData.photo_evidence || undefined,
     })
   }
 

@@ -50,7 +50,7 @@ export function useTemperatureReadings(conservationPointId?: string) {
     mutationFn: async (
       data: Omit<
         TemperatureReading,
-        'id' | 'company_id' | 'recorded_at' | 'validation_status'
+        'id' | 'company_id' | 'created_at'
       >
     ) => {
       if (!user?.company_id) throw new Error('No company ID available')
@@ -58,8 +58,7 @@ export function useTemperatureReadings(conservationPointId?: string) {
       const payload = {
         ...data,
         company_id: user.company_id,
-        recorded_at: new Date().toISOString(),
-        validation_status: 'pending' as const,
+        recorded_at: data.recorded_at || new Date().toISOString(),
       }
 
       const { data: result, error } = await supabase
@@ -133,36 +132,15 @@ export function useTemperatureReadings(conservationPointId?: string) {
     },
   })
 
-  // Statistics
+  // Statistics - simplified to only use fields that exist in DB
   const stats = {
     total: temperatureReadings?.length || 0,
-    compliant:
-      temperatureReadings?.filter(r => r.status === 'compliant').length || 0,
-    warning:
-      temperatureReadings?.filter(r => r.status === 'warning').length || 0,
-    critical:
-      temperatureReadings?.filter(r => r.status === 'critical').length || 0,
-    byMethod: {
-      manual:
-        temperatureReadings?.filter(r => r.method === 'manual').length || 0,
-      digital_thermometer:
-        temperatureReadings?.filter(r => r.method === 'digital_thermometer')
-          .length || 0,
-      automatic_sensor:
-        temperatureReadings?.filter(r => r.method === 'automatic_sensor')
-          .length || 0,
-    },
-    byValidation: {
-      pending:
-        temperatureReadings?.filter(r => r.validation_status === 'pending')
-          .length || 0,
-      validated:
-        temperatureReadings?.filter(r => r.validation_status === 'validated')
-          .length || 0,
-      flagged:
-        temperatureReadings?.filter(r => r.validation_status === 'flagged')
-          .length || 0,
-    },
+    recent: temperatureReadings?.slice(0, 10) || [],
+    averageTemperature: temperatureReadings?.length
+      ? temperatureReadings.reduce((sum, r) => sum + r.temperature, 0) / temperatureReadings.length
+      : 0,
+    // TODO: Add computed compliance stats based on conservation point setpoint_temp
+    // TODO: Add method and validation status tracking when DB schema is updated
   }
 
   return {
