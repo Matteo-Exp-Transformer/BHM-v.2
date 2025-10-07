@@ -563,6 +563,65 @@ localStorage.setItem('onboarding-completed-at', new Date().toISOString())
 
 ---
 
+## 🔄 Reset & Purge System
+
+### Reset App Function
+
+**File:** `src/utils/onboardingHelpers.ts:653`
+
+La funzione `resetApp()` ora include purge completo:
+
+**Operazioni eseguite:**
+1. ✅ Ottiene `company_id` da `user_profiles`
+2. ✅ Chiama `supabase.rpc('purge_company_data')` per eliminare dati DB
+3. ✅ Pulisce localStorage + sessionStorage
+4. ✅ Svuota cache React Query (`window.queryClient.clear()`)
+5. ✅ Hard reload della pagina
+
+### Database Purge Function
+
+**File:** `supabase/purge-company-data.sql`
+
+Funzione SQL `purge_company_data(p_company_id uuid)` che:
+- Elimina tutti i dati di una company in ordine FK-safe
+- Gestisce 15 tabelle con dipendenze
+- Restituisce statistiche JSON dei record eliminati
+- **NON elimina** `companies` né `user_profiles`
+
+**Ordine eliminazione (rispetta FK):**
+1. `temperature_readings`
+2. `shopping_list_items`
+3. `products`
+4. `maintenance_tasks`, `tasks`
+5. `events`, `notes`, `non_conformities`
+6. `shopping_lists`
+7. `product_categories`
+8. `conservation_points`
+9. `UPDATE user_profiles SET staff_id = NULL`
+10. `staff`
+11. `departments`
+12. *(opzionale)* `maintenance_tasks_backup`
+
+**Utilizzo:**
+```sql
+SELECT purge_company_data('c47b8b25-7257-4db3-a94c-d1693ff53cc5');
+```
+
+**Documentazione completa:** Vedi `RESET_APP_GUIDE.md`
+
+---
+
+## 📚 Documentazione Correlata
+
+- **`SUPABASE_SCHEMA_MAPPING.md`** (questo file) - Mapping dati onboarding → DB
+- **`MAPPING_COMPLIANCE_REPORT.md`** - Audit report compliance schema
+- **`RLS_SOLUTION.md`** - Soluzione RLS con Clerk Auth
+- **`RESET_APP_GUIDE.md`** - Guida completa reset app & database
+
+---
+
 **Documento aggiornato da:** Claude Code
-**Versione:** 2.0
+**Versione:** 2.1
+**Ultimo aggiornamento:** 2025-10-06
+**Modifiche v2.1:** Aggiunto sistema reset & purge completo
 **Prossimi aggiornamenti:** Quando cambiano gli schemi Supabase

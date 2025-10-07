@@ -648,11 +648,16 @@ export const resetOnboarding = (): void => {
 
 /**
  * Reset completo dell'app (solo sviluppo)
+ * NUOVA VERSIONE: include purge database + cache QueryClient
  */
-export const resetApp = (): void => {
+export const resetApp = async (): Promise<void> => {
   const confirmed = window.confirm(
-    '🚨 RESET COMPLETO APP\n\n' +
-      'Questa operazione cancellerà TUTTO il localStorage e sessionStorage.\n' +
+    '🚨 RESET COMPLETO APP + DATABASE\n\n' +
+      'Questa operazione cancellerà:\n' +
+      '- TUTTI i dati dal database Supabase\n' +
+      '- localStorage e sessionStorage\n' +
+      '- Cache di React Query\n\n' +
+      '⚠️ ATTENZIONE: OPERAZIONE IRREVERSIBILE!\n\n' +
       'Utilizzare solo in sviluppo!\n\n' +
       'Sei ASSOLUTAMENTE sicuro?'
   )
@@ -662,27 +667,65 @@ export const resetApp = (): void => {
     return
   }
 
-  console.log('🔄 Reset completo app...')
+  console.log('🔄 Reset completo app + database...')
 
   try {
-    // Pulisce completamente tutto lo storage
+    // 1. Ottieni company_id
+    const clerkUserId = localStorage.getItem('clerk-user-id')
+    let companyId: string | null = null
+
+    if (clerkUserId) {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('company_id')
+        .eq('clerk_user_id', clerkUserId)
+        .single()
+
+      companyId = profile?.company_id || null
+    }
+
+    // 2. Purge database se abbiamo company_id
+    if (companyId) {
+      console.log('🗑️ Purging database for company_id:', companyId)
+
+      const { data: stats, error } = await supabase.rpc('purge_company_data', {
+        p_company_id: companyId,
+      })
+
+      if (error) {
+        console.error('❌ Errore purge database:', error)
+        throw new Error(`Database purge failed: ${error.message}`)
+      }
+
+      console.log('✅ Database purge completato:', stats)
+    } else {
+      console.warn('⚠️ Nessun company_id trovato - skip database purge')
+    }
+
+    // 3. Pulisce storage locale
     clearAllStorage()
 
-    console.log('✅ Reset app completato con successo')
-    toast.success('App resettata completamente!', {
+    // 4. Pulisce cache React Query (se disponibile)
+    if (window.queryClient) {
+      console.log('🗑️ Clearing React Query cache...')
+      window.queryClient.clear()
+    }
+
+    console.log('✅ Reset app + database completato con successo')
+    toast.success('App e database resettati completamente!', {
       position: 'top-right',
       autoClose: 2000,
     })
 
-    // Ricarica la pagina immediatamente
+    // 5. Ricarica la pagina per hard refresh
     setTimeout(() => {
       window.location.reload()
     }, 500)
   } catch (error) {
     console.error('❌ Errore nel reset app:', error)
-    toast.error('Errore durante il reset completo', {
+    toast.error(`Errore durante il reset: ${error instanceof Error ? error.message : 'Unknown error'}`, {
       position: 'top-right',
-      autoClose: 3000,
+      autoClose: 5000,
     })
   }
 }
