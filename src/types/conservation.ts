@@ -340,31 +340,31 @@ export const TEMPERATURE_RANGES = {
   blast: { min: -40, max: 3, optimal: -18 },
 } as const
 
-// Conservation point type colors - High contrast palette
+// Conservation point type colors - Distinct color palette
 export const CONSERVATION_TYPE_COLORS = {
   fridge: {
+    bg: 'bg-orange-100',
+    text: 'text-orange-900',
+    border: 'border-orange-400',
+    badge: 'bg-orange-500 text-white',
+  },
+  freezer: {
     bg: 'bg-blue-100',
     text: 'text-blue-900',
     border: 'border-blue-400',
     badge: 'bg-blue-500 text-white',
   },
-  freezer: {
-    bg: 'bg-indigo-100',
-    text: 'text-indigo-900',
-    border: 'border-indigo-400',
-    badge: 'bg-indigo-500 text-white',
-  },
   blast: {
-    bg: 'bg-purple-100',
-    text: 'text-purple-900',
-    border: 'border-purple-400',
-    badge: 'bg-purple-600 text-white',
+    bg: 'bg-slate-100',
+    text: 'text-slate-900',
+    border: 'border-slate-400',
+    badge: 'bg-slate-600 text-white',
   },
   ambient: {
-    bg: 'bg-orange-100',
-    text: 'text-orange-900',
-    border: 'border-orange-400',
-    badge: 'bg-orange-500 text-white',
+    bg: 'bg-green-100',
+    text: 'text-green-900',
+    border: 'border-green-400',
+    badge: 'bg-green-600 text-white',
   },
 } as const
 
