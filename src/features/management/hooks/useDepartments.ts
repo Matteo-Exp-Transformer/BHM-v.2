@@ -8,7 +8,6 @@ export interface Department {
   id: string
   company_id: string
   name: string
-  description?: string | null
   is_active: boolean
   created_at: string
   updated_at: string
@@ -16,7 +15,6 @@ export interface Department {
 
 export interface DepartmentInput {
   name: string
-  description?: string
   is_active?: boolean
 }
 
@@ -66,7 +64,6 @@ export const useDepartments = () => {
         .insert({
           company_id: companyId,
           name: input.name,
-          description: input.description || null,
           is_active: input.is_active ?? true,
         })
         .select()
@@ -101,7 +98,6 @@ export const useDepartments = () => {
         .from('departments')
         .update({
           name: input.name,
-          description: input.description || null,
           is_active: input.is_active,
           updated_at: new Date().toISOString(),
         })
@@ -197,10 +193,10 @@ export const useDepartments = () => {
       if (!companyId) throw new Error('Company ID not found')
 
       const presetDepartments = [
-        { name: 'Bancone', description: 'Area di servizio al bancone' },
-        { name: 'Sala', description: 'Area di servizio ai tavoli' },
-        { name: 'Magazzino', description: 'Area di stoccaggio prodotti' },
-        { name: 'Cucina', description: 'Area di preparazione e cottura' },
+        { name: 'Bancone' },
+        { name: 'Sala' },
+        { name: 'Magazzino' },
+        { name: 'Cucina' },
       ]
 
       const { data, error } = await supabase
@@ -209,7 +205,6 @@ export const useDepartments = () => {
           presetDepartments.map(dept => ({
             company_id: companyId,
             name: dept.name,
-            description: dept.description,
             is_active: true,
           }))
         )

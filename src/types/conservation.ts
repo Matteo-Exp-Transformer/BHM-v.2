@@ -134,14 +134,9 @@ export interface MaintenanceTask {
 }
 
 export type MaintenanceType =
-  | 'temperature_calibration'
-  | 'deep_cleaning'
-  | 'defrosting'
-  | 'filter_replacement'
-  | 'seal_inspection'
-  | 'compressor_check'
-  | 'general_inspection'
-  | 'other'
+  | 'temperature'      // Rilevamento temperatura
+  | 'sanitization'     // Sanificazione
+  | 'defrosting'       // Sbrinamento
 
 export type MaintenanceFrequency =
   | 'daily'
@@ -155,8 +150,8 @@ export type MaintenanceFrequency =
 
 // Maintenance task types configuration
 export const MAINTENANCE_TASK_TYPES = {
-  temperature_calibration: {
-    label: 'Calibrazione Termometro',
+  temperature: {
+    label: 'Rilevamento Temperatura',
     icon: 'thermometer',
     color: 'blue',
     defaultDuration: 30,
@@ -165,10 +160,11 @@ export const MAINTENANCE_TASK_TYPES = {
       'Controllare temperatura ambiente',
       'Registrare lettura di riferimento',
       'Documentare eventuali scostamenti',
+      'Compilare registro temperature',
     ],
   },
-  deep_cleaning: {
-    label: 'Pulizia Profonda',
+  sanitization: {
+    label: 'Sanificazione',
     icon: 'spray-can',
     color: 'green',
     defaultDuration: 120,
@@ -193,74 +189,6 @@ export const MAINTENANCE_TASK_TYPES = {
       "Pulire l'acqua di scongelamento",
       'Asciugare completamente',
       'Riaccendere e verificare funzionamento',
-    ],
-  },
-  filter_replacement: {
-    label: 'Sostituzione Filtri',
-    icon: 'filter',
-    color: 'yellow',
-    defaultDuration: 45,
-    defaultChecklist: [
-      'Identificare il filtro da sostituire',
-      "Spegnere l'apparecchio",
-      'Rimuovere il filtro vecchio',
-      'Installare il filtro nuovo',
-      'Verificare la tenuta',
-      'Riaccendere e testare',
-    ],
-  },
-  seal_inspection: {
-    label: 'Controllo Guarnizioni',
-    icon: 'search',
-    color: 'purple',
-    defaultDuration: 30,
-    defaultChecklist: [
-      'Ispezionare visivamente le guarnizioni',
-      'Verificare elasticità e integrità',
-      'Controllare aderenza alla porta',
-      'Testare tenuta con foglio di carta',
-      'Documentare eventuali difetti',
-    ],
-  },
-  compressor_check: {
-    label: 'Controllo Compressore',
-    icon: 'wrench',
-    color: 'red',
-    defaultDuration: 90,
-    defaultChecklist: [
-      'Verificare funzionamento del compressore',
-      'Controllare livelli di refrigerante',
-      'Ispezionare tubazioni e connessioni',
-      'Verificare vibrazioni anomale',
-      'Controllare temperatura di esercizio',
-      'Documentare stato generale',
-    ],
-  },
-  general_inspection: {
-    label: 'Ispezione Generale',
-    icon: 'clipboard-check',
-    color: 'gray',
-    defaultDuration: 60,
-    defaultChecklist: [
-      'Verificare funzionamento generale',
-      'Controllare temperature di esercizio',
-      'Ispezionare componenti esterni',
-      'Verificare illuminazione interna',
-      'Controllare sistema di allarme',
-      'Documentare stato complessivo',
-    ],
-  },
-  other: {
-    label: 'Altro',
-    icon: 'tool',
-    color: 'gray',
-    defaultDuration: 60,
-    defaultChecklist: [
-      'Verificare specifiche del task',
-      'Controllare strumenti necessari',
-      'Eseguire operazioni richieste',
-      'Documentare risultati',
-      'Verificare completamento',
     ],
   },
 } as const

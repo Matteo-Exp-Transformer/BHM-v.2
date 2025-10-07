@@ -386,7 +386,7 @@ export function AddPointModal({
   const addMaintenanceTask = () => {
     const newTask: MaintenanceTaskData = {
       title: 'Nuova Manutenzione',
-      type: 'general_inspection',
+      type: 'sanitization',
       frequency: 'weekly',
       estimated_duration: 30,
       priority: 'medium',

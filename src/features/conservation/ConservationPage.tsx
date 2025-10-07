@@ -577,14 +577,14 @@ export default function ConservationPage() {
               <div className="text-lg mb-1">🌡️</div>
               <div className="text-xs text-gray-600">Controllo Temperature</div>
               <div className="text-sm font-semibold">
-                {maintenanceStats.tasks_by_type.temperature_calibration ?? 0}
+                {maintenanceStats.tasks_by_type.temperature ?? 0}
               </div>
             </div>
             <div className="text-center">
               <div className="text-lg mb-1">🧼</div>
-              <div className="text-xs text-gray-600">Pulizia Profonda</div>
+              <div className="text-xs text-gray-600">Sanificazione</div>
               <div className="text-sm font-semibold">
-                {maintenanceStats.tasks_by_type.deep_cleaning ?? 0}
+                {maintenanceStats.tasks_by_type.sanitization ?? 0}
               </div>
             </div>
             <div className="text-center">
