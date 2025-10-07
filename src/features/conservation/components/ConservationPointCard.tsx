@@ -138,7 +138,7 @@ export function ConservationPointCard({
           />
           <div>
             <div className="text-sm text-gray-600">Stato</div>
-            <div className={`font-semibold ${colors.text}`}>
+            <div className={`font-semibold ${statusColors.text}`}>
               {getStatusText()}
             </div>
           </div>
@@ -148,12 +148,12 @@ export function ConservationPointCard({
       {/* Last Temperature Reading */}
       {point.last_temperature_reading && (
         <div
-          className={`rounded-md ${colors.bg} border ${colors.border} p-3 mb-3`}
+          className={`rounded-md ${statusColors.bg} border ${statusColors.border} p-3 mb-3`}
         >
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm text-gray-600">Ultima lettura</div>
-              <div className={`font-semibold ${colors.text}`}>
+              <div className={`font-semibold ${statusColors.text}`}>
                 {point.last_temperature_reading.temperature}°C
               </div>
             </div>
