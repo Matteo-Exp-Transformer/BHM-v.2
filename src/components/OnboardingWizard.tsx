@@ -63,9 +63,9 @@ const OnboardingWizard = () => {
     }
   }, [])
 
-  const handleCompleteOnboarding = useCallback(() => {
-    completeOnboardingHelper()
-  }, [])
+  const handleCompleteOnboarding = useCallback(async () => {
+    await completeOnboardingHelper(companyId)
+  }, [companyId])
 
   const handleResetOnboarding = useCallback(() => {
     resetOnboarding()
@@ -158,18 +158,12 @@ const OnboardingWizard = () => {
       // Salva tutti i dati su Supabase
       await saveAllDataToSupabase()
 
-      // Marca onboarding come completato
-      const { error } = await supabase
-        .from('companies')
-        .update({
-          onboarding_completed: true,
-          onboarding_completed_at: new Date().toISOString(),
-        })
-        .eq('id', companyId)
+      // Marca onboarding come completato nel localStorage
+      // Nota: i campi onboarding_completed/onboarding_completed_at non esistono in companies table
+      localStorage.setItem('onboarding-completed', 'true')
+      localStorage.setItem('onboarding-completed-at', new Date().toISOString())
 
-      if (error) throw error
-
-      // Pulisci localStorage
+      // Pulisci localStorage onboarding data
       localStorage.removeItem('onboarding-data')
 
       toast.success('Onboarding completato con successo!')

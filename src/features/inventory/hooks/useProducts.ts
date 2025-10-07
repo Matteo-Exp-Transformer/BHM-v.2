@@ -84,7 +84,7 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
         .select(
           `
           *,
-          product_categories(id, name, color),
+          product_categories(id, name),
           departments(id, name),
           conservation_points(id, name)
         `

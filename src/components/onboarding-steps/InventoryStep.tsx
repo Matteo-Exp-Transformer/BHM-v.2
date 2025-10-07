@@ -76,11 +76,11 @@ const InventoryStep = ({
       products,
     }
     onUpdate(payload)
-  }, [categories, products, onUpdate])
+  }, [categories, products])
 
   useEffect(() => {
     onValidChange(products.length > 0)
-  }, [products.length, onValidChange])
+  }, [products.length])
 
   const departmentOptions = useMemo(
     () => departments.filter(department => department.is_active),

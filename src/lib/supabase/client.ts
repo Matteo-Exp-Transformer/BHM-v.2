@@ -34,22 +34,8 @@ export const supabase = (() => {
   return supabaseInstance
 })()
 
-// Service role client (for admin operations - server-side only)
-const supabaseServiceKey =
-  import.meta.env.SUPABASE_SERVICE_ROLE_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjZHlhZHNsdXp6enN5YndybWx6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODI3Mzc4OSwiZXhwIjoyMDczODQ5Nzg5fQ.QT-P0WDDOD8AsM3LVCpz0LAjr-7O-D8nQhSs8YMBuLY'
-
-export const supabaseAdmin = (() => {
-  if (!supabaseAdminInstance) {
-    supabaseAdminInstance = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    })
-  }
-  return supabaseAdminInstance
-})()
+// Note: Service role client should NEVER be used in frontend code
+// It's only for server-side operations (Edge Functions, etc.)
 
 // Database types for type safety in components
 export interface Company {

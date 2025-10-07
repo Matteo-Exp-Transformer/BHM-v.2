@@ -2,11 +2,20 @@ import { safeSetItem, clearAllStorage, clearHaccpData } from './safeStorage'
 import { toast } from 'react-toastify'
 import { AllergenType } from '@/types/inventory'
 import type { OnboardingData } from '@/types/onboarding'
+import { supabase } from '@/lib/supabase/client'
+
+// Funzione per generare UUID validi (RFC 4122 v4)
+const generateUUID = (): string => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0
+    const v = c === 'x' ? r : (r & 0x3 | 0x8)
+    return v.toString(16)
+  })
+}
 
 // Funzione per generare le manutenzioni precompilate per ogni punto di conservazione
 const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
-  const generateId = () =>
-    `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  const generateId = generateUUID
 
   // Manutenzioni standard per ogni punto di conservazione (da PRECOMPILATION_AND_RESET_GUIDE.md righe 166-197)
   const standardMaintenances = [
@@ -80,8 +89,7 @@ const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
 
 // Dati precompilati seguendo esattamente la guida di riferimento
 export const getPrefillData = (): OnboardingData => {
-  const generateId = () =>
-    `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  const generateId = generateUUID
 
   // Genera i reparti prima per poterli referenziare
   const departments = [
@@ -680,24 +688,428 @@ export const resetApp = (): void => {
 }
 
 /**
- * Completa automaticamente l'onboarding
+ * Helper functions for data mapping
  */
-export const completeOnboarding = (): void => {
+const mapManutenzioneTipo = (tipo: string): string => {
+  // Mapping ai valori enum effettivi di maintenance_task_kind
+  // Valori disponibili: 'temperature', 'sanitization', 'defrosting'
+  const map: Record<string, string> = {
+    'rilevamento_temperatura': 'temperature',
+    'sanificazione': 'sanitization',
+    'sbrinamento': 'defrosting',
+    'controllo_scadenze': 'temperature', // Fallback a temperature per controllo scadenze
+  }
+  return map[tipo] || 'sanitization' // Default fallback
+}
+
+const mapFrequenza = (frequenza: string): string => {
+  const map: Record<string, string> = {
+    'giornaliera': 'daily',
+    'settimanale': 'weekly',
+    'mensile': 'monthly',
+    'annuale': 'annual',
+    'custom': 'custom',
+  }
+  return map[frequenza] || 'weekly'
+}
+
+const calculateNextDue = (frequenza: string): string => {
+  const now = new Date()
+  switch (frequenza) {
+    case 'giornaliera':
+      return new Date(now.setDate(now.getDate() + 1)).toISOString()
+    case 'settimanale':
+      return new Date(now.setDate(now.getDate() + 7)).toISOString()
+    case 'mensile':
+      return new Date(now.setMonth(now.getMonth() + 1)).toISOString()
+    case 'annuale':
+      return new Date(now.setFullYear(now.getFullYear() + 1)).toISOString()
+    default:
+      return new Date(now.setDate(now.getDate() + 7)).toISOString()
+  }
+}
+
+/**
+ * Pulisce i dati esistenti dell'onboarding per evitare duplicati
+ */
+const cleanExistingOnboardingData = async (companyId: string) => {
+  console.log('🧹 Cleaning existing onboarding data...')
+
+  try {
+    // Elimina in ordine inverso per rispettare le foreign keys
+    await supabase.from('products').delete().eq('company_id', companyId)
+    await supabase.from('product_categories').delete().eq('company_id', companyId)
+    await supabase.from('tasks').delete().eq('company_id', companyId)
+    await supabase.from('maintenance_tasks').delete().eq('company_id', companyId)
+    await supabase.from('conservation_points').delete().eq('company_id', companyId)
+    await supabase.from('staff').delete().eq('company_id', companyId)
+    await supabase.from('departments').delete().eq('company_id', companyId)
+
+    console.log('✅ Existing onboarding data cleaned')
+  } catch (error) {
+    console.warn('⚠️ Error cleaning existing data (might not exist):', error)
+  }
+}
+
+/**
+ * Salva tutti i dati su Supabase
+ */
+const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string) => {
+  if (!companyId) throw new Error('Company ID not found')
+
+  // Pulisci i dati esistenti prima di inserire nuovi dati
+  await cleanExistingOnboardingData(companyId)
+
+  // Salva informazioni aziendali
+  // Riferimento: SUPABASE_SCHEMA_MAPPING.md - Section 1: companies
+  if (formData.business) {
+    const businessUpdate: Record<string, any> = {
+      name: formData.business.name,                      // ✅ DISPONIBILE
+      address: formData.business.address,                // ✅ DISPONIBILE
+      email: formData.business.email,                    // ✅ DISPONIBILE
+      staff_count: formData.staff?.length || 0,          // ✅ CALCOLARE
+      updated_at: new Date().toISOString()
+    }
+
+    const { error } = await supabase
+      .from('companies')
+      .update(businessUpdate)
+      .eq('id', companyId)
+
+    if (error) {
+      console.error('❌ Error updating company:', error)
+      throw error
+    }
+
+    console.log('✅ Company updated successfully')
+  }
+
+  // Salva reparti
+  // Riferimento: SUPABASE_SCHEMA_MAPPING.md - Section 2: departments
+  if (formData.departments?.length) {
+    const departments = formData.departments.map(dept => ({
+      id: dept.id,                          // ✅ UUID valido generato da generateUUID()
+      company_id: companyId,                // ✅ Da passare
+      name: dept.name,                      // ✅ DISPONIBILE
+      is_active: dept.is_active ?? true,    // ✅ DISPONIBILE
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+      // ❌ NON SALVARE: description (non esiste nella tabella)
+    }))
+
+    console.log('📤 Inserting departments:', departments.length)
+
+    const { error } = await supabase.from('departments').insert(departments)
+
+    if (error) {
+      console.error('❌ Error inserting departments:', error)
+      console.error('❌ Departments data:', JSON.stringify(departments, null, 2))
+      throw new Error(`Failed to insert departments: ${error.message}`)
+    }
+
+    console.log('✅ Departments inserted successfully:', departments.length)
+  }
+
+  // Salva staff
+  // Riferimento: SUPABASE_SCHEMA_MAPPING.md - Section 3: staff
+  if (formData.staff?.length) {
+    const staff = formData.staff.map((person: any) => ({
+      company_id: companyId,                                                    // ✅ Da passare
+      name: person.fullName || `${person.name} ${person.surname}`,             // ✅ DISPONIBILE
+      role: person.role,                                                        // ✅ DISPONIBILE
+      category: Array.isArray(person.categories)
+        ? person.categories[0] || 'Altro'
+        : person.category,                                                      // ✅ DISPONIBILE
+      email: person.email || null,                                              // ✅ DISPONIBILE
+      phone: person.phone || null,                                              // ✅ DISPONIBILE
+      hire_date: null,                                                          // ⚠️ Non presente
+      status: 'active',                                                         // ✅ Default
+      notes: person.notes || null,                                              // ✅ DISPONIBILE
+      haccp_certification: person.haccpExpiry ? {
+        level: 'base',
+        expiry_date: person.haccpExpiry,
+        issuing_authority: '',
+        certificate_number: ''
+      } : null,                                                                 // ✅ DISPONIBILE
+      department_assignments: person.department_assignments || null,            // ✅ DISPONIBILE
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }))
+
+    const { error } = await supabase.from('staff').insert(staff)
+
+    if (error) {
+      console.error('❌ Error inserting staff:', error)
+      throw error
+    }
+
+    console.log('✅ Staff inserted successfully:', staff.length)
+  }
+
+  // Salva punti conservazione
+  // Riferimento: SUPABASE_SCHEMA_MAPPING.md - Section 4: conservation_points
+  const conservationPointsIdMap = new Map<string, string>()
+
+  if (formData.conservation?.points?.length) {
+    const points = formData.conservation.points.map((point: any) => ({
+      company_id: companyId,
+      department_id: point.departmentId,
+      name: point.name,
+      setpoint_temp: point.targetTemperature,
+      type: point.pointType,
+      product_categories: point.productCategories || [],
+      is_blast_chiller: point.isBlastChiller || false,
+      status: 'normal',
+      maintenance_due: point.maintenanceDue || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }))
+
+    const { data: insertedPoints, error } = await supabase
+      .from('conservation_points')
+      .insert(points)
+      .select('id, name')
+
+    if (error) {
+      console.error('❌ Error inserting conservation points:', error)
+      throw error
+    }
+
+    // Crea mappa old_id -> new_id per mapping maintenance tasks
+    if (insertedPoints) {
+      formData.conservation.points.forEach((point: any, index: number) => {
+        if (insertedPoints[index]) {
+          conservationPointsIdMap.set(point.id, insertedPoints[index].id)
+        }
+      })
+    }
+
+    console.log('✅ Conservation points inserted successfully:', points.length)
+    console.log('✅ Conservation points ID mapping:', Object.fromEntries(conservationPointsIdMap))
+  }
+
+  // Salva manutenzioni punti conservazione
+  // Riferimento: SUPABASE_SCHEMA_MAPPING.md - Section 5: maintenance_tasks
+  if (formData.tasks?.conservationMaintenancePlans?.length) {
+    const maintenanceTasks = formData.tasks.conservationMaintenancePlans
+      .map((plan: any) => {
+        // Ottieni il vero ID dal database usando la mappa
+        const realConservationPointId = conservationPointsIdMap.get(plan.conservationPointId)
+
+        if (!realConservationPointId) {
+          console.warn(`⚠️ Skipping maintenance task - conservation point not found: ${plan.conservationPointId}`)
+          return null
+        }
+
+        return {
+          company_id: companyId,
+          conservation_point_id: realConservationPointId, // ✅ Usa ID reale
+          type: mapManutenzioneTipo(plan.manutenzione),
+          frequency: mapFrequenza(plan.frequenza),
+          title: `Manutenzione: ${plan.manutenzione}`,
+          description: plan.note || '',
+          priority: 'medium',
+          status: 'scheduled',
+          next_due: calculateNextDue(plan.frequenza),
+          estimated_duration: 60,
+          instructions: [],
+          assigned_to_staff_id:
+            plan.assegnatoARuolo === 'specifico'
+              ? plan.assegnatoADipendenteSpecifico
+              : null,
+          assigned_to_role:
+            plan.assegnatoARuolo !== 'specifico' ? plan.assegnatoARuolo : null,
+          assigned_to_category: plan.assegnatoACategoria || null,
+          assigned_to:
+            plan.assegnatoADipendenteSpecifico || plan.assegnatoARuolo || '',
+          assignment_type:
+            plan.assegnatoARuolo === 'specifico' ? 'staff' : 'role',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+      })
+      .filter(Boolean) // Rimuovi null
+
+    if (maintenanceTasks.length > 0) {
+      console.log('📤 Inserting maintenance tasks:', maintenanceTasks.length)
+      console.log('📤 Sample task:', JSON.stringify(maintenanceTasks[0], null, 2))
+
+      const { error } = await supabase
+        .from('maintenance_tasks')
+        .insert(maintenanceTasks)
+
+      if (error) {
+        console.error('❌ Error inserting maintenance tasks:', error)
+        console.error('❌ Error message:', error.message)
+        throw new Error(`Failed to insert maintenance tasks: ${error.message}`)
+      }
+
+      console.log('✅ Maintenance tasks inserted successfully:', maintenanceTasks.length)
+    } else {
+      console.warn('⚠️ No maintenance tasks to insert - all conservation points missing')
+    }
+  }
+
+  // Salva generic tasks
+  if (formData.tasks?.genericTasks?.length) {
+    const genericTasks = formData.tasks.genericTasks.map((task: any) => ({
+      company_id: companyId,
+      name: task.name,
+      frequency: mapFrequenza(task.frequenza),
+      description: task.note || '',
+      department_id: null,
+      conservation_point_id: null,
+      priority: 'medium',
+      estimated_duration: 60,
+      checklist: [],
+      required_tools: [],
+      haccp_category: null,
+      next_due: calculateNextDue(task.frequenza),
+      status: 'pending',
+      assigned_to_staff_id:
+        task.assegnatoARuolo === 'specifico'
+          ? task.assegnatoADipendenteSpecifico
+          : null,
+      assigned_to_role:
+        task.assegnatoARuolo !== 'specifico' ? task.assegnatoARuolo : null,
+      assigned_to_category: task.assegnatoACategoria || null,
+      assigned_to:
+        task.assegnatoADipendenteSpecifico || task.assegnatoARuolo || '',
+      assignment_type: task.assegnatoARuolo === 'specifico' ? 'staff' : 'role',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }))
+
+    const { error } = await supabase.from('tasks').insert(genericTasks)
+
+    if (error) throw error
+  }
+
+  // Salva categorie prodotti
+  // Riferimento: SUPABASE_SCHEMA_MAPPING.md - Section 7: product_categories
+  if (formData.inventory?.categories?.length) {
+    const categories = formData.inventory.categories.map(category => ({
+      id: category.id,                        // ✅ Generato da frontend
+      company_id: companyId,                  // ✅ Da passare
+      name: category.name,                    // ✅ DISPONIBILE
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+      // ❌ NON SALVARE: color, description, conservationRules (solo frontend)
+    }))
+
+    const { error: catError } = await supabase
+      .from('product_categories')
+      .insert(categories)
+
+    if (catError) {
+      console.error('❌ Error inserting product categories:', catError)
+      throw catError
+    }
+
+    console.log('✅ Product categories inserted successfully:', categories.length)
+  }
+
+  // Salva prodotti
+  // Riferimento: SUPABASE_SCHEMA_MAPPING.md - Section 8: products
+  if (formData.inventory?.products?.length) {
+    const products = formData.inventory.products.map(product => ({
+      id: product.id,                                       // ✅ Generato da frontend
+      company_id: companyId,                                // ✅ Da passare
+      name: product.name,                                   // ✅ DISPONIBILE
+      category_id: product.categoryId || null,              // ✅ DISPONIBILE
+      department_id: product.departmentId || null,          // ✅ DISPONIBILE
+      conservation_point_id: product.conservationPointId || null, // ✅ DISPONIBILE
+      barcode: product.barcode || null,                     // ✅ DISPONIBILE
+      sku: product.sku || null,                             // ✅ DISPONIBILE
+      supplier_name: product.supplierName || null,          // ✅ DISPONIBILE
+      purchase_date: product.purchaseDate || null,          // ✅ DISPONIBILE
+      expiry_date: product.expiryDate || null,              // ✅ DISPONIBILE
+      quantity: product.quantity || null,                   // ✅ DISPONIBILE
+      unit: product.unit || null,                           // ✅ DISPONIBILE
+      allergens: product.allergens || [],                   // ✅ DISPONIBILE
+      label_photo_url: product.labelPhotoUrl || null,       // ✅ DISPONIBILE
+      notes: product.notes || null,                         // ✅ DISPONIBILE
+      status: product.status || 'active',                   // ✅ DISPONIBILE
+      compliance_status: product.complianceStatus || null,  // ✅ DISPONIBILE
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }))
+
+    const { error } = await supabase.from('products').insert(products)
+
+    if (error) {
+      console.error('❌ Error inserting products:', error)
+      throw error
+    }
+
+    console.log('✅ Products inserted successfully:', products.length)
+  }
+}
+
+/**
+ * Completa automaticamente l'onboarding
+ * Nota: Questa funzione deve essere chiamata solo dal componente OnboardingWizard
+ * che ha accesso al companyId tramite useAuth.
+ *
+ * Per chiamare questa funzione dai DevButtons o dalla console, passa il companyId come parametro.
+ */
+export const completeOnboarding = async (companyIdParam?: string): Promise<void> => {
   console.log('🔄 Completamento automatico onboarding...')
 
   try {
     // Prima precompila i dati se non esistono
-    const existingData = localStorage.getItem('onboarding-data')
+    let existingData = localStorage.getItem('onboarding-data')
     if (!existingData) {
       prefillOnboarding()
+      existingData = localStorage.getItem('onboarding-data')
     }
 
-    // Simula il completamento dell'onboarding
-    safeSetItem('onboarding-completed', true)
-    safeSetItem('onboarding-completed-at', new Date().toISOString())
+    if (!existingData) {
+      throw new Error('Nessun dato di onboarding trovato')
+    }
+
+    const formData: OnboardingData = JSON.parse(existingData)
+
+    // Recupera il companyId
+    let companyId = companyIdParam
+
+    if (!companyId) {
+      // Prova a recuperare il company_id dalla sessione
+      const clerkUserId = localStorage.getItem('clerk-user-id')
+
+      if (!clerkUserId) {
+        throw new Error('Utente non autenticato. Effettua il login e riprova.')
+      }
+
+      // Recupera il company_id dal profilo utente usando clerk_user_id
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('company_id')
+        .eq('clerk_user_id', clerkUserId)
+        .single()
+
+      if (profileError || !profile?.company_id) {
+        throw new Error('Company ID non trovato nel profilo utente')
+      }
+
+      companyId = profile.company_id
+    }
+
+    console.log('🏢 Company ID:', companyId)
+
+    // Salva tutti i dati su Supabase
+    await saveAllDataToSupabase(formData, companyId)
+
+    // Marca onboarding come completato nel localStorage
+    // Nota: i campi onboarding_completed/onboarding_completed_at non esistono in companies table
+    localStorage.setItem('onboarding-completed', 'true')
+    localStorage.setItem('onboarding-completed-at', new Date().toISOString())
+
+    // Pulisci localStorage onboarding data
+    localStorage.removeItem('onboarding-data')
 
     console.log('✅ Onboarding completato automaticamente')
-    toast.success('Onboarding completato automaticamente!', {
+    toast.success('Onboarding completato con successo!', {
       position: 'top-right',
       autoClose: 3000,
     })
@@ -708,9 +1120,9 @@ export const completeOnboarding = (): void => {
     }, 1000)
   } catch (error) {
     console.error('❌ Errore nel completamento automatico:', error)
-    toast.error('Errore durante il completamento automatico', {
+    toast.error(`Errore durante il completamento: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`, {
       position: 'top-right',
-      autoClose: 3000,
+      autoClose: 5000,
     })
   }
 }

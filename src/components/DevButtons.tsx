@@ -4,7 +4,7 @@ import { Users, RotateCcw, CheckCircle } from 'lucide-react'
 interface DevButtonsProps {
   onPrefillOnboarding: () => void
   onResetOnboarding: () => void
-  onCompleteOnboarding: () => void
+  onCompleteOnboarding: () => void | Promise<void>
   isDevMode?: boolean
 }
 

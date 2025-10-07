@@ -107,6 +107,11 @@ export const useAuth = () => {
   const { user, isLoaded: isClerkLoaded, isSignedIn } = useUser()
   const clerkUser = user as ClerkUser | null
 
+  // Save clerk_user_id in localStorage for onboarding helpers
+  if (clerkUser?.id) {
+    localStorage.setItem('clerk-user-id', clerkUser.id)
+  }
+
   // Debug logs removed for cleaner console
 
   // Fetch user profile and determine role

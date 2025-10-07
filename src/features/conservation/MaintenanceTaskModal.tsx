@@ -83,7 +83,7 @@ export function MaintenanceTaskModal({
 
   const [formData, setFormData] = useState<MaintenanceFormState>({
     kind: 'temperature',
-    type: 'temperature_calibration',
+    type: 'temperature',
     frequency: 'weekly',
     next_due: new Date(Date.now() + 24 * 60 * 60 * 1000)
       .toISOString()
@@ -118,9 +118,9 @@ export function MaintenanceTaskModal({
       kind,
       type:
         kind === 'temperature'
-          ? 'temperature_calibration'
+          ? 'temperature'
           : kind === 'sanitization'
-            ? 'deep_cleaning'
+            ? 'sanitization'
             : 'defrosting',
       checklist: commonChecklists[kind] || [],
     }))
