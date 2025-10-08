@@ -127,6 +127,14 @@ export function useCalendarAlerts(events: CalendarEvent[]): CalendarAlertsResult
     [activeAlerts]
   )
 
+  // 🔍 DEBUG: Log per verificare il conteggio
+  console.log('🔍 Alert Debug:', {
+    totalEvents: events.length,
+    filteredAlerts: alertCount,
+    criticalAlerts: criticalCount,
+    alerts: activeAlerts.map(a => ({ title: a.event.title, severity: a.severity, start: a.event.start }))
+  })
+
   const dismissAlert = useCallback((alertId: string) => {
     const current = getDismissedAlerts()
     if (!current.includes(alertId)) {
