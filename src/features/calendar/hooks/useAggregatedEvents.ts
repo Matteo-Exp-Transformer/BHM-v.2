@@ -4,6 +4,7 @@ import { useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanc
 import { useConservationPoints } from '@/features/conservation/hooks/useConservationPoints'
 import { useStaff } from '@/features/management/hooks/useStaff'
 import { useProducts } from '@/features/inventory/hooks/useProducts'
+import { useGenericTasks, type GenericTask } from './useGenericTasks'
 import type { CalendarEvent } from '@/types/calendar'
 import type { MaintenanceTask } from '@/types/conservation'
 import type { Product } from '@/types/inventory'
@@ -22,6 +23,7 @@ interface AggregatedEventsResult {
     productExpiry: number
     haccpDeadlines: number
     temperatureChecks: number
+    genericTasks: number
     custom: number
   }
 }
@@ -34,9 +36,10 @@ export function useAggregatedEvents(): AggregatedEventsResult {
     useConservationPoints()
   const { staff, isLoading: staffLoading } = useStaff()
   const { products, isLoading: productsLoading } = useProducts()
+  const { tasks: genericTasks, isLoading: genericTasksLoading } = useGenericTasks()
 
   const isLoading =
-    maintenanceLoading || staffLoading || productsLoading || pointsLoading
+    maintenanceLoading || staffLoading || productsLoading || pointsLoading || genericTasksLoading
 
   const maintenanceEvents = useMemo(() => {
     if (!maintenanceTasks || maintenanceTasks.length === 0) return []
@@ -91,6 +94,14 @@ export function useAggregatedEvents(): AggregatedEventsResult {
     )
   }, [conservationPoints, companyId, user?.id])
 
+  const genericTaskEvents = useMemo(() => {
+    if (!genericTasks || genericTasks.length === 0) return []
+    
+    return genericTasks.map(task =>
+      convertGenericTaskToEvent(task, companyId || '', user?.id || '')
+    )
+  }, [genericTasks, companyId, user?.id])
+
   const allEvents = useMemo(() => {
     return [
       ...maintenanceEvents,
@@ -98,6 +109,7 @@ export function useAggregatedEvents(): AggregatedEventsResult {
       ...productExpiryEvents,
       ...haccpDeadlineEvents,
       ...temperatureEvents,
+      ...genericTaskEvents,
     ]
   }, [
     maintenanceEvents,
@@ -105,6 +117,7 @@ export function useAggregatedEvents(): AggregatedEventsResult {
     productExpiryEvents,
     haccpDeadlineEvents,
     temperatureEvents,
+    genericTaskEvents,
   ])
 
   return {
@@ -117,6 +130,7 @@ export function useAggregatedEvents(): AggregatedEventsResult {
       productExpiry: productExpiryEvents.length,
       haccpDeadlines: haccpDeadlineEvents.length,
       temperatureChecks: temperatureEvents.length,
+      genericTasks: genericTaskEvents.length,
       custom: 0,
     },
   }
@@ -327,6 +341,77 @@ function convertProductExpiryToEvent(
     },
     created_at: product.created_at,
     updated_at: product.updated_at,
+    created_by: userId,
+    company_id: companyId,
+  }
+}
+
+function convertGenericTaskToEvent(
+  task: GenericTask,
+  companyId: string,
+  userId: string
+): CalendarEvent {
+  const startDate = task.next_due ? new Date(task.next_due) : new Date()
+  const endDate = new Date(
+    startDate.getTime() + (task.estimated_duration || 60) * 60 * 1000
+  )
+
+  const status: CalendarEvent['status'] =
+    task.status === 'completed'
+      ? 'completed'
+      : startDate < new Date()
+        ? 'overdue'
+        : 'pending'
+
+  const colors = getEventColors(
+    'general_task',
+    status,
+    task.priority || 'medium'
+  )
+
+  return {
+    id: `generic-task-${task.id}`,
+    title: task.name,
+    description: task.description,
+    start: startDate,
+    end: endDate,
+    allDay: false,
+    type: 'general_task',
+    status,
+    priority: task.priority || 'medium',
+    source: 'general_task',
+    sourceId: task.id,
+    assigned_to: task.assigned_to_staff_id ? [task.assigned_to_staff_id] : [],
+    recurring: task.frequency !== 'as_needed',
+    backgroundColor: colors.backgroundColor,
+    borderColor: colors.borderColor,
+    textColor: colors.textColor,
+    metadata: {
+      task_id: task.id,
+      assigned_to_role: task.assigned_to_role,
+      assigned_to_category: task.assigned_to_category,
+      assigned_to_staff_id: task.assigned_to_staff_id,
+      notes: task.description,
+      frequency: task.frequency,
+    },
+    extendedProps: {
+      status: status as
+        | 'scheduled'
+        | 'in_progress'
+        | 'completed'
+        | 'overdue'
+        | 'cancelled',
+      priority: task.priority || 'medium',
+      assignedTo: task.assigned_to_staff_id ? [task.assigned_to_staff_id] : [],
+      metadata: {
+        id: task.id,
+        notes: task.description,
+        estimatedDuration: task.estimated_duration,
+        frequency: task.frequency,
+      },
+    },
+    created_at: task.created_at,
+    updated_at: task.updated_at,
     created_by: userId,
     company_id: companyId,
   }
