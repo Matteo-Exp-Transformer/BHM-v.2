@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { X } from 'lucide-react'
-import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 
 // Step Components
@@ -176,7 +175,7 @@ const OnboardingWizard = () => {
       setCurrentStep(prev => prev + 1)
     } else {
       // Ultimo step - completa onboarding
-      await completeOnboarding()
+      await completeOnboardingFromWizard()
     }
   }
 
@@ -186,243 +185,27 @@ const OnboardingWizard = () => {
     }
   }
 
-  const completeOnboarding = async () => {
+  const completeOnboardingFromWizard = async () => {
     setIsCompleting(true)
     setIsLoading(true)
 
     try {
-      // Salva tutti i dati su Supabase
-      await saveAllDataToSupabase()
+      if (!companyId) {
+        throw new Error('Company ID non trovato')
+      }
 
-      // Marca onboarding come completato nel localStorage
-      // Nota: i campi onboarding_completed/onboarding_completed_at non esistono in companies table
-      localStorage.setItem('onboarding-completed', 'true')
-      localStorage.setItem('onboarding-completed-at', new Date().toISOString())
+      // Usa la funzione helper unificata passando i dati correnti
+      // La funzione gestisce: salvataggio su Supabase, pulizia localStorage, redirect
+      await completeOnboardingHelper(companyId, formData)
 
-      // Pulisci localStorage onboarding data
-      localStorage.removeItem('onboarding-data')
-
-      toast.success('Onboarding completato con successo!')
-
-      // Reindirizza alla dashboard
-      navigate('/')
     } catch (error) {
       console.error('Error completing onboarding:', error)
       toast.error("Errore durante il completamento dell'onboarding")
-    } finally {
       setIsCompleting(false)
       setIsLoading(false)
     }
   }
 
-  // Helper functions for data mapping
-  const mapManutenzioneTipo = (tipo: string): string => {
-    const map: Record<string, string> = {
-      'rilevamento_temperatura': 'temperature_monitoring',
-      'sanificazione': 'sanitation',
-      'sbrinamento': 'defrosting',
-      'controllo_scadenze': 'expiry_check',
-    }
-    return map[tipo] || 'general_maintenance'
-  }
-
-  const mapFrequenza = (frequenza: string): string => {
-    const map: Record<string, string> = {
-      'giornaliera': 'daily',
-      'settimanale': 'weekly',
-      'mensile': 'monthly',
-      'annuale': 'annual',
-      'custom': 'custom',
-    }
-    return map[frequenza] || 'weekly'
-  }
-
-  const calculateNextDue = (frequenza: string): string => {
-    const now = new Date()
-    switch (frequenza) {
-      case 'giornaliera':
-        return new Date(now.setDate(now.getDate() + 1)).toISOString()
-      case 'settimanale':
-        return new Date(now.setDate(now.getDate() + 7)).toISOString()
-      case 'mensile':
-        return new Date(now.setMonth(now.getMonth() + 1)).toISOString()
-      case 'annuale':
-        return new Date(now.setFullYear(now.getFullYear() + 1)).toISOString()
-      default:
-        return new Date(now.setDate(now.getDate() + 7)).toISOString()
-    }
-  }
-
-  const saveAllDataToSupabase = async () => {
-    if (!companyId) throw new Error('Company ID not found')
-
-    // Salva informazioni aziendali
-    if (formData.business) {
-      const { error } = await supabase
-        .from('companies')
-        .update({
-          ...formData.business,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', companyId)
-
-      if (error) throw error
-    }
-
-    // Salva reparti
-    if (formData.departments?.length) {
-      const departments = formData.departments.map(dept => ({
-        ...dept,
-        company_id: companyId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }))
-
-      const { error } = await supabase.from('departments').insert(departments)
-
-      if (error) throw error
-    }
-
-    // Salva staff
-    if (formData.staff?.length) {
-      const staff = formData.staff.map((person: any) => ({
-        company_id: companyId,
-        name: person.fullName || `${person.name} ${person.surname}`,
-        role: person.role,
-        category: Array.isArray(person.categories) ? person.categories[0] || 'Altro' : person.category,
-        email: person.email || null,
-        phone: person.phone || null,
-        hire_date: null,
-        status: 'active',
-        notes: person.notes || null,
-        haccp_certification: person.haccpExpiry
-          ? {
-              level: 'base',
-              expiry_date: person.haccpExpiry,
-              issuing_authority: '',
-              certificate_number: '',
-            }
-          : null,
-        department_assignments: person.department_assignments || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }))
-
-      const { error } = await supabase.from('staff').insert(staff)
-
-      if (error) throw error
-    }
-
-    // Salva punti conservazione
-    if (formData.conservation?.points?.length) {
-      const points = formData.conservation.points.map((point: any) => ({
-        company_id: companyId,
-        department_id: point.departmentId,
-        name: point.name,
-        setpoint_temp: point.targetTemperature,
-        type: point.pointType,
-        product_categories: point.productCategories || [],
-        is_blast_chiller: point.isBlastChiller || false,
-        status: 'normal',
-        maintenance_due: point.maintenanceDue || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }))
-
-      const { error } = await supabase
-        .from('conservation_points')
-        .insert(points)
-
-      if (error) throw error
-    }
-
-    // Salva manutenzioni punti conservazione
-    if (formData.tasks?.conservationMaintenancePlans?.length) {
-      const maintenanceTasks = formData.tasks.conservationMaintenancePlans.map(
-        (plan: any) => ({
-          company_id: companyId,
-          conservation_point_id: plan.conservationPointId,
-          type: mapManutenzioneTipo(plan.manutenzione),
-          frequency: mapFrequenza(plan.frequenza),
-          title: `Manutenzione: ${plan.manutenzione}`,
-          description: plan.note || '',
-          priority: 'medium',
-          status: 'scheduled',
-          next_due: calculateNextDue(plan.frequenza),
-          estimated_duration: 60,
-          instructions: [],
-          assigned_to_staff_id:
-            plan.assegnatoARuolo === 'specifico'
-              ? plan.assegnatoADipendenteSpecifico
-              : null,
-          assigned_to_role:
-            plan.assegnatoARuolo !== 'specifico' ? plan.assegnatoARuolo : null,
-          assigned_to_category: plan.assegnatoACategoria || null,
-          assigned_to:
-            plan.assegnatoADipendenteSpecifico || plan.assegnatoARuolo || '',
-          assignment_type:
-            plan.assegnatoARuolo === 'specifico' ? 'staff' : 'role',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-      )
-
-      const { error } = await supabase
-        .from('maintenance_tasks')
-        .insert(maintenanceTasks)
-
-      if (error) throw error
-    }
-
-    // Salva generic tasks
-    if (formData.tasks?.genericTasks?.length) {
-      const genericTasks = formData.tasks.genericTasks.map((task: any) => ({
-        company_id: companyId,
-        name: task.name,
-        frequency: mapFrequenza(task.frequenza),
-        description: task.note || '',
-        department_id: null,
-        conservation_point_id: null,
-        priority: 'medium',
-        estimated_duration: 60,
-        checklist: [],
-        required_tools: [],
-        haccp_category: null,
-        next_due: calculateNextDue(task.frequenza),
-        status: 'pending',
-        assigned_to_staff_id:
-          task.assegnatoARuolo === 'specifico'
-            ? task.assegnatoADipendenteSpecifico
-            : null,
-        assigned_to_role:
-          task.assegnatoARuolo !== 'specifico' ? task.assegnatoARuolo : null,
-        assigned_to_category: task.assegnatoACategoria || null,
-        assigned_to:
-          task.assegnatoADipendenteSpecifico || task.assegnatoARuolo || '',
-        assignment_type: task.assegnatoARuolo === 'specifico' ? 'staff' : 'role',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }))
-
-      const { error } = await supabase.from('tasks').insert(genericTasks)
-
-      if (error) throw error
-    }
-
-    // Salva inventario
-    if (formData.inventory?.products?.length) {
-      const products = formData.inventory.products.map(product => ({
-        ...product,
-        company_id: companyId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }))
-
-      const { error } = await supabase.from('products').insert(products)
-
-      if (error) throw error
-    }
-  }
 
   const renderCurrentStep = () => {
     switch (currentStep) {

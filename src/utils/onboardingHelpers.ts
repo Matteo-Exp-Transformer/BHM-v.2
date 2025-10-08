@@ -21,12 +21,12 @@ const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
   const standardMaintenances = [
     {
       manutenzione: 'rilevamento_temperatura' as const, // ✅ Corretto: inglese
-      frequenza: 'giornaliera' as const,
+      frequenza: 'mensile' as const,
       assegnatoARuolo: 'responsabile' as const,
       assegnatoACategoria: 'Banconisti',
       assegnatoADipendenteSpecifico: undefined,
       giorniCustom: undefined,
-      note: 'Controllo temperatura giornaliero obbligatorio',
+      note: 'Controllo temperatura mensile',
     },
     {
       manutenzione: 'sanificazione' as const, // ✅ Corretto: inglese
@@ -1091,27 +1091,38 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
 
 /**
  * Completa automaticamente l'onboarding
- * Nota: Questa funzione deve essere chiamata solo dal componente OnboardingWizard
- * che ha accesso al companyId tramite useAuth.
+ * Nota: Questa funzione può essere chiamata sia dal componente OnboardingWizard
+ * che dai DevButtons per testing.
  *
- * Per chiamare questa funzione dai DevButtons o dalla console, passa il companyId come parametro.
+ * @param companyIdParam - ID dell'azienda (opzionale, verrà cercato se non fornito)
+ * @param formDataParam - Dati dell'onboarding (opzionale, verranno letti da localStorage se non forniti)
  */
-export const completeOnboarding = async (companyIdParam?: string): Promise<void> => {
+export const completeOnboarding = async (
+  companyIdParam?: string,
+  formDataParam?: OnboardingData
+): Promise<void> => {
   console.log('🔄 Completamento automatico onboarding...')
 
   try {
-    // Prima precompila i dati se non esistono
-    let existingData = localStorage.getItem('onboarding-data')
-    if (!existingData) {
-      prefillOnboarding()
-      existingData = localStorage.getItem('onboarding-data')
-    }
+    let formData: OnboardingData
 
-    if (!existingData) {
-      throw new Error('Nessun dato di onboarding trovato')
-    }
+    // Usa formData passato come parametro se disponibile, altrimenti leggi da localStorage
+    if (formDataParam) {
+      formData = formDataParam
+    } else {
+      // Prima precompila i dati se non esistono
+      let existingData = localStorage.getItem('onboarding-data')
+      if (!existingData) {
+        prefillOnboarding()
+        existingData = localStorage.getItem('onboarding-data')
+      }
 
-    const formData: OnboardingData = JSON.parse(existingData)
+      if (!existingData) {
+        throw new Error('Nessun dato di onboarding trovato')
+      }
+
+      formData = JSON.parse(existingData)
+    }
 
     // Recupera il companyId
     let companyId = companyIdParam
