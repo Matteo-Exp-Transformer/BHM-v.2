@@ -115,6 +115,7 @@ const TasksStep = ({
   const validateAllMaintenanceAssigned = useCallback(() => {
     // Controlla che ogni punto di conservazione non-ambiente abbia le 4 manutenzioni
     // e che ogni punto ambiente abbia 3 manutenzioni (senza sbrinamento)
+    if (!conservationPoints) return true
     return conservationPoints.every(point => {
       const pointMaintenances = maintenancePlans.filter(
         plan => plan.conservationPointId === point.id
@@ -141,12 +142,10 @@ const TasksStep = ({
   useEffect(() => {
     const payload: TasksStepData = {
       conservationMaintenancePlans: maintenancePlans,
-      generalTasks: [],
-      maintenanceTasks: data?.maintenanceTasks ?? [],
       genericTasks: genericTasks,
     }
     onUpdate(payload)
-  }, [maintenancePlans, genericTasks, onUpdate, data?.maintenanceTasks])
+  }, [maintenancePlans, genericTasks, onUpdate])
 
   useEffect(() => {
     // Validazione aggiornata:
@@ -364,7 +363,7 @@ const TasksStep = ({
           </div>
 
           <div className="space-y-3">
-            {conservationPoints.length === 0 ? (
+            {!conservationPoints || conservationPoints.length === 0 ? (
               <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center">
                 <p className="text-gray-500">
                   Nessun punto di conservazione configurato. Completa lo Step 4
@@ -514,7 +513,7 @@ const MaintenanceAssignmentForm = ({
           id: `plan-${maintenanceType.value}-${conservationPoint.id}`,
           conservationPointId: conservationPoint.id,
           manutenzione: maintenanceType.value,
-          frequenza: maintenanceType.value === 'rilevamento_temperatura' ? 'giornaliera' :
+          frequenza: maintenanceType.value === 'rilevamento_temperatura' ? 'mensile' :
                      maintenanceType.value === 'sanificazione' ? 'settimanale' :
                      maintenanceType.value === 'sbrinamento' ? 'annuale' : 'custom',
           assegnatoARuolo: 'dipendente',
@@ -721,7 +720,7 @@ const MaintenanceAssignmentForm = ({
                             const currentDays = plan.giorniCustom || []
                             const newDays = e.target.checked
                               ? [...currentDays, day.value]
-                              : currentDays.filter(d => d !== day.value)
+                              : currentDays.filter((d: CustomFrequencyDays) => d !== day.value)
                             updatePlan(index, { giorniCustom: newDays })
                           }}
                           className="rounded border-gray-300"
@@ -970,7 +969,7 @@ const GenericTaskForm = ({
                           const currentDays = task.giorniCustom || []
                           const newDays = e.target.checked
                             ? [...currentDays, day.value]
-                            : currentDays.filter(d => d !== day.value)
+                            : currentDays.filter((d: CustomFrequencyDays) => d !== day.value)
                           updateTask({ giorniCustom: newDays })
                         }}
                         className="rounded border-gray-300"

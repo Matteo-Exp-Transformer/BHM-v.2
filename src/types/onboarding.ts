@@ -95,22 +95,31 @@ export type MaintenanceTaskStatus =
 
 export interface ConservationMaintenanceTask {
   id: string
-  title: string
+  title?: string
   conservationPointId: ConservationPoint['id']
   conservationPointName?: string
-  type: MaintenanceTaskType
-  frequency: TaskFrequency
+  type?: MaintenanceTaskType
+  frequency?: TaskFrequency
   priority?: TaskPriority
   estimatedDuration?: number
   assignedRole?: StaffRole | string
-  assignedStaffIds: StaffMember['id'][]
+  assignedStaffIds?: StaffMember['id'][]
   nextDue?: string
   instructions?: string[]
   notes?: string
   status?: MaintenanceTaskStatus
+  // Proprietà in italiano per onboarding
+  manutenzione?: StandardMaintenanceType
+  frequenza?: MaintenanceFrequency
+  assegnatoARuolo?: StaffRole | 'specifico' | string
+  assegnatoACategoria?: string
+  assegnatoADipendenteSpecifico?: string
+  giorniCustom?: CustomFrequencyDays[]
+  note?: string
 }
 
 export type MaintenanceTask = ConservationMaintenanceTask
+export type ConservationMaintenancePlan = ConservationMaintenanceTask
 
 export interface ConservationPoint {
   id: string
@@ -152,17 +161,43 @@ export type TaskFrequency =
   | 'annually'
   | 'as_needed'
 
+// Tipi per le manutenzioni standard (in italiano)
+export type StandardMaintenanceType =
+  | 'rilevamento_temperatura'
+  | 'sanificazione'
+  | 'sbrinamento'
+  | 'controllo_scadenze'
+
+// Frequenze di manutenzione (in italiano)
+export type MaintenanceFrequency =
+  | 'giornaliera'
+  | 'settimanale'
+  | 'mensile'
+  | 'annuale'
+  | 'custom'
+
+// Giorni della settimana per frequenze personalizzate
+export type CustomFrequencyDays =
+  | 'lunedi'
+  | 'martedi'
+  | 'mercoledi'
+  | 'giovedi'
+  | 'venerdi'
+  | 'sabato'
+  | 'domenica'
+
 export type TaskPriority = 'low' | 'medium' | 'high' | 'critical'
 
 export interface GenericTask {
   id: string
   name: string
-  frequenza: TaskFrequency
+  frequenza: TaskFrequency | MaintenanceFrequency
   assegnatoARuolo: StaffRole | 'specifico' | string
   assegnatoACategoria?: string
   assegnatoADipendenteSpecifico?: string
   note?: string
   priority?: TaskPriority
+  giorniCustom?: CustomFrequencyDays[]
 }
 
 export interface TasksStepData {
@@ -172,6 +207,7 @@ export interface TasksStepData {
 
 export interface TasksStepProps {
   data?: TasksStepData
+  departments?: DepartmentSummary[]
   conservationPoints?: ConservationPoint[]
   staff?: StaffMember[]
   onUpdate: (data: TasksStepData) => void

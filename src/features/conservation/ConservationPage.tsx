@@ -7,20 +7,18 @@ import {
   TrendingUp,
   Clock,
   // Camera,
-  Wrench,
 } from 'lucide-react'
 import { useConservationPoints } from './hooks/useConservationPoints'
 import { useTemperatureReadings } from './hooks/useTemperatureReadings'
-import { useMaintenanceTasks } from './hooks/useMaintenanceTasks'
+// import { useMaintenanceTasks } from './hooks/useMaintenanceTasks'
 import { ConservationPointCard } from './components/ConservationPointCard'
 import { AddPointModal } from './components/AddPointModal'
 import { AddTemperatureModal } from './components/AddTemperatureModal'
 import { TemperatureReadingCard } from './components/TemperatureReadingCard'
-import { MaintenanceTaskCard } from './components/MaintenanceTaskCard'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
+import { ScheduledMaintenanceCard } from '@/features/dashboard/components/ScheduledMaintenanceCard'
 import type {
   ConservationPoint,
-  MaintenanceTask,
   TemperatureReading,
 } from '@/types/conservation'
 
@@ -58,20 +56,21 @@ export default function ConservationPage() {
     // isDeleting: isDeletingReading,
   } = useTemperatureReadings()
 
-  const {
-    maintenanceTasks,
-    stats: maintenanceStats,
-    isLoading: isLoadingMaintenance,
-    getTaskStatus,
-    // createTask,
-    // updateTask,
-    deleteTask,
-    completeTask,
-    // isCreating: isCreatingTask,
-    // isUpdating: isUpdatingTask,
-    // isDeleting: isDeletingTask,
-    // isCompleting: isCompletingTask,
-  } = useMaintenanceTasks()
+  // Maintenance tasks ora gestiti dal nuovo ScheduledMaintenanceCard
+  // const {
+  //   maintenanceTasks,
+  //   stats: maintenanceStats,
+  //   isLoading: isLoadingMaintenance,
+  //   getTaskStatus,
+  //   // createTask,
+  //   // updateTask,
+  //   deleteTask,
+  //   completeTask,
+  //   // isCreating: isCreatingTask,
+  //   // isUpdating: isUpdatingTask,
+  //   // isDeleting: isDeletingTask,
+  //   // isCompleting: isCompletingTask,
+  // } = useMaintenanceTasks()
 
   const handleSave = (
     data: Omit<
@@ -83,7 +82,7 @@ export default function ConservationPage() {
       | 'status'
       | 'last_temperature_reading'
     >,
-    maintenanceTasks: any[] = []
+    maintenanceTasks: unknown[] = []
   ) => {
     if (editingPoint) {
       updateConservationPoint({
@@ -126,7 +125,7 @@ export default function ConservationPage() {
   const handleSaveTemperature = (
     data: Omit<
       TemperatureReading,
-      'id' | 'company_id' | 'recorded_at' | 'validation_status'
+      'id' | 'company_id' | 'created_at'
     >
   ) => {
     createReading(data)
@@ -148,33 +147,33 @@ export default function ConservationPage() {
     }
   }
 
-  // Maintenance handlers
-  const handleCompleteMaintenance = (task: MaintenanceTask) => {
-    if (
-      confirm(
-        `Sei sicuro di voler completare la manutenzione "${task.type}" per ${task.conservation_point?.name}?`
-      )
-    ) {
-      completeTask({
-        maintenance_task_id: task.id,
-        completed_by: 'user1', // TODO: get from auth
-        completed_at: new Date(),
-        created_at: new Date(),
-        notes: 'Completato tramite interfaccia web',
-      })
-    }
-  }
+  // Maintenance handlers ora gestiti dal nuovo ScheduledMaintenanceCard
+  // const handleCompleteMaintenance = (task: MaintenanceTask) => {
+  //   if (
+  //     confirm(
+  //       `Sei sicuro di voler completare la manutenzione "${task.type}" per ${task.conservation_point?.name}?`
+  //     )
+  //   ) {
+  //     completeTask({
+  //       maintenance_task_id: task.id,
+  //       completed_by: 'user1', // TODO: get from auth
+  //       completed_at: new Date(),
+  //       created_at: new Date(),
+  //       notes: 'Completato tramite interfaccia web',
+  //     })
+  //   }
+  // }
 
-  const handleEditMaintenance = (_task: MaintenanceTask) => {
-    // For now, just show a simple alert - later we can add an edit modal
-    alert('Modifica manutenzione - Funzionalità in arrivo')
-  }
+  // const handleEditMaintenance = (_task: MaintenanceTask) => {
+  //   // For now, just show a simple alert - later we can add an edit modal
+  //   alert('Modifica manutenzione - Funzionalità in arrivo')
+  // }
 
-  const handleDeleteMaintenance = (id: string) => {
-    if (confirm('Sei sicuro di voler eliminare questo task di manutenzione?')) {
-      deleteTask(id)
-    }
-  }
+  // const handleDeleteMaintenance = (id: string) => {
+  //   if (confirm('Sei sicuro di voler eliminare questo task di manutenzione?')) {
+  //     deleteTask(id)
+  //   }
+  // }
 
   if (isLoading) {
     return (
@@ -476,11 +475,11 @@ export default function ConservationPage() {
           <div className="space-y-4">
             {temperatureReadings
               .sort(
-                (a, b) =>
+                (a: TemperatureReading, b: TemperatureReading) =>
                   new Date(b.recorded_at).getTime() -
                   new Date(a.recorded_at).getTime()
               )
-              .map(reading => (
+              .map((reading: TemperatureReading) => (
                 <TemperatureReadingCard
                   key={reading.id}
                   reading={reading}
@@ -492,161 +491,8 @@ export default function ConservationPage() {
         )}
       </CollapsibleCard>
 
-      {/* Maintenance Tasks List */}
-      <CollapsibleCard
-        title="Manutenzioni Programmate"
-        subtitle={`${maintenanceStats.total_tasks} task configurati`}
-        defaultExpanded={true}
-        icon={Wrench}
-        actions={
-          <button
-            onClick={e => {
-              e.stopPropagation()
-              alert('Aggiungi manutenzione - Funzionalità in arrivo')
-            }}
-            className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Aggiungi</span>
-          </button>
-        }
-      >
-        {/* Mini Statistics - Manutenzioni */}
-        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
-          <div className="bg-blue-50 rounded-lg border border-blue-200 p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-blue-700">Totale</p>
-                <p className="text-lg font-bold text-blue-900">
-                  {maintenanceStats.total_tasks}
-                </p>
-              </div>
-              <Wrench className="w-5 h-5 text-blue-600" />
-            </div>
-          </div>
-
-          <div className="bg-red-50 rounded-lg border border-red-200 p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-red-700">In Ritardo</p>
-                <p className="text-lg font-bold text-red-900">
-                  {maintenanceStats.overdue_tasks}
-                </p>
-              </div>
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-            </div>
-          </div>
-
-          <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-yellow-700">Urgenti</p>
-                <p className="text-lg font-bold text-yellow-900">
-                  {Math.max(
-                    maintenanceStats.total_tasks -
-                      maintenanceStats.overdue_tasks,
-                    0
-                  )}
-                </p>
-              </div>
-              <Clock className="w-5 h-5 text-yellow-600" />
-            </div>
-          </div>
-
-          <div className="bg-green-50 rounded-lg border border-green-200 p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-green-700">Programmate</p>
-                <p className="text-lg font-bold text-green-900">
-                  {maintenanceStats.completed_tasks}
-                </p>
-              </div>
-              <CheckCircle className="w-5 h-5 text-green-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Maintenance Type Distribution - Mini */}
-        <div className="mb-6 bg-gray-50 rounded-lg p-4">
-          <h4 className="text-sm font-semibold mb-3 flex items-center text-gray-700">
-            <Wrench className="w-4 h-4 mr-2 text-blue-600" />
-            Distribuzione per Tipo
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="text-center">
-              <div className="text-lg mb-1">🌡️</div>
-              <div className="text-xs text-gray-600">Controllo Temperature</div>
-              <div className="text-sm font-semibold">
-                {maintenanceStats.tasks_by_type.temperature ?? 0}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg mb-1">🧼</div>
-              <div className="text-xs text-gray-600">Sanificazione</div>
-              <div className="text-sm font-semibold">
-                {maintenanceStats.tasks_by_type.sanitization ?? 0}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg mb-1">❄️</div>
-              <div className="text-xs text-gray-600">Sbrinamento</div>
-              <div className="text-sm font-semibold">
-                {maintenanceStats.tasks_by_type.defrosting ?? 0}
-              </div>
-            </div>
-          </div>
-        </div>
-        {isLoadingMaintenance ? (
-          <div className="animate-pulse space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        ) : maintenanceTasks.length === 0 ? (
-          <div className="text-center py-8">
-            <Wrench className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Nessuna manutenzione programmata
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Le manutenzioni vengono create automaticamente per ogni punto di
-              conservazione.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {maintenanceTasks
-              .sort((a, b) => {
-                // Sort by status: overdue first, then pending, then scheduled
-                const statusPriority = { overdue: 0, pending: 1, scheduled: 2 }
-                const aStatus = getTaskStatus(a) as keyof typeof statusPriority
-                const bStatus = getTaskStatus(b) as keyof typeof statusPriority
-
-                if (statusPriority[aStatus] !== statusPriority[bStatus]) {
-                  return statusPriority[aStatus] - statusPriority[bStatus]
-                }
-
-                // Then by due date
-                return (
-                  new Date(a.next_due).getTime() -
-                  new Date(b.next_due).getTime()
-                )
-              })
-              .map(task => (
-                <MaintenanceTaskCard
-                  key={task.id}
-                  task={task}
-                  status={
-                    getTaskStatus(task) as 'overdue' | 'pending' | 'scheduled'
-                  }
-                  onComplete={handleCompleteMaintenance}
-                  onEdit={handleEditMaintenance}
-                  onDelete={handleDeleteMaintenance}
-                />
-              ))}
-          </div>
-        )}
-      </CollapsibleCard>
+      {/* Maintenance Tasks List - Nuovo formato con indicatori settimanali */}
+      <ScheduledMaintenanceCard />
 
       {/* Add/Edit Point Modal */}
       <AddPointModal
