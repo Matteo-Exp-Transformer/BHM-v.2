@@ -23,42 +23,54 @@ export const useExpiredProducts = () => {
   } = useQuery({
     queryKey: QUERY_KEYS.expiredProducts(user?.company_id || ''),
     queryFn: async (): Promise<ExpiredProduct[]> => {
-      console.log(
-        '🔧 Using mock data for expired products - database disabled temporarily'
-      )
-      return [
-        {
-          id: '3',
-          company_id: user?.company_id || '',
-          name: 'Latte Scaduto',
-          category_id: 'cat1',
-          category_name: 'Latticini',
-          department_id: 'dept1',
-          department_name: 'Cucina',
-          conservation_point_id: 'cp1',
-          conservation_point_name: 'Frigorifero Principale',
-          barcode: '1234567890123',
-          supplier_name: 'Latteria Centrale',
-          purchase_date: new Date('2025-09-01'),
-          expiry_date: new Date('2025-09-19'),
-          quantity: 1.0,
-          unit: 'litri',
-          allergens: [AllergenType.LATTE],
-          temperature_requirements: {
-            min_temp: 0,
-            max_temp: 4,
-            storage_type: 'fridge' as any,
-          },
-          label_photo_url: undefined,
-          status: 'expired',
-          notes: 'Prodotto scaduto da rimuovere',
-          expired_at: new Date('2025-09-19'),
-          compliance_status: 'non_compliant',
-          reinsertion_count: 0,
-          created_at: new Date('2025-09-01'),
-          updated_at: new Date(),
-        },
-      ]
+      if (!user?.company_id) {
+        return []
+      }
+
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          product_categories(id, name),
+          departments(id, name),
+          conservation_points(id, name)
+        `)
+        .eq('company_id', user.company_id)
+        .eq('status', 'expired')
+        .order('expiry_date', { ascending: true })
+
+      if (error) {
+        console.error('Error fetching expired products:', error)
+        throw error
+      }
+
+      return (data || []).map(product => ({
+        id: product.id,
+        company_id: product.company_id,
+        name: product.name,
+        category_id: product.category_id,
+        category_name: product.product_categories?.name,
+        department_id: product.department_id,
+        department_name: product.departments?.name,
+        conservation_point_id: product.conservation_point_id,
+        conservation_point_name: product.conservation_points?.name,
+        barcode: product.barcode,
+        supplier_name: product.supplier_name,
+        purchase_date: product.purchase_date ? new Date(product.purchase_date) : undefined,
+        expiry_date: product.expiry_date ? new Date(product.expiry_date) : new Date(),
+        quantity: product.quantity || 0,
+        unit: product.unit || '',
+        allergens: product.allergens || [],
+        temperature_requirements: product.temperature_requirements,
+        label_photo_url: product.label_photo_url,
+        status: product.status,
+        notes: product.notes,
+        expired_at: product.expired_at ? new Date(product.expired_at) : new Date(),
+        compliance_status: product.compliance_status,
+        reinsertion_count: product.reinsertion_count || 0,
+        created_at: product.created_at ? new Date(product.created_at) : new Date(),
+        updated_at: product.updated_at ? new Date(product.updated_at) : new Date(),
+      }))
     },
     enabled: !!user?.company_id,
   })
@@ -83,27 +95,45 @@ export const useExpiredProducts = () => {
         }
       }
 
-      // TEMPORARY: Mock data until database is fixed
-      console.log(
-        '🔧 Using mock data for waste stats - database disabled temporarily'
-      )
-      const expiredProducts = [
-        {
-          id: '3',
-          name: 'Latte Scaduto',
-          quantity: 1.0,
-          expiry_date: '2025-09-19',
-          product_categories: { name: 'Latticini' },
-        },
-      ]
+      const { data: expiredProductsData, error } = await supabase
+        .from('products')
+        .select(`
+          id,
+          name,
+          quantity,
+          expiry_date,
+          product_categories(name)
+        `)
+        .eq('company_id', user.company_id)
+        .eq('status', 'expired')
 
+      if (error) {
+        console.error('Error fetching waste stats:', error)
+        throw error
+      }
+
+      const expiredProducts = expiredProductsData || []
       const totalExpired = expiredProducts.length
+
+      if (totalExpired === 0) {
+        return {
+          total_expired_products: 0,
+          total_waste_cost: 0,
+          average_expiry_days: 0,
+          most_wasted_category: '',
+          waste_trend: 'stable',
+          monthly_waste_cost: [],
+          prevention_savings: 0,
+        }
+      }
+
       const totalWasteCost = expiredProducts.reduce((total, product) => {
-        return total + product.quantity * 2.5 // €2.50 per unit average
+        return total + (product.quantity || 0) * 2.5 // €2.50 per unit average
       }, 0)
 
       const today = new Date()
       const totalExpiredDays = expiredProducts.reduce((total, product) => {
+        if (!product.expiry_date) return total
         const expiryDate = new Date(product.expiry_date)
         const diffTime = today.getTime() - expiryDate.getTime()
         const daysExpired = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
@@ -116,7 +146,7 @@ export const useExpiredProducts = () => {
       // Find most wasted category
       const categoryCounts = expiredProducts.reduce(
         (acc, product) => {
-          const categoryName = product.product_categories.name
+          const categoryName = product.product_categories?.name || 'Senza categoria'
           acc[categoryName] = (acc[categoryName] || 0) + 1
           return acc
         },
