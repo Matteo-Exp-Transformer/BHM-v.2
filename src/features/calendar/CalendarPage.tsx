@@ -4,6 +4,7 @@ import {
   Activity,
   AlertCircle,
   TrendingUp,
+  ClipboardCheck,
 } from 'lucide-react'
 import Calendar from './Calendar'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
@@ -12,10 +13,13 @@ import {
   ViewSelector,
   HorizontalCalendarFilters,
   useCalendarView,
+  GenericTaskForm,
 } from './components'
 import { useCalendarAlerts } from './hooks/useCalendarAlerts'
 import { useAggregatedEvents } from './hooks/useAggregatedEvents'
 import { useFilteredEvents } from './hooks/useFilteredEvents'
+import { useGenericTasks } from './hooks/useGenericTasks'
+import { useStaff } from '@/features/management/hooks/useStaff'
 
 export const CalendarPage = () => {
   // ✅ Sostituisci useCalendar con nuovi hooks
@@ -23,6 +27,8 @@ export const CalendarPage = () => {
   const { filteredEvents } = useFilteredEvents(aggregatedEvents)
   const { alertCount, criticalCount } = useCalendarAlerts(filteredEvents)
   const [view, setView] = useCalendarView('month')
+  const { createTask, isCreating } = useGenericTasks()
+  const { staff } = useStaff()
 
   const [activeFilters, setActiveFilters] = useState({
     eventTypes: [
@@ -120,6 +126,29 @@ export const CalendarPage = () => {
     })
   }
 
+  const handleCreateGenericTask = (taskData: any) => {
+    createTask({
+      name: taskData.name,
+      frequency: taskData.frequenza,
+      assigned_to_role: taskData.assegnatoARuolo,
+      assigned_to_category: taskData.assegnatoACategoria,
+      assigned_to_staff_id: taskData.assegnatoADipendenteSpecifico,
+      note: taskData.note,
+      custom_days: taskData.giorniCustom,
+    })
+  }
+
+  const staffOptions = useMemo(
+    () =>
+      (staff ?? []).map(member => ({
+        id: member.id,
+        label: member.name,
+        role: member.role,
+        categories: [member.category] || [],
+      })),
+    [staff]
+  )
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -157,6 +186,25 @@ export const CalendarPage = () => {
       </div>
 
       <div className="px-4 py-6">
+        {/* Assegna nuova attività/mansione */}
+        <div className="mb-6">
+          <CollapsibleCard
+            title="Assegna nuova attività / mansione"
+            icon={ClipboardCheck}
+            defaultExpanded={false}
+            className="mb-4"
+          >
+            <div className="p-4">
+              <GenericTaskForm
+                staffOptions={staffOptions}
+                onSubmit={handleCreateGenericTask}
+                onCancel={() => {}}
+                isLoading={isCreating}
+              />
+            </div>
+          </CollapsibleCard>
+        </div>
+
         {/* Stats Panel */}
         <div className="mb-6">
           <CollapsibleCard
@@ -260,6 +308,12 @@ export const CalendarPage = () => {
                       <span className="text-gray-600">🌡️ Controlli Temp</span>
                       <span className="font-medium">
                         {sources?.temperatureChecks || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">📋 Attività Generiche</span>
+                      <span className="font-medium">
+                        {sources?.genericTasks || 0}
                       </span>
                     </div>
                   </div>

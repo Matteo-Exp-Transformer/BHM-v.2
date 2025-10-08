@@ -12,3 +12,5 @@ export type { HorizontalCalendarFiltersProps } from './HorizontalCalendarFilters
 
 export { ViewSelector, CompactViewSelector, useCalendarView } from './ViewSelector'
 export type { ViewSelectorProps, CompactViewSelectorProps, CalendarViewType } from './ViewSelector'
+
+export { GenericTaskForm } from './GenericTaskForm'
