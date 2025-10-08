@@ -14,7 +14,9 @@ import { transformToFullCalendarEvents } from './utils/eventTransform'
 import EventModal from './components/EventModal'
 import FilterPanel from './components/FilterPanel'
 import QuickActions from './components/QuickActions'
+import MacroCategoryModal from './components/MacroCategoryModal'
 import { Calendar as CalendarIcon, Filter, Plus } from 'lucide-react'
+import { useMacroCategoryEvents, type MacroCategory } from './hooks/useMacroCategoryEvents'
 
 interface CalendarProps {
   events: CalendarEvent[]
@@ -27,6 +29,7 @@ interface CalendarProps {
   currentView?: 'year' | 'month' | 'week' | 'day'
   loading?: boolean
   error?: string | null
+  useMacroCategories?: boolean
 }
 
 const defaultConfig: CalendarViewConfig = {
@@ -73,6 +76,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   currentView,
   loading = false,
   error = null,
+  useMacroCategories = false,
 }) => {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
@@ -84,6 +88,13 @@ export const Calendar: React.FC<CalendarProps> = ({
     departments: [],
     assignees: [],
   })
+  const [selectedMacroCategory, setSelectedMacroCategory] = useState<{
+    category: MacroCategory
+    date: Date
+    items: any[]
+  } | null>(null)
+
+  const { events: macroCategoryEvents } = useMacroCategoryEvents()
 
   const calendarRef = useRef<FullCalendar>(null)
   const finalConfig = { ...defaultConfig, ...config }
@@ -98,20 +109,67 @@ export const Calendar: React.FC<CalendarProps> = ({
           ? 'timeGridDay'
           : finalConfig.defaultView
 
-  // Transform events for FullCalendar
-  const fullCalendarEvents = transformToFullCalendarEvents(events)
+  const getCategoryLabel = (category: MacroCategory): string => {
+    const labels = {
+      maintenance: 'Manutenzioni',
+      generic_tasks: 'Mansioni/Attività',
+      product_expiry: 'Scadenze Prodotti',
+    }
+    return labels[category]
+  }
 
-  // Handle event click
+  const getCategoryColor = (category: MacroCategory) => {
+    const colors = {
+      maintenance: { bg: '#FEF3C7', border: '#F59E0B', text: '#92400E' },
+      generic_tasks: { bg: '#D1FAE5', border: '#10B981', text: '#065F46' },
+      product_expiry: { bg: '#FECACA', border: '#EF4444', text: '#991B1B' },
+    }
+    return colors[category]
+  }
+
+  const fullCalendarEvents = useMacroCategories
+    ? macroCategoryEvents.map(event => {
+        console.log('📅 Creating calendar event:', {
+          category: event.category,
+          date: event.date,
+          itemsCount: event.items.length,
+          items: event.items
+        })
+        return {
+          id: `macro-${event.category}-${event.date}`,
+          title: getCategoryLabel(event.category),
+          start: event.date,
+          allDay: true,
+          backgroundColor: getCategoryColor(event.category).bg,
+          borderColor: getCategoryColor(event.category).border,
+          textColor: getCategoryColor(event.category).text,
+          extendedProps: {
+            type: 'macro_category',
+            category: event.category,
+            count: event.count,
+            items: event.items,
+          },
+        }
+      })
+    : transformToFullCalendarEvents(events)
+
   const handleEventClick = useCallback(
-    (clickInfo: { event: { extendedProps?: { originalEvent?: any } } }) => {
-      const originalEvent = clickInfo.event.extendedProps?.originalEvent
-      if (originalEvent) {
-        setSelectedEvent(originalEvent)
-        setShowEventModal(true)
-        onEventClick?.(originalEvent)
+    (clickInfo: { event: { extendedProps?: { originalEvent?: any; type?: string; category?: MacroCategory; items?: any[] }; start: Date | null } }) => {
+      if (useMacroCategories && clickInfo.event.extendedProps?.type === 'macro_category') {
+        const { category, items } = clickInfo.event.extendedProps
+        const date = clickInfo.event.start ? new Date(clickInfo.event.start) : new Date()
+        console.log('📊 Macro category clicked:', { category, date, itemsCount: items?.length })
+        setSelectedMacroCategory({ category, date, items: items || [] })
+      } else {
+        const originalEvent = clickInfo.event.extendedProps?.originalEvent
+        if (originalEvent) {
+          setSelectedEvent(originalEvent)
+          setShowEventModal(true)
+          onEventClick?.(originalEvent)
+        }
       }
     },
-    [onEventClick]
+    [onEventClick, useMacroCategories]
   )
 
   // Handle date selection for new events
@@ -326,6 +384,22 @@ export const Calendar: React.FC<CalendarProps> = ({
               const { event } = arg
               const extendedProps = event.extendedProps
 
+              if (useMacroCategories && extendedProps?.type === 'macro_category') {
+                return (
+                  <div className="fc-event-content-custom">
+                    <div className="fc-event-title-container">
+                      <span className="fc-event-type-icon">
+                        {extendedProps.category === 'maintenance' && '🔧'}
+                        {extendedProps.category === 'generic_tasks' && '📋'}
+                        {extendedProps.category === 'product_expiry' && '📦'}
+                      </span>
+                      <span className="fc-event-title">{event.title}</span>
+                      <span className="fc-event-count-badge">({extendedProps.count})</span>
+                    </div>
+                  </div>
+                )
+              }
+
               return (
                 <div className="fc-event-content-custom">
                   <div className="fc-event-title-container">
@@ -369,6 +443,17 @@ export const Calendar: React.FC<CalendarProps> = ({
           event={selectedEvent}
           onUpdate={onEventUpdate}
           onClose={() => setSelectedEvent(null)}
+        />
+      )}
+
+      {/* Macro Category Modal */}
+      {useMacroCategories && selectedMacroCategory && (
+        <MacroCategoryModal
+          isOpen={true}
+          onClose={() => setSelectedMacroCategory(null)}
+          category={selectedMacroCategory.category}
+          items={selectedMacroCategory.items}
+          date={selectedMacroCategory.date}
         />
       )}
 
@@ -477,6 +562,38 @@ export const Calendar: React.FC<CalendarProps> = ({
         .event-priority-high {
           border-width: 2px !important;
           font-weight: 500;
+        }
+
+        .fc-event-count-badge {
+          font-size: 10px;
+          font-weight: 600;
+          margin-left: 4px;
+          color: inherit;
+        }
+
+        .event-type-macro_category {
+          cursor: pointer;
+          font-weight: 600;
+          border-width: 2px !important;
+        }
+
+        /* Macro category specific colors */
+        .fc-event[style*="#FEF3C7"] {
+          background-color: #FEF3C7 !important;
+          border-color: #F59E0B !important;
+          color: #92400E !important;
+        }
+
+        .fc-event[style*="#D1FAE5"] {
+          background-color: #D1FAE5 !important;
+          border-color: #10B981 !important;
+          color: #065F46 !important;
+        }
+
+        .fc-event[style*="#FECACA"] {
+          background-color: #FECACA !important;
+          border-color: #EF4444 !important;
+          color: #991B1B !important;
         }
       `}</style>
     </div>

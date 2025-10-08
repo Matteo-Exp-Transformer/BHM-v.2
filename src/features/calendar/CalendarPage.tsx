@@ -380,6 +380,7 @@ export const CalendarPage = () => {
               currentView={view}
               loading={isLoading}
               error={null}
+              useMacroCategories={true}
             />
         </div>
 
