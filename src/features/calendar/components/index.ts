@@ -14,3 +14,4 @@ export { ViewSelector, CompactViewSelector, useCalendarView } from './ViewSelect
 export type { ViewSelectorProps, CompactViewSelectorProps, CalendarViewType } from './ViewSelector'
 
 export { GenericTaskForm } from './GenericTaskForm'
+export { AlertModal } from './AlertModal'
