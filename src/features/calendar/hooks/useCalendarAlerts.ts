@@ -67,16 +67,6 @@ export function useCalendarAlerts(events: CalendarEvent[]): CalendarAlertsResult
         return
       }
 
-      // 🔍 DEBUG: Log per ogni evento
-      console.log(`🔍 Event: ${event.title}`, {
-        start: eventStart.toISOString(),
-        isOverdue,
-        hoursUntilEvent,
-        priority: event.priority,
-        recurring: event.recurring,
-        status: event.status,
-        willShow: !isOverdue && hoursUntilEvent <= ALERT_THRESHOLD_HOURS
-      })
 
       let severity: CalendarAlert['severity'] | null = null
       let message = ''
@@ -138,13 +128,6 @@ export function useCalendarAlerts(events: CalendarEvent[]): CalendarAlertsResult
     [activeAlerts]
   )
 
-  // 🔍 DEBUG: Log per verificare il conteggio
-  console.log('🔍 Alert Debug:', {
-    totalEvents: events.length,
-    filteredAlerts: alertCount,
-    criticalAlerts: criticalCount,
-    alerts: activeAlerts.map(a => ({ title: a.event.title, severity: a.severity, start: a.event.start }))
-  })
 
   const dismissAlert = useCallback((alertId: string) => {
     const current = getDismissedAlerts()
