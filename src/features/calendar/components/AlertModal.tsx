@@ -142,10 +142,10 @@ export const AlertModal: React.FC<AlertModalProps> = ({
           {/* Categories Tabs */}
           <div className="flex space-x-8">
             {categories.map(category => {
-              const categoryConfig = categoryConfig[category]
+              const categoryConfigItem = categoryConfig[category]
               const categoryAlerts = groupedAlerts[category]
               const criticalCount = categoryAlerts.filter(a => a.severity === 'critical').length
-              const CategoryIcon = categoryConfig.icon
+              const CategoryIcon = categoryConfigItem.icon
 
               return (
                 <button
@@ -153,13 +153,13 @@ export const AlertModal: React.FC<AlertModalProps> = ({
                   onClick={() => setSelectedCategory(category)}
                   className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                     selectedCategory === category
-                      ? `${categoryConfig.borderColor} ${categoryConfig.textColor}`
+                      ? `${categoryConfigItem.borderColor} ${categoryConfigItem.textColor}`
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <CategoryIcon className="h-4 w-4" />
-                    <span>{categoryConfig.label}</span>
+                    <span>{categoryConfigItem.label}</span>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       criticalCount > 0 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-600'
                     }`}>
