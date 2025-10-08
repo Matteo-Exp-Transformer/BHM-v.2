@@ -2,8 +2,8 @@
 
 **Comprehensive schema documentation and data access patterns**
 
-**Ultima verifica:** 2025-10-07
-**Status:** ✅ Verificato e aggiornato con audit completo
+**Ultima verifica:** 2025-10-08
+**Status:** ✅ Verificato e aggiornato con audit completo + Sistema Macro-Categorie Calendario
 **Architettura:** Clerk Auth + Supabase Database
 
 ---
@@ -994,6 +994,205 @@ const calendarEvents = tasks.map(task => ({
 }))
 ```
 
+### Calendar Macro-Categories System ✨ **NEW: 2025-10-08**
+
+**Hook:** `useMacroCategoryEvents` (`C:\Users\matte.MIO\Documents\GitHub\BHM-v.2\src\features\calendar\hooks\useMacroCategoryEvents.ts`)
+**Component:** `MacroCategoryModal` (`C:\Users\matte.MIO\Documents\GitHub\BHM-v.2\src\features\calendar\components\MacroCategoryModal.tsx`)
+
+**Sistema di Aggregazione Multi-Tabella:**
+
+Il sistema di macro-categorie aggrega eventi da tre tabelle diverse in un'unica visualizzazione calendario semplificata:
+
+```typescript
+// Tabelle coinvolte:
+// 1. maintenance_tasks → Macro-Categoria: 'maintenance' (Manutenzioni)
+// 2. tasks → Macro-Categoria: 'generic_tasks' (Mansioni/Attività Generiche)
+// 3. products (expiry_date) → Macro-Categoria: 'product_expiry' (Scadenze Prodotti)
+```
+
+**Data Flow e Aggregazione:**
+
+```typescript
+// Step 1: Query parallele da 3 tabelle
+const { maintenanceTasks } = useMaintenanceTasks()  // ✅ Table: maintenance_tasks
+const { tasks: genericTasks } = useGenericTasks()   // ✅ Table: tasks
+const { products } = useProducts()                  // ✅ Table: products
+
+// Step 2: Conversione a formato unificato MacroCategoryItem
+// maintenance_tasks → MacroCategoryItem
+const maintenanceItems = maintenanceTasks.map(task => ({
+  id: task.id,
+  title: task.title || 'Manutenzione',
+  description: task.description,
+  dueDate: new Date(task.next_due),           // ✅ Campo: next_due
+  status: calculateStatus(task.status, task.next_due),
+  priority: task.priority || 'medium',
+  assignedTo: task.assigned_to,
+  frequency: task.frequency,
+  metadata: {
+    category: 'maintenance',
+    sourceId: task.id,
+    conservationPointId: task.conservation_point_id,
+    estimatedDuration: task.estimated_duration,
+    instructions: task.instructions
+  }
+}))
+
+// tasks → MacroCategoryItem
+const genericTaskItems = genericTasks.map(task => ({
+  id: task.id,
+  title: task.name,                           // ✅ Campo: name (non title)
+  description: task.description,
+  dueDate: new Date(task.next_due),           // ✅ Campo: next_due
+  status: calculateStatus(task.status, task.next_due),
+  priority: task.priority || 'medium',
+  assignedTo: task.assigned_to,
+  assignedToRole: task.assigned_to_role,      // ✅ Campo specifico tasks
+  assignedToCategory: task.assigned_to_category, // ✅ Campo specifico tasks
+  assignedToStaffId: task.assigned_to_staff_id,  // ✅ Campo specifico tasks
+  frequency: task.frequency,
+  metadata: {
+    category: 'generic_tasks',
+    sourceId: task.id,
+    estimatedDuration: task.estimated_duration
+  }
+}))
+
+// products (filtrati per scadenza) → MacroCategoryItem
+const productExpiryItems = products
+  .filter(product =>
+    product.expiry_date &&                    // ✅ Campo: expiry_date
+    product.status === 'active' &&            // ✅ Solo prodotti attivi
+    new Date(product.expiry_date) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Ultimi 7 giorni inclusi
+  )
+  .map(product => ({
+    id: product.id,
+    title: `Scadenza: ${product.name}`,
+    description: `Prodotto in scadenza - ${product.quantity || ''} ${product.unit || ''}`,
+    dueDate: new Date(product.expiry_date!),  // ✅ Campo: expiry_date
+    status: calculateExpiryStatus(product.expiry_date),
+    priority: calculateExpiryPriority(product.expiry_date), // Auto: critical/high/medium
+    metadata: {
+      category: 'product_expiry',
+      sourceId: product.id,
+      productName: product.name,
+      quantity: product.quantity,
+      unit: product.unit,
+      departmentId: product.department_id,
+      conservationPointId: product.conservation_point_id,
+      barcode: product.barcode,
+      sku: product.sku,
+      supplierName: product.supplier_name,
+      purchaseDate: product.purchase_date,
+      notes: product.notes
+    }
+  }))
+
+// Step 3: Raggruppamento per Data + Categoria
+const eventsByDateAndCategory = new Map<string, Map<MacroCategory, MacroCategoryItem[]>>()
+
+allItems.forEach(item => {
+  const dateKey = item.dueDate.toISOString().split('T')[0] // ✅ Formato: YYYY-MM-DD
+  
+  // Raggruppa per data
+  if (!eventsByDateAndCategory.has(dateKey)) {
+    eventsByDateAndCategory.set(dateKey, new Map())
+  }
+  
+  // Raggruppa per categoria all'interno della data
+  const categoryMap = eventsByDateAndCategory.get(dateKey)!
+  if (!categoryMap.has(item.metadata.category)) {
+    categoryMap.set(item.metadata.category, [])
+  }
+  
+  categoryMap.get(item.metadata.category)!.push(item)
+})
+
+// Step 4: Generazione MacroCategoryEvent finale
+const events: MacroCategoryEvent[] = []
+
+eventsByDateAndCategory.forEach((categoryMap, dateKey) => {
+  categoryMap.forEach((items, category) => {
+    events.push({
+      date: dateKey,                         // ✅ YYYY-MM-DD
+      category,                              // ✅ 'maintenance' | 'generic_tasks' | 'product_expiry'
+      count: items.length,                   // ✅ Numero sotto-attività
+      items: items.sort((a, b) => {          // ✅ Ordinamento per priorità
+        const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
+        return priorityOrder[a.priority] - priorityOrder[b.priority]
+      })
+    })
+  })
+})
+```
+
+**Visualizzazione Calendario:**
+
+```typescript
+// File: src/features/calendar/Calendar.tsx
+// Modalità Macro-Categorie attivata con prop useMacroCategories={true}
+
+// Ogni giorno mostra solo eventi macro-categoria:
+// - "Manutenzioni (5)" → 5 maintenance_tasks per quella data
+// - "Mansioni/Attività Generiche (3)" → 3 tasks per quella data
+// - "Scadenze Prodotti (2)" → 2 products in scadenza
+
+// Click su macro-categoria → apre MacroCategoryModal
+// Modal mostra lista completa sotto-attività con dettagli:
+// - Titolo, descrizione, stato (pending/completed/overdue)
+// - Priorità (low/medium/high/critical)
+// - Assegnazione (staff/ruolo/categoria)
+// - Frequenza, scadenza, metadati specifici per tipo
+```
+
+**Mapping Campi Database → UI:**
+
+| Database Table | Campo Chiave | Macro-Categoria | Badge Calendario | Dettagli Modal |
+|----------------|--------------|-----------------|------------------|----------------|
+| `maintenance_tasks` | `next_due` | `maintenance` | "Manutenzioni (N)" | Punto conservazione, istruzioni, durata |
+| `tasks` | `next_due` | `generic_tasks` | "Mansioni/Attività Generiche (N)" | Assegnazione (role/category/staff), frequenza |
+| `products` | `expiry_date` | `product_expiry` | "Scadenze Prodotti (N)" | Quantità, fornitore, barcode, SKU |
+
+**Logica Priorità Automatica (Products):**
+
+```typescript
+// Calcolo automatico priorità per scadenze prodotti
+const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
+const priority =
+  daysUntilExpiry <= 1 ? 'critical' :   // ✅ Scade oggi/domani → Critico
+  daysUntilExpiry <= 3 ? 'high' :       // ✅ Scade in 2-3 giorni → Alto
+  'medium'                               // ✅ Scade in 4-7 giorni → Medio
+```
+
+**Company Isolation:**
+
+Tutti e tre gli hook sottostanti applicano filtri `company_id`:
+- `useMaintenanceTasks()`: `.eq('company_id', user.company_id)`
+- `useGenericTasks()`: `.eq('company_id', companyId)`
+- `useProducts()`: `.eq('company_id', companyId)`
+
+✅ **Security:** Nessun dato cross-tenant, aggregazione sicura a livello applicazione.
+
+**Colori Distintivi:**
+
+| Macro-Categoria | Colore | Icona | Badge |
+|-----------------|--------|-------|-------|
+| `maintenance` | Blu | 🔧 Wrench | `bg-blue-50 border-blue-200 text-blue-700` |
+| `generic_tasks` | Verde | 📋 ClipboardList | `bg-green-50 border-green-200 text-green-700` |
+| `product_expiry` | Arancione | 📦 Package | `bg-orange-50 border-orange-200 text-orange-700` |
+
+**Files Creati:**
+
+1. `src/features/calendar/hooks/useMacroCategoryEvents.ts` - Hook aggregazione multi-tabella
+2. `src/features/calendar/components/MacroCategoryModal.tsx` - Drawer laterale dettagli
+
+**Files Modificati:**
+
+1. `src/features/calendar/Calendar.tsx` - Aggiunto supporto `useMacroCategories` prop
+2. `src/features/calendar/CalendarPage.tsx` - Attivato `useMacroCategories={true}`
+3. `src/features/calendar/components/index.ts` - Esportato `MacroCategoryModal`
+
 ### Staff Management
 
 **Hook:** `useStaff` (`C:\Users\matte.MIO\Documents\GitHub\BHM-v.2\src\features\management\hooks\useStaff.ts`)
@@ -1209,6 +1408,7 @@ await supabase
 | `useDepartments` | `departments` | None | ✅ Required | React Query (5min stale) |
 | `useCategories` | `product_categories` | None | ✅ Required | React Query (live) |
 | `useCalendarEvents` | `maintenance_tasks` | `conservation_points`, `departments` | ✅ Required | React Query (5min refetch) |
+| `useMacroCategoryEvents` ✨ | **Multi-table**: `maintenance_tasks`, `tasks`, `products` | Via sottostanti hooks | ✅ Required (inherited) | Aggregazione in-memory |
 
 ### Common Query Patterns
 
@@ -2226,13 +2426,23 @@ SQL function `purge_company_data(p_company_id uuid)`:
 ---
 
 **Document Updated By:** Claude Code
-**Version:** 3.1
-**Last Updated:** 2025-10-07
-**Changes v3.1:**
+**Version:** 3.2
+**Last Updated:** 2025-10-08
+
+**Changes v3.2 (2025-10-08):**
+- ✨ Added **Calendar Macro-Categories System** documentation
+- Documented `useMacroCategoryEvents` hook for multi-table aggregation
+- Documented `MacroCategoryModal` component for detailed event display
+- Added data flow mapping: `maintenance_tasks` + `tasks` + `products` → 3 macro-categorie
+- Documented automatic priority calculation for product expiry dates
+- Updated Query Pattern Summary table with new aggregation hook
+
+**Changes v3.1 (2025-10-07):**
 - Fixed `temperature_readings` schema to match actual simplified SQL structure
 - Added 5 missing tables from SQL schema: `events`, `notes`, `non_conformities`, `shopping_lists`, `shopping_list_items`
 - Added PostgreSQL ENUM Types section documenting USER-DEFINED types
 - Added Schema Validation Notes section highlighting critical discrepancies
 - Updated security checklist to include all SQL schema tables
 - Corrected staff.role constraint documentation (no DB-level constraint exists)
+
 **Next Update:** When schema changes or new tables are added

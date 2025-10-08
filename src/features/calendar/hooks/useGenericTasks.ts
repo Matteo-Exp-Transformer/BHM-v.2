@@ -138,27 +138,31 @@ export const useGenericTasks = () => {
       const frequency = mapFrequency(input.frequency)
       const next_due = calculateNextDue(input.frequency, input.custom_days)
 
-      const payload = {
+      // Payload allineato esattamente con schema onboarding (riga 998-1024 onboardingHelpers.ts)
+      const payload: any = {
         company_id: companyId,
         name: input.name,
-        description: input.note || '',
         frequency: frequency,
-        assigned_to: input.assigned_to_staff_id && input.assigned_to_staff_id !== 'none' 
-          ? input.assigned_to_staff_id 
-          : input.assigned_to_role,
-        assigned_to_role: input.assigned_to_role,
-        assigned_to_category: input.assigned_to_category && input.assigned_to_category !== 'all' ? input.assigned_to_category : null,
-        assigned_to_staff_id: input.assigned_to_staff_id && input.assigned_to_staff_id !== 'none' ? input.assigned_to_staff_id : null,
+        assigned_to: input.assigned_to_staff_id && input.assigned_to_staff_id !== 'none'
+          ? input.assigned_to_staff_id
+          : input.assigned_to_role || '',
         assignment_type: input.assigned_to_staff_id && input.assigned_to_staff_id !== 'none' ? 'staff' : 'role',
-        priority: 'medium',
-        estimated_duration: 60,
-        department_id: null,
-        conservation_point_id: null,
-        next_due: next_due.toISOString(),
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       }
+
+      // Campi opzionali - aggiungi solo se presenti
+      if (input.note) payload.description = input.note
+      if (input.assigned_to_staff_id && input.assigned_to_staff_id !== 'none') {
+        payload.assigned_to_staff_id = input.assigned_to_staff_id
+      }
+      if (input.assigned_to_role) {
+        payload.assigned_to_role = input.assigned_to_role
+      }
+      if (input.assigned_to_category && input.assigned_to_category !== 'all') {
+        payload.assigned_to_category = input.assigned_to_category
+      }
+      if (next_due) payload.next_due = next_due.toISOString()
+
+      console.log('📤 Creating task with payload:', payload)
 
       const { data, error } = await supabase
         .from('tasks')
@@ -167,10 +171,12 @@ export const useGenericTasks = () => {
         .single()
 
       if (error) {
-        console.error('Error creating task:', error)
+        console.error('❌ Error creating task:', error)
+        console.error('❌ Failed payload:', payload)
         throw error
       }
 
+      console.log('✅ Task created successfully:', data)
       return data
     },
     onSuccess: () => {
