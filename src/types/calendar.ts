@@ -238,7 +238,7 @@ export interface CalendarSettings {
 
 // Calendar view configuration
 export interface CalendarViewConfig {
-  defaultView: 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listWeek'
+  defaultView: 'multiMonthYear' | 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listWeek'
   headerToolbar: {
     left: string
     center: string

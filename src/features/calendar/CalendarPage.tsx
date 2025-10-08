@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import {
   Calendar as CalendarIcon,
   Activity,
@@ -7,11 +7,10 @@ import {
 } from 'lucide-react'
 import Calendar from './Calendar'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
-// ✅ Importa nuovi componenti calendario
+import type { CalendarEvent } from '@/types/calendar'
 import {
   ViewSelector,
-  CalendarFilters,
-  CalendarLegend,
+  HorizontalCalendarFilters,
   useCalendarView,
 } from './components'
 import { useCalendarAlerts } from './hooks/useCalendarAlerts'
@@ -25,26 +24,37 @@ export const CalendarPage = () => {
   const { alertCount, criticalCount } = useCalendarAlerts(filteredEvents)
   const [view, setView] = useCalendarView('month')
 
-  // ✅ State per filtri
   const [activeFilters, setActiveFilters] = useState({
     eventTypes: [
       'maintenance',
       'general_task',
       'temperature_reading',
       'custom',
-    ],
-    priorities: ['critical', 'high', 'medium', 'low'],
-    statuses: ['pending', 'overdue'],
+    ] as CalendarEvent['type'][],
+    priorities: ['critical', 'high', 'medium', 'low'] as CalendarEvent['priority'][],
+    statuses: ['pending', 'overdue', 'completed'] as CalendarEvent['status'][],
   })
 
-  // ✅ Applica filtri
+  const handleFilterChange = useCallback((newFilters: typeof activeFilters) => {
+    console.log('🔍 Filtri aggiornati:', newFilters)
+    setActiveFilters(newFilters)
+  }, [])
+
   const displayEvents = useMemo(() => {
-    return filteredEvents.filter(
-      event =>
-        activeFilters.eventTypes.includes(event.type) &&
-        activeFilters.priorities.includes(event.priority) &&
-        activeFilters.statuses.includes(event.status)
-    )
+    const filtered = filteredEvents.filter(event => {
+      const typeMatch = activeFilters.eventTypes.length === 0 || activeFilters.eventTypes.includes(event.type)
+      const priorityMatch = activeFilters.priorities.length === 0 || activeFilters.priorities.includes(event.priority)
+      const statusMatch = activeFilters.statuses.length === 0 || activeFilters.statuses.includes(event.status)
+
+      return typeMatch && priorityMatch && statusMatch
+    })
+
+    console.log(`📊 Eventi totali: ${filteredEvents.length}, Eventi filtrati: ${filtered.length}`, {
+      filtri: activeFilters,
+      sample: filtered.slice(0, 3).map(e => ({ title: e.title, type: e.type, priority: e.priority, status: e.status }))
+    })
+
+    return filtered
   }, [filteredEvents, activeFilters])
 
   // ✅ Calcola statistiche
@@ -281,31 +291,16 @@ export const CalendarPage = () => {
           </CollapsibleCard>
         </div>
 
-        {/* ✅ Layout con Sidebar */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
-          {/* Sidebar con Filtri e Legenda */}
-          <div className="lg:col-span-1 space-y-4">
-            <CalendarFilters
-              onFilterChange={setActiveFilters}
-              initialFilters={activeFilters}
-            />
-            <CalendarLegend defaultExpanded={false} />
+        {/* Filtri Orizzontali */}
+        <div className="mb-6">
+          <HorizontalCalendarFilters
+            onFilterChange={handleFilterChange}
+            initialFilters={activeFilters}
+          />
+        </div>
 
-            {/* Stats Sources */}
-            <div className="bg-white rounded-lg border p-4">
-              <h3 className="text-sm font-semibold mb-2">Fonti Eventi</h3>
-              <div className="space-y-1 text-xs">
-                <div>🔧 Manutenzioni: {sources?.maintenance || 0}</div>
-                <div>📜 Scadenze HACCP: {sources?.haccpExpiry || 0}</div>
-                <div>📦 Scadenze Prodotti: {sources?.productExpiry || 0}</div>
-                <div>⏰ Alert HACCP: {sources?.haccpDeadlines || 0}</div>
-                <div>🌡️ Controlli Temp: {sources?.temperatureChecks || 0}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Calendario */}
-          <div className="lg:col-span-3">
+        {/* Calendario */}
+        <div className="mb-6">
             <Calendar
               events={displayEvents}
               onEventClick={onEventClick}
@@ -315,21 +310,23 @@ export const CalendarPage = () => {
               onDateSelect={onDateSelect}
               config={{
                 defaultView:
-                  view === 'month'
-                    ? 'dayGridMonth'
-                    : view === 'week'
-                      ? 'timeGridWeek'
-                      : 'timeGridDay',
+                  view === 'year'
+                    ? 'multiMonthYear'
+                    : view === 'month'
+                      ? 'dayGridMonth'
+                      : view === 'week'
+                        ? 'timeGridWeek'
+                        : 'timeGridDay',
                 headerToolbar: {
                   left: 'prev,next today',
                   center: 'title',
-                  right: '', // ViewSelector esterno
+                  right: '',
                 },
               }}
+              currentView={view}
               loading={isLoading}
               error={null}
             />
-          </div>
         </div>
 
         {/* Quick Overview Cards */}

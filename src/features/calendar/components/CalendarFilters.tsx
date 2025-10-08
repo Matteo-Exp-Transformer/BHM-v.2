@@ -86,7 +86,7 @@ export function CalendarFilters({
     priorities: initialFilters?.priorities ||
       storedFilters.priorities || ['critical', 'high', 'medium', 'low'],
     statuses: initialFilters?.statuses ||
-      storedFilters.statuses || ['pending', 'overdue'],
+      storedFilters.statuses || ['pending', 'overdue', 'completed'],
   }
 
   const [filters, setFilters] = useState<CalendarFilterOptions>(defaultFilters)
@@ -131,7 +131,7 @@ export function CalendarFilters({
     const reset: CalendarFilterOptions = {
       eventTypes: ['maintenance', 'general_task', 'temperature_reading', 'custom'],
       priorities: ['critical', 'high', 'medium', 'low'],
-      statuses: ['pending', 'overdue'],
+      statuses: ['pending', 'overdue', 'completed'],
     }
     setFilters(reset)
   }
