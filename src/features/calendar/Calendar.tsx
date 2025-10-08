@@ -4,6 +4,7 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import listPlugin from '@fullcalendar/list'
+import multiMonthPlugin from '@fullcalendar/multimonth'
 import {
   CalendarEvent,
   CalendarFilters,
@@ -23,6 +24,7 @@ interface CalendarProps {
   onEventDelete?: (eventId: string) => void
   onDateSelect?: (start: Date, end: Date) => void
   config?: Partial<CalendarViewConfig>
+  currentView?: 'year' | 'month' | 'week' | 'day'
   loading?: boolean
   error?: string | null
 }
@@ -68,6 +70,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   onEventDelete,
   onDateSelect,
   config = {},
+  currentView,
   loading = false,
   error = null,
 }) => {
@@ -84,6 +87,16 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   const calendarRef = useRef<FullCalendar>(null)
   const finalConfig = { ...defaultConfig, ...config }
+
+  const calendarView = currentView === 'year'
+    ? 'multiMonthYear'
+    : currentView === 'month'
+      ? 'dayGridMonth'
+      : currentView === 'week'
+        ? 'timeGridWeek'
+        : currentView === 'day'
+          ? 'timeGridDay'
+          : finalConfig.defaultView
 
   // Transform events for FullCalendar
   const fullCalendarEvents = transformToFullCalendarEvents(events)
@@ -264,8 +277,10 @@ export const Calendar: React.FC<CalendarProps> = ({
               timeGridPlugin,
               interactionPlugin,
               listPlugin,
+              multiMonthPlugin,
             ]}
-            initialView={finalConfig.defaultView}
+            initialView={calendarView}
+            key={calendarView}
             headerToolbar={finalConfig.headerToolbar}
             customButtons={customButtons}
             height={finalConfig.height}

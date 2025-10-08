@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Calendar, CalendarDays, CalendarClock } from 'lucide-react'
+import { Calendar, CalendarDays, CalendarClock, CalendarRange } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type CalendarViewType = 'month' | 'week' | 'day'
+export type CalendarViewType = 'year' | 'month' | 'week' | 'day'
 
 export interface ViewSelectorProps {
   currentView: CalendarViewType
@@ -18,6 +18,7 @@ const VIEW_OPTIONS: Array<{
   label: string
   icon: typeof Calendar
 }> = [
+  { value: 'year', label: 'Anno', icon: CalendarRange },
   { value: 'month', label: 'Mese', icon: Calendar },
   { value: 'week', label: 'Settimana', icon: CalendarDays },
   { value: 'day', label: 'Giorno', icon: CalendarClock },
@@ -38,7 +39,7 @@ const ICON_SIZE = {
 function loadViewPreference(): CalendarViewType {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored && ['month', 'week', 'day'].includes(stored)) {
+    if (stored && ['year', 'month', 'week', 'day'].includes(stored)) {
       return stored as CalendarViewType
     }
   } catch {
