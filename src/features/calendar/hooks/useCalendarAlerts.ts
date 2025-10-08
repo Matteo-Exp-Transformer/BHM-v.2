@@ -20,8 +20,7 @@ export interface CalendarAlertsResult {
 }
 
 const STORAGE_KEY = 'calendar-dismissed-alerts'
-const CRITICAL_HOURS_THRESHOLD = 24
-const HIGH_HOURS_THRESHOLD = 72
+const ALERT_THRESHOLD_HOURS = 72 // 3 giorni
 
 function getDismissedAlerts(): string[] {
   try {
@@ -48,6 +47,7 @@ export function useCalendarAlerts(events: CalendarEvent[]): CalendarAlertsResult
     const alertsList: CalendarAlert[] = []
 
     events.forEach(event => {
+      // Ignora eventi completati o cancellati
       if (event.status === 'completed' || event.status === 'cancelled') {
         return
       }
@@ -56,27 +56,42 @@ export function useCalendarAlerts(events: CalendarEvent[]): CalendarAlertsResult
       const isOverdue = isPast(eventStart) && event.status !== 'completed'
       const hoursUntilEvent = differenceInHours(eventStart, now)
 
+      // ✅ FILTRO IMPORTANTE: Ignora eventi oltre i 3 giorni
+      if (!isOverdue && hoursUntilEvent > ALERT_THRESHOLD_HOURS) {
+        return
+      }
+
+      // ✅ FILTRO RICORRENTI: Per eventi ricorrenti (controlli temperatura, etc.)
+      // mostra solo se sono critici o high priority, oppure se scaduti
+      if (event.recurring && !isOverdue && event.priority !== 'critical' && event.priority !== 'high') {
+        return
+      }
+
       let severity: CalendarAlert['severity'] | null = null
       let message = ''
 
+      // ✅ CASO 1: Evento SCADUTO o non eseguito
       if (isOverdue) {
         severity = 'critical'
         const daysPast = Math.abs(Math.floor(hoursUntilEvent / 24))
         message = `⚠️ SCADUTO da ${daysPast} ${daysPast === 1 ? 'giorno' : 'giorni'}: ${event.title}`
-      } else if (event.priority === 'critical' && hoursUntilEvent <= CRITICAL_HOURS_THRESHOLD) {
-        severity = 'critical'
-        message = `🔴 URGENTE (${Math.max(0, hoursUntilEvent)}h): ${event.title}`
-      } else if (
-        (event.priority === 'critical' || event.priority === 'high') &&
-        hoursUntilEvent <= HIGH_HOURS_THRESHOLD
-      ) {
-        severity = 'high'
-        const days = Math.ceil(hoursUntilEvent / 24)
-        message = `🟠 In scadenza tra ${days} ${days === 1 ? 'giorno' : 'giorni'}: ${event.title}`
-      } else if (event.priority === 'high' && hoursUntilEvent <= HIGH_HOURS_THRESHOLD * 2) {
-        severity = 'medium'
-        const days = Math.ceil(hoursUntilEvent / 24)
-        message = `🟡 Promemoria (${days} giorni): ${event.title}`
+      } 
+      // ✅ CASO 2: Evento ENTRO 3 GIORNI (72 ore)
+      else if (hoursUntilEvent <= ALERT_THRESHOLD_HOURS) {
+        // Severity basata su priorità e tempo rimanente
+        if (event.priority === 'critical' || hoursUntilEvent <= 24) {
+          severity = 'critical'
+          const hours = Math.max(0, Math.floor(hoursUntilEvent))
+          message = `🔴 URGENTE (${hours}h): ${event.title}`
+        } else if (event.priority === 'high' || hoursUntilEvent <= 48) {
+          severity = 'high'
+          const days = Math.ceil(hoursUntilEvent / 24)
+          message = `🟠 In scadenza tra ${days} ${days === 1 ? 'giorno' : 'giorni'}: ${event.title}`
+        } else {
+          severity = 'medium'
+          const days = Math.ceil(hoursUntilEvent / 24)
+          message = `🟡 Promemoria (${days} giorni): ${event.title}`
+        }
       }
 
       if (severity) {
