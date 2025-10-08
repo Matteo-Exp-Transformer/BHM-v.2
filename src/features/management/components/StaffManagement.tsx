@@ -25,6 +25,7 @@ export const StaffManagement = () => {
 
   const [showModal, setShowModal] = useState(false)
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<string | null>(null)
 
   const handleCreateNew = () => {
     setEditingStaff(null)
@@ -65,6 +66,29 @@ export const StaffManagement = () => {
     toggleStaffStatus({ id, status })
   }
 
+  // Calculate staff distribution by department
+  // Note: staff.department_assignments is an array of department UUIDs
+  const staffByDepartment = departments.map(dept => ({
+    id: dept.id,
+    name: dept.name,
+    count: staff.filter(s => 
+      Array.isArray(s.department_assignments) && 
+      s.department_assignments.includes(dept.id)
+    ).length,
+  })).filter(dept => dept.count > 0)
+
+  // Filter staff by selected department
+  const filteredStaff = selectedDepartmentId
+    ? staff.filter(s => 
+        Array.isArray(s.department_assignments) && 
+        s.department_assignments.includes(selectedDepartmentId)
+      )
+    : staff
+
+  const handleDepartmentClick = (deptId: string) => {
+    setSelectedDepartmentId(selectedDepartmentId === deptId ? null : deptId)
+  }
+
   // Card actions
   const cardActions = (
     <>
@@ -101,81 +125,71 @@ export const StaffManagement = () => {
       >
         {staff.length > 0 && (
           <div className="space-y-4">
-            {/* Stats */}
-            <div className="mb-4 grid grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">
-                  {stats.total}
-                </div>
-                <div className="text-sm text-gray-500">Totale</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {stats.active}
-                </div>
-                <div className="text-sm text-gray-500">Attivi</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-400">
-                  {stats.inactive}
-                </div>
-                <div className="text-sm text-gray-500">Inattivi</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-600">
-                  {stats.suspended || 0}
-                </div>
-                <div className="text-sm text-gray-500">Sospesi</div>
-              </div>
-            </div>
-
-            {/* Role Distribution */}
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">
-                Distribuzione Ruoli
+            {/* Department Distribution */}
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">
+                Dipendenti per Reparto
               </h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Admin:</span>
-                  <span className="font-medium">
-                    {staff.filter(s => s.role === 'admin').length}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Responsabili:</span>
-                  <span className="font-medium">
-                    {staff.filter(s => s.role === 'responsabile').length}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Dipendenti:</span>
-                  <span className="font-medium">
-                    {staff.filter(s => s.role === 'dipendente').length}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Collaboratori:</span>
-                  <span className="font-medium">
-                    {staff.filter(s => s.role === 'collaboratore').length}
-                  </span>
-                </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {staffByDepartment.map(dept => (
+                  <button
+                    key={dept.id}
+                    onClick={() => handleDepartmentClick(dept.id)}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      selectedDepartmentId === dept.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="text-2xl font-bold text-gray-900">
+                      {dept.count}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      {dept.name}
+                    </div>
+                  </button>
+                ))}
+                {staffByDepartment.length === 0 && (
+                  <div className="col-span-full text-center py-4 text-gray-500 text-sm">
+                    Nessun dipendente assegnato ai reparti
+                  </div>
+                )}
               </div>
+              {selectedDepartmentId && (
+                <div className="mt-3 flex items-center justify-between">
+                  <p className="text-sm text-blue-600">
+                    Filtrando per: {staffByDepartment.find(d => d.id === selectedDepartmentId)?.name}
+                  </p>
+                  <button
+                    onClick={() => setSelectedDepartmentId(null)}
+                    className="text-sm text-gray-500 hover:text-gray-700 underline"
+                  >
+                    Mostra tutti
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Staff List */}
             <div className="space-y-3">
-              {staff.map(staffMember => (
-                <StaffCard
-                  key={staffMember.id}
-                  staffMember={staffMember}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onToggleStatus={handleToggleStatus}
-                  isToggling={isToggling}
-                  isDeleting={isDeleting}
-                  departments={departments}
-                />
-              ))}
+              {filteredStaff.length > 0 ? (
+                filteredStaff.map(staffMember => (
+                  <StaffCard
+                    key={staffMember.id}
+                    staffMember={staffMember}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onToggleStatus={handleToggleStatus}
+                    isToggling={isToggling}
+                    isDeleting={isDeleting}
+                    departments={departments}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>Nessun dipendente trovato{selectedDepartmentId ? ' in questo reparto' : ''}.</p>
+                </div>
+              )}
             </div>
 
             {/* Quick Actions */}

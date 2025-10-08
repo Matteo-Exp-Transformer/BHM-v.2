@@ -162,42 +162,10 @@ const HomePage = () => {
           Attività Recenti
         </h2>
 
-        <div className="space-y-3">
-          <div className="card p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-success-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  Pulizia frigorifero principale completata
-                </p>
-                <p className="text-xs text-gray-500">2 ore fa</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="card p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-warning-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  Temperatura freezer fuori range
-                </p>
-                <p className="text-xs text-gray-500">4 ore fa</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="card p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-success-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  Controllo scadenze inventario
-                </p>
-                <p className="text-xs text-gray-500">6 ore fa</p>
-              </div>
-            </div>
-          </div>
+        <div className="card p-8 text-center">
+          <p className="text-gray-500">
+            Nessuna attività recente da mostrare
+          </p>
         </div>
       </div>
     </div>
