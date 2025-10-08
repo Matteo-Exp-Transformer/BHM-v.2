@@ -15,6 +15,7 @@ import {
   useCalendarView,
   GenericTaskForm,
 } from './components'
+import { AlertModal } from './components/AlertModal'
 import { useCalendarAlerts } from './hooks/useCalendarAlerts'
 import { useAggregatedEvents } from './hooks/useAggregatedEvents'
 import { useFilteredEvents } from './hooks/useFilteredEvents'
@@ -25,10 +26,11 @@ export const CalendarPage = () => {
   // ✅ Sostituisci useCalendar con nuovi hooks
   const { events: aggregatedEvents, isLoading, sources } = useAggregatedEvents()
   const { filteredEvents } = useFilteredEvents(aggregatedEvents)
-  const { alertCount, criticalCount } = useCalendarAlerts(filteredEvents)
+  const { alertCount, criticalCount, alerts } = useCalendarAlerts(filteredEvents)
   const [view, setView] = useCalendarView('month')
   const { createTask, isCreating } = useGenericTasks()
   const { staff } = useStaff()
+  const [showAlertModal, setShowAlertModal] = useState(false)
 
   const [activeFilters, setActiveFilters] = useState({
     eventTypes: [
@@ -172,11 +174,14 @@ export const CalendarPage = () => {
             {/* ✅ Alert Badge e ViewSelector */}
             <div className="flex items-center gap-4">
               {alertCount > 0 && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
+                <button
+                  onClick={() => setShowAlertModal(true)}
+                  className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer"
+                >
                   <span className="text-sm font-medium text-red-700">
                     {criticalCount > 0 ? '🔴' : '⚠️'} {alertCount} Alert
                   </span>
-                </div>
+                </button>
               )}
 
               <ViewSelector currentView={view} onChange={setView} />
@@ -551,6 +556,13 @@ export const CalendarPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={showAlertModal}
+        onClose={() => setShowAlertModal(false)}
+        alerts={alerts}
+      />
     </div>
   )
 }

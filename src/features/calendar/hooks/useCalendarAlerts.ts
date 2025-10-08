@@ -155,13 +155,15 @@ export function useAlertBadge(events: CalendarEvent[]): {
   criticalCount: number
   hasAlerts: boolean
   hasCritical: boolean
+  alerts: CalendarAlert[]
 } {
-  const { alertCount, criticalCount } = useCalendarAlerts(events)
+  const { alertCount, criticalCount, alerts } = useCalendarAlerts(events)
 
   return {
     count: alertCount,
     criticalCount,
     hasAlerts: alertCount > 0,
     hasCritical: criticalCount > 0,
+    alerts,
   }
 }
