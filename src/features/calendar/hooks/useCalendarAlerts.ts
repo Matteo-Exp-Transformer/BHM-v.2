@@ -56,7 +56,7 @@ export function useCalendarAlerts(events: CalendarEvent[]): CalendarAlertsResult
       const isOverdue = isPast(eventStart) && event.status !== 'completed'
       const hoursUntilEvent = differenceInHours(eventStart, now)
 
-      // ✅ FILTRO IMPORTANTE: Ignora eventi oltre i 3 giorni
+      // ✅ FILTRO IMPORTANTE: Ignora eventi futuri oltre i 3 giorni
       if (!isOverdue && hoursUntilEvent > ALERT_THRESHOLD_HOURS) {
         return
       }
@@ -66,6 +66,17 @@ export function useCalendarAlerts(events: CalendarEvent[]): CalendarAlertsResult
       if (event.recurring && !isOverdue && event.priority !== 'critical' && event.priority !== 'high') {
         return
       }
+
+      // 🔍 DEBUG: Log per ogni evento
+      console.log(`🔍 Event: ${event.title}`, {
+        start: eventStart.toISOString(),
+        isOverdue,
+        hoursUntilEvent,
+        priority: event.priority,
+        recurring: event.recurring,
+        status: event.status,
+        willShow: !isOverdue && hoursUntilEvent <= ALERT_THRESHOLD_HOURS
+      })
 
       let severity: CalendarAlert['severity'] | null = null
       let message = ''
