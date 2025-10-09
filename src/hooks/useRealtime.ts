@@ -55,7 +55,7 @@ export function useRealtime(
     activityTracking = true,
   } = options
 
-  const { user, userProfile, companyId } = useAuth()
+  const { user, companyId } = useAuth()
 
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
     connected: false,
@@ -88,21 +88,19 @@ export function useRealtime(
   )
 
   const connect = useCallback(async () => {
-    const companyIdentifier = companyId ?? userProfile?.company_id
-    if (!user || !companyIdentifier) {
+    if (!user || !companyId) {
       console.warn('Cannot connect to real-time: user or company not available')
       return
     }
 
-    const email =
-      user.emailAddresses?.[0]?.emailAddress || userProfile?.email || ''
+    const email = user.email || ''
 
     try {
-      await realtimeManager.connect(companyIdentifier, user.id, email)
+      await realtimeManager.connect(companyId, user.id, email)
     } catch (error) {
       console.error('Failed to connect to real-time services:', error)
     }
-  }, [companyId, user, userProfile])
+  }, [companyId, user])
 
   const disconnect = useCallback(() => {
     realtimeManager.disconnect()
@@ -199,7 +197,7 @@ export function useRealtime(
 
     const cleanupActivity = setupActivityTracking()
 
-    if (autoConnect && user && (companyId || userProfile?.company_id)) {
+    if (autoConnect && user && companyId) {
       void connect()
     }
 
@@ -221,7 +219,6 @@ export function useRealtime(
     setupActivityTracking,
     user,
     companyId,
-    userProfile?.company_id,
   ])
 
   useEffect(() => {

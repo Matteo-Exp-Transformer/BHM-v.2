@@ -59,9 +59,8 @@ const QUERY_KEYS = {
 
 // Hook for shopping lists management
 export const useShoppingLists = () => {
-  const { userProfile } = useAuth()
+  const { companyId, userId } = useAuth()
   const queryClient = useQueryClient()
-  const companyId = userProfile?.company_id
 
   // Fetch all shopping lists
   const {
@@ -193,7 +192,7 @@ export const useShoppingLists = () => {
     mutationFn: async (
       input: CreateShoppingListInput
     ): Promise<ShoppingList> => {
-      if (!companyId || !userProfile?.id)
+      if (!companyId || !userId)
         throw new Error('User not authenticated')
 
       const { data: listData, error: listError } = await supabase
@@ -202,7 +201,7 @@ export const useShoppingLists = () => {
           company_id: companyId,
           name: input.name,
           description: input.description || null,
-          created_by: userProfile.id,
+          created_by: userId,
           is_template: input.is_template || false,
           is_completed: false,
         })
@@ -274,7 +273,7 @@ export const useShoppingLists = () => {
       name: string
       description?: string
     }): Promise<ShoppingList> => {
-      if (!companyId || !userProfile?.id)
+      if (!companyId || !userId)
         throw new Error('User not authenticated')
 
       // Get template with items
@@ -305,7 +304,7 @@ export const useShoppingLists = () => {
           company_id: companyId,
           name,
           description: description || null,
-          created_by: userProfile.id,
+          created_by: userId,
           is_template: false,
           is_completed: false,
         })

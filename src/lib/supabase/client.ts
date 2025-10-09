@@ -52,15 +52,18 @@ export interface Company {
   updated_at: string
 }
 
+// ⚠️ DEPRECATED: UserProfile table è in fase di deprecazione
+// Usa invece company_members + auth.users per multi-tenant
 export interface UserProfile {
   id: string
-  clerk_user_id: string
+  clerk_user_id?: string // DEPRECATO - vecchio sistema Clerk
+  auth_user_id?: string  // NUOVO - Supabase Auth user ID
   email: string
   first_name?: string
   last_name?: string
-  company_id?: string
+  company_id?: string // DEPRECATO - usa company_members
   staff_id?: string
-  role: 'admin' | 'responsabile' | 'dipendente' | 'collaboratore' | 'guest'
+  role?: 'admin' | 'responsabile' | 'dipendente' | 'collaboratore' | 'guest' // DEPRECATO - usa company_members
   created_at: string
   updated_at: string
 }

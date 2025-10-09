@@ -194,7 +194,7 @@ export interface SecurityConfig {
 }
 
 export interface AuthConfig {
-  provider: 'clerk' | 'auth0' | 'cognito' | 'firebase'
+  provider: 'supabase' | 'auth0' | 'cognito' | 'firebase'
   mfa: boolean
   sessionTimeout: number
   passwordPolicy: PasswordPolicy

@@ -88,9 +88,9 @@ global.console = {
 // Mock import.meta.env
 Object.defineProperty(import.meta, 'env', {
   value: {
-    VITE_CLERK_PUBLISHABLE_KEY: 'pk_test_mock_key',
     VITE_SUPABASE_URL: 'https://mock.supabase.co',
     VITE_SUPABASE_ANON_KEY: 'mock_anon_key',
+    VITE_SENTRY_DSN: undefined,
   },
   writable: true,
 })

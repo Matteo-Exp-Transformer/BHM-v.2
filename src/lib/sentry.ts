@@ -29,7 +29,6 @@ export const initSentry = () => {
     tracePropagationTargets: [
       'localhost',
       /^https:\/\/.*\.supabase\.co\/.*$/,
-      /^https:\/\/.*\.clerk\.accounts\.dev\/.*$/,
       /^https:\/\/.*\.vercel\.app\/.*$/,
     ],
     // Session Replay
