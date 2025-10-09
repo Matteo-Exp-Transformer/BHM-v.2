@@ -1,11 +1,13 @@
-import { UserButton, useUser } from '@clerk/clerk-react'
-import { CheckCircle, AlertTriangle, Clock, TrendingUp } from 'lucide-react'
+import { CheckCircle, AlertTriangle, Clock, TrendingUp, LogOut } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
 import { useConservationPoints } from '@/features/conservation/hooks/useConservationPoints'
 import { useProducts } from '@/features/inventory/hooks/useProducts'
 import { useCalendarEvents } from '@/features/calendar/hooks/useCalendarEvents'
+import { useNavigate } from 'react-router-dom'
 
 const HomePage = () => {
-  const { user } = useUser()
+  const { user, displayName, signOut } = useAuth()
+  const navigate = useNavigate()
 
   // Load real data from hooks
   const { stats: conservationStats, isLoading: isLoadingConservation } =
@@ -82,11 +84,28 @@ const HomePage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Ciao, {user?.firstName || 'Utente'}!
+            Ciao, {displayName.split(' ')[0] || 'Utente'}!
           </h1>
           <p className="text-gray-600">Benvenuto nel tuo HACCP Manager</p>
         </div>
-        <UserButton afterSignOutUrl="/login" />
+        
+        {/* User Menu (sostituisce UserButton di Clerk) */}
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <p className="text-sm font-medium text-gray-900">{displayName}</p>
+            <p className="text-xs text-gray-500">{user?.email}</p>
+          </div>
+          <button
+            onClick={async () => {
+              await signOut()
+              navigate('/sign-in')
+            }}
+            className="p-2 rounded-lg hover:bg-red-50 text-gray-600 hover:text-red-600 transition-colors"
+            title="Logout"
+          >
+            <LogOut size={20} />
+          </button>
+        </div>
       </div>
 
       {/* Stats Grid */}

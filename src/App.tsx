@@ -32,6 +32,8 @@ const PageLoader = () => (
 const HomePage = lazy(() => import('./features/auth/HomePage'))
 const LoginPage = lazy(() => import('./features/auth/LoginPage'))
 const RegisterPage = lazy(() => import('./features/auth/RegisterPage'))
+const ForgotPasswordPage = lazy(() => import('./features/auth/ForgotPasswordPage'))
+const AcceptInvitePage = lazy(() => import('./features/auth/AcceptInvitePage'))
 const ManagementPage = lazy(
   () => import('./features/management/ManagementPage')
 )
@@ -90,8 +92,10 @@ function App() {
           {/* Public routes (Auth pages) */}
           <Route path="/sign-in" element={<LoginPage />} />
           <Route path="/sign-up" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/accept-invite" element={<AcceptInvitePage />} />
           
-          {/* Protected routes - Auth check verrà implementato in FASE 4 */}
+          {/* Protected routes */}
           <Route
             path="/*"
             element={
