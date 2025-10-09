@@ -1,22 +1,23 @@
-import { useUser } from '@clerk/clerk-react'
-import { useQuery } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase/client'
+/**
+ * 🔐 useAuth Hook - Supabase Auth + Multi-Company
+ * 
+ * Hook principale per autenticazione con Supabase Auth
+ * Sostituisce completamente Clerk con supporto multi-company
+ * 
+ * @author BHM v2 Team - Post Migrazione NoClerk
+ * @date 2025-01-09
+ */
 
-// Define our own User interface based on what we actually use from Clerk
-interface ClerkUser {
-  id: string
-  firstName?: string | null
-  lastName?: string | null
-  emailAddresses?: Array<{ emailAddress: string }>
-}
+import { useEffect, useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tantml:invoke>
+<parameter name="supabase } from '@/lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
 
-// Extended User with company_id and role
-interface ExtendedUser extends ClerkUser {
-  company_id?: string
-  role?: UserRole
-}
+// =============================================
+// TYPES & INTERFACES
+// =============================================
 
-// Role types
+// Role types (allineati con database CHECK constraint)
 export type UserRole =
   | 'admin'
   | 'responsabile'
@@ -34,31 +35,26 @@ export interface UserPermissions {
   canManageSettings: boolean // admin only
 }
 
-// Staff member interface
-// interface StaffMember {
-//   id: string
-//   company_id: string
-//   name: string
-//   role: UserRole
-//   category: string
-//   email?: string
-// }
-
-// User profile interface (updated with new columns)
-interface UserProfile {
-  id: string
-  clerk_user_id: string
-  company_id: string | null
-  email: string
-  first_name: string | null
-  last_name: string | null
-  staff_id: string | null
+// Company membership (da tabella company_members)
+interface CompanyMembership {
+  company_id: string
+  company_name: string
   role: UserRole
-  created_at: string
-  updated_at: string
+  staff_id: string | null
+  is_active: boolean
 }
 
-// Permission mapping based on role
+// User session (da tabella user_sessions)
+interface UserSession {
+  user_id: string
+  active_company_id: string | null
+  last_activity: string
+}
+
+// =============================================
+// PERMISSION MAPPING
+// =============================================
+
 const getPermissionsFromRole = (role: UserRole): UserPermissions => {
   switch (role) {
     case 'admin':
@@ -102,99 +98,191 @@ const getPermissionsFromRole = (role: UserRole): UserPermissions => {
   }
 }
 
-// Main useAuth hook
+// =============================================
+// MAIN HOOK
+// =============================================
+
 export const useAuth = () => {
-  const { user, isLoaded: isClerkLoaded, isSignedIn } = useUser()
-  const clerkUser = user as ClerkUser | null
+  const queryClient = useQueryClient()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Save clerk_user_id in localStorage for onboarding helpers
-  if (clerkUser?.id) {
-    localStorage.setItem('clerk-user-id', clerkUser.id)
-  }
+  // =============================================
+  // 1. Auth State Listener (Supabase Session)
+  // =============================================
 
-  // Debug logs removed for cleaner console
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setIsLoading(false)
+    })
 
-  // Fetch user profile and determine role
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setIsLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // =============================================
+  // 2. Fetch User Companies (da company_members)
+  // =============================================
+
   const {
-    data: userProfile,
-    isLoading: isProfileLoading,
-    error: profileError,
-    refetch: refetchProfile,
+    data: companies = [],
+    isLoading: companiesLoading,
+    error: companiesError,
   } = useQuery({
-    queryKey: ['userProfile', clerkUser?.id],
-    queryFn: async (): Promise<UserProfile | null> => {
-      if (!clerkUser?.emailAddresses?.[0]?.emailAddress) {
-        return null
-      }
+    queryKey: ['user-companies', user?.id],
+    queryFn: async (): Promise<CompanyMembership[]> => {
+      if (!user?.id) return []
 
-      const userEmail = clerkUser.emailAddresses[0].emailAddress
-
-      // First, check if user profile already exists
-      const { data: existingProfile } = await supabase
-        .from('user_profiles')
-        .select('*, staff_id, role')
-        .eq('clerk_user_id', clerkUser.id)
-        .single()
-
-      if (existingProfile) {
-        return existingProfile as UserProfile
-      }
-
-      // If no profile exists, check if email exists in staff table
-      const { data: staffData, error: staffError } = await supabase
-        .from('staff')
-        .select('id, company_id, role, name, email')
-        .eq('email', userEmail)
-        .single()
-
-      if (staffError && staffError.code !== 'PGRST116') {
-        console.error('Error checking staff table:', staffError)
-        throw new Error('Failed to check staff membership')
-      }
-
-      // Determine role and company
-      const role: UserRole = staffData?.role || 'guest'
-      const company_id = staffData?.company_id || null
-      const staff_id = staffData?.id || null
-
-      // Create user profile
-      const { data: newProfile, error: createError } = await supabase
-        .from('user_profiles')
-        .insert({
-          clerk_user_id: clerkUser.id,
-          email: userEmail,
-          first_name: clerkUser.firstName,
-          last_name: clerkUser.lastName,
+      const { data, error } = await supabase
+        .from('company_members')
+        .select(
+          `
           company_id,
-          staff_id,
           role,
-        })
-        .select()
-        .single()
+          staff_id,
+          is_active,
+          companies (
+            name
+          )
+        `
+        )
+        .eq('user_id', user.id)
+        .eq('is_active', true)
 
-      if (createError) {
-        console.error('Error creating user profile:', createError)
-        throw new Error('Failed to create user profile')
+      if (error) {
+        console.error('❌ Errore caricamento companies:', error)
+        throw error
       }
 
-      return newProfile as UserProfile
+      return (data || []).map(m => ({
+        company_id: m.company_id,
+        company_name: (m.companies as any)?.name || 'Unknown',
+        role: m.role as UserRole,
+        staff_id: m.staff_id,
+        is_active: m.is_active,
+      }))
     },
-    enabled: !!clerkUser?.id && isSignedIn,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 3,
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minuti
   })
 
-  // Loading states
-  const isLoading = !isClerkLoaded || isProfileLoading
+  // =============================================
+  // 3. Fetch/Create User Session (active company)
+  // =============================================
 
-  // Authentication status
-  const isAuthenticated = isSignedIn && !!userProfile
+  const {
+    data: session,
+    isLoading: sessionLoading,
+    refetch: refetchSession,
+  } = useQuery({
+    queryKey: ['user-session', user?.id],
+    queryFn: async (): Promise<UserSession | null> => {
+      if (!user?.id) return null
 
-  // User role and permissions
-  const userRole: UserRole = userProfile?.role || 'guest'
+      // Prova a ottenere sessione esistente
+      let { data: existing, error } = await supabase
+        .from('user_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('❌ Errore caricamento sessione:', error)
+        throw error
+      }
+
+      // Se sessione esiste, ritornala
+      if (existing) {
+        return existing as UserSession
+      }
+
+      // Se non esiste, creala con prima company disponibile
+      if (companies.length > 0) {
+        const { data: newSession, error: createError } = await supabase
+          .from('user_sessions')
+          .insert({
+            user_id: user.id,
+            active_company_id: companies[0].company_id,
+          })
+          .select()
+          .single()
+
+        if (createError) {
+          console.error('❌ Errore creazione sessione:', createError)
+          throw createError
+        }
+
+        return newSession as UserSession
+      }
+
+      // Utente senza aziende
+      return null
+    },
+    enabled: !!user?.id && companies.length > 0,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  // =============================================
+  // 4. Get Current Company Membership
+  // =============================================
+
+  const currentMembership = companies.find(
+    c => c.company_id === session?.active_company_id
+  )
+
+  // =============================================
+  // 5. Switch Company Mutation
+  // =============================================
+
+  const switchCompanyMutation = useMutation({
+    mutationFn: async (newCompanyId: string) => {
+      if (!user?.id) throw new Error('Non autenticato')
+
+      // Verifica che l'utente sia membro di questa company
+      const isMember = companies.some(c => c.company_id === newCompanyId)
+      if (!isMember) {
+        throw new Error('Non sei membro di questa azienda')
+      }
+
+      const { error } = await supabase
+        .from('user_sessions')
+        .update({
+          active_company_id: newCompanyId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      return newCompanyId
+    },
+    onSuccess: () => {
+      // Invalida cache sessione
+      queryClient.invalidateQueries({ queryKey: ['user-session'] })
+      // Invalida TUTTE le query per ricaricare dati nuova company
+      queryClient.invalidateQueries()
+    },
+  })
+
+  // =============================================
+  // 6. Permissions & Role Checks
+  // =============================================
+
+  const userRole: UserRole = currentMembership?.role || 'guest'
   const permissions = getPermissionsFromRole(userRole)
 
-  // Helper functions
+  const hasManagementRole =
+    userRole === 'admin' || userRole === 'responsabile'
+
   const hasPermission = (permission: keyof UserPermissions): boolean => {
     return permissions[permission]
   }
@@ -208,63 +296,142 @@ export const useAuth = () => {
     return roles.some(role => userRole === role)
   }
 
-  // Check if user is authorized (not guest)
   const isAuthorized = userRole !== 'guest'
 
-  // Get user display name
+  // =============================================
+  // 7. User Display Name
+  // =============================================
+
   const displayName =
-    userProfile?.first_name && userProfile?.last_name
-      ? `${userProfile.first_name} ${userProfile.last_name}`
-      : clerkUser?.firstName && clerkUser?.lastName
-        ? `${clerkUser.firstName} ${clerkUser.lastName}`
-        : userProfile?.email || 'User'
+    user?.user_metadata?.first_name && user?.user_metadata?.last_name
+      ? `${user.user_metadata.first_name} ${user.user_metadata.last_name}`
+      : user?.user_metadata?.full_name ||
+        user?.email ||
+        'User'
 
-  // Error handling
-  const authError = profileError ? 'Failed to load user profile' : null
+  // =============================================
+  // 8. Auth Methods
+  // =============================================
 
-  // Extended user with company_id and role
-  const extendedUser = clerkUser as ExtendedUser
-  if (extendedUser && userProfile?.company_id) {
-    extendedUser.company_id = userProfile.company_id
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    if (error) throw error
+    return data
   }
-  if (extendedUser && userProfile?.role) {
-    extendedUser.role = userProfile.role
+
+  const signUp = async (
+    email: string,
+    password: string,
+    metadata?: { first_name?: string; last_name?: string }
+  ) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          ...metadata,
+          full_name:
+            metadata?.first_name && metadata?.last_name
+              ? `${metadata.first_name} ${metadata.last_name}`
+              : email,
+        },
+      },
+    })
+    if (error) throw error
+    return data
   }
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
+    
+    // Clear all cache
+    queryClient.clear()
+    
+    return true
+  }
+
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    if (error) throw error
+    return true
+  }
+
+  // =============================================
+  // 9. Loading States
+  // =============================================
+
+  const isAuthLoading = isLoading || companiesLoading || sessionLoading
+  const isAuthenticated = !!user && !!currentMembership
+
+  // =============================================
+  // 10. Error Handling
+  // =============================================
+
+  const authError = companiesError
+    ? 'Failed to load user companies'
+    : null
+
+  // =============================================
+  // RETURN (API Compatible con vecchio useAuth)
+  // =============================================
 
   return {
     // Loading states
-    isLoading,
-    isClerkLoaded,
-    isProfileLoading,
+    isLoading: isAuthLoading,
+    isClerkLoaded: true, // Compatibility - sempre true con Supabase
+    isProfileLoading: companiesLoading,
 
     // Authentication status
-    isSignedIn,
+    isSignedIn: !!user,
     isAuthenticated,
     isAuthorized,
 
     // User data
-    user: extendedUser,
-    userId: clerkUser?.id || null,
-    userProfile,
+    user,
+    userId: user?.id || null,
+    userProfile: null, // DEPRECATED - ora usiamo company_members
     userRole,
     permissions,
     displayName,
-    companyId: userProfile?.company_id,
+    companyId: session?.active_company_id || null,
+
+    // Multi-company (NUOVO)
+    companies,
+    activeCompanyId: session?.active_company_id || null,
+    currentMembership,
+    switchCompany: switchCompanyMutation.mutate,
+    isSwitchingCompany: switchCompanyMutation.isPending,
 
     // Helper functions
     hasPermission,
     hasRole,
     hasAnyRole,
+    hasManagementRole,
+
+    // Auth actions (NUOVO)
+    signIn,
+    signUp,
+    signOut,
+    resetPassword,
 
     // Actions
-    refetchProfile,
+    refetchProfile: refetchSession, // Compatibility
 
     // Error handling
     authError,
   }
 }
 
-// Permission-based helper hooks
+// =============================================
+// PERMISSION-BASED HELPER HOOKS
+// =============================================
+
 export const usePermission = (permission: keyof UserPermissions) => {
   const { hasPermission, isLoading } = useAuth()
   return { hasPermission: hasPermission(permission), isLoading }
