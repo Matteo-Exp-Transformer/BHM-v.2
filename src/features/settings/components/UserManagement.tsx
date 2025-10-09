@@ -26,12 +26,15 @@ interface Staff {
   department_assignments: string[] | null
 }
 
+// ⚠️ NOTA: Questa interfaccia sarà deprecata
+// In futuro useremo company_members invece di user_profiles
 interface UserProfile {
   id: string
-  clerk_user_id: string
-  company_id: string
+  clerk_user_id?: string // DEPRECATO
+  auth_user_id?: string  // NUOVO
+  company_id?: string    // DEPRECATO - usa company_members
   staff_id: string | null
-  role: string
+  role?: string          // DEPRECATO - usa company_members
   created_at: string
   updated_at: string
   staff?: Staff
@@ -265,9 +268,9 @@ export function UserManagement() {
                     ) : (
                       <div className="flex items-center gap-2">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeColor(user.role)}`}
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeColor(user.role || 'guest')}`}
                         >
-                          {getRoleDisplayName(user.role)}
+                          {getRoleDisplayName(user.role || 'guest')}
                         </span>
                         <button
                           onClick={() => setEditingUser(user.id)}

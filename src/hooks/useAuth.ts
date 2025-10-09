@@ -9,8 +9,8 @@
  */
 
 import { useEffect, useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tantml:invoke>
-<parameter name="supabase } from '@/lib/supabase/client'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 
 // =============================================

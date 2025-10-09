@@ -670,18 +670,17 @@ export const resetApp = async (): Promise<void> => {
   console.log('🔄 Reset completo app + database...')
 
   try {
-    // 1. Ottieni company_id
-    const clerkUserId = localStorage.getItem('clerk-user-id')
+    // 1. Ottieni company_id dall'utente autenticato (Supabase Auth)
+    const { data: { user } } = await supabase.auth.getUser()
     let companyId: string | null = null
 
-    if (clerkUserId) {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('clerk_user_id', clerkUserId)
-        .single()
-
-      companyId = profile?.company_id || null
+    if (user?.id) {
+      // Usa funzione RLS helper per ottenere company_id attivo
+      const { data: activeCompanyId, error } = await supabase.rpc('get_active_company_id')
+      
+      if (!error && activeCompanyId) {
+        companyId = activeCompanyId
+      }
     }
 
     // 2. Purge database se abbiamo company_id
@@ -1128,25 +1127,21 @@ export const completeOnboarding = async (
     let companyId = companyIdParam
 
     if (!companyId) {
-      // Prova a recuperare il company_id dalla sessione
-      const clerkUserId = localStorage.getItem('clerk-user-id')
+      // Prova a recuperare il company_id dall'utente autenticato (Supabase Auth)
+      const { data: { user } } = await supabase.auth.getUser()
 
-      if (!clerkUserId) {
+      if (!user?.id) {
         throw new Error('Utente non autenticato. Effettua il login e riprova.')
       }
 
-      // Recupera il company_id dal profilo utente usando clerk_user_id
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('clerk_user_id', clerkUserId)
-        .single()
+      // Usa funzione RLS helper per ottenere company_id attivo
+      const { data: activeCompanyId, error: companyError } = await supabase.rpc('get_active_company_id')
 
-      if (profileError || !profile?.company_id) {
-        throw new Error('Company ID non trovato nel profilo utente')
+      if (companyError || !activeCompanyId) {
+        throw new Error('Company ID non trovato. Completa prima l\'onboarding.')
       }
 
-      companyId = profile.company_id
+      companyId = activeCompanyId
     }
 
     console.log('🏢 Company ID:', companyId)

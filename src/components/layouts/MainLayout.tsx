@@ -11,6 +11,7 @@ import {
 import { SyncStatusBar } from '@/components/offline/SyncStatusBar'
 import { useAuth, UserRole } from '@/hooks/useAuth'
 import HeaderButtons from '@/components/HeaderButtons'
+import CompanySwitcher from '@/components/CompanySwitcher'
 import { resetApp } from '@/utils/onboardingHelpers'
 
 interface MainLayoutProps {
@@ -84,12 +85,16 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     <div className="min-h-screen bg-gray-50">
       {/* Header with Control Buttons */}
       <header className="bg-white border-b border-gray-200 px-4 py-3 safe-area-top">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
             <h1 className="text-lg font-semibold text-gray-900">
               HACCP Manager
             </h1>
+            
+            {/* Company Switcher (solo se utente ha aziende) */}
+            <CompanySwitcher />
           </div>
+          
           <HeaderButtons
             onResetApp={resetApp}
             onOpenOnboarding={handleOpenOnboarding}

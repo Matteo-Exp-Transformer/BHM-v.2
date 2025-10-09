@@ -63,9 +63,8 @@ const QUERY_KEYS = {
 
 // Hook for staff management
 export const useStaff = () => {
-  const { userProfile } = useAuth()
+  const { companyId } = useAuth()
   const queryClient = useQueryClient()
-  const companyId = userProfile?.company_id
 
   // Fetch all staff members
   const {

@@ -26,9 +26,8 @@ const QUERY_KEYS = {
 
 // Hook for departments management
 export const useDepartments = () => {
-  const { userProfile } = useAuth()
+  const { companyId } = useAuth()
   const queryClient = useQueryClient()
-  const companyId = userProfile?.company_id
 
   // Fetch all departments
   const {
