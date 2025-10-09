@@ -99,7 +99,7 @@ const OnboardingWizard = () => {
       })
 
       // Reindirizza alla dashboard
-      navigate('/')
+      navigate('/dashboard')
     } catch (error) {
       console.error('Error skipping onboarding:', error)
       toast.error('Errore durante il salto della configurazione')
@@ -190,13 +190,18 @@ const OnboardingWizard = () => {
     setIsLoading(true)
 
     try {
-      if (!companyId) {
-        throw new Error('Company ID non trovato')
+      let finalCompanyId = companyId
+
+      // Se companyId è NULL, crea la company durante onboarding
+      if (!finalCompanyId) {
+        console.log('🔧 Company ID NULL - creando company durante onboarding')
+        // La company verrà creata in completeOnboardingHelper
+        finalCompanyId = null // Passerà null e verrà creata
       }
 
       // Usa la funzione helper unificata passando i dati correnti
-      // La funzione gestisce: salvataggio su Supabase, pulizia localStorage, redirect
-      await completeOnboardingHelper(companyId, formData)
+      // La funzione gestisce: creazione company, salvataggio su Supabase, pulizia localStorage, redirect
+      await completeOnboardingHelper(finalCompanyId, formData)
 
     } catch (error) {
       console.error('Error completing onboarding:', error)

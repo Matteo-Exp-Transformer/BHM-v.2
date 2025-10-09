@@ -647,19 +647,78 @@ export const resetOnboarding = (): void => {
 }
 
 /**
+ * Reset selettivo dei dati operativi di una company
+ * PRESERVA: companies, users, company_members
+ * CANCELLA: staff, departments, products, conservation, etc.
+ */
+const resetCompanyOperationalData = async (companyId: string): Promise<void> => {
+  console.log('🗑️ Reset dati operativi per company:', companyId)
+
+  try {
+    // Lista delle tabelle da pulire (dati operativi)
+    const tablesToClean = [
+      'staff',
+      'departments', 
+      'products',
+      'product_categories',
+      'conservation_points',
+      'temperature_readings',
+      'maintenance_tasks',
+      'maintenance_completions',
+      'calendar_events',
+      'shopping_lists',
+      'shopping_list_items',
+      'haccp_configurations',
+      'notification_preferences',
+      'user_sessions',
+      'audit_logs'
+    ]
+
+    // Pulisce ogni tabella
+    for (const table of tablesToClean) {
+      try {
+        const { error } = await supabase
+          .from(table)
+          .delete()
+          .eq('company_id', companyId)
+
+        if (error) {
+          console.warn(`⚠️ Errore pulizia ${table}:`, error.message)
+        } else {
+          console.log(`✅ Pulito ${table}`)
+        }
+      } catch (err) {
+        console.warn(`⚠️ Errore pulizia ${table}:`, err)
+      }
+    }
+
+    console.log('✅ Reset dati operativi completato')
+  } catch (error) {
+    console.error('❌ Errore reset dati operativi:', error)
+    throw error
+  }
+}
+
+/**
  * Reset completo dell'app (solo sviluppo)
  * NUOVA VERSIONE: include purge database + cache QueryClient
  */
 export const resetApp = async (): Promise<void> => {
   const confirmed = window.confirm(
-    '🚨 RESET COMPLETO APP + DATABASE\n\n' +
+    '🔄 RESET DATI OPERATIVI\n\n' +
       'Questa operazione cancellerà:\n' +
-      '- TUTTI i dati dal database Supabase\n' +
+      '- Staff, Departments, Products\n' +
+      '- Conservation Points, Temperature Readings\n' +
+      '- Maintenance Tasks, Calendar Events\n' +
+      '- Shopping Lists, Inventory Data\n' +
       '- localStorage e sessionStorage\n' +
       '- Cache di React Query\n\n' +
+      '✅ PRESERVATO:\n' +
+      '- Companies (aziende)\n' +
+      '- Users (utenti)\n' +
+      '- Company Members (associazioni)\n\n' +
       '⚠️ ATTENZIONE: OPERAZIONE IRREVERSIBILE!\n\n' +
-      'Utilizzare solo in sviluppo!\n\n' +
-      'Sei ASSOLUTAMENTE sicuro?'
+      'Sei sicuro di voler procedere?'
   )
 
   if (!confirmed) {
@@ -667,10 +726,10 @@ export const resetApp = async (): Promise<void> => {
     return
   }
 
-  console.log('🔄 Reset completo app + database...')
+  console.log('🔄 Reset selettivo dati operativi...')
 
   try {
-    // 1. Ottieni company_id dall'utente autenticato (Supabase Auth)
+    // 1. Ottieni company_id dall'utente autenticato
     const { data: { user } } = await supabase.auth.getUser()
     let companyId: string | null = null
 
@@ -683,22 +742,12 @@ export const resetApp = async (): Promise<void> => {
       }
     }
 
-    // 2. Purge database se abbiamo company_id
+    // 2. Reset selettivo se abbiamo company_id
     if (companyId) {
-      console.log('🗑️ Purging database for company_id:', companyId)
-
-      const { data: stats, error } = await supabase.rpc('purge_company_data', {
-        p_company_id: companyId,
-      })
-
-      if (error) {
-        console.error('❌ Errore purge database:', error)
-        throw new Error(`Database purge failed: ${error.message}`)
-      }
-
-      console.log('✅ Database purge completato:', stats)
+      console.log('🗑️ Reset dati operativi per company_id:', companyId)
+      await resetCompanyOperationalData(companyId)
     } else {
-      console.warn('⚠️ Nessun company_id trovato - skip database purge')
+      console.warn('⚠️ Nessun company_id trovato - skip database reset')
     }
 
     // 3. Pulisce storage locale
@@ -794,10 +843,61 @@ const cleanExistingOnboardingData = async (companyId: string) => {
 }
 
 /**
+ * Crea company durante onboarding per primo cliente
+ */
+const createCompanyFromOnboarding = async (formData: OnboardingData): Promise<string> => {
+  console.log('🏢 Creando company per primo cliente...')
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.id) {
+    throw new Error('Utente non autenticato')
+  }
+
+  const { data: company, error } = await supabase
+    .from('companies')
+    .insert({
+      name: formData.business?.name || 'Nuova Azienda',
+      address: formData.business?.address || '',
+      email: user.email || '',
+      staff_count: 0, // Inizialmente 0, verrà aggiornato quando si aggiungono dipendenti
+    })
+    .select('id')
+    .single()
+
+  if (error || !company) {
+    throw new Error(`Errore creazione company: ${error?.message}`)
+  }
+
+  console.log('✅ Company creata:', company.id)
+
+  // Associa l'utente alla company come admin
+  const { error: memberError } = await supabase
+    .from('company_members')
+    .update({
+      company_id: company.id,
+      role: 'admin',
+      is_active: true,
+    })
+    .eq('user_id', user.id)
+
+  if (memberError) {
+    console.error('❌ Errore associazione company_member:', memberError)
+    throw new Error(`Errore associazione utente: ${memberError.message}`)
+  }
+
+  console.log('✅ Utente associato alla company come admin')
+  return company.id
+}
+
+/**
  * Salva tutti i dati su Supabase
  */
-const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string) => {
-  if (!companyId) throw new Error('Company ID not found')
+const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string | null) => {
+  // Se companyId è NULL, crea la company
+  if (!companyId) {
+    console.log('🔧 Creando company durante onboarding...')
+    companyId = await createCompanyFromOnboarding(formData)
+  }
 
   // Pulisci i dati esistenti prima di inserire nuovi dati
   await cleanExistingOnboardingData(companyId)
@@ -1138,10 +1238,12 @@ export const completeOnboarding = async (
       const { data: activeCompanyId, error: companyError } = await supabase.rpc('get_active_company_id')
 
       if (companyError || !activeCompanyId) {
-        throw new Error('Company ID non trovato. Completa prima l\'onboarding.')
+        console.log('🔧 Company ID NULL - creando company durante onboarding')
+        // Company ID NULL = primo cliente, creerà company durante onboarding
+        companyId = null
+      } else {
+        companyId = activeCompanyId
       }
-
-      companyId = activeCompanyId
     }
 
     console.log('🏢 Company ID:', companyId)
@@ -1165,7 +1267,7 @@ export const completeOnboarding = async (
 
     // Reindirizza alla dashboard
     setTimeout(() => {
-      window.location.href = '/'
+      window.location.href = '/dashboard'
     }, 1000)
   } catch (error) {
     console.error('❌ Errore nel completamento automatico:', error)
