@@ -31,7 +31,6 @@
     "deploy:force": "npm run clean && npm run build:prod && vercel --force --prod"
   },
   "dependencies": {
-    "@clerk/clerk-react": "^5.20.0",
     "@fullcalendar/core": "^6.1.19",
     "@fullcalendar/daygrid": "^6.1.19",
     "@fullcalendar/interaction": "^6.1.19",

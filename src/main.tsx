@@ -2,31 +2,28 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ClerkProvider } from '@clerk/clerk-react'
-// Import Sentry only in production to avoid CORS conflicts
 import App from './App.tsx'
 import './styles/index.css'
-
-// Debug logs removed for cleaner console
 
 // Test Supabase connection in development
 if (import.meta.env.DEV) {
   import('./lib/supabase/test-connection')
 }
 
-// Initialize Sentry only in production to avoid CORS conflicts with Clerk
+// Initialize Sentry only in production
 if (import.meta.env.PROD) {
   const { initSentry } = await import('./lib/sentry')
   initSentry()
 } else {
-  console.log('🔧 Sentry disabled in development mode to avoid CORS conflicts')
+  console.log('🔧 Sentry disabled in development mode')
 }
 
-// Import your publishable key
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+// Verifica configurazione Supabase
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-if (!PUBLISHABLE_KEY) {
-  throw new Error('Missing Publishable Key')
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error('Missing Supabase configuration. Check .env file.')
 }
 
 // Create a client with optimized cache settings
@@ -56,29 +53,15 @@ window.queryClient = queryClient
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ClerkProvider
-      publishableKey={PUBLISHABLE_KEY}
-      appearance={{
-        baseTheme: undefined,
-        variables: {
-          colorPrimary: '#3b82f6',
-        },
-      }}
-      signInUrl="/sign-in"
-      signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/"
-      signUpFallbackRedirectUrl="/"
-    >
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true,
-          }}
-        >
-          <App />
-        </BrowserRouter>
-      </QueryClientProvider>
-    </ClerkProvider>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
+        <App />
+      </BrowserRouter>
+    </QueryClientProvider>
   </React.StrictMode>
 )

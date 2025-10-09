@@ -1,6 +1,5 @@
 import { Suspense, lazy, useEffect } from 'react'
-import { Routes, Route } from 'react-router-dom'
-import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
@@ -88,82 +87,78 @@ function App() {
     <>
       <Suspense fallback={<PageLoader />}>
         <Routes>
+          {/* Public routes (Auth pages) */}
           <Route path="/sign-in" element={<LoginPage />} />
           <Route path="/sign-up" element={<RegisterPage />} />
+          
+          {/* Protected routes - Auth check verrà implementato in FASE 4 */}
           <Route
             path="/*"
             element={
-              <>
-                <SignedIn>
-                  <MainLayout>
-                    <Routes>
-                      <Route
-                        path="/"
-                        element={
-                          <ProtectedRoute>
-                            <HomePage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/conservazione"
-                        element={
-                          <ProtectedRoute>
-                            <ConservationPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/attivita"
-                        element={
-                          <ProtectedRoute>
-                            <CalendarPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/inventario"
-                        element={
-                          <ProtectedRoute>
-                            <InventoryPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/impostazioni"
-                        element={
-                          <ProtectedRoute requiredRole="admin">
-                            <SettingsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/gestione"
-                        element={
-                          <ProtectedRoute
-                            requiredRole={['admin', 'responsabile']}
-                          >
-                            <ManagementPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/onboarding"
-                        element={
-                          <ProtectedRoute>
-                            <OnboardingWizard />
-                          </ProtectedRoute>
-                        }
-                      />
-                      {/* 404 Not Found - catch all route for authenticated users */}
-                      <Route path="*" element={<NotFoundPage />} />
-                    </Routes>
-                  </MainLayout>
-                </SignedIn>
-                <SignedOut>
-                  <RedirectToSignIn />
-                </SignedOut>
-              </>
+              <MainLayout>
+                <Routes>
+                  <Route
+                    path="/"
+                    element={
+                      <ProtectedRoute>
+                        <HomePage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/conservazione"
+                    element={
+                      <ProtectedRoute>
+                        <ConservationPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/attivita"
+                    element={
+                      <ProtectedRoute>
+                        <CalendarPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/inventario"
+                    element={
+                      <ProtectedRoute>
+                        <InventoryPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/impostazioni"
+                    element={
+                      <ProtectedRoute requiredRole="admin">
+                        <SettingsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/gestione"
+                    element={
+                      <ProtectedRoute
+                        requiredRole={['admin', 'responsabile']}
+                      >
+                        <ManagementPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/onboarding"
+                    element={
+                      <ProtectedRoute>
+                        <OnboardingWizard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  {/* 404 Not Found */}
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </MainLayout>
             }
           />
         </Routes>

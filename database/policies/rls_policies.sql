@@ -530,10 +530,51 @@ CREATE POLICY "System can insert audit logs"
 -- No UPDATE/DELETE on audit_logs (immutable)
 
 -- =============================================
+-- TABLE 19: user_profiles (DEPRECATED - In migrazione)
+-- =============================================
+-- ⚠️ NOTA: Questa tabella è in fase di deprecazione
+-- Sarà sostituita completamente da company_members + auth.users
+-- Per ora manteniamo policies per retrocompatibilità
+
+-- ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own profile" ON public.user_profiles;
+CREATE POLICY "Users can view own profile"
+  ON public.user_profiles FOR SELECT
+  USING (
+    auth_user_id = auth.uid() OR -- Nuovo: via Supabase Auth
+    clerk_user_id = (auth.jwt() ->> 'sub') -- Vecchio: via Clerk (temporaneo)
+  );
+
+DROP POLICY IF EXISTS "Admins can view company profiles" ON public.user_profiles;
+CREATE POLICY "Admins can view company profiles"
+  ON public.user_profiles FOR SELECT
+  USING (
+    company_id IS NOT NULL AND is_admin(company_id)
+  );
+
+DROP POLICY IF EXISTS "Users can update own profile" ON public.user_profiles;
+CREATE POLICY "Users can update own profile"
+  ON public.user_profiles FOR UPDATE
+  USING (
+    auth_user_id = auth.uid() OR
+    clerk_user_id = (auth.jwt() ->> 'sub')
+  )
+  WITH CHECK (
+    auth_user_id = auth.uid() OR
+    clerk_user_id = (auth.jwt() ->> 'sub')
+  );
+
+-- No INSERT/DELETE (handled by auth signup flow)
+
+-- =============================================
 -- ENABLE ALL RLS (Commented out - enable in FASE 7)
 -- =============================================
 
 /*
+-- ⚠️ IMPORTANTE: Decommenta questo blocco SOLO in FASE 7
+-- Dopo aver completato l'implementazione frontend con Supabase Auth
+
 ALTER TABLE public.companies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.departments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.staff ENABLE ROW LEVEL SECURITY;
@@ -552,6 +593,7 @@ ALTER TABLE public.company_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invite_tokens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
 */
 
 -- =============================================
