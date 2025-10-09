@@ -13,6 +13,7 @@ import {
   ToggleLeft,
   ToggleRight,
   Building2,
+  Send,
   // UserCheck,
 } from 'lucide-react'
 
@@ -24,8 +25,10 @@ interface StaffCardProps {
     id: string,
     status: 'active' | 'inactive' | 'suspended'
   ) => void
+  onSendInvite?: (staffMember: StaffMember) => void
   isToggling?: boolean
   isDeleting?: boolean
+  isSendingInvite?: boolean
   departments?: Array<{ id: string; name: string }>
 }
 
@@ -34,8 +37,10 @@ export const StaffCard = ({
   onEdit,
   onDelete,
   onToggleStatus,
+  onSendInvite,
   isToggling = false,
   isDeleting = false,
+  isSendingInvite = false,
   departments = [],
 }: StaffCardProps) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -269,6 +274,23 @@ export const StaffCard = ({
 
         {/* Actions */}
         <div className="flex items-center space-x-1 ml-4">
+          {/* Send Invite (only if email present) */}
+          {staffMember.email && onSendInvite && (
+            <button
+              type="button"
+              onClick={() => onSendInvite(staffMember)}
+              disabled={isSendingInvite}
+              className="p-1.5 rounded-md text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50"
+              title="Invia invito email"
+            >
+              {isSendingInvite ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </button>
+          )}
+
           {/* Toggle Status */}
           <button
             type="button"

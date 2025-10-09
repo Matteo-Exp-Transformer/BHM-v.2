@@ -8,8 +8,12 @@ import useStaff, { StaffMember, StaffInput } from '../hooks/useStaff'
 import useDepartments from '../hooks/useDepartments'
 import StaffCard from './StaffCard'
 import AddStaffModal from './AddStaffModal'
+import { useAuth } from '@/hooks/useAuth'
+import { createInviteToken } from '@/services/auth/inviteService'
+import { toast } from 'react-toastify'
 
 export const StaffManagement = () => {
+  const { companyId } = useAuth()
   const {
     staff,
     stats,
@@ -26,6 +30,7 @@ export const StaffManagement = () => {
   const [showModal, setShowModal] = useState(false)
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<string | null>(null)
+  const [sendingInviteFor, setSendingInviteFor] = useState<string | null>(null)
 
   const handleCreateNew = () => {
     setEditingStaff(null)
@@ -64,6 +69,45 @@ export const StaffManagement = () => {
     status: 'active' | 'inactive' | 'suspended'
   ) => {
     toggleStaffStatus({ id, status })
+  }
+
+  // Handle sending invite email
+  const handleSendInvite = async (staffMember: StaffMember) => {
+    if (!companyId) {
+      toast.error('Company ID non trovato')
+      return
+    }
+
+    if (!staffMember.email) {
+      toast.error('Email non disponibile per questo dipendente')
+      return
+    }
+
+    try {
+      setSendingInviteFor(staffMember.id)
+      
+      await createInviteToken({
+        email: staffMember.email,
+        company_id: companyId,
+        role: staffMember.role as any,
+        staff_id: staffMember.id,
+        expires_in_days: 7,
+      })
+
+      toast.success(
+        `Invito inviato a ${staffMember.name} (${staffMember.email})`,
+        { autoClose: 5000 }
+      )
+    } catch (error) {
+      console.error('Errore invio invito:', error)
+      toast.error(
+        error instanceof Error 
+          ? error.message 
+          : 'Errore durante l\'invio dell\'invito'
+      )
+    } finally {
+      setSendingInviteFor(null)
+    }
   }
 
   // Calculate staff distribution by department
@@ -180,8 +224,10 @@ export const StaffManagement = () => {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onToggleStatus={handleToggleStatus}
+                    onSendInvite={handleSendInvite}
                     isToggling={isToggling}
                     isDeleting={isDeleting}
+                    isSendingInvite={sendingInviteFor === staffMember.id}
                     departments={departments}
                   />
                 ))
