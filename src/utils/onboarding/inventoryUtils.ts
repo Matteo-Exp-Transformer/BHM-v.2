@@ -5,8 +5,10 @@ import type {
   ConservationPoint,
   InventoryProduct,
   ProductCategory,
-  ProductStatus,
 } from '@/types/onboarding'
+
+// ProductStatus type locale
+type ProductStatus = 'active' | 'expired' | 'consumed' | 'waste'
 
 // Mappa per le etichette degli allergeni - allineata con AddProductModal
 const ALLERGEN_LABELS: Record<AllergenType, string> = {
@@ -293,6 +295,7 @@ export const createEmptyProduct = {
       return {
         ...product,
         allergens: product.allergens ?? [],
+        unit: product.unit || 'pz', // ✅ Assicura default
       }
     }
 
@@ -301,6 +304,7 @@ export const createEmptyProduct = {
       name: '',
       status: 'active',
       allergens: [],
+      unit: 'pz', // ✅ Default unit
     }
   },
 }
@@ -319,7 +323,7 @@ export const normalizeInventoryProduct = (
   purchaseDate: product.purchaseDate?.trim() || undefined,
   expiryDate: product.expiryDate?.trim() || undefined,
   quantity: product.quantity,
-  unit: product.unit?.trim() || undefined,
+  unit: product.unit?.trim() || 'pz', // ✅ Default a 'pz' se vuoto
   allergens: product.allergens ?? [],
   labelPhotoUrl: product.labelPhotoUrl?.trim() || undefined,
   status: product.status,

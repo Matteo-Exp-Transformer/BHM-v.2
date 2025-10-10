@@ -1,8 +1,9 @@
 # 📊 SCHEMA DATABASE ATTUALE - BHM v.2
 **Progetto**: Business HACCP Manager v2  
-**Data**: 9 Gennaio 2025  
-**Versione**: 1.0.0 (Post-migrazione Supabase Auth)  
-**Database**: Supabase PostgreSQL
+**Data**: 10 Gennaio 2025  
+**Versione**: 1.1.0  
+**Database**: Supabase PostgreSQL  
+**Branch**: NoClerk
 
 ---
 
@@ -12,13 +13,14 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 
 ### 📋 Statistiche Schema
 
-- **Tabelle totali**: 19
-- **Tabelle base**: 15 (companies, departments, staff, products, ecc.)
+- **Tabelle totali**: 14 tabelle
+- **Tabelle core**: 10 (companies, departments, staff, products, conservation_points, tasks, maintenance_tasks, events, notes, non_conformities)
 - **Tabelle auth**: 4 (company_members, user_sessions, invite_tokens, audit_logs)
+- **Tabelle shopping**: 2 (shopping_lists, shopping_list_items)
 - **Relazioni**: 35+ foreign keys
 - **Indici**: 50+ per performance
 - **Funzioni RLS**: 8 helper functions
-- **Policies RLS**: 72+ policies (da attivare)
+- **Policies RLS**: 72+ policies (pronte, non ancora attive)
 
 ---
 
@@ -864,7 +866,8 @@ Trigger `update_[table]_updated_at` aggiorna `updated_at` automaticamente.
 
 ---
 
-**Versione Schema**: 1.0.0  
-**Ultimo Aggiornamento**: 9 Gennaio 2025  
-**Stato**: ✅ Produzione Ready
+**Versione Schema**: 1.1.0  
+**Ultimo Aggiornamento**: 10 Gennaio 2025  
+**Stato**: ✅ Schema verificato e allineato con database Supabase  
+**Compliance**: ✅ 100% allineamento con SQL schema attuale
 

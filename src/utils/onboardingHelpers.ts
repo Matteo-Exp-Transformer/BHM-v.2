@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 import { AllergenType } from '@/types/inventory'
 import type { OnboardingData } from '@/types/onboarding'
 import { supabase } from '@/lib/supabase/client'
+import { createInviteToken } from '@/services/auth/inviteService'
 
 // Funzione per generare UUID validi (RFC 4122 v4)
 const generateUUID = (): string => {
@@ -145,13 +146,13 @@ export const getPrefillData = (): OnboardingData => {
   ]
 
   // Funzione helper per trovare reparti per nome
-  const getDepartmentIds = (names: string[]) => {
-    return departments
-      .filter(dept =>
-        names.some(name => dept.name.toLowerCase().includes(name.toLowerCase()))
-      )
-      .map(dept => dept.id)
-  }
+  // const getDepartmentIds = (names: string[]) => {
+  //   return departments
+  //     .filter(dept =>
+  //       names.some(name => dept.name.toLowerCase().includes(name.toLowerCase()))
+  //     )
+  //     .map(dept => dept.id)
+  // }
 
   // Funzione helper per tutti i reparti attivi
   const getAllDepartmentIds = () => {
@@ -167,37 +168,38 @@ export const getPrefillData = (): OnboardingData => {
   }
 
   const staff = [
-    {
-      id: generateId(),
-      name: 'Matteo',
-      surname: 'Cavallaro',
-      fullName: 'Matteo Cavallaro',
-      role: 'responsabile' as const,
-      categories: ['Banconisti'],
-      email: 'Neo@gmail.com',
-      phone: '3334578536',
-      department_assignments: getAllDepartmentIds(), // Tutti i reparti
-      haccpExpiry: '2025-10-01',
-      notes: 'Responsabile con accesso a tutti i reparti',
-    },
-    {
-      id: generateId(),
-      name: 'Fabrizio',
-      surname: 'Dettori',
-      fullName: 'Fabrizio Dettori',
-      role: 'admin' as const,
-      categories: ['Amministratore'],
-      email: 'Fabri@gmail.com',
-      phone: '3334578535',
-      department_assignments: getDepartmentIds([
-        'Sala',
-        'Sala B',
-        'Deoor',
-        'Plonge',
-      ]), // Sala + Sala B + Deoor + Plonge
-      haccpExpiry: '2026-10-01',
-      notes: 'Amministratore con accesso a Sala, Sala B, Deoor e Plonge',
-    },
+    // ⏸️ TEMPORANEAMENTE COMMENTATI - Solo Paolo Dettori visibile per testing
+    // {
+    //   id: generateId(),
+    //   name: 'Matteo',
+    //   surname: 'Cavallaro',
+    //   fullName: 'Matteo Cavallaro',
+    //   role: 'responsabile' as const,
+    //   categories: ['Banconisti'],
+    //   email: 'Neo@gmail.com',
+    //   phone: '3334578536',
+    //   department_assignments: getAllDepartmentIds(), // Tutti i reparti
+    //   haccpExpiry: '2025-10-01',
+    //   notes: 'Responsabile con accesso a tutti i reparti',
+    // },
+    // {
+    //   id: generateId(),
+    //   name: 'Fabrizio',
+    //   surname: 'Dettori',
+    //   fullName: 'Fabrizio Dettori',
+    //   role: 'admin' as const,
+    //   categories: ['Amministratore'],
+    //   email: 'Fabri@gmail.com',
+    //   phone: '3334578535',
+    //   department_assignments: getDepartmentIds([
+    //     'Sala',
+    //     'Sala B',
+    //     'Deoor',
+    //     'Plonge',
+    //   ]), // Sala + Sala B + Deoor + Plonge
+    //   haccpExpiry: '2026-10-01',
+    //   notes: 'Amministratore con accesso a Sala, Sala B, Deoor e Plonge',
+    // },
     {
       id: generateId(),
       name: 'Paolo',
@@ -205,44 +207,44 @@ export const getPrefillData = (): OnboardingData => {
       fullName: 'Paolo Dettori',
       role: 'admin' as const,
       categories: ['Cuochi', 'Amministratore'],
-      email: 'Pablo@gmail.com',
+      email: '0cavuz0@gmail.com',
       phone: '3334578534',
       department_assignments: getAllDepartmentIds(), // Tutti i reparti
       haccpExpiry: '2025-10-01',
       notes: 'Amministratore con competenze di cucina',
     },
-    {
-      id: generateId(),
-      name: 'Eddy',
-      surname: 'TheQueen',
-      fullName: 'Eddy TheQueen',
-      role: 'dipendente' as const,
-      categories: ['Banconisti'],
-      email: 'Eddy@gmail.com',
-      phone: '3334578533',
-      department_assignments: getDepartmentIds(['Bancone']), // Bancone
-      haccpExpiry: '2026-10-01',
-      notes: 'Dipendente specializzato al bancone',
-    },
-    {
-      id: generateId(),
-      name: 'Elena',
-      surname: 'Compagna',
-      fullName: 'Elena Compagna',
-      role: 'dipendente' as const,
-      categories: ['Banconisti', 'Camerieri'],
-      email: 'Ele@gmail.com',
-      phone: '3334578532',
-      department_assignments: getDepartmentIds([
-        'Bancone',
-        'Sala',
-        'Sala B',
-        'Deoor',
-        'Plonge',
-      ]), // Bancone + Sala + Sala B + Deoor + Plonge
-      haccpExpiry: '2026-10-01',
-      notes: 'Dipendente multiruolo con accesso a più reparti',
-    },
+    // {
+    //   id: generateId(),
+    //   name: 'Eddy',
+    //   surname: 'TheQueen',
+    //   fullName: 'Eddy TheQueen',
+    //   role: 'dipendente' as const,
+    //   categories: ['Banconisti'],
+    //   email: 'Eddy@gmail.com',
+    //   phone: '3334578533',
+    //   department_assignments: getDepartmentIds(['Bancone']), // Bancone
+    //   haccpExpiry: '2026-10-01',
+    //   notes: 'Dipendente specializzato al bancone',
+    // },
+    // {
+    //   id: generateId(),
+    //   name: 'Elena',
+    //   surname: 'Compagna',
+    //   fullName: 'Elena Compagna',
+    //   role: 'dipendente' as const,
+    //   categories: ['Banconisti', 'Camerieri'],
+    //   email: 'Ele@gmail.com',
+    //   phone: '3334578532',
+    //   department_assignments: getDepartmentIds([
+    //     'Bancone',
+    //     'Sala',
+    //     'Sala B',
+    //     'Deoor',
+    //     'Plonge',
+    //   ]), // Bancone + Sala + Sala B + Deoor + Plonge
+    //   haccpExpiry: '2026-10-01',
+    //   notes: 'Dipendente multiruolo con accesso a più reparti',
+    // },
   ]
 
   const conservationPoints = [
@@ -379,8 +381,6 @@ export const getPrefillData = (): OnboardingData => {
           note: 'Pulizia tavoli, pavimenti e controllo generale sala',
         },
       ],
-      generalTasks: [],
-      maintenanceTasks: [],
     },
     inventory: {
       categories: [
@@ -1203,9 +1203,9 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
     const products = formData.inventory.products.map(product => ({
       company_id: companyId,                                // ✅ Da passare
       name: product.name,                                   // ✅ DISPONIBILE
-      category_id: categoriesIdMap.get(product.categoryId) || null,              // ✅ Usa ID reale
-      department_id: departmentsIdMap.get(product.departmentId) || null,          // ✅ Usa ID reale
-      conservation_point_id: conservationPointsIdMap.get(product.conservationPointId) || null, // ✅ Usa ID reale
+      category_id: (product.categoryId ? categoriesIdMap.get(product.categoryId) : null) || null,              // ✅ Usa ID reale
+      department_id: (product.departmentId ? departmentsIdMap.get(product.departmentId) : null) || null,          // ✅ Usa ID reale
+      conservation_point_id: (product.conservationPointId ? conservationPointsIdMap.get(product.conservationPointId) : null) || null, // ✅ Usa ID reale
       barcode: product.barcode || null,                     // ✅ DISPONIBILE
       sku: product.sku || null,                             // ✅ DISPONIBILE
       supplier_name: product.supplierName || null,          // ✅ DISPONIBILE
@@ -1284,7 +1284,7 @@ export const completeOnboarding = async (
       }
 
       // Verifica se utente ha già un company_member record
-      const { data: existingMember, error: memberError } = await supabase
+      const { data: existingMember } = await supabase
         .from('company_members')
         .select('company_id')
         .eq('user_id', user.id)
@@ -1297,7 +1297,7 @@ export const completeOnboarding = async (
       } else {
         // Nessuna company associata → creane una nuova durante onboarding
         console.log('🔧 Nessuna company trovata - creando nuova company durante onboarding')
-        companyId = null
+        companyId = undefined
       }
     }
 
@@ -1331,6 +1331,41 @@ export const completeOnboarding = async (
         }
 
         console.log('✅ User session aggiornata con active_company_id')
+      }
+    }
+
+    // AUTO-INVIO INVITI: Invia email di invito a tutti gli staff con email
+    if (formData.staff?.length && companyId) {
+      console.log('📧 Invio inviti a staff...')
+      
+      let invitesSent = 0
+      let invitesFailed = 0
+
+      for (const person of formData.staff) {
+        if (person.email) {
+          try {
+            await createInviteToken({
+              email: person.email,
+              company_id: companyId,
+              role: person.role, // Usa ruolo assegnato nello Step 3
+              expires_in_days: 7,
+            })
+            
+            invitesSent++
+            console.log(`✅ Invito creato per: ${person.email} (${person.role})`)
+          } catch (err) {
+            invitesFailed++
+            console.warn(`⚠️ Errore creazione invito per ${person.email}:`, err)
+          }
+        }
+      }
+
+      if (invitesSent > 0) {
+        console.log(`📧 Inviti creati: ${invitesSent} (falliti: ${invitesFailed})`)
+        toast.success(`${invitesSent} inviti creati e pronti per l'invio!`, {
+          position: 'top-right',
+          autoClose: 4000,
+        })
       }
     }
 
