@@ -47,18 +47,19 @@ export function useFilteredEvents(
       return []
     }
 
-    return events.filter(event => {
+    const filtered = events.filter(event => {
       const assignment: EventAssignment = {
-        assigned_to_staff_id: event.metadata?.staff_id,
+        assigned_to_staff_id: event.metadata?.assigned_to_staff_id || event.metadata?.staff_id,
         assigned_to_role: (event.metadata as any)?.assigned_to_role,
         assigned_to_category: (event.metadata as any)?.assigned_to_category,
         assigned_to: event.assigned_to,
       }
 
       const isAssignedToUser = checkEventAssignment(assignment, userStaffMember)
-
       return isAssignedToUser
     })
+
+    return filtered
   }, [events, userProfile, canViewAllEvents, userStaffMember])
 
   return {

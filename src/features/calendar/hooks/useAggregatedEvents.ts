@@ -171,7 +171,7 @@ function convertMaintenanceTaskToEvent(
     priority: task.priority || 'medium',
     source: 'maintenance',
     sourceId: task.id,
-    assigned_to: task.assigned_to ? [task.assigned_to] : [],
+    assigned_to: task.assigned_to_staff_id ? [task.assigned_to_staff_id] : [],
     conservation_point_id: task.conservation_point_id,
     recurring: false,
     backgroundColor: colors.backgroundColor,

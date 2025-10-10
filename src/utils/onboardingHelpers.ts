@@ -648,6 +648,318 @@ export const resetOnboarding = (): void => {
 }
 
 /**
+ * Reset Onboarding - Elimina solo dati inseriti con "Precompila"
+ * PRESERVA i dati inseriti manualmente dall'utente
+ */
+export const resetOnboardingData = (): void => {
+  const confirmed = window.confirm(
+    '🔄 RESET ONBOARDING\n\n' +
+      'Questa operazione cancellerà SOLO i dati inseriti con "Precompila":\n' +
+      '- Paolo Dettori e staff da Precompila\n' +
+      '- Reparti da Precompila (Cucina, Bancone, etc.)\n' +
+      '- Punti Conservazione da Precompila (Frigo A, Freezer A, etc.)\n' +
+      '- Prodotti da Precompila (Pollo, Salmone, etc.)\n' +
+      '- Attività e Manutenzioni da Precompila\n' +
+      '- localStorage onboarding\n' +
+      '- Cache di React Query\n\n' +
+      '✅ PRESERVATO:\n' +
+      '- Dati inseriti manualmente dall\'utente\n' +
+      '- Companies (aziende)\n' +
+      '- Users (utenti)\n' +
+      '- Company Members (associazioni)\n' +
+      '- Sessione login (rimani loggato)\n\n' +
+      '⚠️ ATTENZIONE: OPERAZIONE IRREVERSIBILE!\n\n' +
+      'Sei sicuro di voler procedere?'
+  )
+
+  if (!confirmed) {
+    console.log("🔄 Reset onboarding annullato dall'utente")
+    return
+  }
+
+  console.log('🔄 Reset dati onboarding...')
+
+  try {
+    // Pulisce solo dati da Precompila
+    clearPrefillData()
+
+    console.log('✅ Reset onboarding completato con successo')
+    toast.success('Dati onboarding rimossi!', {
+      position: 'top-right',
+      autoClose: 3000,
+    })
+
+    // Ricarica la pagina dopo un breve delay
+    setTimeout(() => {
+      window.location.reload()
+    }, 1000)
+  } catch (error) {
+    console.error('❌ Errore durante reset onboarding:', error)
+    toast.error('Errore durante il reset', {
+      position: 'top-right',
+      autoClose: 3000,
+    })
+  }
+}
+
+/**
+ * Reset All Data - Elimina TUTTI i dati (onboarding + utente manuale)
+ */
+export const resetAllData = async (): Promise<void> => {
+  const confirmed = window.confirm(
+    '🔄 RESET ALL DATA\n\n' +
+      'Questa operazione cancellerà TUTTI i dati:\n' +
+      '- TUTTI i reparti (Precompila + manuali)\n' +
+      '- TUTTO lo staff (Precompila + manuali)\n' +
+      '- TUTTI i prodotti e categorie\n' +
+      '- TUTTI i punti di conservazione\n' +
+      '- TUTTE le manutenzioni e attività\n' +
+      '- TUTTE le rilevazioni temperatura\n' +
+      '- localStorage onboarding\n' +
+      '- Cache di React Query\n\n' +
+      '✅ PRESERVATO:\n' +
+      '- Companies (aziende)\n' +
+      '- Users (utenti)\n' +
+      '- Company Members (associazioni)\n' +
+      '- Sessione login (rimani loggato)\n\n' +
+      '⚠️ ATTENZIONE: OPERAZIONE IRREVERSIBILE!\n\n' +
+      'Sei sicuro di voler procedere?'
+  )
+
+  if (!confirmed) {
+    console.log("🔄 Reset all data annullato dall'utente")
+    return
+  }
+
+  try {
+    // Pulisce TUTTI i dati operativi
+    const companyId = await getCurrentCompanyId()
+    if (!companyId) {
+      throw new Error('Company ID non trovato')
+    }
+    await resetCompanyOperationalData(companyId)
+
+    console.log('✅ Reset all data completato con successo')
+    toast.success('Tutti i dati rimossi!', {
+      position: 'top-right',
+      autoClose: 3000,
+    })
+
+    // Ricarica la pagina dopo un breve delay
+    setTimeout(() => {
+      window.location.reload()
+    }, 1000)
+  } catch (error) {
+    console.error('❌ Errore durante reset all data:', error)
+    toast.error('Errore durante il reset', {
+      position: 'top-right',
+      autoClose: 3000,
+    })
+  }
+}
+
+/**
+ * Reset Tot+Utenti - Elimina TUTTO inclusi utenti e token inviti
+ */
+export const resetTotAndUsers = async (): Promise<void> => {
+  const confirmed = window.confirm(
+    '🚨 RESET TOT+UTENTI\n\n' +
+      'Questa operazione cancellerà TUTTO:\n' +
+      '- TUTTI i dati dell\'app\n' +
+      '- TUTTI gli utenti registrati\n' +
+      '- TUTTI i token di invito\n' +
+      '- TUTTE le company (eccetto quella corrente)\n' +
+      '- TUTTE le associazioni utente-company\n' +
+      '- localStorage onboarding\n' +
+      '- Cache di React Query\n\n' +
+      '✅ PRESERVATO:\n' +
+      '- Company corrente\n' +
+      '- Utente corrente (tu)\n' +
+      '- Associazione corrente\n' +
+      '- Sessione login (rimani loggato)\n\n' +
+      '⚠️ ATTENZIONE: OPERAZIONE IRREVERSIBILE!\n\n' +
+      'Sei sicuro di voler procedere?'
+  )
+
+  if (!confirmed) {
+    console.log("🔄 Reset tot+utenti annullato dall'utente")
+    return
+  }
+
+  try {
+    // 1. Pulisce TUTTI i dati operativi
+    const companyId = await getCurrentCompanyId()
+    if (!companyId) {
+      throw new Error('Company ID non trovato')
+    }
+    await resetCompanyOperationalData(companyId)
+
+    // 2. Pulisce TUTTI i token inviti
+    await supabase.from('invite_tokens').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+
+    // 3. Pulisce TUTTI gli utenti (eccetto corrente)
+    const { data: { user: currentUser } } = await supabase.auth.getUser()
+    if (currentUser) {
+      await supabase.from('company_members').delete().neq('user_id', currentUser.id)
+      await supabase.from('user_sessions').delete().neq('user_id', currentUser.id)
+    }
+
+    console.log('✅ Reset tot+utenti completato con successo')
+    toast.success('Tutto rimosso incluso utenti!', {
+      position: 'top-right',
+      autoClose: 3000,
+    })
+
+    // Ricarica la pagina dopo un breve delay
+    setTimeout(() => {
+      window.location.reload()
+    }, 1000)
+  } catch (error) {
+    console.error('❌ Errore durante reset tot+utenti:', error)
+    toast.error('Errore durante il reset', {
+      position: 'top-right',
+      autoClose: 3000,
+    })
+  }
+}
+
+/**
+ * Pulisce solo i dati inseriti manualmente dall'utente (esclude Precompila)
+ */
+const clearManualData = async (): Promise<void> => {
+  console.log('🧹 Pulizia dati manuali...')
+  
+  try {
+    const companyId = await getCurrentCompanyId()
+    
+    if (!companyId) {
+      throw new Error('Company ID non trovato')
+    }
+
+    // Rimuove staff NON da Precompila (tutto tranne Paolo Dettori)
+    await supabase
+      .from('staff')
+      .delete()
+      .eq('company_id', companyId)
+      .not('name', 'eq', 'Paolo Dettori')
+      .not('email', 'eq', 'paolo.dettori@example.com')
+
+    // Rimuove departments NON da Precompila (tutto tranne Cucina, Bancone, Sala, Magazzino)
+    await supabase
+      .from('departments')
+      .delete()
+      .eq('company_id', companyId)
+      .not('name', 'in', ['Cucina', 'Bancone', 'Sala', 'Magazzino'])
+
+    // Rimuove conservation points NON da Precompila
+    await supabase
+      .from('conservation_points')
+      .delete()
+      .eq('company_id', companyId)
+      .not('name', 'like', '%Frigo A%')
+      .not('name', 'like', '%Freezer A%')
+      .not('name', 'like', '%Abbattitore%')
+
+    // Rimuove prodotti NON da Precompila
+    await supabase
+      .from('products')
+      .delete()
+      .eq('company_id', companyId)
+      .not('name', 'in', ['Pollo Intero', 'Salmone Fresco', 'Mozzarella di Bufala', 'Pomodori San Marzano'])
+
+    // Rimuove TUTTE le temperature readings (sono sempre manuali)
+    await supabase
+      .from('temperature_readings')
+      .delete()
+      .eq('company_id', companyId)
+
+    // Pulisce localStorage
+    localStorage.removeItem('onboardingData')
+    localStorage.removeItem('haccpData')
+
+    console.log('✅ Dati manuali rimossi')
+  } catch (error) {
+    console.error('❌ Errore pulizia dati manuali:', error)
+    throw error
+  }
+}
+
+/**
+ * Pulisce solo i dati inseriti con "Precompila"
+ */
+const clearPrefillData = async (): Promise<void> => {
+  console.log('🧹 Pulizia dati Precompila...')
+  
+  try {
+    // Identifica e rimuove solo dati specifici da Precompila
+    const companyId = await getCurrentCompanyId()
+    
+    if (!companyId) {
+      throw new Error('Company ID non trovato')
+    }
+
+    // Rimuove staff specifico da Precompila
+    await supabase
+      .from('staff')
+      .delete()
+      .eq('company_id', companyId)
+      .in('name', ['Paolo Dettori'])
+      .in('email', ['paolo.dettori@example.com'])
+
+    // Rimuove departments specifici da Precompila
+    await supabase
+      .from('departments')
+      .delete()
+      .eq('company_id', companyId)
+      .in('name', ['Cucina', 'Bancone', 'Sala', 'Magazzino'])
+
+    // Rimuove conservation points specifici da Precompila
+    await supabase
+      .from('conservation_points')
+      .delete()
+      .eq('company_id', companyId)
+      .or('name.ilike.%Frigo A%,name.ilike.%Freezer A%,name.ilike.%Abbattitore%')
+
+    // Rimuove prodotti specifici da Precompila
+    await supabase
+      .from('products')
+      .delete()
+      .eq('company_id', companyId)
+      .in('name', ['Pollo Intero', 'Salmone Fresco', 'Mozzarella di Bufala', 'Pomodori San Marzano'])
+
+    // Pulisce localStorage
+    localStorage.removeItem('onboardingData')
+    localStorage.removeItem('haccpData')
+
+    console.log('✅ Dati Precompila rimossi')
+  } catch (error) {
+    console.error('❌ Errore pulizia dati Precompila:', error)
+    throw error
+  }
+}
+
+/**
+ * Ottiene l'ID della company corrente
+ */
+const getCurrentCompanyId = async (): Promise<string | null> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+
+    const { data: session } = await supabase
+      .from('user_sessions')
+      .select('active_company_id')
+      .eq('user_id', user.id)
+      .single()
+
+    return session?.active_company_id || null
+  } catch (error) {
+    console.error('❌ Errore ottenimento company ID:', error)
+    return null
+  }
+}
+
+/**
  * Reset selettivo dei dati operativi di una company
  * PRESERVA: companies, users, company_members
  * CANCELLA: staff, departments, products, conservation, etc.
@@ -699,13 +1011,66 @@ const resetCompanyOperationalData = async (companyId: string): Promise<void> => 
 }
 
 /**
- * Reset completo dell'app (solo sviluppo)
- * NUOVA VERSIONE: include purge database + cache QueryClient
+ * Reset Manuale - Elimina solo dati inseriti manualmente dall'utente
+ * PRESERVA i dati inseriti con "Precompila"
+ */
+export const resetManualData = async (): Promise<void> => {
+  const confirmed = window.confirm(
+    '🔄 RESET MANUALE\n\n' +
+      'Questa operazione cancellerà SOLO i dati inseriti manualmente dall\'utente:\n' +
+      '- Reparti aggiunti manualmente (esclude Precompila)\n' +
+      '- Staff aggiunti manualmente (esclude Precompila)\n' +
+      '- Prodotti e Categorie inseriti manualmente\n' +
+      '- Punti Conservazione aggiunti manualmente\n' +
+      '- Manutenzioni e Attività create manualmente\n' +
+      '- Rilevazioni Temperatura\n' +
+      '- localStorage onboarding\n' +
+      '- Cache di React Query\n\n' +
+      '✅ PRESERVATO:\n' +
+      '- Dati inseriti con "Precompila" (Paolo Dettori, Cucina, etc.)\n' +
+      '- Companies (aziende)\n' +
+      '- Users (utenti)\n' +
+      '- Company Members (associazioni)\n' +
+      '- Sessione login (rimani loggato)\n\n' +
+      '⚠️ ATTENZIONE: OPERAZIONE IRREVERSIBILE!\n\n' +
+      'Sei sicuro di voler procedere?'
+  )
+
+  if (!confirmed) {
+    console.log("🔄 Reset manuale annullato dall'utente")
+    return
+  }
+
+  try {
+    // Pulisce solo dati inseriti manualmente (esclude Precompila)
+    await clearManualData()
+
+    console.log('✅ Reset manuale completato con successo')
+    toast.success('Dati manuali rimossi!', {
+      position: 'top-right',
+      autoClose: 3000,
+    })
+
+    // Ricarica la pagina dopo un breve delay
+    setTimeout(() => {
+      window.location.reload()
+    }, 1000)
+  } catch (error) {
+    console.error('❌ Errore durante reset manuale:', error)
+    toast.error('Errore durante il reset', {
+      position: 'top-right',
+      autoClose: 3000,
+    })
+  }
+}
+
+/**
+ * Reset completo dell'app (legacy - mantenuto per compatibilità)
  */
 export const resetApp = async (): Promise<void> => {
   const confirmed = window.confirm(
-    '🔄 RESET DATI CONFIGURAZIONE\n\n' +
-      'Questa operazione cancellerà:\n' +
+    '🔄 RESET APP (LEGACY)\n\n' +
+      'Questa operazione cancellerà tutti i dati operativi:\n' +
       '- Reparti (Departments)\n' +
       '- Prodotti e Categorie\n' +
       '- Punti di Conservazione\n' +
@@ -728,49 +1093,20 @@ export const resetApp = async (): Promise<void> => {
     return
   }
 
-  console.log('🔄 Reset selettivo dati operativi...')
-
   try {
-    // 1. Ottieni company_id dall'utente autenticato
-    const { data: { user } } = await supabase.auth.getUser()
-    let companyId: string | null = null
-
-    if (user?.id) {
-      // Usa funzione RLS helper per ottenere company_id attivo
-      const { data: activeCompanyId, error } = await supabase.rpc('get_active_company_id')
-      
-      if (!error && activeCompanyId) {
-        companyId = activeCompanyId
-      }
+    const companyId = await getCurrentCompanyId()
+    if (!companyId) {
+      throw new Error('Company ID non trovato')
     }
+    await resetCompanyOperationalData(companyId)
 
-    // 2. Reset selettivo se abbiamo company_id
-    if (companyId) {
-      console.log('🗑️ Reset dati operativi per company_id:', companyId)
-      await resetCompanyOperationalData(companyId)
-    } else {
-      console.warn('⚠️ Nessun company_id trovato - skip database reset')
-    }
-
-    // 3. Pulisce SOLO localStorage onboarding (NON clearAllStorage che cancella Supabase!)
-    localStorage.removeItem('onboarding-data')
-    localStorage.removeItem('onboarding-completed')
-    localStorage.removeItem('onboarding-completed-at')
-    console.log('🗑️ Cleared onboarding localStorage')
-
-    // 4. Pulisce cache React Query (se disponibile)
-    if (window.queryClient) {
-      console.log('🗑️ Clearing React Query cache...')
-      window.queryClient.clear()
-    }
-
-    console.log('✅ Reset configurazione completato (rimani loggato)')
-    toast.success('Dati configurazione resettati! Puoi rifare l\'onboarding.', {
+    console.log('✅ Reset app completato con successo')
+    toast.success('App resettata!', {
       position: 'top-right',
       autoClose: 3000,
     })
 
-    // 5. Ricarica la pagina per hard refresh
+    // Ricarica la pagina dopo un breve delay
     setTimeout(() => {
       window.location.reload()
     }, 1000)
@@ -991,26 +1327,26 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
       }
 
       return {
-        company_id: companyId,                                                    // ✅ Da passare
-        name: person.fullName || `${person.name} ${person.surname}`,             // ✅ DISPONIBILE
-        role: person.role,                                                        // ✅ DISPONIBILE
-        category: Array.isArray(person.categories)
-          ? person.categories[0] || 'Altro'
-          : person.category,                                                      // ✅ DISPONIBILE
-        email: person.email || null,                                              // ✅ DISPONIBILE
-        phone: person.phone || null,                                              // ✅ DISPONIBILE
-        hire_date: null,                                                          // ⚠️ Non presente
-        status: 'active',                                                         // ✅ Default
-        notes: person.notes || null,                                              // ✅ DISPONIBILE
-        haccp_certification: person.haccpExpiry ? {
-          level: 'base',
-          expiry_date: person.haccpExpiry,
-          issuing_authority: '',
-          certificate_number: ''
-        } : null,                                                                 // ✅ DISPONIBILE
+      company_id: companyId,                                                    // ✅ Da passare
+      name: person.fullName || `${person.name} ${person.surname}`,             // ✅ DISPONIBILE
+      role: person.role,                                                        // ✅ DISPONIBILE
+      category: Array.isArray(person.categories)
+        ? person.categories[0] || 'Altro'
+        : person.category,                                                      // ✅ DISPONIBILE
+      email: person.email || null,                                              // ✅ DISPONIBILE
+      phone: person.phone || null,                                              // ✅ DISPONIBILE
+      hire_date: null,                                                          // ⚠️ Non presente
+      status: 'active',                                                         // ✅ Default
+      notes: person.notes || null,                                              // ✅ DISPONIBILE
+      haccp_certification: person.haccpExpiry ? {
+        level: 'base',
+        expiry_date: person.haccpExpiry,
+        issuing_authority: '',
+        certificate_number: ''
+      } : null,                                                                 // ✅ DISPONIBILE
         department_assignments: mappedDepartments,                                // ✅ Con ID reali
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
       }
     })
 
