@@ -3,7 +3,7 @@ import { toast } from 'react-toastify'
 import { AllergenType } from '@/types/inventory'
 import type { OnboardingData } from '@/types/onboarding'
 import { supabase } from '@/lib/supabase/client'
-import { createInviteToken } from '@/services/auth/inviteService'
+import { createInviteToken, sendInviteEmail } from '@/services/auth/inviteService'
 
 // Funzione per generare UUID validi (RFC 4122 v4)
 const generateUUID = (): string => {
@@ -1347,15 +1347,26 @@ export const completeOnboarding = async (
       for (const person of formData.staff) {
         if (person.email) {
           try {
-            await createInviteToken({
+            // Crea token invito
+            const inviteToken = await createInviteToken({
               email: person.email,
               company_id: companyId,
               role: person.role, // Usa ruolo assegnato nello Step 3
               expires_in_days: 7,
             })
             
-            invitesSent++
             console.log(`✅ Invito creato per: ${person.email} (${person.role})`)
+            
+            // Tenta invio email (non bloccante se fallisce)
+            const emailSent = await sendInviteEmail(inviteToken)
+            
+            if (emailSent) {
+              console.log(`📧 Email inviata a: ${person.email}`)
+            } else {
+              console.warn(`⚠️ Email NON inviata a ${person.email} - usa link manuale`)
+            }
+            
+            invitesSent++
           } catch (err) {
             invitesFailed++
             console.warn(`⚠️ Errore creazione invito per ${person.email}:`, err)
