@@ -656,24 +656,21 @@ const resetCompanyOperationalData = async (companyId: string): Promise<void> => 
   console.log('🗑️ Reset dati operativi per company:', companyId)
 
   try {
-    // Lista delle tabelle da pulire (dati operativi)
-    // ⚠️ NON includere: companies, company_members, user_sessions (CRITICI!)
+    // Lista delle tabelle da pulire (solo dati configurabili nell'onboarding)
+    // ⚠️ PRESERVATO: companies, company_members, user_sessions, staff
     const tablesToClean = [
-      'staff',
-      'departments', 
-      'products',
-      'product_categories',
-      'conservation_points',
-      'temperature_readings',
-      'maintenance_tasks',
-      'maintenance_completions',
+      'departments',           // ✅ Reparti
+      'products',             // ✅ Prodotti
+      'product_categories',   // ✅ Categorie prodotti
+      'conservation_points',  // ✅ Punti di conservazione
+      'temperature_readings', // ✅ Rilevazioni temperatura
+      'maintenance_tasks',    // ✅ Manutenzioni
+      'tasks',                // ✅ Attività generiche
       'calendar_events',
       'shopping_lists',
       'shopping_list_items',
-      'haccp_configurations',
-      'notification_preferences',
       'audit_logs'
-      // ❌ NON cancellare user_sessions - contiene active_company_id necessario!
+      // ❌ NON cancellare: staff, companies, company_members, user_sessions
     ]
 
     // Pulisce ogni tabella
@@ -707,18 +704,21 @@ const resetCompanyOperationalData = async (companyId: string): Promise<void> => 
  */
 export const resetApp = async (): Promise<void> => {
   const confirmed = window.confirm(
-    '🔄 RESET DATI OPERATIVI\n\n' +
+    '🔄 RESET DATI CONFIGURAZIONE\n\n' +
       'Questa operazione cancellerà:\n' +
-      '- Staff, Departments, Products\n' +
-      '- Conservation Points, Temperature Readings\n' +
-      '- Maintenance Tasks, Calendar Events\n' +
-      '- Shopping Lists, Inventory Data\n' +
-      '- localStorage e sessionStorage\n' +
+      '- Reparti (Departments)\n' +
+      '- Prodotti e Categorie\n' +
+      '- Punti di Conservazione\n' +
+      '- Manutenzioni e Attività\n' +
+      '- Rilevazioni Temperatura\n' +
+      '- localStorage onboarding\n' +
       '- Cache di React Query\n\n' +
       '✅ PRESERVATO:\n' +
       '- Companies (aziende)\n' +
       '- Users (utenti)\n' +
-      '- Company Members (associazioni)\n\n' +
+      '- Company Members (associazioni)\n' +
+      '- Staff (dipendenti)\n' +
+      '- Sessione login (rimani loggato)\n\n' +
       '⚠️ ATTENZIONE: OPERAZIONE IRREVERSIBILE!\n\n' +
       'Sei sicuro di voler procedere?'
   )
@@ -752,8 +752,11 @@ export const resetApp = async (): Promise<void> => {
       console.warn('⚠️ Nessun company_id trovato - skip database reset')
     }
 
-    // 3. Pulisce storage locale
-    clearAllStorage()
+    // 3. Pulisce SOLO localStorage onboarding (NON clearAllStorage che cancella Supabase!)
+    localStorage.removeItem('onboarding-data')
+    localStorage.removeItem('onboarding-completed')
+    localStorage.removeItem('onboarding-completed-at')
+    console.log('🗑️ Cleared onboarding localStorage')
 
     // 4. Pulisce cache React Query (se disponibile)
     if (window.queryClient) {
@@ -761,16 +764,16 @@ export const resetApp = async (): Promise<void> => {
       window.queryClient.clear()
     }
 
-    console.log('✅ Reset app + database completato con successo')
-    toast.success('App e database resettati completamente!', {
+    console.log('✅ Reset configurazione completato (rimani loggato)')
+    toast.success('Dati configurazione resettati! Puoi rifare l\'onboarding.', {
       position: 'top-right',
-      autoClose: 2000,
+      autoClose: 3000,
     })
 
     // 5. Ricarica la pagina per hard refresh
     setTimeout(() => {
       window.location.reload()
-    }, 500)
+    }, 1000)
   } catch (error) {
     console.error('❌ Errore nel reset app:', error)
     toast.error(`Errore durante il reset: ${error instanceof Error ? error.message : 'Unknown error'}`, {
