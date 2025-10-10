@@ -10,7 +10,7 @@ import { MAINTENANCE_TASK_TYPES } from '@/types/conservation'
 import { toast } from 'react-toastify'
 
 export function useMaintenanceTasks(conservationPointId?: string) {
-  const { user } = useAuth()
+  const { companyId } = useAuth()
   const queryClient = useQueryClient()
 
   const {
@@ -18,14 +18,14 @@ export function useMaintenanceTasks(conservationPointId?: string) {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['maintenance-tasks', user?.company_id, conservationPointId],
+    queryKey: ['maintenance-tasks', companyId, conservationPointId],
     queryFn: async () => {
-      if (!user?.company_id) {
+      if (!companyId) {
         console.warn('⚠️ No company_id available, cannot load maintenance tasks')
         return []
       }
 
-      console.log('🔧 Loading maintenance tasks from Supabase for company:', user.company_id)
+      console.log('🔧 Loading maintenance tasks from Supabase for company:', companyId)
 
       let query = supabase
         .from('maintenance_tasks')
@@ -34,7 +34,7 @@ export function useMaintenanceTasks(conservationPointId?: string) {
           conservation_point:conservation_points(id, name),
           assigned_user:staff(id, name)
         `)
-        .eq('company_id', user.company_id)
+        .eq('company_id', companyId)
 
       if (conservationPointId) {
         query = query.eq('conservation_point_id', conservationPointId)
@@ -50,7 +50,7 @@ export function useMaintenanceTasks(conservationPointId?: string) {
       console.log('✅ Loaded maintenance tasks from Supabase:', data?.length || 0)
       return data || []
     },
-    enabled: !!user?.company_id,
+    enabled: !!companyId,
   })
 
   const createTaskMutation = useMutation({
@@ -60,7 +60,7 @@ export function useMaintenanceTasks(conservationPointId?: string) {
         'id' | 'company_id' | 'created_at' | 'updated_at'
       >
     ) => {
-      if (!user?.company_id) throw new Error('No company ID available')
+      if (!companyId) throw new Error('No company ID available')
 
       const { data: result, error } = await supabase
         .from('maintenance_tasks')
@@ -68,7 +68,7 @@ export function useMaintenanceTasks(conservationPointId?: string) {
           {
             ...data,
             checklist: data.checklist ?? [],
-            company_id: user.company_id,
+            company_id: companyId,
           },
         ])
         .select()
@@ -138,14 +138,14 @@ export function useMaintenanceTasks(conservationPointId?: string) {
     mutationFn: async (
       completion: Omit<MaintenanceCompletion, 'id' | 'company_id'>
     ) => {
-      if (!user?.company_id) throw new Error('No company ID available')
+      if (!companyId) throw new Error('No company ID available')
 
       const { data: result, error } = await supabase
         .from('maintenance_completions')
         .insert([
           {
             ...completion,
-            company_id: user.company_id,
+            company_id: companyId,
           },
         ])
         .select()

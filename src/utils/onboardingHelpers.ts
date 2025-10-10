@@ -61,9 +61,10 @@ const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
 
   conservationPoints.forEach(point => {
     standardMaintenances.forEach(maintenance => {
-      // I punti di tipo "ambiente" non hanno "sbrinamento" ✅ Corretto: inglese
+      // I punti di tipo "ambient" non hanno "sbrinamento" (defrosting)
+      // Database usa 'ambient' (inglese), non 'ambiente'
       if (
-        point.pointType === 'ambiente' &&
+        point.pointType === 'ambient' &&
         maintenance.manutenzione === 'sbrinamento'
       ) {
         return
@@ -656,6 +657,7 @@ const resetCompanyOperationalData = async (companyId: string): Promise<void> => 
 
   try {
     // Lista delle tabelle da pulire (dati operativi)
+    // ⚠️ NON includere: companies, company_members, user_sessions (CRITICI!)
     const tablesToClean = [
       'staff',
       'departments', 
@@ -670,8 +672,8 @@ const resetCompanyOperationalData = async (companyId: string): Promise<void> => 
       'shopping_list_items',
       'haccp_configurations',
       'notification_preferences',
-      'user_sessions',
       'audit_logs'
+      // ❌ NON cancellare user_sessions - contiene active_company_id necessario!
     ]
 
     // Pulisce ogni tabella
@@ -798,7 +800,7 @@ const mapFrequenza = (frequenza: string): string => {
     'giornaliera': 'daily',
     'settimanale': 'weekly',
     'mensile': 'monthly',
-    'annuale': 'annual',
+    'annuale': 'annually',  // ✅ Fixed: DB requires 'annually' not 'annual'
     'custom': 'custom',
   }
   return map[frequenza] || 'weekly'
@@ -822,12 +824,16 @@ const calculateNextDue = (frequenza: string): string => {
 
 /**
  * Pulisce i dati esistenti dell'onboarding per evitare duplicati
+ * 
+ * IMPORTANTE: NON elimina mai company_members - quella tabella è gestita
+ * separatamente e contiene le associazioni utente-azienda critiche!
  */
 const cleanExistingOnboardingData = async (companyId: string) => {
   console.log('🧹 Cleaning existing onboarding data...')
 
   try {
     // Elimina in ordine inverso per rispettare le foreign keys
+    // ⚠️ NON eliminare company_members - potrebbe disconnettere utenti!
     await supabase.from('products').delete().eq('company_id', companyId)
     await supabase.from('product_categories').delete().eq('company_id', companyId)
     await supabase.from('tasks').delete().eq('company_id', companyId)
@@ -835,8 +841,9 @@ const cleanExistingOnboardingData = async (companyId: string) => {
     await supabase.from('conservation_points').delete().eq('company_id', companyId)
     await supabase.from('staff').delete().eq('company_id', companyId)
     await supabase.from('departments').delete().eq('company_id', companyId)
+    // ⚠️ NON toccare: companies, company_members, user_sessions
 
-    console.log('✅ Existing onboarding data cleaned')
+    console.log('✅ Existing onboarding data cleaned (preserving company_members)')
   } catch (error) {
     console.warn('⚠️ Error cleaning existing data (might not exist):', error)
   }
@@ -873,12 +880,13 @@ const createCompanyFromOnboarding = async (formData: OnboardingData): Promise<st
   // Associa l'utente alla company come admin
   const { error: memberError } = await supabase
     .from('company_members')
-    .update({
+    .insert({
+      user_id: user.id,
       company_id: company.id,
       role: 'admin',
+      staff_id: null,
       is_active: true,
     })
-    .eq('user_id', user.id)
 
   if (memberError) {
     console.error('❌ Errore associazione company_member:', memberError)
@@ -928,20 +936,25 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
 
   // Salva reparti
   // Riferimento: SUPABASE_SCHEMA_MAPPING.md - Section 2: departments
+  const departmentsIdMap = new Map<string, string>()
+  
   if (formData.departments?.length) {
     const departments = formData.departments.map(dept => ({
-      id: dept.id,                          // ✅ UUID valido generato da generateUUID()
       company_id: companyId,                // ✅ Da passare
       name: dept.name,                      // ✅ DISPONIBILE
       is_active: dept.is_active ?? true,    // ✅ DISPONIBILE
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
       // ❌ NON SALVARE: description (non esiste nella tabella)
+      // ❌ NON SALVARE: id frontend (database genera il proprio)
     }))
 
     console.log('📤 Inserting departments:', departments.length)
 
-    const { error } = await supabase.from('departments').insert(departments)
+    const { data: insertedDepts, error } = await supabase
+      .from('departments')
+      .insert(departments)
+      .select('id, name')
 
     if (error) {
       console.error('❌ Error inserting departments:', error)
@@ -949,34 +962,54 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
       throw new Error(`Failed to insert departments: ${error.message}`)
     }
 
+    // Crea mappa old_id -> new_id per mapping staff e conservation points
+    if (insertedDepts) {
+      formData.departments.forEach((dept: any, index: number) => {
+        if (insertedDepts[index]) {
+          departmentsIdMap.set(dept.id, insertedDepts[index].id)
+        }
+      })
+    }
+
     console.log('✅ Departments inserted successfully:', departments.length)
+    console.log('✅ Departments ID mapping:', Object.fromEntries(departmentsIdMap))
   }
 
   // Salva staff
   // Riferimento: SUPABASE_SCHEMA_MAPPING.md - Section 3: staff
   if (formData.staff?.length) {
-    const staff = formData.staff.map((person: any) => ({
-      company_id: companyId,                                                    // ✅ Da passare
-      name: person.fullName || `${person.name} ${person.surname}`,             // ✅ DISPONIBILE
-      role: person.role,                                                        // ✅ DISPONIBILE
-      category: Array.isArray(person.categories)
-        ? person.categories[0] || 'Altro'
-        : person.category,                                                      // ✅ DISPONIBILE
-      email: person.email || null,                                              // ✅ DISPONIBILE
-      phone: person.phone || null,                                              // ✅ DISPONIBILE
-      hire_date: null,                                                          // ⚠️ Non presente
-      status: 'active',                                                         // ✅ Default
-      notes: person.notes || null,                                              // ✅ DISPONIBILE
-      haccp_certification: person.haccpExpiry ? {
-        level: 'base',
-        expiry_date: person.haccpExpiry,
-        issuing_authority: '',
-        certificate_number: ''
-      } : null,                                                                 // ✅ DISPONIBILE
-      department_assignments: person.department_assignments || null,            // ✅ DISPONIBILE
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }))
+    const staff = formData.staff.map((person: any) => {
+      // Mappa department_assignments con ID reali
+      let mappedDepartments = null
+      if (person.department_assignments && Array.isArray(person.department_assignments)) {
+        mappedDepartments = person.department_assignments
+          .map((deptId: string) => departmentsIdMap.get(deptId) || deptId)
+          .filter(Boolean)
+      }
+
+      return {
+        company_id: companyId,                                                    // ✅ Da passare
+        name: person.fullName || `${person.name} ${person.surname}`,             // ✅ DISPONIBILE
+        role: person.role,                                                        // ✅ DISPONIBILE
+        category: Array.isArray(person.categories)
+          ? person.categories[0] || 'Altro'
+          : person.category,                                                      // ✅ DISPONIBILE
+        email: person.email || null,                                              // ✅ DISPONIBILE
+        phone: person.phone || null,                                              // ✅ DISPONIBILE
+        hire_date: null,                                                          // ⚠️ Non presente
+        status: 'active',                                                         // ✅ Default
+        notes: person.notes || null,                                              // ✅ DISPONIBILE
+        haccp_certification: person.haccpExpiry ? {
+          level: 'base',
+          expiry_date: person.haccpExpiry,
+          issuing_authority: '',
+          certificate_number: ''
+        } : null,                                                                 // ✅ DISPONIBILE
+        department_assignments: mappedDepartments,                                // ✅ Con ID reali
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    })
 
     const { error } = await supabase.from('staff').insert(staff)
 
@@ -995,7 +1028,7 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
   if (formData.conservation?.points?.length) {
     const points = formData.conservation.points.map((point: any) => ({
       company_id: companyId,
-      department_id: point.departmentId,
+      department_id: departmentsIdMap.get(point.departmentId) || point.departmentId, // ✅ Usa ID reale
       name: point.name,
       setpoint_temp: point.targetTemperature,
       type: point.pointType,
@@ -1017,7 +1050,7 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
       throw error
     }
 
-    // Crea mappa old_id -> new_id per mapping maintenance tasks
+    // Crea mappa old_id -> new_id per mapping products e maintenance tasks
     if (insertedPoints) {
       formData.conservation.points.forEach((point: any, index: number) => {
         if (insertedPoints[index]) {
@@ -1129,38 +1162,50 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
 
   // Salva categorie prodotti
   // Riferimento: SUPABASE_SCHEMA_MAPPING.md - Section 7: product_categories
+  const categoriesIdMap = new Map<string, string>()
+  
   if (formData.inventory?.categories?.length) {
     const categories = formData.inventory.categories.map(category => ({
-      id: category.id,                        // ✅ Generato da frontend
       company_id: companyId,                  // ✅ Da passare
       name: category.name,                    // ✅ DISPONIBILE
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
       // ❌ NON SALVARE: color, description, conservationRules (solo frontend)
+      // ❌ NON SALVARE: id frontend (database genera il proprio)
     }))
 
-    const { error: catError } = await supabase
+    const { data: insertedCategories, error: catError } = await supabase
       .from('product_categories')
       .insert(categories)
+      .select('id, name')
 
     if (catError) {
       console.error('❌ Error inserting product categories:', catError)
       throw catError
     }
 
+    // Crea mappa old_id -> new_id per mapping products
+    if (insertedCategories) {
+      formData.inventory.categories.forEach((cat: any, index: number) => {
+        if (insertedCategories[index]) {
+          categoriesIdMap.set(cat.id, insertedCategories[index].id)
+        }
+      })
+    }
+
     console.log('✅ Product categories inserted successfully:', categories.length)
+    console.log('✅ Product categories ID mapping:', Object.fromEntries(categoriesIdMap))
   }
 
   // Salva prodotti
   // Riferimento: SUPABASE_SCHEMA_MAPPING.md - Section 8: products
   if (formData.inventory?.products?.length) {
     const products = formData.inventory.products.map(product => ({
-      id: product.id,                                       // ✅ Generato da frontend
       company_id: companyId,                                // ✅ Da passare
       name: product.name,                                   // ✅ DISPONIBILE
-      category_id: product.categoryId || null,              // ✅ DISPONIBILE
-      department_id: product.departmentId || null,          // ✅ DISPONIBILE
-      conservation_point_id: product.conservationPointId || null, // ✅ DISPONIBILE
+      category_id: categoriesIdMap.get(product.categoryId) || null,              // ✅ Usa ID reale
+      department_id: departmentsIdMap.get(product.departmentId) || null,          // ✅ Usa ID reale
+      conservation_point_id: conservationPointsIdMap.get(product.conservationPointId) || null, // ✅ Usa ID reale
       barcode: product.barcode || null,                     // ✅ DISPONIBILE
       sku: product.sku || null,                             // ✅ DISPONIBILE
       supplier_name: product.supplierName || null,          // ✅ DISPONIBILE
@@ -1175,7 +1220,11 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
       compliance_status: product.complianceStatus || null,  // ✅ DISPONIBILE
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
+      // ❌ NON SALVARE: id frontend (database genera il proprio)
     }))
+
+    console.log('📤 Inserting products with mapped IDs:', products.length)
+    console.log('📤 Sample product:', JSON.stringify(products[0], null, 2))
 
     const { error } = await supabase.from('products').insert(products)
 
@@ -1234,22 +1283,56 @@ export const completeOnboarding = async (
         throw new Error('Utente non autenticato. Effettua il login e riprova.')
       }
 
-      // Usa funzione RLS helper per ottenere company_id attivo
-      const { data: activeCompanyId, error: companyError } = await supabase.rpc('get_active_company_id')
+      // Verifica se utente ha già un company_member record
+      const { data: existingMember, error: memberError } = await supabase
+        .from('company_members')
+        .select('company_id')
+        .eq('user_id', user.id)
+        .single()
 
-      if (companyError || !activeCompanyId) {
-        console.log('🔧 Company ID NULL - creando company durante onboarding')
-        // Company ID NULL = primo cliente, creerà company durante onboarding
-        companyId = null
+      if (existingMember && existingMember.company_id) {
+        // Utente ha già una company associata → usa quella esistente
+        console.log('✅ Company esistente trovata:', existingMember.company_id)
+        companyId = existingMember.company_id
       } else {
-        companyId = activeCompanyId
+        // Nessuna company associata → creane una nuova durante onboarding
+        console.log('🔧 Nessuna company trovata - creando nuova company durante onboarding')
+        companyId = null
       }
     }
 
     console.log('🏢 Company ID:', companyId)
 
     // Salva tutti i dati su Supabase
-    await saveAllDataToSupabase(formData, companyId)
+    await saveAllDataToSupabase(formData, companyId!)
+
+    // CRITICAL: Assicurati che user_sessions sia creata/aggiornata con il company_id corretto
+    if (companyId) {
+      // Recupera utente corrente
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      
+      if (currentUser?.id) {
+        console.log('🔄 Aggiornamento user_sessions con company_id:', companyId)
+        
+        const { error: sessionError } = await supabase
+          .from('user_sessions')
+          .upsert({
+            user_id: currentUser.id,
+            active_company_id: companyId,
+            last_activity: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }, {
+            onConflict: 'user_id'
+          })
+
+        if (sessionError) {
+          console.error('❌ Errore aggiornamento sessione:', sessionError)
+          throw new Error(`Impossibile aggiornare sessione: ${sessionError.message}`)
+        }
+
+        console.log('✅ User session aggiornata con active_company_id')
+      }
+    }
 
     // Marca onboarding come completato nel localStorage
     // Nota: i campi onboarding_completed/onboarding_completed_at non esistono in companies table

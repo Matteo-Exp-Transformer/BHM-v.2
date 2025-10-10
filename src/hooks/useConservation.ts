@@ -501,7 +501,7 @@ export function useConservation(options: UseConservationOptions = {}) {
           assigned_to: data.assigned_to,
           priority: data.priority,
           checklist: data.instructions,
-          company_id: user.company_id,
+          company_id: companyId,
           status: 'scheduled',
         })
         .select()
@@ -536,7 +536,7 @@ export function useConservation(options: UseConservationOptions = {}) {
           notes: data.notes,
           photos: data.photos,
           next_due: data.next_due?.toISOString(),
-          company_id: user.company_id,
+          company_id: companyId,
           completed_at: new Date().toISOString(),
         })
         .select()

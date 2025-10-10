@@ -36,7 +36,7 @@ export function AddTemperatureModal({
   conservationPoint,
   isLoading,
 }: AddTemperatureModalProps) {
-  const { user } = useAuth()
+  const { companyId } = useAuth()
   const [formData, setFormData] = useState({
     temperature: conservationPoint.setpoint_temp,
     method: 'digital_thermometer' as const,

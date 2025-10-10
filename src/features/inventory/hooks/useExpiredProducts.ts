@@ -11,7 +11,7 @@ const QUERY_KEYS = {
 }
 
 export const useExpiredProducts = () => {
-  const { user } = useAuth()
+  const { companyId } = useAuth()
   const queryClient = useQueryClient()
 
   // Fetch expired products
@@ -21,9 +21,9 @@ export const useExpiredProducts = () => {
     error: expiredError,
     refetch: refetchExpired,
   } = useQuery({
-    queryKey: QUERY_KEYS.expiredProducts(user?.company_id || ''),
+    queryKey: QUERY_KEYS.expiredProducts(companyId || ''),
     queryFn: async (): Promise<ExpiredProduct[]> => {
-      if (!user?.company_id) {
+      if (!companyId) {
         return []
       }
 
@@ -35,7 +35,7 @@ export const useExpiredProducts = () => {
           departments(id, name),
           conservation_points(id, name)
         `)
-        .eq('company_id', user.company_id)
+        .eq('company_id', companyId)
         .eq('status', 'expired')
         .order('expiry_date', { ascending: true })
 
@@ -72,7 +72,7 @@ export const useExpiredProducts = () => {
         updated_at: product.updated_at ? new Date(product.updated_at) : new Date(),
       }))
     },
-    enabled: !!user?.company_id,
+    enabled: !!companyId,
   })
 
   // Fetch waste statistics
@@ -81,9 +81,9 @@ export const useExpiredProducts = () => {
     isLoading: isLoadingWasteStats,
     error: wasteStatsError,
   } = useQuery({
-    queryKey: QUERY_KEYS.wasteStats(user?.company_id || ''),
+    queryKey: QUERY_KEYS.wasteStats(companyId || ''),
     queryFn: async (): Promise<WasteStats> => {
-      if (!user?.company_id) {
+      if (!companyId) {
         return {
           total_expired_products: 0,
           total_waste_cost: 0,
@@ -104,7 +104,7 @@ export const useExpiredProducts = () => {
           expiry_date,
           product_categories(name)
         `)
-        .eq('company_id', user.company_id)
+        .eq('company_id', companyId)
         .eq('status', 'expired')
 
       if (error) {
@@ -169,7 +169,7 @@ export const useExpiredProducts = () => {
         prevention_savings: totalWasteCost * 0.3, // 30% savings with better management
       }
     },
-    enabled: !!user?.company_id,
+    enabled: !!companyId,
   })
 
   // Reinsert expired product mutation
@@ -185,14 +185,14 @@ export const useExpiredProducts = () => {
       newQuantity?: number
       notes?: string
     }) => {
-      if (!user?.company_id) throw new Error('User not authenticated')
+      if (!companyId) throw new Error('User not authenticated')
 
       // Get the expired product
       const { data: expiredProduct, error: fetchError } = await supabase
         .from('products')
         .select('*')
         .eq('id', expiredProductId)
-        .eq('company_id', user.company_id)
+        .eq('company_id', companyId)
         .single()
 
       if (fetchError || !expiredProduct) {
@@ -240,13 +240,13 @@ export const useExpiredProducts = () => {
     onSuccess: () => {
       toast.success('Prodotto reinserito con successo')
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.expiredProducts(user?.company_id || ''),
+        queryKey: QUERY_KEYS.expiredProducts(companyId || ''),
       })
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.wasteStats(user?.company_id || ''),
+        queryKey: QUERY_KEYS.wasteStats(companyId || ''),
       })
       queryClient.invalidateQueries({
-        queryKey: ['products', user?.company_id],
+        queryKey: ['products', companyId],
       })
     },
     onError: (error: Error) => {
@@ -258,13 +258,13 @@ export const useExpiredProducts = () => {
   // Delete expired product mutation
   const deleteExpiredProduct = useMutation({
     mutationFn: async (productId: string) => {
-      if (!user?.company_id) throw new Error('User not authenticated')
+      if (!companyId) throw new Error('User not authenticated')
 
       const { error } = await supabase
         .from('products')
         .delete()
         .eq('id', productId)
-        .eq('company_id', user.company_id)
+        .eq('company_id', companyId)
 
       if (error) {
         throw error
@@ -275,10 +275,10 @@ export const useExpiredProducts = () => {
     onSuccess: () => {
       toast.success('Prodotto eliminato definitivamente')
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.expiredProducts(user?.company_id || ''),
+        queryKey: QUERY_KEYS.expiredProducts(companyId || ''),
       })
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.wasteStats(user?.company_id || ''),
+        queryKey: QUERY_KEYS.wasteStats(companyId || ''),
       })
     },
     onError: (error: Error) => {
@@ -290,13 +290,13 @@ export const useExpiredProducts = () => {
   // Bulk operations
   const bulkDeleteExpired = useMutation({
     mutationFn: async (productIds: string[]) => {
-      if (!user?.company_id) throw new Error('User not authenticated')
+      if (!companyId) throw new Error('User not authenticated')
 
       const { error } = await supabase
         .from('products')
         .delete()
         .in('id', productIds)
-        .eq('company_id', user.company_id)
+        .eq('company_id', companyId)
 
       if (error) {
         throw error
@@ -307,10 +307,10 @@ export const useExpiredProducts = () => {
     onSuccess: result => {
       toast.success(`${result.deletedCount} prodotti eliminati definitivamente`)
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.expiredProducts(user?.company_id || ''),
+        queryKey: QUERY_KEYS.expiredProducts(companyId || ''),
       })
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.wasteStats(user?.company_id || ''),
+        queryKey: QUERY_KEYS.wasteStats(companyId || ''),
       })
     },
     onError: (error: Error) => {

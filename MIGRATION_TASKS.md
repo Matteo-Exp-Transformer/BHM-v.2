@@ -1118,6 +1118,60 @@ Noi abbiamo completato:
 - **User Association:** ✅ Working - Links user as admin to new company
 - **Data Persistence:** ✅ Working - All operational data saved correctly
 
+---
+
+## 🐛 BUG FIXES POST-TESTING (2025-01-10 02:00-03:00)
+
+### **CRITICAL BUGS IDENTIFIED & FIXED:**
+
+#### **BUG #1: Company Members Not Created** ⚠️ CRITICAL
+- **Problem:** `.update()` invece di `.insert()` in createCompanyFromOnboarding
+- **Impact:** Utente registrato ma bloccato come "guest"
+- **Fix:** Cambiato da `.update()` a `.insert()` 
+- **File:** `src/utils/onboardingHelpers.ts` (linea 876-888)
+- **Status:** ✅ FIXED
+
+#### **BUG #2: Admin Loses Access After Onboarding** ⚠️ HIGH
+- **Problem:** Sistema non riconosceva company esistente dell'admin
+- **Impact:** Admin completava onboarding e perdeva accesso
+- **Fix:** Query diretta a `company_members` invece di RPC function
+- **File:** `src/utils/onboardingHelpers.ts` (linea 1238-1254)
+- **Status:** ✅ FIXED
+
+#### **BUG #3: company_members Protection Missing** ⚠️ HIGH
+- **Problem:** Nessuna documentazione che `company_members` è critico
+- **Impact:** Risk di eliminazione accidentale
+- **Fix:** Aggiunti commenti critici e warning
+- **File:** `src/utils/onboardingHelpers.ts` (linea 824-848)
+- **Status:** ✅ DOCUMENTED & PROTECTED
+
+#### **BUG #4: Data Not Visible After Onboarding** ⚠️ MEDIUM
+- **Problem:** `user_sessions` non aggiornata dopo onboarding
+- **Impact:** Dashboard mostra dati vuoti
+- **Fix:** Aggiunte upsert `user_sessions` con `active_company_id`
+- **File:** `src/utils/onboardingHelpers.ts` (linea 1267-1288)
+- **Status:** ✅ FIXED
+
+#### **BUG #5: Schema Compliance Issue** ⚠️ LOW
+- **Problem:** Codice usava `'ambiente'` (IT) invece di `'ambient'` (EN)
+- **Impact:** Check maintenance poteva fallire
+- **Fix:** Cambiato `'ambiente'` → `'ambient'` per compliance con schema DB
+- **File:** `src/utils/onboardingHelpers.ts` (linea 64-71)
+- **Status:** ✅ FIXED
+
+### **SUMMARY BUG FIXES:**
+- **Total Bugs:** 5
+- **Critical:** 1 (Fixed ✅)
+- **High:** 2 (Fixed ✅)
+- **Medium:** 1 (Fixed ✅)
+- **Low:** 1 (Fixed ✅)
+- **Success Rate:** 100% ✅
+
+### **DOCUMENTATION CREATED:**
+- ✅ `Report Agenti/BUG_FIXES_ONBOARDING_2025_01_10.md` - Detailed bug report
+- ✅ `Report Agenti/FIX_ONBOARDING_COMPLETION_BUG_2025_01_10.md` - Fix guide
+- ✅ `Report Agenti/FIX_AUTH_ONBOARDING_2025_01_10.md` - Initial fix report
+
 #### ✅ **ROUTING & UX IMPROVEMENTS:**
 - **Homepage Redirect:** ✅ Fixed - `/` now redirects to `/sign-in`
 - **Dashboard Route:** ✅ Added - `/dashboard` for authenticated users
