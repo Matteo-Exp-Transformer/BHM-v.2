@@ -1163,12 +1163,18 @@ const calculateNextDue = (frequenza: string): string => {
 
 /**
  * Pulisce i dati esistenti dell'onboarding per evitare duplicati
- * 
+ *
  * IMPORTANTE: NON elimina mai company_members - quella tabella è gestita
  * separatamente e contiene le associazioni utente-azienda critiche!
  */
 const cleanExistingOnboardingData = async (companyId: string) => {
   console.log('🧹 Cleaning existing onboarding data...')
+
+  // Guardia: verifica che companyId sia una stringa valida
+  if (!companyId || typeof companyId !== 'string') {
+    console.error('❌ Invalid companyId for cleaning:', companyId)
+    throw new Error('Invalid company ID: must be a valid UUID string')
+  }
 
   try {
     // Elimina in ordine inverso per rispettare le foreign keys
@@ -1245,6 +1251,14 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
     console.log('🔧 Creando company durante onboarding...')
     companyId = await createCompanyFromOnboarding(formData)
   }
+
+  // Verifica che companyId sia una stringa valida
+  if (!companyId || typeof companyId !== 'string') {
+    console.error('❌ Invalid companyId:', companyId, 'type:', typeof companyId)
+    throw new Error('Invalid company ID: must be a valid UUID string')
+  }
+
+  console.log('✅ Using valid companyId:', companyId)
 
   // Pulisci i dati esistenti prima di inserire nuovi dati
   await cleanExistingOnboardingData(companyId)
