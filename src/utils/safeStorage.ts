@@ -143,13 +143,36 @@ export const clearHaccpData = (): boolean => {
 
 /**
  * Pulisce completamente localStorage e sessionStorage
+ * PRESERVA: Token Supabase Auth per evitare logout forzato
  * @returns true se pulizia completata
  */
 export const clearAllStorage = (): boolean => {
   try {
+    // Salva token Supabase prima di cancellare
+    const supabaseKeys: Record<string, string | null> = {}
+    const keysToPreserve: string[] = []
+    
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith('sb-')) {
+        // Chiavi Supabase (sb-<project>-auth-token, sb-<project>-auth-token-code-verifier, etc.)
+        keysToPreserve.push(key)
+        supabaseKeys[key] = localStorage.getItem(key)
+      }
+    }
+    
+    // Cancella tutto
     localStorage.clear()
     sessionStorage.clear()
-    console.log('[SafeStorage] Storage pulito completamente')
+    
+    // Ripristina chiavi Supabase
+    Object.entries(supabaseKeys).forEach(([key, value]) => {
+      if (value) {
+        localStorage.setItem(key, value)
+      }
+    })
+    
+    console.log('[SafeStorage] Storage pulito (preservato:', keysToPreserve.length, 'chiavi Supabase)')
     return true
   } catch (error) {
     console.error('[SafeStorage] Errore nella pulizia completa:', error)

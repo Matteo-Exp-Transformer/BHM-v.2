@@ -29,7 +29,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   }
 
   const allTabs = [
-    { id: 'home', label: 'Home', icon: Home, path: '/', requiresAuth: true },
+    { id: 'home', label: 'Home', icon: Home, path: '/dashboard', requiresAuth: true },
     {
       id: 'conservation',
       label: 'Conservazione',

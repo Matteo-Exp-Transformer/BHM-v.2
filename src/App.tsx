@@ -21,6 +21,7 @@ import MainLayout from './components/layouts/MainLayout'
 // Components
 import ProtectedRoute from './components/ProtectedRoute'
 import OnboardingGuard from './components/OnboardingGuard'
+import HomeRedirect from './components/HomeRedirect'
 
 // Loading component
 const PageLoader = () => (
@@ -105,7 +106,7 @@ function App() {
                   <Routes>
                     <Route
                       path="/"
-                      element={<Navigate to="/sign-in" replace />}
+                      element={<HomeRedirect />}
                     />
                     <Route
                       path="/dashboard"

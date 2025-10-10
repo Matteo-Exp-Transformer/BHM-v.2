@@ -152,6 +152,7 @@ const ConservationStep = ({
       pointType: formData.pointType,
       isBlastChiller: formData.isBlastChiller,
       productCategories: [...new Set(formData.productCategories)],
+      source: 'manual' as const, // ✅ FIXED: Campo obbligatorio per validazione
       maintenanceTasks: [],
     })
 

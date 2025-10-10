@@ -154,13 +154,20 @@ const InventoryStep = ({
 
   const handleSaveProduct = () => {
     if (!draftProduct) return
+    console.log('🔍 Prodotto da validare:', draftProduct)
     const normalized = normalizeInventoryProduct(draftProduct)
+    console.log('🔍 Prodotto normalizzato:', normalized)
     const result = validateInventoryProduct(
       normalized,
       categories,
       conservationPoints
     )
     if (!result.success) {
+      console.error('❌ Validazione prodotto fallita:')
+      console.error('Errori dettagliati:', JSON.stringify(result.errors, null, 2))
+      Object.entries(result.errors ?? {}).forEach(([field, error]) => {
+        console.error(`  - ${field}: ${error}`)
+      })
       setProductErrors(result.errors ?? {})
       return
     }
@@ -795,7 +802,7 @@ const InventoryStep = ({
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
                     <label className="mb-1 block text-sm font-medium text-blue-900">
-                      Categoria
+                      Categoria *
                     </label>
                     <select
                       value={draftProduct.categoryId ?? ''}
@@ -809,7 +816,11 @@ const InventoryStep = ({
                             : prev
                         )
                       }
-                      className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                      className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+                        productErrors.categoryId
+                          ? 'border-red-300'
+                          : 'border-blue-200'
+                      }`}
                     >
                       <option value="">Seleziona categoria</option>
                       {categories.map(category => (
@@ -827,7 +838,7 @@ const InventoryStep = ({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="mb-1 block text-sm font-medium text-blue-900">
-                        Reparto
+                        Reparto *
                       </label>
                       <select
                         value={draftProduct.departmentId ?? ''}
@@ -841,7 +852,11 @@ const InventoryStep = ({
                               : prev
                           )
                         }
-                        className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                        className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+                          productErrors.departmentId
+                            ? 'border-red-300'
+                            : 'border-blue-200'
+                        }`}
                       >
                         <option value="">Seleziona reparto</option>
                         {departmentOptions.map(department => (
@@ -850,10 +865,15 @@ const InventoryStep = ({
                           </option>
                         ))}
                       </select>
+                      {productErrors.departmentId && (
+                        <p className="mt-1 text-xs text-red-600">
+                          {productErrors.departmentId}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="mb-1 block text-sm font-medium text-blue-900">
-                        Conservazione
+                        Conservazione *
                       </label>
                       <select
                         value={draftProduct.conservationPointId ?? ''}
@@ -901,7 +921,7 @@ const InventoryStep = ({
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
                     <label className="mb-1 block text-sm font-medium text-blue-900">
-                      Data Acquisto
+                      Data Acquisto *
                     </label>
                     <input
                       type="date"
@@ -916,13 +936,22 @@ const InventoryStep = ({
                             : prev
                         )
                       }
-                      className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                      className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+                        productErrors.purchaseDate
+                          ? 'border-red-300'
+                          : 'border-blue-200'
+                      }`}
                     />
+                    {productErrors.purchaseDate && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {productErrors.purchaseDate}
+                      </p>
+                    )}
                   </div>
 
                   <div>
                     <label className="mb-1 block text-sm font-medium text-blue-900">
-                      Data Scadenza
+                      Data Scadenza *
                     </label>
                     <input
                       type="date"
@@ -952,7 +981,7 @@ const InventoryStep = ({
 
                   <div>
                     <label className="mb-1 block text-sm font-medium text-blue-900">
-                      Quantità
+                      Quantità *
                     </label>
                     <input
                       type="number"
@@ -985,7 +1014,7 @@ const InventoryStep = ({
                   </div>
                   <div>
                     <label className="mb-1 block text-sm font-medium text-blue-900">
-                      Unità
+                      Unità *
                     </label>
                     <select
                       value={draftProduct.unit ?? 'pz'}
