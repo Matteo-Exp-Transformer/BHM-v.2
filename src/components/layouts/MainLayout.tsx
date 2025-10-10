@@ -12,7 +12,7 @@ import { SyncStatusBar } from '@/components/offline/SyncStatusBar'
 import { useAuth, UserRole } from '@/hooks/useAuth'
 import HeaderButtons from '@/components/HeaderButtons'
 import CompanySwitcher from '@/components/CompanySwitcher'
-import { resetApp } from '@/utils/onboardingHelpers'
+// Rimosso import resetApp - ora tutto gestito in HeaderButtons
 
 interface MainLayoutProps {
   children: ReactNode
@@ -96,9 +96,8 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           </div>
           
           <HeaderButtons
-            onResetApp={resetApp}
             onOpenOnboarding={handleOpenOnboarding}
-            showResetApp={import.meta.env.DEV}
+            showDevButtons={import.meta.env.DEV}
           />
         </div>
       </header>

@@ -8,6 +8,10 @@ import {
   prefillOnboarding,
   resetOnboarding,
   resetApp,
+  resetManualData,
+  resetOnboardingData,
+  resetAllData,
+  resetTotAndUsers,
   completeOnboarding,
 } from './utils/onboardingHelpers'
 
@@ -36,6 +40,7 @@ const LoginPage = lazy(() => import('./features/auth/LoginPage'))
 const RegisterPage = lazy(() => import('./features/auth/RegisterPage'))
 const ForgotPasswordPage = lazy(() => import('./features/auth/ForgotPasswordPage'))
 const AcceptInvitePage = lazy(() => import('./features/auth/AcceptInvitePage'))
+const AuthCallbackPage = lazy(() => import('./features/auth/AuthCallbackPage'))
 const ManagementPage = lazy(
   () => import('./features/management/ManagementPage')
 )
@@ -52,6 +57,10 @@ type DevWindow = Window &
   Partial<{
     resetApp: typeof resetApp
     resetOnboarding: typeof resetOnboarding
+    resetManualData: typeof resetManualData
+    resetOnboardingData: typeof resetOnboardingData
+    resetAllData: typeof resetAllData
+    resetTotAndUsers: typeof resetTotAndUsers
     prefillOnboarding: typeof prefillOnboarding
     completeOnboarding: typeof completeOnboarding
     devFunctionsLogged: boolean
@@ -70,18 +79,24 @@ function App() {
       const devWindow = window as DevWindow
       devWindow.resetApp = resetApp
       devWindow.resetOnboarding = resetOnboarding
+      devWindow.resetManualData = resetManualData
+      devWindow.resetOnboardingData = resetOnboardingData
+      devWindow.resetAllData = resetAllData
+      devWindow.resetTotAndUsers = resetTotAndUsers
       devWindow.prefillOnboarding = prefillOnboarding
       devWindow.completeOnboarding = completeOnboarding
 
       // Log delle funzioni disponibili
       if (!devWindow.devFunctionsLogged) {
         console.log('🔄 Funzioni dev disponibili:')
-        console.log('  - resetApp() - Reset completo app')
-        console.log('  - resetOnboarding() - Reset onboarding e app')
+        console.log('  - resetApp() - Reset completo app (legacy)')
+        console.log('  - resetOnboarding() - Reset onboarding e app (legacy)')
+        console.log('  - resetManualData() - Solo dati utente manuali')
+        console.log('  - resetOnboardingData() - Solo dati Precompila')
+        console.log('  - resetAllData() - Tutti i dati (onboarding + utente)')
+        console.log('  - resetTotAndUsers() - Tutto + utenti + token')
         console.log('  - prefillOnboarding() - Precompila onboarding')
-        console.log(
-          '  - completeOnboarding() - Completa onboarding automaticamente'
-        )
+        console.log('  - completeOnboarding() - Completa onboarding automaticamente')
         devWindow.devFunctionsLogged = true
       }
     }
@@ -96,6 +111,7 @@ function App() {
           <Route path="/sign-up" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/accept-invite" element={<AcceptInvitePage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
           
           {/* Protected routes */}
           <Route

@@ -20,8 +20,10 @@ const DevButtons: React.FC<DevButtonsProps> = ({
       console.log('DevButtons loaded in dev mode')
     }
   }, [isDevMode])
+
   return (
     <div className="flex gap-2 flex-wrap">
+      {/* PULSANTE PRECOMPILA */}
       <button
         onClick={onPrefillOnboarding}
         className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-green-600 bg-white border border-green-200 rounded-md hover:text-green-700 hover:bg-green-50 transition-colors"
@@ -32,6 +34,7 @@ const DevButtons: React.FC<DevButtonsProps> = ({
         <span className="sm:hidden">Precompila</span>
       </button>
 
+      {/* PULSANTE COMPLETA ONBOARDING */}
       <button
         onClick={onCompleteOnboarding}
         className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-md hover:text-blue-700 hover:bg-blue-50 transition-colors"
@@ -42,10 +45,11 @@ const DevButtons: React.FC<DevButtonsProps> = ({
         <span className="sm:hidden">Completa</span>
       </button>
 
+      {/* PULSANTE RESET ONBOARDING */}
       <button
         onClick={onResetOnboarding}
-        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-md hover:text-red-700 hover:bg-red-50 transition-colors"
-        title="Reset completo onboarding e app"
+        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-orange-600 bg-white border border-orange-200 rounded-md hover:text-orange-700 hover:bg-orange-50 transition-colors"
+        title="Reset Onboarding - Cancella tutto e ricomincia"
       >
         <RotateCcw className="h-4 w-4" />
         <span className="hidden sm:inline">Reset Onboarding</span>
