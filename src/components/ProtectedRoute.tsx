@@ -1,4 +1,5 @@
-import React, { ReactNode } from 'react'
+import React, { ReactNode, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth, UserRole, UserPermissions } from '@/hooks/useAuth'
 import { Loader2, AlertCircle, UserX } from 'lucide-react'
 
@@ -163,14 +164,34 @@ export const ProtectedRoute = ({
   fallback,
   showLoadingSpinner = true,
 }: ProtectedRouteProps) => {
+  const navigate = useNavigate()
   const {
     isLoading,
+    isAuthenticated,
     isAuthorized,
     userRole,
     hasRole,
     hasPermission,
     authError,
   } = useAuth()
+
+  // ✅ Redirect a login se non autenticato
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      console.log('🚫 Utente non autenticato - redirect a login')
+      navigate('/sign-in', { replace: true })
+    }
+  }, [isLoading, isAuthenticated, navigate])
+
+  // ✅ Redirect a login se non autorizzato (guest senza company)
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && !isAuthorized) {
+      console.log('🚫 Utente non autorizzato (no company) - redirect a login')
+      setTimeout(() => {
+        navigate('/sign-in', { replace: true })
+      }, 2000) // Mostra messaggio per 2 secondi prima del redirect
+    }
+  }, [isLoading, isAuthenticated, isAuthorized, navigate])
 
   if (isLoading && showLoadingSpinner) {
     return fallback || <LoadingFallback />
@@ -185,10 +206,10 @@ export const ProtectedRoute = ({
         </h2>
         <p className="text-red-800 text-center mb-4">{authError}</p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => navigate('/sign-in')}
           className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
         >
-          Riprova
+          Torna al Login
         </button>
       </div>
     )
