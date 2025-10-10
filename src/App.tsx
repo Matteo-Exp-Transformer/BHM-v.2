@@ -20,6 +20,7 @@ import MainLayout from './components/layouts/MainLayout'
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute'
+import OnboardingGuard from './components/OnboardingGuard'
 
 // Loading component
 const PageLoader = () => (
@@ -100,19 +101,20 @@ function App() {
             path="/*"
             element={
               <MainLayout>
-                <Routes>
-                  <Route
-                    path="/"
-                    element={<Navigate to="/sign-in" replace />}
-                  />
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <ProtectedRoute>
-                        <HomePage />
-                      </ProtectedRoute>
-                    }
-                  />
+                <OnboardingGuard>
+                  <Routes>
+                    <Route
+                      path="/"
+                      element={<Navigate to="/sign-in" replace />}
+                    />
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <ProtectedRoute>
+                          <HomePage />
+                        </ProtectedRoute>
+                      }
+                    />
                   <Route
                     path="/conservazione"
                     element={
@@ -166,6 +168,7 @@ function App() {
                   {/* 404 Not Found */}
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
+                </OnboardingGuard>
               </MainLayout>
             }
           />

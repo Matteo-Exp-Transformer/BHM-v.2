@@ -9,7 +9,7 @@ import {
 import { toast } from 'react-toastify'
 
 export function useConservationPoints() {
-  const { user } = useAuth()
+  const { companyId } = useAuth()
   const queryClient = useQueryClient()
 
   const {
@@ -17,16 +17,16 @@ export function useConservationPoints() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['conservation-points', user?.company_id],
+    queryKey: ['conservation-points', companyId],
     queryFn: async () => {
-      if (!user?.company_id) {
+      if (!companyId) {
         console.warn('⚠️ No company_id available, cannot load conservation points')
         return []
       }
 
       console.log(
         '🔧 Loading conservation points from Supabase for company:',
-        user.company_id
+        companyId
       )
       const { data, error } = await supabase
         .from('conservation_points')
@@ -36,7 +36,7 @@ export function useConservationPoints() {
           department:departments(id, name)
         `
         )
-        .eq('company_id', user.company_id)
+        .eq('company_id', companyId)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -50,7 +50,7 @@ export function useConservationPoints() {
       )
       return data || []
     },
-    enabled: !!user?.company_id,
+    enabled: !!companyId,
   })
 
   const createConservationPointMutation = useMutation({
@@ -69,7 +69,7 @@ export function useConservationPoints() {
       >
       maintenanceTasks: any[]
     }) => {
-      if (!user?.company_id) throw new Error('No company ID available')
+      if (!companyId) throw new Error('No company ID available')
 
       // Auto-classify based on temperature
       const typeClassification = classifyConservationPoint(
@@ -83,7 +83,7 @@ export function useConservationPoints() {
         .insert([
           {
             ...conservationPoint,
-            company_id: user.company_id,
+            company_id: companyId,
             type: typeClassification,
           },
         ])
@@ -95,7 +95,7 @@ export function useConservationPoints() {
       // Create maintenance tasks if any
       if (maintenanceTasks.length > 0) {
         const tasksToInsert = maintenanceTasks.map(task => ({
-          company_id: user.company_id,
+          company_id: companyId,
           conservation_point_id: pointResult.id,
           title: task.title,
           type: task.type,

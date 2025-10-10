@@ -438,6 +438,7 @@ main (produzione)
 - **Schema Compatibility:** ✅ Fixed - Database schema alignment complete
 - **Data Persistence:** ✅ Working - All operational data saved correctly
 - **User Experience:** ✅ Improved - Clear login-first flow
+- **Data Visibility:** ✅ Fixed - Dashboard shows data after onboarding
 
 #### **PROBLEMS SOLVED:**
 1. **RLS Policy Conflicts** → Fixed with proper invite validation policies
@@ -445,6 +446,37 @@ main (produzione)
 3. **Rate Limiting Issues** → Managed with proper request handling
 4. **Email Confirmation** → Configured for development environment
 5. **Routing Issues** → Fixed with proper redirect logic
+
+---
+
+## 🐛 BUG FIXES POST-TESTING (2025-01-10 02:00-03:00)
+
+### **5 CRITICAL BUGS IDENTIFIED & RESOLVED:**
+
+1. **Company Members Not Created** (CRITICAL)
+   - `.update()` → `.insert()` fix
+   - Prevented "guest" lockout
+
+2. **Admin Loses Access After Onboarding** (HIGH)  
+   - Company detection improved
+   - Direct query to `company_members`
+
+3. **company_members Protection Missing** (HIGH)
+   - Critical documentation added
+   - Prevented accidental deletion
+
+4. **Data Not Visible After Onboarding** (MEDIUM)
+   - `user_sessions` upsert added
+   - Dashboard data now visible
+
+5. **Schema Compliance Issue** (LOW)
+   - `'ambiente'` → `'ambient'` fixed
+   - Full database compliance verified
+
+### **DOCUMENTATION CREATED:**
+- ✅ 3 detailed bug fix reports
+- ✅ Complete testing checklist
+- ✅ Schema compliance verification
 
 ### **PRODUCTION READINESS:**
 - ✅ **Core Functionality:** 100% Working
@@ -462,6 +494,7 @@ main (produzione)
 ---
 
 **Planning Owner:** Claude AI Assistant (continuato da Cursor AI)
-**Last Updated:** 2025-01-10 01:30
-**Status:** ✅ **MIGRATION 100% COMPLETE + FULL TESTING COMPLETE**
-**Next Phase:** Production Deployment Preparation
+**Last Updated:** 2025-01-10 03:00
+**Status:** ✅ **MIGRATION 100% COMPLETE + ALL BUGS FIXED**
+**Bug Fixes:** 5/5 Critical bugs resolved (100% success rate)
+**Next Phase:** Final validation & Production Deployment

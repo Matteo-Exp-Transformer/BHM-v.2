@@ -19,7 +19,7 @@ import {
  * Hook for managing calendar events
  */
 export function useCalendarEvents() {
-  const { user } = useAuth()
+  const { companyId } = useAuth()
   const queryClient = useQueryClient()
 
   // Fetch all calendar events
@@ -29,16 +29,16 @@ export function useCalendarEvents() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['calendar-events', user?.company_id],
+    queryKey: ['calendar-events', companyId],
     queryFn: async (): Promise<CalendarEvent[]> => {
-      if (!user?.company_id) {
+      if (!companyId) {
         console.warn('⚠️ No company_id available, cannot load calendar events')
         throw new Error('No company ID available')
       }
 
       console.log(
         '🔧 Loading calendar events from Supabase for company:',
-        user.company_id
+        companyId
       )
 
       // Load maintenance tasks from Supabase and convert to calendar events
@@ -50,7 +50,7 @@ export function useCalendarEvents() {
           conservation_points(id, name, departments(id, name))
         `
         )
-        .eq('company_id', user.company_id)
+        .eq('company_id', companyId)
         .order('next_due', { ascending: true })
 
       if (tasksError) {
@@ -170,7 +170,7 @@ export function useCalendarEvents() {
 
       return calendarEvents
     },
-    enabled: !!user?.company_id,
+    enabled: !!companyId,
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
   })
 
@@ -179,12 +179,12 @@ export function useCalendarEvents() {
     mutationFn: async (
       input: CreateCalendarEventInput
     ): Promise<CalendarEvent> => {
-      if (!user?.company_id) throw new Error('No company ID available')
+      if (!companyId) throw new Error('No company ID available')
 
       // For now, we only support creating maintenance tasks as calendar events
       if (input.type === 'maintenance' && input.conservation_point_id) {
         const payload = {
-          company_id: user.company_id,
+          company_id: companyId,
           conservation_point_id: input.conservation_point_id,
           title: input.title,
           instructions: input.description,

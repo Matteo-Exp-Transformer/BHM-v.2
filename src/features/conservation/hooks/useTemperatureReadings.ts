@@ -5,7 +5,7 @@ import { TemperatureReading } from '@/types/conservation'
 import { toast } from 'react-toastify'
 
 export function useTemperatureReadings(conservationPointId?: string) {
-  const { user } = useAuth()
+  const { companyId } = useAuth()
   const queryClient = useQueryClient()
 
 
@@ -14,14 +14,14 @@ export function useTemperatureReadings(conservationPointId?: string) {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['temperature-readings', user?.company_id, conservationPointId],
+    queryKey: ['temperature-readings', companyId, conservationPointId],
     queryFn: async () => {
-      if (!user?.company_id) {
+      if (!companyId) {
         console.warn('⚠️ No company_id available, cannot load temperature readings')
         throw new Error('No company ID available')
       }
 
-      console.log('🔧 Loading temperature readings from Supabase for company:', user.company_id)
+      console.log('🔧 Loading temperature readings from Supabase for company:', companyId)
 
       // ✅ JOIN with conservation_points to enable computed status
       let query = supabase
@@ -35,7 +35,7 @@ export function useTemperatureReadings(conservationPointId?: string) {
             setpoint_temp
           )
         `)
-        .eq('company_id', user.company_id)
+        .eq('company_id', companyId)
         .order('recorded_at', { ascending: false })
 
       if (conservationPointId) {
@@ -52,7 +52,7 @@ export function useTemperatureReadings(conservationPointId?: string) {
       console.log('✅ Loaded temperature readings from Supabase:', data?.length || 0)
       return data || []
     },
-    enabled: !!user?.company_id,
+    enabled: !!companyId,
   })
 
   const createReadingMutation = useMutation({
@@ -62,11 +62,11 @@ export function useTemperatureReadings(conservationPointId?: string) {
         'id' | 'company_id' | 'created_at'
       >
     ) => {
-      if (!user?.company_id) throw new Error('No company ID available')
+      if (!companyId) throw new Error('No company ID available')
 
       const payload = {
         ...data,
-        company_id: user.company_id,
+        company_id: companyId,
         recorded_at: data.recorded_at || new Date().toISOString(),
       }
 
