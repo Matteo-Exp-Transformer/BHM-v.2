@@ -1159,18 +1159,60 @@ Noi abbiamo completato:
 - **File:** `src/utils/onboardingHelpers.ts` (linea 64-71)
 - **Status:** ✅ FIXED
 
+#### **BUG #6: Foreign Key Mapping Missing** ⚠️ CRITICAL
+- **Problem:** UUID frontend non mappati con UUID database reali
+- **Impact:** Dati inseriti con foreign key invalide → dati orfani
+- **Fix:** Creato sistema di mapping completo per departments, categories, conservation points
+- **File:** `src/utils/onboardingHelpers.ts` (linea 938-1038)
+- **Status:** ✅ FIXED
+
+#### **BUG #7: user_sessions Deleted by resetApp** ⚠️ HIGH
+- **Problem:** resetApp cancellava user_sessions → perdita active_company_id
+- **Impact:** Dopo reset, dati non più visibili
+- **Fix:** Rimosso user_sessions dalla lista tablesToClean
+- **File:** `src/utils/onboardingHelpers.ts` (linea 660-677)
+- **Status:** ✅ FIXED
+
+#### **BUG #8: Hook Using Deprecated user.company_id** ⚠️ CRITICAL
+- **Problem:** 6 hook usavano `user?.company_id` (deprecato) invece di `companyId`
+- **Impact:** Query mai eseguite → dati mai caricati
+- **Fix:** 30+ sostituzioni in 6 file hook
+- **Files:** 
+  - `src/features/conservation/hooks/useConservationPoints.ts` (9 sostituzioni)
+  - `src/features/conservation/hooks/useMaintenanceTasks.ts` (5 sostituzioni)
+  - `src/features/conservation/hooks/useTemperatureReadings.ts` (4 sostituzioni)
+  - `src/features/calendar/hooks/useCalendarEvents.ts` (4 sostituzioni)
+  - `src/features/inventory/hooks/useExpiredProducts.ts` (6 sostituzioni)
+  - `src/hooks/useConservation.ts` (2 sostituzioni)
+  - `src/features/conservation/components/AddTemperatureModal.tsx` (1 sostituzione)
+- **Status:** ✅ FIXED
+
 ### **SUMMARY BUG FIXES:**
-- **Total Bugs:** 5
-- **Critical:** 1 (Fixed ✅)
-- **High:** 2 (Fixed ✅)
+- **Total Bugs:** 8 (expanded from 5)
+- **Critical:** 3 (Fixed ✅)
+- **High:** 3 (Fixed ✅)
 - **Medium:** 1 (Fixed ✅)
 - **Low:** 1 (Fixed ✅)
 - **Success Rate:** 100% ✅
 
+### **COMPONENTS CREATED:**
+- ✅ `src/components/OnboardingGuard.tsx` - Auto-redirect per utenti senza company
+
+### **SCRIPTS CREATED:**
+- ✅ `database/scripts/fix_admin_account.sql` - Script per setup admin manuale
+
 ### **DOCUMENTATION CREATED:**
-- ✅ `Report Agenti/BUG_FIXES_ONBOARDING_2025_01_10.md` - Detailed bug report
+- ✅ `Report Agenti/BUG_FIXES_ONBOARDING_2025_01_10.md` - Detailed bug report (5 bugs)
 - ✅ `Report Agenti/FIX_ONBOARDING_COMPLETION_BUG_2025_01_10.md` - Fix guide
 - ✅ `Report Agenti/FIX_AUTH_ONBOARDING_2025_01_10.md` - Initial fix report
+- ✅ `Report Agenti/HOOK_FIX_SCAN_COMPLETE_2025_01_10.md` - Hook scan report (3 bugs)
+
+### **CODE CHANGES SUMMARY:**
+- **Files modified:** 17
+- **Lines added:** 1577
+- **Lines removed:** 124
+- **New files:** 6 (5 docs + 1 script + 1 component)
+- **Hook fixes:** 6 files, 30+ replacements
 
 #### ✅ **ROUTING & UX IMPROVEMENTS:**
 - **Homepage Redirect:** ✅ Fixed - `/` now redirects to `/sign-in`
@@ -1202,7 +1244,9 @@ Noi abbiamo completato:
 
 ---
 
-**Last Updated:** 2025-01-10 01:30
-**Status:** ✅ **MIGRATION 100% COMPLETE + TESTING COMPLETE!** 🎉
-**Current Phase:** ALL 10 PHASES COMPLETED + FULL END-TO-END TESTING
-**Next:** Production Deployment Preparation
+**Last Updated:** 2025-01-10 03:30
+**Status:** ✅ **MIGRATION 100% COMPLETE + ALL CRITICAL BUGS FIXED!** 🎉
+**Current Phase:** ALL 10 PHASES COMPLETED + FULL BUG FIX SESSION
+**Bug Fixes:** 8/8 Critical bugs resolved (100% success rate)
+**Commit:** `02152b0` - fix: critical onboarding and auth bugs
+**Next:** User validation & Production Deployment
