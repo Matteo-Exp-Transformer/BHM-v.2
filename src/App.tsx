@@ -14,6 +14,7 @@ import {
   resetTotAndUsers,
   completeOnboarding,
 } from './utils/onboardingHelpers'
+import { manualSyncWithOtherPorts } from './utils/multiHostAuth'
 
 // Control components (used in components)
 // import DevButtons from './components/DevButtons'
@@ -63,6 +64,7 @@ type DevWindow = Window &
     resetTotAndUsers: typeof resetTotAndUsers
     prefillOnboarding: typeof prefillOnboarding
     completeOnboarding: typeof completeOnboarding
+    syncHosts: typeof manualSyncWithOtherPorts
     devFunctionsLogged: boolean
   }>
 
@@ -85,10 +87,12 @@ function App() {
       devWindow.resetTotAndUsers = resetTotAndUsers
       devWindow.prefillOnboarding = prefillOnboarding
       devWindow.completeOnboarding = completeOnboarding
+      devWindow.syncHosts = manualSyncWithOtherPorts
 
       // Log delle funzioni disponibili
       if (!devWindow.devFunctionsLogged) {
         console.log('🔄 Funzioni dev disponibili:')
+        console.log('  - syncHosts() - Sincronizza sessione con altre porte')
         console.log('  - resetApp() - Reset completo app (legacy)')
         console.log('  - resetOnboarding() - Reset onboarding e app (legacy)')
         console.log('  - resetManualData() - Solo dati utente manuali')

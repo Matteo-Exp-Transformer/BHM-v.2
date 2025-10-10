@@ -1,5 +1,5 @@
 import React from 'react'
-import { Users, RotateCcw, Bell, CheckCircle, Database, UserX, Trash2 } from 'lucide-react'
+import { Users, RotateCcw, Bell, CheckCircle, Database, UserX, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAlertBadge } from '@/features/calendar/hooks/useCalendarAlerts'
 import { useAggregatedEvents } from '@/features/calendar/hooks/useAggregatedEvents'
@@ -12,6 +12,7 @@ import {
   prefillOnboarding,
   completeOnboarding
 } from '@/utils/onboardingHelpers'
+import { manualSyncWithOtherPorts } from '@/utils/multiHostAuth'
 
 interface HeaderButtonsProps {
   onOpenOnboarding: () => void
@@ -62,6 +63,17 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
       {/* PULSANTI DEV - Solo in modalità sviluppo */}
       {showDevButtons && (
         <>
+          {/* Sincronizza Host (Multi-Port Login) */}
+          <button
+            onClick={manualSyncWithOtherPorts}
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-purple-600 bg-white border border-purple-200 rounded-md hover:text-purple-700 hover:bg-purple-50 transition-colors"
+            title="Sincronizza sessione con altre porte (3000, 3002, 5173)"
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span className="hidden sm:inline">Sync Host</span>
+            <span className="sm:hidden">Sync</span>
+          </button>
+
           {/* Precompila */}
           <button
             onClick={prefillOnboarding}
