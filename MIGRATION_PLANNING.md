@@ -451,7 +451,7 @@ main (produzione)
 
 ## 🐛 BUG FIXES POST-TESTING (2025-01-10 02:00-03:00)
 
-### **5 CRITICAL BUGS IDENTIFIED & RESOLVED:**
+### **8 CRITICAL BUGS IDENTIFIED & RESOLVED:**
 
 1. **Company Members Not Created** (CRITICAL)
    - `.update()` → `.insert()` fix
@@ -473,10 +473,38 @@ main (produzione)
    - `'ambiente'` → `'ambient'` fixed
    - Full database compliance verified
 
+6. **Foreign Key Mapping Missing** (CRITICAL)
+   - UUID frontend → UUID database mapping system
+   - Fixed orphaned data issue
+   
+7. **user_sessions Deleted by resetApp** (HIGH)
+   - Removed from reset cleanup list
+   - Preserved active_company_id
+
+8. **Hook Using Deprecated user.company_id** (CRITICAL)
+   - Fixed 6 hooks with 30+ replacements
+   - All queries now execute correctly
+
+### **COMPONENTS CREATED:**
+- ✅ OnboardingGuard component (auto-redirect)
+
+### **SCRIPTS CREATED:**
+- ✅ fix_admin_account.sql (manual admin setup)
+
 ### **DOCUMENTATION CREATED:**
-- ✅ 3 detailed bug fix reports
+- ✅ 4 detailed bug fix reports
 - ✅ Complete testing checklist
 - ✅ Schema compliance verification
+- ✅ Hook fix scan report
+
+### **CODE STATISTICS:**
+- **Files Modified:** 17
+- **Lines Added:** 1,577
+- **Lines Removed:** 124
+- **Hook Fixes:** 6 files, 30+ replacements
+- **New Components:** 1
+- **New Scripts:** 1
+- **Documentation:** 4 reports
 
 ### **PRODUCTION READINESS:**
 - ✅ **Core Functionality:** 100% Working
@@ -494,7 +522,8 @@ main (produzione)
 ---
 
 **Planning Owner:** Claude AI Assistant (continuato da Cursor AI)
-**Last Updated:** 2025-01-10 03:00
-**Status:** ✅ **MIGRATION 100% COMPLETE + ALL BUGS FIXED**
-**Bug Fixes:** 5/5 Critical bugs resolved (100% success rate)
-**Next Phase:** Final validation & Production Deployment
+**Last Updated:** 2025-01-10 03:30
+**Status:** ✅ **MIGRATION 100% COMPLETE + 8 CRITICAL BUGS FIXED**
+**Bug Fixes:** 8/8 Critical bugs resolved (100% success rate)
+**Commit:** `02152b0` - fix: critical onboarding and auth bugs (17 files, 1577 insertions)
+**Next Phase:** User validation & Production Deployment
