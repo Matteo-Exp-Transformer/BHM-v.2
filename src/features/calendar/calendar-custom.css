@@ -27,16 +27,22 @@
 }
 
 /* ============================================
-   GIORNO SELEZIONATO - Bordi meno spessi
+   GIORNO SELEZIONATO - Bordi verdi su tutti i lati
    ============================================ */
 .fc .fc-daygrid-day.fc-day-selected {
-  background-color: rgba(59, 130, 246, 0.1) !important;
-  border: 2px solid #60A5FA !important; /* Bordo blu chiaro medio */
+  background-color: rgba(34, 197, 94, 0.1) !important; /* Sfondo verde chiaro */
+  border-top: 2px solid #22C55E !important; /* Verde */
+  border-right: 2px solid #22C55E !important; /* Verde */
+  border-bottom: 2px solid #22C55E !important; /* Verde */
+  border-left: 2px solid #22C55E !important; /* Verde */
+  box-shadow: 0 0 0 1px #22C55E inset !important; /* Shadow interno verde */
 }
 
 /* Non sovrascrivere il giorno corrente se è anche selezionato */
 .fc .fc-daygrid-day.fc-day-today.fc-day-selected {
-  border: 3px solid #3B82F6 !important;
+  border: 3px solid #3B82F6 !important; /* Mantieni blu per giorno corrente */
+  background-color: rgba(59, 130, 246, 0.05) !important; /* Mantieni sfondo blu */
+  box-shadow: 0 0 0 1px #3B82F6 inset !important; /* Mantieni shadow blu */
 }
 
 /* ============================================
@@ -56,7 +62,7 @@
 }
 
 /* ============================================
-   VISUALIZZAZIONE SETTIMANALE - Giorno corrente
+   VISUALIZZAZIONE SETTIMANALE - Giorno corrente e selezionato
    ============================================ */
 .fc .fc-timegrid-col.fc-day-today {
   background-color: rgba(59, 130, 246, 0.05) !important;
@@ -70,8 +76,25 @@
   padding: 6px 12px;
 }
 
+/* Giorno selezionato in vista settimanale */
+.fc .fc-timegrid-col.fc-day-selected {
+  background-color: rgba(34, 197, 94, 0.1) !important;
+  border-top: 2px solid #22C55E !important;
+  border-right: 2px solid #22C55E !important;
+  border-bottom: 2px solid #22C55E !important;
+  border-left: 2px solid #22C55E !important;
+}
+
+.fc .fc-timegrid-col.fc-day-selected .fc-col-header-cell-cushion {
+  background-color: #22C55E !important;
+  color: white !important;
+  font-weight: 600 !important;
+  border-radius: 6px;
+  padding: 6px 12px;
+}
+
 /* ============================================
-   LISTA - Giorno corrente
+   LISTA - Giorno corrente e selezionato
    ============================================ */
 .fc .fc-list-day.fc-day-today {
   background-color: rgba(59, 130, 246, 0.1) !important;
@@ -79,6 +102,17 @@
 
 .fc .fc-list-day.fc-day-today .fc-list-day-cushion {
   background-color: #3B82F6 !important;
+  color: white !important;
+}
+
+/* Giorno selezionato in vista lista */
+.fc .fc-list-day.fc-day-selected {
+  background-color: rgba(34, 197, 94, 0.1) !important;
+  border-left: 4px solid #22C55E !important;
+}
+
+.fc .fc-list-day.fc-day-selected .fc-list-day-cushion {
+  background-color: #22C55E !important;
   color: white !important;
 }
 
