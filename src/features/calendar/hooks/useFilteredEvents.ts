@@ -35,24 +35,15 @@ export function useFilteredEvents(
   }, [userRole])
 
   const filteredEvents = useMemo(() => {
-    console.log('🔍 DEBUG FILTER: Eventi in input:', events?.length || 0)
-    console.log('🔍 DEBUG FILTER: UserProfile:', userProfile ? 'Presente' : 'Assente')
-    console.log('🔍 DEBUG FILTER: UserRole:', userRole)
-    console.log('🔍 DEBUG FILTER: CanViewAllEvents:', canViewAllEvents)
-    console.log('🔍 DEBUG FILTER: UserStaffMember:', userStaffMember ? 'Presente' : 'Assente')
-    
     if (!userProfile || !events || events.length === 0) {
-      console.log('❌ DEBUG FILTER: Bloccato - manca userProfile o eventi')
       return []
     }
 
     if (canViewAllEvents) {
-      console.log('✅ DEBUG FILTER: Admin/Responsabile - Mostra tutti gli eventi')
       return events
     }
 
     if (!userStaffMember) {
-      console.log('❌ DEBUG FILTER: Bloccato - manca userStaffMember')
       return []
     }
 
@@ -67,7 +58,6 @@ export function useFilteredEvents(
       return checkEventAssignment(assignment, userStaffMember)
     })
     
-    console.log(`📊 DEBUG FILTER: Eventi filtrati: ${filtered.length}/${events.length}`)
     return filtered
   }, [events, userProfile, canViewAllEvents, userStaffMember])
 
