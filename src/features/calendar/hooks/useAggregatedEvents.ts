@@ -97,12 +97,28 @@ export function useAggregatedEvents(): AggregatedEventsResult {
   }, [conservationPoints, companyId, user?.id])
 
   const genericTaskEvents = useMemo(() => {
-    if (!genericTasks || genericTasks.length === 0) return []
+    console.log('🔍 DEBUG: Generic tasks loaded:', genericTasks?.length || 0)
+    
+    if (!genericTasks || genericTasks.length === 0) {
+      console.log('❌ DEBUG: Nessun task generico trovato')
+      return []
+    }
+    
+    // Debug: mostra task giornalieri
+    const dailyTasks = genericTasks.filter(task => task.frequency === 'daily')
+    console.log('📅 DEBUG: Task giornalieri trovati:', dailyTasks.length)
+    dailyTasks.forEach(task => {
+      console.log(`   - ${task.name} (${task.frequency}) - Created: ${task.created_at}`)
+    })
     
     // ✅ Espandi attività ricorrenti per mostrare occorrenze multiple
-    return genericTasks.flatMap(task =>
+    const expandedEvents = genericTasks.flatMap(task =>
       expandRecurringTask(task, companyId || '', user?.id || '', 'generic')
     )
+    
+    console.log('📊 DEBUG: Eventi generati da task:', expandedEvents.length)
+    
+    return expandedEvents
   }, [genericTasks, companyId, user?.id])
 
   const allEvents = useMemo(() => {
@@ -151,8 +167,11 @@ function expandRecurringTask(
 ): CalendarEvent[] {
   const frequency = task.frequency
   
+  console.log(`🔄 DEBUG: Espansione task ${task.name} (${frequency}) - Type: ${type}`)
+  
   // Se non è una frequenza ricorrente, restituisci un solo evento
   if (frequency === 'as_needed' || frequency === 'custom') {
+    console.log(`   → Task non ricorrente, singolo evento`)
     return type === 'maintenance'
       ? [convertMaintenanceTaskToEvent(task as MaintenanceTask, companyId, userId)]
       : [convertGenericTaskToEvent(task as GenericTask, companyId, userId)]
@@ -166,6 +185,9 @@ function expandRecurringTask(
   
   const events: CalendarEvent[] = []
   let currentDate = startDate
+  let eventCount = 0
+  
+  console.log(`   → Inizio: ${startDate.toISOString().split('T')[0]}, Fine: ${endDate.toISOString().split('T')[0]}`)
   
   // Genera eventi ricorrenti in base alla frequenza
   while (currentDate <= endDate) {
@@ -175,6 +197,7 @@ function expandRecurringTask(
       : convertGenericTaskToEvent(task as GenericTask, companyId, userId, currentDate)
     
     events.push(event)
+    eventCount++
     
     // Calcola la prossima occorrenza in base alla frequenza
     switch (frequency) {
@@ -203,6 +226,7 @@ function expandRecurringTask(
     }
   }
   
+  console.log(`   → Generati ${eventCount} eventi ricorrenti per task "${task.name}"`)
   return events
 }
 
