@@ -11,10 +11,10 @@ export interface GitInfo {
 }
 
 export const useGitInfo = (): GitInfo => {
-  // ✅ Ottieni branch da variabili ambiente o fallback
+  // ✅ Ottieni branch da variabili ambiente o fallback intelligente
   const branch = import.meta.env.VITE_GIT_BRANCH || 
                  import.meta.env.GIT_BRANCH || 
-                 'unknown'
+                 (import.meta.env.MODE === 'development' ? 'dev' : 'unknown')
   
   // ✅ Ottieni commit hash
   const commit = import.meta.env.VITE_GIT_COMMIT || 
@@ -27,7 +27,7 @@ export const useGitInfo = (): GitInfo => {
   
   return {
     branch,
-    commit: commit.substring(0, 8), // Solo primi 8 caratteri
+    commit: commit !== 'unknown' ? commit.substring(0, 8) : 'unknown', // Solo primi 8 caratteri se disponibile
     isDevelopment,
     environment
   }
