@@ -11,7 +11,7 @@ import {
   CalendarViewConfig,
 } from '@/types/calendar'
 import { transformToFullCalendarEvents } from './utils/eventTransform'
-import EventModal from './components/EventModal'
+import { EventDetailsModal } from './EventDetailsModal'
 import FilterPanel from './components/FilterPanel'
 import QuickActions from './components/QuickActions'
 import MacroCategoryModal from './components/MacroCategoryModal'
@@ -441,15 +441,28 @@ export const Calendar: React.FC<CalendarProps> = ({
 
       {/* Event Modal */}
       {selectedEvent && (
-        <EventModal
-          isOpen={showEventModal}
+        <EventDetailsModal
+          event={selectedEvent}
           onClose={() => {
             setShowEventModal(false)
             setSelectedEvent(null)
           }}
-          event={selectedEvent}
-          onUpdate={onEventUpdate}
-          onDelete={onEventDelete}
+          onUpdate={(data) => {
+            if (onEventUpdate) {
+              onEventUpdate({
+                ...selectedEvent,
+                ...data.updates,
+              })
+            }
+          }}
+          onDelete={(eventId) => {
+            if (onEventDelete) {
+              onEventDelete(eventId)
+            }
+            setShowEventModal(false)
+            setSelectedEvent(null)
+          }}
+          selectedDate={selectedDate || undefined}
         />
       )}
 

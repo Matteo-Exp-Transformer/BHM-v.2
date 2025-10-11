@@ -1,7 +1,7 @@
 # 📊 SCHEMA DATABASE ATTUALE - BHM v.2
 **Progetto**: Business HACCP Manager v2  
-**Data**: 10 Gennaio 2025  
-**Versione**: 1.1.0  
+**Data**: 11 Ottobre 2025  
+**Versione**: 1.3.0  
 **Database**: Supabase PostgreSQL  
 **Branch**: NoClerk
 
@@ -13,12 +13,14 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 
 ### 📋 Statistiche Schema
 
-- **Tabelle totali**: 14 tabelle
+- **Tabelle totali**: 20 tabelle
 - **Tabelle core**: 10 (companies, departments, staff, products, conservation_points, tasks, maintenance_tasks, events, notes, non_conformities)
-- **Tabelle auth**: 4 (company_members, user_sessions, invite_tokens, audit_logs)
+- **Tabelle auth**: 5 (company_members, user_sessions, user_profiles, invite_tokens, audit_logs)
 - **Tabelle shopping**: 2 (shopping_lists, shopping_list_items)
-- **Relazioni**: 35+ foreign keys
-- **Indici**: 50+ per performance
+- **Tabelle tracking**: 2 (user_activity_logs, task_completions)
+- **Tabelle supporto**: 2 (product_categories, temperature_readings)
+- **Relazioni**: 42+ foreign keys
+- **Indici**: 65+ per performance
 - **Funzioni RLS**: 8 helper functions
 - **Policies RLS**: 72+ policies (pronte, non ancora attive)
 
@@ -36,7 +38,7 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 | `id` | UUID | PRIMARY KEY, NOT NULL | `gen_random_uuid()` | ID univoco azienda |
 | `name` | VARCHAR | NOT NULL | - | Nome azienda |
 | `address` | TEXT | NOT NULL | - | Indirizzo completo |
-| `staff_count` | INTEGER | NOT NULL, CHECK (>0) | - | Numero dipendenti |
+| `staff_count` | INTEGER | NOT NULL, CHECK (>=0) | - | Numero dipendenti |
 | `email` | VARCHAR | NOT NULL | - | Email contatto |
 | `created_at` | TIMESTAMPTZ | NOT NULL | `now()` | Data creazione |
 | `updated_at` | TIMESTAMPTZ | NOT NULL | `now()` | Data ultimo aggiornamento |
@@ -47,7 +49,15 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 - ← `products.company_id`
 - ← `conservation_points.company_id`
 - ← `tasks.company_id`
+- ← `task_completions.company_id`
 - ← `company_members.company_id`
+- ← `user_sessions.active_company_id`
+- ← `user_activity_logs.company_id`
+- ← `audit_logs.company_id`
+- ← `shopping_lists.company_id`
+- ← `events.company_id`
+- ← `notes.company_id`
+- ← `non_conformities.company_id`
 
 **Trigger**: `update_companies_updated_at` (aggiorna `updated_at` automaticamente)
 
@@ -138,7 +148,7 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 |-------|------|-------------|---------|-------------|
 | `id` | UUID | PRIMARY KEY, NOT NULL | `gen_random_uuid()` | ID univoco membership |
 | `user_id` | UUID | NOT NULL, FK → auth.users | - | Utente Supabase Auth |
-| `company_id` | UUID | NOT NULL, FK → companies | - | Azienda associata |
+| `company_id` | UUID | FK → companies | - | Azienda associata (nullable) |
 | `role` | VARCHAR | NOT NULL, CHECK | - | Ruolo nell'azienda |
 | `staff_id` | UUID | FK → staff | - | Link al record staff (opzionale) |
 | `is_active` | BOOLEAN | NOT NULL | `true` | Membership attiva |
@@ -176,6 +186,11 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 | `user_id` | UUID | NOT NULL, UNIQUE, FK → auth.users | - | Utente Supabase Auth |
 | `active_company_id` | UUID | FK → companies | - | Azienda attualmente selezionata |
 | `last_activity` | TIMESTAMPTZ | NOT NULL | `now()` | Ultima attività |
+| `session_start` | TIMESTAMPTZ | NOT NULL | `now()` | Inizio sessione |
+| `session_end` | TIMESTAMPTZ | - | - | Fine sessione (NULL se ancora attiva) |
+| `is_active` | BOOLEAN | NOT NULL | `true` | Sessione attiva |
+| `ip_address` | INET | - | - | Indirizzo IP |
+| `user_agent` | TEXT | - | - | Browser/device info |
 | `created_at` | TIMESTAMPTZ | NOT NULL | `now()` | Data creazione sessione |
 | `updated_at` | TIMESTAMPTZ | NOT NULL | `now()` | Data ultimo aggiornamento |
 
@@ -185,13 +200,14 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 **Relazioni**:
 - → `auth.users.id`
 - → `companies.id`
+- ← `user_activity_logs.session_id`
 
 **Indici**:
 - `idx_user_sessions_user_id` su `user_id`
 - `idx_user_sessions_company_id` su `active_company_id`
 - `idx_user_sessions_active` su `(user_id, active_company_id)`
 
-**Note**: Quando un utente fa login, viene creata/aggiornata la sua sessione con l'azienda di default. Può poi cambiare azienda usando `switch_active_company()`.
+**Note**: Quando un utente fa login, viene creata/aggiornata la sua sessione con l'azienda di default. Può poi cambiare azienda usando `switch_active_company()`. I campi `session_start`, `session_end` e `is_active` permettono di tracciare la durata delle sessioni per analisi e sicurezza.
 
 ---
 
@@ -203,7 +219,7 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 | `id` | UUID | PRIMARY KEY, NOT NULL | `gen_random_uuid()` | ID univoco token |
 | `token` | VARCHAR | NOT NULL, UNIQUE | - | Token di invito (UUID generato) |
 | `email` | VARCHAR | NOT NULL | - | Email destinatario |
-| `company_id` | UUID | NOT NULL, FK → companies | - | Azienda che invita |
+| `company_id` | UUID | FK → companies | - | Azienda che invita (nullable) |
 | `role` | VARCHAR | NOT NULL, CHECK | - | Ruolo assegnato |
 | `staff_id` | UUID | FK → staff | - | Link al record staff (opzionale) |
 | `invited_by` | UUID | FK → auth.users | - | Chi ha creato l'invito |
@@ -272,6 +288,78 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 - `idx_audit_logs_haccp` su `(company_id, table_name, action, created_at DESC)`
 
 **Note**: I log di audit sono fondamentali per la compliance HACCP. Registrano tutte le operazioni critiche per la tracciabilità.
+
+---
+
+#### `user_activity_logs`
+**Descrizione**: Log attività utenti per tracciamento e analytics
+
+| Campo | Tipo | Constraints | Default | Descrizione |
+|-------|------|-------------|---------|-------------|
+| `id` | UUID | PRIMARY KEY, NOT NULL | `gen_random_uuid()` | ID univoco log |
+| `user_id` | UUID | NOT NULL, FK → auth.users | - | Utente che ha eseguito l'attività |
+| `company_id` | UUID | NOT NULL, FK → companies | - | Azienda di riferimento |
+| `session_id` | UUID | FK → user_sessions | - | Sessione associata |
+| `activity_type` | VARCHAR | NOT NULL, CHECK | - | Tipo attività |
+| `activity_data` | JSONB | - | `'{}'` | Dati aggiuntivi attività |
+| `entity_type` | VARCHAR | CHECK | - | Tipo entità coinvolta (opzionale) |
+| `entity_id` | UUID | - | - | ID entità coinvolta |
+| `timestamp` | TIMESTAMPTZ | NOT NULL | `now()` | Data/ora attività |
+| `ip_address` | INET | - | - | Indirizzo IP |
+| `user_agent` | TEXT | - | - | Browser/device info |
+| `created_at` | TIMESTAMPTZ | NOT NULL | `now()` | Data creazione record |
+
+**Valori Enum - activity_type**:
+- `session_start` - Inizio sessione
+- `session_end` - Fine sessione
+- `task_completed` - Task completato
+- `product_added` - Prodotto aggiunto
+- `product_updated` - Prodotto modificato
+- `product_deleted` - Prodotto eliminato
+- `shopping_list_created` - Lista spesa creata
+- `shopping_list_updated` - Lista spesa modificata
+- `shopping_list_completed` - Lista spesa completata
+- `department_created` - Reparto creato
+- `staff_added` - Staff aggiunto
+- `conservation_point_created` - Punto conservazione creato
+- `maintenance_task_created` - Task manutenzione creato
+- `temperature_reading_added` - Temperatura rilevata
+- `note_created` - Nota creata
+- `non_conformity_reported` - Non conformità segnalata
+- `page_view` - Visualizzazione pagina
+- `export_data` - Esportazione dati
+
+**Valori Enum - entity_type**:
+- `maintenance_task` - Task di manutenzione
+- `generic_task` - Task generico
+- `product` - Prodotto
+- `shopping_list` - Lista spesa
+- `department` - Reparto
+- `staff` - Dipendente
+- `conservation_point` - Punto conservazione
+- `temperature_reading` - Rilevazione temperatura
+- `note` - Nota
+- `non_conformity` - Non conformità
+
+**Relazioni**:
+- → `auth.users.id`
+- → `companies.id`
+- → `user_sessions.id` (opzionale)
+
+**Indici**:
+- `idx_user_activity_logs_user_id` su `(user_id, created_at DESC)`
+- `idx_user_activity_logs_company_id` su `(company_id, created_at DESC)`
+- `idx_user_activity_logs_session_id` su `session_id`
+- `idx_user_activity_logs_activity_type` su `(company_id, activity_type, created_at DESC)`
+- `idx_user_activity_logs_entity` su `(entity_type, entity_id)`
+
+**Note**: Questa tabella traccia tutte le attività degli utenti per analisi comportamentali, reporting e audit non-HACCP. A differenza di `audit_logs` (focalizzata su compliance HACCP), questa tabella cattura anche attività generiche come navigazione e visualizzazioni pagina.
+
+**Utilizzo**:
+- **Analytics**: Capire quali funzioni sono più utilizzate
+- **User behavior**: Tracciare pattern di utilizzo
+- **Security**: Monitorare attività sospette
+- **Reporting**: Generare report di utilizzo
 
 ---
 
@@ -501,6 +589,7 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 - → `staff.id` (opzionale)
 - → `departments.id` (opzionale)
 - → `conservation_points.id` (opzionale)
+- ← `task_completions.task_id`
 
 **Indici**:
 - `idx_tasks_company_id` su `company_id`
@@ -509,6 +598,72 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 - `idx_tasks_staff_id` su `assigned_to_staff_id`
 - `idx_tasks_status` su `(company_id, status)`
 - `idx_tasks_next_due` su `next_due`
+
+---
+
+#### `task_completions`
+**Descrizione**: Storico completamenti task (tracciamento esecuzioni)
+
+| Campo | Tipo | Constraints | Default | Descrizione |
+|-------|------|-------------|---------|-------------|
+| `id` | UUID | PRIMARY KEY, NOT NULL | `gen_random_uuid()` | ID univoco completamento |
+| `company_id` | UUID | NOT NULL, FK → companies | - | Azienda di appartenenza |
+| `task_id` | UUID | NOT NULL, FK → tasks | - | Task completato |
+| `completed_by` | UUID | FK → auth.users | - | Utente che ha completato |
+| `completed_at` | TIMESTAMPTZ | NOT NULL | `now()` | Data/ora completamento |
+| `period_start` | TIMESTAMPTZ | NOT NULL | - | Inizio periodo di riferimento |
+| `period_end` | TIMESTAMPTZ | NOT NULL | - | Fine periodo di riferimento |
+| `notes` | TEXT | - | - | Note sul completamento |
+| `created_at` | TIMESTAMPTZ | NOT NULL | `now()` | Data creazione record |
+| `updated_at` | TIMESTAMPTZ | NOT NULL | `now()` | Data ultimo aggiornamento |
+
+**Relazioni**:
+- → `companies.id`
+- → `tasks.id`
+- → `auth.users.id` (opzionale)
+
+**Indici**:
+- `idx_task_completions_company_id` su `company_id`
+- `idx_task_completions_task_id` su `task_id`
+- `idx_task_completions_completed_by` su `completed_by`
+- `idx_task_completions_completed_at` su `completed_at DESC`
+- `idx_task_completions_period` su `(task_id, period_start, period_end)`
+- `idx_task_completions_lookup` su `(company_id, task_id, completed_at DESC)`
+
+**Note**: 
+Questa tabella mantiene uno storico completo di tutti i completamenti dei task ricorrenti. A differenza del campo `status` in `tasks` (che mostra lo stato attuale), questa tabella permette di:
+- Tracciare **chi** ha completato il task e **quando**
+- Associare ogni completamento a un **periodo specifico** (es. settimana 1-7 gennaio)
+- Mantenere **note specifiche** per ogni esecuzione
+- Generare **report storici** di compliance HACCP
+- Analizzare **pattern di completamento** nel tempo
+
+**Workflow tipico**:
+1. Task ricorrente con `frequency = 'weekly'`
+2. Utente completa il task → crea record in `task_completions`
+3. Sistema aggiorna `tasks.next_due` per la prossima settimana
+4. Record in `task_completions` rimane come prova di esecuzione per audit
+
+**Esempio**:
+```sql
+-- Task: "Pulizia frigorifero" (settimanale)
+-- Completato da Mario il 8 Gennaio per la settimana 1-7 Gennaio
+INSERT INTO task_completions (
+  company_id, 
+  task_id, 
+  completed_by, 
+  period_start, 
+  period_end, 
+  notes
+) VALUES (
+  'company-uuid',
+  'task-uuid',
+  'mario-user-uuid',
+  '2025-01-01',
+  '2025-01-07',
+  'Frigorifero pulito e sanificato, temperatura corretta'
+);
+```
 
 ---
 
@@ -659,8 +814,13 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 | `is_template` | BOOLEAN | NOT NULL | `false` | È un template riutilizzabile |
 | `is_completed` | BOOLEAN | NOT NULL | `false` | Lista completata |
 | `completed_at` | TIMESTAMPTZ | - | - | Data completamento |
+| `status` | VARCHAR | CHECK | `'draft'` | Status: 'draft', 'sent', 'completed', 'cancelled' |
+| `notes` | TEXT | - | - | Note aggiuntive |
 | `created_at` | TIMESTAMPTZ | NOT NULL | `now()` | Data creazione |
 | `updated_at` | TIMESTAMPTZ | NOT NULL | `now()` | Data ultimo aggiornamento |
+
+**Valori Enum**:
+- `status`: 'draft', 'sent', 'completed', 'cancelled'
 
 **Relazioni**:
 - → `companies.id`
@@ -670,6 +830,9 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 - `idx_shopping_lists_company_id` su `company_id`
 - `idx_shopping_lists_created_by` su `created_by`
 - `idx_shopping_lists_is_template` su `is_template`
+- `idx_shopping_lists_status` su `(company_id, status)`
+
+**Note**: Il campo `status` permette di tracciare lo stato della lista dalla bozza all'invio al fornitore fino al completamento. `is_completed` è mantenuto per backward compatibility ma è preferibile usare `status = 'completed'`.
 
 ---
 
@@ -686,9 +849,11 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 | `quantity` | NUMERIC | NOT NULL, CHECK (>0) | `1` | Quantità da acquistare |
 | `unit` | VARCHAR | - | - | Unità di misura |
 | `notes` | TEXT | - | - | Note aggiuntive |
-| `is_completed` | BOOLEAN | NOT NULL | `false` | Elemento completato |
+| `is_completed` | BOOLEAN | NOT NULL | `false` | Elemento completato (acquisto ricevuto) |
 | `added_at` | TIMESTAMPTZ | NOT NULL | `now()` | Data aggiunta |
 | `completed_at` | TIMESTAMPTZ | - | - | Data completamento |
+| `is_checked` | BOOLEAN | NOT NULL | `false` | Elemento selezionato/spuntato (nella UI) |
+| `checked_at` | TIMESTAMPTZ | - | - | Data selezione |
 | `created_at` | TIMESTAMPTZ | NOT NULL | `now()` | Data creazione record |
 | `updated_at` | TIMESTAMPTZ | NOT NULL | `now()` | Data ultimo aggiornamento |
 
@@ -699,6 +864,12 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 **Indici**:
 - `idx_shopping_list_items_list_id` su `shopping_list_id`
 - `idx_shopping_list_items_product_id` su `product_id`
+- `idx_shopping_list_items_checked` su `(shopping_list_id, is_checked)`
+
+**Note**: 
+- `is_checked` e `checked_at` permettono agli utenti di spuntare gli elementi durante la spesa senza segnarli come completati
+- `is_completed` e `completed_at` indicano l'effettivo completamento dell'acquisto (es. quando il prodotto è ricevuto in magazzino)
+- Workflow tipico: utente spunta item (`is_checked = true`) → riceve merce → segna completato (`is_completed = true`)
 
 ---
 
@@ -750,18 +921,22 @@ auth.users (Supabase)
   ↓
   ├─→ company_members ──→ companies
   │                         ↓
-  ├─→ user_sessions         ├─→ departments ←──┐ Many-to-Many
-  │                         │                  │ via array
-  ├─→ invite_tokens         ├─→ staff ─────────┘ department_assignments[]
+  ├─→ user_sessions ────────├─→ departments ←──┐ Many-to-Many
+  │      ↓                  │                  │ via array
+  ├─→ user_activity_logs    ├─→ staff ─────────┘ department_assignments[]
   │                         │
-  └─→ audit_logs            ├─→ product_categories
-                            ├─→ conservation_points
-                            │      ↓
-                            │      ├─→ temperature_readings
-                            │      └─→ maintenance_tasks
-                            │
+  ├─→ user_profiles         ├─→ product_categories
+  │                         │
+  ├─→ invite_tokens         ├─→ conservation_points
+  │                         │      ↓
+  ├─→ audit_logs            │      ├─→ temperature_readings
+  │                         │      └─→ maintenance_tasks
+  └─→ task_completions      │
                             ├─→ products
-                            ├─→ tasks
+                            ├─→ tasks ────────────┐
+                            │      ↓              │
+                            │      └─→ task_completions (storico)
+                            │
                             ├─→ events
                             ├─→ notes
                             ├─→ non_conformities
@@ -772,8 +947,16 @@ auth.users (Supabase)
 
 **Relazioni Chiave**:
 - `staff.department_assignments[]` ↔ `departments.id` = **Many-to-Many** (un dipendente può lavorare in più reparti)
-- Implementata tramite array PostgreSQL invece di tabella junction
-- Esempio: Mario lavora sia in Cucina che in Sala → `department_assignments: ['uuid-cucina', 'uuid-sala']`
+  - Implementata tramite array PostgreSQL invece di tabella junction
+  - Esempio: Mario lavora sia in Cucina che in Sala → `department_assignments: ['uuid-cucina', 'uuid-sala']`
+- `tasks` → `task_completions` = **One-to-Many** (un task ha molti completamenti storici)
+  - `tasks` mantiene lo stato attuale del task
+  - `task_completions` mantiene lo storico di tutte le esecuzioni
+  - Fondamentale per compliance HACCP e audit trail
+- **Differenza tra tabelle di log**:
+  - `audit_logs` → modifiche dati critiche per compliance HACCP
+  - `user_activity_logs` → attività utente generiche per analytics
+  - `task_completions` → storico esecuzioni task per tracciabilità HACCP
 
 ---
 
@@ -786,37 +969,69 @@ auth.users (Supabase)
 | `companies` | 100 | 500 B | 50 KB |
 | `departments` | 400 | 300 B | 120 KB |
 | `staff` | 1,000 | 1 KB | 1 MB |
+| `company_members` | 1,200 | 200 B | 240 KB |
+| `user_sessions` | 100 | 300 B | 30 KB |
 | `products` | 50,000 | 2 KB | 100 MB |
 | `conservation_points` | 500 | 800 B | 400 KB |
 | `temperature_readings` | 500,000 | 150 B | 75 MB |
 | `tasks` | 5,000 | 1.5 KB | 7.5 MB |
+| `task_completions` | 250,000 | 400 B | 100 MB |
 | `maintenance_tasks` | 2,000 | 2 KB | 4 MB |
+| `shopping_lists` | 3,000 | 500 B | 1.5 MB |
+| `shopping_list_items` | 30,000 | 400 B | 12 MB |
 | `audit_logs` | 100,000 | 1 KB | 100 MB |
+| `user_activity_logs` | 500,000 | 500 B | 250 MB |
 
-**Totale stimato**: ~290 MB per 100 aziende
+**Totale stimato**: ~650 MB per 100 aziende
+
+**Note**:
+- `task_completions` cresce con ogni esecuzione task (stimato ~50 completamenti/task in 1 anno)
+- `user_activity_logs` cresce rapidamente con l'utilizzo attivo (ogni interazione viene tracciata)
+- Si consiglia pulizia periodica di `user_activity_logs` dopo 6 mesi
+- `task_completions`, `temperature_readings` e `audit_logs` devono essere mantenuti più a lungo per compliance HACCP (2+ anni)
 
 ---
 
 ## 🔧 MANUTENZIONE DATABASE
 
-### Query di Pulizia Consiglia
-
-te
+### Query di Pulizia Consigliate
 
 ```sql
--- Rimuovi temperature readings > 1 anno
-DELETE FROM temperature_readings 
-WHERE recorded_at < NOW() - INTERVAL '1 year';
+-- Rimuovi user activity logs > 6 mesi (per GDPR e performance)
+DELETE FROM user_activity_logs 
+WHERE created_at < NOW() - INTERVAL '6 months';
 
--- Rimuovi audit logs > 2 anni
+-- Rimuovi task completions > 2 anni (requisito HACCP compliance)
+-- ATTENZIONE: Verificare requisiti legali specifici prima di eseguire
+DELETE FROM task_completions 
+WHERE completed_at < NOW() - INTERVAL '2 years';
+
+-- Rimuovi temperature readings > 2 anni (allineato a requisito HACCP)
+DELETE FROM temperature_readings 
+WHERE recorded_at < NOW() - INTERVAL '2 years';
+
+-- Rimuovi audit logs > 3 anni (conservazione estesa per audit critici)
 DELETE FROM audit_logs 
-WHERE created_at < NOW() - INTERVAL '2 years';
+WHERE created_at < NOW() - INTERVAL '3 years';
 
 -- Rimuovi invite tokens scaduti e usati
 DELETE FROM invite_tokens 
 WHERE used_at IS NOT NULL 
   AND used_at < NOW() - INTERVAL '30 days';
+
+-- Rimuovi sessioni inattive > 30 giorni
+DELETE FROM user_sessions 
+WHERE is_active = false 
+  AND session_end < NOW() - INTERVAL '30 days';
 ```
+
+**⚠️ IMPORTANTE - Compliance HACCP**:
+Le tabelle critiche per la compliance HACCP sono:
+- `task_completions` - **2+ anni** (prova di esecuzione attività)
+- `temperature_readings` - **2+ anni** (controllo catena del freddo)
+- `audit_logs` - **3+ anni** (tracciabilità modifiche dati)
+
+Verificare sempre con il consulente HACCP i tempi di conservazione specifici per il settore e la normativa locale prima di eliminare dati.
 
 ### Indici da Monitorare
 
@@ -866,8 +1081,55 @@ Trigger `update_[table]_updated_at` aggiorna `updated_at` automaticamente.
 
 ---
 
-**Versione Schema**: 1.1.0  
-**Ultimo Aggiornamento**: 10 Gennaio 2025  
+**Versione Schema**: 1.3.0  
+**Ultimo Aggiornamento**: 11 Ottobre 2025  
 **Stato**: ✅ Schema verificato e allineato con database Supabase  
 **Compliance**: ✅ 100% allineamento con SQL schema attuale
+
+## 📝 CHANGELOG
+
+### v1.3.0 - 11 Ottobre 2025
+
+**✨ Nuova Funzionalità - Storico Task**
+- ✅ **Aggiunta tabella `task_completions`** - Storico completo di tutti i completamenti task
+  - Traccia **chi**, **quando** e **per quale periodo** ogni task è stato completato
+  - Note specifiche per ogni esecuzione
+  - Fondamentale per **compliance HACCP** e audit trail
+  - Permette report storici e analisi pattern di completamento
+
+**🔧 Modifiche Relazioni**
+- ✅ `tasks` ora ha relazione **One-to-Many** con `task_completions`
+- ✅ Aggiornato diagramma ER per includere `task_completions`
+
+**📊 Statistiche Aggiornate**
+- Tabelle totali: 19 → **20 tabelle**
+- Tabelle tracking: 1 → **2 tabelle** (aggiunti `task_completions`)
+- Storage stimato: 550 MB → **650 MB** (per 100 aziende)
+- Foreign keys: 40+ → **42+**
+- Indici: 60+ → **65+**
+
+**🔧 Manutenzione Database**
+- ✅ Aggiunta query pulizia per `task_completions` (2+ anni retention per HACCP)
+- ✅ Aggiornate linee guida compliance HACCP per conservazione dati
+
+---
+
+### v1.2.0 - 11 Ottobre 2025
+
+**✨ Aggiunte**
+- ✅ Aggiunta tabella `user_activity_logs` per tracciamento attività utenti
+- ✅ Campi `status` e `notes` aggiunti a `shopping_lists`
+- ✅ Campi `is_checked` e `checked_at` aggiunti a `shopping_list_items`
+- ✅ Campi `session_start`, `session_end`, `is_active`, `ip_address`, `user_agent` aggiunti a `user_sessions`
+
+**🔧 Modifiche**
+- ✅ `companies.staff_count`: CHECK constraint aggiornato da `>0` a `>=0`
+- ✅ `company_members.company_id`: ora nullable
+- ✅ `invite_tokens.company_id`: ora nullable
+
+**📊 Statistiche Aggiornate**
+- Tabelle totali: 14 → **19 tabelle**
+- Storage stimato: 290 MB → **550 MB** (per 100 aziende)
+- Foreign keys: 35+ → **40+**
+- Indici: 50+ → **60+**
 

@@ -1,10 +1,10 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
 import { useConservationPoints } from '@/features/conservation/hooks/useConservationPoints'
 import { useStaff } from '@/features/management/hooks/useStaff'
 import { useProducts } from '@/features/inventory/hooks/useProducts'
-import { useGenericTasks, type GenericTask } from './useGenericTasks'
+import { useGenericTasks, type GenericTask, type TaskCompletion } from './useGenericTasks'
 import type { CalendarEvent } from '@/types/calendar'
 import type { MaintenanceTask } from '@/types/conservation'
 import type { Product } from '@/types/inventory'
@@ -13,6 +13,7 @@ import { getEventColors } from '../utils/eventTransform'
 import { generateHaccpDeadlineEvents } from '../utils/haccpDeadlineGenerator'
 import { generateTemperatureCheckEvents } from '../utils/temperatureCheckGenerator'
 import { addDays, addWeeks, addMonths, startOfDay, endOfDay } from 'date-fns'
+import { supabase } from '@/lib/supabase/client'
 
 interface AggregatedEventsResult {
   events: CalendarEvent[]
@@ -38,6 +39,38 @@ export function useAggregatedEvents(): AggregatedEventsResult {
   const { staff, isLoading: staffLoading } = useStaff()
   const { products, isLoading: productsLoading } = useProducts()
   const { tasks: genericTasks, isLoading: genericTasksLoading } = useGenericTasks()
+  const [taskCompletions, setTaskCompletions] = useState<TaskCompletion[]>([])
+
+  // Carica tutti i completamenti delle mansioni
+  useEffect(() => {
+    if (!companyId) return
+
+    const loadCompletions = async () => {
+      const { data, error } = await supabase
+        .from('task_completions')
+        .select('*')
+        .eq('company_id', companyId)
+
+      if (!error && data) {
+        setTaskCompletions(
+          data.map((c: any) => ({
+            id: c.id,
+            company_id: c.company_id,
+            task_id: c.task_id,
+            completed_by: c.completed_by,
+            completed_at: new Date(c.completed_at),
+            period_start: new Date(c.period_start),
+            period_end: new Date(c.period_end),
+            notes: c.notes,
+            created_at: new Date(c.created_at),
+            updated_at: new Date(c.updated_at),
+          }))
+        )
+      }
+    }
+
+    loadCompletions()
+  }, [companyId])
 
   const isLoading =
     maintenanceLoading || staffLoading || productsLoading || pointsLoading || genericTasksLoading
@@ -100,12 +133,12 @@ export function useAggregatedEvents(): AggregatedEventsResult {
     if (!genericTasks || genericTasks.length === 0) {
       return []
     }
-    
+
     // ✅ Espandi attività ricorrenti per mostrare occorrenze multiple
     return genericTasks.flatMap(task =>
-      expandRecurringTask(task, companyId || '', user?.id || '', 'generic')
+      expandRecurringTask(task, companyId || '', user?.id || '', 'generic', taskCompletions)
     )
-  }, [genericTasks, companyId, user?.id])
+  }, [genericTasks, companyId, user?.id, taskCompletions])
 
   const allEvents = useMemo(() => {
     return [
@@ -149,7 +182,8 @@ function expandRecurringTask(
   task: MaintenanceTask | GenericTask,
   companyId: string,
   userId: string,
-  type: 'maintenance' | 'generic'
+  type: 'maintenance' | 'generic',
+  completions?: TaskCompletion[]
 ): CalendarEvent[] {
   const frequency = task.frequency
   
@@ -157,7 +191,7 @@ function expandRecurringTask(
   if (frequency === 'as_needed' || frequency === 'custom') {
     return type === 'maintenance'
       ? [convertMaintenanceTaskToEvent(task as MaintenanceTask, companyId, userId)]
-      : [convertGenericTaskToEvent(task as GenericTask, companyId, userId)]
+      : [convertGenericTaskToEvent(task as GenericTask, companyId, userId, undefined, completions)]
   }
   
   // Data di inizio: usa created_at come data di creazione della task
@@ -174,7 +208,7 @@ function expandRecurringTask(
     // Crea l'evento per questa data
     const event = type === 'maintenance'
       ? convertMaintenanceTaskToEvent(task as MaintenanceTask, companyId, userId, currentDate)
-      : convertGenericTaskToEvent(task as GenericTask, companyId, userId, currentDate)
+      : convertGenericTaskToEvent(task as GenericTask, companyId, userId, currentDate, completions)
     
     events.push(event)
     
@@ -429,7 +463,8 @@ function convertGenericTaskToEvent(
   task: GenericTask,
   companyId: string,
   userId: string,
-  occurrenceDate?: Date
+  occurrenceDate?: Date,
+  completions?: TaskCompletion[]
 ): CalendarEvent {
   // Usa occurrenceDate se fornito, altrimenti usa next_due o data corrente
   const startDate = occurrenceDate || (task.next_due ? new Date(task.next_due) : new Date())
@@ -437,8 +472,47 @@ function convertGenericTaskToEvent(
     startDate.getTime() + (task.estimated_duration || 60) * 60 * 1000
   )
 
+  // Calcola period_start e period_end per verificare completamento
+  let period_start: Date
+  let period_end: Date
+
+  switch (task.frequency) {
+    case 'daily':
+      period_start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0)
+      period_end = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 23, 59, 59)
+      break
+    case 'weekly':
+      const dayOfWeek = startDate.getDay() || 7
+      const monday = new Date(startDate)
+      monday.setDate(startDate.getDate() - (dayOfWeek - 1))
+      period_start = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 0, 0, 0)
+      const sunday = new Date(monday)
+      sunday.setDate(monday.getDate() + 6)
+      period_end = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate(), 23, 59, 59)
+      break
+    case 'monthly':
+      period_start = new Date(startDate.getFullYear(), startDate.getMonth(), 1, 0, 0, 0)
+      period_end = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0, 23, 59, 59)
+      break
+    case 'annually':
+    case 'annual':
+      period_start = new Date(startDate.getFullYear(), 0, 1, 0, 0, 0)
+      period_end = new Date(startDate.getFullYear(), 11, 31, 23, 59, 59)
+      break
+    default:
+      period_start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0)
+      period_end = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 23, 59, 59)
+  }
+
+  // Verifica se esiste un completamento per questo periodo
+  const isCompletedInPeriod = completions?.some(c =>
+    c.task_id === task.id &&
+    c.period_start.getTime() === period_start.getTime() &&
+    c.period_end.getTime() === period_end.getTime()
+  ) ?? false
+
   const status: CalendarEvent['status'] =
-    task.status === 'completed'
+    isCompletedInPeriod
       ? 'completed'
       : startDate < new Date()
         ? 'overdue'
@@ -478,7 +552,6 @@ function convertGenericTaskToEvent(
       assigned_to_category: task.assigned_to_category,
       assigned_to_staff_id: task.assigned_to_staff_id,
       notes: task.description,
-      frequency: task.frequency,
     },
     extendedProps: {
       status: status as
@@ -489,11 +562,15 @@ function convertGenericTaskToEvent(
         | 'cancelled',
       priority: task.priority || 'medium',
       assignedTo: task.assigned_to_staff_id ? [task.assigned_to_staff_id] : [],
+      isCompletedInPeriod,
       metadata: {
         id: task.id,
+        task_id: task.id,
         notes: task.description,
         estimatedDuration: task.estimated_duration,
         frequency: task.frequency,
+        period_start,
+        period_end,
       },
     },
     created_at: task.created_at,
