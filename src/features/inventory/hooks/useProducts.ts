@@ -102,7 +102,8 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
       }
 
       const transformed = (data || []).map(transformProductRecord)
-      console.log(`✅ Supabase: ${transformed.length} prodotti caricati`)
+      const count = transformed.length
+      console.log(`✅ Supabase: ${count} prodotto${count !== 1 ? 'i' : ''} caricato${count !== 1 ? 'i' : ''}`)
       return transformed
     },
     enabled: !!companyId && !!user,

@@ -89,7 +89,8 @@ export const useStaff = () => {
         throw error
       }
 
-      console.log(`✅ Supabase: ${data?.length || 0} membri staff caricati`)
+      const count = data?.length || 0
+      console.log(`✅ Supabase: ${count} membro${count !== 1 ? 'i' : ''} staff caricato${count !== 1 ? 'i' : ''}`)
       return data || []
     },
     enabled: !!companyId,
