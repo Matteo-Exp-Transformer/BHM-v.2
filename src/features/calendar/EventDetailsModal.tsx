@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   X,
   Calendar,
@@ -8,14 +8,17 @@ import {
   CheckCircle,
   Edit,
   Trash2,
+  Check,
 } from 'lucide-react'
 import type { CalendarEvent } from '@/types/calendar'
+import { useGenericTasks, type TaskCompletion } from './hooks/useGenericTasks'
 
 interface EventDetailsModalProps {
   event: CalendarEvent
   onClose: () => void
   onUpdate: (data: { eventId: string; updates: Partial<CalendarEvent> }) => void
   onDelete: (eventId: string) => void
+  selectedDate?: Date
 }
 
 const sourceLabels = {
@@ -64,8 +67,26 @@ export function EventDetailsModal({
   onClose,
   onUpdate,
   onDelete,
+  selectedDate,
 }: EventDetailsModalProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [completions, setCompletions] = useState<TaskCompletion[]>([])
+  const { completeTask, isCompleting, fetchCompletions } = useGenericTasks()
+
+  // DEBUG: Mostra info evento
+  console.log('🔍 EventDetailsModal - Event source:', event.source)
+  console.log('🔍 EventDetailsModal - Event type:', event.type)
+  console.log('🔍 EventDetailsModal - Full event:', event)
+
+  // Carica i completamenti quando si apre la modal per una mansione
+  useEffect(() => {
+    const taskId = event.extendedProps?.metadata?.task_id || event.metadata?.task_id
+    if (event.source === 'general_task' && taskId) {
+      fetchCompletions(taskId)
+        .then(data => setCompletions(data))
+        .catch(error => console.error('Error loading completions:', error))
+    }
+  }, [event, fetchCompletions])
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('it-IT', {
@@ -92,6 +113,34 @@ export function EventDetailsModal({
     onDelete(event.id)
     onClose()
   }
+
+  const handleComplete = () => {
+    const taskId = event.extendedProps?.metadata?.task_id || event.metadata?.task_id
+    if (!taskId) return
+
+    completeTask(
+      { taskId },
+      {
+        onSuccess: () => {
+          // Ricarica i completamenti
+          fetchCompletions(taskId)
+            .then(data => setCompletions(data))
+            .catch(error => console.error('Error loading completions:', error))
+        },
+      }
+    )
+  }
+
+  // Filtra i completamenti per il giorno corrente
+  const todayCompletions = completions.filter(c => {
+    const now = selectedDate || new Date()
+    return (
+      c.period_start <= now &&
+      c.period_end >= now
+    )
+  })
+
+  const isCompletedToday = todayCompletions.length > 0
 
   const renderMaintenanceDetails = () => {
     if (event.source !== 'maintenance') return null
@@ -304,6 +353,39 @@ export function EventDetailsModal({
           )}
         </div>
 
+        {/* Mansioni Completate */}
+        {event.source === 'general_task' && todayCompletions.length > 0 && (
+          <div className="p-6 border-t border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">
+              Mansioni Completate Oggi
+            </h3>
+            <div className="space-y-2">
+              {todayCompletions.map(completion => (
+                <div
+                  key={completion.id}
+                  className="flex items-start gap-2 p-3 bg-green-50 rounded-lg border border-green-200"
+                >
+                  <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-900">
+                      Completato alle{' '}
+                      {new Intl.DateTimeFormat('it-IT', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      }).format(completion.completed_at)}
+                    </div>
+                    {completion.notes && (
+                      <div className="text-xs text-gray-600 mt-1">
+                        {completion.notes}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex items-center justify-between p-6 border-t border-gray-200">
           <div>
@@ -318,6 +400,27 @@ export function EventDetailsModal({
           </div>
 
           <div className="flex items-center gap-3">
+            {/* DEBUG INFO */}
+            <div className="px-3 py-1 bg-yellow-100 text-xs rounded">
+              Source: {event.source || 'undefined'} | Type: {event.type}
+            </div>
+
+            {/* Pulsante Completa per mansioni */}
+            {event.source === 'general_task' && (
+              <button
+                onClick={handleComplete}
+                disabled={isCompleting || isCompletedToday}
+                className={
+                  isCompletedToday
+                    ? 'flex items-center gap-2 px-4 py-2 text-green-700 bg-green-100 rounded-lg cursor-not-allowed opacity-60'
+                    : 'flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50'
+                }
+              >
+                <Check className="w-4 h-4" />
+                {isCompletedToday ? 'Completata' : isCompleting ? 'Completando...' : 'Completa'}
+              </button>
+            )}
+
             <button
               onClick={() => {
                 /* TODO: Implement editing mode */

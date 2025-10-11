@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { X, Wrench, ClipboardList, Package, ChevronRight, Calendar, User, Clock, AlertCircle } from 'lucide-react'
+import { X, Wrench, ClipboardList, Package, ChevronRight, Calendar, User, Clock, AlertCircle, Check } from 'lucide-react'
 import type { MacroCategory, MacroCategoryItem } from '../hooks/useMacroCategoryEvents'
+import { useGenericTasks } from '../hooks/useGenericTasks'
 
 interface MacroCategoryModalProps {
   isOpen: boolean
@@ -61,6 +62,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   date,
 }) => {
   const [selectedItem, setSelectedItem] = useState<MacroCategoryItem | null>(null)
+  const { completeTask, isCompleting } = useGenericTasks()
   const config = categoryConfig[category]
   const Icon = config.icon
 
@@ -291,6 +293,30 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                             {item.id}
                           </p>
                         </div>
+
+                        {/* Pulsante Completa per mansioni */}
+                        {category === 'generic_tasks' && (
+                          <div className="pt-4 border-t border-gray-200 mt-4">
+                            <button
+                              onClick={() => {
+                                completeTask(
+                                  { taskId: item.id },
+                                  {
+                                    onSuccess: () => {
+                                      // Chiudi il dettaglio dopo il completamento
+                                      setSelectedItem(null)
+                                    },
+                                  }
+                                )
+                              }}
+                              disabled={isCompleting}
+                              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Check className="w-5 h-5" />
+                              {isCompleting ? 'Completando...' : 'Completa Mansione'}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
