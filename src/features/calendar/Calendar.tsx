@@ -190,9 +190,14 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   // ✅ Handle click su giorno (per evidenziare il giorno selezionato)
   const handleDayClick = useCallback((info: { date: Date; dayEl: HTMLElement }) => {
-    // Rimuovi classe da tutti i giorni
-    const allDays = document.querySelectorAll('.fc-daygrid-day')
-    allDays.forEach(day => day.classList.remove('fc-day-selected'))
+    // Rimuovi classe da tutti i giorni in tutte le visualizzazioni
+    const allDayGridDays = document.querySelectorAll('.fc-daygrid-day')
+    const allTimeGridCols = document.querySelectorAll('.fc-timegrid-col')
+    const allListDays = document.querySelectorAll('.fc-list-day')
+    
+    allDayGridDays.forEach(day => day.classList.remove('fc-day-selected'))
+    allTimeGridCols.forEach(col => col.classList.remove('fc-day-selected'))
+    allListDays.forEach(day => day.classList.remove('fc-day-selected'))
     
     // Aggiungi classe al giorno cliccato
     info.dayEl.classList.add('fc-day-selected')
