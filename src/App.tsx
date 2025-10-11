@@ -94,7 +94,6 @@ function App() {
       // Log delle funzioni disponibili
       if (!devWindow.devFunctionsLogged) {
         console.log('🚀 BHM v2 - Modalità sviluppo attiva')
-        console.log('🔧 TEST: Log console funzionante!')
         console.log('🔄 Funzioni dev disponibili:')
         console.log('  - syncHosts() - Sincronizza sessione con altre porte')
         console.log('  - resetApp() - Reset completo app (legacy)')
