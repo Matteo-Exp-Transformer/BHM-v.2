@@ -6,6 +6,7 @@ import type {
   ShoppingListFilters,
 } from '../../../types/shopping'
 import { useAuth } from '../../../hooks/useAuth'
+import { activityTrackingService } from '../../../services/activityTrackingService'
 
 export function useShoppingLists(filters?: ShoppingListFilters) {
   const { companyId } = useAuth()
@@ -40,7 +41,7 @@ export function useShoppingListDetail(listId: string | undefined) {
 
 export function useCreateShoppingList() {
   const queryClient = useQueryClient()
-  const { companyId } = useAuth()
+  const { user, companyId, sessionId } = useAuth()
 
   return useMutation({
     mutationFn: async (input: CreateShoppingListInput) => {
@@ -50,6 +51,30 @@ export function useCreateShoppingList() {
         input
       )
       if (!result.success) throw new Error(result.error)
+
+      if (user?.id && companyId && result.data) {
+        await activityTrackingService.logActivity(
+          user.id,
+          companyId,
+          'shopping_list_created',
+          {
+            list_id: result.data.id,
+            list_name: result.data.name,
+            total_items: input.items.length,
+            items: input.items.map(item => ({
+              product_name: item.product_name,
+              category_name: item.category_name,
+              quantity: item.quantity,
+            })),
+          },
+          {
+            sessionId: sessionId || undefined,
+            entityType: 'shopping_list',
+            entityId: result.data.id,
+          }
+        )
+      }
+
       return result.data
     },
     onSuccess: () => {
@@ -120,12 +145,28 @@ export function useCheckItem() {
 
 export function useCompleteShoppingList() {
   const queryClient = useQueryClient()
-  const { companyId } = useAuth()
+  const { user, companyId, sessionId } = useAuth()
 
   return useMutation({
     mutationFn: async (listId: string) => {
       const result = await shoppingListService.completeList(listId)
       if (!result.success) throw new Error(result.error)
+
+      if (user?.id && companyId) {
+        await activityTrackingService.logActivity(
+          user.id,
+          companyId,
+          'shopping_list_completed',
+          {
+            list_id: listId,
+          },
+          {
+            sessionId: sessionId || undefined,
+            entityType: 'shopping_list',
+            entityId: listId,
+          }
+        )
+      }
     },
     onSuccess: (_, listId) => {
       queryClient.invalidateQueries({ queryKey: ['shopping-lists', companyId] })

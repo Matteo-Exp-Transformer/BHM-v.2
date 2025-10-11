@@ -53,6 +53,8 @@ const InventoryPage = lazy(() => import('./features/inventory/InventoryPage'))
 const SettingsPage = lazy(() => import('./features/settings/SettingsPage'))
 const OnboardingWizard = lazy(() => import('./components/OnboardingWizard'))
 const NotFoundPage = lazy(() => import('./components/pages/NotFoundPage'))
+const ShoppingListsPage = lazy(() => import('./features/shopping/pages/ShoppingListsPage'))
+const ShoppingListDetailPage = lazy(() => import('./features/shopping/pages/ShoppingListDetailPage'))
 
 type DevWindow = Window &
   Partial<{
@@ -157,6 +159,22 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <InventoryPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/liste-spesa"
+                    element={
+                      <ProtectedRoute>
+                        <ShoppingListsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/liste-spesa/:listId"
+                    element={
+                      <ProtectedRoute>
+                        <ShoppingListDetailPage />
                       </ProtectedRoute>
                     }
                   />

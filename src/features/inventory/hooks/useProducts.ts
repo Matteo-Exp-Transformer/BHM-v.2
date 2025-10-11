@@ -10,6 +10,7 @@ import {
   ProductFilters,
   AllergenType,
 } from '@/types/inventory'
+import { activityTrackingService } from '@/services/activityTrackingService'
 
 // Query keys
 const QUERY_KEYS = {
@@ -26,7 +27,7 @@ const QUERY_KEYS = {
 
 // Hook for products management
 export const useProducts = (searchParams?: ProductSearchParams) => {
-  const { user, companyId } = useAuth()
+  const { user, companyId, sessionId } = useAuth()
   const queryClient = useQueryClient()
 
   // Fetch products with filters
@@ -207,7 +208,30 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
         throw error
       }
 
-      return transformProductRecord(data)
+      const product = transformProductRecord(data)
+
+      if (user?.id && companyId) {
+        await activityTrackingService.logActivity(
+          user.id,
+          companyId,
+          'product_added',
+          {
+            product_id: product.id,
+            product_name: product.name,
+            category_id: product.category_id,
+            department_id: product.department_id,
+            quantity: product.quantity,
+            unit: product.unit,
+          },
+          {
+            sessionId: sessionId || undefined,
+            entityType: 'product',
+            entityId: product.id,
+          }
+        )
+      }
+
+      return product
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
