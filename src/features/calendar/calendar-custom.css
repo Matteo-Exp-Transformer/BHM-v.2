@@ -1,0 +1,121 @@
+/**
+ * Custom Calendar Styles
+ * Stili personalizzati per FullCalendar
+ */
+
+/* ============================================
+   GIORNO CORRENTE - Bordi spessi blu
+   ============================================ */
+.fc .fc-daygrid-day.fc-day-today {
+  background-color: rgba(59, 130, 246, 0.05) !important; /* Sfondo azzurro chiaro */
+  border: 3px solid #3B82F6 !important; /* Bordo blu spesso */
+  box-shadow: 0 0 0 1px #3B82F6 inset !important;
+}
+
+/* Header del giorno corrente */
+.fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  background-color: #3B82F6 !important;
+  color: white !important;
+  font-weight: 700 !important;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  margin: 4px;
+}
+
+/* ============================================
+   GIORNO SELEZIONATO - Bordi meno spessi
+   ============================================ */
+.fc .fc-daygrid-day.fc-day-selected {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  border: 2px solid #60A5FA !important; /* Bordo blu chiaro medio */
+}
+
+/* Non sovrascrivere il giorno corrente se è anche selezionato */
+.fc .fc-daygrid-day.fc-day-today.fc-day-selected {
+  border: 3px solid #3B82F6 !important;
+}
+
+/* ============================================
+   HOVER sui giorni
+   ============================================ */
+.fc .fc-daygrid-day:hover {
+  background-color: rgba(59, 130, 246, 0.05) !important;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* ============================================
+   SETTIMANA CORRENTE (opzionale)
+   ============================================ */
+.fc .fc-timegrid-col.fc-day-today {
+  background-color: rgba(59, 130, 246, 0.05) !important;
+}
+
+/* ============================================
+   VISUALIZZAZIONE SETTIMANALE - Giorno corrente
+   ============================================ */
+.fc .fc-timegrid-col.fc-day-today {
+  background-color: rgba(59, 130, 246, 0.05) !important;
+}
+
+.fc .fc-timegrid-col.fc-day-today .fc-col-header-cell-cushion {
+  background-color: #3B82F6 !important;
+  color: white !important;
+  font-weight: 700 !important;
+  border-radius: 6px;
+  padding: 6px 12px;
+}
+
+/* ============================================
+   LISTA - Giorno corrente
+   ============================================ */
+.fc .fc-list-day.fc-day-today {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+.fc .fc-list-day.fc-day-today .fc-list-day-cushion {
+  background-color: #3B82F6 !important;
+  color: white !important;
+}
+
+/* ============================================
+   ACCESSIBILITÀ - Focus
+   ============================================ */
+.fc .fc-daygrid-day:focus {
+  outline: 3px solid #3B82F6;
+  outline-offset: -3px;
+}
+
+/* ============================================
+   DARK MODE (se implementato in futuro)
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  .fc .fc-daygrid-day.fc-day-today {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+    border-color: #60A5FA !important;
+  }
+  
+  .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+    background-color: #60A5FA !important;
+  }
+}
+
+/* ============================================
+   RESPONSIVE - Mobile
+   ============================================ */
+@media (max-width: 768px) {
+  .fc .fc-daygrid-day.fc-day-today {
+    border-width: 2px !important; /* Bordi più sottili su mobile */
+  }
+  
+  .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+}
+
