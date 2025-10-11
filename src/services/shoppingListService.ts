@@ -123,7 +123,7 @@ export const shoppingListService = {
       }
 
       const totalItems = items?.length || 0
-      const checkedItems = items?.filter((item) => item.is_checked).length || 0
+      const checkedItems = items?.filter((item: { is_checked: boolean }) => item.is_checked).length || 0
       const completionPercentage =
         totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0
 

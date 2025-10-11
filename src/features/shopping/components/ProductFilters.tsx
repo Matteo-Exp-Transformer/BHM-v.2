@@ -22,8 +22,8 @@ export function ProductFilters({
   filters,
   onFiltersChange,
 }: ProductFiltersProps) {
-  const { data: categories = [] } = useCategories()
-  const { data: departments = [] } = useDepartments()
+  const { categories = [] } = useCategories()
+  const { departments = [] } = useDepartments()
 
   const departmentOptions = useMemo(() => {
     const uniqueDepartmentIds = new Set(
@@ -32,7 +32,7 @@ export function ProductFilters({
         .filter((id): id is string => id !== undefined && id !== null)
     )
 
-    return departments.filter((dept) => uniqueDepartmentIds.has(dept.id))
+    return departments.filter((dept: { id: string }) => uniqueDepartmentIds.has(dept.id))
   }, [products, departments])
 
   const categoryOptions = useMemo(() => {
@@ -42,7 +42,7 @@ export function ProductFilters({
         .filter((id): id is string => id !== undefined && id !== null)
     )
 
-    return categories.filter((cat) => uniqueCategoryIds.has(cat.id))
+    return categories.filter((cat: { id: string }) => uniqueCategoryIds.has(cat.id))
   }, [products, categories])
 
   const handleReset = () => {
@@ -85,7 +85,7 @@ export function ProductFilters({
             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Tutte le categorie</option>
-            {categoryOptions.map((category) => (
+            {categoryOptions.map((category: { id: string; name: string }) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>
@@ -105,7 +105,7 @@ export function ProductFilters({
             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Tutti i reparti</option>
-            {departmentOptions.map((dept) => (
+            {departmentOptions.map((dept: { id: string; name: string }) => (
               <option key={dept.id} value={dept.id}>
                 {dept.name}
               </option>
