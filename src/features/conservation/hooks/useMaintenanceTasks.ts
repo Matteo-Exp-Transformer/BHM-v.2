@@ -154,16 +154,16 @@ export function useMaintenanceTasks(conservationPointId?: string) {
 
       if (error) throw error
 
-      const task = maintenanceTasks?.find(t => t.id === completion.task_id)
+      const task = maintenanceTasks?.find((t: MaintenanceTask) => t.id === completion.maintenance_task_id)
       if (user?.id && companyId && task) {
         await activityTrackingService.logActivity(
           user.id,
           companyId,
           'task_completed',
           {
-            task_id: completion.task_id,
+            task_id: completion.maintenance_task_id,
             task_type: task.type,
-            task_name: task.name,
+            task_name: task.title,
             conservation_point_id: task.conservation_point_id,
             completed_by: completion.completed_by,
             completion_notes: completion.notes,
@@ -171,7 +171,7 @@ export function useMaintenanceTasks(conservationPointId?: string) {
           {
             sessionId: sessionId || undefined,
             entityType: 'maintenance_task',
-            entityId: completion.task_id,
+            entityId: completion.maintenance_task_id,
           }
         )
       }
