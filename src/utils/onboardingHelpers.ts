@@ -1250,15 +1250,17 @@ const createCompanyFromOnboarding = async (formData: OnboardingData): Promise<st
 
   console.log('✅ Company creata:', company.id)
 
-  // Associa l'utente alla company come admin
+  // Associa l'utente alla company come admin (usa upsert per prevenire duplicati)
   const { error: memberError } = await supabase
     .from('company_members')
-    .insert({
+    .upsert({
       user_id: user.id,
       company_id: company.id,
       role: 'admin',
       staff_id: null,
       is_active: true,
+    }, {
+      onConflict: 'user_id,company_id'
     })
 
   if (memberError) {

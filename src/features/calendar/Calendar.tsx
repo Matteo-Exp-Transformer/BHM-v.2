@@ -154,7 +154,6 @@ export const Calendar: React.FC<CalendarProps> = ({
       if (useMacroCategories && clickInfo.event.extendedProps?.type === 'macro_category') {
         const { category, items } = clickInfo.event.extendedProps
         const date = clickInfo.event.start ? new Date(clickInfo.event.start) : new Date()
-        console.log('📊 Macro category clicked:', { category, date, itemsCount: items?.length })
         setSelectedMacroCategory({ category, date, items: items || [] })
       } else {
         const originalEvent = clickInfo.event.extendedProps?.originalEvent

@@ -44,25 +44,17 @@ export const CalendarPage = () => {
   })
 
   const handleFilterChange = useCallback((newFilters: typeof activeFilters) => {
-    console.log('🔍 Filtri aggiornati:', newFilters)
     setActiveFilters(newFilters)
   }, [])
 
   const displayEvents = useMemo(() => {
-    const filtered = filteredEvents.filter(event => {
+    return filteredEvents.filter(event => {
       const typeMatch = activeFilters.eventTypes.length === 0 || activeFilters.eventTypes.includes(event.type)
       const priorityMatch = activeFilters.priorities.length === 0 || activeFilters.priorities.includes(event.priority)
       const statusMatch = activeFilters.statuses.length === 0 || activeFilters.statuses.includes(event.status)
 
       return typeMatch && priorityMatch && statusMatch
     })
-
-    console.log(`📊 Eventi totali: ${filteredEvents.length}, Eventi filtrati: ${filtered.length}`, {
-      filtri: activeFilters,
-      sample: filtered.slice(0, 3).map(e => ({ title: e.title, type: e.type, priority: e.priority, status: e.status }))
-    })
-
-    return filtered
   }, [filteredEvents, activeFilters])
 
   // ✅ Calcola statistiche
