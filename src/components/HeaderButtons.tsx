@@ -4,13 +4,14 @@ import { Link } from 'react-router-dom'
 import { useAlertBadge } from '@/features/calendar/hooks/useCalendarAlerts'
 import { useAggregatedEvents } from '@/features/calendar/hooks/useAggregatedEvents'
 import { useFilteredEvents } from '@/features/calendar/hooks/useFilteredEvents'
-import { 
-  resetManualData, 
-  resetOnboardingData, 
-  resetAllData, 
+import {
+  resetManualData,
+  resetOnboardingData,
+  resetAllData,
   resetTotAndUsers,
   prefillOnboarding,
-  completeOnboarding
+  completeOnboarding,
+  debugAuthState
 } from '@/utils/onboardingHelpers'
 import { manualSyncWithOtherPorts } from '@/utils/multiHostAuth'
 
@@ -63,6 +64,17 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
       {/* PULSANTI DEV - Solo in modalità sviluppo */}
       {showDevButtons && (
         <>
+          {/* Debug Auth State */}
+          <button
+            onClick={() => debugAuthState()}
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-purple-600 bg-white border border-purple-200 rounded-md hover:text-purple-700 hover:bg-purple-50 transition-colors"
+            title="Debug: Verifica stato autenticazione"
+          >
+            <Bell className="h-4 w-4" />
+            <span className="hidden sm:inline">Debug Auth</span>
+            <span className="sm:hidden">Auth</span>
+          </button>
+
           {/* Sincronizza Host (Multi-Port Login) */}
           <button
             onClick={manualSyncWithOtherPorts}
