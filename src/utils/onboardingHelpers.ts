@@ -1591,6 +1591,46 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
 }
 
 /**
+ * DEBUG: Verifica stato autenticazione
+ */
+export const debugAuthState = async (): Promise<void> => {
+  console.log('🔍 ===== DEBUG AUTH STATE =====')
+
+  // 1. Verifica localStorage
+  console.log('1️⃣ localStorage keys:')
+  const allKeys = Object.keys(localStorage)
+  allKeys.forEach(key => {
+    if (key.includes('auth') || key.includes('supabase') || key.includes('bhm')) {
+      const value = localStorage.getItem(key)
+      console.log(`  ✓ ${key}:`, value ? `PRESENTE (${value.length} chars)` : 'VUOTO')
+    }
+  })
+
+  // 2. Verifica sessione Supabase
+  console.log('2️⃣ Supabase getSession():')
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+  console.log('  Session:', sessionData.session ? '✅ PRESENTE' : '❌ ASSENTE')
+  console.log('  Error:', sessionError)
+  if (sessionData.session) {
+    console.log('  User ID:', sessionData.session.user?.id)
+    console.log('  Email:', sessionData.session.user?.email)
+    console.log('  Expires at:', sessionData.session.expires_at)
+  }
+
+  // 3. Verifica getUser
+  console.log('3️⃣ Supabase getUser():')
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  console.log('  User:', userData.user ? '✅ PRESENTE' : '❌ ASSENTE')
+  console.log('  Error:', userError)
+  if (userData.user) {
+    console.log('  User ID:', userData.user.id)
+    console.log('  Email:', userData.user.email)
+  }
+
+  console.log('🔍 ===== END DEBUG =====')
+}
+
+/**
  * Completa automaticamente l'onboarding
  * Nota: Questa funzione può essere chiamata sia dal componente OnboardingWizard
  * che dai DevButtons per testing.
@@ -1603,6 +1643,17 @@ export const completeOnboarding = async (
   formDataParam?: OnboardingData
 ): Promise<void> => {
   console.log('🔄 Completamento automatico onboarding...')
+
+  // DEBUG: Verifica SUBITO localStorage all'inizio
+  console.log('🔍 DEBUG - Verifica localStorage all\'inizio:')
+  const allKeys = Object.keys(localStorage)
+  console.log('📦 Tutte le chiavi localStorage:', allKeys)
+  allKeys.forEach(key => {
+    if (key.includes('auth') || key.includes('supabase') || key.includes('bhm')) {
+      const value = localStorage.getItem(key)
+      console.log(`  - ${key}:`, value ? 'PRESENTE (length: ' + value.length + ')' : 'VUOTO')
+    }
+  })
 
   try {
     let formData: OnboardingData
