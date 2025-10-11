@@ -9,7 +9,7 @@ export function ShoppingListCard() {
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set())
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
-  const { data: products = [], isLoading } = useProducts()
+  const { products = [], isLoading } = useProducts()
 
   const handleToggleProduct = (productId: string) => {
     setSelectedProductIds((prev) => {
