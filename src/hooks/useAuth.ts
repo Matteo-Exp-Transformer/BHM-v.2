@@ -175,7 +175,7 @@ export const useAuth = () => {
         return null
       }
 
-      console.log('✅ Supabase: User profile caricato', data?.role || 'guest')
+      console.log(`✅ Supabase: User profile caricato (${data?.role || 'guest'})`)
       return data
     },
     enabled: !!user?.id,

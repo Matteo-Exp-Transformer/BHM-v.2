@@ -93,17 +93,16 @@ function App() {
 
       // Log delle funzioni disponibili
       if (!devWindow.devFunctionsLogged) {
-        console.log('🚀 BHM v2 - Modalità sviluppo attiva')
-        console.log('🔄 Funzioni dev disponibili:')
-        console.log('  - syncHosts() - Sincronizza sessione con altre porte')
-        console.log('  - resetApp() - Reset completo app (legacy)')
-        console.log('  - resetOnboarding() - Reset onboarding e app (legacy)')
-        console.log('  - resetManualData() - Solo dati utente manuali')
-        console.log('  - resetOnboardingData() - Solo dati Precompila')
-        console.log('  - resetAllData() - Tutti i dati (onboarding + utente)')
-        console.log('  - resetTotAndUsers() - Tutto + utenti + token')
-        console.log('  - prefillOnboarding() - Precompila onboarding')
-        console.log('  - completeOnboarding() - Completa onboarding automaticamente')
+        console.log('%c🚀 BHM v2 - Modalità Sviluppo Attiva', 'color: #10b981; font-weight: bold; font-size: 14px;')
+        console.log('%c🔄 Funzioni Dev Disponibili:', 'color: #3b82f6; font-weight: bold;')
+        console.log('  📡 syncHosts() - Sincronizza sessione con altre porte')
+        console.log('  🗑️ resetManualData() - Solo dati utente manuali')
+        console.log('  🔄 resetOnboardingData() - Solo dati Precompila')
+        console.log('  💥 resetAllData() - Tutti i dati (onboarding + utente)')
+        console.log('  ⚠️ resetTotAndUsers() - Tutto + utenti + token')
+        console.log('  📝 prefillOnboarding() - Precompila onboarding')
+        console.log('  ✅ completeOnboarding() - Completa onboarding automaticamente')
+        console.log('')
         devWindow.devFunctionsLogged = true
       }
     }

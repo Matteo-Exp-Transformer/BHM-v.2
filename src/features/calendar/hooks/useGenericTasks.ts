@@ -122,7 +122,8 @@ export const useGenericTasks = () => {
         throw error
       }
 
-      console.log(`✅ Supabase: ${data?.length || 0} tasks caricate`)
+      const count = data?.length || 0
+      console.log(`✅ Supabase: ${count} task${count !== 1 ? 's' : ''} caricata${count !== 1 ? 'e' : ''}`)
 
       return (data || []).map((task: any) => ({
         id: task.id,
