@@ -8,9 +8,10 @@ import type {
 } from '@/types/conservation'
 import { MAINTENANCE_TASK_TYPES } from '@/types/conservation'
 import { toast } from 'react-toastify'
+import { activityTrackingService } from '@/services/activityTrackingService'
 
 export function useMaintenanceTasks(conservationPointId?: string) {
-  const { companyId } = useAuth()
+  const { user, companyId, sessionId } = useAuth()
   const queryClient = useQueryClient()
 
   const {
@@ -152,6 +153,29 @@ export function useMaintenanceTasks(conservationPointId?: string) {
         .single()
 
       if (error) throw error
+
+      const task = maintenanceTasks?.find(t => t.id === completion.task_id)
+      if (user?.id && companyId && task) {
+        await activityTrackingService.logActivity(
+          user.id,
+          companyId,
+          'task_completed',
+          {
+            task_id: completion.task_id,
+            task_type: task.type,
+            task_name: task.name,
+            conservation_point_id: task.conservation_point_id,
+            completed_by: completion.completed_by,
+            completion_notes: completion.notes,
+          },
+          {
+            sessionId: sessionId || undefined,
+            entityType: 'maintenance_task',
+            entityId: completion.task_id,
+          }
+        )
+      }
+
       return result
     },
     onSuccess: () => {

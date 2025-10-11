@@ -12,6 +12,7 @@ import type { StaffMember } from '@/features/management/hooks/useStaff'
 import { getEventColors } from '../utils/eventTransform'
 import { generateHaccpDeadlineEvents } from '../utils/haccpDeadlineGenerator'
 import { generateTemperatureCheckEvents } from '../utils/temperatureCheckGenerator'
+import { addDays, addWeeks, addMonths, startOfDay, endOfDay } from 'date-fns'
 
 interface AggregatedEventsResult {
   events: CalendarEvent[]
@@ -44,8 +45,9 @@ export function useAggregatedEvents(): AggregatedEventsResult {
   const maintenanceEvents = useMemo(() => {
     if (!maintenanceTasks || maintenanceTasks.length === 0) return []
 
-    return maintenanceTasks.map(task =>
-      convertMaintenanceTaskToEvent(task, companyId || '', user?.id || '')
+    // ✅ Espandi attività ricorrenti per mostrare occorrenze multiple
+    return maintenanceTasks.flatMap(task =>
+      expandRecurringTask(task, companyId || '', user?.id || '', 'maintenance')
     )
   }, [maintenanceTasks, companyId, user?.id])
 
@@ -97,8 +99,9 @@ export function useAggregatedEvents(): AggregatedEventsResult {
   const genericTaskEvents = useMemo(() => {
     if (!genericTasks || genericTasks.length === 0) return []
     
-    return genericTasks.map(task =>
-      convertGenericTaskToEvent(task, companyId || '', user?.id || '')
+    // ✅ Espandi attività ricorrenti per mostrare occorrenze multiple
+    return genericTasks.flatMap(task =>
+      expandRecurringTask(task, companyId || '', user?.id || '', 'generic')
     )
   }, [genericTasks, companyId, user?.id])
 
@@ -136,12 +139,81 @@ export function useAggregatedEvents(): AggregatedEventsResult {
   }
 }
 
+/**
+ * Espande una task ricorrente in multiple occorrenze
+ * Per frequenza "daily" genera un evento per ogni giorno dalla data di creazione
+ */
+function expandRecurringTask(
+  task: MaintenanceTask | GenericTask,
+  companyId: string,
+  userId: string,
+  type: 'maintenance' | 'generic'
+): CalendarEvent[] {
+  const frequency = task.frequency
+  
+  // Se non è una frequenza ricorrente, restituisci un solo evento
+  if (frequency === 'as_needed' || frequency === 'custom') {
+    return type === 'maintenance'
+      ? [convertMaintenanceTaskToEvent(task as MaintenanceTask, companyId, userId)]
+      : [convertGenericTaskToEvent(task as GenericTask, companyId, userId)]
+  }
+  
+  // Data di inizio: usa created_at come data di creazione della task
+  const startDate = startOfDay(new Date(task.created_at))
+  
+  // Data di fine: mostra eventi fino a 90 giorni nel futuro
+  const endDate = endOfDay(addDays(new Date(), 90))
+  
+  const events: CalendarEvent[] = []
+  let currentDate = startDate
+  
+  // Genera eventi ricorrenti in base alla frequenza
+  while (currentDate <= endDate) {
+    // Crea l'evento per questa data
+    const event = type === 'maintenance'
+      ? convertMaintenanceTaskToEvent(task as MaintenanceTask, companyId, userId, currentDate)
+      : convertGenericTaskToEvent(task as GenericTask, companyId, userId, currentDate)
+    
+    events.push(event)
+    
+    // Calcola la prossima occorrenza in base alla frequenza
+    switch (frequency) {
+      case 'daily':
+        currentDate = addDays(currentDate, 1)
+        break
+      case 'weekly':
+        currentDate = addWeeks(currentDate, 1)
+        break
+      case 'monthly':
+        currentDate = addMonths(currentDate, 1)
+        break
+      case 'quarterly':
+        currentDate = addMonths(currentDate, 3)
+        break
+      case 'biannually':
+        currentDate = addMonths(currentDate, 6)
+        break
+      case 'annually':
+      case 'annual':
+        currentDate = addMonths(currentDate, 12)
+        break
+      default:
+        // Per frequenze sconosciute, esci dal loop
+        currentDate = addDays(endDate, 1)
+    }
+  }
+  
+  return events
+}
+
 function convertMaintenanceTaskToEvent(
   task: MaintenanceTask,
   companyId: string,
-  userId: string
+  userId: string,
+  occurrenceDate?: Date
 ): CalendarEvent {
-  const startDate = new Date(task.next_due)
+  // Usa occurrenceDate se fornito, altrimenti usa next_due
+  const startDate = occurrenceDate || new Date(task.next_due)
   const endDate = new Date(
     startDate.getTime() + (task.estimated_duration || 60) * 60 * 1000
   )
@@ -159,8 +231,13 @@ function convertMaintenanceTaskToEvent(
     task.priority || 'medium'
   )
 
+  // ✅ ID univoco per ogni occorrenza (include data)
+  const eventId = occurrenceDate 
+    ? `maintenance-${task.id}-${startDate.toISOString().split('T')[0]}`
+    : `maintenance-${task.id}`
+  
   return {
-    id: `maintenance-${task.id}`,
+    id: eventId,
     title: task.title || 'Manutenzione',
     description: task.description,
     start: startDate,
@@ -349,9 +426,11 @@ function convertProductExpiryToEvent(
 function convertGenericTaskToEvent(
   task: GenericTask,
   companyId: string,
-  userId: string
+  userId: string,
+  occurrenceDate?: Date
 ): CalendarEvent {
-  const startDate = task.next_due ? new Date(task.next_due) : new Date()
+  // Usa occurrenceDate se fornito, altrimenti usa next_due o data corrente
+  const startDate = occurrenceDate || (task.next_due ? new Date(task.next_due) : new Date())
   const endDate = new Date(
     startDate.getTime() + (task.estimated_duration || 60) * 60 * 1000
   )
@@ -369,8 +448,13 @@ function convertGenericTaskToEvent(
     task.priority || 'medium'
   )
 
+  // ✅ ID univoco per ogni occorrenza (include data)
+  const eventId = occurrenceDate 
+    ? `generic-task-${task.id}-${startDate.toISOString().split('T')[0]}`
+    : `generic-task-${task.id}`
+
   return {
-    id: `generic-task-${task.id}`,
+    id: eventId,
     title: task.name,
     description: task.description,
     start: startDate,

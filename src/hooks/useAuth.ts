@@ -8,10 +8,11 @@
  * @date 2025-01-09
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
+import { activityTrackingService } from '@/services/activityTrackingService'
 
 // =============================================
 // TYPES & INTERFACES
@@ -106,6 +107,7 @@ export const useAuth = () => {
   const queryClient = useQueryClient()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
 
   // =============================================
   // 1. Auth State Listener (Supabase Session)
@@ -121,13 +123,33 @@ export const useAuth = () => {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null)
       setIsLoading(false)
+
+      if (event === 'SIGNED_IN' && session?.user) {
+        const companyId = localStorage.getItem('active_company_id')
+        if (companyId) {
+          const sessionResult = await activityTrackingService.startSession(
+            session.user.id,
+            companyId
+          )
+          if (sessionResult.success && sessionResult.data) {
+            setCurrentSessionId(sessionResult.data.id)
+          }
+        }
+      }
+
+      if (event === 'SIGNED_OUT') {
+        if (currentSessionId) {
+          await activityTrackingService.endSession(currentSessionId, 'manual')
+          setCurrentSessionId(null)
+        }
+      }
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [currentSessionId])
 
   // =============================================
   // 2. Fetch User Companies (da company_members)
@@ -219,6 +241,15 @@ export const useAuth = () => {
         if (createError) {
           console.error('❌ Errore creazione sessione:', createError)
           throw createError
+        }
+
+        // Start activity tracking session
+        const sessionResult = await activityTrackingService.startSession(
+          user.id,
+          companies[0].company_id
+        )
+        if (sessionResult.success && sessionResult.data) {
+          setCurrentSessionId(sessionResult.data.id)
         }
 
         return newSession as UserSession
@@ -345,12 +376,17 @@ export const useAuth = () => {
   }
 
   const signOut = async () => {
+    if (currentSessionId) {
+      await activityTrackingService.endSession(currentSessionId, 'manual')
+      setCurrentSessionId(null)
+    }
+
     const { error } = await supabase.auth.signOut()
     if (error) throw error
-    
+
     // Clear all cache
     queryClient.clear()
-    
+
     return true
   }
 
@@ -363,14 +399,31 @@ export const useAuth = () => {
   }
 
   // =============================================
-  // 9. Loading States
+  // 9. Last Activity Update (every 5 minutes)
+  // =============================================
+
+  useEffect(() => {
+    if (!user?.id || !session?.active_company_id) return
+
+    const updateActivity = async () => {
+      if (currentSessionId) {
+        await activityTrackingService.updateLastActivity(currentSessionId)
+      }
+    }
+
+    const interval = setInterval(updateActivity, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [user?.id, session?.active_company_id, currentSessionId])
+
+  // =============================================
+  // 10. Loading States
   // =============================================
 
   const isAuthLoading = isLoading || companiesLoading || sessionLoading
   const isAuthenticated = !!user && !!currentMembership
 
   // =============================================
-  // 10. Error Handling
+  // 11. Error Handling
   // =============================================
 
   const authError = companiesError
@@ -400,6 +453,7 @@ export const useAuth = () => {
     permissions,
     displayName,
     companyId: session?.active_company_id || null,
+    sessionId: currentSessionId,
 
     // Multi-company (NUOVO)
     companies,
