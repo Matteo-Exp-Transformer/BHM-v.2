@@ -12,8 +12,9 @@
 
 const SUPPORTED_PORTS = [3000, 3001, 3002, 3003, 3004, 3005, 5173, 5174]
 const STORAGE_KEYS = {
-  SUPABASE_AUTH: 'sb-tucqgcfrlzmwyfadiodo-auth-token',
-  // Aggiungi altre chiavi Supabase se necessario
+  SUPABASE_AUTH: 'bhm-supabase-auth', // Chiave corretta configurata in client.ts
+  // Fallback per vecchia chiave (se esiste)
+  SUPABASE_AUTH_OLD: 'sb-tucqgcfrlzmwyfadiodo-auth-token',
 }
 
 /**
@@ -305,22 +306,25 @@ export const syncSessionViaCookies = async (): Promise<boolean> => {
 
   try {
     const authData = localStorage.getItem(STORAGE_KEYS.SUPABASE_AUTH)
-    if (!authData) return false
-
-    const session = JSON.parse(authData)
-    const projectRef = 'tucqgcfrlzmwyfadiodo'
-
-    // Imposta cookie con domain=localhost (funziona tra tutte le porte)
-    document.cookie = `sb-${projectRef}-auth-token=${session.access_token}; domain=localhost; path=/; max-age=3600; SameSite=Lax`
-
-    if (session.refresh_token) {
-      document.cookie = `sb-${projectRef}-refresh-token=${session.refresh_token}; domain=localhost; path=/; max-age=2592000; SameSite=Lax`
+    if (!authData) {
+      console.warn('⚠️ Nessun token auth trovato in localStorage')
+      return false
     }
 
-    console.log('✅ Sessione salvata nei cookie cross-port')
+    const session = JSON.parse(authData)
+
+    // Verifica che abbiamo i dati necessari
+    if (!session?.access_token) {
+      console.warn('⚠️ Token access mancante nella sessione')
+      return false
+    }
+
+    // NON usiamo cookie - Supabase li gestisce automaticamente
+    // Invece, assicuriamoci che localStorage sia sincronizzato
+    console.log('✅ Sessione già presente in localStorage con chiave:', STORAGE_KEYS.SUPABASE_AUTH)
     return true
   } catch (error) {
-    console.error('❌ Errore sync cookie:', error)
+    console.error('❌ Errore sync sessione:', error)
     return false
   }
 }
