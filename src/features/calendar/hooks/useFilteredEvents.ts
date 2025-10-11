@@ -35,15 +35,24 @@ export function useFilteredEvents(
   }, [userRole])
 
   const filteredEvents = useMemo(() => {
+    console.log('🔍 DEBUG FILTER: Eventi in input:', events?.length || 0)
+    console.log('🔍 DEBUG FILTER: UserProfile:', userProfile ? 'Presente' : 'Assente')
+    console.log('🔍 DEBUG FILTER: UserRole:', userRole)
+    console.log('🔍 DEBUG FILTER: CanViewAllEvents:', canViewAllEvents)
+    console.log('🔍 DEBUG FILTER: UserStaffMember:', userStaffMember ? 'Presente' : 'Assente')
+    
     if (!userProfile || !events || events.length === 0) {
+      console.log('❌ DEBUG FILTER: Nessun userProfile o eventi')
       return []
     }
 
     if (canViewAllEvents) {
+      console.log('✅ DEBUG FILTER: Admin/Responsabile - Mostra tutti gli eventi')
       return events
     }
 
     if (!userStaffMember) {
+      console.log('❌ DEBUG FILTER: Nessun userStaffMember')
       return []
     }
 
@@ -56,9 +65,26 @@ export function useFilteredEvents(
       }
 
       const isAssignedToUser = checkEventAssignment(assignment, userStaffMember)
+      
+      // Debug per i primi 3 eventi
+      if (events.indexOf(event) < 3) {
+        console.log(`🔍 DEBUG FILTER Event ${event.title}:`, {
+          metadata: event.metadata,
+          assignment,
+          isAssignedToUser,
+          userStaffMember: {
+            id: userStaffMember.id,
+            name: userStaffMember.name,
+            role: userStaffMember.role,
+            category: userStaffMember.category
+          }
+        })
+      }
+      
       return isAssignedToUser
     })
 
+    console.log(`📊 DEBUG FILTER: Eventi filtrati: ${filtered.length}/${events.length}`)
     return filtered
   }, [events, userProfile, canViewAllEvents, userStaffMember])
 
@@ -76,6 +102,7 @@ function checkEventAssignment(
 ): boolean {
   // ✅ Se assegnato a categoria 'all', tutti vedono
   if (assignment.assigned_to_category === 'all') {
+    console.log(`   ✅ DEBUG ASSIGNMENT: Categoria 'all' - visibile`)
     return true
   }
 
@@ -113,9 +140,11 @@ function checkEventAssignment(
     Array.isArray(assignment.assigned_to) &&
     assignment.assigned_to.includes(staffMember.id)
   ) {
+    console.log(`   ✅ DEBUG ASSIGNMENT: Assigned_to array - visibile`)
     return true
   }
 
+  console.log(`   ❌ DEBUG ASSIGNMENT: Nessun match - nascosto`)
   return false
 }
 

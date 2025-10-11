@@ -24,6 +24,9 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
   onOpenOnboarding,
   showDevButtons = false,
 }) => {
+  // DEBUG: Log showDevButtons value
+  console.log('🔍 HeaderButtons: showDevButtons =', showDevButtons)
+
   // ✅ Alert badge logic
   const { events } = useAggregatedEvents()
   const { filteredEvents } = useFilteredEvents(events)
