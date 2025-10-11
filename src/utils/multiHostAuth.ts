@@ -10,7 +10,7 @@
  * In production c'è un solo dominio, quindi non serve.
  */
 
-const SUPPORTED_PORTS = [3000, 3002, 5173, 5174]
+const SUPPORTED_PORTS = [3000, 3001, 3002, 3003, 3004, 3005, 5173, 5174]
 const STORAGE_KEYS = {
   SUPABASE_AUTH: 'sb-tucqgcfrlzmwyfadiodo-auth-token',
   // Aggiungi altre chiavi Supabase se necessario
@@ -243,22 +243,85 @@ export const checkAndAutoLoginOnStartup = async (): Promise<void> => {
   if (import.meta.env.PROD) {
     return
   }
-  
+
   // Solo se non già loggato
   if (isLoggedInCurrentPort()) {
     return
   }
-  
+
   console.log('🔄 Auto-login multi-host attivo...')
-  
+
   const success = await autoLoginFromOtherPorts()
-  
+
   if (success) {
     console.log('✅ Auto-login completato - ricarica pagina...')
     // Ricarica automaticamente dopo 1 secondo
     setTimeout(() => {
       window.location.reload()
     }, 1000)
+  }
+}
+
+/**
+ * ALTERNATIVA MIGLIORE: Sync con SharedWorker o BroadcastChannel
+ * Questa è più affidabile per sviluppo locale
+ */
+export const syncSessionAcrossTabsAndPorts = (): void => {
+  if (import.meta.env.PROD) return
+
+  // BroadcastChannel per sincronizzare tra tab/finestre stesso origin
+  const channel = new BroadcastChannel('supabase-auth-sync')
+
+  // Ascolta eventi di auth da altre tab
+  channel.addEventListener('message', (event) => {
+    if (event.data.type === 'AUTH_STATE_CHANGE') {
+      console.log('🔄 Sessione aggiornata da altra tab/porta')
+      const { session } = event.data
+      if (session) {
+        localStorage.setItem(STORAGE_KEYS.SUPABASE_AUTH, JSON.stringify(session))
+        window.location.reload()
+      }
+    }
+  })
+
+  // Broadcast quando la sessione cambia qui
+  const authData = localStorage.getItem(STORAGE_KEYS.SUPABASE_AUTH)
+  if (authData) {
+    try {
+      const session = JSON.parse(authData)
+      channel.postMessage({ type: 'AUTH_STATE_CHANGE', session })
+    } catch (e) {
+      console.error('Errore broadcast sessione:', e)
+    }
+  }
+}
+
+/**
+ * SOLUZIONE COOKIE (Alternativa)
+ * Funziona solo se tutte le porte sono su localhost con domain=localhost
+ */
+export const syncSessionViaCookies = async (): Promise<boolean> => {
+  if (import.meta.env.PROD) return false
+
+  try {
+    const authData = localStorage.getItem(STORAGE_KEYS.SUPABASE_AUTH)
+    if (!authData) return false
+
+    const session = JSON.parse(authData)
+    const projectRef = 'tucqgcfrlzmwyfadiodo'
+
+    // Imposta cookie con domain=localhost (funziona tra tutte le porte)
+    document.cookie = `sb-${projectRef}-auth-token=${session.access_token}; domain=localhost; path=/; max-age=3600; SameSite=Lax`
+
+    if (session.refresh_token) {
+      document.cookie = `sb-${projectRef}-refresh-token=${session.refresh_token}; domain=localhost; path=/; max-age=2592000; SameSite=Lax`
+    }
+
+    console.log('✅ Sessione salvata nei cookie cross-port')
+    return true
+  } catch (error) {
+    console.error('❌ Errore sync cookie:', error)
+    return false
   }
 }
 

@@ -1630,27 +1630,40 @@ export const completeOnboarding = async (
 
     if (!companyId) {
       // Prova a recuperare il company_id dall'utente autenticato (Supabase Auth)
-      const { data: { user } } = await supabase.auth.getUser()
+      // Prima verifica la sessione
+      const { data: { session } } = await supabase.auth.getSession()
 
-      if (!user?.id) {
-        throw new Error('Utente non autenticato. Effettua il login e riprova.')
+      if (!session?.user?.id) {
+        // Fallback: prova getUser()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user?.id) {
+          console.error('❌ Nessuna sessione o utente trovato')
+          throw new Error('Utente non autenticato. Effettua il login e riprova.')
+        }
+
+        companyId = await resolveCompanyId(user.id)
+      } else {
+        companyId = await resolveCompanyId(session.user.id)
       }
+    }
 
+    async function resolveCompanyId(userId: string): Promise<string | undefined> {
       // Verifica se utente ha già un company_member record
       const { data: existingMember } = await supabase
         .from('company_members')
         .select('company_id')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single()
 
       if (existingMember && existingMember.company_id) {
         // Utente ha già una company associata → usa quella esistente
         console.log('✅ Company esistente trovata:', existingMember.company_id)
-        companyId = existingMember.company_id
+        return existingMember.company_id
       } else {
         // Nessuna company associata → creane una nuova durante onboarding
         console.log('🔧 Nessuna company trovata - creando nuova company durante onboarding')
-        companyId = undefined
+        return undefined
       }
     }
 
