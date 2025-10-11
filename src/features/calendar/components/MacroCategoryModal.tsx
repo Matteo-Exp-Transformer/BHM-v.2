@@ -3,6 +3,9 @@ import { X, Wrench, ClipboardList, Package, ChevronRight, Calendar, User, Clock,
 import type { MacroCategory, MacroCategoryItem } from '../hooks/useMacroCategoryEvents'
 import { useGenericTasks } from '../hooks/useGenericTasks'
 import { useQueryClient } from '@tanstack/react-query'
+import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
+import { toast } from 'react-toastify'
 
 interface MacroCategoryModalProps {
   isOpen: boolean
@@ -65,6 +68,42 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   const [selectedItem, setSelectedItem] = useState<MacroCategoryItem | null>(null)
   const { completeTask, isCompleting } = useGenericTasks()
   const queryClient = useQueryClient()
+  const { companyId, user } = useAuth()
+  const [isCompletingMaintenance, setIsCompletingMaintenance] = useState(false)
+
+  const handleCompleteMaintenance = async (maintenanceId: string) => {
+    if (!companyId || !user) {
+      toast.error('Utente non autenticato')
+      return
+    }
+
+    setIsCompletingMaintenance(true)
+    try {
+      // Aggiorna lo stato della manutenzione a 'completed'
+      const { error } = await supabase
+        .from('maintenance_tasks')
+        .update({
+          status: 'completed',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', maintenanceId)
+        .eq('company_id', companyId)
+
+      if (error) throw error
+
+      // Invalida le query per ricaricare
+      queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
+      queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] })
+
+      toast.success('Manutenzione completata')
+      setSelectedItem(null)
+    } catch (error) {
+      console.error('Error completing maintenance:', error)
+      toast.error('Errore nel completamento della manutenzione')
+    } finally {
+      setIsCompletingMaintenance(false)
+    }
+  }
   const config = categoryConfig[category]
   const Icon = config.icon
 
@@ -301,27 +340,30 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                           <div className="pt-4 border-t border-gray-200 mt-4">
                             <button
                               onClick={() => {
-                                completeTask(
-                                  { taskId: item.id },
-                                  {
-                                    onSuccess: () => {
-                                      // Invalida tutte le query per ricaricare i dati
-                                      queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
-                                      queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
-                                      queryClient.invalidateQueries({ queryKey: ['task-completions'] })
-                                      queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] })
+                                if (category === 'maintenance') {
+                                  handleCompleteMaintenance(item.id)
+                                } else {
+                                  completeTask(
+                                    { taskId: item.id },
+                                    {
+                                      onSuccess: () => {
+                                        // Invalida tutte le query per ricaricare i dati
+                                        queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
+                                        queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
+                                        queryClient.invalidateQueries({ queryKey: ['task-completions'] })
 
-                                      // Chiudi il dettaglio dopo il completamento
-                                      setSelectedItem(null)
-                                    },
-                                  }
-                                )
+                                        // Chiudi il dettaglio dopo il completamento
+                                        setSelectedItem(null)
+                                      },
+                                    }
+                                  )
+                                }
                               }}
-                              disabled={isCompleting}
+                              disabled={isCompleting || isCompletingMaintenance}
                               className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <Check className="w-5 h-5" />
-                              {isCompleting ? 'Completando...' : category === 'maintenance' ? 'Completa Manutenzione' : 'Completa Mansione'}
+                              {(isCompleting || isCompletingMaintenance) ? 'Completando...' : category === 'maintenance' ? 'Completa Manutenzione' : 'Completa Mansione'}
                             </button>
                           </div>
                         )}

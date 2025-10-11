@@ -104,6 +104,7 @@ const getPermissionsFromRole = (role: UserRole): UserPermissions => {
 // =============================================
 
 export const useAuth = () => {
+  console.log('🔧 TEST: useAuth hook caricato!')
   const queryClient = useQueryClient()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
