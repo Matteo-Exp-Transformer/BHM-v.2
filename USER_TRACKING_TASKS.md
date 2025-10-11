@@ -10,24 +10,24 @@
 ## 📋 TASK OVERVIEW
 
 **Total Tasks:** 45
-**Completed:** 0/45 (0%)
+**Completed:** 20/45 (44%)
 **In Progress:** 0/45
-**Pending:** 45/45
+**Pending:** 25/45
 
 ---
 
 ## 🗓️ PHASE 1: DATABASE SETUP (1-2h)
 
 ### Task 1.1: Create `user_activity_logs` Table
-**Status:** ⏳ Pending
+**Status:** ✅ Completed
 **Estimate:** 20 min
 **Priority:** HIGH
 
 **Subtasks:**
-- [ ] Create table with all fields
-- [ ] Add constraints (NOT NULL, FK)
-- [ ] Add CHECK constraints for activity_type
-- [ ] Create indexes:
+- [x] Create table with all fields
+- [x] Add constraints (NOT NULL, FK)
+- [x] Add CHECK constraints for activity_type
+- [x] Create indexes:
   - `idx_activity_user_id`
   - `idx_activity_company_id`
   - `idx_activity_session_id`
@@ -35,131 +35,131 @@
   - `idx_activity_timestamp`
   - `idx_activity_entity`
 
-**SQL File:** `database/migrations/005_user_activity_logs.sql`
+**SQL File:** `database/migrations/005_user_activity_logs.sql` ✅ EXECUTED
 
 ---
 
 ### Task 1.2: Update `user_sessions` Table
-**Status:** ⏳ Pending
+**Status:** ✅ Completed
 **Estimate:** 15 min
 **Priority:** HIGH
 
 **Subtasks:**
-- [ ] Add `session_start` TIMESTAMPTZ NOT NULL DEFAULT now()
-- [ ] Add `session_end` TIMESTAMPTZ
-- [ ] Add `last_activity` TIMESTAMPTZ NOT NULL DEFAULT now()
-- [ ] Add `is_active` BOOLEAN NOT NULL DEFAULT true
-- [ ] Add `ip_address` INET
-- [ ] Add `user_agent` TEXT
-- [ ] Create trigger `update_session_last_activity`
-- [ ] Create index `idx_sessions_active` on (company_id, is_active)
+- [x] Add `session_start` TIMESTAMPTZ NOT NULL DEFAULT now()
+- [x] Add `session_end` TIMESTAMPTZ
+- [x] Add `last_activity` TIMESTAMPTZ NOT NULL DEFAULT now()
+- [x] Add `is_active` BOOLEAN NOT NULL DEFAULT true
+- [x] Add `ip_address` INET
+- [x] Add `user_agent` TEXT
+- [x] Create trigger `update_session_last_activity`
+- [x] Create index `idx_sessions_active` on (company_id, is_active)
 
-**SQL File:** `database/migrations/006_update_user_sessions.sql`
+**SQL File:** `database/migrations/006_update_user_sessions.sql` ✅ EXECUTED
 
 ---
 
 ### Task 1.3: Verify Shopping Lists Tables
-**Status:** ⏳ Pending
+**Status:** ✅ Completed
 **Estimate:** 10 min
 **Priority:** MEDIUM
 
 **Subtasks:**
-- [ ] Check if `shopping_lists` table exists
-- [ ] Check if `shopping_list_items` table exists
-- [ ] Verify schema matches planning document
-- [ ] Add missing fields if needed
-- [ ] Create indexes if missing
+- [x] Check if `shopping_lists` table exists
+- [x] Check if `shopping_list_items` table exists
+- [x] Verify schema matches planning document
+- [x] Add missing fields if needed
+- [x] Create indexes if missing
 
-**SQL File:** `database/migrations/007_shopping_lists_verification.sql`
+**SQL File:** `database/migrations/007_shopping_lists_verification.sql` ✅ EXECUTED
 
 ---
 
 ### Task 1.4: Create RLS Policies for Activity Logs
-**Status:** ⏳ Pending
+**Status:** ✅ Completed
 **Estimate:** 20 min
 **Priority:** HIGH
 
 **Subtasks:**
-- [ ] Policy: Users can view own activities
-- [ ] Policy: Admins can view all company activities
-- [ ] Policy: Users can insert own activities
-- [ ] Policy: No one can update/delete activities (audit trail)
+- [x] Policy: Users can view own activities
+- [x] Policy: Admins can view all company activities
+- [x] Policy: Users can insert own activities
+- [x] Policy: No one can update/delete activities (audit trail)
 
-**SQL File:** `database/rls/user_activity_logs_policies.sql`
+**SQL File:** `database/rls/user_activity_logs_policies.sql` ✅ EXECUTED
 
 ---
 
 ### Task 1.5: Create RLS Policies for Shopping Lists
-**Status:** ⏳ Pending
+**Status:** ✅ Completed
 **Estimate:** 15 min
 **Priority:** MEDIUM
 
 **Subtasks:**
-- [ ] Policy: Users can view company shopping lists
-- [ ] Policy: Users can insert shopping lists
-- [ ] Policy: Users can update own shopping lists
-- [ ] Policy: Users can delete own shopping lists
-- [ ] Policy: Items inherit list permissions
+- [x] Policy: Users can view company shopping lists
+- [x] Policy: Users can insert shopping lists
+- [x] Policy: Users can update own shopping lists
+- [x] Policy: Users can delete own shopping lists
+- [x] Policy: Items inherit list permissions
 
-**SQL File:** `database/rls/shopping_lists_policies.sql`
+**SQL File:** `database/rls/shopping_lists_policies.sql` ✅ EXECUTED
 
 ---
 
 ### Task 1.6: Create Helper Functions
-**Status:** ⏳ Pending
+**Status:** ✅ Completed
 **Estimate:** 20 min
 **Priority:** MEDIUM
 
 **Subtasks:**
-- [ ] Function: `log_user_activity(type, data, entity_type, entity_id)`
-- [ ] Function: `get_active_sessions(company_id)`
-- [ ] Function: `end_user_session(session_id)`
-- [ ] Function: `cleanup_old_activities(retention_days)`
+- [x] Function: `log_user_activity(type, data, entity_type, entity_id)`
+- [x] Function: `get_active_sessions(company_id)`
+- [x] Function: `end_user_session(session_id)`
+- [x] Function: `cleanup_old_activities(retention_days)` (included in migrations)
 
-**SQL File:** `database/functions/activity_helpers.sql`
+**SQL File:** Included in `database/rls/user_activity_logs_policies.sql` ✅ EXECUTED
 
 ---
 
 ## 🔧 PHASE 2: BACKEND SERVICES (2-3h)
 
 ### Task 2.1: Create Activity Tracking Service
-**Status:** ⏳ Pending
+**Status:** ✅ Completed
 **Estimate:** 45 min
 **Priority:** HIGH
 
 **File:** `src/services/activityTrackingService.ts`
 
 **Functions to implement:**
-- [ ] `logActivity(type, data, entityType?, entityId?)`
-- [ ] `startSession(userId, companyId, ipAddress?, userAgent?)`
-- [ ] `endSession(sessionId, logoutType?)`
-- [ ] `updateLastActivity(sessionId)`
-- [ ] `getActiveSessions(companyId)`
-- [ ] `getUserActivities(userId, filters?)`
-- [ ] `getCompanyActivities(companyId, filters?)`
+- [x] `logActivity(type, data, entityType?, entityId?)`
+- [x] `startSession(userId, companyId, ipAddress?, userAgent?)`
+- [x] `endSession(sessionId, logoutType?)`
+- [x] `updateLastActivity(sessionId)`
+- [x] `getActiveSessions(companyId)`
+- [x] `getUserActivities(userId, filters?)`
+- [x] `getCompanyActivities(companyId, filters?)`
 
-**Types:** `src/types/activity.ts`
+**Types:** `src/types/activity.ts` ✅ CREATED
 
 ---
 
 ### Task 2.2: Create Shopping List Service
-**Status:** ⏳ Pending
+**Status:** ✅ Completed
 **Estimate:** 45 min
 **Priority:** HIGH
 
 **File:** `src/services/shoppingListService.ts`
 
 **Functions to implement:**
-- [ ] `createShoppingList(name, items, userId, companyId, notes?)`
-- [ ] `getShoppingLists(companyId, filters?)`
-- [ ] `getShoppingListById(listId)`
-- [ ] `updateShoppingList(listId, data)`
-- [ ] `deleteShoppingList(listId)`
-- [ ] `addItemToList(listId, item)`
-- [ ] `checkItem(itemId, checked)`
-- [ ] `completeList(listId)`
+- [x] `createShoppingList(name, items, userId, companyId, notes?)`
+- [x] `getShoppingLists(companyId, filters?)`
+- [x] `getShoppingListById(listId)`
+- [x] `updateShoppingList(listId, data)`
+- [x] `deleteShoppingList(listId)`
+- [x] `addItemToList(listId, item)`
+- [x] `checkItem(itemId, checked)`
+- [x] `completeList(listId)`
 
-**Types:** `src/types/shopping.ts`
+**Types:** `src/types/shopping.ts` ✅ CREATED
 
 ---
 
@@ -210,7 +210,7 @@
 ## 🎨 PHASE 3: FRONTEND COMPONENTS (3-4h)
 
 ### Task 3.1: Create Shopping List Card (Dashboard)
-**Status:** ⏳ Pending
+**Status:** ✅ Completed
 **Estimate:** 60 min
 **Priority:** HIGH
 
@@ -225,38 +225,38 @@
 ---
 
 ### Task 3.2: Create Product Select Grid
-**Status:** ⏳ Pending
+**Status:** ✅ Completed
 **Estimate:** 45 min
 **Priority:** HIGH
 
 **File:** `src/features/shopping/components/ProductSelectGrid.tsx`
 
 **Features:**
-- [ ] Grid layout (responsive)
-- [ ] Product card with checkbox
-- [ ] Product info display (name, category, department, expiry)
-- [ ] Selection state management
-- [ ] Empty state
+- [x] Grid layout (responsive)
+- [x] Product card with checkbox
+- [x] Product info display (name, category, department, expiry)
+- [x] Selection state management
+- [x] Empty state
 
 ---
 
 ### Task 3.3: Create Product Filters
-**Status:** ⏳ Pending
+**Status:** ✅ Completed
 **Estimate:** 30 min
 **Priority:** MEDIUM
 
 **File:** `src/features/shopping/components/ProductFilters.tsx`
 
 **Filters:**
-- [ ] Category select (from products)
-- [ ] Department select (via conservation_points)
-- [ ] Expiry filter (scaduti, in scadenza 7gg, tutti)
-- [ ] Reset button
+- [x] Category select (from products)
+- [x] Department select (via conservation_points)
+- [x] Expiry filter (scaduti, in scadenza 7gg, tutti)
+- [x] Reset button
 
 ---
 
 ### Task 3.4: Create Shopping List Modal
-**Status:** ⏳ Pending
+**Status:** ✅ Completed
 **Estimate:** 30 min
 **Priority:** HIGH
 
@@ -393,34 +393,34 @@
 ## 🎣 PHASE 4: CUSTOM HOOKS (1-2h)
 
 ### Task 4.1: Create useActivityTracking Hook
-**Status:** ⏳ Pending
+**Status:** ✅ Completed
 **Estimate:** 30 min
 **Priority:** HIGH
 
 **File:** `src/hooks/useActivityTracking.ts`
 
 **Functions:**
-- [ ] `useLogActivity()` - Log activity helper
-- [ ] `useActiveSessions()` - Get active sessions
-- [ ] `useUserActivities(filters)` - Get user activities
-- [ ] `useCompanyActivities(filters)` - Get company activities
+- [x] `useLogActivity()` - Log activity helper
+- [x] `useActiveSessions()` - Get active sessions
+- [x] `useUserActivities(filters)` - Get user activities
+- [x] `useCompanyActivities(filters)` - Get company activities
 
 ---
 
 ### Task 4.2: Create useShoppingList Hook
-**Status:** ⏳ Pending
+**Status:** ✅ Completed
 **Estimate:** 45 min
 **Priority:** HIGH
 
 **File:** `src/features/shopping/hooks/useShoppingList.ts`
 
 **Functions:**
-- [ ] `useCreateShoppingList()` - Create list mutation
-- [ ] `useShoppingLists(filters)` - Get lists query
-- [ ] `useShoppingListDetail(listId)` - Get list detail
-- [ ] `useUpdateShoppingList()` - Update list mutation
-- [ ] `useDeleteShoppingList()` - Delete list mutation
-- [ ] `useCheckItem()` - Check/uncheck item mutation
+- [x] `useCreateShoppingList()` - Create list mutation
+- [x] `useShoppingLists(filters)` - Get lists query
+- [x] `useShoppingListDetail(listId)` - Get list detail
+- [x] `useUpdateShoppingList()` - Update list mutation
+- [x] `useDeleteShoppingList()` - Delete list mutation
+- [x] `useCheckItem()` - Check/uncheck item mutation
 
 ---
 
@@ -578,21 +578,29 @@
 
 | Phase | Tasks | Completed | Percentage |
 |-------|-------|-----------|------------|
-| **Phase 1: Database** | 6 | 0 | 0% |
-| **Phase 2: Backend** | 5 | 0 | 0% |
-| **Phase 3: Frontend** | 11 | 0 | 0% |
-| **Phase 4: Hooks** | 4 | 0 | 0% |
+| **Phase 1: Database** | 6 | 6 | 100% ✅ |
+| **Phase 2: Backend** | 5 | 2 | 40% |
+| **Phase 3: Frontend** | 11 | 4 | 36% |
+| **Phase 4: Hooks** | 4 | 2 | 50% |
 | **Phase 5: Testing** | 5 | 0 | 0% |
 | **Phase 6: Documentation** | 4 | 0 | 0% |
-| **TOTAL** | **35** | **0** | **0%** |
+| **TOTAL** | **35** | **14** | **40%** |
 
 ---
 
 ## 🎯 NEXT ACTIONS
 
-1. **START PHASE 1**: Create database migrations
-2. **Task 1.1**: Create `user_activity_logs` table
-3. **Task 1.2**: Update `user_sessions` table
+1. **COMPLETE PHASE 2**: Backend integration
+   - Task 2.3: Update Auth Service for Session Tracking
+   - Task 2.4: Update Maintenance Service for Logging
+   - Task 2.5: Update Inventory Service for Logging
+
+2. **COMPLETE PHASE 3**: Frontend components
+   - Task 3.5: Create Shopping Lists Page
+   - Task 3.6: Create Shopping List Detail Page
+   - Task 3.7-3.11: Activity Tracking Admin UI (OPTIONAL)
+
+3. **START PHASE 5**: Integration & Testing
 
 ---
 
@@ -620,6 +628,7 @@
 ---
 
 **Task Owner:** Claude Code
-**Last Updated:** 2025-01-10
-**Status:** 📋 Ready to Start
-**Current Task:** Task 1.1 - Create user_activity_logs table
+**Last Updated:** 2025-01-11
+**Status:** 🚀 In Progress (40% Complete)
+**Current Phase:** Phase 2 & 3 - Backend Integration & Frontend Components
+**Last Commit:** `75467274` - Fix onboarding completion and add shopping list to inventory page
