@@ -88,7 +88,14 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
 
           {/* Precompila */}
           <button
-            onClick={() => prefillOnboarding()}
+            onClick={async () => {
+              console.log('🔘 HeaderButtons: Click su Precompila')
+              try {
+                await prefillOnboarding()
+              } catch (error) {
+                console.error('❌ Errore precompila:', error)
+              }
+            }}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-green-600 bg-white border border-green-200 rounded-md hover:text-green-700 hover:bg-green-50 transition-colors"
             title="Precompila onboarding con dati di test"
           >
@@ -99,7 +106,14 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
 
           {/* Completa Onboarding */}
           <button
-            onClick={() => completeOnboarding()}
+            onClick={async () => {
+              console.log('🔘 HeaderButtons: Click su Completa Onboarding')
+              try {
+                await completeOnboarding()
+              } catch (error) {
+                console.error('❌ Errore completa onboarding:', error)
+              }
+            }}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-md hover:text-blue-700 hover:bg-blue-50 transition-colors"
             title="Completa onboarding automaticamente"
           >
