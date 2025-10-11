@@ -9,7 +9,25 @@
 .fc .fc-daygrid-day.fc-day-today {
   background-color: rgba(59, 130, 246, 0.05) !important; /* Sfondo azzurro chiaro */
   border: 3px solid #3B82F6 !important; /* Bordo blu spesso */
-  box-shadow: 0 0 0 1px #3B82F6 inset !important;
+  box-shadow: 
+    0 0 0 1px #3B82F6 inset, /* Shadow interno blu */
+    0 0 0 3px #3B82F6 !important; /* Outline esterno per bordi completi */
+  position: relative !important;
+  z-index: 12 !important;
+}
+
+/* Assicura che i bordi del giorno corrente siano sempre visibili */
+.fc .fc-daygrid-day.fc-day-today::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border: 3px solid #3B82F6;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 13;
 }
 
 /* Header del giorno corrente */
@@ -35,14 +53,41 @@
   border-right: 2px solid #22C55E !important; /* Verde */
   border-bottom: 2px solid #22C55E !important; /* Verde */
   border-left: 2px solid #22C55E !important; /* Verde */
-  box-shadow: 0 0 0 1px #22C55E inset !important; /* Shadow interno verde */
+  box-shadow: 
+    0 0 0 1px #22C55E inset, /* Shadow interno verde */
+    0 0 0 2px #22C55E !important; /* Outline esterno per bordi completi */
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+/* Assicura che i bordi siano sempre visibili sopra altri elementi */
+.fc .fc-daygrid-day.fc-day-selected::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 2px solid #22C55E;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 11;
 }
 
 /* Non sovrascrivere il giorno corrente se è anche selezionato */
 .fc .fc-daygrid-day.fc-day-today.fc-day-selected {
   border: 3px solid #3B82F6 !important; /* Mantieni blu per giorno corrente */
   background-color: rgba(59, 130, 246, 0.05) !important; /* Mantieni sfondo blu */
-  box-shadow: 0 0 0 1px #3B82F6 inset !important; /* Mantieni shadow blu */
+  box-shadow: 
+    0 0 0 1px #3B82F6 inset, /* Shadow interno blu */
+    0 0 0 3px #3B82F6 !important; /* Outline esterno blu */
+  z-index: 14 !important;
+}
+
+/* Override del pseudo-elemento verde con blu per giorno corrente selezionato */
+.fc .fc-daygrid-day.fc-day-today.fc-day-selected::before {
+  border: 3px solid #3B82F6 !important; /* Forza blu invece di verde */
+  z-index: 15;
 }
 
 /* ============================================
@@ -83,6 +128,22 @@
   border-right: 2px solid #22C55E !important;
   border-bottom: 2px solid #22C55E !important;
   border-left: 2px solid #22C55E !important;
+  box-shadow: 0 0 0 2px #22C55E !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+.fc .fc-timegrid-col.fc-day-selected::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 2px solid #22C55E;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 11;
 }
 
 .fc .fc-timegrid-col.fc-day-selected .fc-col-header-cell-cushion {
