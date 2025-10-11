@@ -163,6 +163,7 @@ export const useAuth = () => {
     queryFn: async () => {
       if (!user?.id) return null
 
+      console.log('🔗 Supabase: Caricamento user profile...')
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -170,10 +171,11 @@ export const useAuth = () => {
         .single()
 
       if (error && error.code !== 'PGRST116') {
-        console.error('❌ Errore caricamento user profile:', error)
+        console.error('❌ Supabase: Errore caricamento user profile:', error)
         return null
       }
 
+      console.log('✅ Supabase: User profile caricato', data?.role || 'guest')
       return data
     },
     enabled: !!user?.id,

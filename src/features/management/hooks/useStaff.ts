@@ -77,13 +77,19 @@ export const useStaff = () => {
     queryFn: async (): Promise<StaffMember[]> => {
       if (!companyId) throw new Error('Company ID not found')
 
+      console.log('🔗 Supabase: Caricamento staff...')
       const { data, error } = await supabase
         .from('staff')
         .select('*')
         .eq('company_id', companyId)
         .order('name', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('❌ Supabase: Errore caricamento staff:', error)
+        throw error
+      }
+
+      console.log(`✅ Supabase: ${data?.length || 0} membri staff caricati`)
       return data || []
     },
     enabled: !!companyId,

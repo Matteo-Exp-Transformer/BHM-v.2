@@ -73,11 +73,6 @@ export function EventDetailsModal({
   const [completions, setCompletions] = useState<TaskCompletion[]>([])
   const { completeTask, isCompleting, fetchCompletions } = useGenericTasks()
 
-  // DEBUG: Mostra info evento
-  console.log('🔍 EventDetailsModal - Event source:', event.source)
-  console.log('🔍 EventDetailsModal - Event type:', event.type)
-  console.log('🔍 EventDetailsModal - Full event:', event)
-
   // Carica i completamenti quando si apre la modal per una mansione
   useEffect(() => {
     const taskId = event.extendedProps?.metadata?.task_id || event.metadata?.task_id
@@ -400,11 +395,6 @@ export function EventDetailsModal({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* DEBUG INFO */}
-            <div className="px-3 py-1 bg-yellow-100 text-xs rounded">
-              Source: {event.source || 'undefined'} | Type: {event.type}
-            </div>
-
             {/* Pulsante Completa per mansioni */}
             {event.source === 'general_task' && (
               <button

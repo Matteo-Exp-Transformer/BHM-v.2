@@ -110,8 +110,7 @@ export const useGenericTasks = () => {
         return []
       }
 
-      console.log('🔧 Loading generic tasks from Supabase for company:', companyId)
-
+      console.log('🔗 Supabase: Caricamento tasks...')
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
@@ -119,14 +118,11 @@ export const useGenericTasks = () => {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('❌ Error fetching generic tasks:', error)
+        console.error('❌ Supabase: Errore caricamento tasks:', error)
         throw error
       }
 
-      console.log('✅ Loaded generic tasks from Supabase:', data?.length || 0)
-      if (data && data.length > 0) {
-        console.log('📋 Sample task:', data[0])
-      }
+      console.log(`✅ Supabase: ${data?.length || 0} tasks caricate`)
 
       return (data || []).map((task: any) => ({
         id: task.id,
