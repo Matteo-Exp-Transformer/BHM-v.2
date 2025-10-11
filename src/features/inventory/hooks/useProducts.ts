@@ -82,7 +82,7 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
         throw new Error('No company ID available')
       }
 
-      console.log('🔧 Loading products from Supabase for company:', companyId)
+      console.log('🔗 Supabase: Caricamento prodotti...')
       const { data, error } = await supabase
         .from('products')
         .select(
@@ -97,12 +97,12 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('❌ Error loading products:', error)
+        console.error('❌ Supabase: Errore caricamento prodotti:', error)
         throw error
       }
 
       const transformed = (data || []).map(transformProductRecord)
-      console.log('✅ Loaded products from Supabase:', transformed.length)
+      console.log(`✅ Supabase: ${transformed.length} prodotti caricati`)
       return transformed
     },
     enabled: !!companyId && !!user,
