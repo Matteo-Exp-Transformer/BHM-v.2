@@ -1866,9 +1866,13 @@ export const completeOnboarding = async (
       autoClose: 3000,
     })
 
-    // Reindirizza alla dashboard
+    // Reindirizza alla dashboard con reload per invalidare cache React Query
     setTimeout(() => {
       window.location.href = '/dashboard'
+      // Forza reload completo per invalidare tutta la cache
+      setTimeout(() => {
+        window.location.reload()
+      }, 100)
     }, 1000)
   } catch (error) {
     console.error('❌ Errore nel completamento automatico:', error)
