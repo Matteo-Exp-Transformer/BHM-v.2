@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search, Trash2, Download, CheckCircle, Clock } from 'lucide-react'
+import { Plus, Search, Trash2, CheckCircle, Clock, FileText } from 'lucide-react'
 import { useShoppingLists, useDeleteShoppingList } from '../hooks/useShoppingList'
+import { exportShoppingListToPDF } from '../utils/exportToPDF'
 import type { ShoppingListStatus } from '@/types/shopping'
 
 export default function ShoppingListsPage() {
@@ -26,8 +27,17 @@ export default function ShoppingListsPage() {
     }
   }
 
-  const handleExport = (listId: string) => {
-    console.log('Export list:', listId)
+  const handleExportPDF = async (listId: string) => {
+    try {
+      const result = await import('../../../services/shoppingListService')
+      const listData = await result.shoppingListService.getShoppingListById(listId)
+      if (listData.success && listData.data) {
+        exportShoppingListToPDF(listData.data)
+      }
+    } catch (error) {
+      console.error('Error exporting list:', error)
+      alert('Errore durante l\'esportazione della lista')
+    }
   }
 
   const getStatusBadge = (status: ShoppingListStatus) => {
@@ -153,11 +163,11 @@ export default function ShoppingListsPage() {
                   Visualizza
                 </button>
                 <button
-                  onClick={() => handleExport(list.id)}
-                  className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
-                  title="Esporta"
+                  onClick={() => handleExportPDF(list.id)}
+                  className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                  title="Esporta PDF"
                 >
-                  <Download className="w-4 h-4" />
+                  <FileText className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(list.id)}

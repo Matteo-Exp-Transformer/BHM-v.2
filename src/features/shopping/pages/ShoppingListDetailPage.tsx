@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, CheckCircle, Circle, Download, Trash2 } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Circle, Download, Trash2, FileText } from 'lucide-react'
 import {
   useShoppingListDetail,
   useCheckItem,
   useCompleteShoppingList,
   useDeleteShoppingList,
 } from '../hooks/useShoppingList'
+import { exportShoppingListToPDF } from '../utils/exportToPDF'
 
 export default function ShoppingListDetailPage() {
   const { listId } = useParams<{ listId: string }>()
@@ -49,7 +50,7 @@ export default function ShoppingListDetailPage() {
     }
   }
 
-  const handleExport = () => {
+  const handleExportCSV = () => {
     if (!list) return
 
     const csvContent = [
@@ -75,6 +76,11 @@ export default function ShoppingListDetailPage() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+  }
+
+  const handleExportPDF = () => {
+    if (!list) return
+    exportShoppingListToPDF(list)
   }
 
   if (isLoading) {
@@ -126,11 +132,18 @@ export default function ShoppingListDetailPage() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={handleExport}
+            onClick={handleExportPDF}
+            className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2"
+          >
+            <FileText className="w-4 h-4" />
+            PDF
+          </button>
+          <button
+            onClick={handleExportCSV}
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
-            Esporta
+            CSV
           </button>
           <button
             onClick={handleDeleteList}

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { CollapseCard } from '../../shared/components/CollapseCard'
 import { ProductSelectGrid } from './ProductSelectGrid'
-import { CreateShoppingListModal } from './CreateShoppingListModal'
+import { CreateShoppingListModalV2 } from './CreateShoppingListModalV2'
 import { useProducts } from '../../inventory/hooks/useProducts'
 
 export function ShoppingListCard() {
@@ -102,7 +102,7 @@ export function ShoppingListCard() {
         </div>
       </CollapseCard>
 
-      <CreateShoppingListModal
+      <CreateShoppingListModalV2
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         selectedProducts={selectedProducts}
