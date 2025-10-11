@@ -93,23 +93,23 @@ export const CalendarPage = () => {
 
   // ✅ Event handlers
   const onEventClick = (event: any) => {
-    console.log('Event clicked:', event)
+    // Event clicked - can add logic here if needed
   }
 
   const onEventUpdate = (event: any) => {
-    console.log('Event updated:', event)
+    // Event updated - can add logic here if needed
   }
 
   const onEventDelete = (eventId: string) => {
-    console.log('Event deleted:', eventId)
+    // Event deleted - can add logic here if needed
   }
 
   const onDateSelect = (start: Date, end: Date) => {
-    console.log('Date selected:', start, end)
+    // Date selected - can add logic here if needed
   }
 
   const createEvent = (eventData: any) => {
-    console.log('Create event:', eventData)
+    // Create event - can add logic here if needed
   }
 
   const handleCreateEvent = (eventData: any) => {

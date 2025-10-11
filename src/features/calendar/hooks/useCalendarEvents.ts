@@ -36,10 +36,7 @@ export function useCalendarEvents() {
         throw new Error('No company ID available')
       }
 
-      console.log(
-        '🔧 Loading calendar events from Supabase for company:',
-        companyId
-      )
+      // Loading calendar events from Supabase
 
       // Load maintenance tasks from Supabase and convert to calendar events
       const { data: tasks, error: tasksError } = await supabase
@@ -58,10 +55,7 @@ export function useCalendarEvents() {
         throw tasksError
       }
 
-      console.log(
-        '✅ Loaded maintenance tasks from Supabase:',
-        tasks?.length || 0
-      )
+      // Loaded maintenance tasks from Supabase
 
       // Convert maintenance tasks to calendar events
       type SupabaseMaintenanceTask = {
