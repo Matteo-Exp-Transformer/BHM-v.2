@@ -162,7 +162,7 @@ export const useGenericTasks = () => {
       }
       if (next_due) payload.next_due = next_due.toISOString()
 
-      console.log('📤 Creating task with payload:', payload)
+      // Creating task with payload
 
       const { data, error } = await supabase
         .from('tasks')
@@ -176,7 +176,7 @@ export const useGenericTasks = () => {
         throw error
       }
 
-      console.log('✅ Task created successfully:', data)
+      // Task created successfully
       return data
     },
     onSuccess: () => {

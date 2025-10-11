@@ -131,12 +131,6 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   const fullCalendarEvents = useMacroCategories
     ? macroCategoryEvents.map(event => {
-        console.log('📅 Creating calendar event:', {
-          category: event.category,
-          date: event.date,
-          itemsCount: event.items.length,
-          items: event.items
-        })
         return {
           id: `macro-${event.category}-${event.date}`,
           title: getCategoryLabel(event.category),
