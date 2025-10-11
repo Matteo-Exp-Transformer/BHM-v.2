@@ -152,7 +152,36 @@ export const useAuth = () => {
   }, [currentSessionId])
 
   // =============================================
-  // 2. Fetch User Companies (da company_members)
+  // 2. Fetch User Profile
+  // =============================================
+
+  const {
+    data: userProfile,
+    isLoading: profileLoading,
+  } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null
+
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('auth_user_id', user.id)
+        .single()
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('❌ Errore caricamento user profile:', error)
+        return null
+      }
+
+      return data
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minuti
+  })
+
+  // =============================================
+  // 3. Fetch User Companies (da company_members)
   // =============================================
 
   const {
@@ -436,7 +465,7 @@ export const useAuth = () => {
 
   return {
     // Loading states
-    isLoading: isAuthLoading,
+    isLoading: isAuthLoading || profileLoading,
     isClerkLoaded: true, // Compatibility - sempre true con Supabase
     isProfileLoading: companiesLoading,
 
@@ -448,7 +477,7 @@ export const useAuth = () => {
     // User data
     user,
     userId: user?.id || null,
-    userProfile: null, // DEPRECATED - ora usiamo company_members
+    userProfile: userProfile || null, // ✅ ORA CARICATO DAL DATABASE
     userRole,
     permissions,
     displayName,
