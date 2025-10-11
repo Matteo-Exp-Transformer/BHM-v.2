@@ -154,8 +154,8 @@ export const clearAllStorage = (): boolean => {
     
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i)
-      if (key && key.startsWith('sb-')) {
-        // Chiavi Supabase (sb-<project>-auth-token, sb-<project>-auth-token-code-verifier, etc.)
+      if (key && (key.startsWith('sb-') || key.includes('supabase-auth') || key.includes('bhm-supabase'))) {
+        // Chiavi Supabase (sb-<project>-auth-token, bhm-supabase-auth, etc.)
         keysToPreserve.push(key)
         supabaseKeys[key] = localStorage.getItem(key)
       }

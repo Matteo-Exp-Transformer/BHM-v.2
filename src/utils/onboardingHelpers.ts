@@ -667,7 +667,7 @@ export const resetOnboardingData = (): void => {
       '- Companies (aziende)\n' +
       '- Users (utenti)\n' +
       '- Company Members (associazioni)\n' +
-      '- Sessione login (rimani loggato)\n\n' +
+      '- Token di autenticazione (rimani loggato)\n\n' +
       '⚠️ ATTENZIONE: OPERAZIONE IRREVERSIBILE!\n\n' +
       'Sei sicuro di voler procedere?'
   )
@@ -721,7 +721,7 @@ export const resetAllData = async (): Promise<void> => {
       '- Companies (aziende)\n' +
       '- Users (utenti)\n' +
       '- Company Members (associazioni)\n' +
-      '- Sessione login (rimani loggato)\n\n' +
+      '- Token di autenticazione (rimani loggato)\n\n' +
       '⚠️ ATTENZIONE: OPERAZIONE IRREVERSIBILE!\n\n' +
       'Sei sicuro di voler procedere?'
   )
@@ -873,9 +873,8 @@ const clearManualData = async (): Promise<void> => {
       .delete()
       .eq('company_id', companyId)
 
-    // Pulisce localStorage
-    localStorage.removeItem('onboardingData')
-    localStorage.removeItem('haccpData')
+    // Pulisce localStorage preservando token di autenticazione
+    clearLocalStoragePreservingAuth()
 
     console.log('✅ Dati manuali rimossi')
   } catch (error) {
@@ -927,9 +926,8 @@ const clearPrefillData = async (): Promise<void> => {
       .eq('company_id', companyId)
       .in('name', ['Pollo Intero', 'Salmone Fresco', 'Mozzarella di Bufala', 'Pomodori San Marzano'])
 
-    // Pulisce localStorage
-    localStorage.removeItem('onboardingData')
-    localStorage.removeItem('haccpData')
+    // Pulisce localStorage preservando token di autenticazione
+    clearLocalStoragePreservingAuth()
 
     console.log('✅ Dati Precompila rimossi')
   } catch (error) {
@@ -960,12 +958,42 @@ const getCurrentCompanyId = async (): Promise<string | null> => {
 }
 
 /**
+ * Pulisce localStorage preservando i token di autenticazione Supabase
+ * Rimuove solo onboardingData e haccpData, mantiene token per utente loggato
+ */
+const clearLocalStoragePreservingAuth = (): void => {
+  // Salva token di autenticazione Supabase
+  const authKeys = Object.keys(localStorage).filter(key => 
+    key.startsWith('sb-') && key.includes('auth')
+  )
+  
+  const authTokens: Record<string, string> = {}
+  authKeys.forEach(key => {
+    authTokens[key] = localStorage.getItem(key) || ''
+  })
+
+  // Pulisce localStorage
+  localStorage.removeItem('onboardingData')
+  localStorage.removeItem('haccpData')
+  
+  // Ripristina token di autenticazione
+  Object.entries(authTokens).forEach(([key, value]) => {
+    if (value) {
+      localStorage.setItem(key, value)
+    }
+  })
+
+  console.log('🔒 Token di autenticazione preservati:', authKeys.length)
+}
+
+/**
  * Reset selettivo dei dati operativi di una company
  * PRESERVA: companies, users, company_members
  * CANCELLA: staff, departments, products, conservation, etc.
  */
 const resetCompanyOperationalData = async (companyId: string): Promise<void> => {
   console.log('🗑️ Reset dati operativi per company:', companyId)
+  console.log('🔒 PRESERVANDO: Token di autenticazione Supabase in localStorage')
 
   try {
     // Lista delle tabelle da pulire (solo dati configurabili nell'onboarding)
@@ -995,7 +1023,7 @@ const resetCompanyOperationalData = async (companyId: string): Promise<void> => 
 
         if (error) {
           console.warn(`⚠️ Errore pulizia ${table}:`, error.message)
-        } else {
+    } else {
           console.log(`✅ Pulito ${table}`)
         }
       } catch (err) {
@@ -1031,7 +1059,7 @@ export const resetManualData = async (): Promise<void> => {
       '- Companies (aziende)\n' +
       '- Users (utenti)\n' +
       '- Company Members (associazioni)\n' +
-      '- Sessione login (rimani loggato)\n\n' +
+      '- Token di autenticazione (rimani loggato)\n\n' +
       '⚠️ ATTENZIONE: OPERAZIONE IRREVERSIBILE!\n\n' +
       'Sei sicuro di voler procedere?'
   )
@@ -1713,8 +1741,8 @@ export const completeOnboarding = async (
             }
           }
 
-          throw new Error('Utente non autenticato. Effettua il login e riprova.')
-        }
+        throw new Error('Utente non autenticato. Effettua il login e riprova.')
+      }
 
         console.log('✅ Utente trovato via getUser:', userData.user.id)
         companyId = await resolveCompanyId(userData.user.id)
