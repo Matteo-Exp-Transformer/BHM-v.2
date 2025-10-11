@@ -20,6 +20,7 @@ import { ExpiryAlert } from './components/ExpiryAlert'
 import { CategoryFilter } from './components/CategoryFilter'
 import { ExpiredProductsManager } from './components/ExpiredProductsManager'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
+import { ShoppingListCard } from '@/features/shopping/components/ShoppingListCard'
 import {
   Product,
   ProductCategory,
@@ -220,6 +221,9 @@ export default function InventoryPage() {
           </div>
         </div>
       </div>
+
+      {/* Shopping List Card */}
+      <ShoppingListCard />
 
       {/* Search and Filters */}
       <div className="bg-white p-4 rounded-lg border border-gray-200">

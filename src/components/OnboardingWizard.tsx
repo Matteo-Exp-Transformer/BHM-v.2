@@ -64,10 +64,8 @@ const OnboardingWizard = () => {
   }, [])
 
   const handleCompleteOnboarding = useCallback(async () => {
-    if (companyId) {
-      await completeOnboardingHelper(companyId)
-    }
-  }, [companyId])
+    await completeOnboardingHelper(companyId, formData)
+  }, [companyId, formData])
 
   const handleResetOnboarding = useCallback(() => {
     resetOnboarding()

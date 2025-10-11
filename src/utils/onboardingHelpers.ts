@@ -1657,7 +1657,7 @@ export const completeOnboarding = async (
     console.log('🏢 Company ID:', companyId)
 
     // Salva tutti i dati su Supabase
-    await saveAllDataToSupabase(formData, companyId!)
+    await saveAllDataToSupabase(formData, companyId ?? null)
 
     // CRITICAL: Assicurati che user_sessions sia creata/aggiornata con il company_id corretto
     if (companyId) {
