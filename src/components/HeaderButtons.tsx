@@ -1,5 +1,5 @@
 import React from 'react'
-import { Users, RotateCcw, Bell, CheckCircle, Database, UserX, RefreshCw } from 'lucide-react'
+import { Users, RotateCcw, Bell, Database, UserX, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAlertBadge } from '@/features/calendar/hooks/useCalendarAlerts'
 import { useAggregatedEvents } from '@/features/calendar/hooks/useAggregatedEvents'
@@ -9,8 +9,6 @@ import {
   resetOnboardingData,
   resetAllData,
   resetTotAndUsers,
-  prefillOnboarding,
-  completeOnboarding,
   debugAuthState
 } from '@/utils/onboardingHelpers'
 import { manualSyncWithOtherPorts } from '@/utils/multiHostAuth'
@@ -84,40 +82,6 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
             <RefreshCw className="h-4 w-4" />
             <span className="hidden sm:inline">Sync Host</span>
             <span className="sm:hidden">Sync</span>
-          </button>
-
-          {/* Precompila */}
-          <button
-            onClick={async () => {
-              try {
-                await prefillOnboarding()
-              } catch (error) {
-                console.error('❌ Errore precompila:', error)
-              }
-            }}
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-green-600 bg-white border border-green-200 rounded-md hover:text-green-700 hover:bg-green-50 transition-colors"
-            title="Precompila onboarding con dati di test"
-          >
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Precompila</span>
-            <span className="sm:hidden">Precompila</span>
-          </button>
-
-          {/* Completa Onboarding */}
-          <button
-            onClick={async () => {
-              try {
-                await completeOnboarding()
-              } catch (error) {
-                console.error('❌ Errore completa onboarding:', error)
-              }
-            }}
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-md hover:text-blue-700 hover:bg-blue-50 transition-colors"
-            title="Completa onboarding automaticamente"
-          >
-            <CheckCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">Completa</span>
-            <span className="sm:hidden">Completa</span>
           </button>
 
           {/* Reset Manuale */}
