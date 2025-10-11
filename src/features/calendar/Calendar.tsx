@@ -17,6 +17,7 @@ import QuickActions from './components/QuickActions'
 import MacroCategoryModal from './components/MacroCategoryModal'
 import { Calendar as CalendarIcon, Filter, Plus } from 'lucide-react'
 import { useMacroCategoryEvents, type MacroCategory } from './hooks/useMacroCategoryEvents'
+import './calendar-custom.css' // ✅ Import stili personalizzati calendario
 
 interface CalendarProps {
   events: CalendarEvent[]
@@ -93,6 +94,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     date: Date
     items: any[]
   } | null>(null)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null) // ✅ Traccia giorno selezionato
 
   const { events: macroCategoryEvents } = useMacroCategoryEvents()
 
@@ -177,10 +179,25 @@ export const Calendar: React.FC<CalendarProps> = ({
     (selectInfo: { start: Date; end: Date }) => {
       const start = new Date(selectInfo.start)
       const end = new Date(selectInfo.end)
+      
+      // ✅ Aggiorna giorno selezionato
+      setSelectedDate(start)
+      
       onDateSelect?.(start, end)
     },
     [onDateSelect]
   )
+
+  // ✅ Handle click su giorno (per evidenziare il giorno selezionato)
+  const handleDayClick = useCallback((info: { date: Date; dayEl: HTMLElement }) => {
+    // Rimuovi classe da tutti i giorni
+    const allDays = document.querySelectorAll('.fc-daygrid-day')
+    allDays.forEach(day => day.classList.remove('fc-day-selected'))
+    
+    // Aggiungi classe al giorno cliccato
+    info.dayEl.classList.add('fc-day-selected')
+    setSelectedDate(info.date)
+  }, [])
 
   // Handle event drag and drop
   const handleEventDrop = useCallback(
@@ -350,6 +367,7 @@ export const Calendar: React.FC<CalendarProps> = ({
             events={fullCalendarEvents}
             eventClick={handleEventClick}
             select={handleDateSelect}
+            dateClick={handleDayClick}
             eventDrop={handleEventDrop}
             eventResize={handleEventResize}
             selectable={true}
