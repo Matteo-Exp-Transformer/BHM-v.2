@@ -48,7 +48,7 @@ export function CreateShoppingListModalV2({
     }))
   )
 
-  const { data: departments = [] } = useDepartments()
+  const { departments = [] } = useDepartments()
   const createMutation = useCreateShoppingList()
 
   const updateProductQuantity = (productId: string, quantity: number) => {
@@ -80,7 +80,7 @@ export function CreateShoppingListModalV2({
 
     return Object.entries(grouped).map(([deptId, products]) => ({
       departmentId: deptId,
-      departmentName: departments.find(d => d.id === deptId)?.name || 'Senza Reparto',
+      departmentName: departments.find((d: { id: string; name: string }) => d.id === deptId)?.name || 'Senza Reparto',
       products: products.sort((a, b) => a.name.localeCompare(b.name))
     })).sort((a, b) => a.departmentName.localeCompare(b.departmentName))
   }, [productsWithQuantity, departments])
@@ -133,7 +133,7 @@ export function CreateShoppingListModalV2({
       isOpen={isOpen}
       onClose={handleClose}
       title="Crea Lista della Spesa"
-      size="large"
+      size="xl"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

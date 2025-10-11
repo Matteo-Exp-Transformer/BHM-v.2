@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, CheckCircle, Circle, Download, Trash2, FileText } from 'lucide-react'
 import {
@@ -12,7 +11,6 @@ import { exportShoppingListToPDF } from '../utils/exportToPDF'
 export default function ShoppingListDetailPage() {
   const { listId } = useParams<{ listId: string }>()
   const navigate = useNavigate()
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
 
   const { data: list, isLoading } = useShoppingListDetail(listId)
   const checkItemMutation = useCheckItem()
