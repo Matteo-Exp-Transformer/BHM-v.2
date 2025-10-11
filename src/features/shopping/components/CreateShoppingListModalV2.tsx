@@ -104,7 +104,7 @@ export function CreateShoppingListModalV2({
       items: productsWithQuantity.map((product) => ({
         product_id: product.id,
         product_name: product.name,
-        category_name: product.category_id || 'Altro',
+        category_name: product.category_name || 'Altro',
         quantity: product.customQuantity || 1,
         unit: product.customUnit || 'pz',
       })),
