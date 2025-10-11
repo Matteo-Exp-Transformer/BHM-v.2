@@ -93,7 +93,8 @@ function App() {
 
       // Log delle funzioni disponibili
       if (!devWindow.devFunctionsLogged) {
-        console.log('%c🚀 BHM v2 - Modalità Sviluppo Attiva', 'color: #10b981; font-weight: bold; font-size: 14px;')
+        console.log('%c🚀 BHM v2 - Modalità Sviluppo Attiva (v2.1)', 'color: #10b981; font-weight: bold; font-size: 14px;')
+        console.log('🧹 Console pulita - nessun log di test presente')
         console.log('%c🔄 Funzioni Dev Disponibili:', 'color: #3b82f6; font-weight: bold;')
         console.log('  📡 syncHosts() - Sincronizza sessione con altre porte')
         console.log('  🗑️ resetManualData() - Solo dati utente manuali')
