@@ -172,17 +172,17 @@ function ProductCard({ product, isSelected, onToggle }: ProductCardProps) {
           <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
 
           <div className="mt-2 space-y-1.5">
-            {product.category_id && (
+            {product.category_name && (
               <div className="flex items-center gap-1.5 text-xs text-gray-600">
                 <span className="inline-block w-2 h-2 bg-purple-500 rounded-full" />
-                <span className="truncate">Categoria</span>
+                <span className="truncate">{product.category_name}</span>
               </div>
             )}
 
-            {product.department_id && (
+            {product.department_name && (
               <div className="flex items-center gap-1.5 text-xs text-gray-600">
                 <span className="inline-block w-2 h-2 bg-green-500 rounded-full" />
-                <span className="truncate">Reparto</span>
+                <span className="truncate">{product.department_name}</span>
               </div>
             )}
 

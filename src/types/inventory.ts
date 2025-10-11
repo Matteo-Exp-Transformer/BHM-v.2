@@ -5,8 +5,11 @@ export interface Product {
   company_id: string
   name: string // Required
   category_id?: string
+  category_name?: string
   department_id?: string
+  department_name?: string
   conservation_point_id?: string
+  conservation_point_name?: string
 
   // Identification
   barcode?: string
