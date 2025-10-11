@@ -1,5 +1,6 @@
-import { CheckCircle, AlertTriangle, Clock, TrendingUp, LogOut } from 'lucide-react'
+import { CheckCircle, AlertTriangle, Clock, TrendingUp, LogOut, GitBranch } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { useGitInfo } from '@/hooks/useGitInfo'
 import { useConservationPoints } from '@/features/conservation/hooks/useConservationPoints'
 import { useProducts } from '@/features/inventory/hooks/useProducts'
 import { useCalendarEvents } from '@/features/calendar/hooks/useCalendarEvents'
@@ -7,6 +8,7 @@ import { useNavigate } from 'react-router-dom'
 
 const HomePage = () => {
   const { user, displayName, signOut } = useAuth()
+  const { branch, environment, isDevelopment } = useGitInfo()
   const navigate = useNavigate()
 
   // Load real data from hooks
@@ -94,6 +96,17 @@ const HomePage = () => {
           <div className="text-right">
             <p className="text-sm font-medium text-gray-900">{displayName}</p>
             <p className="text-xs text-gray-500">{user?.email}</p>
+            {/* Branch indicator */}
+            <div className="flex items-center gap-1 mt-1">
+              <GitBranch className="h-3 w-3 text-blue-500" />
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                isDevelopment 
+                  ? 'bg-blue-100 text-blue-700' 
+                  : 'bg-green-100 text-green-700'
+              }`}>
+                {branch}
+              </span>
+            </div>
           </div>
           <button
             onClick={async () => {

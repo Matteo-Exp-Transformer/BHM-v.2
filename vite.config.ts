@@ -6,6 +6,11 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    // ✅ Inietta info Git come variabili ambiente
+    'import.meta.env.VITE_GIT_BRANCH': JSON.stringify(process.env.GIT_BRANCH || 'NoClerk'),
+    'import.meta.env.VITE_GIT_COMMIT': JSON.stringify(process.env.GIT_COMMIT || 'unknown'),
+  },
   plugins: [
     react(),
     ...(process.env.SENTRY_AUTH_TOKEN
