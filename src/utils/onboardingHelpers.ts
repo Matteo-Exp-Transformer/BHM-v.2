@@ -1630,21 +1630,46 @@ export const completeOnboarding = async (
 
     if (!companyId) {
       // Prova a recuperare il company_id dall'utente autenticato (Supabase Auth)
+      console.log('🔍 Cercando sessione utente...')
+
       // Prima verifica la sessione
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      console.log('📊 getSession result:', { session: sessionData.session, error: sessionError })
 
-      if (!session?.user?.id) {
+      if (!sessionData.session?.user?.id) {
         // Fallback: prova getUser()
-        const { data: { user } } = await supabase.auth.getUser()
+        console.log('🔍 Fallback a getUser()...')
+        const { data: userData, error: userError } = await supabase.auth.getUser()
+        console.log('📊 getUser result:', { user: userData.user, error: userError })
 
-        if (!user?.id) {
+        if (!userData.user?.id) {
           console.error('❌ Nessuna sessione o utente trovato')
+
+          // Debug: verifica localStorage
+          const storageKey = 'bhm-supabase-auth'
+          const authToken = localStorage.getItem(storageKey)
+          console.log('🔑 LocalStorage auth token:', authToken ? 'PRESENTE' : 'ASSENTE')
+          if (authToken) {
+            try {
+              const parsed = JSON.parse(authToken)
+              console.log('🔑 Token parsed:', {
+                hasAccessToken: !!parsed?.access_token,
+                hasUser: !!parsed?.user,
+                expiresAt: parsed?.expires_at
+              })
+            } catch (e) {
+              console.error('❌ Errore parsing token:', e)
+            }
+          }
+
           throw new Error('Utente non autenticato. Effettua il login e riprova.')
         }
 
-        companyId = await resolveCompanyId(user.id)
+        console.log('✅ Utente trovato via getUser:', userData.user.id)
+        companyId = await resolveCompanyId(userData.user.id)
       } else {
-        companyId = await resolveCompanyId(session.user.id)
+        console.log('✅ Sessione trovata:', sessionData.session.user.id)
+        companyId = await resolveCompanyId(sessionData.session.user.id)
       }
     }
 
