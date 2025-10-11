@@ -24,9 +24,6 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
   onOpenOnboarding,
   showDevButtons = false,
 }) => {
-  // DEBUG: Log showDevButtons value
-  console.log('🔍 HeaderButtons: showDevButtons =', showDevButtons)
-
   // ✅ Alert badge logic
   const { events } = useAggregatedEvents()
   const { filteredEvents } = useFilteredEvents(events)
@@ -92,7 +89,6 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
           {/* Precompila */}
           <button
             onClick={async () => {
-              console.log('🔘 HeaderButtons: Click su Precompila')
               try {
                 await prefillOnboarding()
               } catch (error) {
@@ -110,7 +106,6 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
           {/* Completa Onboarding */}
           <button
             onClick={async () => {
-              console.log('🔘 HeaderButtons: Click su Completa Onboarding')
               try {
                 await completeOnboarding()
               } catch (error) {

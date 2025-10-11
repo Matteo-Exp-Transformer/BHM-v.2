@@ -286,15 +286,17 @@ export const acceptInvite = async (
 
     console.log('✅ Account Supabase creato:', authData.user.id)
 
-    // 3. Crea record in company_members
+    // 3. Crea record in company_members (usa upsert per prevenire duplicati)
     const { error: memberError } = await supabase
       .from('company_members')
-      .insert({
+      .upsert({
         user_id: authData.user.id,
         company_id: invite.company_id,
         role: invite.role,
         staff_id: invite.staff_id,
         is_active: true,
+      }, {
+        onConflict: 'user_id,company_id'
       })
 
     if (memberError) {
