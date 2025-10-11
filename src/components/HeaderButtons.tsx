@@ -76,7 +76,7 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
 
           {/* Precompila */}
           <button
-            onClick={prefillOnboarding}
+            onClick={() => prefillOnboarding()}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-green-600 bg-white border border-green-200 rounded-md hover:text-green-700 hover:bg-green-50 transition-colors"
             title="Precompila onboarding con dati di test"
           >
@@ -87,7 +87,7 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
 
           {/* Completa Onboarding */}
           <button
-            onClick={completeOnboarding}
+            onClick={() => completeOnboarding()}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-md hover:text-blue-700 hover:bg-blue-50 transition-colors"
             title="Completa onboarding automaticamente"
           >
@@ -98,7 +98,7 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
 
           {/* Reset Manuale */}
           <button
-            onClick={resetManualData}
+            onClick={() => resetManualData()}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-yellow-600 bg-white border border-yellow-200 rounded-md hover:text-yellow-700 hover:bg-yellow-50 transition-colors"
             title="Reset Manuale - Solo dati utente manuali"
           >
@@ -109,7 +109,7 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
 
           {/* Reset Onboarding */}
           <button
-            onClick={resetOnboardingData}
+            onClick={() => resetOnboardingData()}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-orange-600 bg-white border border-orange-200 rounded-md hover:text-orange-700 hover:bg-orange-50 transition-colors"
             title="Reset Onboarding - Solo dati Precompila"
           >
@@ -120,7 +120,7 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
 
           {/* Reset All Data */}
           <button
-            onClick={resetAllData}
+            onClick={() => resetAllData()}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-md hover:text-red-700 hover:bg-red-50 transition-colors"
             title="Reset All Data - Tutti i dati"
           >
@@ -131,7 +131,7 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
 
           {/* Reset Tot+Utenti */}
           <button
-            onClick={resetTotAndUsers}
+            onClick={() => resetTotAndUsers()}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-800 bg-white border border-red-300 rounded-md hover:text-red-900 hover:bg-red-50 transition-colors"
             title="Reset Tot+Utenti - Tutto + utenti + token"
           >
