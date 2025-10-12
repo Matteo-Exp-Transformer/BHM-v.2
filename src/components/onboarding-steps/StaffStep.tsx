@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Plus, Trash2, Edit2, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { Plus, Trash2, Edit2, ShieldAlert, ShieldCheck, Lock } from 'lucide-react'
 
 import { useScrollToForm } from '@/hooks/useScrollToForm'
+import { useAuth } from '@/hooks/useAuth'
 
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -55,6 +56,7 @@ const StaffStep = ({
   onUpdate,
   onValidChange,
 }: StaffStepProps) => {
+  const { user } = useAuth() // Ottieni utente loggato
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>(data || [])
   const [formData, setFormData] = useState<StaffStepFormData>({ ...EMPTY_FORM })
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -64,6 +66,25 @@ const StaffStep = ({
     Boolean(editingId),
     'staff-step-form'
   )
+
+  // Identifica se stiamo editando il primo membro (utente corrente)
+  const isEditingCurrentUser = useMemo(() => {
+    if (!editingId || staffMembers.length === 0) return false
+    const firstMember = staffMembers[0]
+    return editingId === firstMember.id
+  }, [editingId, staffMembers])
+
+  // ⚠️ NUOVO: Precompila automaticamente email e ruolo per il primo membro
+  useEffect(() => {
+    // Se non ci sono membri E non stiamo editando, precompila con dati utente corrente
+    if (staffMembers.length === 0 && !editingId && user?.email) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email || '',
+        role: 'admin', // Primo membro è sempre admin
+      }))
+    }
+  }, [staffMembers.length, editingId, user])
 
   useEffect(() => {
     onUpdate(staffMembers)
@@ -229,16 +250,19 @@ const StaffStep = ({
             </p>
           )}
 
-          {staffMembers.map(member => {
+              {staffMembers.map((member, index) => {
             const requiresHaccp = member.categories.some(category =>
               HACCP_CERT_REQUIRED_CATEGORIES.includes(category)
             )
             const expiryStatus = getHaccpExpiryStatus(member.haccpExpiry)
+            const isFirstMember = index === 0 // Il primo membro è l'utente corrente
 
             return (
               <article
                 key={member.id}
-                className="grid gap-4 px-4 py-3 md:grid-cols-[1fr_auto] md:items-start"
+                className={`grid gap-4 px-4 py-3 md:grid-cols-[1fr_auto] md:items-start ${
+                  isFirstMember ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                }`}
               >
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
@@ -246,6 +270,11 @@ const StaffStep = ({
                       {member.fullName}
                     </h4>
                     <Badge>{member.role}</Badge>
+                    {isFirstMember && (
+                      <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300">
+                        👤 Tu (Admin)
+                      </Badge>
+                    )}
                   </div>
 
                   <div className="flex flex-wrap gap-2 text-xs text-gray-600">
@@ -323,14 +352,22 @@ const StaffStep = ({
                   >
                     <Edit2 className="h-4 w-4" aria-hidden />
                   </Button>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => handleDeleteMember(member.id)}
-                    aria-label="Elimina membro"
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden />
-                  </Button>
+                  {!isFirstMember && (
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => handleDeleteMember(member.id)}
+                      aria-label="Elimina membro"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden />
+                    </Button>
+                  )}
+                  {isFirstMember && (
+                    <div className="flex items-center gap-1 px-3 py-2 text-xs text-blue-600">
+                      <Lock className="h-3 w-3" />
+                      Non eliminabile
+                    </div>
+                  )}
                 </div>
               </article>
             )
@@ -347,11 +384,31 @@ const StaffStep = ({
           <h3 className="text-lg font-semibold text-gray-900">
             {editingId
               ? 'Modifica membro dello staff'
-              : 'Aggiungi nuovo membro'}
+              : staffMembers.length === 0
+                ? '👤 Primo Membro: Amministratore (Tu)'
+                : 'Aggiungi nuovo membro'}
           </h3>
           <p className="text-sm text-gray-500">
-            Compila i campi obbligatori per registrare il personale. Le
-            certificazioni HACCP sono richieste solo per le categorie operative.
+            {staffMembers.length === 0 ? (
+              <>
+                Il <strong>primo membro</strong> sei tu come <strong>Amministratore</strong>. 
+                La tua email è già precompilata. Completa i dati mancanti (nome, cognome, telefono).
+                <br />
+                <span className="text-blue-600 font-medium">
+                  ⚠️ Non riceverai email di invito (sei già registrato).
+                </span>
+              </>
+            ) : isEditingCurrentUser ? (
+              <>
+                Stai modificando i <strong>tuoi dati</strong> come amministratore. 
+                Email e ruolo non possono essere modificati.
+              </>
+            ) : (
+              <>
+                Compila i campi per aggiungere un altro membro. 
+                Il sistema invierà automaticamente un'<strong>email di invito</strong> all'indirizzo inserito.
+              </>
+            )}
           </p>
         </header>
 
@@ -394,7 +451,14 @@ const StaffStep = ({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="staff-email">Email</Label>
+              <Label htmlFor="staff-email">
+                Email {staffMembers.length === 0 && '*'}
+                {(staffMembers.length === 0 || isEditingCurrentUser) && (
+                  <span className="ml-2 text-xs text-blue-600 font-normal">
+                    (La tua email)
+                  </span>
+                )}
+              </Label>
               <Input
                 id="staff-email"
                 type="email"
@@ -404,9 +468,21 @@ const StaffStep = ({
                 }
                 placeholder="email@azienda.it"
                 aria-invalid={Boolean(errors.email)}
+                readOnly={staffMembers.length === 0 || isEditingCurrentUser}
+                disabled={staffMembers.length === 0 || isEditingCurrentUser}
+                className={
+                  staffMembers.length === 0 || isEditingCurrentUser
+                    ? 'bg-blue-50 border-blue-200 cursor-not-allowed'
+                    : ''
+                }
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
+              {(staffMembers.length === 0 || isEditingCurrentUser) && (
+                <p className="mt-1 text-xs text-blue-600">
+                  🔒 Email precompilata dall'account con cui hai effettuato il login
+                </p>
               )}
             </div>
             <div>
@@ -428,24 +504,47 @@ const StaffStep = ({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="staff-role">Ruolo *</Label>
-              <Select
-                value={formData.role}
-                onValueChange={value =>
-                  setFormData(prev => ({ ...prev, role: value as StaffRole }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona ruolo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {STAFF_ROLES.map(role => (
-                    <SelectOption key={role.value} value={role.value}>
-                      {role.label}
-                    </SelectOption>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="staff-role">
+                Ruolo *
+                {(staffMembers.length === 0 || isEditingCurrentUser) && (
+                  <span className="ml-2 text-xs text-blue-600 font-normal">
+                    (Amministratore)
+                  </span>
+                )}
+              </Label>
+              {staffMembers.length === 0 || isEditingCurrentUser ? (
+                // Primo membro: ruolo fisso "admin"
+                <div className="relative">
+                  <Input
+                    value="Amministratore"
+                    readOnly
+                    disabled
+                    className="bg-blue-50 border-blue-200 cursor-not-allowed"
+                  />
+                  <p className="mt-1 text-xs text-blue-600">
+                    🔒 Il primo membro è sempre Amministratore
+                  </p>
+                </div>
+              ) : (
+                // Altri membri: ruolo selezionabile
+                <Select
+                  value={formData.role}
+                  onValueChange={value =>
+                    setFormData(prev => ({ ...prev, role: value as StaffRole }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona ruolo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STAFF_ROLES.map(role => (
+                      <SelectOption key={role.value} value={role.value}>
+                        {role.label}
+                      </SelectOption>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             <div>
               <Label>Categorie *</Label>

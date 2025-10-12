@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Wrench, ClipboardList, Package, ChevronRight, Calendar, User, Clock, AlertCircle, Check } from 'lucide-react'
+import { X, Wrench, ClipboardList, Package, ChevronRight, Calendar, User, Clock, AlertCircle, Check, RotateCcw, AlertTriangle } from 'lucide-react'
 import type { MacroCategory, MacroCategoryItem } from '../hooks/useMacroCategoryEvents'
 import { useGenericTasks } from '../hooks/useGenericTasks'
 import { useQueryClient } from '@tanstack/react-query'
@@ -66,10 +66,11 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   date,
 }) => {
   const [selectedItem, setSelectedItem] = useState<MacroCategoryItem | null>(null)
-  const { completeTask, isCompleting } = useGenericTasks()
+  const { completeTask, uncompleteTask, isCompleting, isUncompleting } = useGenericTasks()
   const queryClient = useQueryClient()
   const { companyId, user } = useAuth()
   const [isCompletingMaintenance, setIsCompletingMaintenance] = useState(false)
+
 
   const handleCompleteMaintenance = async (maintenanceId: string) => {
     if (!companyId || !user) {
@@ -92,11 +93,13 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
       if (error) throw error
 
       // Invalida le query per ricaricare
-      queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
-      queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] })
+      await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
+      await queryClient.invalidateQueries({ queryKey: ['maintenance-tasks', companyId] })
+      await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
 
       toast.success('Manutenzione completata')
       setSelectedItem(null)
+      // Non serve più window.location.reload() - React Query gestisce l'aggiornamento
     } catch (error) {
       console.error('Error completing maintenance:', error)
       toast.error('Errore nel completamento della manutenzione')
@@ -112,6 +115,35 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   const handleItemClick = (item: MacroCategoryItem) => {
     setSelectedItem(selectedItem?.id === item.id ? null : item)
   }
+
+  // Separa gli items in attivi e completati
+  const activeItems = items.filter(i => i.status !== 'completed')
+  const completedItems = items.filter(i => i.status === 'completed')
+
+  // Calcola le date per determinare "in ritardo"
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const selectedDate = new Date(date)
+  selectedDate.setHours(0, 0, 0, 0)
+  
+  // Data 1 settimana fa (7 giorni prima di oggi)
+  const oneWeekAgo = new Date(now)
+  oneWeekAgo.setDate(now.getDate() - 7)
+  
+  // Ieri (1 giorno prima di oggi)
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+
+  // Attività in ritardo: non completate, da 1 settimana fa fino a ieri (escluso oggi)
+  const overdueItems = items.filter(i => {
+    if (i.status === 'completed') return false
+    const itemDate = new Date(i.dueDate)
+    itemDate.setHours(0, 0, 0, 0)
+    // In ritardo se: data >= 1 settimana fa E data <= ieri (quindi < oggi)
+    return itemDate >= oneWeekAgo && itemDate < now
+  })
+  
+  const shouldShowOverdue = overdueItems.length > 0
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -142,20 +174,22 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
           <div className="flex items-center space-x-4">
             <div className={`px-4 py-2 ${config.iconBgColor} rounded-lg`}>
               <span className="text-sm font-medium text-gray-700">
-                Totale: <span className={`font-bold ${config.textColor}`}>{items.length}</span>
+                Attive: <span className={`font-bold ${config.textColor}`}>{activeItems.length}</span>
               </span>
             </div>
-            <div className="px-4 py-2 bg-red-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">
-                In Ritardo: <span className="font-bold text-red-700">
-                  {items.filter(i => i.status === 'overdue').length}
+            {shouldShowOverdue && (
+              <div className="px-4 py-2 bg-red-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">
+                  In Ritardo: <span className="font-bold text-red-700">
+                    {overdueItems.length}
+                  </span>
                 </span>
-              </span>
-            </div>
-            <div className="px-4 py-2 bg-yellow-50 rounded-lg">
+              </div>
+            )}
+            <div className="px-4 py-2 bg-green-50 rounded-lg">
               <span className="text-sm font-medium text-gray-700">
-                In Attesa: <span className="font-bold text-yellow-700">
-                  {items.filter(i => i.status === 'pending').length}
+                Completate: <span className="font-bold text-green-700">
+                  {completedItems.length}
                 </span>
               </span>
             </div>
@@ -169,8 +203,16 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
               <p className="text-gray-500">Nessuna attività per questa data</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {items.map((item) => (
+            <>
+              {/* Sezione Attività Attive */}
+              {activeItems.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center px-4">
+                    <Clock className="h-5 w-5 mr-2" />
+                    {category === 'maintenance' ? 'Manutenzioni Attive' : 'Mansioni/Attività Attive'}
+                  </h3>
+                  <div className="space-y-4">
+                    {activeItems.map((item) => (
                 <div key={item.id} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
                   <div
                     className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
@@ -337,24 +379,50 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
 
                         {/* Pulsante Completa per mansioni e manutenzioni */}
                         {(category === 'generic_tasks' || category === 'maintenance') && (
-                          <div className="pt-4 border-t border-gray-200 mt-4">
+                          <div className="pt-4 border-t-2 border-green-400 mt-4 bg-green-50 p-4 rounded-lg">
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+
                                 if (category === 'maintenance') {
                                   handleCompleteMaintenance(item.id)
                                 } else {
-                                  completeTask(
-                                    { taskId: item.id },
-                                    {
-                                      onSuccess: () => {
-                                        // Invalida tutte le query per ricaricare i dati
-                                        queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
-                                        queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
-                                        queryClient.invalidateQueries({ queryKey: ['task-completions'] })
+                                  // Verifica se il task è del giorno corrente
+                                  const today = new Date()
+                                  today.setHours(0, 0, 0, 0)
+                                  
+                                  const taskDate = new Date(item.dueDate)
+                                  taskDate.setHours(0, 0, 0, 0)
 
-                                        // Chiudi il dettaglio dopo il completamento
+                                  if (today.getTime() !== taskDate.getTime()) {
+                                    const taskDateStr = taskDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })
+                                    toast.warning(`⚠️ Puoi completare solo le mansioni del giorno corrente!\nQuesta mansione è del ${taskDateStr}.`, {
+                                      autoClose: 5000
+                                    })
+                                    return
+                                  }
+
+                                  const taskId = item.metadata.taskId || item.id
+                                  completeTask(
+                                    { taskId: taskId },
+                                    {
+                                      onSuccess: async () => {
+                                        await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
+                                        await queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
+                                        await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
+                                        await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
+
+                                        toast.success('Mansione completata!')
                                         setSelectedItem(null)
+                                        
+                                        // Chiudi e riapri il pannello per mostrare le modifiche
+                                        onClose()
                                       },
+                                      onError: (error) => {
+                                        console.error('Error completing task:', error)
+                                        toast.error('Errore nel completamento')
+                                      }
                                     }
                                   )
                                 }
@@ -371,8 +439,326 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Sezione Attività in Ritardo */}
+              {overdueItems.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center px-4">
+                    <AlertTriangle className="h-5 w-5 mr-2 text-red-600" />
+                    {category === 'maintenance' ? 'Manutenzioni in Ritardo' : 'Mansioni/Attività in Ritardo'}
+                    <span className="ml-2 text-sm text-red-600">
+                      (da 1 settimana fa fino a ieri)
+                    </span>
+                  </h3>
+                  <div className="space-y-4">
+                    {overdueItems.map((item) => (
+                      <div key={item.id} className="bg-red-50 border-2 border-red-300 rounded-lg shadow-md overflow-hidden">
+                        <div
+                          className="p-4 hover:bg-red-100 cursor-pointer transition-colors"
+                          onClick={() => handleItemClick(item)}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <h3 className="text-lg font-semibold text-gray-900 truncate">
+                                  ⚠️ {item.title}
+                                </h3>
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-800">
+                                  IN RITARDO
+                                </span>
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${priorityConfig[item.priority].color}`}>
+                                  {priorityConfig[item.priority].icon} {priorityConfig[item.priority].label}
+                                </span>
+                              </div>
+
+                              {item.description && (
+                                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                  {item.description}
+                                </p>
+                              )}
+
+                              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                                {item.frequency && (
+                                  <div className="flex items-center space-x-1">
+                                    <Clock className="h-4 w-4" />
+                                    <span className="font-medium">Frequenza:</span>
+                                    <span className="capitalize">{item.frequency}</span>
+                                  </div>
+                                )}
+
+                                {(item.assignedTo || item.assignedToRole || item.assignedToCategory) && (
+                                  <div className="flex items-center space-x-1">
+                                    <User className="h-4 w-4" />
+                                    <span className="font-medium">Assegnato a:</span>
+                                    <span>
+                                      {item.assignedToStaffId ? 'Dipendente specifico' :
+                                       item.assignedToRole ? item.assignedToRole :
+                                       item.assignedToCategory ? item.assignedToCategory :
+                                       item.assignedTo || 'Non assegnato'}
+                                    </span>
+                                  </div>
+                                )}
+
+                                <div className="flex items-center space-x-1">
+                                  <Calendar className="h-4 w-4" />
+                                  <span className="font-medium">Scadenza:</span>
+                                  <span className="text-red-700 font-semibold">
+                                    {item.dueDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <ChevronRight className={`h-5 w-5 text-gray-400 transition-transform ${selectedItem?.id === item.id ? 'rotate-90' : ''}`} />
+                          </div>
+                        </div>
+
+                        {selectedItem?.id === item.id && (
+                          <div className="border-t-2 border-red-300 bg-red-50 p-4">
+                            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                              <AlertCircle className="h-4 w-4 mr-2" />
+                              Dettagli
+                            </h4>
+                            <div className="space-y-3 text-sm">
+                              <div>
+                                <span className="font-medium text-gray-700">Descrizione completa:</span>
+                                <p className="text-gray-600 mt-1 whitespace-pre-wrap">
+                                  {item.description || 'Nessuna descrizione'}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-700">ID Attività:</span>
+                                <p className="text-gray-600 mt-1 font-mono text-xs">
+                                  {item.id}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Pulsante Completa per mansioni in ritardo */}
+                            {(category === 'generic_tasks' || category === 'maintenance') && (
+                              <div className="pt-4 border-t-2 border-red-400 mt-4 bg-red-100 p-4 rounded-lg">
+                                <p className="text-xs text-red-800 mb-3 text-center font-medium">
+                                  ⚠️ Questa attività è in ritardo. Completala al più presto!
+                                </p>
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+
+                                    if (category === 'maintenance') {
+                                      handleCompleteMaintenance(item.id)
+                                    } else {
+                                      // Verifica se il task è del giorno corrente
+                                      const today = new Date()
+                                      today.setHours(0, 0, 0, 0)
+                                      
+                                      const taskDate = new Date(item.dueDate)
+                                      taskDate.setHours(0, 0, 0, 0)
+
+                                      if (today.getTime() !== taskDate.getTime()) {
+                                        const taskDateStr = taskDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })
+                                        toast.warning(`⚠️ Puoi completare solo le mansioni del giorno corrente!\nQuesta mansione è del ${taskDateStr}.`, {
+                                          autoClose: 5000
+                                        })
+                                        return
+                                      }
+
+                                      const taskId = item.metadata.taskId || item.id
+                                      completeTask(
+                                        { taskId: taskId },
+                                        {
+                                          onSuccess: async () => {
+                                            await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
+                                            await queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
+                                            await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
+                                            await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
+
+                                            toast.success('Mansione completata!')
+                                            setSelectedItem(null)
+                                            
+                                            // Chiudi e riapri il pannello per mostrare le modifiche
+                                            onClose()
+                                          },
+                                          onError: (error) => {
+                                            console.error('Error completing task:', error)
+                                            toast.error('Errore nel completamento')
+                                          }
+                                        }
+                                      )
+                                    }
+                                  }}
+                                  disabled={isCompleting || isCompletingMaintenance}
+                                  className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <Check className="w-5 h-5" />
+                                  {(isCompleting || isCompletingMaintenance) ? 'Completando...' : category === 'maintenance' ? 'Completa Manutenzione' : 'Completa Mansione in Ritardo'}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Sezione Attività Completate */}
+              {completedItems.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center px-4">
+                    <Check className="h-5 w-5 mr-2 text-green-600" />
+                    {category === 'maintenance' ? 'Manutenzioni Completate' : 'Mansioni/Attività Completate'}
+                  </h3>
+                  <div className="space-y-4">
+                    {completedItems.map((item) => (
+                      <div key={item.id} className="bg-green-50 border border-green-200 rounded-lg shadow-sm overflow-hidden opacity-75">
+                        <div
+                          className="p-4 hover:bg-green-100 cursor-pointer transition-colors"
+                          onClick={() => handleItemClick(item)}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                ✅ {item.title}
+                              </h3>
+                            </div>
+                          </div>
+                        </div>
+
+                        {selectedItem?.id === item.id && (
+                          <div className="border-t border-green-200 bg-green-50 p-4">
+                            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                              <AlertCircle className="h-4 w-4 mr-2" />
+                              Dettagli
+                            </h4>
+                            <div className="space-y-3 text-sm">
+                              {/* Informazioni di completamento */}
+                              {item.metadata.completedAt && (
+                                <div className="bg-green-100 p-3 rounded-lg border border-green-300">
+                                  <h5 className="font-semibold text-green-900 mb-2 flex items-center">
+                                    <Check className="h-4 w-4 mr-2" />
+                                    Log Completamento
+                                  </h5>
+                                  <div className="space-y-1 text-xs text-green-800">
+                                    <div className="flex items-center">
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      <span className="font-medium">Completata il:</span>
+                                      <span className="ml-1">
+                                        {new Date(item.metadata.completedAt).toLocaleString('it-IT', {
+                                          day: '2-digit',
+                                          month: 'long',
+                                          year: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit'
+                                        })}
+                                      </span>
+                                    </div>
+                                    {(item.metadata.completedBy || item.metadata.completedByName) && (
+                                      <div className="flex items-center">
+                                        <User className="h-3 w-3 mr-1" />
+                                        <span className="font-medium">Completata da:</span>
+                                        <span className="ml-1">
+                                          {item.metadata.completedByName || 
+                                           (item.metadata.completedBy ? `ID: ${item.metadata.completedBy.substring(0, 8)}...` : 'Sconosciuto')}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Note completamento */}
+                              {item.metadata.completionNotes && (
+                                <div>
+                                  <span className="font-medium text-gray-700">Note completamento:</span>
+                                  <p className="text-gray-600 mt-1 whitespace-pre-wrap bg-gray-50 p-2 rounded">
+                                    {item.metadata.completionNotes}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Note task */}
+                              {item.metadata.notes && (
+                                <div>
+                                  <span className="font-medium text-gray-700">Descrizione task:</span>
+                                  <p className="text-gray-600 mt-1 whitespace-pre-wrap">
+                                    {item.metadata.notes}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Pulsante Ripristina per mansioni completate */}
+                            {category === 'generic_tasks' && (() => {
+                              const canUncomplete = item.metadata.completedBy === user?.id
+                              
+                              return (
+                                <div className="pt-4 border-t-2 border-yellow-400 mt-4 bg-yellow-50 p-4 rounded-lg">
+                                  {canUncomplete ? (
+                                    <>
+                                      <button
+                                        onClick={(e) => {
+                                          e.preventDefault()
+                                          e.stopPropagation()
+
+                                          const taskId = item.metadata.taskId || item.id
+                                          uncompleteTask(
+                                            { taskId: taskId },
+                                            {
+                                              onSuccess: async () => {
+                                                await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
+                                                await queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
+                                                await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
+                                                await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
+                                                setSelectedItem(null)
+                                                
+                                                // Chiudi e riapri il pannello per mostrare le modifiche
+                                                onClose()
+                                              },
+                                              onError: (error) => {
+                                                console.error('Error uncompleting task:', error)
+                                              }
+                                            }
+                                          )
+                                        }}
+                                        disabled={isUncompleting}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                      >
+                                        <RotateCcw className="w-5 h-5" />
+                                        {isUncompleting ? 'Ripristinando...' : 'Ripristina come "Da Completare"'}
+                                      </button>
+                                      <p className="text-xs text-gray-600 mt-2 text-center">
+                                        ⚠️ Questo annullerà il completamento della mansione
+                                      </p>
+                                    </>
+                                  ) : (
+                                    <div className="text-center p-4 bg-gray-100 rounded-lg border-2 border-gray-300">
+                                      <p className="text-sm font-medium text-gray-700 mb-2">
+                                        🔒 Ripristino non autorizzato
+                                      </p>
+                                      <p className="text-xs text-gray-600">
+                                        Solo l'utente che ha completato questa mansione può ripristinarla.
+                                        {item.metadata.completedByName && (
+                                          <><br />Completata da: <strong>{item.metadata.completedByName}</strong></>
+                                        )}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })()}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

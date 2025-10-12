@@ -53,11 +53,20 @@ const OnboardingWizard = () => {
   }, [])
 
   // Gestori per i pulsanti di controllo
-  const handlePrefillOnboarding = useCallback(() => {
+  const handlePrefillOnboarding = useCallback(async () => {
     try {
-      const data = getPrefillData()
-      setFormData(data as OnboardingData)
-      toast.success('Dati precompilati caricati!')
+      // ⚠️ NUOVO: prefillOnboarding è ora async (usa email utente corrente)
+      await import('@/utils/onboardingHelpers').then(async (module) => {
+        await module.prefillOnboarding()
+      })
+      
+      // Ricarica i dati da localStorage
+      const savedData = localStorage.getItem('onboarding-data')
+      if (savedData) {
+        const parsed = JSON.parse(savedData)
+        setFormData(parsed)
+        toast.success('Dati precompilati caricati con la tua email!')
+      }
     } catch (error) {
       console.error('Error prefilling onboarding:', error)
       toast.error('Errore durante la precompilazione')

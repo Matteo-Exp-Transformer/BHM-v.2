@@ -4,6 +4,7 @@ import { AllergenType } from '@/types/inventory'
 import type { OnboardingData } from '@/types/onboarding'
 import { supabase } from '@/lib/supabase/client'
 import { createInviteToken, sendInviteEmail } from '@/services/auth/inviteService'
+import { getCompanyIdForOnboarding, hasDevCompany } from './devCompanyHelper'
 
 // Funzione per generare UUID validi (RFC 4122 v4)
 const generateUUID = (): string => {
@@ -167,39 +168,11 @@ export const getPrefillData = (): OnboardingData => {
     return dept?.id || ''
   }
 
+  // ⚠️ IMPORTANTE: Il PRIMO membro è sempre l'admin che sta facendo l'onboarding
+  // Questo membro NON riceverà invito (è già registrato)
+  // Gli altri membri riceveranno inviti automatici
   const staff = [
-    // ⏸️ TEMPORANEAMENTE COMMENTATI - Solo Paolo Dettori visibile per testing
-    // {
-    //   id: generateId(),
-    //   name: 'Matteo',
-    //   surname: 'Cavallaro',
-    //   fullName: 'Matteo Cavallaro',
-    //   role: 'responsabile' as const,
-    //   categories: ['Banconisti'],
-    //   email: 'Neo@gmail.com',
-    //   phone: '3334578536',
-    //   department_assignments: getAllDepartmentIds(), // Tutti i reparti
-    //   haccpExpiry: '2025-10-01',
-    //   notes: 'Responsabile con accesso a tutti i reparti',
-    // },
-    // {
-    //   id: generateId(),
-    //   name: 'Fabrizio',
-    //   surname: 'Dettori',
-    //   fullName: 'Fabrizio Dettori',
-    //   role: 'admin' as const,
-    //   categories: ['Amministratore'],
-    //   email: 'Fabri@gmail.com',
-    //   phone: '3334578535',
-    //   department_assignments: getDepartmentIds([
-    //     'Sala',
-    //     'Sala B',
-    //     'Deoor',
-    //     'Plonge',
-    //   ]), // Sala + Sala B + Deoor + Plonge
-    //   haccpExpiry: '2026-10-01',
-    //   notes: 'Amministratore con accesso a Sala, Sala B, Deoor e Plonge',
-    // },
+    // 1️⃣ PRIMO MEMBRO: Admin che sta creando l'azienda (Paolo)
     {
       id: generateId(),
       name: 'Paolo',
@@ -207,44 +180,77 @@ export const getPrefillData = (): OnboardingData => {
       fullName: 'Paolo Dettori',
       role: 'admin' as const,
       categories: ['Cuochi', 'Amministratore'],
-      email: '0cavuz0@gmail.com',
+      email: 'matteo.cavallaro.work@gmail.com',
       phone: '3334578534',
       department_assignments: getAllDepartmentIds(), // Tutti i reparti
       haccpExpiry: '2025-10-01',
-      notes: 'Amministratore con competenze di cucina',
+      notes: 'Amministratore - Primo utente che ha creato l\'azienda',
+      isCurrentUser: true, // ⚠️ Flag per identificare l'utente corrente
     },
-    // {
-    //   id: generateId(),
-    //   name: 'Eddy',
-    //   surname: 'TheQueen',
-    //   fullName: 'Eddy TheQueen',
-    //   role: 'dipendente' as const,
-    //   categories: ['Banconisti'],
-    //   email: 'Eddy@gmail.com',
-    //   phone: '3334578533',
-    //   department_assignments: getDepartmentIds(['Bancone']), // Bancone
-    //   haccpExpiry: '2026-10-01',
-    //   notes: 'Dipendente specializzato al bancone',
-    // },
-    // {
-    //   id: generateId(),
-    //   name: 'Elena',
-    //   surname: 'Compagna',
-    //   fullName: 'Elena Compagna',
-    //   role: 'dipendente' as const,
-    //   categories: ['Banconisti', 'Camerieri'],
-    //   email: 'Ele@gmail.com',
-    //   phone: '3334578532',
-    //   department_assignments: getDepartmentIds([
-    //     'Bancone',
-    //     'Sala',
-    //     'Sala B',
-    //     'Deoor',
-    //     'Plonge',
-    //   ]), // Bancone + Sala + Sala B + Deoor + Plonge
-    //   haccpExpiry: '2026-10-01',
-    //   notes: 'Dipendente multiruolo con accesso a più reparti',
-    // },
+    // 2️⃣ Altri membri: Riceveranno inviti automatici
+    {
+      id: generateId(),
+      name: 'Matteo',
+      surname: 'Cavallaro',
+      fullName: 'Matteo Cavallaro',
+      role: 'responsabile' as const,
+      categories: ['Banconisti'],
+      email: 'matti169cava@libero.it',
+      phone: '3334578536',
+      department_assignments: getAllDepartmentIds(), // Tutti i reparti
+      haccpExpiry: '2025-10-01',
+      notes: 'Responsabile con accesso a tutti i reparti',
+    },
+    {
+      id: generateId(),
+      name: 'Elena',
+      surname: 'Compagna',
+      fullName: 'Elena Compagna',
+      role: 'dipendente' as const,
+      categories: ['Banconisti', 'Camerieri'],
+      email: '0cavuz0@gmail.com',
+      phone: '3334578532',
+      department_assignments: [
+        getDepartmentId('Bancone'),
+        getDepartmentId('Sala'),
+        getDepartmentId('Sala B'),
+        getDepartmentId('Deoor'),
+        getDepartmentId('Plonge'),
+      ].filter(Boolean), // Bancone + Sala + Sala B + Deoor + Plonge
+      haccpExpiry: '2026-10-01',
+      notes: 'Dipendente multiruolo con accesso a più reparti',
+    },
+    {
+      id: generateId(),
+      name: 'Fabrizio',
+      surname: 'Dettori',
+      fullName: 'Fabrizio Dettori',
+      role: 'admin' as const,
+      categories: ['Amministratore'],
+      email: 'Fabri@gmail.com',
+      phone: '3334578535',
+      department_assignments: [
+        getDepartmentId('Sala'),
+        getDepartmentId('Sala B'),
+        getDepartmentId('Deoor'),
+        getDepartmentId('Plonge'),
+      ].filter(Boolean), // Sala + Sala B + Deoor + Plonge
+      haccpExpiry: '2026-10-01',
+      notes: 'Amministratore con accesso a Sala, Sala B, Deoor e Plonge',
+    },
+    {
+      id: generateId(),
+      name: 'Eddy',
+      surname: 'TheQueen',
+      fullName: 'Eddy TheQueen',
+      role: 'dipendente' as const,
+      categories: ['Banconisti'],
+      email: 'Eddy@gmail.com',
+      phone: '3334578533',
+      department_assignments: [getDepartmentId('Bancone')].filter(Boolean), // Bancone
+      haccpExpiry: '2026-10-01',
+      notes: 'Dipendente specializzato al bancone',
+    },
   ]
 
   const conservationPoints = [
@@ -513,16 +519,46 @@ export const getPrefillData = (): OnboardingData => {
 
 /**
  * Precompila l'onboarding con dati di test completi
+ * ⚠️ NUOVO: Usa l'email dell'utente corrente per il primo membro (admin)
  */
-export const prefillOnboarding = (): void => {
+export const prefillOnboarding = async (): Promise<void> => {
   console.log('🔄 Precompilazione onboarding...')
 
   try {
     // Pulisce COMPLETAMENTE tutti i dati esistenti per evitare conflitti
     clearAllStorage()
 
+    // Ottieni email utente corrente
+    const { data: { user } } = await supabase.auth.getUser()
+    const currentUserEmail = user?.email || 'matteo.cavallaro.work@gmail.com' // Fallback
+    const currentUserFirstName = user?.user_metadata?.first_name || 'Paolo'
+    const currentUserLastName = user?.user_metadata?.last_name || 'Dettori'
+
+    console.log('👤 Utente corrente:', {
+      email: currentUserEmail,
+      nome: currentUserFirstName,
+      cognome: currentUserLastName,
+    })
+
     // Ottiene i dati precompilati
     const data = getPrefillData()
+
+    // ⚠️ IMPORTANTE: Sostituisci il primo staff member con i dati dell'utente corrente
+    if (data.staff && data.staff.length > 0) {
+      console.log('🔄 Sostituisco primo staff member con dati utente corrente...')
+      
+      data.staff[0] = {
+        ...data.staff[0],
+        name: currentUserFirstName,
+        surname: currentUserLastName,
+        fullName: `${currentUserFirstName} ${currentUserLastName}`,
+        email: currentUserEmail,
+        role: 'admin' as const, // Primo membro è sempre admin
+        notes: 'Amministratore - Primo utente che ha creato l\'azienda',
+      }
+
+      console.log('✅ Primo staff member aggiornato:', data.staff[0])
+    }
 
     // Associa i department_id ai conservation points
     if (data.departments?.length) {
@@ -1394,7 +1430,10 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
       }
     })
 
-    const { error } = await supabase.from('staff').insert(staff)
+    const { data: insertedStaff, error } = await supabase
+      .from('staff')
+      .insert(staff)
+      .select('id, email')
 
     if (error) {
       console.error('❌ Error inserting staff:', error)
@@ -1402,6 +1441,34 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
     }
 
     console.log('✅ Staff inserted successfully:', staff.length)
+
+    // ⚠️ IMPORTANTE: Collega il primo staff member (admin) al company_member dell'utente corrente
+    if (insertedStaff && insertedStaff.length > 0) {
+      const firstStaffMember = insertedStaff[0] // Primo staff = utente corrente
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+
+      if (currentUser?.id && firstStaffMember.id) {
+        console.log('🔗 Collegamento primo staff member a company_member...')
+        
+        // Aggiorna company_member per includere staff_id
+        const { error: updateError } = await supabase
+          .from('company_members')
+          .update({ 
+            staff_id: firstStaffMember.id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', currentUser.id)
+          .eq('company_id', companyId)
+
+        if (updateError) {
+          console.warn('⚠️ Errore collegamento staff_id a company_member:', updateError)
+        } else {
+          console.log('✅ Primo staff member collegato a company_member')
+          console.log('   User:', currentUser.email)
+          console.log('   Staff ID:', firstStaffMember.id)
+        }
+      }
+    }
   }
 
   // Salva punti conservazione
@@ -1737,47 +1804,66 @@ export const completeOnboarding = async (
     let companyId = companyIdParam
 
     if (!companyId) {
-      // Prova a recuperare il company_id dall'utente autenticato (Supabase Auth)
-      console.log('🔍 Cercando sessione utente...')
-
-      // Prima verifica la sessione
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-      console.log('📊 getSession result:', { session: sessionData.session, error: sessionError })
-
-      if (!sessionData.session?.user?.id) {
-        // Fallback: prova getUser()
-        console.log('🔍 Fallback a getUser()...')
-        const { data: userData, error: userError } = await supabase.auth.getUser()
-        console.log('📊 getUser result:', { user: userData.user, error: userError })
-
-        if (!userData.user?.id) {
-          console.error('❌ Nessuna sessione o utente trovato')
-
-          // Debug: verifica localStorage
-          const storageKey = 'bhm-supabase-auth'
-          const authToken = localStorage.getItem(storageKey)
-          console.log('🔑 LocalStorage auth token:', authToken ? 'PRESENTE' : 'ASSENTE')
-          if (authToken) {
-            try {
-              const parsed = JSON.parse(authToken)
-              console.log('🔑 Token parsed:', {
-                hasAccessToken: !!parsed?.access_token,
-                hasUser: !!parsed?.user,
-                expiresAt: parsed?.expires_at
-              })
-            } catch (e) {
-              console.error('❌ Errore parsing token:', e)
-            }
-          }
-
-        throw new Error('Utente non autenticato. Effettua il login e riprova.')
+      // 🔧 DEV MODE: Controlla se c'è una dev company impostata
+      console.log('🔍 Cercando company per onboarding...')
+      
+      if (hasDevCompany()) {
+        console.log('🛠️ DEV MODE ATTIVO - Cercando dev company...')
+        const devCompanyId = await getCompanyIdForOnboarding()
+        
+        if (devCompanyId) {
+          companyId = devCompanyId
+          console.log('✅ Dev company trovata e verrà riutilizzata:', companyId)
+          toast.info('🛠️ Modalità sviluppo: riutilizzo company esistente', {
+            position: 'top-right',
+            autoClose: 2000,
+          })
+        }
       }
 
-        console.log('✅ Utente trovato via getUser:', userData.user.id)
-        companyId = await resolveCompanyId(userData.user.id)
-      } else {
-        console.log('✅ Sessione trovata:', sessionData.session.user.id)
-        companyId = await resolveCompanyId(sessionData.session.user.id)
+      // Se ancora non abbiamo companyId, cerca dall'utente autenticato
+      if (!companyId) {
+        console.log('🔍 Cercando company da sessione utente...')
+
+        // Prima verifica la sessione
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        console.log('📊 getSession result:', { session: sessionData.session, error: sessionError })
+
+        if (!sessionData.session?.user?.id) {
+          // Fallback: prova getUser()
+          console.log('🔍 Fallback a getUser()...')
+          const { data: userData, error: userError } = await supabase.auth.getUser()
+          console.log('📊 getUser result:', { user: userData.user, error: userError })
+
+          if (!userData.user?.id) {
+            console.error('❌ Nessuna sessione o utente trovato')
+
+            // Debug: verifica localStorage
+            const storageKey = 'bhm-supabase-auth'
+            const authToken = localStorage.getItem(storageKey)
+            console.log('🔑 LocalStorage auth token:', authToken ? 'PRESENTE' : 'ASSENTE')
+            if (authToken) {
+              try {
+                const parsed = JSON.parse(authToken)
+                console.log('🔑 Token parsed:', {
+                  hasAccessToken: !!parsed?.access_token,
+                  hasUser: !!parsed?.user,
+                  expiresAt: parsed?.expires_at
+                })
+              } catch (e) {
+                console.error('❌ Errore parsing token:', e)
+              }
+            }
+
+          throw new Error('Utente non autenticato. Effettua il login e riprova.')
+        }
+
+          console.log('✅ Utente trovato via getUser:', userData.user.id)
+          companyId = await resolveCompanyId(userData.user.id)
+        } else {
+          console.log('✅ Sessione trovata:', sessionData.session.user.id)
+          companyId = await resolveCompanyId(sessionData.session.user.id)
+        }
       }
     }
 
@@ -1834,13 +1920,17 @@ export const completeOnboarding = async (
     }
 
     // AUTO-INVIO INVITI: Invia email di invito a tutti gli staff con email
+    // ESCLUSO il PRIMO membro (utente che sta completando l'onboarding - già registrato)
     if (formData.staff?.length && companyId) {
       console.log('📧 Invio inviti a staff...')
       
       let invitesSent = 0
       let invitesFailed = 0
 
-      for (const person of formData.staff) {
+      // ⚠️ IMPORTANTE: Salta il primo membro (indice 0) - è l'utente corrente!
+      for (let i = 1; i < formData.staff.length; i++) {
+        const person = formData.staff[i]
+        
         if (person.email) {
           try {
             // Crea token invito
@@ -1870,12 +1960,19 @@ export const completeOnboarding = async (
         }
       }
 
+      // Log del primo membro saltato
+      if (formData.staff[0]?.email) {
+        console.log(`⏭️ Primo membro (utente corrente) saltato: ${formData.staff[0].email}`)
+      }
+
       if (invitesSent > 0) {
         console.log(`📧 Inviti creati: ${invitesSent} (falliti: ${invitesFailed})`)
         toast.success(`${invitesSent} inviti creati e pronti per l'invio!`, {
           position: 'top-right',
           autoClose: 4000,
         })
+      } else {
+        console.log(`ℹ️ Nessun invito da inviare (solo utente corrente registrato)`)
       }
     }
 

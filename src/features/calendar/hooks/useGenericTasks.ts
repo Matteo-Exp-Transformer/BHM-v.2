@@ -27,6 +27,7 @@ export interface TaskCompletion {
   company_id: string
   task_id: string
   completed_by?: string
+  completed_by_name?: string | null
   completed_at: Date
   period_start: Date
   period_end: Date
@@ -319,12 +320,20 @@ export const useGenericTasks = () => {
           period_end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
       }
 
+
+      // Ottieni il nome dell'utente dai metadata
+      const { data: userData } = await supabase.auth.getUser()
+      const completedByName = userData.user?.user_metadata?.first_name && userData.user?.user_metadata?.last_name
+        ? `${userData.user.user_metadata.first_name} ${userData.user.user_metadata.last_name}`
+        : userData.user?.email || null
+
       const { data, error } = await supabase
         .from('task_completions')
         .insert({
           company_id: companyId,
           task_id: taskId,
           completed_by: user.id,
+          completed_by_name: completedByName,
           period_start: period_start.toISOString(),
           period_end: period_end.toISOString(),
           notes,
@@ -332,11 +341,7 @@ export const useGenericTasks = () => {
         .select()
         .single()
 
-      if (error) {
-        console.error('Error completing task:', error)
-        throw error
-      }
-
+      if (error) throw error
       return data
     },
     onSuccess: () => {
@@ -354,6 +359,57 @@ export const useGenericTasks = () => {
     onError: (error: Error) => {
       console.error('Error completing task:', error)
       toast.error('Errore nel completamento della mansione')
+    },
+  })
+
+  // Uncomplete task (rimuove il completamento)
+  const uncompleteTaskMutation = useMutation({
+    mutationFn: async ({
+      taskId,
+      completionId,
+    }: {
+      taskId: string
+      completionId?: string
+    }) => {
+      if (!companyId || !user) throw new Error('No company ID or user available')
+
+      // Se è fornito un completionId specifico, elimina quello
+      // Altrimenti elimina tutti i completamenti del task per il giorno corrente
+      const now = new Date()
+      const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
+      const dayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+
+      let query = supabase
+        .from('task_completions')
+        .delete()
+        .eq('company_id', companyId)
+        .eq('task_id', taskId)
+
+      if (completionId) {
+        query = query.eq('id', completionId)
+      } else {
+        // Elimina completamenti del giorno corrente
+        query = query
+          .gte('period_start', dayStart.toISOString())
+          .lte('period_end', dayEnd.toISOString())
+      }
+
+      const { error } = await query
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.genericTasks(companyId || ''),
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['task-completions', companyId],
+      })
+      toast.success('Mansione ripristinata come "da completare"')
+    },
+    onError: (error: Error) => {
+      console.error('Error uncompleting task:', error)
+      toast.error('Errore nel ripristino della mansione')
     },
   })
 
@@ -395,9 +451,11 @@ export const useGenericTasks = () => {
     createTask: createTaskMutation.mutate,
     deleteTask: deleteTaskMutation.mutate,
     completeTask: completeTaskMutation.mutate,
+    uncompleteTask: uncompleteTaskMutation.mutate,
     isCreating: createTaskMutation.isPending,
     isDeleting: deleteTaskMutation.isPending,
     isCompleting: completeTaskMutation.isPending,
+    isUncompleting: uncompleteTaskMutation.isPending,
     fetchCompletions,
   }
 }

@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
 import { useProducts } from '@/features/inventory/hooks/useProducts'
@@ -56,39 +57,41 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date): MacroCategoryResul
   const { maintenanceTasks, isLoading: maintenanceLoading } = useMaintenanceTasks()
   const { products, isLoading: productsLoading } = useProducts()
   const { tasks: genericTasks, isLoading: genericTasksLoading } = useGenericTasks()
-  const [taskCompletions, setTaskCompletions] = useState<TaskCompletion[]>([])
+  
+  // Usa React Query per i task completions invece di useState locale
+  const { data: taskCompletions = [], isLoading: completionsLoading } = useQuery({
+    queryKey: ['task-completions', companyId],
+    queryFn: async (): Promise<TaskCompletion[]> => {
+      if (!companyId) return []
 
-  useEffect(() => {
-    if (!companyId) return
-
-    const loadCompletions = async () => {
       const { data, error } = await supabase
         .from('task_completions')
         .select('*')
         .eq('company_id', companyId)
 
-      if (!error && data) {
-        setTaskCompletions(
-          data.map((c: any) => ({
-            id: c.id,
-            company_id: c.company_id,
-            task_id: c.task_id,
-            completed_by: c.completed_by,
-            completed_at: new Date(c.completed_at),
-            period_start: new Date(c.period_start),
-            period_end: new Date(c.period_end),
-            notes: c.notes,
-            created_at: new Date(c.created_at),
-            updated_at: new Date(c.updated_at),
-          }))
-        )
+      if (error) {
+        console.error('Error loading task completions:', error)
+        throw error
       }
-    }
 
-    loadCompletions()
-  }, [companyId])
+      return (data || []).map((c: any) => ({
+        id: c.id,
+        company_id: c.company_id,
+        task_id: c.task_id,
+        completed_by: c.completed_by,
+        completed_by_name: c.completed_by_name || null,
+        completed_at: new Date(c.completed_at),
+        period_start: new Date(c.period_start),
+        period_end: new Date(c.period_end),
+        notes: c.notes,
+        created_at: new Date(c.created_at),
+        updated_at: new Date(c.updated_at),
+      }))
+    },
+    enabled: !!companyId,
+  })
 
-  const isLoading = maintenanceLoading || productsLoading || genericTasksLoading
+  const isLoading = maintenanceLoading || productsLoading || genericTasksLoading || completionsLoading
 
   const maintenanceItems = useMemo(() => {
     if (!maintenanceTasks || maintenanceTasks.length === 0) return []
@@ -150,6 +153,7 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date): MacroCategoryResul
     eventsByDateAndCategory.forEach((categoryMap, dateKey) => {
       categoryMap.forEach((items, category) => {
         const activeItems = items.filter(i => i.status !== 'completed')
+        
         result.push({
           date: dateKey,
           category,
@@ -324,7 +328,8 @@ function convertGenericTaskToItem(
       period_end = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 59)
   }
 
-  const isCompletedInPeriod = completions?.some(c => {
+  // Trova il completamento per questo periodo
+  const completion = completions?.find(c => {
     if (c.task_id !== task.id) return false
 
     const completionStart = c.period_start.getTime()
@@ -332,7 +337,9 @@ function convertGenericTaskToItem(
     const eventTime = dueDate.getTime()
 
     return eventTime >= completionStart && eventTime <= completionEnd
-  }) ?? false
+  })
+
+  const isCompletedInPeriod = !!completion
 
   const status: MacroCategoryItem['status'] =
     isCompletedInPeriod ? 'completed' :
@@ -358,6 +365,14 @@ function convertGenericTaskToItem(
       notes: task.description,
       estimatedDuration: task.estimated_duration,
       taskId: task.id,
+      // Aggiungi informazioni di completamento se disponibili
+      ...(completion && {
+        completedBy: completion.completed_by,
+        completedByName: completion.completed_by_name,
+        completedAt: completion.completed_at,
+        completionNotes: completion.notes,
+        completionId: completion.id,
+      }),
     },
   }
 }

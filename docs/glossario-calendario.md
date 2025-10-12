@@ -3,15 +3,14 @@
 ## Indice
 1. [Panoramica Sistema](#panoramica-sistema)
 2. [Architettura Database](#architettura-database)
-3. [Configurazione Calendario](#configurazione-calendario)
-4. [Tipi di Eventi](#tipi-di-eventi)
-5. [Sistema di Completamento Task](#sistema-di-completamento-task)
-6. [Logiche di Visualizzazione](#logiche-di-visualizzazione)
-7. [Macro Categorie](#macro-categorie)
-8. [Attività in Ritardo](#attività-in-ritardo)
-9. [File e Componenti Principali](#file-e-componenti-principali)
-10. [Hook e Utilities](#hook-e-utilities)
-11. [Troubleshooting](#troubleshooting)
+3. [Tipi di Eventi](#tipi-di-eventi)
+4. [Sistema di Completamento Task](#sistema-di-completamento-task)
+5. [Logiche di Visualizzazione](#logiche-di-visualizzazione)
+6. [Macro Categorie](#macro-categorie)
+7. [Attività in Ritardo](#attività-in-ritardo)
+8. [File e Componenti Principali](#file-e-componenti-principali)
+9. [Hook e Utilities](#hook-e-utilities)
+10. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -34,153 +33,6 @@ Il sistema calendario di Business HACCP Manager è un calendario unificato che a
 ## Architettura Database
 
 ### Tabelle Principali
-
-#### `company_calendar_settings` (Configurazione Calendario)
-```sql
-CREATE TABLE company_calendar_settings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-  fiscal_year_start DATE NOT NULL,
-  fiscal_year_end DATE NOT NULL,
-  closure_dates DATE[] DEFAULT '{}',
-  open_weekdays INTEGER[] DEFAULT '{1,2,3,4,5,6}',
-  business_hours JSONB NOT NULL DEFAULT '{}',
-  is_configured BOOLEAN NOT NULL DEFAULT false,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE(company_id) -- Relazione 1:1
-)
-```
-
-**Campi:**
-- `fiscal_year_start/end`: Anno lavorativo - calendario mostra eventi solo in questo range
-- `closure_dates`: Array di date chiusura (ferie, festività) in formato YYYY-MM-DD
-- `open_weekdays`: Array giorni settimana aperti (0=Domenica, 6=Sabato)
-- `business_hours`: JSONB - orari apertura per ogni giorno
-  ```json
-  {
-    "1": [{"open": "09:00", "close": "22:00"}],
-    "2": [{"open": "08:00", "close": "12:30"}, {"open": "16:00", "close": "20:00"}]
-  }
-  ```
-- `is_configured`: Flag per verificare se calendario è stato configurato
-
-**RLS Policies:**
-- SELECT: `is_company_member(company_id)`
-- INSERT: `is_admin(company_id)` + no duplicati
-- UPDATE: `has_management_role(company_id)` + company_id immutabile
-- DELETE: `is_admin(company_id)`
-
-**Audit:**
-- Trigger automatico registra tutte le modifiche in `audit_logs`
-
----
-
-## Configurazione Calendario
-
-### Onboarding - Step 7
-
-**Componente:** `CalendarConfigStep.tsx`
-
-#### Campi Configurazione
-
-**1. Anno Lavorativo**
-- Data Inizio (fiscal_year_start)
-- Data Fine (fiscal_year_end)
-- Validazione: fine > inizio, min 30 giorni, max 2 anni
-
-**2. Giorni Apertura Settimanali**
-- Toggle buttons per ogni giorno (0-6)
-- Almeno 1 giorno obbligatorio
-- Default: [1,2,3,4,5,6] (Lun-Sab)
-
-**3. Giorni di Chiusura**
-- **Modalità Giorno Singolo**: Seleziona una singola data
-- **Modalità Periodo**: Seleziona dal-al, genera tutte le date automaticamente
-- Date visualizzate come badge removibili
-- Validazione: date dentro anno lavorativo
-
-**4. Orari di Apertura**
-- Per ogni giorno aperto configurabile 1-2 fasce orarie
-- Input `type="time"` in formato HH:mm
-- Validazione: ora fine > ora inizio, no sovrapposizioni
-- Esempio: 09:00-22:00 oppure 08:00-12:30 · 16:00-20:00
-
-#### UI/UX
-
-**Toggle Giorni Chiusura:**
-```typescript
-<button onClick={() => setClosureType('single')}>Giorno Singolo</button>
-<button onClick={() => setClosureType('period')}>Periodo</button>
-```
-
-**Period Input:**
-- Due date picker (Dal/Al)
-- Generazione automatica tutte le date nel range
-- Evita duplicati
-
-**Business Hours:**
-- Card per ogni giorno aperto
-- Pulsante "Aggiungi fascia" (max 2)
-- Rimozione fascia se > 1
-
-### Configurazione Post-Onboarding
-
-**Accesso:**
-- CalendarPage → Se non configurato → Overlay con pulsante "Configura Calendario"
-- Modal `CalendarConfigModal` con form completo
-
-**Hook:** `useCalendarSettings`
-```typescript
-const {
-  settings,           // CompanyCalendarSettings | null
-  isLoading,
-  isConfigured,      // () => boolean
-  saveSettings,      // (input: CalendarConfigInput) => void
-  isDateOpen,        // (date: Date) => boolean
-  getBusinessHours,  // (date: Date) => BusinessHourSlot[] | null
-  isWithinFiscalYear // (date: Date) => boolean
-} = useCalendarSettings()
-```
-
-### Visualizzazione nel Calendario
-
-**Overlay Non Configurato:**
-```typescript
-{!isConfigured() && (
-  <div className="absolute inset-0 bg-gray-100 bg-opacity-90 z-10">
-    <div className="text-center">
-      <Settings className="h-8 w-8" />
-      <h3>Calendario Non Configurato</h3>
-      <button onClick={() => setShowConfigModal(true)}>
-        Configura Calendario
-      </button>
-    </div>
-  </div>
-)}
-```
-
-**Orari nell'Header Colonna:**
-- Font-size: 13px (ingrandito per leggibilità)
-- Font-weight: 700 (bold)
-- Badge blu sopra il nome giorno
-- Esempio: "09:00-12:30 · 16:00-20:00"
-
-**Giorni Chiusura (closure_dates):**
-- Sfondo: gradiente azzurro (linear-gradient #e0f2fe → #bae6fd)
-- Icona: 🏖️ centrata (font-size: 48px, opacity: 0.6)
-- Decorazioni: gradienti radiali giallo/blu
-
-**Giorni Non Lavorativi (non in open_weekdays):**
-- Sfondo: normale bianco (come altri giorni)
-- NO icona spiaggia
-- NO orari mostrati
-
-**Filtro Eventi:**
-- Eventi fuori `fiscal_year` nascosti
-- `validRange` di FullCalendar impostato automaticamente
-
----
 
 #### `tasks` (Attività Generiche/Mansioni)
 ```sql
@@ -844,6 +696,18 @@ WHERE task_id = $1
 
 ## Features Implementate
 
+### ✅ Calendario Configurazione (Onboarding)
+- [x] Step 7 - Configurazione calendario aziendale
+- [x] Selezione anno fiscale (inizio/fine)
+- [x] Gestione giorni apertura settimanale
+- [x] Chiusure programmate (singole o periodi)
+- [x] Orari lavorativi per giorno settimana
+- [x] **Contatore giorni lavorativi** con calcolo automatico
+- [x] Visualizzazione breakdown: totali, settimanali, programmati, lavorativi
+- [x] Formula esplicativa e percentuale apertura annuale
+- [x] Barra progressiva animata
+- [x] Prevenzione doppi conteggi (chiusure in giorni già chiusi)
+
 ### ✅ Core Features
 - [x] Calendario unificato multi-fonte
 - [x] Eventi ricorrenti (daily, weekly, monthly, annually)
@@ -854,31 +718,6 @@ WHERE task_id = $1
 - [x] Modal macro categoria con sezioni Attive/Completate
 - [x] Checkmark verde per giorni completati
 - [x] Count esclusione eventi completati
-
-### ✅ Configurazione Calendario
-- [x] Tabella `company_calendar_settings` con RLS multi-tenant
-- [x] Step 7 onboarding per configurazione iniziale
-- [x] Anno lavorativo (fiscal_year_start/end) con validazione
-- [x] Giorni apertura settimanali (open_weekdays) con toggle UI
-- [x] Giorni chiusura programmata (closure_dates):
-  - [x] Modalità Giorno Singolo
-  - [x] Modalità Periodo (genera automaticamente date nel range)
-  - [x] Badge removibili per ogni data
-- [x] Orari apertura (business_hours JSONB):
-  - [x] 1-2 fasce orarie per giorno
-  - [x] Input type="time" con validazione
-  - [x] Display nell'header colonna calendario
-- [x] Modal post-onboarding per modifica configurazione
-- [x] Overlay "Configura Calendario" se non configurato
-- [x] Hook `useCalendarSettings` con helper functions
-- [x] Utility functions (calendarUtils.ts) per validazione
-- [x] Visualizzazione orari: font 13px bold nell'header
-- [x] Giorni chiusura: sfondo azzurro + 🏖️ emoji
-- [x] Giorni non lavorativi: sfondo normale (no emoji)
-- [x] Audit logging automatico per modifiche configurazione
-- [x] Validazione completa (fiscal year, weekdays, hours, closures)
-- [x] Integrazione con onboardingHelpers per salvataggio
-- [x] Documentazione completa in SCHEMA_ATTUALE.md
 
 ### ✅ Attività in Ritardo
 - [x] Calcolo eventi in ritardo ultima settimana (7 giorni)
@@ -902,32 +741,6 @@ WHERE task_id = $1
 - [x] Status "completed" basato su completions
 - [x] Separazione UI Attive vs Completate
 
-### ✅ Data di Inizio Task Generici
-- [x] Campo "Assegna Data di Inizio" nel form creazione task
-- [x] Validazione: data non può essere retroattiva (solo oggi o futuro)
-- [x] Logica default: se campo vuoto, task inizia da oggi
-- [x] Logica custom: se compilato, task inizia dalla data specificata
-- [x] Input type="date" con attributo `min` per bloccare date passate
-- [x] Validazione JavaScript per doppio controllo
-- [x] Messaggio errore: "La data di inizio non può essere nel passato"
-- [x] Integrazione con `calculateNextDue` per usare `start_date`
-- [x] Correzione `useMacroCategoryEvents` per usare `next_due` invece di `created_at`
-
-### ✅ Intervallo Date e Anno Lavorativo
-- [x] Campo "Assegna Data di Fine" per specificare intervallo date
-- [x] Validazione: data fine > data inizio
-- [x] Input `min` dinamico basato su data inizio
-- [x] end_date serializzato in description con formato `[END_DATE:YYYY-MM-DD]`
-- [x] Helper function `extractEndDate()` per deserializzare
-- [x] Espansione eventi fino a `fiscal_year_end` invece di +90 giorni fissi
-- [x] Logica priorità: taskEndDate vs fiscalYearEnd (usa il minimo)
-- [x] Fallback a +90 giorni se calendario non configurato
-- [x] `useAggregatedEvents` accetta parametro `fiscalYearEnd`
-- [x] `useMacroCategoryEvents` accetta parametro `fiscalYearEnd`
-- [x] `expandRecurringTask` gestisce tutte le combinazioni date
-- [x] Testo helper: "anno lavorativo" invece di "anno fiscale"
-- [x] Uniformità colori domeniche nel calendario (fix CSS)
-
 ### 🔄 In Progress / Future
 - [ ] Click su task in "Attività in Ritardo" → apre modal
 - [ ] Notifiche push per task in scadenza
@@ -937,362 +750,79 @@ WHERE task_id = $1
 
 ---
 
-## Gestione Date Task: Inizio, Fine e Anno Lavorativo
+## Contatore Giorni Lavorativi
 
-### Feature 1: Campo "Assegna Data di Inizio"
+### Panoramica
+Il contatore giorni lavorativi è visualizzato nello **Step 7 - Calendario** dell'onboarding e calcola automaticamente i giorni effettivi di apertura dell'azienda nell'anno fiscale.
 
-**Implementata:** 2025-01-12
-
-#### Descrizione
-Permette all'utente di specificare una data di inizio personalizzata per le nuove attività generiche. Se non specificata, l'attività inizia dalla data odierna (default).
-
-#### Componenti Modificati
-
-##### 1. GenericTaskForm.tsx
+### Calcolo
 ```typescript
-interface GenericTaskFormData {
-  // ... altri campi
-  dataInizio?: string // Data di inizio in formato ISO (YYYY-MM-DD)
-}
+// Formula base
+giorni_lavorativi = giorni_totali - chiusure_settimanali - chiusure_programmate
 
-// Campo form
-<Input
-  type="date"
-  value={formData.dataInizio ?? ''}
-  onChange={e => updateField({ dataInizio: e.target.value })}
-  min={new Date().toISOString().split('T')[0]} // Blocca date passate
-  aria-invalid={Boolean(errors.dataInizio)}
-/>
+// Dove:
+// - giorni_totali = fiscal_year_end - fiscal_year_start + 1
+// - chiusure_settimanali = conteggio giorni NON in open_weekdays
+// - chiusure_programmate = closure_dates che cadono in giorni aperti (no doppi conteggi)
+```
 
-// Validazione
-if (formData.dataInizio) {
-  const selectedDate = new Date(formData.dataInizio)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  selectedDate.setHours(0, 0, 0, 0)
+### Logica Anti-Doppi Conteggi
+```typescript
+// Chiusure programmate contate SOLO se cadono in giorni normalmente aperti
+let programmedClosureDays = 0
+for (const closureDate of formData.closure_dates) {
+  const date = new Date(closureDate)
+  const dayOfWeek = date.getDay()
   
-  if (selectedDate < today) {
-    newErrors.dataInizio = 'La data di inizio non può essere nel passato'
+  // Conta solo se la chiusura cade in un giorno normalmente aperto
+  if (!closedWeekdays.includes(dayOfWeek)) {
+    programmedClosureDays++
   }
 }
 ```
 
-##### 2. CalendarPage.tsx
-```typescript
-const handleCreateGenericTask = (taskData: any) => {
-  createTask({
-    // ... altri campi
-    start_date: taskData.dataInizio, // Passa data di inizio opzionale
-  })
-}
+**Esempio:**
+- Chiusura programmata: 25 Dicembre (Natale)
+- Se cade di domenica (già chiuso) → NON contato
+- Se cade di lunedì (normalmente aperto) → Contato
+
+### UI Componenti
+
+**4 Card Statistiche:**
+1. **Giorni Totali** - Grigio, numero grande
+2. **Chiusura Settimanale** - Rosso, con lista giorni (es. "Dom")
+3. **Chiusura Programmata** - Arancione, con sottotitolo "(Ferie/Festività)"
+4. **Giorni Lavorativi** - Verde gradient, evidenziato, con check ✅
+
+**Formula Esplicativa:**
+```
+📊 Formula: 365 (totali) - 52 (settimanali) - 10 (programmati) = 303 giorni lavorativi
 ```
 
-##### 3. useGenericTasks.ts
-```typescript
-export interface CreateGenericTaskInput {
-  // ... altri campi
-  start_date?: string // Data di inizio in formato ISO (YYYY-MM-DD)
-}
+**Barra Progressiva:**
+- Percentuale apertura annuale: `(lavorativi / totali) * 100`
+- Barra verde gradient
+- Animazione transition 500ms
 
-// Funzione calculateNextDue aggiornata
-const calculateNextDue = (frequency: string, customDays?: string[], startDate?: string): Date => {
-  // Se viene fornita una data di inizio, usala come base, altrimenti usa oggi
-  const baseDate = startDate ? new Date(startDate) : new Date()
-  
-  switch (frequency) {
-    case 'giornaliera':
-      // Se c'è una start_date usa quella, altrimenti domani
-      if (startDate) return baseDate
-      baseDate.setDate(baseDate.getDate() + 1)
-      break
-    // ... altri casi
-  }
-  
-  return baseDate
-}
+### File Modificati
+- `src/components/onboarding-steps/CalendarConfigStep.tsx` - Logica calcolo e UI
+- `src/components/StepNavigator.tsx` - Aggiunto Step 7 con icon Calendar
 
-// Mutation
-const next_due = calculateNextDue(input.frequency, input.custom_days, input.start_date)
-```
-
-##### 4. useMacroCategoryEvents.ts
-```typescript
-function expandTaskWithCompletions(
-  task: GenericTask,
-  completions: TaskCompletion[]
-): MacroCategoryItem[] {
-  // ... 
-  
-  // FIX: Usa next_due se disponibile (data di inizio impostata dall'utente), 
-  // altrimenti usa created_at
-  const startDate = task.next_due ? new Date(task.next_due) : new Date(task.created_at)
-  const endDate = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)
-  
-  // ... espansione eventi
-}
-```
-
-#### Comportamento
-
-**Scenario 1: Campo vuoto (default)**
-- Utente non compila "Assegna Data di Inizio"
-- Sistema usa data odierna come punto di partenza
-- `next_due` viene calcolato da oggi
-
-**Scenario 2: Data futura specificata**
-- Utente seleziona data futura (es. 18 ottobre)
-- Sistema usa quella data come `next_due`
-- Eventi ricorrenti iniziano da quella data
-
-**Scenario 3: Tentativo data passata**
-- Utente cerca di selezionare data passata
-- HTML input con `min` blocca la selezione
-- Se bypassato, validazione JS mostra errore
-- Form non può essere inviato
-
-#### Validazioni
-
-**Validazione HTML:**
-```html
-<input type="date" min="2025-01-12" />
-```
-
-**Validazione JavaScript:**
-```typescript
-// Confronta date normalizzate (senza ore)
-const selectedDate = new Date(formData.dataInizio)
-const today = new Date()
-today.setHours(0, 0, 0, 0)
-selectedDate.setHours(0, 0, 0, 0)
-
-if (selectedDate < today) {
-  throw new Error('La data di inizio non può essere nel passato')
-}
-```
-
-#### UI/UX
-
-**Posizionamento:**
-- Dopo campo "Frequenza"
-- Prima campo "Ruolo"
-- Occupa 1 colonna nel grid a 2 colonne
-
-**Label:**
-```
-Assegna Data di Inizio
-```
-
-**Testo Helper:**
-```
-Opzionale - Se non specificata, l'attività inizia da oggi
-```
-
-**Messaggio Errore:**
-```
-La data di inizio non può essere nel passato
-```
-
----
-
-### Feature 2: Intervallo Date e Espansione Anno Lavorativo
-
-**Implementata:** 2025-01-12
-
-#### Descrizione
-Permette di specificare un intervallo di date per task/manutenzioni e di espandere automaticamente gli eventi ricorrenti fino alla fine dell'anno lavorativo configurato.
-
-#### 1. Campo "Assegna Data di Fine"
-
-**Posizionamento:**
-- Dopo "Assegna Data di Inizio"
-- Prima "Ruolo"
-- Grid a 2 colonne
-
-**Input:**
-```typescript
-<Input
-  type="date"
-  value={formData.dataFine ?? ''}
-  onChange={e => updateField({ dataFine: e.target.value })}
-  min={formData.dataInizio || new Date().toISOString().split('T')[0]}
-  placeholder="Lascia vuoto per fine anno lavorativo"
-  aria-invalid={Boolean(errors.dataFine)}
-/>
-```
-
-**Testo Helper:**
-```
-Opzionale - Se non specificata, l'attività prosegue fino a fine anno lavorativo
-```
-
-**Validazione:**
-```typescript
-if (formData.dataFine) {
-  const endDate = new Date(formData.dataFine)
-  const startDate = formData.dataInizio ? new Date(formData.dataInizio) : new Date()
-  
-  if (endDate <= startDate) {
-    newErrors.dataFine = 'La data di fine deve essere successiva alla data di inizio'
-  }
-}
-```
-
-#### 2. Serializzazione end_date
-
-**Storage:**
-```typescript
-// In useGenericTasks.ts - createTaskMutation
-if (input.end_date) {
-  payload.description = payload.description 
-    ? `${payload.description}\n[END_DATE:${input.end_date}]`
-    : `[END_DATE:${input.end_date}]`
-}
-```
-
-**Deserializzazione:**
-```typescript
-// Helper function
-function extractEndDate(description?: string): Date | null {
-  if (!description) return null
-  const match = description.match(/\[END_DATE:(\d{4}-\d{2}-\d{2})\]/)
-  return match ? new Date(match[1]) : null
-}
-```
-
-#### 3. Logica Espansione Eventi
-
-**Priorità Decisionale:**
-
-```typescript
-function expandRecurringTask(
-  task,
-  companyId,
-  userId,
-  type,
-  completions?,
-  fiscalYearEnd?
-) {
-  // 1. Data inizio: usa next_due (se presente) o created_at
-  const startDate = task.next_due 
-    ? new Date(task.next_due) 
-    : new Date(task.created_at)
-  
-  // 2. Estrai end_date dalla description (se presente)
-  const taskEndDate = extractEndDate(task.description)
-  
-  // 3. Determina data finale
-  let endDate: Date
-  if (fiscalYearEnd) {
-    if (taskEndDate) {
-      // Usa il minimo tra end_date e fiscal_year_end
-      endDate = taskEndDate < fiscalYearEnd ? taskEndDate : fiscalYearEnd
-    } else {
-      // Usa fiscal_year_end
-      endDate = fiscalYearEnd
-    }
-  } else if (taskEndDate) {
-    // Usa end_date se non c'è fiscal_year_end
-    endDate = taskEndDate
-  } else {
-    // Fallback: +90 giorni
-    endDate = addDays(new Date(), 90)
-  }
-  
-  // 4. Genera eventi ricorrenti da startDate a endDate
-  // ...
-}
-```
-
-#### 4. Integrazione con Calendario
-
-**CalendarPage.tsx:**
-```typescript
-const { settings: calendarSettings } = useCalendarSettings()
-const { events: aggregatedEvents } = useAggregatedEvents(
-  calendarSettings?.fiscal_year_end 
-    ? new Date(calendarSettings.fiscal_year_end) 
-    : undefined
-)
-```
-
-**Calendar.tsx:**
-```typescript
-const { events: macroCategoryEvents } = useMacroCategoryEvents(
-  calendarSettings?.fiscal_year_end 
-    ? new Date(calendarSettings.fiscal_year_end) 
-    : undefined
-)
-```
-
-#### Scenari di Utilizzo
-
-**Scenario A: Solo Data Inizio**
-```
-Input:
-- Data Inizio: 15/03/2025
-- Data Fine: (vuota)
-- Anno Lavorativo: 01/01/2025 - 31/12/2025
-
-Risultato:
-→ Eventi dal 15/03/2025 al 31/12/2025
-```
-
-**Scenario B: Intervallo Completo**
-```
-Input:
-- Data Inizio: 01/05/2025
-- Data Fine: 31/08/2025
-- Anno Lavorativo: 01/01/2025 - 31/12/2025
-
-Risultato:
-→ Eventi dal 01/05/2025 al 31/08/2025 (rispetta intervallo utente)
-```
-
-**Scenario C: Data Fine oltre Anno Lavorativo**
-```
-Input:
-- Data Inizio: 01/11/2025
-- Data Fine: 31/03/2026
-- Anno Lavorativo: 01/01/2025 - 31/12/2025
-
-Risultato:
-→ Eventi dal 01/11/2025 al 31/12/2025 (limitato da anno lavorativo)
-```
-
-**Scenario D: Calendario Non Configurato**
-```
-Input:
-- Data Inizio: 12/01/2025
-- Data Fine: (vuota)
-- Anno Lavorativo: (non configurato)
-
-Risultato:
-→ Eventi dal 12/01/2025 per 90 giorni (fallback)
-```
-
-#### File Modificati
-
-1. **GenericTaskForm.tsx**: Campo dataFine con validazione
-2. **CalendarPage.tsx**: Passa end_date e fiscal_year_end
-3. **useGenericTasks.ts**: CreateGenericTaskInput con end_date, serializzazione
-4. **useMacroCategoryEvents.ts**: extractEndDate helper, espansione con fiscalYearEnd
-5. **useAggregatedEvents.ts**: expandRecurringTask con fiscalYearEnd, usa next_due come start
-6. **Calendar.tsx**: Passa fiscal_year_end a useMacroCategoryEvents
-7. **calendar-custom.css**: Uniformità colori domeniche
-
-#### Performance Note
-
-- Espansione limitata da `fiscal_year_end` o `end_date` (non più fisso +90 giorni)
-- Migliore performance: meno eventi generati se anno lavorativo è breve
-- Cache React Query: eventi invalidati correttamente dopo creazione
+### Database Integration
+- Nessuna modifica schema richiesta
+- Usa campi esistenti da `company_calendar_settings`:
+  - `fiscal_year_start` (date)
+  - `fiscal_year_end` (date)
+  - `open_weekdays` (integer[])
+  - `closure_dates` (date[])
 
 ---
 
 ## Versioning
 
-**Versione Documento:** 1.2
+**Versione Documento:** 1.1
 **Data Creazione:** 2025-01-12
-**Ultimo Aggiornamento:** 2025-01-12
+**Ultimo Aggiornamento:** 2025-10-12
 **Autore:** Claude (Anthropic)
 
 ---
@@ -1300,8 +830,7 @@ Risultato:
 ## Note Aggiuntive
 
 ### Performance Considerations
-- Espansione eventi limitata da `fiscal_year_end` o `end_date` (dinamico)
-- Fallback a +90 giorni se calendario non configurato
+- Espansione eventi limitata a 90 giorni nel futuro
 - Task completions caricati una volta all'init
 - React Query cache: 5 minuti default
 - Reload pagina dopo completamento (temporaneo - da ottimizzare)
