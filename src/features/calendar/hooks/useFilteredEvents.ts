@@ -35,15 +35,42 @@ export function useFilteredEvents(
   }, [userRole])
 
   const filteredEvents = useMemo(() => {
+    console.log('🔐 useFilteredEvents debug:', {
+      totalEvents: events?.length || 0,
+      userProfile,
+      userRole,
+      canViewAllEvents,
+      userStaffMember: userStaffMember ? {
+        id: userStaffMember.id,
+        name: userStaffMember.name,
+        role: userStaffMember.role,
+        category: userStaffMember.category,
+        department_assignments: userStaffMember.department_assignments
+      } : null,
+      sampleEvents: events?.slice(0, 3).map(e => ({
+        id: e.id,
+        type: e.type,
+        assigned_to: e.assigned_to,
+        metadata: {
+          assigned_to_staff_id: e.metadata?.assigned_to_staff_id,
+          assigned_to_role: e.metadata?.assigned_to_role,
+          assigned_to_category: e.metadata?.assigned_to_category
+        }
+      }))
+    })
+
     if (!userProfile || !events || events.length === 0) {
+      console.log('❌ No user profile or events')
       return []
     }
 
     if (canViewAllEvents) {
+      console.log('✅ Admin/Responsabile - returning all events')
       return events
     }
 
     if (!userStaffMember) {
+      console.log('❌ No staff member found for user')
       return []
     }
 
@@ -55,9 +82,24 @@ export function useFilteredEvents(
         assigned_to: event.assigned_to,
       }
 
-      return checkEventAssignment(assignment, userStaffMember)
+      const matches = checkEventAssignment(assignment, userStaffMember)
+      if (!matches) {
+        console.log('🚫 Event filtered out:', {
+          eventId: event.id,
+          eventType: event.type,
+          assignment,
+          userStaff: {
+            id: userStaffMember.id,
+            role: userStaffMember.role,
+            category: userStaffMember.category,
+            department_assignments: userStaffMember.department_assignments
+          }
+        })
+      }
+      return matches
     })
     
+    console.log(`✅ Filtered events: ${filtered.length}/${events.length} passed`)
     return filtered
   }, [events, userProfile, canViewAllEvents, userStaffMember])
 
