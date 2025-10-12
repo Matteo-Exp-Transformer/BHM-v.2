@@ -7,16 +7,14 @@ import listPlugin from '@fullcalendar/list'
 import multiMonthPlugin from '@fullcalendar/multimonth'
 import {
   CalendarEvent,
-  CalendarFilters,
   CalendarViewConfig,
   CompanyCalendarSettings,
 } from '@/types/calendar'
 import { transformToFullCalendarEvents } from './utils/eventTransform'
 import { EventDetailsModal } from './EventDetailsModal'
-import FilterPanel from './components/FilterPanel'
 import QuickActions from './components/QuickActions'
 import MacroCategoryModal from './components/MacroCategoryModal'
-import { Calendar as CalendarIcon, Filter, Plus } from 'lucide-react'
+import { Calendar as CalendarIcon, Plus } from 'lucide-react'
 import { useMacroCategoryEvents, type MacroCategory } from './hooks/useMacroCategoryEvents'
 import './calendar-custom.css' // ✅ Import stili personalizzati calendario
 
@@ -86,14 +84,6 @@ export const Calendar: React.FC<CalendarProps> = ({
 }) => {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
-  const [showFilters, setShowFilters] = useState(false)
-  const [filters, setFilters] = useState<CalendarFilters>({
-    types: [],
-    statuses: [],
-    priorities: [],
-    departments: [],
-    assignees: [],
-  })
   const [selectedMacroCategory, setSelectedMacroCategory] = useState<{
     category: MacroCategory
     date: Date
@@ -257,10 +247,6 @@ export const Calendar: React.FC<CalendarProps> = ({
         }
       },
     },
-    filterToggle: {
-      text: 'Filtri',
-      click: () => setShowFilters(!showFilters),
-    },
   }
 
   if (loading) {
@@ -310,17 +296,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           </div>
 
           <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                showFilters
-                  ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                  : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200'
-              }`}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filtri
-            </button>
+            {/* Filtri gestiti da CalendarPage tramite HorizontalCalendarFilters */}
 
             {onEventCreate && (
               <button
@@ -342,14 +318,6 @@ export const Calendar: React.FC<CalendarProps> = ({
         </div>
       </div>
 
-      {/* Filter Panel */}
-      {showFilters && (
-        <FilterPanel
-          filters={filters}
-          onFiltersChange={setFilters}
-          onClose={() => setShowFilters(false)}
-        />
-      )}
 
       {/* Calendar Content */}
       <div className="p-4">
