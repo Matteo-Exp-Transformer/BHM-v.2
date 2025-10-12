@@ -1210,18 +1210,25 @@ const mapFrequenza = (frequenza: string): string => {
 }
 
 const calculateNextDue = (frequenza: string): string => {
+  // Imposta la scadenza a OGGI per permettere il completamento immediato
+  // Le mansioni precompilate devono essere completabili subito dopo l'onboarding
   const now = new Date()
+  
   switch (frequenza) {
     case 'giornaliera':
-      return new Date(now.setDate(now.getDate() + 1)).toISOString()
+      // Giornaliera: scade oggi
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString()
     case 'settimanale':
-      return new Date(now.setDate(now.getDate() + 7)).toISOString()
+      // Settimanale: scade oggi (inizio settimana corrente)
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString()
     case 'mensile':
-      return new Date(now.setMonth(now.getMonth() + 1)).toISOString()
+      // Mensile: scade oggi (inizio mese corrente)
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString()
     case 'annuale':
-      return new Date(now.setFullYear(now.getFullYear() + 1)).toISOString()
+      // Annuale: scade oggi (inizio anno corrente)
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString()
     default:
-      return new Date(now.setDate(now.getDate() + 7)).toISOString()
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString()
   }
 }
 

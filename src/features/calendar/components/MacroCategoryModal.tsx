@@ -65,11 +65,14 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   items,
   date,
 }) => {
-  const [selectedItem, setSelectedItem] = useState<MacroCategoryItem | null>(null)
+  const [selectedItems, setSelectedItems] = useState<string[]>([]) // Array di ID per toggle indipendente
   const { completeTask, uncompleteTask, isCompleting, isUncompleting } = useGenericTasks()
   const queryClient = useQueryClient()
   const { companyId, user } = useAuth()
   const [isCompletingMaintenance, setIsCompletingMaintenance] = useState(false)
+  
+  // Helper per verificare se un item è selezionato
+  const isItemSelected = (itemId: string) => selectedItems.includes(itemId)
 
 
   const handleCompleteMaintenance = async (maintenanceId: string) => {
@@ -98,7 +101,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
       await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
 
       toast.success('Manutenzione completata')
-      setSelectedItem(null)
+      setSelectedItems([]) // Chiudi tutti gli item aperti
       // Non serve più window.location.reload() - React Query gestisce l'aggiornamento
     } catch (error) {
       console.error('Error completing maintenance:', error)
@@ -113,7 +116,12 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   if (!isOpen) return null
 
   const handleItemClick = (item: MacroCategoryItem) => {
-    setSelectedItem(selectedItem?.id === item.id ? null : item)
+    // Toggle indipendente: se è già aperto lo chiude, altrimenti lo apre
+    setSelectedItems(prev => 
+      prev.includes(item.id) 
+        ? prev.filter(id => id !== item.id) // Rimuovi se già presente
+        : [...prev, item.id] // Aggiungi se non presente
+    )
   }
 
   // Separa gli items in attivi e completati
@@ -278,13 +286,13 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
 
                       <ChevronRight
                         className={`h-5 w-5 text-gray-400 transition-transform flex-shrink-0 ml-4 ${
-                          selectedItem?.id === item.id ? 'rotate-90' : ''
+                          isItemSelected(item.id) ? 'rotate-90' : ''
                         }`}
                       />
                     </div>
                   </div>
 
-                  {selectedItem?.id === item.id && (
+                  {isItemSelected(item.id) && (
                     <div className="border-t border-gray-200 bg-gray-50 p-4">
                       <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
                         <AlertCircle className="h-4 w-4 mr-2" />
@@ -388,16 +396,19 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                 if (category === 'maintenance') {
                                   handleCompleteMaintenance(item.id)
                                 } else {
-                                  // Verifica se il task è del giorno corrente
+                                  // Permetti completamento fino a 1 giorno prima della scadenza
                                   const today = new Date()
                                   today.setHours(0, 0, 0, 0)
                                   
                                   const taskDate = new Date(item.dueDate)
                                   taskDate.setHours(0, 0, 0, 0)
 
-                                  if (today.getTime() !== taskDate.getTime()) {
+                                  // Blocca solo se la mansione è più di 1 giorno nel futuro
+                                  const daysDiff = Math.floor((taskDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                                  
+                                  if (daysDiff > 1) {
                                     const taskDateStr = taskDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })
-                                    toast.warning(`⚠️ Puoi completare solo le mansioni del giorno corrente!\nQuesta mansione è del ${taskDateStr}.`, {
+                                    toast.warning(`⚠️ Puoi completare mansioni fino a 1 giorno prima!\nQuesta mansione è del ${taskDateStr}.`, {
                                       autoClose: 5000
                                     })
                                     return
@@ -414,7 +425,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                         await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
 
                                         toast.success('Mansione completata!')
-                                        setSelectedItem(null)
+                                        setSelectedItems([]) // Chiudi tutti gli item aperti
                                         
                                         // Chiudi e riapri il pannello per mostrare le modifiche
                                         onClose()
@@ -512,11 +523,11 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                 </div>
                               </div>
                             </div>
-                            <ChevronRight className={`h-5 w-5 text-gray-400 transition-transform ${selectedItem?.id === item.id ? 'rotate-90' : ''}`} />
+                            <ChevronRight className={`h-5 w-5 text-gray-400 transition-transform ${isItemSelected(item.id) ? 'rotate-90' : ''}`} />
                           </div>
                         </div>
 
-                        {selectedItem?.id === item.id && (
+                        {isItemSelected(item.id) && (
                           <div className="border-t-2 border-red-300 bg-red-50 p-4">
                             <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
                               <AlertCircle className="h-4 w-4 mr-2" />
@@ -551,16 +562,19 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                     if (category === 'maintenance') {
                                       handleCompleteMaintenance(item.id)
                                     } else {
-                                      // Verifica se il task è del giorno corrente
+                                      // Permetti completamento fino a 1 giorno prima della scadenza
                                       const today = new Date()
                                       today.setHours(0, 0, 0, 0)
                                       
                                       const taskDate = new Date(item.dueDate)
                                       taskDate.setHours(0, 0, 0, 0)
 
-                                      if (today.getTime() !== taskDate.getTime()) {
+                                      // Blocca solo se la mansione è più di 1 giorno nel futuro
+                                      const daysDiff = Math.floor((taskDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                                      
+                                      if (daysDiff > 1) {
                                         const taskDateStr = taskDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })
-                                        toast.warning(`⚠️ Puoi completare solo le mansioni del giorno corrente!\nQuesta mansione è del ${taskDateStr}.`, {
+                                        toast.warning(`⚠️ Puoi completare mansioni fino a 1 giorno prima!\nQuesta mansione è del ${taskDateStr}.`, {
                                           autoClose: 5000
                                         })
                                         return
@@ -577,7 +591,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                             await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
 
                                             toast.success('Mansione completata!')
-                                            setSelectedItem(null)
+                                            setSelectedItems([]) // Chiudi tutti gli item aperti
                                             
                                             // Chiudi e riapri il pannello per mostrare le modifiche
                                             onClose()
@@ -629,7 +643,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                           </div>
                         </div>
 
-                        {selectedItem?.id === item.id && (
+                        {isItemSelected(item.id) && (
                           <div className="border-t border-green-200 bg-green-50 p-4">
                             <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
                               <AlertCircle className="h-4 w-4 mr-2" />
@@ -692,62 +706,51 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                               )}
                             </div>
 
-                            {/* Pulsante Ripristina per mansioni completate */}
+                            {/* Pulsante Ripristina per mansioni completate - SOLO per chi ha completato */}
                             {category === 'generic_tasks' && (() => {
                               const canUncomplete = item.metadata.completedBy === user?.id
                               
+                              // Mostra la sezione SOLO se l'utente può ripristinare
+                              if (!canUncomplete) {
+                                return null
+                              }
+                              
                               return (
                                 <div className="pt-4 border-t-2 border-yellow-400 mt-4 bg-yellow-50 p-4 rounded-lg">
-                                  {canUncomplete ? (
-                                    <>
-                                      <button
-                                        onClick={(e) => {
-                                          e.preventDefault()
-                                          e.stopPropagation()
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
 
-                                          const taskId = item.metadata.taskId || item.id
-                                          uncompleteTask(
-                                            { taskId: taskId },
-                                            {
-                                              onSuccess: async () => {
-                                                await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
-                                                await queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
-                                                await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
-                                                await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
-                                                setSelectedItem(null)
-                                                
-                                                // Chiudi e riapri il pannello per mostrare le modifiche
-                                                onClose()
-                                              },
-                                              onError: (error) => {
-                                                console.error('Error uncompleting task:', error)
-                                              }
-                                            }
-                                          )
-                                        }}
-                                        disabled={isUncompleting}
-                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                      >
-                                        <RotateCcw className="w-5 h-5" />
-                                        {isUncompleting ? 'Ripristinando...' : 'Ripristina come "Da Completare"'}
-                                      </button>
-                                      <p className="text-xs text-gray-600 mt-2 text-center">
-                                        ⚠️ Questo annullerà il completamento della mansione
-                                      </p>
-                                    </>
-                                  ) : (
-                                    <div className="text-center p-4 bg-gray-100 rounded-lg border-2 border-gray-300">
-                                      <p className="text-sm font-medium text-gray-700 mb-2">
-                                        🔒 Ripristino non autorizzato
-                                      </p>
-                                      <p className="text-xs text-gray-600">
-                                        Solo l'utente che ha completato questa mansione può ripristinarla.
-                                        {item.metadata.completedByName && (
-                                          <><br />Completata da: <strong>{item.metadata.completedByName}</strong></>
-                                        )}
-                                      </p>
-                                    </div>
-                                  )}
+                                      const taskId = item.metadata.taskId || item.id
+                                      uncompleteTask(
+                                        { taskId: taskId },
+                                        {
+                                          onSuccess: async () => {
+                                            await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
+                                            await queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
+                                            await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
+                                            await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
+                                            setSelectedItems([]) // Chiudi tutti gli item aperti
+                                            
+                                            // Chiudi e riapri il pannello per mostrare le modifiche
+                                            onClose()
+                                          },
+                                          onError: (error) => {
+                                            console.error('Error uncompleting task:', error)
+                                          }
+                                        }
+                                      )
+                                    }}
+                                    disabled={isUncompleting}
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    <RotateCcw className="w-5 h-5" />
+                                    {isUncompleting ? 'Ripristinando...' : 'Ripristina come "Da Completare"'}
+                                  </button>
+                                  <p className="text-xs text-gray-600 mt-2 text-center">
+                                    ⚠️ Questo annullerà il completamento della mansione
+                                  </p>
                                 </div>
                               )
                             })()}
