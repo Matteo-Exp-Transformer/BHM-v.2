@@ -70,6 +70,10 @@ export const CalendarPage = () => {
       }))
     })
     
+    if (filteredEvents.length === 0) {
+      console.log('⚠️ No events to filter - check useFilteredEvents or useAggregatedEvents')
+    }
+    
     return filteredEvents.filter(event => {
       const typeMatch = activeFilters.eventTypes.length === 0 || activeFilters.eventTypes.includes(event.type)
       const priorityMatch = activeFilters.priorities.length === 0 || activeFilters.priorities.includes(event.priority)

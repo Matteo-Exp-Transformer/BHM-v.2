@@ -75,6 +75,8 @@ export function HorizontalCalendarFilters({
   className,
 }: HorizontalCalendarFiltersProps) {
   const storedFilters = loadFiltersFromStorage()
+  console.log('🔧 Stored filters from localStorage:', storedFilters)
+  
   const defaultFilters: CalendarFilterOptions = {
     eventTypes: initialFilters?.eventTypes ||
       (storedFilters.eventTypes && storedFilters.eventTypes.length > 0 ? storedFilters.eventTypes : null) ||
@@ -86,10 +88,24 @@ export function HorizontalCalendarFilters({
       (storedFilters.statuses && storedFilters.statuses.length > 0 ? storedFilters.statuses : null) ||
       ['pending', 'in_progress', 'overdue', 'completed'],
   }
+  
+  console.log('🔧 Computed default filters:', defaultFilters)
 
   const [filters, setFilters] = useState<CalendarFilterOptions>(defaultFilters)
 
+  // Fix: Se i filtri sono vuoti, forza il reset ai default
   useEffect(() => {
+    if (filters.eventTypes.length === 0 || filters.priorities.length === 0 || filters.statuses.length === 0) {
+      console.log('⚠️ Empty filters detected, resetting to defaults')
+      const resetFilters: CalendarFilterOptions = {
+        eventTypes: ['maintenance', 'general_task', 'temperature_reading', 'custom'],
+        priorities: ['critical', 'high', 'medium', 'low'],
+        statuses: ['pending', 'in_progress', 'overdue', 'completed'],
+      }
+      setFilters(resetFilters)
+      return
+    }
+    
     onFilterChange(filters)
     saveFiltersToStorage(filters)
   }, [filters, onFilterChange])
