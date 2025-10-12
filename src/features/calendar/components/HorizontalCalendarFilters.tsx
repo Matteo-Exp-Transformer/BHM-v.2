@@ -95,30 +95,45 @@ export function HorizontalCalendarFilters({
   }, [filters, onFilterChange])
 
   const toggleEventType = (type: CalendarEvent['type']) => {
-    setFilters(prev => ({
-      ...prev,
-      eventTypes: prev.eventTypes.includes(type)
+    console.log('🔄 Toggle event type:', type, 'Current:', filters.eventTypes)
+    setFilters(prev => {
+      const newEventTypes = prev.eventTypes.includes(type)
         ? prev.eventTypes.filter(t => t !== type)
-        : [...prev.eventTypes, type],
-    }))
+        : [...prev.eventTypes, type]
+      console.log('✅ New event types:', newEventTypes)
+      return {
+        ...prev,
+        eventTypes: newEventTypes,
+      }
+    })
   }
 
   const togglePriority = (priority: CalendarEvent['priority']) => {
-    setFilters(prev => ({
-      ...prev,
-      priorities: prev.priorities.includes(priority)
+    console.log('🔄 Toggle priority:', priority, 'Current:', filters.priorities)
+    setFilters(prev => {
+      const newPriorities = prev.priorities.includes(priority)
         ? prev.priorities.filter(p => p !== priority)
-        : [...prev.priorities, priority],
-    }))
+        : [...prev.priorities, priority]
+      console.log('✅ New priorities:', newPriorities)
+      return {
+        ...prev,
+        priorities: newPriorities,
+      }
+    })
   }
 
   const toggleStatus = (status: CalendarEvent['status']) => {
-    setFilters(prev => ({
-      ...prev,
-      statuses: prev.statuses.includes(status)
+    console.log('🔄 Toggle status:', status, 'Current:', filters.statuses)
+    setFilters(prev => {
+      const newStatuses = prev.statuses.includes(status)
         ? prev.statuses.filter(s => s !== status)
-        : [...prev.statuses, status],
-    }))
+        : [...prev.statuses, status]
+      console.log('✅ New statuses:', newStatuses)
+      return {
+        ...prev,
+        statuses: newStatuses,
+      }
+    })
   }
 
   const resetFilters = () => {
