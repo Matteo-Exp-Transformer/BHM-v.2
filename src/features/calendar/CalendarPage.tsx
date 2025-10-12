@@ -21,16 +21,18 @@ import { useAggregatedEvents } from './hooks/useAggregatedEvents'
 import { useFilteredEvents } from './hooks/useFilteredEvents'
 import { useGenericTasks } from './hooks/useGenericTasks'
 import { useStaff } from '@/features/management/hooks/useStaff'
+import { useCalendarSettings } from '@/hooks/useCalendarSettings'
 
 export const CalendarPage = () => {
-  // ✅ Sostituisci useCalendar con nuovi hooks
   const { events: aggregatedEvents, isLoading, sources } = useAggregatedEvents()
   const { filteredEvents } = useFilteredEvents(aggregatedEvents)
   const { alertCount, criticalCount, alerts } = useCalendarAlerts(filteredEvents)
   const [view, setView] = useCalendarView('month')
   const { createTask, isCreating } = useGenericTasks()
   const { staff } = useStaff()
+  const { settings: calendarSettings, isLoading: settingsLoading, isConfigured } = useCalendarSettings()
   const [showAlertModal, setShowAlertModal] = useState(false)
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null)
 
   const [activeFilters, setActiveFilters] = useState({
     eventTypes: [
@@ -64,24 +66,58 @@ export const CalendarPage = () => {
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
     return displayEvents.filter(
-      event => event.start >= today && event.start < tomorrow
+      event => {
+        const eventDate = new Date(event.start)
+        return eventDate >= today &&
+               eventDate < tomorrow &&
+               event.status !== 'completed'
+      }
     )
   }, [displayEvents])
 
-  const upcomingEvents = useMemo(() => {
+  const tomorrowEvents = useMemo(() => {
     const now = new Date()
-    const futureDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+    const tomorrow = new Date(now)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(0, 0, 0, 0)
+    const dayAfterTomorrow = new Date(tomorrow)
+    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1)
+
     return displayEvents.filter(
-      event =>
-        event.start >= now &&
-        event.start <= futureDate &&
-        event.status === 'pending'
+      event => {
+        const eventDate = new Date(event.start)
+        return eventDate >= tomorrow && eventDate < dayAfterTomorrow
+      }
     )
   }, [displayEvents])
 
   const overdueEvents = useMemo(() => {
-    return displayEvents.filter(event => event.status === 'overdue')
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    const oneWeekAgo = new Date(now)
+    oneWeekAgo.setDate(now.getDate() - 7)
+
+    return displayEvents.filter(event => {
+      if (event.status === 'completed') return false
+
+      const eventDate = new Date(event.start)
+      eventDate.setHours(0, 0, 0, 0)
+
+      return eventDate >= oneWeekAgo && eventDate < now
+    })
   }, [displayEvents])
+
+  const shouldShowOverdueSection = useMemo(() => {
+    if (overdueEvents.length === 0) return false
+    if (!selectedCalendarDate) return true
+
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    const selectedDate = new Date(selectedCalendarDate)
+    selectedDate.setHours(0, 0, 0, 0)
+
+    return selectedDate <= now
+  }, [overdueEvents.length, selectedCalendarDate])
 
   // ✅ Event handlers
   const onEventClick = (event: any) => {
@@ -129,6 +165,7 @@ export const CalendarPage = () => {
       assigned_to_staff_id: taskData.assegnatoADipendenteSpecifico,
       note: taskData.note,
       custom_days: taskData.giorniCustom,
+      start_date: taskData.dataInizio, // Data di inizio opzionale
     })
   }
 
@@ -325,21 +362,83 @@ export const CalendarPage = () => {
                       <AlertCircle className="h-4 w-4 mr-2" />
                       <span>{overdueEvents.length} eventi in ritardo</span>
                     </div>
-                    <div className="flex items-center text-sm text-yellow-600">
-                      <CalendarIcon className="h-4 w-4 mr-2" />
-                      <span>
-                        {upcomingEvents.length} eventi prossimi (7 giorni)
-                      </span>
-                    </div>
                     <div className="flex items-center text-sm text-blue-600">
-                      <Activity className="h-4 w-4 mr-2" />
+                      <CalendarIcon className="h-4 w-4 mr-2" />
                       <span>{todayEvents.length} eventi oggi</span>
+                    </div>
+                    <div className="flex items-center text-sm text-green-600">
+                      <Activity className="h-4 w-4 mr-2" />
+                      <span>{tomorrowEvents.length} eventi domani</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </CollapsibleCard>
+
+          {/* Attività in Ritardo */}
+          {shouldShowOverdueSection && (
+            <CollapsibleCard
+              title="Attività in Ritardo"
+              icon={AlertCircle}
+              defaultOpen={true}
+              className="bg-red-50 border-red-200"
+            >
+              <div className="space-y-3">
+                {overdueEvents.map(event => (
+                  <div
+                    key={event.id}
+                    className="bg-white border border-red-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => {
+                      // TODO: Aprire modal dettagli evento
+                    }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm">
+                            {event.type === 'maintenance' && '🔧'}
+                            {event.type === 'general_task' && '📋'}
+                            {event.type === 'temperature_reading' && '🌡️'}
+                            {event.type === 'custom' && '📌'}
+                          </span>
+                          <h4 className="text-sm font-semibold text-gray-900">
+                            {event.title}
+                          </h4>
+                        </div>
+                        {event.description && (
+                          <p className="text-xs text-gray-600 mb-2">
+                            {event.description}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-3 text-xs text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <CalendarIcon className="h-3 w-3" />
+                            {new Date(event.start).toLocaleDateString('it-IT', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            event.priority === 'critical' ? 'bg-red-100 text-red-800' :
+                            event.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                            event.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {event.priority === 'critical' ? '🔴 Critico' :
+                             event.priority === 'high' ? '🟠 Alto' :
+                             event.priority === 'medium' ? '🟡 Medio' :
+                             '🔵 Basso'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleCard>
+          )}
         </div>
 
         {/* Filtri Orizzontali */}
@@ -352,95 +451,53 @@ export const CalendarPage = () => {
 
         {/* Calendario */}
         <div className="mb-6">
-            <Calendar
-              events={displayEvents}
-              onEventClick={onEventClick}
-              onEventCreate={handleCreateEvent}
-              onEventUpdate={onEventUpdate}
-              onEventDelete={onEventDelete}
-              onDateSelect={onDateSelect}
-              config={{
-                defaultView:
-                  view === 'year'
-                    ? 'multiMonthYear'
-                    : view === 'month'
-                      ? 'dayGridMonth'
-                      : view === 'week'
-                        ? 'timeGridWeek'
-                        : 'timeGridDay',
-                headerToolbar: {
-                  left: 'prev,next today',
-                  center: 'title',
-                  right: '',
-                },
-              }}
-              currentView={view}
-              loading={isLoading}
-              error={null}
-              useMacroCategories={true}
-            />
+          {!isConfigured() && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-yellow-600" />
+                <p className="text-sm text-yellow-800">
+                  <strong>Calendario non configurato.</strong> Completa la configurazione iniziale per abilitare il calendario.
+                </p>
+              </div>
+            </div>
+          )}
+          <Calendar
+            events={displayEvents}
+            onEventClick={onEventClick}
+            onEventCreate={handleCreateEvent}
+            onEventUpdate={onEventUpdate}
+            onEventDelete={onEventDelete}
+            onDateSelect={onDateSelect}
+            onDateClick={setSelectedCalendarDate}
+            config={{
+              defaultView:
+                view === 'year'
+                  ? 'multiMonthYear'
+                  : view === 'month'
+                    ? 'dayGridMonth'
+                    : view === 'week'
+                      ? 'timeGridWeek'
+                      : 'timeGridDay',
+              headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: '',
+              },
+              validRange: calendarSettings?.is_configured ? {
+                start: calendarSettings.fiscal_year_start,
+                end: calendarSettings.fiscal_year_end,
+              } : undefined,
+            }}
+            currentView={view}
+            loading={isLoading || settingsLoading}
+            error={null}
+            useMacroCategories={true}
+            calendarSettings={calendarSettings}
+          />
         </div>
 
         {/* Quick Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Today's Events */}
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-            <div className="p-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <CalendarIcon className="h-5 w-5 mr-2 text-blue-600" />
-                Eventi di Oggi
-              </h3>
-            </div>
-            <div className="p-4">
-              {todayEvents.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">
-                  Nessun evento programmato per oggi
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {todayEvents.slice(0, 3).map(event => (
-                    <div
-                      key={event.id}
-                      className="flex items-center justify-between p-2 bg-gray-50 rounded-md"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {event.title}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {event.start.toLocaleTimeString('it-IT', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
-                      </div>
-                      <span
-                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          event.status === 'completed'
-                            ? 'bg-green-100 text-green-800'
-                            : event.status === 'overdue'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {event.status === 'completed'
-                          ? '✅'
-                          : event.status === 'overdue'
-                            ? '⚠️'
-                            : '⏳'}
-                      </span>
-                    </div>
-                  ))}
-                  {todayEvents.length > 3 && (
-                    <p className="text-xs text-gray-500 text-center">
-                      +{todayEvents.length - 3} altri eventi
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* Overdue Events */}
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
             <div className="p-4 border-b border-gray-200">
@@ -488,22 +545,22 @@ export const CalendarPage = () => {
             </div>
           </div>
 
-          {/* Upcoming Events */}
+          {/* Today's Events */}
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
             <div className="p-4 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <Activity className="h-5 w-5 mr-2 text-blue-600" />
-                Prossimi Eventi
+                <CalendarIcon className="h-5 w-5 mr-2 text-blue-600" />
+                Eventi di Oggi
               </h3>
             </div>
             <div className="p-4">
-              {upcomingEvents.length === 0 ? (
+              {todayEvents.length === 0 ? (
                 <p className="text-sm text-gray-500 text-center py-4">
-                  Nessun evento nei prossimi 7 giorni
+                  Nessun evento oggi
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {upcomingEvents.slice(0, 3).map(event => (
+                  {todayEvents.slice(0, 3).map(event => (
                     <div
                       key={event.id}
                       className="flex items-center justify-between p-2 bg-blue-50 rounded-md"
@@ -537,9 +594,68 @@ export const CalendarPage = () => {
                       </span>
                     </div>
                   ))}
-                  {upcomingEvents.length > 3 && (
+                  {todayEvents.length > 3 && (
                     <p className="text-xs text-blue-500 text-center">
-                      +{upcomingEvents.length - 3} altri eventi programmati
+                      +{todayEvents.length - 3} altri eventi oggi
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Tomorrow's Events */}
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                <Activity className="h-5 w-5 mr-2 text-green-600" />
+                Eventi di Domani
+              </h3>
+            </div>
+            <div className="p-4">
+              {tomorrowEvents.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-4">
+                  Nessun evento domani
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {tomorrowEvents.slice(0, 3).map(event => (
+                    <div
+                      key={event.id}
+                      className="flex items-center justify-between p-2 bg-green-50 rounded-md"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {event.title}
+                        </p>
+                        <p className="text-xs text-green-600">
+                          {event.start.toLocaleDateString('it-IT', {
+                            weekday: 'short',
+                            day: '2-digit',
+                            month: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          event.priority === 'critical'
+                            ? 'bg-red-100 text-red-800'
+                            : event.priority === 'high'
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-green-100 text-green-800'
+                        }`}
+                      >
+                        {event.priority === 'critical'
+                          ? '🔴'
+                          : event.priority === 'high'
+                            ? '🟠'
+                            : '🟢'}
+                      </span>
+                    </div>
+                  ))}
+                  {tomorrowEvents.length > 3 && (
+                    <p className="text-xs text-green-500 text-center">
+                      +{tomorrowEvents.length - 3} altri eventi domani
                     </p>
                   )}
                 </div>

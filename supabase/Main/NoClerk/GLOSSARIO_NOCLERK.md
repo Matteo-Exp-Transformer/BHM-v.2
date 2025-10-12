@@ -28,6 +28,7 @@ Questo glossario garantisce la **compliance perfetta** tra:
 6. [Migration Guide: Clerk → Supabase Auth](#6-migration-guide-clerk--supabase-auth)
 7. [Validation Rules](#7-validation-rules)
 8. [Best Practices](#8-best-practices)
+9. [Features Recenti](#9-features-recenti)
 
 ---
 
@@ -442,6 +443,33 @@ export interface Task {
   updated_at: Date             // TIMESTAMPTZ
 }
 
+#### `TaskCompletion`
+```typescript
+// Tabella: task_completions
+export interface TaskCompletion {
+  id: string                    // UUID
+  company_id: string           // UUID → companies.id
+  task_id: string              // UUID → tasks.id ON DELETE CASCADE
+  completed_by: string | null  // UUID → auth.users.id
+  completed_at: Date           // TIMESTAMPTZ DEFAULT now()
+  period_start: Date           // TIMESTAMPTZ NOT NULL
+  period_end: Date             // TIMESTAMPTZ NOT NULL
+  notes: string | null         // TEXT
+  created_at: Date             // TIMESTAMPTZ
+  updated_at: Date             // TIMESTAMPTZ
+}
+
+// Period Tracking:
+// - daily: giorno corrente (00:00 - 23:59)
+// - weekly: settimana corrente (lunedì 00:00 - domenica 23:59)
+// - monthly: mese corrente (1° giorno 00:00 - ultimo giorno 23:59)
+// - annually: anno corrente (1 gen 00:00 - 31 dic 23:59)
+
+export interface CompleteTaskInput {
+  taskId: string
+  notes?: string
+}
+
 export interface CreateTaskInput {
   name: string
   description?: string
@@ -459,11 +487,17 @@ export interface CreateTaskInput {
   documentation_url?: string
   validation_notes?: string
   next_due?: Date
+  start_date?: string  // Data di inizio in formato ISO (YYYY-MM-DD) - Se specificata, l'attività parte da questa data
 }
 
 export interface UpdateTaskInput extends Partial<CreateTaskInput> {
   id: string
   status?: TaskStatus
+}
+
+export interface CompleteTaskInput {
+  taskId: string
+  notes?: string
 }
 ```
 
@@ -1184,7 +1218,7 @@ const getTemperatureTrends = async (
 
 ---
 
-### 4.4 Task Queries
+### 4.4 Task & Completion Queries
 
 #### Get Overdue Tasks
 ```typescript
@@ -1210,7 +1244,7 @@ const getOverdueTasks = async (companyId: string) => {
 const getTasksForCurrentUser = async (companyId: string) => {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
-  
+
   // Ottieni company_member per sapere ruolo e staff_id
   const { data: member } = await supabase
     .from('company_members')
@@ -1218,9 +1252,9 @@ const getTasksForCurrentUser = async (companyId: string) => {
     .eq('user_id', user.id)
     .eq('company_id', companyId)
     .single()
-  
+
   if (!member) return []
-  
+
   // Query task in base all'assegnazione
   const { data: tasks } = await supabase
     .from('tasks')
@@ -1231,8 +1265,109 @@ const getTasksForCurrentUser = async (companyId: string) => {
       and(assignment_type.eq.role,assigned_to_role.eq.${member.role})
     `)
     .order('next_due', { ascending: true })
-  
+
   return tasks
+}
+```
+
+#### Complete Task
+```typescript
+// Completa un task per il periodo corrente
+const completeTask = async (input: CompleteTaskInput, companyId: string) => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Non autenticato')
+
+  // Trova task per determinare periodo
+  const { data: task } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('id', input.taskId)
+    .eq('company_id', companyId)
+    .single()
+
+  if (!task) throw new Error('Task non trovato')
+
+  // Calcola period_start e period_end in base a frequency
+  const now = new Date()
+  let period_start: Date
+  let period_end: Date
+
+  switch (task.frequency) {
+    case 'daily':
+      period_start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
+      period_end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+      break
+    case 'weekly':
+      const dayOfWeek = now.getDay() || 7
+      const monday = new Date(now)
+      monday.setDate(now.getDate() - (dayOfWeek - 1))
+      period_start = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 0, 0, 0)
+      const sunday = new Date(monday)
+      sunday.setDate(monday.getDate() + 6)
+      period_end = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate(), 23, 59, 59)
+      break
+    case 'monthly':
+      period_start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0)
+      period_end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+      break
+    case 'annually':
+    case 'annual':
+      period_start = new Date(now.getFullYear(), 0, 1, 0, 0, 0)
+      period_end = new Date(now.getFullYear(), 11, 31, 23, 59, 59)
+      break
+    default:
+      period_start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
+      period_end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+  }
+
+  // Insert task completion
+  const { data, error } = await supabase
+    .from('task_completions')
+    .insert({
+      company_id: companyId,
+      task_id: input.taskId,
+      completed_by: user.id,
+      period_start: period_start.toISOString(),
+      period_end: period_end.toISOString(),
+      notes: input.notes,
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+```
+
+#### Get Task Completions
+```typescript
+// Ottieni completamenti di un task
+const getTaskCompletions = async (taskId: string, companyId: string) => {
+  const { data, error } = await supabase
+    .from('task_completions')
+    .select('*')
+    .eq('company_id', companyId)
+    .eq('task_id', taskId)
+    .order('completed_at', { ascending: false })
+
+  if (error) throw error
+  return data
+}
+```
+
+#### Check if Task Completed in Period
+```typescript
+// Verifica se task è completato per un periodo specifico
+const isTaskCompletedInPeriod = (
+  eventDate: Date,
+  completions: TaskCompletion[]
+): boolean => {
+  return completions.some(c => {
+    const eventTime = eventDate.getTime()
+    const completionStart = c.period_start.getTime()
+    const completionEnd = c.period_end.getTime()
+    return eventTime >= completionStart && eventTime <= completionEnd
+  })
 }
 ```
 
@@ -1455,11 +1590,11 @@ export const useStaffWithDepartments = (companyId: string) => {
 
 export const useAssignDepartments = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: ({ staffId, departmentIds }: { 
+    mutationFn: ({ staffId, departmentIds }: {
       staffId: string
-      departmentIds: string[] 
+      departmentIds: string[]
     }) => assignStaffToDepartments(staffId, departmentIds),
     onSuccess: (_, variables) => {
       // Invalida cache staff
@@ -1478,6 +1613,74 @@ export const useAssignDepartments = () => {
 // const { data: staff } = useStaffWithDepartments(companyId)
 // const { mutate: assignDepts } = useAssignDepartments()
 // assignDepts({ staffId: 'xxx', departmentIds: ['dept1', 'dept2'] })
+```
+
+#### React Query Hook for Calendar Tasks
+```typescript
+// Hook per task generici con completamenti
+export const useGenericTasks = (companyId: string) => {
+  return useQuery({
+    queryKey: ['generic-tasks', companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('company_id', companyId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return data
+    },
+    enabled: !!companyId,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+// Hook per completamenti task
+export const useTaskCompletions = (companyId: string) => {
+  return useQuery({
+    queryKey: ['task-completions', companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('task_completions')
+        .select('*')
+        .eq('company_id', companyId)
+
+      if (error) throw error
+      return data
+    },
+    enabled: !!companyId,
+    staleTime: 2 * 60 * 1000, // 2 minuti (più frequente)
+  })
+}
+
+// Mutation per completare task
+export const useCompleteTask = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ taskId, notes, companyId }: CompleteTaskInput & { companyId: string }) =>
+      completeTask({ taskId, notes }, companyId),
+    onSuccess: (_, variables) => {
+      // Invalida tutte le query calendario
+      queryClient.invalidateQueries(['generic-tasks', variables.companyId])
+      queryClient.invalidateQueries(['task-completions', variables.companyId])
+      queryClient.invalidateQueries(['calendar-events', variables.companyId])
+      queryClient.invalidateQueries(['macro-category-events'])
+      toast.success('Mansione completata')
+    },
+    onError: (error) => {
+      console.error('Errore completamento task:', error)
+      toast.error('Impossibile completare la mansione')
+    }
+  })
+}
+
+// Uso nei componenti:
+// const { data: tasks } = useGenericTasks(companyId)
+// const { data: completions } = useTaskCompletions(companyId)
+// const { mutate: complete } = useCompleteTask()
+// complete({ taskId: 'xxx', notes: 'Done', companyId })
 ```
 
 ---
@@ -2054,6 +2257,76 @@ const { data } = await supabase
 
 ---
 
+## 9. FEATURES RECENTI
+
+### 9.1 Data di Inizio Task Generici (2025-01-12)
+
+**Feature:** Campo "Assegna Data di Inizio" per nuove attività generiche.
+
+#### Interfacce Aggiornate
+
+```typescript
+// CreateGenericTaskInput aggiornato
+export interface CreateGenericTaskInput {
+  name: string
+  frequency: GenericTask['frequency']
+  assigned_to_role: string
+  assigned_to_category?: string
+  assigned_to_staff_id?: string
+  note?: string
+  custom_days?: string[]
+  start_date?: string  // NUOVO: Data di inizio in formato ISO (YYYY-MM-DD)
+}
+```
+
+#### Logica
+
+**Default (campo vuoto):**
+- `start_date` non specificato → task inizia da oggi
+- `calculateNextDue` usa `new Date()` come base
+
+**Custom (campo compilato):**
+- `start_date` specificato (es. '2025-10-18') → task inizia da quella data
+- `calculateNextDue` usa `new Date(start_date)` come base
+
+**Validazione:**
+- Data non può essere retroattiva (solo oggi o futuro)
+- Validazione HTML: `<input type="date" min="oggi" />`
+- Validazione JS: confronto date normalizzate
+
+#### Componenti Modificati
+
+1. **GenericTaskForm.tsx**: Campo "Assegna Data di Inizio" con validazione
+2. **CalendarPage.tsx**: Passa `start_date` al handler
+3. **useGenericTasks.ts**: `calculateNextDue` accetta parametro `startDate`
+4. **useMacroCategoryEvents.ts**: Usa `next_due` invece di `created_at` per data inizio
+
+#### Query Pattern
+
+```typescript
+// Creazione task con data inizio
+const { data, error } = await supabase
+  .from('tasks')
+  .insert({
+    company_id: companyId,
+    name: 'Pulizia cucina',
+    frequency: 'weekly',
+    assigned_to: 'dipendente',
+    assignment_type: 'role',
+    next_due: new Date('2025-10-18').toISOString(), // Data di inizio custom
+  })
+  .select()
+  .single()
+```
+
+#### Impatto Database
+
+- **Nessuna migrazione richiesta**: usa campo esistente `next_due`
+- Campo `next_due` rappresenta la prima occorrenza del task
+- Per task ricorrenti, espansione parte da `next_due` (se presente) o `created_at` (fallback)
+
+---
+
 ## 🎯 CHECKLIST COMPLIANCE
 
 Usa questa checklist per verificare la compliance del codice:
@@ -2124,8 +2397,8 @@ SELECT get_user_role_for_company('[company-id]');
 
 ---
 
-**Versione Glossario**: 1.0.0  
-**Ultimo Aggiornamento**: 9 Gennaio 2025  
+**Versione Glossario**: 1.1.0  
+**Ultimo Aggiornamento**: 12 Gennaio 2025  
 **Stato**: ✅ Produzione Ready  
 **Maintainer**: Dev Team BHM v.2
 

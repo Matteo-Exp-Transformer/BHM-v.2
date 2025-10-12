@@ -23,6 +23,7 @@ interface GenericTaskFormData {
   assegnatoACategoria?: string
   assegnatoADipendenteSpecifico?: string
   giorniCustom?: CustomFrequencyDays[]
+  dataInizio?: string // Data di inizio in formato ISO (YYYY-MM-DD)
   note?: string
 }
 
@@ -98,6 +99,17 @@ export const GenericTaskForm = ({
     }
     if (formData.frequenza === 'custom' && (!formData.giorniCustom || formData.giorniCustom.length === 0)) {
       newErrors.giorni = 'Seleziona almeno un giorno per frequenza personalizzata'
+    }
+    // Validazione data di inizio: non può essere nel passato
+    if (formData.dataInizio) {
+      const selectedDate = new Date(formData.dataInizio)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      selectedDate.setHours(0, 0, 0, 0)
+      
+      if (selectedDate < today) {
+        newErrors.dataInizio = 'La data di inizio non può essere nel passato'
+      }
     }
 
     setErrors(newErrors)
@@ -191,6 +203,27 @@ export const GenericTaskForm = ({
           </Select>
           {errors.frequenza && (
             <p className="mt-1 text-sm text-red-600">{errors.frequenza}</p>
+          )}
+        </div>
+
+        {/* Data di Inizio */}
+        <div>
+          <Label>Assegna Data di Inizio</Label>
+          <Input
+            type="date"
+            value={formData.dataInizio ?? ''}
+            onChange={e => updateField({ dataInizio: e.target.value })}
+            min={new Date().toISOString().split('T')[0]}
+            className="w-full"
+            placeholder="Lascia vuoto per iniziare da oggi"
+            aria-invalid={Boolean(errors.dataInizio)}
+          />
+          {errors.dataInizio ? (
+            <p className="mt-1 text-sm text-red-600">{errors.dataInizio}</p>
+          ) : (
+            <p className="mt-1 text-xs text-gray-500">
+              Opzionale - Se non specificata, l'attività inizia da oggi
+            </p>
           )}
         </div>
 
