@@ -282,42 +282,45 @@ export const useGenericTasks = () => {
       const task = tasks.find(t => t.id === taskId)
       if (!task) throw new Error('Task not found')
 
+      // Usa next_due se disponibile, altrimenti usa data corrente
+      // Questo permette di completare una mansione "per la sua scadenza" anche se fatta in anticipo
+      const referenceDate = task.next_due ? new Date(task.next_due) : new Date()
+      
       // Calcola period_start e period_end basato sulla frequenza
-      const now = new Date()
       let period_start: Date
       let period_end: Date
 
       switch (task.frequency) {
         case 'daily':
-          // Periodo: giorno corrente
-          period_start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
-          period_end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+          // Periodo: giorno di riferimento
+          period_start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 0, 0, 0)
+          period_end = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 23, 59, 59)
           break
         case 'weekly':
-          // Periodo: settimana corrente (lunedì-domenica)
-          const dayOfWeek = now.getDay() || 7 // 0=domenica -> 7
-          const monday = new Date(now)
-          monday.setDate(now.getDate() - (dayOfWeek - 1))
+          // Periodo: settimana di riferimento (lunedì-domenica)
+          const dayOfWeek = referenceDate.getDay() || 7 // 0=domenica -> 7
+          const monday = new Date(referenceDate)
+          monday.setDate(referenceDate.getDate() - (dayOfWeek - 1))
           period_start = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 0, 0, 0)
           const sunday = new Date(monday)
           sunday.setDate(monday.getDate() + 6)
           period_end = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate(), 23, 59, 59)
           break
         case 'monthly':
-          // Periodo: mese corrente
-          period_start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0)
-          period_end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+          // Periodo: mese di riferimento
+          period_start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1, 0, 0, 0)
+          period_end = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 0, 23, 59, 59)
           break
         case 'annually':
         case 'annual':
-          // Periodo: anno corrente
-          period_start = new Date(now.getFullYear(), 0, 1, 0, 0, 0)
-          period_end = new Date(now.getFullYear(), 11, 31, 23, 59, 59)
+          // Periodo: anno di riferimento
+          period_start = new Date(referenceDate.getFullYear(), 0, 1, 0, 0, 0)
+          period_end = new Date(referenceDate.getFullYear(), 11, 31, 23, 59, 59)
           break
         default:
-          // Per altre frequenze, usa giorno corrente
-          period_start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
-          period_end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+          // Per altre frequenze, usa giorno di riferimento
+          period_start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 0, 0, 0)
+          period_end = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 23, 59, 59)
       }
 
 
