@@ -44,6 +44,7 @@ export interface CreateGenericTaskInput {
   note?: string
   custom_days?: string[] // Giorni della settimana se frequenza custom
   start_date?: string // Data di inizio in formato ISO (YYYY-MM-DD)
+  end_date?: string // Data di fine in formato ISO (YYYY-MM-DD) - limita espansione eventi
 }
 
 const QUERY_KEYS = {
@@ -198,6 +199,13 @@ export const useGenericTasks = () => {
         payload.assigned_to_category = input.assigned_to_category
       }
       if (next_due) payload.next_due = next_due.toISOString()
+      
+      // Salva end_date nei metadata se specificato
+      if (input.end_date) {
+        payload.description = payload.description 
+          ? `${payload.description}\n[END_DATE:${input.end_date}]`
+          : `[END_DATE:${input.end_date}]`
+      }
 
       const { data, error } = await supabase
         .from('tasks')

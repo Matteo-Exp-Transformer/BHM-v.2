@@ -30,7 +30,14 @@ interface AggregatedEventsResult {
   }
 }
 
-export function useAggregatedEvents(): AggregatedEventsResult {
+// Helper function per estrarre end_date dalla description
+function extractEndDate(description?: string): Date | null {
+  if (!description) return null
+  const match = description.match(/\[END_DATE:(\d{4}-\d{2}-\d{2})\]/)
+  return match ? new Date(match[1]) : null
+}
+
+export function useAggregatedEvents(fiscalYearEnd?: Date): AggregatedEventsResult {
   const { user, companyId } = useAuth()
   const { maintenanceTasks, isLoading: maintenanceLoading } =
     useMaintenanceTasks()
@@ -80,9 +87,9 @@ export function useAggregatedEvents(): AggregatedEventsResult {
 
     // ✅ Espandi attività ricorrenti per mostrare occorrenze multiple
     return maintenanceTasks.flatMap(task =>
-      expandRecurringTask(task, companyId || '', user?.id || '', 'maintenance')
+      expandRecurringTask(task, companyId || '', user?.id || '', 'maintenance', undefined, fiscalYearEnd)
     )
-  }, [maintenanceTasks, companyId, user?.id])
+  }, [maintenanceTasks, companyId, user?.id, fiscalYearEnd])
 
   const haccpExpiryEvents = useMemo(() => {
     if (!staff || staff.length === 0) return []
@@ -136,9 +143,9 @@ export function useAggregatedEvents(): AggregatedEventsResult {
 
     // ✅ Espandi attività ricorrenti per mostrare occorrenze multiple
     return genericTasks.flatMap(task =>
-      expandRecurringTask(task, companyId || '', user?.id || '', 'generic', taskCompletions)
+      expandRecurringTask(task, companyId || '', user?.id || '', 'generic', taskCompletions, fiscalYearEnd)
     )
-  }, [genericTasks, companyId, user?.id, taskCompletions])
+  }, [genericTasks, companyId, user?.id, taskCompletions, fiscalYearEnd])
 
   const allEvents = useMemo(() => {
     return [
@@ -163,12 +170,12 @@ export function useAggregatedEvents(): AggregatedEventsResult {
     isLoading,
     error: null,
     sources: {
-      maintenance: maintenanceEvents.length,
+      maintenance: maintenanceEvents.filter(e => e.status !== 'completed').length,
       haccpExpiry: haccpExpiryEvents.length,
       productExpiry: productExpiryEvents.length,
       haccpDeadlines: haccpDeadlineEvents.length,
       temperatureChecks: temperatureEvents.length,
-      genericTasks: genericTaskEvents.length,
+      genericTasks: genericTaskEvents.filter(e => e.status !== 'completed').length,
       custom: 0,
     },
   }
@@ -183,7 +190,8 @@ function expandRecurringTask(
   companyId: string,
   userId: string,
   type: 'maintenance' | 'generic',
-  completions?: TaskCompletion[]
+  completions?: TaskCompletion[],
+  fiscalYearEnd?: Date
 ): CalendarEvent[] {
   const frequency = task.frequency
   
@@ -194,11 +202,30 @@ function expandRecurringTask(
       : [convertGenericTaskToEvent(task as GenericTask, companyId, userId, undefined, completions)]
   }
   
-  // Data di inizio: usa created_at come data di creazione della task
-  const startDate = startOfDay(new Date(task.created_at))
+  // Data di inizio: usa next_due se disponibile (data scelta dall'utente), altrimenti created_at
+  const taskStartDate = 'next_due' in task && task.next_due ? new Date(task.next_due) : new Date(task.created_at)
+  const startDate = startOfDay(taskStartDate)
   
-  // Data di fine: mostra eventi fino a 90 giorni nel futuro
-  const endDate = endOfDay(addDays(new Date(), 90))
+  // Estrai end_date dalla description se presente (per generic tasks)
+  const taskEndDate = type === 'generic' ? extractEndDate((task as GenericTask).description) : null
+  
+  // Data di fine: usa fiscal_year_end se configurato, altrimenti +90 giorni
+  let endDate: Date
+  if (fiscalYearEnd) {
+    if (taskEndDate) {
+      // Usa il minimo tra end_date specificato e fiscal_year_end
+      endDate = endOfDay(taskEndDate < fiscalYearEnd ? taskEndDate : fiscalYearEnd)
+    } else {
+      // Usa fiscal_year_end
+      endDate = endOfDay(fiscalYearEnd)
+    }
+  } else if (taskEndDate) {
+    // Usa end_date specificato se non c'è fiscal_year_end
+    endDate = endOfDay(taskEndDate)
+  } else {
+    // Fallback: +90 giorni se niente è configurato
+    endDate = endOfDay(addDays(new Date(), 90))
+  }
   
   const events: CalendarEvent[] = []
   let currentDate = startDate
@@ -505,11 +532,17 @@ function convertGenericTaskToEvent(
   }
 
   // Verifica se esiste un completamento per questo periodo
-  const isCompletedInPeriod = completions?.some(c =>
-    c.task_id === task.id &&
-    c.period_start.getTime() === period_start.getTime() &&
-    c.period_end.getTime() === period_end.getTime()
-  ) ?? false
+  // Controlla se startDate cade dentro il periodo di un completamento
+  const isCompletedInPeriod = completions?.some(c => {
+    if (c.task_id !== task.id) return false
+
+    // Controlla se startDate è dentro il range period_start - period_end
+    const completionStart = c.period_start.getTime()
+    const completionEnd = c.period_end.getTime()
+    const eventTime = startDate.getTime()
+
+    return eventTime >= completionStart && eventTime <= completionEnd
+  }) ?? false
 
   const status: CalendarEvent['status'] =
     isCompletedInPeriod

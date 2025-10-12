@@ -24,6 +24,7 @@ interface GenericTaskFormData {
   assegnatoADipendenteSpecifico?: string
   giorniCustom?: CustomFrequencyDays[]
   dataInizio?: string // Data di inizio in formato ISO (YYYY-MM-DD)
+  dataFine?: string // Data fine in formato ISO (YYYY-MM-DD) - Opzionale per intervallo
   note?: string
 }
 
@@ -109,6 +110,18 @@ export const GenericTaskForm = ({
       
       if (selectedDate < today) {
         newErrors.dataInizio = 'La data di inizio non può essere nel passato'
+      }
+    }
+
+    // Validazione data di fine: deve essere successiva alla data di inizio
+    if (formData.dataFine) {
+      const endDate = new Date(formData.dataFine)
+      const startDate = formData.dataInizio ? new Date(formData.dataInizio) : new Date()
+      startDate.setHours(0, 0, 0, 0)
+      endDate.setHours(0, 0, 0, 0)
+      
+      if (endDate <= startDate) {
+        newErrors.dataFine = 'La data di fine deve essere successiva alla data di inizio'
       }
     }
 
@@ -223,6 +236,27 @@ export const GenericTaskForm = ({
           ) : (
             <p className="mt-1 text-xs text-gray-500">
               Opzionale - Se non specificata, l'attività inizia da oggi
+            </p>
+          )}
+        </div>
+
+        {/* Data di Fine */}
+        <div>
+          <Label>Assegna Data di Fine</Label>
+          <Input
+            type="date"
+            value={formData.dataFine ?? ''}
+            onChange={e => updateField({ dataFine: e.target.value })}
+            min={formData.dataInizio || new Date().toISOString().split('T')[0]}
+            className="w-full"
+            placeholder="Lascia vuoto per fine anno lavorativo"
+            aria-invalid={Boolean(errors.dataFine)}
+          />
+          {errors.dataFine ? (
+            <p className="mt-1 text-sm text-red-600">{errors.dataFine}</p>
+          ) : (
+            <p className="mt-1 text-xs text-gray-500">
+              Opzionale - Se non specificata, l'attività prosegue fino a fine anno lavorativo
             </p>
           )}
         </div>

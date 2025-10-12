@@ -44,7 +44,14 @@ interface MacroCategoryResult {
   getCategoryForDate: (date: Date, category: MacroCategory) => MacroCategoryEvent | null
 }
 
-export function useMacroCategoryEvents(): MacroCategoryResult {
+// Helper function per estrarre end_date dalla description
+function extractEndDate(description?: string): Date | null {
+  if (!description) return null
+  const match = description.match(/\[END_DATE:(\d{4}-\d{2}-\d{2})\]/)
+  return match ? new Date(match[1]) : null
+}
+
+export function useMacroCategoryEvents(fiscalYearEnd?: Date): MacroCategoryResult {
   const { user, companyId } = useAuth()
   const { maintenanceTasks, isLoading: maintenanceLoading } = useMaintenanceTasks()
   const { products, isLoading: productsLoading } = useProducts()
@@ -95,9 +102,9 @@ export function useMacroCategoryEvents(): MacroCategoryResult {
     if (!genericTasks || genericTasks.length === 0) return []
 
     return genericTasks.flatMap(task =>
-      expandTaskWithCompletions(task, taskCompletions)
+      expandTaskWithCompletions(task, taskCompletions, fiscalYearEnd)
     )
-  }, [genericTasks, taskCompletions])
+  }, [genericTasks, taskCompletions, fiscalYearEnd])
 
   const productExpiryItems = useMemo(() => {
     if (!products || products.length === 0) return []
@@ -209,7 +216,8 @@ function convertMaintenanceToItem(task: MaintenanceTask): MacroCategoryItem {
 
 function expandTaskWithCompletions(
   task: GenericTask,
-  completions: TaskCompletion[]
+  completions: TaskCompletion[],
+  fiscalYearEnd?: Date
 ): MacroCategoryItem[] {
   if (task.frequency === 'as_needed' || task.frequency === 'custom') {
     return [convertGenericTaskToItem(task, task.next_due ? new Date(task.next_due) : new Date(), completions)]
@@ -217,9 +225,33 @@ function expandTaskWithCompletions(
 
   const items: MacroCategoryItem[] = []
   const now = new Date()
+  
   // Usa next_due se disponibile (data di inizio impostata dall'utente), altrimenti usa created_at
   const startDate = task.next_due ? new Date(task.next_due) : new Date(task.created_at)
-  const endDate = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)
+  
+  // Estrai end_date dalla description se presente
+  const taskEndDate = extractEndDate(task.description)
+  
+  // Determina data finale per espansione:
+  // 1. Se c'è fiscalYearEnd, usalo come limite
+  // 2. Se c'è taskEndDate (dall'utente), usa il minimo tra taskEndDate e fiscalYearEnd
+  // 3. Altrimenti default a +90 giorni (fallback se non configurato)
+  let endDate: Date
+  if (fiscalYearEnd) {
+    if (taskEndDate) {
+      // Usa il minimo tra end_date specificato e fiscal_year_end
+      endDate = taskEndDate < fiscalYearEnd ? taskEndDate : fiscalYearEnd
+    } else {
+      // Usa fiscal_year_end
+      endDate = fiscalYearEnd
+    }
+  } else if (taskEndDate) {
+    // Usa end_date specificato se non c'è fiscal_year_end
+    endDate = taskEndDate
+  } else {
+    // Fallback: +90 giorni se niente è configurato
+    endDate = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)
+  }
 
   let currentDate = new Date(startDate)
 

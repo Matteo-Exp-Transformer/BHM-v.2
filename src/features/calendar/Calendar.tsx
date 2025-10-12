@@ -101,7 +101,9 @@ export const Calendar: React.FC<CalendarProps> = ({
   } | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null) // ✅ Traccia giorno selezionato
 
-  const { events: macroCategoryEvents } = useMacroCategoryEvents()
+  const { events: macroCategoryEvents } = useMacroCategoryEvents(
+    calendarSettings?.fiscal_year_end ? new Date(calendarSettings.fiscal_year_end) : undefined
+  )
 
   const calendarRef = useRef<FullCalendar>(null)
   const finalConfig = { ...defaultConfig, ...config }
@@ -387,7 +389,6 @@ export const Calendar: React.FC<CalendarProps> = ({
               const dayOfWeek = date.getDay()
 
               const isClosureDate = calendarSettings.closure_dates.includes(dateString)
-              const isWorkingDay = calendarSettings.open_weekdays.includes(dayOfWeek)
 
               if (isClosureDate) {
                 arg.el.classList.add('fc-day-closed')
@@ -396,19 +397,20 @@ export const Calendar: React.FC<CalendarProps> = ({
                 beachIcon.className = 'fc-day-beach-icon'
                 beachIcon.innerHTML = '🏖️'
                 arg.el.querySelector('.fc-daygrid-day-frame')?.appendChild(beachIcon)
-              } else if (isWorkingDay) {
-                const hours = calendarSettings.business_hours[dayOfWeek.toString()]
-                if (hours && hours.length > 0) {
-                  const hoursText = hours.map(h => `${h.open}-${h.close}`).join(' · ')
-                  const hoursEl = document.createElement('div')
-                  hoursEl.className = 'fc-day-hours'
-                  hoursEl.textContent = hoursText
+              }
+            }}
+            dayHeaderDidMount={(arg) => {
+              if (!calendarSettings?.is_configured) return
 
-                  const dayTop = arg.el.querySelector('.fc-daygrid-day-top')
-                  if (dayTop) {
-                    dayTop.insertBefore(hoursEl, dayTop.firstChild)
-                  }
-                }
+              const dayOfWeek = arg.dow
+              const hours = calendarSettings.business_hours[dayOfWeek.toString()]
+
+              if (hours && hours.length > 0) {
+                const hoursText = hours.map(h => `${h.open}-${h.close}`).join(' · ')
+                const hoursEl = document.createElement('div')
+                hoursEl.className = 'fc-col-header-hours'
+                hoursEl.textContent = hoursText
+                arg.el.appendChild(hoursEl)
               }
             }}
             eventDrop={handleEventDrop}
@@ -724,20 +726,30 @@ export const Calendar: React.FC<CalendarProps> = ({
           z-index: 1;
         }
 
-        /* Business hours display */
-        .fc-day-hours {
-          font-size: 9px;
-          color: #4b5563;
+        /* Business hours in column header */
+        .fc-col-header-hours {
+          font-size: 13px;
+          color: #1e40af;
           text-align: center;
-          font-weight: 600;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          padding: 2px 4px;
-          background-color: rgba(59, 130, 246, 0.1);
-          border-radius: 4px;
-          margin-bottom: 2px;
-          line-height: 1.2;
+          font-weight: 700;
+          white-space: normal;
+          padding: 6px 8px;
+          background-color: rgba(59, 130, 246, 0.12);
+          border-radius: 6px;
+          margin-top: 8px;
+          line-height: 1.4;
+          display: block;
+          word-break: break-word;
+          letter-spacing: 0.3px;
+        }
+
+        .fc-col-header-cell {
+          vertical-align: top !important;
+          padding-bottom: 8px !important;
+        }
+
+        .fc-col-header-cell-cushion {
+          padding: 4px 2px !important;
         }
 
         .fc-daygrid-day-top {
