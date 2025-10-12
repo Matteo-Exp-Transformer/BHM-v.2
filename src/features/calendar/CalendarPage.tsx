@@ -29,14 +29,36 @@ import { useCalendarSettings } from '@/hooks/useCalendarSettings'
 export const CalendarPage = () => {
   const navigate = useNavigate()
   const { settings: calendarSettings, isLoading: settingsLoading, isConfigured } = useCalendarSettings()
+  console.log('⚙️ Calendar settings:', { 
+    settings: calendarSettings, 
+    settingsLoading, 
+    isConfigured: isConfigured(),
+    fiscalYearEnd: calendarSettings?.fiscal_year_end
+  })
   const { events: aggregatedEvents, isLoading, sources } = useAggregatedEvents(
     calendarSettings?.fiscal_year_end ? new Date(calendarSettings.fiscal_year_end) : undefined
   )
+  console.log('📊 useAggregatedEvents result:', { 
+    eventsCount: aggregatedEvents?.length || 0, 
+    isLoading, 
+    sources,
+    sampleEvents: aggregatedEvents?.slice(0, 2)
+  })
+  
   const { filteredEvents } = useFilteredEvents(aggregatedEvents)
+  console.log('🔍 useFilteredEvents result:', { 
+    filteredCount: filteredEvents?.length || 0,
+    originalCount: aggregatedEvents?.length || 0,
+    sampleFiltered: filteredEvents?.slice(0, 2)
+  })
   const { alertCount, criticalCount, alerts } = useCalendarAlerts(filteredEvents)
   const [view, setView] = useCalendarView('month')
   const { createTask, isCreating } = useGenericTasks()
   const { staff } = useStaff()
+  console.log('👥 Staff data:', { 
+    staffCount: staff?.length || 0, 
+    sampleStaff: staff?.slice(0, 2)
+  })
   const [showAlertModal, setShowAlertModal] = useState(false)
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null)
   const [showConfigModal, setShowConfigModal] = useState(false)
