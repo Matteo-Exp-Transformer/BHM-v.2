@@ -143,25 +143,26 @@ export const sendInviteEmail = async (invite: InviteToken): Promise<boolean> => 
     // Genera link invito
     const inviteLink = `${window.location.origin}/accept-invite?token=${invite.token}`
     
-    // Prova a usare Supabase Auth admin (richiede proper setup)
-    // NOTA: Questa chiamata potrebbe fallire se non hai configurato SMTP custom
-    const { error } = await supabase.auth.admin.inviteUserByEmail(invite.email, {
-      data: {
-        invite_link: inviteLink,
-        role: invite.role,
-        company_name: 'BHM App',
-      },
-      redirectTo: inviteLink,
+    // ⚠️ NUOVO: Usa Edge Function invece di admin.inviteUserByEmail
+    // Edge Function ha Service Role Key e può inviare email tramite SMTP configurato
+    const { data, error } = await supabase.functions.invoke('send-invite-email', {
+      body: { 
+        inviteToken: {
+          ...invite,
+          invite_link: inviteLink,
+        }
+      }
     })
 
     if (error) {
-      console.warn('⚠️ Invio email Supabase fallito:', error.message)
+      console.warn('⚠️ Invio email Edge Function fallito:', error.message)
       console.log('💡 Link invito manuale:', inviteLink)
       // Non bloccare - il token è creato, email va inviata manualmente
       return false
     }
 
-    console.log('✅ Email inviata con successo tramite Supabase!')
+    console.log('✅ Email inviata con successo tramite Edge Function!')
+    console.log('📧 Dettagli invio:', data)
     return true
   } catch (error: any) {
     console.error('❌ Errore sendInviteEmail:', error.message)
@@ -260,6 +261,16 @@ export const acceptInvite = async (
     const invite = validation.invite
 
     // 2. Crea account Supabase Auth
+    console.log('🔐 Tentativo creazione account per:', invite.email)
+    console.log('📧 Opzioni signup:', {
+      email: invite.email,
+      has_password: !!input.password,
+      metadata: {
+        first_name: input.first_name,
+        last_name: input.last_name,
+      }
+    })
+    
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email: invite.email,
       password: input.password,
@@ -273,6 +284,13 @@ export const acceptInvite = async (
         },
         emailRedirectTo: `${window.location.origin}/auth/callback`
       }
+    })
+    
+    console.log('📊 Risultato signup:', {
+      success: !!authData.user,
+      user_id: authData.user?.id,
+      email: authData.user?.email,
+      error: signUpError?.message,
     })
 
     if (signUpError) {

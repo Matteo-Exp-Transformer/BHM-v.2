@@ -6,6 +6,7 @@ import {
   Thermometer,
   CheckSquare,
   Package,
+  Calendar,
 } from 'lucide-react'
 
 interface StepNavigatorProps {
@@ -50,6 +51,12 @@ const stepInfo = [
     title: 'Inventario',
     description: 'Prodotti e categorie',
     icon: Package,
+  },
+  {
+    id: 6,
+    title: 'Calendario',
+    description: 'Configurazione anno lavorativo',
+    icon: Calendar,
   },
 ]
 

@@ -11,9 +11,9 @@
 
 La migrazione da Clerk a Supabase Auth è stata **completata con successo** e **testata end-to-end**. Tutti i sistemi principali funzionano correttamente:
 
-- ✅ **Sistema Inviti** - Funzionante al 100%
-- ✅ **Onboarding Wizard** - Completamente funzionale
-- ✅ **Creazione Company** - Schema allineato e funzionante
+- ✅ **Sistema Inviti** - Funzionante  da testare
+- ✅ **Onboarding Wizard** - Bug nel completamento 
+- ✅ **Creazione Company** - Schema da verificare allineamento  funzionante
 - ✅ **Autenticazione** - Supabase Auth integrato
 - ✅ **Multi-Company** - Supporto completo implementato
 - ✅ **RLS Security** - Politiche implementate e testate

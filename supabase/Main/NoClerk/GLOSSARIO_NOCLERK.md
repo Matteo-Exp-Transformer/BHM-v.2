@@ -2260,7 +2260,442 @@ const { data } = await supabase
 
 ## 9. FEATURES RECENTI
 
-### 9.1 Data di Inizio Task Generici (2025-01-12)
+### 9.1 Sistema Onboarding con Primo Membro Admin (2025-10-12)
+
+**Feature:** Logica migliorata per riconoscimento automatico del primo admin nell'onboarding.
+
+#### Flusso Implementato
+
+**1. Token Invito Iniziale:**
+```sql
+-- Primo admin riceve token con company_id = NULL
+INSERT INTO invite_tokens (email, role, company_id)
+VALUES ('admin@example.com', 'admin', NULL);  -- NULL = creerà azienda
+```
+
+**2. Accettazione Invito:**
+```typescript
+// AcceptInvitePage mostra:
+// - Email: admin@example.com (dal token, readonly)
+// - Ruolo: ADMIN (dal token, badge)
+// Utente inserisce: nome, cognome, password
+```
+
+**3. Step 3 - Staff (Onboarding):**
+
+**Comportamento Automatico:**
+- Se `staffMembers.length === 0` → Email precompilata con `user.email`
+- Ruolo fisso: "Amministratore" (readonly)
+- UI mostra: "👤 Primo Membro: Amministratore (Tu)"
+
+**Con "Precompila":**
+```typescript
+// Sostituisce primo staff con utente corrente
+data.staff[0] = {
+  name: user.user_metadata.first_name,
+  surname: user.user_metadata.last_name,
+  email: user.email,  // Email utente loggato
+  role: 'admin',      // Sempre admin
+}
+```
+
+**4. Completamento Onboarding:**
+
+**Salvataggio Staff:**
+```typescript
+// Inserisce tutti gli staff
+const insertedStaff = await supabase.from('staff').insert(staff)
+
+// Collega primo staff a company_member
+await supabase
+  .from('company_members')
+  .update({ staff_id: insertedStaff[0].id })
+  .eq('user_id', currentUser.id)
+  .eq('company_id', companyId)
+```
+
+**Generazione Inviti:**
+```typescript
+// SALTA indice 0 (utente corrente)
+for (let i = 1; i < formData.staff.length; i++) {
+  await createInviteToken({
+    email: formData.staff[i].email,
+    company_id: companyId,
+    role: formData.staff[i].role,
+  })
+}
+
+// Console log:
+// ⏭️ Primo membro (utente corrente) saltato: admin@example.com
+// ✅ Invito creato per: user2@example.com (responsabile)
+// ✅ Invito creato per: user3@example.com (dipendente)
+```
+
+#### UI Features
+
+**StaffStep.tsx - Primo Membro:**
+- Badge "👤 Tu (Admin)" visibile
+- Sfondo blu chiaro con bordo blu
+- Email readonly (sfondo blu, disabilitato)
+- Ruolo readonly (mostrato come testo "Amministratore")
+- Pulsante elimina nascosto (mostra "🔒 Non eliminabile")
+
+**Messaggi Contestuali:**
+- Primo membro: "La tua email è già precompilata..."
+- Altri membri: "Il sistema invierà automaticamente un'email di invito..."
+
+#### Componenti Modificati
+
+1. **StaffStep.tsx**: 
+   - Hook `useAuth` per ottenere utente loggato
+   - Effect precompilazione email/ruolo primo membro
+   - Campi readonly per primo membro
+   - UI condizionale con badge e blocchi
+
+2. **onboardingHelpers.ts**:
+   - `prefillOnboarding()` ora async
+   - Sostituisce dinamicamente primo staff con utente corrente
+   - Generazione inviti salta indice 0
+   - Collegamento `staff_id` a `company_members`
+
+3. **OnboardingWizard.tsx**:
+   - Handler "Precompila" aggiornato ad async
+
+#### Database Relations
+
+**Prima** (v1.4.0):
+```
+auth.users → company_members
+  ↓              ↓
+  ?         staff_id: NULL  ← No collegamento
+```
+
+**Dopo** (v1.5.0):
+```
+auth.users → company_members → staff (primo membro)
+  ↓              ↓                ↓
+user_id    staff_id: [ID]   role: admin ✅
+                            email: [user.email]
+```
+
+#### Query Pattern
+
+**Ottenere staff member dell'utente loggato:**
+```typescript
+const { data: myStaffRecord } = await supabase
+  .from('company_members')
+  .select(`
+    staff_id,
+    staff:staff_id (
+      id,
+      name,
+      email,
+      role,
+      category,
+      department_assignments
+    )
+  `)
+  .eq('user_id', user.id)
+  .eq('company_id', companyId)
+  .single()
+
+// myStaffRecord.staff contiene i dati completi dello staff member
+```
+
+**Verificare se utente è primo admin:**
+```sql
+SELECT 
+  cm.user_id = s.email as is_first_admin,
+  s.name,
+  cm.role
+FROM company_members cm
+JOIN staff s ON s.id = cm.staff_id
+WHERE cm.user_id = '[USER_ID]'
+  AND cm.company_id = '[COMPANY_ID]';
+```
+
+---
+
+### 9.2 Sistema DevCompanyHelper (2025-10-12)
+
+**Feature:** Utility per sviluppo che previene creazione di company duplicate.
+
+#### Problema Risolto
+
+**Prima:**
+```
+Ogni onboarding → NUOVA company creata
+Reset + Onboarding × 10 = 10 company duplicate ❌
+```
+
+**Dopo:**
+```
+Dev company impostata → SEMPRE riutilizzata
+Reset + Onboarding × 10 = 1 company (la stessa) ✅
+```
+
+#### Utility Functions
+
+**File**: `src/utils/devCompanyHelper.ts`
+
+```typescript
+// Imposta dev company manualmente
+devCompanyHelper.setDevCompany('company-uuid')
+
+// Imposta automaticamente da utente corrente
+devCompanyHelper.setDevCompanyFromCurrentUser()
+
+// Trova migliore company (più completa)
+devCompanyHelper.findBestDevCompany()
+
+// Mostra info dev company attuale
+devCompanyHelper.showDevCompanyInfo()
+
+// Verifica se dev company è attiva
+devCompanyHelper.hasDevCompany()  // → true/false
+
+// Ottieni ID dev company
+devCompanyHelper.getDevCompany()  // → 'uuid' | null
+
+// Rimuovi dev company (torna al normale)
+devCompanyHelper.clearDevCompany()
+
+// Usa in onboarding (interno)
+devCompanyHelper.getCompanyIdForOnboarding()
+```
+
+#### Integrazione Onboarding
+
+**File**: `src/utils/onboardingHelpers.ts`
+
+```typescript
+// Logica in completeOnboarding()
+if (hasDevCompany()) {
+  companyId = await getCompanyIdForOnboarding()
+  // → Riutilizza company esistente invece di crearne una nuova
+  toast.info('🛠️ Modalità sviluppo: riutilizzo company esistente')
+}
+```
+
+#### Storage
+
+**LocalStorage Key**: `bhm-dev-company-id`
+
+```javascript
+// Salvato in localStorage
+localStorage.setItem('bhm-dev-company-id', 'company-uuid')
+
+// Persiste tra refresh e sessioni
+// Rimuovi solo esplicitamente con clearDevCompany()
+```
+
+#### Workflow Sviluppo
+
+**Setup Iniziale (una volta):**
+```javascript
+// Console browser (F12)
+devCompanyHelper.findBestDevCompany()
+devCompanyHelper.setDevCompanyFromCurrentUser()
+```
+
+**Durante Sviluppo:**
+- Reset dati operativi liberamente
+- Onboarding multipli senza preoccupazioni
+- Company sempre la stessa ✅
+
+**Prima di Produzione:**
+```javascript
+devCompanyHelper.clearDevCompany()  // Disattiva dev mode
+```
+
+#### Script SQL Supporto
+
+**File**: `database/test_data/cleanup_duplicate_companies.sql`
+
+Elimina company duplicate manualmente:
+```sql
+-- Trova migliore company
+SELECT id, name, 
+  (COUNT departments + COUNT staff + ...) as score
+FROM companies
+WHERE name = 'Al Ritrovo SRL'
+ORDER BY score DESC LIMIT 1;
+
+-- Elimina duplicate
+DELETE FROM companies 
+WHERE name = 'Al Ritrovo SRL' 
+AND id != '[BEST_COMPANY_ID]';
+```
+
+---
+
+---
+
+### 9.3 Flusso Inviti Migliorato (2025-10-12)
+
+**Feature:** Sistema inviti con riconoscimento automatico primo admin e prevenzione duplicati.
+
+#### Workflow Completo
+
+**Step 1: Generazione Token Iniziale**
+```sql
+-- Admin sistema genera token per primo admin
+INSERT INTO invite_tokens (email, role, company_id)
+VALUES ('first.admin@company.com', 'admin', NULL);
+-- company_id = NULL → Primo admin, creerà azienda
+```
+
+**Step 2: Primo Admin Accetta Invito**
+```typescript
+// AcceptInvitePage:
+// 1. Valida token
+const validation = await validateInviteToken(token)
+
+// 2. Crea account Supabase Auth
+const { data: authData } = await supabase.auth.signUp({
+  email: invite.email,
+  password: formData.password,
+  options: {
+    data: {
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+    }
+  }
+})
+
+// 3. Crea company_member (senza company_id ancora)
+await supabase.from('company_members').insert({
+  user_id: authData.user.id,
+  company_id: null,  // Sarà impostato durante onboarding
+  role: 'admin',
+})
+
+// 4. Marca token come usato
+await supabase
+  .from('invite_tokens')
+  .update({ used_at: now() })
+  .eq('id', invite.id)
+```
+
+**Step 3: Onboarding - Creazione Azienda**
+```typescript
+// onboardingHelpers.ts - completeOnboarding()
+
+// 1. Crea company
+const { data: company } = await supabase
+  .from('companies')
+  .insert({ name: 'Al Ritrovo SRL', ... })
+
+// 2. Aggiorna company_member
+await supabase
+  .from('company_members')
+  .update({ company_id: company.id })
+  .eq('user_id', user.id)
+
+// 3. Inserisce staff (primo = utente corrente)
+const staff = formData.staff.map((person, index) => ({
+  ...person,
+  email: index === 0 ? user.email : person.email,  // Primo = user email
+  role: index === 0 ? 'admin' : person.role,       // Primo = admin
+}))
+
+const insertedStaff = await supabase.from('staff').insert(staff)
+
+// 4. Collega primo staff a company_member
+await supabase
+  .from('company_members')
+  .update({ staff_id: insertedStaff[0].id })
+  .eq('user_id', user.id)
+
+// 5. Genera inviti per altri membri (da indice 1)
+for (let i = 1; i < formData.staff.length; i++) {
+  await createInviteToken({
+    email: formData.staff[i].email,
+    company_id: company.id,
+    role: formData.staff[i].role,
+  })
+}
+```
+
+**Step 4: Altri Membri Accettano Inviti**
+```typescript
+// Stesso flusso di Step 2, ma:
+// - company_id è già presente nel token
+// - user_session creata automaticamente con active_company_id
+// - staff_id collegato se presente nell'invito
+```
+
+#### Database State Progression
+
+**Dopo Reset:**
+```
+auth.users: 0
+companies: 0
+company_members: 0
+invite_tokens: 1 (token per primo admin, company_id = NULL)
+staff: 0
+```
+
+**Dopo Primo Admin Accetta:**
+```
+auth.users: 1 (primo admin)
+companies: 0
+company_members: 1 (user_id, company_id = NULL, role = admin)
+invite_tokens: 1 (used_at = NOW())
+staff: 0
+```
+
+**Dopo Onboarding Completato:**
+```
+auth.users: 1
+companies: 1 (Al Ritrovo SRL)
+company_members: 1 (company_id aggiornato, staff_id collegato)
+invite_tokens: 5 (1 usato + 4 pending per altri membri)
+staff: 5 (tutti inseriti)
+```
+
+**Dopo Altri Membri Accettano:**
+```
+auth.users: 3 (o più)
+companies: 1
+company_members: 3 (tutti con staff_id)
+invite_tokens: 5 (tutti used_at != NULL)
+staff: 5
+```
+
+#### Script SQL Utilities
+
+**Reset Completo**: `database/test_data/FULL_DATABASE_RESET.sql`
+```sql
+-- Elimina tutto e genera token per primo admin
+DO $$
+BEGIN
+  -- Pulisce tutto
+  DELETE FROM companies CASCADE;
+  DELETE FROM auth.users;
+  
+  -- Genera token iniziale
+  INSERT INTO invite_tokens (email, role, company_id)
+  VALUES ('first.admin@company.com', 'admin', NULL);
+END $$;
+```
+
+**Cleanup Duplicate**: `database/test_data/cleanup_duplicate_companies.sql`
+```sql
+-- Trova migliore company
+SELECT id FROM companies WHERE name = 'Al Ritrovo SRL'
+ORDER BY (SELECT COUNT(*) FROM staff WHERE company_id = companies.id) DESC
+LIMIT 1;
+
+-- Elimina duplicate
+DELETE FROM companies 
+WHERE name = 'Al Ritrovo SRL' 
+AND id != '[BEST_ID]';
+```
+
+---
+
+### 9.4 Data di Inizio Task Generici (2025-01-12)
 
 **Feature:** Campo "Assegna Data di Inizio" per nuove attività generiche.
 
@@ -2512,6 +2947,265 @@ Anno Lavorativo: 01/01/2025 - 31/12/2025
 
 ---
 
+## 10. SISTEMA CALENDARIO AZIENDALE
+
+### 10.1 Configurazione Calendario (Onboarding Step 7)
+
+**Tabella:** `company_calendar_settings`
+
+```typescript
+export interface CompanyCalendarSettings {
+  id: string                    // UUID
+  company_id: string           // UUID → companies.id (UNIQUE)
+  fiscal_year_start: string    // DATE formato 'YYYY-MM-DD'
+  fiscal_year_end: string      // DATE formato 'YYYY-MM-DD'
+  closure_dates: string[]      // DATE[] - Array di date chiusura
+  open_weekdays: number[]      // INTEGER[] - Giorni apertura (0=dom, 6=sab)
+  business_hours: BusinessHours // JSONB - Orari per giorno settimana
+  is_configured: boolean       // DEFAULT false
+  created_at: Date             // TIMESTAMPTZ
+  updated_at: Date             // TIMESTAMPTZ
+}
+
+export interface BusinessHours {
+  [weekday: string]: TimeSlot[] // '0' to '6'
+}
+
+export interface TimeSlot {
+  open: string   // 'HH:MM' formato 24h
+  close: string  // 'HH:MM' formato 24h
+}
+```
+
+### 10.2 Contatore Giorni Lavorativi
+
+**Feature:** Calcolo automatico giorni lavorativi nell'anno fiscale
+
+#### Interfaccia Calcolo
+```typescript
+interface WorkingDaysStats {
+  totalDays: number                // Giorni totali anno fiscale
+  weeklyClosureDays: number        // Giorni chiusura settimanale
+  programmedClosureDays: number    // Chiusure programmate (smart count)
+  programmedClosureDaysTotal: number // Totale chiusure (include quelle in giorni già chiusi)
+  workingDays: number              // Giorni lavorativi effettivi
+  closedWeekdaysNames: string[]    // ['Domenica', 'Lunedì', ...]
+}
+```
+
+#### Formula Calcolo
+```typescript
+// 1. Giorni totali
+const totalDays = Math.round(
+  (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+) + 1
+
+// 2. Chiusure settimanali (es. tutte le domeniche)
+const closedWeekdays = [0,1,2,3,4,5,6].filter(day => !open_weekdays.includes(day))
+let weeklyClosureDays = 0
+for (let date = startDate; date <= endDate; date.setDate(date.getDate() + 1)) {
+  if (closedWeekdays.includes(date.getDay())) weeklyClosureDays++
+}
+
+// 3. Chiusure programmate (SMART: no doppi conteggi)
+let programmedClosureDays = 0
+for (const closureDate of closure_dates) {
+  const dayOfWeek = new Date(closureDate).getDay()
+  // Conta SOLO se cade in giorno normalmente aperto
+  if (!closedWeekdays.includes(dayOfWeek)) {
+    programmedClosureDays++
+  }
+}
+
+// 4. Risultato finale
+const workingDays = totalDays - weeklyClosureDays - programmedClosureDays
+```
+
+#### Esempio Pratico
+```
+Anno Fiscale: 01/01/2025 - 31/12/2025
+Giorni Apertura: Lun-Sab (chiuso Domenica)
+Chiusure Programmate:
+  - 25 Dicembre (Natale) → cade Giovedì → CONTATO
+  - 1 Gennaio (Capodanno) → cade Mercoledì → CONTATO
+  - 15 Agosto (Ferragosto) → cade Domenica → NON CONTATO (già chiuso)
+
+Calcolo:
+  365 giorni totali
+  - 52 domeniche (settimanali)
+  - 2 chiusure programmate (escluso Ferragosto)
+  = 311 giorni lavorativi
+```
+
+### 10.3 Query Patterns
+
+#### Salvataggio Configurazione
+```typescript
+const { data, error } = await supabase
+  .from('company_calendar_settings')
+  .insert({
+    company_id: companyId,
+    fiscal_year_start: '2025-01-01',
+    fiscal_year_end: '2025-12-31',
+    closure_dates: ['2025-12-25', '2025-01-01', '2025-08-15'],
+    open_weekdays: [1,2,3,4,5,6], // Lun-Sab
+    business_hours: {
+      '1': [{ open: '09:00', close: '22:00' }],
+      '2': [{ open: '09:00', close: '22:00' }],
+      // ... altri giorni
+    },
+    is_configured: true,
+  })
+  .select()
+  .single()
+```
+
+#### Lettura Configurazione
+```typescript
+const { data: calendarSettings } = await supabase
+  .from('company_calendar_settings')
+  .select('*')
+  .eq('company_id', companyId)
+  .single()
+
+// Verifica se configurato
+if (!calendarSettings?.is_configured) {
+  // Redirect a configurazione
+}
+```
+
+### 10.4 RLS Policies Calendario
+
+```sql
+-- Visualizzazione
+CREATE POLICY "Users can view company calendar settings"
+ON company_calendar_settings FOR SELECT
+USING (is_company_member(company_id));
+
+-- Inserimento (onboarding)
+CREATE POLICY "Allow insert calendar settings"
+ON company_calendar_settings FOR INSERT
+WITH CHECK (true);
+
+-- Aggiornamento
+CREATE POLICY "Users can update company calendar settings"
+ON company_calendar_settings FOR UPDATE
+USING (is_company_member(company_id));
+```
+
+### 10.5 Componenti UI
+
+**File:** `src/components/onboarding-steps/CalendarConfigStep.tsx`
+
+**Sezioni:**
+1. **Anno Fiscale** - Date picker inizio/fine
+2. **Giorni Apertura** - Toggle per ogni giorno settimana
+3. **Chiusure Programmate** - Gestione date chiusura (singole/periodi)
+4. **Orari Lavorativi** - Time slots per ogni giorno aperto
+5. **Contatore Giorni Lavorativi** - Box riepilogo con statistiche
+
+**Contatore UI:**
+```jsx
+<div className="bg-gradient-to-br from-blue-50 to-indigo-50">
+  {/* Header con icona calendario */}
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    {/* 4 Card: Totali, Settimanali, Programmati, Lavorativi */}
+  </div>
+  {/* Formula esplicativa */}
+  {/* Barra percentuale apertura */}
+</div>
+```
+
+### 10.6 Validazioni
+
+```typescript
+// Anno fiscale
+if (fiscal_year_end <= fiscal_year_start) {
+  throw new Error('La data di fine deve essere successiva alla data di inizio')
+}
+
+// Giorni apertura (almeno 1)
+if (open_weekdays.length === 0) {
+  throw new Error('Devi selezionare almeno un giorno di apertura')
+}
+
+// Orari per ogni giorno aperto
+for (const weekday of open_weekdays) {
+  if (!business_hours[weekday] || business_hours[weekday].length === 0) {
+    throw new Error(`Mancano gli orari per ${getWeekdayName(weekday)}`)
+  }
+}
+
+// Time slots validi
+for (const slot of business_hours[weekday]) {
+  if (slot.close <= slot.open) {
+    throw new Error('Orario chiusura deve essere dopo apertura')
+  }
+}
+```
+
+### 10.7 Utilities
+
+**File:** `src/utils/calendarUtils.ts`
+
+```typescript
+// Conversione weekday number → nome
+export function getWeekdayName(weekday: number): string {
+  const names = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato']
+  return names[weekday]
+}
+
+// Formattazione date per display
+export function formatDateDisplay(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('it-IT', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  })
+}
+
+// Validazione anno fiscale
+export function validateFiscalYear(start: string, end: string): string | null {
+  const startDate = new Date(start)
+  const endDate = new Date(end)
+  
+  if (endDate <= startDate) {
+    return 'La data di fine deve essere successiva alla data di inizio'
+  }
+  
+  const diffDays = (endDate - startDate) / (1000 * 60 * 60 * 24)
+  if (diffDays < 180) {
+    return 'L\'anno fiscale deve durare almeno 6 mesi'
+  }
+  if (diffDays > 730) {
+    return 'L\'anno fiscale non può superare i 2 anni'
+  }
+  
+  return null
+}
+```
+
+### 10.8 Default Configuration
+
+```typescript
+export const DEFAULT_CALENDAR_CONFIG: CalendarConfigInput = {
+  fiscal_year_start: `${new Date().getFullYear()}-01-01`,
+  fiscal_year_end: `${new Date().getFullYear()}-12-31`,
+  closure_dates: [],
+  open_weekdays: [1, 2, 3, 4, 5, 6], // Lunedì-Sabato
+  business_hours: {
+    '1': [{ open: '09:00', close: '22:00' }],
+    '2': [{ open: '09:00', close: '22:00' }],
+    '3': [{ open: '09:00', close: '22:00' }],
+    '4': [{ open: '09:00', close: '22:00' }],
+    '5': [{ open: '09:00', close: '22:00' }],
+    '6': [{ open: '09:00', close: '22:00' }],
+  },
+}
+```
+
+---
+
 ## 🎯 CHECKLIST COMPLIANCE
 
 Usa questa checklist per verificare la compliance del codice:
@@ -2582,8 +3276,8 @@ SELECT get_user_role_for_company('[company-id]');
 
 ---
 
-**Versione Glossario**: 1.2.0  
-**Ultimo Aggiornamento**: 12 Gennaio 2025  
+**Versione Glossario**: 1.4.0  
+**Ultimo Aggiornamento**: 12 Ottobre 2025  
 **Stato**: ✅ Produzione Ready  
 **Maintainer**: Dev Team BHM v.2
 

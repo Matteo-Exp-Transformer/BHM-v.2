@@ -612,6 +612,7 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 | `company_id` | UUID | NOT NULL, FK → companies | - | Azienda di appartenenza |
 | `task_id` | UUID | NOT NULL, FK → tasks | - | Task completato |
 | `completed_by` | UUID | FK → auth.users | - | Utente che ha completato |
+| `completed_by_name` | TEXT | - | - | Nome completo utente (cached da auth.users metadata) |
 | `completed_at` | TIMESTAMPTZ | NOT NULL | `now()` | Data/ora completamento |
 | `period_start` | TIMESTAMPTZ | NOT NULL | - | Inizio periodo di riferimento |
 | `period_end` | TIMESTAMPTZ | NOT NULL | - | Fine periodo di riferimento |
@@ -1101,12 +1102,106 @@ Trigger `update_[table]_updated_at` aggiorna `updated_at` automaticamente.
 
 ---
 
-**Versione Schema**: 1.3.0  
-**Ultimo Aggiornamento**: 11 Ottobre 2025  
+**Versione Schema**: 1.6.0  
+**Ultimo Aggiornamento**: 12 Ottobre 2025  
 **Stato**: ✅ Schema verificato e allineato con database Supabase  
-**Compliance**: ✅ 100% allineamento con SQL schema attuale
+**Compliance**: ✅ 100% allineamento con SQL schema attuale  
+**Sistema Multi-Tenant**: ✅ Implementato con prevenzione duplicate company  
+**Sistema Calendario**: ✅ Configurazione completa con contatore giorni lavorativi
+
+---
 
 ## 📝 CHANGELOG
+
+### v1.6.0 - 12 Ottobre 2025
+
+**📅 Sistema Calendario Completato**
+- ✅ **Contatore giorni lavorativi** - Calcolo automatico nell'onboarding Step 7
+  - Mostra giorni totali, chiusure settimanali, chiusure programmate
+  - Calcolo intelligente: evita doppi conteggi (chiusure programmate in giorni già chiusi)
+  - UI visuale con percentuale apertura annuale e barra progressiva
+  - Formula esplicativa: `Totali - Settimanali - Programmati = Lavorativi`
+  
+**🔒 RLS Policies Calendario**
+- ✅ **Policies SELECT complete** - Visualizzazione dati post-onboarding
+  - Policy `"Users can view company calendar settings"` per lettura
+  - Policy `"Allow insert calendar settings"` per inserimento durante onboarding
+  - Policy `"Users can update company calendar settings"` per modifiche
+  - Tutte le tabelle core (companies, departments, staff, tasks, products, etc.) hanno policies SELECT
+
+**🎨 UI Miglioramenti**
+- ✅ **Step 7 - Calendario** aggiunto a StepNavigator
+  - Icon Calendar da lucide-react
+  - Descrizione: "Configura orari, chiusure e giorni lavorativi"
+  - Fix TypeError per navigazione corretta
+  
+**🐛 Bug Fix**
+- ✅ **Risolto problema dati non visibili** post-onboarding
+  - Causa: Mancavano policies SELECT su tabelle principali
+  - Fix: Aggiunte 8+ policies per visualizzazione dati
+  - Trigger audit_logs disabilitati temporaneamente per cleanup company duplicate
+
+**📚 Documentazione**
+- ✅ Script `DEBUG_DATI_NON_VISIBILI.sql` per troubleshooting
+  - Verifica dati salvati
+  - Controllo policies RLS
+  - Fix rapido per associazione utente-company
+
+---
+
+### v1.5.0 - 12 Ottobre 2025
+
+**🎯 Sistema Multi-Company e Prevenzione Duplicate**
+- ✅ **Implementato sistema DevCompanyHelper** - Previene creazione di company duplicate durante sviluppo
+  - Utility `devCompanyHelper.ts` per ancorare sempre la stessa company
+  - Integrazione in `onboardingHelpers.ts` per riutilizzo automatico company
+  - Comandi console per gestione facile: `setDevCompany()`, `showDevCompanyInfo()`, etc.
+
+**👥 Logica Primo Membro Admin nell'Onboarding**
+- ✅ **Step 3 (Staff) ora riconosce automaticamente il primo membro come admin**
+  - Email precompilata automaticamente con l'utente loggato (readonly)
+  - Ruolo fisso "Amministratore" per primo membro (non modificabile)
+  - Badge "👤 Tu (Admin)" visibile nel primo membro
+  - Pulsante elimina nascosto per primo membro
+  - `prefillOnboarding()` ora async - sostituisce primo staff con dati utente corrente
+
+**📧 Inviti Automatici Migliorati**
+- ✅ **Sistema NON genera più invito per il primo membro** (già registrato)
+  - Generazione inviti salta indice 0 dell'array staff
+  - Console log chiaro: "⏭️ Primo membro (utente corrente) saltato"
+  - Inviti generati solo per membri da indice 1 in poi
+
+**🔗 Collegamento Staff ↔ Company Members**
+- ✅ **Primo staff member automaticamente collegato a company_member**
+  - Dopo inserimento staff, aggiorna `company_members.staff_id` per utente corrente
+  - Garantisce relazione bidirezionale `auth.users ↔ staff`
+
+**📚 Documentazione Sviluppo**
+- ✅ Creati script SQL per reset completo database
+- ✅ Guide dettagliate per testing flusso completo (3 utenti, 1 azienda)
+- ✅ Strategia sviluppo per evitare company duplicate
+
+---
+
+### v1.4.0 - 12 Ottobre 2025
+
+**✨ Nuove Funzionalità - Task Completions**
+- ✅ **Aggiunto campo `completed_by_name` a `task_completions`** - Memorizza il nome completo dell'utente
+  - Cache del nome utente da `auth.users.user_metadata` per performance
+  - Evita join complessi con auth.users ad ogni query
+  - Tipo: TEXT (nullable)
+
+**🔒 Sicurezza - Ripristino Task**
+- ✅ Solo l'utente che ha completato una mansione può ripristinarla
+- ✅ Messaggio di errore informativo per utenti non autorizzati
+- ✅ Validazione lato UI e backend
+
+**📊 UI Migliorata**
+- ✅ Visualizzazione Nome e Cognome invece di ID utente nei log
+- ✅ Formato: "Mario Rossi" o email se nome non disponibile
+- ✅ Log di completamento con timestamp e utente in formato user-friendly
+
+---
 
 ### v1.3.0 - 11 Ottobre 2025
 

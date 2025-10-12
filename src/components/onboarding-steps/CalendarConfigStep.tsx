@@ -165,6 +165,65 @@ const CalendarConfigStep = ({
     })
   }
 
+  // ========================================
+  // CALCOLO GIORNI LAVORATIVI TOTALI
+  // ========================================
+  const calculateWorkingDays = () => {
+    if (!formData.fiscal_year_start || !formData.fiscal_year_end) {
+      return null
+    }
+
+    // Normalizza le date a mezzanotte per evitare problemi timezone
+    const startDate = new Date(formData.fiscal_year_start + 'T00:00:00')
+    const endDate = new Date(formData.fiscal_year_end + 'T00:00:00')
+
+    // 1. Giorni totali nell'anno fiscale (calcolo preciso)
+    const diffTime = endDate.getTime() - startDate.getTime()
+    const totalDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1
+
+    // 2. Calcola giorni chiusura settimanale
+    const closedWeekdays = [0, 1, 2, 3, 4, 5, 6].filter(day => !formData.open_weekdays.includes(day))
+    
+    // Conta quante volte ogni giorno chiuso si ripete nell'anno
+    let weeklyClosureDays = 0
+    const current = new Date(startDate)
+    
+    while (current <= endDate) {
+      const dayOfWeek = current.getDay()
+      if (closedWeekdays.includes(dayOfWeek)) {
+        weeklyClosureDays++
+      }
+      current.setDate(current.getDate() + 1)
+    }
+
+    // 3. Giorni di chiusura programmata (festività/ferie)
+    // Conta solo le chiusure che NON cadono già in giorni di chiusura settimanale
+    let programmedClosureDays = 0
+    for (const closureDate of formData.closure_dates) {
+      const date = new Date(closureDate)
+      const dayOfWeek = date.getDay()
+      
+      // Conta solo se la chiusura cade in un giorno normalmente aperto
+      if (!closedWeekdays.includes(dayOfWeek)) {
+        programmedClosureDays++
+      }
+    }
+
+    // 4. Calcola giorni lavorativi effettivi
+    const workingDays = totalDays - weeklyClosureDays - programmedClosureDays
+
+    return {
+      totalDays,
+      weeklyClosureDays,
+      programmedClosureDays,
+      programmedClosureDaysTotal: formData.closure_dates.length, // Totale chiusure (anche quelle in giorni già chiusi)
+      workingDays: Math.max(0, workingDays), // Non può essere negativo
+      closedWeekdaysNames: closedWeekdays.map(day => getWeekdayName(day)),
+    }
+  }
+
+  const workingDaysStats = calculateWorkingDays()
+
   return (
     <div className="space-y-6">
       <div>
@@ -437,6 +496,110 @@ const CalendarConfigStep = ({
             </p>
           )}
         </div>
+
+        {/* ========================================
+            CONTATORE GIORNI LAVORATIVI
+            ======================================== */}
+        {workingDaysStats && (
+          <div className="border-t border-gray-200 pt-6">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                  <CalendarIcon className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900">
+                    Riepilogo Anno Lavorativo
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    {new Date(formData.fiscal_year_start).getFullYear()}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Giorni Totali */}
+                <div className="bg-white rounded-lg p-4 text-center border border-gray-200">
+                  <div className="text-3xl font-bold text-gray-900">
+                    {workingDaysStats.totalDays}
+                  </div>
+                  <div className="text-xs text-gray-600 mt-1">
+                    Giorni Totali
+                  </div>
+                </div>
+
+                {/* Chiusura Settimanale */}
+                <div className="bg-white rounded-lg p-4 text-center border border-red-200">
+                  <div className="text-3xl font-bold text-red-600">
+                    -{workingDaysStats.weeklyClosureDays}
+                  </div>
+                  <div className="text-xs text-gray-600 mt-1">
+                    Chiusura Settimanale
+                  </div>
+                  {workingDaysStats.closedWeekdaysNames.length > 0 && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      ({workingDaysStats.closedWeekdaysNames.join(', ')})
+                    </div>
+                  )}
+                </div>
+
+                {/* Chiusura Programmata */}
+                <div className="bg-white rounded-lg p-4 text-center border border-orange-200">
+                  <div className="text-3xl font-bold text-orange-600">
+                    -{workingDaysStats.programmedClosureDays}
+                  </div>
+                  <div className="text-xs text-gray-600 mt-1">
+                    Chiusura Programmata
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    (Ferie/Festività)
+                  </div>
+                </div>
+
+                {/* Giorni Lavorativi */}
+                <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg p-4 text-center shadow-lg">
+                  <div className="text-4xl font-bold text-white">
+                    {workingDaysStats.workingDays}
+                  </div>
+                  <div className="text-xs text-white font-semibold mt-1">
+                    ✅ Giorni Lavorativi
+                  </div>
+                  <div className="text-xs text-green-100 mt-1">
+                    Anno {new Date(formData.fiscal_year_start).getFullYear()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Formula Esplicativa */}
+              <div className="mt-4 p-3 bg-blue-100 rounded-lg border border-blue-300">
+                <p className="text-xs text-blue-900 text-center font-mono">
+                  📊 Formula: {workingDaysStats.totalDays} (totali) 
+                  - {workingDaysStats.weeklyClosureDays} (settimanali) 
+                  - {workingDaysStats.programmedClosureDays} (programmati) 
+                  = <strong className="text-blue-700">{workingDaysStats.workingDays} giorni lavorativi</strong>
+                </p>
+              </div>
+
+              {/* Percentuale Apertura */}
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                  <span>Percentuale apertura annuale</span>
+                  <span className="font-semibold text-blue-700">
+                    {((workingDaysStats.workingDays / workingDaysStats.totalDays) * 100).toFixed(1)}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 h-2 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${(workingDaysStats.workingDays / workingDaysStats.totalDays) * 100}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
