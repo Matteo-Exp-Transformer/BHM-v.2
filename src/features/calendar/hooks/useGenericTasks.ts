@@ -43,6 +43,7 @@ export interface CreateGenericTaskInput {
   assigned_to_staff_id?: string
   note?: string
   custom_days?: string[] // Giorni della settimana se frequenza custom
+  start_date?: string // Data di inizio in formato ISO (YYYY-MM-DD)
 }
 
 const QUERY_KEYS = {
@@ -61,35 +62,59 @@ const mapFrequency = (frequenza: string): GenericTask['frequency'] => {
   return map[frequenza] || 'weekly'
 }
 
-// Calcola next_due in base alla frequenza
-const calculateNextDue = (frequency: string, customDays?: string[]): Date => {
-  const now = new Date()
+// Calcola next_due in base alla frequenza e alla data di inizio
+const calculateNextDue = (frequency: string, customDays?: string[], startDate?: string): Date => {
+  // Se viene fornita una data di inizio, usala come base, altrimenti usa oggi
+  const baseDate = startDate ? new Date(startDate) : new Date()
   
   switch (frequency) {
     case 'giornaliera':
-      now.setDate(now.getDate() + 1)
+      // Per giornaliera, se c'è una start_date usa quella, altrimenti domani
+      if (startDate) {
+        return baseDate
+      }
+      baseDate.setDate(baseDate.getDate() + 1)
       break
     case 'settimanale':
-      now.setDate(now.getDate() + 7)
+      // Per settimanale, se c'è una start_date usa quella, altrimenti fra 7 giorni
+      if (startDate) {
+        return baseDate
+      }
+      baseDate.setDate(baseDate.getDate() + 7)
       break
     case 'mensile':
-      now.setMonth(now.getMonth() + 1)
+      // Per mensile, se c'è una start_date usa quella, altrimenti fra un mese
+      if (startDate) {
+        return baseDate
+      }
+      baseDate.setMonth(baseDate.getMonth() + 1)
       break
     case 'annuale':
-      now.setFullYear(now.getFullYear() + 1)
+      // Per annuale, se c'è una start_date usa quella, altrimenti fra un anno
+      if (startDate) {
+        return baseDate
+      }
+      baseDate.setFullYear(baseDate.getFullYear() + 1)
       break
     case 'custom':
       // Se custom, imposta al prossimo giorno selezionato
       if (customDays && customDays.length > 0) {
-        // Logica semplificata: prossima settimana
-        now.setDate(now.getDate() + 7)
+        // Se c'è una start_date usa quella, altrimenti logica semplificata: prossima settimana
+        if (startDate) {
+          return baseDate
+        }
+        baseDate.setDate(baseDate.getDate() + 7)
       }
       break
     default:
-      now.setDate(now.getDate() + 7)
+      // Default: se c'è una start_date usa quella, altrimenti fra 7 giorni
+      if (startDate) {
+        return baseDate
+      }
+      baseDate.setDate(baseDate.getDate() + 7)
   }
   
-  return now
+  return baseDate
 }
 
 export const useGenericTasks = () => {
@@ -106,11 +131,9 @@ export const useGenericTasks = () => {
     queryKey: QUERY_KEYS.genericTasks(companyId || ''),
     queryFn: async (): Promise<GenericTask[]> => {
       if (!companyId) {
-        console.warn('⚠️ No company_id available')
         return []
       }
 
-      console.log('🔗 Supabase: Caricamento tasks...')
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
@@ -118,12 +141,9 @@ export const useGenericTasks = () => {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('❌ Supabase: Errore caricamento tasks:', error)
+        console.error('Error loading tasks:', error)
         throw error
       }
-
-      const count = data?.length || 0
-      console.log(`✅ Supabase: ${count} task${count !== 1 ? 's' : ''} caricata${count !== 1 ? 'e' : ''}`)
 
       return (data || []).map((task: any) => ({
         id: task.id,
@@ -153,7 +173,7 @@ export const useGenericTasks = () => {
       if (!companyId) throw new Error('No company ID available')
 
       const frequency = mapFrequency(input.frequency)
-      const next_due = calculateNextDue(input.frequency, input.custom_days)
+      const next_due = calculateNextDue(input.frequency, input.custom_days, input.start_date)
 
       // Payload allineato esattamente con schema onboarding (riga 998-1024 onboardingHelpers.ts)
       const payload: any = {
@@ -179,8 +199,6 @@ export const useGenericTasks = () => {
       }
       if (next_due) payload.next_due = next_due.toISOString()
 
-      // Creating task with payload
-
       const { data, error } = await supabase
         .from('tasks')
         .insert(payload)
@@ -188,12 +206,10 @@ export const useGenericTasks = () => {
         .single()
 
       if (error) {
-        console.error('❌ Error creating task:', error)
-        console.error('❌ Failed payload:', payload)
+        console.error('Error creating task:', error)
         throw error
       }
 
-      // Task created successfully
       return data
     },
     onSuccess: () => {
@@ -309,7 +325,7 @@ export const useGenericTasks = () => {
         .single()
 
       if (error) {
-        console.error('❌ Error completing task:', error)
+        console.error('Error completing task:', error)
         throw error
       }
 
@@ -345,7 +361,7 @@ export const useGenericTasks = () => {
       .order('completed_at', { ascending: false })
 
     if (error) {
-      console.error('❌ Error fetching task completions:', error)
+      console.error('Error fetching task completions:', error)
       return []
     }
 

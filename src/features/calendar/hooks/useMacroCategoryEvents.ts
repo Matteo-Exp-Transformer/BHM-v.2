@@ -1,11 +1,12 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
 import { useProducts } from '@/features/inventory/hooks/useProducts'
-import { useGenericTasks } from './useGenericTasks'
+import { useGenericTasks, type TaskCompletion } from './useGenericTasks'
 import type { MaintenanceTask } from '@/types/conservation'
 import type { Product } from '@/types/inventory'
 import type { GenericTask } from './useGenericTasks'
+import { supabase } from '@/lib/supabase/client'
 
 export type MacroCategory = 'maintenance' | 'generic_tasks' | 'product_expiry'
 
@@ -48,6 +49,37 @@ export function useMacroCategoryEvents(): MacroCategoryResult {
   const { maintenanceTasks, isLoading: maintenanceLoading } = useMaintenanceTasks()
   const { products, isLoading: productsLoading } = useProducts()
   const { tasks: genericTasks, isLoading: genericTasksLoading } = useGenericTasks()
+  const [taskCompletions, setTaskCompletions] = useState<TaskCompletion[]>([])
+
+  useEffect(() => {
+    if (!companyId) return
+
+    const loadCompletions = async () => {
+      const { data, error } = await supabase
+        .from('task_completions')
+        .select('*')
+        .eq('company_id', companyId)
+
+      if (!error && data) {
+        setTaskCompletions(
+          data.map((c: any) => ({
+            id: c.id,
+            company_id: c.company_id,
+            task_id: c.task_id,
+            completed_by: c.completed_by,
+            completed_at: new Date(c.completed_at),
+            period_start: new Date(c.period_start),
+            period_end: new Date(c.period_end),
+            notes: c.notes,
+            created_at: new Date(c.created_at),
+            updated_at: new Date(c.updated_at),
+          }))
+        )
+      }
+    }
+
+    loadCompletions()
+  }, [companyId])
 
   const isLoading = maintenanceLoading || productsLoading || genericTasksLoading
 
@@ -62,10 +94,10 @@ export function useMacroCategoryEvents(): MacroCategoryResult {
   const genericTaskItems = useMemo(() => {
     if (!genericTasks || genericTasks.length === 0) return []
 
-    return genericTasks.map(task =>
-      convertGenericTaskToItem(task)
+    return genericTasks.flatMap(task =>
+      expandTaskWithCompletions(task, taskCompletions)
     )
-  }, [genericTasks])
+  }, [genericTasks, taskCompletions])
 
   const productExpiryItems = useMemo(() => {
     if (!products || products.length === 0) return []
@@ -110,10 +142,11 @@ export function useMacroCategoryEvents(): MacroCategoryResult {
 
     eventsByDateAndCategory.forEach((categoryMap, dateKey) => {
       categoryMap.forEach((items, category) => {
+        const activeItems = items.filter(i => i.status !== 'completed')
         result.push({
           date: dateKey,
           category,
-          count: items.length,
+          count: activeItems.length,
           items: items.sort((a, b) => {
             const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
             return priorityOrder[a.priority] - priorityOrder[b.priority]
@@ -174,16 +207,109 @@ function convertMaintenanceToItem(task: MaintenanceTask): MacroCategoryItem {
   }
 }
 
-function convertGenericTaskToItem(task: GenericTask): MacroCategoryItem {
-  const dueDate = task.next_due ? new Date(task.next_due) : new Date()
+function expandTaskWithCompletions(
+  task: GenericTask,
+  completions: TaskCompletion[]
+): MacroCategoryItem[] {
+  if (task.frequency === 'as_needed' || task.frequency === 'custom') {
+    return [convertGenericTaskToItem(task, task.next_due ? new Date(task.next_due) : new Date(), completions)]
+  }
+
+  const items: MacroCategoryItem[] = []
+  const now = new Date()
+  // Usa next_due se disponibile (data di inizio impostata dall'utente), altrimenti usa created_at
+  const startDate = task.next_due ? new Date(task.next_due) : new Date(task.created_at)
+  const endDate = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)
+
+  let currentDate = new Date(startDate)
+
+  while (currentDate <= endDate) {
+    items.push(convertGenericTaskToItem(task, new Date(currentDate), completions))
+
+    switch (task.frequency) {
+      case 'daily':
+        currentDate.setDate(currentDate.getDate() + 1)
+        break
+      case 'weekly':
+        currentDate.setDate(currentDate.getDate() + 7)
+        break
+      case 'monthly':
+        currentDate.setMonth(currentDate.getMonth() + 1)
+        break
+      case 'quarterly':
+        currentDate.setMonth(currentDate.getMonth() + 3)
+        break
+      case 'biannually':
+        currentDate.setMonth(currentDate.getMonth() + 6)
+        break
+      case 'annually':
+      case 'annual':
+        currentDate.setFullYear(currentDate.getFullYear() + 1)
+        break
+      default:
+        currentDate = new Date(endDate.getTime() + 1)
+    }
+  }
+
+  return items
+}
+
+function convertGenericTaskToItem(
+  task: GenericTask,
+  dueDate: Date,
+  completions: TaskCompletion[]
+): MacroCategoryItem {
   const now = new Date()
 
+  let period_start: Date
+  let period_end: Date
+
+  switch (task.frequency) {
+    case 'daily':
+      period_start = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 0, 0, 0)
+      period_end = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 59)
+      break
+    case 'weekly':
+      const dayOfWeek = dueDate.getDay() || 7
+      const monday = new Date(dueDate)
+      monday.setDate(dueDate.getDate() - (dayOfWeek - 1))
+      period_start = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 0, 0, 0)
+      const sunday = new Date(monday)
+      sunday.setDate(monday.getDate() + 6)
+      period_end = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate(), 23, 59, 59)
+      break
+    case 'monthly':
+      period_start = new Date(dueDate.getFullYear(), dueDate.getMonth(), 1, 0, 0, 0)
+      period_end = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, 0, 23, 59, 59)
+      break
+    case 'annually':
+    case 'annual':
+      period_start = new Date(dueDate.getFullYear(), 0, 1, 0, 0, 0)
+      period_end = new Date(dueDate.getFullYear(), 11, 31, 23, 59, 59)
+      break
+    default:
+      period_start = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 0, 0, 0)
+      period_end = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 59)
+  }
+
+  const isCompletedInPeriod = completions?.some(c => {
+    if (c.task_id !== task.id) return false
+
+    const completionStart = c.period_start.getTime()
+    const completionEnd = c.period_end.getTime()
+    const eventTime = dueDate.getTime()
+
+    return eventTime >= completionStart && eventTime <= completionEnd
+  }) ?? false
+
   const status: MacroCategoryItem['status'] =
-    task.status === 'completed' ? 'completed' :
+    isCompletedInPeriod ? 'completed' :
     dueDate < now ? 'overdue' : 'pending'
 
+  const itemId = `generic-task-${task.id}-${dueDate.toISOString().split('T')[0]}`
+
   return {
-    id: task.id,
+    id: itemId,
     title: task.name,
     description: task.description,
     dueDate,
@@ -199,6 +325,7 @@ function convertGenericTaskToItem(task: GenericTask): MacroCategoryItem {
       sourceId: task.id,
       notes: task.description,
       estimatedDuration: task.estimated_duration,
+      taskId: task.id,
     },
   }
 }
