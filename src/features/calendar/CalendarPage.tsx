@@ -53,10 +53,23 @@ export const CalendarPage = () => {
   })
 
   const handleFilterChange = useCallback((newFilters: typeof activeFilters) => {
+    console.log('📥 CalendarPage received new filters:', newFilters)
     setActiveFilters(newFilters)
   }, [])
 
   const displayEvents = useMemo(() => {
+    console.log('🔍 Filtering events:', {
+      totalEvents: filteredEvents.length,
+      activeFilters,
+      sampleEvents: filteredEvents.slice(0, 3).map(e => ({
+        id: e.id,
+        type: e.type,
+        priority: e.priority,
+        status: e.status,
+        title: e.title
+      }))
+    })
+    
     return filteredEvents.filter(event => {
       const typeMatch = activeFilters.eventTypes.length === 0 || activeFilters.eventTypes.includes(event.type)
       const priorityMatch = activeFilters.priorities.length === 0 || activeFilters.priorities.includes(event.priority)
