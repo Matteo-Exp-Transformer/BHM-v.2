@@ -1,10 +1,12 @@
 import { useState, useMemo, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Calendar as CalendarIcon,
   Activity,
   AlertCircle,
   TrendingUp,
   ClipboardCheck,
+  Settings,
 } from 'lucide-react'
 import Calendar from './Calendar'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
@@ -16,6 +18,7 @@ import {
   GenericTaskForm,
 } from './components'
 import { AlertModal } from './components/AlertModal'
+import { CalendarConfigModal } from './components/CalendarConfigModal'
 import { useCalendarAlerts } from './hooks/useCalendarAlerts'
 import { useAggregatedEvents } from './hooks/useAggregatedEvents'
 import { useFilteredEvents } from './hooks/useFilteredEvents'
@@ -24,6 +27,7 @@ import { useStaff } from '@/features/management/hooks/useStaff'
 import { useCalendarSettings } from '@/hooks/useCalendarSettings'
 
 export const CalendarPage = () => {
+  const navigate = useNavigate()
   const { events: aggregatedEvents, isLoading, sources } = useAggregatedEvents()
   const { filteredEvents } = useFilteredEvents(aggregatedEvents)
   const { alertCount, criticalCount, alerts } = useCalendarAlerts(filteredEvents)
@@ -33,6 +37,7 @@ export const CalendarPage = () => {
   const { settings: calendarSettings, isLoading: settingsLoading, isConfigured } = useCalendarSettings()
   const [showAlertModal, setShowAlertModal] = useState(false)
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null)
+  const [showConfigModal, setShowConfigModal] = useState(false)
 
   const [activeFilters, setActiveFilters] = useState({
     eventTypes: [
@@ -450,16 +455,33 @@ export const CalendarPage = () => {
         </div>
 
         {/* Calendario */}
-        <div className="mb-6">
+        <div className="mb-6 relative">
           {!isConfigured() && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-yellow-600" />
-                <p className="text-sm text-yellow-800">
-                  <strong>Calendario non configurato.</strong> Completa la configurazione iniziale per abilitare il calendario.
-                </p>
+            <>
+              {/* Overlay opaco */}
+              <div className="absolute inset-0 bg-gray-100 bg-opacity-90 rounded-lg z-10 flex items-center justify-center">
+                <div className="text-center p-8 bg-white rounded-lg shadow-xl border-2 border-blue-500 max-w-md">
+                  <div className="mb-4">
+                    <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Settings className="h-8 w-8 text-blue-600" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    Calendario Non Configurato
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-6">
+                    Configura il tuo anno lavorativo, giorni di apertura e orari per iniziare a utilizzare il calendario.
+                  </p>
+                  <button
+                    onClick={() => setShowConfigModal(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+                  >
+                    <Settings className="h-5 w-5" />
+                    Configura Calendario
+                  </button>
+                </div>
               </div>
-            </div>
+            </>
           )}
           <Calendar
             events={displayEvents}
@@ -671,6 +693,14 @@ export const CalendarPage = () => {
         onClose={() => setShowAlertModal(false)}
         alerts={alerts}
       />
+
+      {/* Calendar Config Modal */}
+      {showConfigModal && (
+        <CalendarConfigModal
+          isOpen={showConfigModal}
+          onClose={() => setShowConfigModal(false)}
+        />
+      )}
     </div>
   )
 }

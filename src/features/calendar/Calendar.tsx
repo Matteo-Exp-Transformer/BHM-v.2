@@ -9,6 +9,7 @@ import {
   CalendarEvent,
   CalendarFilters,
   CalendarViewConfig,
+  CompanyCalendarSettings,
 } from '@/types/calendar'
 import { transformToFullCalendarEvents } from './utils/eventTransform'
 import { EventDetailsModal } from './EventDetailsModal'
@@ -26,11 +27,13 @@ interface CalendarProps {
   onEventUpdate?: (event: CalendarEvent) => void
   onEventDelete?: (eventId: string) => void
   onDateSelect?: (start: Date, end: Date) => void
+  onDateClick?: (date: Date) => void
   config?: Partial<CalendarViewConfig>
   currentView?: 'year' | 'month' | 'week' | 'day'
   loading?: boolean
   error?: string | null
   useMacroCategories?: boolean
+  calendarSettings?: CompanyCalendarSettings | null
 }
 
 const defaultConfig: CalendarViewConfig = {
@@ -73,11 +76,13 @@ export const Calendar: React.FC<CalendarProps> = ({
   onEventUpdate,
   onEventDelete,
   onDateSelect,
+  onDateClick,
   config = {},
   currentView,
   loading = false,
   error = null,
   useMacroCategories = false,
+  calendarSettings = null,
 }) => {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
@@ -187,15 +192,19 @@ export const Calendar: React.FC<CalendarProps> = ({
     const allDayGridDays = document.querySelectorAll('.fc-daygrid-day')
     const allTimeGridCols = document.querySelectorAll('.fc-timegrid-col')
     const allListDays = document.querySelectorAll('.fc-list-day')
-    
+
     allDayGridDays.forEach(day => day.classList.remove('fc-day-selected'))
     allTimeGridCols.forEach(col => col.classList.remove('fc-day-selected'))
     allListDays.forEach(day => day.classList.remove('fc-day-selected'))
-    
+
     // Aggiungi classe al giorno cliccato
     info.dayEl.classList.add('fc-day-selected')
     setSelectedDate(info.date)
-  }, [])
+
+    if (onDateClick) {
+      onDateClick(info.date)
+    }
+  }, [onDateClick])
 
   // Handle event drag and drop
   const handleEventDrop = useCallback(
@@ -361,11 +370,47 @@ export const Calendar: React.FC<CalendarProps> = ({
             firstDay={finalConfig.firstDay}
             slotMinTime={finalConfig.slotMinTime}
             slotMaxTime={finalConfig.slotMaxTime}
-            businessHours={finalConfig.businessHours}
+            businessHours={calendarSettings?.is_configured ? {
+              daysOfWeek: calendarSettings.open_weekdays,
+              startTime: '00:00',
+              endTime: '23:59',
+            } : finalConfig.businessHours}
             events={fullCalendarEvents}
             eventClick={handleEventClick}
             select={handleDateSelect}
             dateClick={handleDayClick}
+            dayCellDidMount={(arg) => {
+              if (!calendarSettings?.is_configured) return
+
+              const date = new Date(arg.date)
+              const dateString = date.toISOString().split('T')[0]
+              const dayOfWeek = date.getDay()
+
+              const isClosureDate = calendarSettings.closure_dates.includes(dateString)
+              const isWorkingDay = calendarSettings.open_weekdays.includes(dayOfWeek)
+
+              if (isClosureDate) {
+                arg.el.classList.add('fc-day-closed')
+
+                const beachIcon = document.createElement('div')
+                beachIcon.className = 'fc-day-beach-icon'
+                beachIcon.innerHTML = '🏖️'
+                arg.el.querySelector('.fc-daygrid-day-frame')?.appendChild(beachIcon)
+              } else if (isWorkingDay) {
+                const hours = calendarSettings.business_hours[dayOfWeek.toString()]
+                if (hours && hours.length > 0) {
+                  const hoursText = hours.map(h => `${h.open}-${h.close}`).join(' · ')
+                  const hoursEl = document.createElement('div')
+                  hoursEl.className = 'fc-day-hours'
+                  hoursEl.textContent = hoursText
+
+                  const dayTop = arg.el.querySelector('.fc-daygrid-day-top')
+                  if (dayTop) {
+                    dayTop.insertBefore(hoursEl, dayTop.firstChild)
+                  }
+                }
+              }
+            }}
             eventDrop={handleEventDrop}
             eventResize={handleEventResize}
             selectable={true}
@@ -401,6 +446,13 @@ export const Calendar: React.FC<CalendarProps> = ({
               const extendedProps = event.extendedProps
 
               if (useMacroCategories && extendedProps?.type === 'macro_category') {
+                if (extendedProps.count === 0) {
+                  return (
+                    <div className="fc-event-content-custom fc-event-all-completed">
+                      <span className="fc-event-checkmark">✓</span>
+                    </div>
+                  )
+                }
                 return (
                   <div className="fc-event-content-custom">
                     <div className="fc-event-title-container">
@@ -532,6 +584,21 @@ export const Calendar: React.FC<CalendarProps> = ({
           flex-shrink: 0;
         }
 
+        .fc-event-all-completed {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          padding: 2px 6px;
+          background-color: transparent !important;
+          border-color: transparent !important;
+        }
+
+        .fc-event-checkmark {
+          font-size: 20px;
+          font-weight: bold;
+          color: #10b981;
+        }
+
         /* Event type styling */
         .event-type-maintenance {
           background-color: #fef3c7 !important;
@@ -623,6 +690,64 @@ export const Calendar: React.FC<CalendarProps> = ({
           background-color: #FECACA !important;
           border-color: #EF4444 !important;
           color: #991B1B !important;
+        }
+
+        /* Day closed styling */
+        .fc-day-closed {
+          background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
+          position: relative;
+          opacity: 1 !important;
+        }
+
+        .fc-day-closed::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-image:
+            radial-gradient(circle at 20% 80%, rgba(251, 191, 36, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(96, 165, 250, 0.1) 0%, transparent 50%);
+          pointer-events: none;
+        }
+
+        /* Beach icon for closed days */
+        .fc-day-beach-icon {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          font-size: 48px;
+          opacity: 0.6;
+          pointer-events: none;
+          z-index: 1;
+        }
+
+        /* Business hours display */
+        .fc-day-hours {
+          font-size: 9px;
+          color: #4b5563;
+          text-align: center;
+          font-weight: 600;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          padding: 2px 4px;
+          background-color: rgba(59, 130, 246, 0.1);
+          border-radius: 4px;
+          margin-bottom: 2px;
+          line-height: 1.2;
+        }
+
+        .fc-daygrid-day-top {
+          flex-direction: column !important;
+          align-items: stretch !important;
+          padding: 2px !important;
+        }
+
+        .fc-daygrid-day-number {
+          padding: 2px 4px !important;
         }
       `}</style>
     </div>
