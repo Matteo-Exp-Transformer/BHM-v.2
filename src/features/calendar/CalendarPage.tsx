@@ -28,13 +28,15 @@ import { useCalendarSettings } from '@/hooks/useCalendarSettings'
 
 export const CalendarPage = () => {
   const navigate = useNavigate()
-  const { events: aggregatedEvents, isLoading, sources } = useAggregatedEvents()
+  const { settings: calendarSettings, isLoading: settingsLoading, isConfigured } = useCalendarSettings()
+  const { events: aggregatedEvents, isLoading, sources } = useAggregatedEvents(
+    calendarSettings?.fiscal_year_end ? new Date(calendarSettings.fiscal_year_end) : undefined
+  )
   const { filteredEvents } = useFilteredEvents(aggregatedEvents)
   const { alertCount, criticalCount, alerts } = useCalendarAlerts(filteredEvents)
   const [view, setView] = useCalendarView('month')
   const { createTask, isCreating } = useGenericTasks()
   const { staff } = useStaff()
-  const { settings: calendarSettings, isLoading: settingsLoading, isConfigured } = useCalendarSettings()
   const [showAlertModal, setShowAlertModal] = useState(false)
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null)
   const [showConfigModal, setShowConfigModal] = useState(false)
@@ -171,6 +173,7 @@ export const CalendarPage = () => {
       note: taskData.note,
       custom_days: taskData.giorniCustom,
       start_date: taskData.dataInizio, // Data di inizio opzionale
+      end_date: taskData.dataFine, // Data di fine opzionale
     })
   }
 
