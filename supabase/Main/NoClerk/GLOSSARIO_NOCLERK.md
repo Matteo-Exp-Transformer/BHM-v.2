@@ -488,6 +488,7 @@ export interface CreateTaskInput {
   validation_notes?: string
   next_due?: Date
   start_date?: string  // Data di inizio in formato ISO (YYYY-MM-DD) - Se specificata, l'attività parte da questa data
+  end_date?: string    // Data di fine in formato ISO (YYYY-MM-DD) - Limita espansione eventi a questa data
 }
 
 export interface UpdateTaskInput extends Partial<CreateTaskInput> {
@@ -2276,6 +2277,7 @@ export interface CreateGenericTaskInput {
   note?: string
   custom_days?: string[]
   start_date?: string  // NUOVO: Data di inizio in formato ISO (YYYY-MM-DD)
+  end_date?: string    // NUOVO: Data di fine in formato ISO (YYYY-MM-DD)
 }
 ```
 
@@ -2324,6 +2326,189 @@ const { data, error } = await supabase
 - **Nessuna migrazione richiesta**: usa campo esistente `next_due`
 - Campo `next_due` rappresenta la prima occorrenza del task
 - Per task ricorrenti, espansione parte da `next_due` (se presente) o `created_at` (fallback)
+
+---
+
+### 9.2 Intervallo Date e Anno Lavorativo (2025-01-12)
+
+**Feature:** Intervallo date per task e espansione automatica fino a fine anno lavorativo.
+
+#### Interfacce Aggiornate
+
+```typescript
+// CreateGenericTaskInput con end_date
+export interface CreateGenericTaskInput {
+  name: string
+  frequency: GenericTask['frequency']
+  assigned_to_role: string
+  assigned_to_category?: string
+  assigned_to_staff_id?: string
+  note?: string
+  custom_days?: string[]
+  start_date?: string  // Data di inizio
+  end_date?: string    // NUOVO: Data di fine (limita espansione)
+}
+
+// GenericTaskFormData con dataFine
+interface GenericTaskFormData {
+  name: string
+  frequenza: MaintenanceFrequency
+  assegnatoARuolo: StaffRole
+  assegnatoACategoria?: string
+  assegnatoADipendenteSpecifico?: string
+  giorniCustom?: CustomFrequencyDays[]
+  dataInizio?: string
+  dataFine?: string    // NUOVO: Data di fine intervallo
+  note?: string
+}
+```
+
+#### Logica
+
+**1. Intervallo Date Personalizzato:**
+- Utente può specificare `start_date` e `end_date`
+- Eventi generati SOLO in questo intervallo
+- Esempio: dal 02/08/2025 al 03/09/2025
+
+**2. Espansione fino a Anno Lavorativo:**
+- Se `end_date` non specificato → espansione fino a `fiscal_year_end`
+- Se `end_date` specificato → usa il minimo tra `end_date` e `fiscal_year_end`
+- Se calendario non configurato → fallback a +90 giorni
+
+**3. Serializzazione end_date:**
+```typescript
+// Storage in description
+if (input.end_date) {
+  payload.description = payload.description 
+    ? `${payload.description}\n[END_DATE:${input.end_date}]`
+    : `[END_DATE:${input.end_date}]`
+}
+
+// Estrazione con regex
+function extractEndDate(description?: string): Date | null {
+  if (!description) return null
+  const match = description.match(/\[END_DATE:(\d{4}-\d{2}-\d{2})\]/)
+  return match ? new Date(match[1]) : null
+}
+```
+
+#### Validazioni
+
+**Data Fine:**
+```typescript
+// Deve essere successiva a data inizio
+if (formData.dataFine) {
+  const endDate = new Date(formData.dataFine)
+  const startDate = formData.dataInizio ? new Date(formData.dataInizio) : new Date()
+  
+  if (endDate <= startDate) {
+    throw new Error('La data di fine deve essere successiva alla data di inizio')
+  }
+}
+```
+
+**Input HTML:**
+```html
+<input 
+  type="date" 
+  min={formData.dataInizio || today} 
+  value={formData.dataFine}
+/>
+```
+
+#### Componenti Modificati
+
+1. **GenericTaskForm.tsx**: Campo "Assegna Data di Fine" con validazione dinamica
+2. **CalendarPage.tsx**: Passa `end_date` e carica `fiscal_year_end` da settings
+3. **useGenericTasks.ts**: Serializza `end_date` in `description`
+4. **useMacroCategoryEvents.ts**: `extractEndDate()` helper, espansione con `fiscalYearEnd`
+5. **useAggregatedEvents.ts**: `expandRecurringTask()` con logica priorità date
+6. **Calendar.tsx**: Passa `fiscal_year_end` a `useMacroCategoryEvents()`
+
+#### Algoritmo Espansione
+
+```typescript
+// 1. Data inizio
+const startDate = task.next_due ?? task.created_at
+
+// 2. Estrai end_date se presente
+const taskEndDate = extractEndDate(task.description)
+
+// 3. Determina data finale (PRIORITÀ)
+let endDate: Date
+if (fiscalYearEnd) {
+  if (taskEndDate) {
+    endDate = min(taskEndDate, fiscalYearEnd)  // Più restrittivo
+  } else {
+    endDate = fiscalYearEnd
+  }
+} else if (taskEndDate) {
+  endDate = taskEndDate
+} else {
+  endDate = addDays(now, 90)  // Fallback
+}
+
+// 4. Genera eventi ricorrenti
+while (currentDate <= endDate) {
+  events.push(createEvent(currentDate))
+  currentDate = addInterval(currentDate, frequency)
+}
+```
+
+#### Query Pattern
+
+```typescript
+// Creazione task con intervallo
+const { data } = await supabase
+  .from('tasks')
+  .insert({
+    company_id: companyId,
+    name: 'Mansione estiva',
+    frequency: 'weekly',
+    assigned_to: 'dipendente',
+    assignment_type: 'role',
+    next_due: new Date('2025-06-01').toISOString(),  // Inizio
+    description: '[END_DATE:2025-08-31]',             // Fine (serializzato)
+  })
+  .select()
+  .single()
+
+// Risultato: eventi dal 1 giugno al 31 agosto 2025
+```
+
+#### Casi d'Uso
+
+**Caso 1: Attività Stagionale**
+```
+Mansione: "Servizio estivo"
+Data Inizio: 01/06/2025
+Data Fine: 30/09/2025
+→ Attività visibile SOLO nei mesi estivi
+```
+
+**Caso 2: Progetto Temporaneo**
+```
+Mansione: "Ristrutturazione cucina"
+Data Inizio: 15/02/2025
+Data Fine: 15/03/2025
+→ Attività visibile solo durante il mese di ristrutturazione
+```
+
+**Caso 3: Attività Annuale Standard**
+```
+Mansione: "Pulizia settimanale"
+Data Inizio: (vuota - usa oggi)
+Data Fine: (vuota)
+Anno Lavorativo: 01/01/2025 - 31/12/2025
+→ Attività da oggi fino al 31/12/2025
+```
+
+#### Impatto Database
+
+- **Nessuna migrazione richiesta**: usa campo esistente `description` per serializzare `end_date`
+- **Formato serializzazione**: `[END_DATE:YYYY-MM-DD]` aggiunto in fondo alla description
+- **Parsing**: Regex `/\[END_DATE:(\d{4}-\d{2}-\d{2})\]/` estrae la data
+- **Compatibilità**: Task senza `[END_DATE:]` usano fiscal_year_end o +90 giorni
 
 ---
 
@@ -2397,7 +2582,7 @@ SELECT get_user_role_for_company('[company-id]');
 
 ---
 
-**Versione Glossario**: 1.1.0  
+**Versione Glossario**: 1.2.0  
 **Ultimo Aggiornamento**: 12 Gennaio 2025  
 **Stato**: ✅ Produzione Ready  
 **Maintainer**: Dev Team BHM v.2
