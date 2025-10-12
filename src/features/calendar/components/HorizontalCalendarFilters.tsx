@@ -46,6 +46,7 @@ const STATUS_OPTIONS: Array<{
   color: string
 }> = [
   { value: 'pending', label: 'In Attesa', icon: '⏳', color: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+  { value: 'in_progress', label: 'In Corso', icon: '🔄', color: 'bg-blue-50 text-blue-700 border-blue-200' },
   { value: 'completed', label: 'Completato', icon: '✅', color: 'bg-green-50 text-green-700 border-green-200' },
   { value: 'overdue', label: 'Scaduto', icon: '⚠️', color: 'bg-red-50 text-red-700 border-red-200' },
   { value: 'cancelled', label: 'Annullato', icon: '❌', color: 'bg-gray-50 text-gray-700 border-gray-200' },
@@ -76,11 +77,14 @@ export function HorizontalCalendarFilters({
   const storedFilters = loadFiltersFromStorage()
   const defaultFilters: CalendarFilterOptions = {
     eventTypes: initialFilters?.eventTypes ||
-      storedFilters.eventTypes || ['maintenance', 'general_task', 'temperature_reading', 'custom'],
+      (storedFilters.eventTypes && storedFilters.eventTypes.length > 0 ? storedFilters.eventTypes : null) ||
+      ['maintenance', 'general_task', 'temperature_reading', 'custom'],
     priorities: initialFilters?.priorities ||
-      storedFilters.priorities || ['critical', 'high', 'medium', 'low'],
+      (storedFilters.priorities && storedFilters.priorities.length > 0 ? storedFilters.priorities : null) ||
+      ['critical', 'high', 'medium', 'low'],
     statuses: initialFilters?.statuses ||
-      storedFilters.statuses || ['pending', 'overdue', 'completed'],
+      (storedFilters.statuses && storedFilters.statuses.length > 0 ? storedFilters.statuses : null) ||
+      ['pending', 'in_progress', 'overdue', 'completed'],
   }
 
   const [filters, setFilters] = useState<CalendarFilterOptions>(defaultFilters)
@@ -121,7 +125,7 @@ export function HorizontalCalendarFilters({
     const reset: CalendarFilterOptions = {
       eventTypes: ['maintenance', 'general_task', 'temperature_reading', 'custom'],
       priorities: ['critical', 'high', 'medium', 'low'],
-      statuses: ['pending', 'overdue', 'completed'],
+      statuses: ['pending', 'in_progress', 'overdue', 'completed'],
     }
     setFilters(reset)
   }

@@ -49,7 +49,7 @@ export const CalendarPage = () => {
       'custom',
     ] as CalendarEvent['type'][],
     priorities: ['critical', 'high', 'medium', 'low'] as CalendarEvent['priority'][],
-    statuses: ['pending', 'overdue', 'completed'] as CalendarEvent['status'][],
+    statuses: ['pending', 'in_progress', 'overdue', 'completed'] as CalendarEvent['status'][],
   })
 
   const handleFilterChange = useCallback((newFilters: typeof activeFilters) => {

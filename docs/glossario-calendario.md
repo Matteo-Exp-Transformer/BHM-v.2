@@ -104,7 +104,7 @@ interface CalendarEvent {
   end: Date
   allDay: boolean
   type: 'maintenance' | 'general_task' | 'temperature_reading' | 'custom'
-  status: 'scheduled' | 'in_progress' | 'completed' | 'overdue' | 'cancelled'
+  status: 'pending' | 'in_progress' | 'completed' | 'overdue' | 'cancelled'
   priority: 'low' | 'medium' | 'high' | 'critical'
   source: 'maintenance' | 'general_task' | 'training' | 'inventory' | 'meeting' | 'temperature_reading' | 'custom'
   sourceId: string // ID originale nel database sorgente
@@ -740,6 +740,17 @@ WHERE task_id = $1
 - [x] Invalidazione automatica query
 - [x] Status "completed" basato su completions
 - [x] Separazione UI Attive vs Completate
+- [x] Completamento usa next_due come data di riferimento per periodo corretto
+- [x] Validazione permette completamento fino a 1 giorno prima
+- [x] Mansioni precompilate con scadenza a OGGI (completabili immediatamente)
+
+### ✅ UI/UX Features
+- [x] Toggle indipendente per mansioni completate (non accordion)
+- [x] Pulsante Ripristina nascosto per utenti non autorizzati
+- [x] Filtri status include 'in_progress'
+- [x] Validazione filtri localStorage (previene array vuoti)
+- [x] Persistenza filtri in localStorage
+- [x] Reset filtri al default completo
 
 ### 🔄 In Progress / Future
 - [ ] Click su task in "Attività in Ritardo" → apre modal
@@ -820,7 +831,7 @@ for (const closureDate of formData.closure_dates) {
 
 ## Versioning
 
-**Versione Documento:** 1.1
+**Versione Documento:** 1.2
 **Data Creazione:** 2025-01-12
 **Ultimo Aggiornamento:** 2025-10-12
 **Autore:** Claude (Anthropic)
