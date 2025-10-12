@@ -178,6 +178,71 @@
 }
 
 /* ============================================
+   UNIFORMITÀ GIORNI SETTIMANA - Domeniche uguali agli altri giorni
+   ============================================ */
+/* Rimuovi lo sfondo grigio predefinito delle domeniche */
+.fc .fc-day-sun {
+  background-color: transparent !important;
+  opacity: 1 !important;
+}
+
+/* Rimuovi overlay scuro sulle domeniche */
+.fc .fc-day-sun .fc-daygrid-day-frame {
+  background-color: transparent !important;
+  opacity: 1 !important;
+}
+
+/* Assicurati che le domeniche abbiano lo stesso background dei giorni feriali */
+.fc .fc-daygrid-day.fc-day-sun {
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Override per eventuali stili di businessHours che rendono le domeniche grigie */
+.fc .fc-non-business {
+  background-color: transparent !important;
+  opacity: 1 !important;
+}
+
+/* Assicurati che il background bianco sia applicato a tutte le domeniche */
+.fc-daygrid-day.fc-day-sun:not(.fc-day-today):not(.fc-day-selected) {
+  background-color: #ffffff !important;
+}
+
+/* Uniforma le domeniche nella vista settimanale (timegrid) */
+.fc .fc-timegrid-col.fc-day-sun {
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.fc .fc-timegrid-col.fc-day-sun .fc-timegrid-col-frame {
+  background-color: transparent !important;
+  opacity: 1 !important;
+}
+
+/* Uniforma le domeniche nella vista lista */
+.fc .fc-list-day.fc-day-sun {
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Override per sabato (se presente lo stesso problema) */
+.fc .fc-day-sat {
+  background-color: transparent !important;
+  opacity: 1 !important;
+}
+
+.fc .fc-daygrid-day.fc-day-sat {
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.fc .fc-timegrid-col.fc-day-sat {
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* ============================================
    ACCESSIBILITÀ - Focus
    ============================================ */
 .fc .fc-daygrid-day:focus {
