@@ -260,6 +260,25 @@ export interface InventoryStepProps {
   onValidChange: (valid: boolean) => void
 }
 
+export interface CalendarConfigInput {
+  fiscal_year_start: string
+  fiscal_year_end: string
+  closure_dates: string[]
+  open_weekdays: number[]
+  business_hours: {
+    [weekday: string]: {
+      open: string
+      close: string
+    }[]
+  }
+}
+
+export interface CalendarStepProps {
+  data?: CalendarConfigInput
+  onUpdate: (data: CalendarConfigInput) => void
+  onValidChange: (valid: boolean) => void
+}
+
 export interface OnboardingData {
   business?: BusinessInfoData
   departments?: DepartmentSummary[]
@@ -269,4 +288,5 @@ export interface OnboardingData {
   }
   tasks?: TasksStepData
   inventory?: InventoryStepData
+  calendar?: CalendarConfigInput
 }

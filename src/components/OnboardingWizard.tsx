@@ -11,6 +11,7 @@ import StaffStep from './onboarding-steps/StaffStep'
 import ConservationStep from './onboarding-steps/ConservationStep'
 import TasksStep from './onboarding-steps/TasksStep'
 import InventoryStep from './onboarding-steps/InventoryStep'
+import CalendarConfigStep from './onboarding-steps/CalendarConfigStep'
 
 // Navigator
 import StepNavigator from './StepNavigator'
@@ -27,7 +28,7 @@ import {
 
 import type { OnboardingData } from '@/types/onboarding'
 
-const TOTAL_STEPS = 6
+const TOTAL_STEPS = 7
 
 const OnboardingWizard = () => {
   const navigate = useNavigate()
@@ -264,6 +265,14 @@ const OnboardingWizard = () => {
             departments={formData.departments || []}
             conservationPoints={formData.conservation?.points || []}
             onUpdate={data => updateFormData('inventory', data)}
+            onValidChange={handleValidChange}
+          />
+        )
+      case 6:
+        return (
+          <CalendarConfigStep
+            data={formData.calendar}
+            onUpdate={data => updateFormData('calendar', data)}
             onValidChange={handleValidChange}
           />
         )

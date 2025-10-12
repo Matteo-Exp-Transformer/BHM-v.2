@@ -1618,6 +1618,33 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
 
     console.log('✅ Products inserted successfully:', products.length)
   }
+
+  if (formData.calendar) {
+    console.log('📤 Inserting calendar settings...')
+
+    const calendarSettings = {
+      company_id: companyId,
+      fiscal_year_start: formData.calendar.fiscal_year_start,
+      fiscal_year_end: formData.calendar.fiscal_year_end,
+      closure_dates: formData.calendar.closure_dates || [],
+      open_weekdays: formData.calendar.open_weekdays || [1,2,3,4,5,6],
+      business_hours: formData.calendar.business_hours || {},
+      is_configured: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+
+    const { error } = await supabase
+      .from('company_calendar_settings')
+      .insert(calendarSettings)
+
+    if (error) {
+      console.error('❌ Error inserting calendar settings:', error)
+      throw error
+    }
+
+    console.log('✅ Calendar settings inserted successfully')
+  }
 }
 
 /**

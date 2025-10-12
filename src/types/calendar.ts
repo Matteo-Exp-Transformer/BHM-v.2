@@ -365,3 +365,209 @@ export const DEFAULT_QUICK_ACTIONS: QuickActionConfig[] = [
     },
   },
 ]
+
+// ============================================================================
+// COMPANY CALENDAR SETTINGS
+// ============================================================================
+
+/**
+ * SECURITY NOTICE:
+ * - Tutti i dati configurazione calendario sono isolati per company_id
+ * - Le RLS policies sul database garantiscono che ogni azienda veda SOLO i propri dati
+ * - Nessun dato può essere condiviso tra aziende diverse (multi-tenant isolation)
+ */
+
+/**
+ * Fascia oraria singola
+ * Rappresenta un intervallo di apertura (es: 09:00-22:00)
+ */
+export interface BusinessHourSlot {
+  /** Orario apertura in formato HH:mm (es: "09:00") */
+  open: string
+
+  /** Orario chiusura in formato HH:mm (es: "22:00") */
+  close: string
+}
+
+/**
+ * Orari di apertura per tutti i giorni della settimana
+ * Key: numero giorno (0=domenica, 1=lunedì, ..., 6=sabato)
+ * Value: array di fasce orarie (1-2 fasce per giorno)
+ *
+ * @example
+ * {
+ *   "1": [{ "open": "09:00", "close": "22:00" }],                    // Lunedì: 1 fascia
+ *   "2": [{ "open": "08:00", "close": "12:30" }, { "open": "16:30", "close": "23:00" }]  // Martedì: 2 fasce
+ * }
+ */
+export interface BusinessHours {
+  [weekday: string]: BusinessHourSlot[]
+}
+
+/**
+ * Configurazione calendario aziendale completa
+ *
+ * SECURITY:
+ * - RLS sul database filtra automaticamente per company_id dell'utente autenticato
+ * - Solo membri azienda possono leggere (policy: is_company_member)
+ * - Solo admin possono creare (policy: is_admin)
+ * - Solo admin/responsabile possono modificare (policy: has_management_role)
+ */
+export interface CompanyCalendarSettings {
+  /** ID univoco configurazione */
+  id: string
+
+  /**
+   * ID azienda
+   * ⚠️ RLS: Automaticamente filtrato per active_company_id dell'utente
+   */
+  company_id: string
+
+  /**
+   * Data inizio anno lavorativo
+   * Formato: YYYY-MM-DD (es: "2025-01-01")
+   * Il calendario mostrerà eventi a partire da questa data
+   */
+  fiscal_year_start: string
+
+  /**
+   * Data fine anno lavorativo
+   * Formato: YYYY-MM-DD (es: "2025-12-31")
+   * Il calendario mostrerà eventi fino a questa data
+   */
+  fiscal_year_end: string
+
+  /**
+   * Array di date di chiusura (festività, manutenzioni)
+   * Formato: YYYY-MM-DD per ogni data
+   * Nessun evento verrà schedulato in questi giorni
+   *
+   * @example ["2025-08-15", "2025-12-25", "2025-12-26"]
+   */
+  closure_dates: string[]
+
+  /**
+   * Giorni della settimana in cui l'azienda è aperta
+   * Valori: 0-6 (0=domenica, 1=lunedì, ..., 6=sabato)
+   *
+   * @example [1,2,3,4,5] = lunedì-venerdì
+   * @example [1,2,3,4,5,6] = lunedì-sabato
+   */
+  open_weekdays: number[]
+
+  /**
+   * Orari di apertura per ogni giorno della settimana
+   * Supporta 1-2 fasce orarie per giorno
+   */
+  business_hours: BusinessHours
+
+  /**
+   * Flag che indica se il calendario è stato configurato
+   * false = mostra wizard configurazione
+   * true = calendario attivo
+   */
+  is_configured: boolean
+
+  /** Data creazione configurazione */
+  created_at: Date
+
+  /** Data ultima modifica (auto-aggiornato da trigger DB) */
+  updated_at: Date
+}
+
+/**
+ * Input per creazione/aggiornamento configurazione calendario
+ * Usato nel form di onboarding e settings
+ */
+export interface CalendarConfigInput {
+  /** Data inizio anno lavorativo (YYYY-MM-DD) */
+  fiscal_year_start: string
+
+  /** Data fine anno lavorativo (YYYY-MM-DD) */
+  fiscal_year_end: string
+
+  /** Array di date chiusura (YYYY-MM-DD[]) */
+  closure_dates: string[]
+
+  /** Giorni settimana aperti (0-6[]) */
+  open_weekdays: number[]
+
+  /** Orari apertura */
+  business_hours: BusinessHours
+}
+
+/**
+ * Costanti: Giorni della settimana
+ */
+export const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6] as const
+
+/**
+ * Nomi giorni settimana in italiano
+ * Key: numero giorno (0-6)
+ * Value: nome italiano
+ */
+export const WEEKDAY_NAMES = {
+  0: 'Domenica',
+  1: 'Lunedì',
+  2: 'Martedì',
+  3: 'Mercoledì',
+  4: 'Giovedì',
+  5: 'Venerdì',
+  6: 'Sabato',
+} as const
+
+/**
+ * Nomi brevi giorni settimana in italiano
+ */
+export const WEEKDAY_NAMES_SHORT = {
+  0: 'Dom',
+  1: 'Lun',
+  2: 'Mar',
+  3: 'Mer',
+  4: 'Gio',
+  5: 'Ven',
+  6: 'Sab',
+} as const
+
+/**
+ * Tipo per giorni settimana
+ */
+export type Weekday = (typeof WEEKDAYS)[number]
+
+/**
+ * Configurazione calendario di default
+ * Usata quando l'azienda non ha ancora configurato il calendario
+ */
+export const DEFAULT_CALENDAR_CONFIG: CalendarConfigInput = {
+  fiscal_year_start: `${new Date().getFullYear()}-01-01`,
+  fiscal_year_end: `${new Date().getFullYear()}-12-31`,
+  closure_dates: [],
+  open_weekdays: [1, 2, 3, 4, 5, 6], // Lunedì-Sabato
+  business_hours: {
+    '1': [{ open: '09:00', close: '22:00' }], // Lunedì
+    '2': [{ open: '09:00', close: '22:00' }], // Martedì
+    '3': [{ open: '09:00', close: '22:00' }], // Mercoledì
+    '4': [{ open: '09:00', close: '22:00' }], // Giovedì
+    '5': [{ open: '09:00', close: '22:00' }], // Venerdì
+    '6': [{ open: '09:00', close: '22:00' }], // Sabato
+  },
+}
+
+/**
+ * Errori di validazione configurazione calendario
+ */
+export interface CalendarConfigValidationErrors {
+  fiscal_year_start?: string
+  fiscal_year_end?: string
+  closure_dates?: string
+  open_weekdays?: string
+  business_hours?: string
+}
+
+/**
+ * Helper type: Status configurazione calendario
+ */
+export type CalendarConfigStatus =
+  | 'not_configured' // Calendario non ancora configurato
+  | 'configured' // Calendario configurato e attivo
+  | 'error' // Errore nel caricamento configurazione

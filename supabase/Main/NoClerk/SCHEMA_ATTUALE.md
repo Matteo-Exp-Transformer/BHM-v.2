@@ -1,8 +1,8 @@
 # 📊 SCHEMA DATABASE ATTUALE - BHM v.2
-**Progetto**: Business HACCP Manager v2  
-**Data**: 11 Ottobre 2025  
-**Versione**: 1.3.0  
-**Database**: Supabase PostgreSQL  
+**Progetto**: Business HACCP Manager v2
+**Data**: 12 Ottobre 2025
+**Versione**: 1.4.0
+**Database**: Supabase PostgreSQL
 **Branch**: NoClerk
 
 ---
@@ -13,16 +13,17 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 
 ### 📋 Statistiche Schema
 
-- **Tabelle totali**: 20 tabelle
+- **Tabelle totali**: 21 tabelle
 - **Tabelle core**: 10 (companies, departments, staff, products, conservation_points, tasks, maintenance_tasks, events, notes, non_conformities)
 - **Tabelle auth**: 5 (company_members, user_sessions, user_profiles, invite_tokens, audit_logs)
 - **Tabelle shopping**: 2 (shopping_lists, shopping_list_items)
 - **Tabelle tracking**: 2 (user_activity_logs, task_completions)
 - **Tabelle supporto**: 2 (product_categories, temperature_readings)
-- **Relazioni**: 42+ foreign keys
-- **Indici**: 65+ per performance
+- **Tabelle configurazione**: 1 (company_calendar_settings) ✨ NEW
+- **Relazioni**: 43+ foreign keys
+- **Indici**: 68+ per performance
 - **Funzioni RLS**: 8 helper functions
-- **Policies RLS**: 72+ policies (pronte, non ancora attive)
+- **Policies RLS**: 76+ policies (4 aggiunte per calendar settings)
 
 ---
 
@@ -50,6 +51,7 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 - ← `conservation_points.company_id`
 - ← `tasks.company_id`
 - ← `task_completions.company_id`
+- ← `company_calendar_settings.company_id` ✨ NEW (1:1 relation)
 - ← `company_members.company_id`
 - ← `user_sessions.active_company_id`
 - ← `user_activity_logs.company_id`
@@ -630,7 +632,7 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 - `idx_task_completions_period` su `(task_id, period_start, period_end)`
 - `idx_task_completions_lookup` su `(company_id, task_id, completed_at DESC)`
 
-**Note**: 
+**Note**:
 Questa tabella mantiene uno storico completo di tutti i completamenti dei task ricorrenti. A differenza del campo `status` in `tasks` (che mostra lo stato attuale), questa tabella permette di:
 - Tracciare **chi** ha completato il task e **quando**
 - Associare ogni completamento a un **periodo specifico** (es. settimana 1-7 gennaio)
@@ -643,6 +645,24 @@ Questa tabella mantiene uno storico completo di tutti i completamenti dei task r
 2. Utente completa il task → crea record in `task_completions`
 3. Sistema aggiorna `tasks.next_due` per la prossima settimana
 4. Record in `task_completions` rimane come prova di esecuzione per audit
+
+**Calcolo period_start e period_end** (implementato in `useGenericTasks.ts`):
+- **daily**: Giorno corrente → `period_start`: oggi 00:00, `period_end`: oggi 23:59
+- **weekly**: Settimana corrente (lunedì-domenica) → `period_start`: lunedì 00:00, `period_end`: domenica 23:59
+- **monthly**: Mese corrente → `period_start`: 1° giorno 00:00, `period_end`: ultimo giorno 23:59
+- **annually/annual**: Anno corrente → `period_start`: 1 gen 00:00, `period_end`: 31 dic 23:59
+
+**Verifica Completamento in Calendario** (implementato in `useAggregatedEvents.ts`):
+```typescript
+// Un evento è completato se la sua data cade nel periodo [period_start, period_end]
+const isCompletedInPeriod = completions?.some(c => {
+  if (c.task_id !== task.id) return false
+  const eventTime = eventDate.getTime()
+  const completionStart = c.period_start.getTime()
+  const completionEnd = c.period_end.getTime()
+  return eventTime >= completionStart && eventTime <= completionEnd
+})
+```
 
 **Esempio**:
 ```sql
