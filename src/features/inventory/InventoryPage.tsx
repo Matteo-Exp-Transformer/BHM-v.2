@@ -71,6 +71,11 @@ export default function InventoryPage() {
     refetch: refetchCategories,
   } = useCategories()
 
+  // Debug: Log categories info
+  console.log('🔍 InventoryPage - DEFAULT_CATEGORIES.length:', DEFAULT_CATEGORIES.length)
+  console.log('🔍 InventoryPage - categories.length:', categories.length)
+  console.log('🔍 InventoryPage - categories:', categories)
+
   const {
     expiryAlerts,
     expiryStats,
@@ -363,7 +368,7 @@ export default function InventoryPage() {
       <CollapsibleCard
         title="Categorie Prodotti"
         icon={FileText}
-        counter={DEFAULT_CATEGORIES.length}
+        counter={categories.length}
         defaultExpanded={false}
         isLoading={isLoadingCategories || isCreatingDefaults}
         contentClassName="px-4 py-6 sm:px-6"

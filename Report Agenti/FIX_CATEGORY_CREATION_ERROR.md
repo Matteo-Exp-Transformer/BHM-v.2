@@ -354,7 +354,29 @@ WHERE name ILIKE '%carne%';
 ---
 
 **Status**: ✅ Fix Completato  
-**Testing**: ⏳ Da testare  
-**Deploy**: ⏳ Da eseguire migrazione database  
+**Testing**: ✅ Testato con successo  
+**Deploy**: ✅ Migrazione applicata  
 **Impatto**: 🟢 Basso rischio (solo estensione schema, no breaking changes)
+
+---
+
+## 🔄 AGGIORNAMENTO COUNTER CATEGORIE
+
+### Problema Aggiuntivo Risolto
+Il counter delle categorie mostrava solo `DEFAULT_CATEGORIES.length` invece del totale reale.
+
+### Fix Applicato
+**File**: `src/features/inventory/InventoryPage.tsx`
+```typescript
+// PRIMA (hardcoded)
+counter={DEFAULT_CATEGORIES.length}
+
+// DOPO (dinamico)
+counter={categories.length}
+```
+
+### Risultato
+- ✅ Counter ora mostra il numero totale di categorie (default + personalizzate)
+- ✅ Si aggiorna automaticamente quando si creano nuove categorie
+- ✅ Riflette il numero reale di categorie disponibili
 
