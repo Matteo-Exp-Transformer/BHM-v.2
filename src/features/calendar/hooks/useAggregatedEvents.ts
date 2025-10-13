@@ -49,6 +49,25 @@ export function useAggregatedEvents(fiscalYearEnd?: Date): AggregatedEventsResul
   const { tasks: genericTasks, isLoading: genericTasksLoading } = useGenericTasks()
   const [taskCompletions, setTaskCompletions] = useState<TaskCompletion[]>([])
 
+  // ✅ Debug: Log stato caricamento dati
+  console.log('🔍 useAggregatedEvents debug:', {
+    user: !!user,
+    companyId,
+    maintenanceTasks: maintenanceTasks?.length || 0,
+    conservationPoints: conservationPoints?.length || 0,
+    staff: staff?.length || 0,
+    products: products?.length || 0,
+    genericTasks: genericTasks?.length || 0,
+    taskCompletions: taskCompletions?.length || 0,
+    loading: {
+      maintenance: maintenanceLoading,
+      points: pointsLoading,
+      staff: staffLoading,
+      products: productsLoading,
+      generic: genericTasksLoading
+    }
+  })
+
   // Carica tutti i completamenti delle mansioni
   useEffect(() => {
     if (!companyId) return
@@ -185,6 +204,26 @@ export function useAggregatedEvents(fiscalYearEnd?: Date): AggregatedEventsResul
     temperatureEvents,
     genericTaskEvents,
   ])
+
+  // ✅ Debug: Log risultato finale
+  console.log('🎯 useAggregatedEvents final result:', {
+    totalEvents: allEvents.length,
+    isLoading,
+    sources: {
+      maintenance: maintenanceEvents.filter(e => e.status !== 'completed').length,
+      haccpExpiry: haccpExpiryEvents.length,
+      productExpiry: productExpiryEvents.length,
+      haccpDeadlines: haccpDeadlineEvents.length,
+      temperatureChecks: temperatureEvents.length,
+      genericTasks: genericTaskEvents.filter(e => e.status !== 'completed').length,
+      custom: 0,
+    },
+    sampleEvents: allEvents.slice(0, 3).map(e => ({
+      title: e.title,
+      type: e.type,
+      start: e.start
+    }))
+  })
 
   return {
     events: allEvents,
