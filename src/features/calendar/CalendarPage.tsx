@@ -105,22 +105,10 @@ export const CalendarPage = () => {
 
   const displayEvents = useMemo(() => {
     if (eventsForFiltering.length === 0) {
-      console.log('⚠️ No events to filter - check useAggregatedEvents')
       return []
     }
 
-    console.log('🔍 Applying new filters to events:', {
-      totalEvents: eventsForFiltering.length,
-      filters: JSON.stringify(calendarFilters, null, 2),
-      sampleEvents: eventsForFiltering.slice(0, 2).map(e => ({
-        title: e.title,
-        source: e.source,
-        type: e.type,
-        metadata: e.metadata
-      }))
-    })
-
-    const filtered = eventsForFiltering.filter(event => {
+    return eventsForFiltering.filter(event => {
       // ✅ NUOVA LOGICA FILTRI CUMULATIVI:
       // - Nessun filtro = Mostra TUTTO
       // - Filtri attivi = Mostra SOLO eventi che corrispondono a TUTTI i filtri
@@ -135,7 +123,7 @@ export const CalendarPage = () => {
       const eventType = determineEventType(event.source || '', event.metadata)
 
       // Verifica filtri usando utility function
-      const passesFilters = doesEventPassFilters(
+      return doesEventPassFilters(
         {
           department_id: event.department_id,
           status: eventStatus,
@@ -143,27 +131,7 @@ export const CalendarPage = () => {
         },
         calendarFilters
       )
-
-      // Debug per primi 5 eventi
-      if (eventsForFiltering.indexOf(event) < 5) {
-        console.log(`🔍 Evento ${eventsForFiltering.indexOf(event)}:`, {
-          title: event.title,
-          source: event.source,
-          department_id: event.department_id,
-          status: event.status,
-          calculatedStatus: eventStatus,
-          calculatedType: eventType,
-          metadata: event.metadata,
-          filters: JSON.stringify(calendarFilters, null, 2),
-          passesFilters
-        })
-      }
-
-      return passesFilters
     })
-
-    console.log('✅ Filtered events count:', filtered.length)
-    return filtered
   }, [eventsForFiltering, calendarFilters])
 
   // ✅ Debug risultato finale
@@ -332,7 +300,7 @@ export const CalendarPage = () => {
   // ✅ Calcola reparti disponibili con count eventi (per filtri)
   const availableDepartments = useMemo(() => {
     const deptMap = new Map<string, { id: string; name: string; event_count: number }>()
-    
+
     filteredEvents.forEach(event => {
       if (event.department_id) {
         const dept = departments?.find(d => d.id === event.department_id)
@@ -350,9 +318,30 @@ export const CalendarPage = () => {
         }
       }
     })
-    
+
     return Array.from(deptMap.values()).sort((a, b) => a.name.localeCompare(b.name))
   }, [filteredEvents, departments])
+
+  // ✅ Calcola count eventi SOLO del mese corrente per la legenda
+  const currentMonthSources = useMemo(() => {
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+
+    const currentMonthEvents = displayEvents.filter(event => {
+      const eventDate = new Date(event.start)
+      return eventDate >= monthStart && eventDate <= monthEnd
+    })
+
+    return {
+      maintenance: currentMonthEvents.filter(e => e.source === 'maintenance' && e.status !== 'completed').length,
+      temperatureChecks: 0, // Già incluso in maintenance
+      haccpExpiry: currentMonthEvents.filter(e => e.source === 'custom' && e.metadata?.staff_id).length,
+      productExpiry: currentMonthEvents.filter(e => e.source === 'custom' && e.metadata?.product_id).length,
+      haccpDeadlines: 0, // Non più usato
+      genericTasks: currentMonthEvents.filter(e => e.source === 'general_task' && e.status !== 'completed').length,
+    }
+  }, [displayEvents])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -477,6 +466,67 @@ export const CalendarPage = () => {
                       width: `${displayEvents.length > 0 ? Math.min((displayEvents.filter(e => e.status === 'completed').length / displayEvents.length) * 100, 100) : 0}%`,
                     }}
                   />
+                </div>
+              </div>
+
+              {/* Statistiche Temporali */}
+              <div className="mb-6 pb-6 border-b border-gray-200">
+                <h4 className="text-sm font-medium text-gray-700 mb-4">
+                  📊 Statistiche Temporali
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-blue-50 rounded-lg p-3 text-center">
+                    <div className="text-lg font-bold text-blue-900">
+                      {displayEvents.filter(e => {
+                        const eventDate = new Date(e.start)
+                        const today = new Date()
+                        today.setHours(0, 0, 0, 0)
+                        eventDate.setHours(0, 0, 0, 0)
+                        return eventDate.getTime() === today.getTime()
+                      }).length}
+                    </div>
+                    <div className="text-xs text-blue-700 font-medium">Oggi</div>
+                  </div>
+
+                  <div className="bg-green-50 rounded-lg p-3 text-center">
+                    <div className="text-lg font-bold text-green-900">
+                      {displayEvents.filter(e => {
+                        const eventDate = new Date(e.start)
+                        const now = new Date()
+                        const weekStart = new Date(now)
+                        weekStart.setDate(now.getDate() - now.getDay() + 1)
+                        weekStart.setHours(0, 0, 0, 0)
+                        const weekEnd = new Date(weekStart)
+                        weekEnd.setDate(weekStart.getDate() + 6)
+                        weekEnd.setHours(23, 59, 59, 999)
+                        return eventDate >= weekStart && eventDate <= weekEnd
+                      }).length}
+                    </div>
+                    <div className="text-xs text-green-700 font-medium">Questa Settimana</div>
+                  </div>
+
+                  <div className="bg-purple-50 rounded-lg p-3 text-center">
+                    <div className="text-lg font-bold text-purple-900">
+                      {displayEvents.filter(e => {
+                        const eventDate = new Date(e.start)
+                        const now = new Date()
+                        return eventDate.getMonth() === now.getMonth() &&
+                               eventDate.getFullYear() === now.getFullYear()
+                      }).length}
+                    </div>
+                    <div className="text-xs text-purple-700 font-medium">Questo Mese</div>
+                  </div>
+
+                  <div className="bg-orange-50 rounded-lg p-3 text-center">
+                    <div className="text-lg font-bold text-orange-900">
+                      {displayEvents.filter(e => {
+                        const eventDate = new Date(e.start)
+                        const now = new Date()
+                        return eventDate.getFullYear() === now.getFullYear()
+                      }).length}
+                    </div>
+                    <div className="text-xs text-orange-700 font-medium">Quest'Anno</div>
+                  </div>
                 </div>
               </div>
 
@@ -671,7 +721,7 @@ export const CalendarPage = () => {
             error={null}
             useMacroCategories={true}
             calendarSettings={calendarSettings}
-            eventSources={sources}
+            eventSources={currentMonthSources}
             filters={
               <NewCalendarFilters
                 filters={calendarFilters}
