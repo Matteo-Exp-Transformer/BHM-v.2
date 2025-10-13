@@ -33,6 +33,14 @@ interface CalendarProps {
   error?: string | null
   useMacroCategories?: boolean
   calendarSettings?: CompanyCalendarSettings | null
+  eventSources?: {
+    maintenance?: number
+    temperatureChecks?: number
+    haccpExpiry?: number
+    productExpiry?: number
+    haccpDeadlines?: number
+    genericTasks?: number
+  }
 }
 
 const defaultConfig: CalendarViewConfig = {
@@ -82,6 +90,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   error = null,
   useMacroCategories = false,
   calendarSettings = null,
+  eventSources,
 }) => {
   // ✅ Debug: Log quando events cambiano
   // console.log('📅 Calendar received events:', {
@@ -325,15 +334,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                 Calendario
               </h2>
               <div className="mt-1">
-                <CalendarEventLegend sources={events?.reduce((acc, event) => {
-                  if (event.type === 'maintenance') acc.maintenance = (acc.maintenance || 0) + 1
-                  else if (event.type === 'temperature_reading') acc.temperatureChecks = (acc.temperatureChecks || 0) + 1
-                  else if (event.type === 'haccp_expiry') acc.haccpExpiry = (acc.haccpExpiry || 0) + 1
-                  else if (event.type === 'product_expiry') acc.productExpiry = (acc.productExpiry || 0) + 1
-                  else if (event.type === 'haccp_deadline') acc.haccpDeadlines = (acc.haccpDeadlines || 0) + 1
-                  else if (event.type === 'general_task') acc.genericTasks = (acc.genericTasks || 0) + 1
-                  return acc
-                }, {} as any)} compact={true} />
+                <CalendarEventLegend sources={eventSources || {}} compact={true} />
               </div>
             </div>
           </div>

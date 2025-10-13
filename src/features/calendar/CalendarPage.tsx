@@ -678,6 +678,7 @@ export const CalendarPage = () => {
             error={null}
             useMacroCategories={true}
             calendarSettings={calendarSettings}
+            eventSources={sources}
           />
         </div>
 
