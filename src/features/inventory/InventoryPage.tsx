@@ -68,6 +68,7 @@ export default function InventoryPage() {
     createCategory,
     updateCategory,
     deleteCategory,
+    refetch: refetchCategories,
   } = useCategories()
 
   const {
@@ -145,6 +146,25 @@ export default function InventoryPage() {
 
   const handleDeleteExpiredProduct = (productId: string) => {
     deleteExpiredProduct.mutate(productId)
+  }
+
+  const handleCreateDefaultCategories = async () => {
+    if (!companyId) {
+      toast.error('Errore: ID azienda non trovato')
+      return
+    }
+
+    setIsCreatingDefaults(true)
+    try {
+      await createDefaultCategories(companyId)
+      await refetchCategories()
+      toast.success('Categorie predefinite create con successo!')
+    } catch (error) {
+      console.error('Error creating default categories:', error)
+      toast.error('Errore nella creazione delle categorie predefinite')
+    } finally {
+      setIsCreatingDefaults(false)
+    }
   }
 
   const isLoading = isLoadingProducts || isLoadingCategories || isLoadingExpiry
@@ -345,12 +365,10 @@ export default function InventoryPage() {
         icon={FileText}
         counter={categories.length}
         defaultExpanded={false}
-        isLoading={isLoadingCategories}
+        isLoading={isLoadingCategories || isCreatingDefaults}
         isEmpty={!isLoadingCategories && categories.length === 0}
-        emptyMessage="Nessuna categoria creata. Usa il pulsante in alto per aggiungerne una."
+        emptyMessage="Nessuna categoria creata."
         contentClassName="px-4 py-6 sm:px-6"
-        emptyActionLabel="Aggiungi la prima categoria"
-        onEmptyAction={() => setShowAddCategoryModal(true)}
       >
         {!isLoadingCategories && categories.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -390,13 +408,35 @@ export default function InventoryPage() {
           </div>
         )}
         {!isLoadingCategories && categories.length === 0 && (
-          <div className="text-center py-6 text-gray-500">
-            <button
-              onClick={() => setShowAddCategoryModal(true)}
-              className="text-green-600 hover:text-green-700 font-medium"
-            >
-              Aggiungi la prima categoria
-            </button>
+          <div className="text-center py-8 space-y-4">
+            <p className="text-gray-600 mb-4">
+              Inizia creando le categorie predefinite o aggiungi la tua categoria personalizzata
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={handleCreateDefaultCategories}
+                disabled={isCreatingDefaults}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCreatingDefaults ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Creazione in corso...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    <span>Crea Categorie Predefinite</span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setShowAddCategoryModal(true)}
+                className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              >
+                Aggiungi Categoria Personalizzata
+              </button>
+            </div>
           </div>
         )}
       </CollapsibleCard>
