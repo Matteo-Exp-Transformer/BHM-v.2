@@ -262,57 +262,6 @@ export default function ConservationPage() {
           </button>
         }
       >
-        {/* Mini Statistics - Punti di Conservazione per Tipo */}
-        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
-          <div className="bg-sky-50 rounded-lg border-2 border-sky-200 p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-sky-700">Frigoriferi</p>
-                <p className="text-lg font-bold text-sky-700">
-                  {stats.by_type.fridge ?? 0}
-                </p>
-              </div>
-              <div className="text-xl">❄️</div>
-            </div>
-          </div>
-
-          <div className="bg-indigo-50 rounded-lg border-2 border-indigo-200 p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-indigo-700">Freezer</p>
-                <p className="text-lg font-bold text-indigo-700">
-                  {stats.by_type.freezer ?? 0}
-                </p>
-              </div>
-              <div className="text-xl">🧊</div>
-            </div>
-          </div>
-
-          <div className="bg-purple-50 rounded-lg border-2 border-purple-200 p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-purple-700">Abbattitore</p>
-                <p className="text-lg font-bold text-purple-700">
-                  {stats.by_type.blast ?? 0}
-                </p>
-              </div>
-              <div className="text-xl">⚡</div>
-            </div>
-          </div>
-
-          <div className="bg-emerald-50 rounded-lg border-2 border-emerald-200 p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-emerald-700">Dispensa</p>
-                <p className="text-lg font-bold text-emerald-700">
-                  {stats.by_type.ambient ?? 0}
-                </p>
-              </div>
-              <div className="text-xl">🌡️</div>
-            </div>
-          </div>
-        </div>
-
         {conservationPoints.length === 0 ? (
           <div className="text-center py-8">
             <Thermometer className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -332,15 +281,110 @@ export default function ConservationPage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {conservationPoints.map(point => (
-              <ConservationPointCard
-                key={point.id}
-                point={point}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
+          <div className="space-y-4">
+            {/* Frigoriferi */}
+            <CollapsibleCard
+              title="Frigoriferi"
+              subtitle={`${stats.by_type.fridge ?? 0} punti configurati`}
+              defaultExpanded={true}
+              customHeaderClasses="bg-sky-50 border-sky-200"
+              customTitleClasses="text-sky-700"
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {conservationPoints
+                  .filter(point => point.type === 'fridge')
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(point => (
+                    <ConservationPointCard
+                      key={point.id}
+                      point={point}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+              </div>
+              {conservationPoints.filter(point => point.type === 'fridge').length === 0 && (
+                <p className="text-center text-gray-500 py-4">Nessun frigorifero configurato</p>
+              )}
+            </CollapsibleCard>
+
+            {/* Freezer */}
+            <CollapsibleCard
+              title="Freezer"
+              subtitle={`${stats.by_type.freezer ?? 0} punti configurati`}
+              defaultExpanded={true}
+              customHeaderClasses="bg-indigo-50 border-indigo-200"
+              customTitleClasses="text-indigo-700"
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {conservationPoints
+                  .filter(point => point.type === 'freezer')
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(point => (
+                    <ConservationPointCard
+                      key={point.id}
+                      point={point}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+              </div>
+              {conservationPoints.filter(point => point.type === 'freezer').length === 0 && (
+                <p className="text-center text-gray-500 py-4">Nessun freezer configurato</p>
+              )}
+            </CollapsibleCard>
+
+            {/* Abbattitori */}
+            <CollapsibleCard
+              title="Abbattitori"
+              subtitle={`${stats.by_type.blast ?? 0} punti configurati`}
+              defaultExpanded={true}
+              customHeaderClasses="bg-purple-50 border-purple-200"
+              customTitleClasses="text-purple-700"
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {conservationPoints
+                  .filter(point => point.type === 'blast')
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(point => (
+                    <ConservationPointCard
+                      key={point.id}
+                      point={point}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+              </div>
+              {conservationPoints.filter(point => point.type === 'blast').length === 0 && (
+                <p className="text-center text-gray-500 py-4">Nessun abbattitore configurato</p>
+              )}
+            </CollapsibleCard>
+
+            {/* Ambiente/Dispensa */}
+            <CollapsibleCard
+              title="Ambiente / Dispensa"
+              subtitle={`${stats.by_type.ambient ?? 0} punti configurati`}
+              defaultExpanded={true}
+              customHeaderClasses="bg-emerald-50 border-emerald-200"
+              customTitleClasses="text-emerald-700"
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {conservationPoints
+                  .filter(point => point.type === 'ambient')
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(point => (
+                    <ConservationPointCard
+                      key={point.id}
+                      point={point}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+              </div>
+              {conservationPoints.filter(point => point.type === 'ambient').length === 0 && (
+                <p className="text-center text-gray-500 py-4">Nessun punto ambiente configurato</p>
+              )}
+            </CollapsibleCard>
           </div>
         )}
       </CollapsibleCard>
