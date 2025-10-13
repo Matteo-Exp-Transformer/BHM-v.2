@@ -264,11 +264,11 @@ export default function ConservationPage() {
       >
         {/* Mini Statistics - Punti di Conservazione per Tipo */}
         <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
-          <div className="bg-gray-200 rounded-lg border border-gray-500 p-3">
+          <div className="bg-sky-50 rounded-lg border-2 border-sky-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-700">Frigoriferi</p>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-xs font-medium text-sky-700">Frigoriferi</p>
+                <p className="text-lg font-bold text-sky-700">
                   {stats.by_type.fridge ?? 0}
                 </p>
               </div>
@@ -276,11 +276,11 @@ export default function ConservationPage() {
             </div>
           </div>
 
-          <div className="bg-blue-200 rounded-lg border border-blue-500 p-3">
+          <div className="bg-indigo-50 rounded-lg border-2 border-indigo-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-blue-800">Freezer</p>
-                <p className="text-lg font-bold text-blue-900">
+                <p className="text-xs font-medium text-indigo-700">Freezer</p>
+                <p className="text-lg font-bold text-indigo-700">
                   {stats.by_type.freezer ?? 0}
                 </p>
               </div>
@@ -288,11 +288,11 @@ export default function ConservationPage() {
             </div>
           </div>
 
-          <div className="bg-red-100 rounded-lg border border-red-400 p-3">
+          <div className="bg-purple-50 rounded-lg border-2 border-purple-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-red-700">Abbattitore</p>
-                <p className="text-lg font-bold text-red-900">
+                <p className="text-xs font-medium text-purple-700">Abbattitore</p>
+                <p className="text-lg font-bold text-purple-700">
                   {stats.by_type.blast ?? 0}
                 </p>
               </div>
@@ -300,11 +300,11 @@ export default function ConservationPage() {
             </div>
           </div>
 
-          <div className="bg-green-100 rounded-lg border border-green-400 p-3">
+          <div className="bg-emerald-50 rounded-lg border-2 border-emerald-200 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-green-700">Dispensa</p>
-                <p className="text-lg font-bold text-green-900">
+                <p className="text-xs font-medium text-emerald-700">Dispensa</p>
+                <p className="text-lg font-bold text-emerald-700">
                   {stats.by_type.ambient ?? 0}
                 </p>
               </div>

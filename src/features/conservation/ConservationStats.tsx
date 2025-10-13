@@ -144,18 +144,32 @@ export function ConservationStats({ stats }: ConservationStatsProps) {
                   ambient: '🌡️',
                 }
 
+                const typeColors: Record<string, string> = {
+                  fridge: 'bg-sky-50 border-sky-200',
+                  freezer: 'bg-indigo-50 border-indigo-200',
+                  blast: 'bg-purple-50 border-purple-200',
+                  ambient: 'bg-emerald-50 border-emerald-200',
+                }
+
+                const typeTextColors: Record<string, string> = {
+                  fridge: 'text-sky-700',
+                  freezer: 'text-indigo-700',
+                  blast: 'text-purple-700',
+                  ambient: 'text-emerald-700',
+                }
+
                 return (
                   <div
                     key={type}
-                    className="text-center p-3 bg-gray-50 rounded-lg"
+                    className={`text-center p-3 rounded-lg border-2 ${typeColors[type] || 'bg-gray-50 border-gray-200'}`}
                   >
                     <div className="text-2xl mb-1">
                       {typeIcons[type] || '📦'}
                     </div>
-                    <div className="text-lg font-bold text-gray-900">
+                    <div className={`text-lg font-bold ${typeTextColors[type] || 'text-gray-900'}`}>
                       {count}
                     </div>
-                    <div className="text-xs text-gray-600">
+                    <div className={`text-xs font-medium ${typeTextColors[type] || 'text-gray-600'}`}>
                       {typeLabels[type] || type}
                     </div>
                   </div>
