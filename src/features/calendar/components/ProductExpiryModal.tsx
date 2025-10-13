@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Label } from '@/components/ui/Label'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase/client'
-import { toast } from 'sonner'
+import { toast } from 'react-toastify'
 import type { Product } from '@/types/inventory'
 
 interface ProductExpiryModalProps {

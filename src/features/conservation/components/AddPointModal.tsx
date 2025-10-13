@@ -6,6 +6,7 @@ import {
 import { X, Thermometer, ShieldCheck, AlertCircle } from 'lucide-react'
 import { useDepartments } from '@/features/management/hooks/useDepartments'
 import { useStaff } from '@/features/management/hooks/useStaff'
+import { useCategories } from '@/features/inventory/hooks/useCategories'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
@@ -326,6 +327,7 @@ export function AddPointModal({
 }: AddPointModalProps) {
   const { departments } = useDepartments()
   const { staff } = useStaff()
+  const { categories: productCategories } = useCategories()
 
   const [formData, setFormData] = useState({
     name: '',
@@ -381,11 +383,30 @@ export function AddPointModal({
   )
 
   const compatibleCategories = useMemo(() => {
+    if (!productCategories || productCategories.length === 0) return []
+
     const temperature = formData.targetTemperature
       ? Number(formData.targetTemperature)
       : null
-    return getCompatibleCategories(temperature, formData.pointType)
-  }, [formData.targetTemperature, formData.pointType])
+
+    return productCategories
+      .filter(cat => {
+        if (!cat.temperature_requirements) return true
+
+        const tempReq = cat.temperature_requirements
+        if (!temperature) return true
+
+        return temperature >= tempReq.min_temp && temperature <= tempReq.max_temp
+      })
+      .map(cat => ({
+        id: cat.name,
+        label: cat.name,
+        range: cat.temperature_requirements ? {
+          min: cat.temperature_requirements.min_temp,
+          max: cat.temperature_requirements.max_temp
+        } : null
+      }))
+  }, [formData.targetTemperature, formData.pointType, productCategories])
 
   useEffect(() => {
     if (formData.targetTemperature && formData.pointType !== 'ambient') {
