@@ -22,7 +22,7 @@ import { CategoryFilter } from './components/CategoryFilter'
 import { ExpiredProductsManager } from './components/ExpiredProductsManager'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 import { ShoppingListCard } from '@/features/shopping/components/ShoppingListCard'
-import { createDefaultCategories } from '@/utils/defaultCategories'
+import { createDefaultCategories, DEFAULT_CATEGORIES } from '@/utils/defaultCategories'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'react-toastify'
 import {
@@ -363,81 +363,124 @@ export default function InventoryPage() {
       <CollapsibleCard
         title="Categorie Prodotti"
         icon={FileText}
-        counter={categories.length}
+        counter={DEFAULT_CATEGORIES.length}
         defaultExpanded={false}
         isLoading={isLoadingCategories || isCreatingDefaults}
-        isEmpty={!isLoadingCategories && categories.length === 0}
-        emptyMessage="Nessuna categoria creata."
         contentClassName="px-4 py-6 sm:px-6"
       >
-        {!isLoadingCategories && categories.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {categories.map(category => (
-              <div
-                key={category.id}
-                className="p-3 bg-gray-50 rounded-lg border border-gray-200"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium text-gray-900">
-                      {category.name}
-                    </h4>
-                    {category.description && (
-                      <p className="text-sm text-gray-600">
-                        {category.description}
-                      </p>
-                    )}
+        {!isLoadingCategories && (
+          <>
+            {/* Mostra sempre tutte le categorie predefinite */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {DEFAULT_CATEGORIES.map(defaultCat => {
+                const existingCategory = categories.find(c => c.name === defaultCat.name)
+                const isCreated = !!existingCategory
+
+                return (
+                  <div
+                    key={defaultCat.name}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      isCreated
+                        ? 'bg-white border-green-200'
+                        : 'bg-gray-50 border-gray-200 border-dashed'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-semibold text-gray-900">
+                            {defaultCat.name}
+                          </h4>
+                          {isCreated && (
+                            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                              ✓ Creata
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {defaultCat.description}
+                        </p>
+                      </div>
+                      {isCreated && existingCategory && (
+                        <div className="flex gap-1 ml-2">
+                          <button
+                            onClick={() => setEditingCategory(existingCategory)}
+                            className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                            title="Modifica"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCategory(existingCategory.id)}
+                            className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                            title="Elimina"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-gray-200">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-600 font-medium">Temperatura:</span>
+                        <span className="text-blue-700 font-semibold">
+                          {defaultCat.temperature_requirements.min_temp}°C - {defaultCat.temperature_requirements.max_temp}°C
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => setEditingCategory(category)}
-                      className="p-1 text-gray-400 hover:text-gray-600"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={() => handleDeleteCategory(category.id)}
-                      className="p-1 text-gray-400 hover:text-red-600"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        {!isLoadingCategories && categories.length === 0 && (
-          <div className="text-center py-8 space-y-4">
-            <p className="text-gray-600 mb-4">
-              Inizia creando le categorie predefinite o aggiungi la tua categoria personalizzata
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                onClick={handleCreateDefaultCategories}
-                disabled={isCreatingDefaults}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isCreatingDefaults ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Creazione in corso...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5" />
-                    <span>Crea Categorie Predefinite</span>
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => setShowAddCategoryModal(true)}
-                className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-              >
-                Aggiungi Categoria Personalizzata
-              </button>
+                )
+              })}
             </div>
-          </div>
+
+            {/* Mostra categorie personalizzate create dall'utente */}
+            {categories.filter(c => !DEFAULT_CATEGORIES.find(dc => dc.name === c.name)).length > 0 && (
+              <>
+                <div className="mt-6 mb-3 border-t border-gray-200 pt-4">
+                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                    Categorie Personalizzate
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {categories
+                    .filter(c => !DEFAULT_CATEGORIES.find(dc => dc.name === c.name))
+                    .map(category => (
+                      <div
+                        key={category.id}
+                        className="p-4 bg-purple-50 rounded-lg border-2 border-purple-200"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-semibold text-gray-900">
+                              {category.name}
+                            </h4>
+                            {category.description && (
+                              <p className="text-xs text-gray-600 mt-1">
+                                {category.description}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => setEditingCategory(category)}
+                              className="p-1 text-gray-400 hover:text-blue-600"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCategory(category.id)}
+                              className="p-1 text-gray-400 hover:text-red-600"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </>
+            )}
+          </>
         )}
       </CollapsibleCard>
 

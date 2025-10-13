@@ -13,9 +13,10 @@ import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 import type { CalendarEvent } from '@/types/calendar'
 import {
   ViewSelector,
-  HorizontalCalendarFilters,
   useCalendarView,
   GenericTaskForm,
+  ProductExpiryModal,
+  NewCalendarFilters,
 } from './components'
 import { AlertModal } from './components/AlertModal'
 import { CalendarConfigModal } from './components/CalendarConfigModal'
@@ -25,7 +26,19 @@ import { useFilteredEvents } from './hooks/useFilteredEvents'
 import { useGenericTasks } from './hooks/useGenericTasks'
 import { useStaff } from '@/features/management/hooks/useStaff'
 import { useDepartments } from '@/features/management/hooks/useDepartments'
+import { useProducts } from '@/features/inventory/hooks/useProducts'
 import { useCalendarSettings } from '@/hooks/useCalendarSettings'
+import { toast } from 'sonner'
+import { 
+  CalendarFilters as NewCalendarFiltersType,
+  DEFAULT_CALENDAR_FILTERS,
+  doesEventPassFilters,
+  calculateEventStatus,
+  determineEventType,
+  type EventStatus,
+  type EventType
+} from '@/types/calendar-filters'
+import type { Product } from '@/types/inventory'
 
 export const CalendarPage = () => {
   const navigate = useNavigate()
@@ -57,6 +70,7 @@ export const CalendarPage = () => {
   const { createTask, isCreating } = useGenericTasks()
   const { staff } = useStaff()
   const { departments } = useDepartments()
+  const { products } = useProducts()
   console.log('👥 Staff data:', { 
     staffCount: staff?.length || 0, 
     sampleStaff: staff?.slice(0, 2)
@@ -68,20 +82,15 @@ export const CalendarPage = () => {
   const [showAlertModal, setShowAlertModal] = useState(false)
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null)
   const [showConfigModal, setShowConfigModal] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [showProductExpiryModal, setShowProductExpiryModal] = useState(false)
 
-  const [activeFilters, setActiveFilters] = useState({
-    eventTypes: [
-      'maintenance',
-      'general_task',
-      'temperature_reading',
-      'custom',
-    ] as CalendarEvent['type'][],
-    priorities: ['critical', 'high', 'medium', 'low'] as CalendarEvent['priority'][],
-    statuses: ['pending', 'in_progress', 'overdue', 'completed'] as CalendarEvent['status'][],
-  })
+  // ✅ Nuovi filtri calendario
+  const [calendarFilters, setCalendarFilters] = useState<NewCalendarFiltersType>(DEFAULT_CALENDAR_FILTERS)
 
-  const handleFilterChange = useCallback((newFilters: typeof activeFilters) => {
-    setActiveFilters(newFilters)
+  const handleFilterChange = useCallback((newFilters: NewCalendarFiltersType) => {
+    console.log('🔧 Filtri aggiornati:', newFilters)
+    setCalendarFilters(newFilters)
   }, [])
 
   const displayEvents = useMemo(() => {
@@ -90,19 +99,32 @@ export const CalendarPage = () => {
     }
     
     return filteredEvents.filter(event => {
-      // ✅ LOGICA CORRETTA: 
-      // - Filtro DISATTIVO (non selezionato) = INCLUDE quel tipo (mostra)
-      // - Filtro ATTIVO (selezionato) = EXCLUDE quel tipo (nasconde)
-      // - Tutti DISATTIVI = Mostra TUTTO
-      // - Alcuni ATTIVI = Nasconde quelli selezionati
+      // ✅ NUOVA LOGICA FILTRI CUMULATIVI:
+      // - Nessun filtro = Mostra TUTTO
+      // - Filtri attivi = Mostra SOLO eventi che corrispondono a TUTTI i filtri
       
-      const typeMatch = !activeFilters.eventTypes.includes(event.type)
-      const priorityMatch = !activeFilters.priorities.includes(event.priority)
-      const statusMatch = !activeFilters.statuses.includes(event.status)
+      // Calcola stato evento dinamicamente
+      const eventStatus = calculateEventStatus(
+        event.start,
+        event.status === 'completed'
+      )
+      
+      // Determina tipo evento
+      const eventType = determineEventType(event.source || '', event.metadata)
+      
+      // Verifica filtri usando utility function
+      const passesFilters = doesEventPassFilters(
+        {
+          department_id: event.department_id,
+          status: eventStatus,
+          type: eventType as EventType
+        },
+        calendarFilters
+      )
 
-      return typeMatch && priorityMatch && statusMatch
+      return passesFilters
     })
-  }, [filteredEvents, activeFilters])
+  }, [filteredEvents, calendarFilters])
 
   // ✅ Calcola statistiche
   const todayEvents = useMemo(() => {
@@ -166,7 +188,23 @@ export const CalendarPage = () => {
 
   // ✅ Event handlers
   const onEventClick = (event: any) => {
-    // Event clicked - can add logic here if needed
+    // Gestione click su evento scadenza prodotto
+    if (event.extendedProps?.metadata?.product_id) {
+      const productId = event.extendedProps.metadata.product_id
+      const product = products?.find((p: Product) => p.id === productId)
+      
+      if (product) {
+        setSelectedProduct(product)
+        setShowProductExpiryModal(true)
+      } else {
+        toast.error('Impossibile caricare i dettagli del prodotto')
+      }
+    }
+  }
+
+  const handleProductExpiryComplete = () => {
+    // Dopo completamento, reload eventi
+    window.location.reload()
   }
 
   const onEventUpdate = (event: any) => {
@@ -237,6 +275,31 @@ export const CalendarPage = () => {
         })),
     [departments]
   )
+
+  // ✅ Calcola reparti disponibili con count eventi (per filtri)
+  const availableDepartments = useMemo(() => {
+    const deptMap = new Map<string, { id: string; name: string; event_count: number }>()
+    
+    filteredEvents.forEach(event => {
+      if (event.department_id) {
+        const dept = departments?.find(d => d.id === event.department_id)
+        if (dept) {
+          const existing = deptMap.get(dept.id)
+          if (existing) {
+            existing.event_count++
+          } else {
+            deptMap.set(dept.id, {
+              id: dept.id,
+              name: dept.name,
+              event_count: 1
+            })
+          }
+        }
+      }
+    })
+    
+    return Array.from(deptMap.values()).sort((a, b) => a.name.localeCompare(b.name))
+  }, [filteredEvents, departments])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -500,11 +563,12 @@ export const CalendarPage = () => {
           )}
         </div>
 
-        {/* Filtri Orizzontali */}
+        {/* Nuovi Filtri Calendario */}
         <div className="mb-6">
-          <HorizontalCalendarFilters
-            onFilterChange={handleFilterChange}
-            initialFilters={activeFilters}
+          <NewCalendarFilters
+            filters={calendarFilters}
+            onFiltersChange={handleFilterChange}
+            availableDepartments={availableDepartments}
           />
         </div>
 
@@ -753,6 +817,19 @@ export const CalendarPage = () => {
         <CalendarConfigModal
           isOpen={showConfigModal}
           onClose={() => setShowConfigModal(false)}
+        />
+      )}
+
+      {/* Product Expiry Modal */}
+      {selectedProduct && (
+        <ProductExpiryModal
+          product={selectedProduct}
+          isOpen={showProductExpiryModal}
+          onClose={() => {
+            setShowProductExpiryModal(false)
+            setSelectedProduct(null)
+          }}
+          onComplete={handleProductExpiryComplete}
         />
       )}
     </div>
