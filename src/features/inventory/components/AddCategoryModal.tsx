@@ -73,7 +73,7 @@ export function AddCategoryModal({
         temperature_requirements: {
           min_temp: 0,
           max_temp: 25,
-          storage_type: '' as any,
+          storage_type: ConservationPointType.AMBIENT,
         },
         default_expiry_days: undefined,
         allergen_info: [],
@@ -119,7 +119,9 @@ export function AddCategoryModal({
     }
 
     if (formData.temperature_requirements) {
-      if (
+      if (!formData.temperature_requirements.storage_type || formData.temperature_requirements.storage_type.trim() === '') {
+        newErrors.temperature = 'Seleziona un tipo di conservazione'
+      } else if (
         formData.temperature_requirements.min_temp >=
         formData.temperature_requirements.max_temp
       ) {
