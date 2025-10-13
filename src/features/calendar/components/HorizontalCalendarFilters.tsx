@@ -75,7 +75,6 @@ export function HorizontalCalendarFilters({
   className,
 }: HorizontalCalendarFiltersProps) {
   const storedFilters = loadFiltersFromStorage()
-  console.log('🔧 Stored filters from localStorage:', storedFilters)
   
   const defaultFilters: CalendarFilterOptions = {
     eventTypes: initialFilters?.eventTypes ||
@@ -88,15 +87,12 @@ export function HorizontalCalendarFilters({
       (storedFilters.statuses && storedFilters.statuses.length > 0 ? storedFilters.statuses : null) ||
       ['pending', 'in_progress', 'overdue', 'completed'],
   }
-  
-  console.log('🔧 Computed default filters:', defaultFilters)
 
   const [filters, setFilters] = useState<CalendarFilterOptions>(defaultFilters)
 
   // Fix: Se i filtri sono vuoti, forza il reset ai default
   useEffect(() => {
     if (filters.eventTypes.length === 0 || filters.priorities.length === 0 || filters.statuses.length === 0) {
-      console.log('⚠️ Empty filters detected, resetting to defaults')
       const resetFilters: CalendarFilterOptions = {
         eventTypes: ['maintenance', 'general_task', 'temperature_reading', 'custom'],
         priorities: ['critical', 'high', 'medium', 'low'],
@@ -111,12 +107,10 @@ export function HorizontalCalendarFilters({
   }, [filters, onFilterChange])
 
   const toggleEventType = (type: CalendarEvent['type']) => {
-    console.log('🔄 Toggle event type:', type, 'Current:', filters.eventTypes)
     setFilters(prev => {
       const newEventTypes = prev.eventTypes.includes(type)
         ? prev.eventTypes.filter(t => t !== type)
         : [...prev.eventTypes, type]
-      console.log('✅ New event types:', newEventTypes)
       return {
         ...prev,
         eventTypes: newEventTypes,
@@ -125,12 +119,10 @@ export function HorizontalCalendarFilters({
   }
 
   const togglePriority = (priority: CalendarEvent['priority']) => {
-    console.log('🔄 Toggle priority:', priority, 'Current:', filters.priorities)
     setFilters(prev => {
       const newPriorities = prev.priorities.includes(priority)
         ? prev.priorities.filter(p => p !== priority)
         : [...prev.priorities, priority]
-      console.log('✅ New priorities:', newPriorities)
       return {
         ...prev,
         priorities: newPriorities,
@@ -139,12 +131,10 @@ export function HorizontalCalendarFilters({
   }
 
   const toggleStatus = (status: CalendarEvent['status']) => {
-    console.log('🔄 Toggle status:', status, 'Current:', filters.statuses)
     setFilters(prev => {
       const newStatuses = prev.statuses.includes(status)
         ? prev.statuses.filter(s => s !== status)
         : [...prev.statuses, status]
-      console.log('✅ New statuses:', newStatuses)
       return {
         ...prev,
         statuses: newStatuses,

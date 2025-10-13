@@ -75,31 +75,24 @@ export const CalendarPage = () => {
   })
 
   const handleFilterChange = useCallback((newFilters: typeof activeFilters) => {
-    console.log('📥 CalendarPage received new filters:', newFilters)
     setActiveFilters(newFilters)
   }, [])
 
   const displayEvents = useMemo(() => {
-    console.log('🔍 Filtering events:', {
-      totalEvents: filteredEvents.length,
-      activeFilters,
-      sampleEvents: filteredEvents.slice(0, 3).map(e => ({
-        id: e.id,
-        type: e.type,
-        priority: e.priority,
-        status: e.status,
-        title: e.title
-      }))
-    })
-    
     if (filteredEvents.length === 0) {
       console.log('⚠️ No events to filter - check useFilteredEvents or useAggregatedEvents')
     }
     
     return filteredEvents.filter(event => {
-      const typeMatch = activeFilters.eventTypes.length === 0 || activeFilters.eventTypes.includes(event.type)
-      const priorityMatch = activeFilters.priorities.length === 0 || activeFilters.priorities.includes(event.priority)
-      const statusMatch = activeFilters.statuses.length === 0 || activeFilters.statuses.includes(event.status)
+      // ✅ LOGICA CORRETTA: 
+      // - Filtro DISATTIVO (non selezionato) = INCLUDE quel tipo (mostra)
+      // - Filtro ATTIVO (selezionato) = EXCLUDE quel tipo (nasconde)
+      // - Tutti DISATTIVI = Mostra TUTTO
+      // - Alcuni ATTIVI = Nasconde quelli selezionati
+      
+      const typeMatch = !activeFilters.eventTypes.includes(event.type)
+      const priorityMatch = !activeFilters.priorities.includes(event.priority)
+      const statusMatch = !activeFilters.statuses.includes(event.status)
 
       return typeMatch && priorityMatch && statusMatch
     })
