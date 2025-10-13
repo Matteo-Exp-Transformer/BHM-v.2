@@ -8,6 +8,7 @@ import {
   TrendingUp,
   Search,
   Filter,
+  Sparkles,
 } from 'lucide-react'
 import { useProducts } from './hooks/useProducts'
 import { useCategories } from './hooks/useCategories'
@@ -21,6 +22,9 @@ import { CategoryFilter } from './components/CategoryFilter'
 import { ExpiredProductsManager } from './components/ExpiredProductsManager'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 import { ShoppingListCard } from '@/features/shopping/components/ShoppingListCard'
+import { createDefaultCategories } from '@/utils/defaultCategories'
+import { useAuth } from '@/hooks/useAuth'
+import { toast } from 'react-toastify'
 import {
   Product,
   ProductCategory,
@@ -29,6 +33,7 @@ import {
 } from '@/types/inventory'
 
 export default function InventoryPage() {
+  const { companyId } = useAuth()
   const [showAddProductModal, setShowAddProductModal] = useState(false)
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -37,6 +42,7 @@ export default function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showExpiredOnly, setShowExpiredOnly] = useState(false)
+  const [isCreatingDefaults, setIsCreatingDefaults] = useState(false)
 
   const {
     products,

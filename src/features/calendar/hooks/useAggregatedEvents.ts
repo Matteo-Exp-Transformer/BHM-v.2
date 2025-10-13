@@ -14,6 +14,7 @@ import { generateHaccpDeadlineEvents } from '../utils/haccpDeadlineGenerator'
 import { generateTemperatureCheckEvents } from '../utils/temperatureCheckGenerator'
 import { addDays, addWeeks, addMonths, startOfDay, endOfDay } from 'date-fns'
 import { supabase } from '@/lib/supabase/client'
+import { calculateEventStatus } from '@/types/calendar-filters'
 
 interface AggregatedEventsResult {
   events: CalendarEvent[]
@@ -106,6 +107,26 @@ export function useAggregatedEvents(fiscalYearEnd?: Date): AggregatedEventsResul
       )
   }, [staff, companyId, user?.id])
 
+  // Carica completamenti scadenze prodotti
+  const [productExpiryCompletions, setProductExpiryCompletions] = useState<any[]>([])
+  
+  useEffect(() => {
+    if (!companyId) return
+
+    const loadProductCompletions = async () => {
+      const { data, error } = await supabase
+        .from('product_expiry_completions')
+        .select('*')
+        .eq('company_id', companyId)
+
+      if (!error && data) {
+        setProductExpiryCompletions(data)
+      }
+    }
+
+    loadProductCompletions()
+  }, [companyId])
+
   const productExpiryEvents = useMemo(() => {
     if (!products || products.length === 0) return []
 
@@ -118,9 +139,9 @@ export function useAggregatedEvents(fiscalYearEnd?: Date): AggregatedEventsResul
             new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
       )
       .map(product =>
-        convertProductExpiryToEvent(product, companyId || '', user?.id || '')
+        convertProductExpiryToEvent(product, companyId || '', user?.id || '', productExpiryCompletions)
       )
-  }, [products, companyId, user?.id])
+  }, [products, companyId, user?.id, productExpiryCompletions])
 
   const haccpDeadlineEvents = useMemo(() => {
     if (!staff || staff.length === 0) return []
@@ -313,6 +334,7 @@ function convertMaintenanceTaskToEvent(
     sourceId: task.id,
     assigned_to: task.assigned_to_staff_id ? [task.assigned_to_staff_id] : [],
     conservation_point_id: task.conservation_point_id,
+    department_id: (task as any).department_id || undefined,
     recurring: false,
     backgroundColor: colors.backgroundColor,
     borderColor: colors.borderColor,
@@ -320,6 +342,7 @@ function convertMaintenanceTaskToEvent(
     metadata: {
       maintenance_id: task.id,
       conservation_point_id: task.conservation_point_id,
+      department_id: (task as any).department_id,
       assigned_to_staff_id: (task as any).assigned_to_staff_id,
       assigned_to_role: (task as any).assigned_to_role,
       assigned_to_category: (task as any).assigned_to_category,
@@ -420,7 +443,8 @@ function convertHaccpExpiryToEvent(
 function convertProductExpiryToEvent(
   product: Product,
   companyId: string,
-  userId: string
+  userId: string,
+  completions: any[] = []
 ): CalendarEvent {
   const expiryDate = new Date(product.expiry_date!)
   const now = new Date()
@@ -428,17 +452,20 @@ function convertProductExpiryToEvent(
     (expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
   )
 
+  // Verifica se prodotto è stato completato (consumato o smaltito)
+  const isCompleted = completions.some(c => c.product_id === product.id)
+
   const priority: CalendarEvent['priority'] =
     daysUntilExpiry <= 1 ? 'critical' : daysUntilExpiry <= 3 ? 'high' : 'medium'
 
   const status: CalendarEvent['status'] =
-    expiryDate < now ? 'overdue' : 'pending'
+    isCompleted ? 'completed' : expiryDate < now ? 'overdue' : 'pending'
 
   const colors = getEventColors('custom', status, priority)
 
   return {
     id: `product-expiry-${product.id}`,
-    title: `Scadenza: ${product.name}`,
+    title: `📦 Scadenza: ${product.name}`,
     description: `Prodotto in scadenza - ${product.quantity || ''} ${product.unit || ''}`,
     start: expiryDate,
     end: expiryDate,
@@ -448,8 +475,8 @@ function convertProductExpiryToEvent(
     priority,
     source: 'custom',
     sourceId: product.id,
-    assigned_to: [], // Rimane vuoto per assigned_to
-    department_id: product.department_id, // ✅ Reparto del prodotto
+    assigned_to: [],
+    department_id: product.department_id,
     conservation_point_id: product.conservation_point_id,
     recurring: false,
     backgroundColor: colors.backgroundColor,
@@ -457,8 +484,8 @@ function convertProductExpiryToEvent(
     textColor: colors.textColor,
     metadata: {
       product_id: product.id,
+      department_id: product.department_id,
       conservation_point_id: product.conservation_point_id,
-      // ✅ Assegnazione per reparto specifico invece di 'all'
       assigned_to_category: product.department_id
         ? `department:${product.department_id}`
         : 'all',
@@ -575,12 +602,14 @@ function convertGenericTaskToEvent(
     source: 'general_task',
     sourceId: task.id,
     assigned_to: task.assigned_to_staff_id ? [task.assigned_to_staff_id] : [],
+    department_id: task.department_id || undefined,
     recurring: task.frequency !== 'as_needed',
     backgroundColor: colors.backgroundColor,
     borderColor: colors.borderColor,
     textColor: colors.textColor,
     metadata: {
       task_id: task.id,
+      department_id: task.department_id,
       assigned_to_role: task.assigned_to_role,
       assigned_to_category: task.assigned_to_category,
       assigned_to_staff_id: task.assigned_to_staff_id,
