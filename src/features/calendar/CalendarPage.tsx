@@ -140,8 +140,8 @@ export const CalendarPage = () => {
         calendarFilters
       )
 
-      // Debug per primi 3 eventi
-      if (eventsForFiltering.indexOf(event) < 3) {
+      // Debug per primi 5 eventi
+      if (eventsForFiltering.indexOf(event) < 5) {
         console.log(`🔍 Evento ${eventsForFiltering.indexOf(event)}:`, {
           title: event.title,
           source: event.source,
@@ -150,7 +150,10 @@ export const CalendarPage = () => {
           calculatedStatus: eventStatus,
           calculatedType: eventType,
           filters: JSON.stringify(calendarFilters, null, 2),
-          passesFilters
+          passesFilters,
+          eventTypeMatch: calendarFilters.types.length === 0 || calendarFilters.types.includes(eventType),
+          statusMatch: calendarFilters.statuses.length === 0 || calendarFilters.statuses.includes(eventStatus),
+          departmentMatch: calendarFilters.departments.length === 0 || (event.department_id && calendarFilters.departments.includes(event.department_id))
         })
       }
 

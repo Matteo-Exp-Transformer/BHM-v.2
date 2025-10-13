@@ -167,29 +167,64 @@ export function doesEventPassFilters(
   },
   filters: CalendarFilters
 ): boolean {
+  console.log('🔍 doesEventPassFilters called:', {
+    event: { department_id: event.department_id, status: event.status, type: event.type },
+    filters: filters
+  })
+  
   // Se tutti i filtri sono vuoti, mostra tutto
   if (areAllFiltersEmpty(filters)) {
+    console.log('✅ All filters empty, showing all events')
     return true
   }
   
   // Filtro Reparto
   if (filters.departments.length > 0) {
+    console.log('🔍 Checking department filter:', {
+      eventDepartment: event.department_id,
+      filterDepartments: filters.departments,
+      hasDepartment: !!event.department_id,
+      departmentIncluded: event.department_id ? filters.departments.includes(event.department_id) : false
+    })
     // Se evento non ha reparto, escludi
-    if (!event.department_id) return false
+    if (!event.department_id) {
+      console.log('❌ Event has no department, excluding')
+      return false
+    }
     // Se reparto non è tra i selezionati, escludi
-    if (!filters.departments.includes(event.department_id)) return false
+    if (!filters.departments.includes(event.department_id)) {
+      console.log('❌ Event department not in filter, excluding')
+      return false
+    }
   }
   
   // Filtro Stato
   if (filters.statuses.length > 0) {
-    if (!filters.statuses.includes(event.status)) return false
+    console.log('🔍 Checking status filter:', {
+      eventStatus: event.status,
+      filterStatuses: filters.statuses,
+      statusIncluded: filters.statuses.includes(event.status)
+    })
+    if (!filters.statuses.includes(event.status)) {
+      console.log('❌ Event status not in filter, excluding')
+      return false
+    }
   }
   
   // Filtro Tipo
   if (filters.types.length > 0) {
-    if (!filters.types.includes(event.type)) return false
+    console.log('🔍 Checking type filter:', {
+      eventType: event.type,
+      filterTypes: filters.types,
+      typeIncluded: filters.types.includes(event.type)
+    })
+    if (!filters.types.includes(event.type)) {
+      console.log('❌ Event type not in filter, excluding')
+      return false
+    }
   }
   
+  console.log('✅ Event passes all filters')
   return true
 }
 
