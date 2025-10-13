@@ -641,21 +641,8 @@ export const getPrefillData = (): OnboardingData => {
         },
       ],
     },
-    calendar: {
-      fiscal_year_start: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0], // 1 gennaio
-      fiscal_year_end: new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0], // 31 dicembre
-      closure_dates: [],
-      open_weekdays: [1, 2, 3, 4, 5, 6, 0], // Tutti i giorni della settimana
-      business_hours: {
-        '1': [{ start: '08:00', end: '22:00' }], // Lunedì
-        '2': [{ start: '08:00', end: '22:00' }], // Martedì
-        '3': [{ start: '08:00', end: '22:00' }], // Mercoledì
-        '4': [{ start: '08:00', end: '22:00' }], // Giovedì
-        '5': [{ start: '08:00', end: '22:00' }], // Venerdì
-        '6': [{ start: '08:00', end: '22:00' }], // Sabato
-        '0': [{ start: '10:00', end: '20:00' }], // Domenica
-      },
-    },
+    // ❌ RIMOSSO: Calendario NON deve essere preconfigurato automaticamente
+    // L'utente deve configurarlo manualmente durante l'onboarding
   }
 }
 
@@ -1867,6 +1854,12 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
     console.log('✅ Products inserted successfully:', products.length)
   }
 
+  // 🔍 DEBUG: Verifica se ci sono dati del calendario
+  console.log('🔍 Calendar data check:', {
+    hasCalendar: !!formData.calendar,
+    calendarData: formData.calendar
+  })
+
   if (formData.calendar) {
     console.log('📤 Inserting calendar settings...')
 
@@ -1892,6 +1885,9 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
     }
 
     console.log('✅ Calendar settings inserted successfully')
+  } else {
+    console.log('⚠️ No calendar data provided - calendar will remain unconfigured')
+    console.log('ℹ️ User must configure calendar manually after onboarding')
   }
 
   // ✅ RITORNA IL COMPANY ID
