@@ -6,6 +6,59 @@ import { supabase } from '@/lib/supabase/client'
 import { createInviteToken, sendInviteEmail } from '@/services/auth/inviteService'
 import { getCompanyIdForOnboarding, hasDevCompany } from './devCompanyHelper'
 
+// Funzione per cancellare tutti i dati di una company (mantenendo solo la company stessa)
+const deleteCompanyData = async (companyId: string): Promise<void> => {
+  console.log('🗑️ Cancellazione dati company:', companyId)
+  
+  try {
+    // Cancella in ordine di dipendenze (FK constraints)
+    const deleteOperations = [
+      // 1. Dati utente/sessione
+      supabase.from('user_sessions').delete().eq('company_id', companyId),
+      supabase.from('audit_logs').delete().eq('company_id', companyId),
+      supabase.from('user_profiles').delete().eq('company_id', companyId),
+      
+      // 2. Task completions e temperature
+      supabase.from('task_completions').delete().eq('company_id', companyId),
+      supabase.from('temperature_readings').delete().eq('company_id', companyId),
+      
+      // 3. Shopping lists
+      supabase.from('shopping_list_items').delete().eq('company_id', companyId),
+      supabase.from('shopping_lists').delete().eq('company_id', companyId),
+      
+      // 4. Maintenance tasks e events
+      supabase.from('maintenance_tasks').delete().eq('company_id', companyId),
+      supabase.from('events').delete().eq('company_id', companyId),
+      supabase.from('notes').delete().eq('company_id', companyId),
+      supabase.from('non_conformities').delete().eq('company_id', companyId),
+      
+      // 5. Tasks (dipende da departments e staff)
+      supabase.from('tasks').delete().eq('company_id', companyId),
+      
+      // 6. Products e conservation points
+      supabase.from('products').delete().eq('company_id', companyId),
+      supabase.from('product_categories').delete().eq('company_id', companyId),
+      supabase.from('conservation_points').delete().eq('company_id', companyId),
+      
+      // 7. Staff e departments
+      supabase.from('staff').delete().eq('company_id', companyId),
+      supabase.from('departments').delete().eq('company_id', companyId),
+      
+      // 8. Company members (mantiene la company)
+      supabase.from('company_members').delete().eq('company_id', companyId),
+    ]
+    
+    // Esegui tutte le cancellazioni in parallelo
+    const results = await Promise.all(deleteOperations)
+    
+    console.log('✅ Cancellazione dati completata:', results.length, 'operazioni')
+    
+  } catch (error) {
+    console.error('❌ Errore durante cancellazione dati company:', error)
+    throw error
+  }
+}
+
 // Funzione per generare UUID validi (RFC 4122 v4)
 const generateUUID = (): string => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -1369,7 +1422,7 @@ const createCompanyFromOnboarding = async (formData: OnboardingData): Promise<st
 /**
  * Salva tutti i dati su Supabase
  */
-const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string | null) => {
+const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string | null): Promise<string> => {
   // Se companyId è NULL, crea la company
   if (!companyId) {
     console.log('🔧 Creando company durante onboarding...')
@@ -1455,50 +1508,82 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
   // Salva staff
   // Riferimento: SUPABASE_SCHEMA_MAPPING.md - Section 3: staff
   if (formData.staff?.length) {
-    const staff = formData.staff.map((person: any) => {
-      // Mappa department_assignments con ID reali
-      let mappedDepartments = null
-      if (person.department_assignments && Array.isArray(person.department_assignments)) {
-        mappedDepartments = person.department_assignments
-          .map((deptId: string) => departmentsIdMap.get(deptId) || deptId)
-          .filter(Boolean)
-      }
-
-      return {
-      company_id: companyId,                                                    // ✅ Da passare
-      name: person.fullName || `${person.name} ${person.surname}`,             // ✅ DISPONIBILE
-      role: person.role,                                                        // ✅ DISPONIBILE
-      category: Array.isArray(person.categories)
-        ? person.categories[0] || 'Altro'
-        : person.category,                                                      // ✅ DISPONIBILE
-      email: person.email || null,                                              // ✅ DISPONIBILE
-      phone: person.phone || null,                                              // ✅ DISPONIBILE
-      hire_date: null,                                                          // ⚠️ Non presente
-      status: 'active',                                                         // ✅ Default
-      notes: person.notes || null,                                              // ✅ DISPONIBILE
-      haccp_certification: person.haccpExpiry ? {
-        level: 'base',
-        expiry_date: person.haccpExpiry,
-        issuing_authority: '',
-        certificate_number: ''
-      } : null,                                                                 // ✅ DISPONIBILE
-        department_assignments: mappedDepartments,                                // ✅ Con ID reali
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-      }
-    })
-
-    const { data: insertedStaff, error } = await supabase
+    // Prima verifica quali staff esistono già
+    const { data: existingStaff } = await supabase
       .from('staff')
-      .insert(staff)
-      .select('id, email')
+      .select('email, id')
+      .eq('company_id', companyId)
 
-    if (error) {
-      console.error('❌ Error inserting staff:', error)
-      throw error
+    const existingEmails = new Set(existingStaff?.map(s => s.email?.toLowerCase()) || [])
+
+    const staff = formData.staff
+      .filter((person: any) => {
+        // Filtra solo staff che NON esistono già
+        if (person.email && existingEmails.has(person.email.toLowerCase())) {
+          console.log(`⚠️ Staff con email ${person.email} già esistente, skip...`)
+          return false
+        }
+        return true
+      })
+      .map((person: any) => {
+        // Mappa department_assignments con ID reali
+        let mappedDepartments = null
+        if (person.department_assignments && Array.isArray(person.department_assignments)) {
+          mappedDepartments = person.department_assignments
+            .map((deptId: string) => departmentsIdMap.get(deptId) || deptId)
+            .filter(Boolean)
+        }
+
+        return {
+        company_id: companyId,                                                    // ✅ Da passare
+        name: person.fullName || `${person.name} ${person.surname}`,             // ✅ DISPONIBILE
+        role: person.role,                                                        // ✅ DISPONIBILE
+        category: Array.isArray(person.categories)
+          ? person.categories[0] || 'Altro'
+          : person.category,                                                      // ✅ DISPONIBILE
+        email: person.email || null,                                              // ✅ DISPONIBILE
+        phone: person.phone || null,                                              // ✅ DISPONIBILE
+        hire_date: null,                                                          // ⚠️ Non presente
+        status: 'active',                                                         // ✅ Default
+        notes: person.notes || null,                                              // ✅ DISPONIBILE
+        haccp_certification: person.haccpExpiry ? {
+          level: 'base',
+          expiry_date: person.haccpExpiry,
+          issuing_authority: '',
+          certificate_number: ''
+        } : null,                                                                 // ✅ DISPONIBILE
+          department_assignments: mappedDepartments,                                // ✅ Con ID reali
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+        }
+      })
+
+    if (staff.length === 0) {
+      console.log('⚠️ Tutti gli staff members esistono già, skip inserimento')
+    } else {
+      const { data: insertedStaff, error } = await supabase
+        .from('staff')
+        .insert(staff)
+        .select('id, email')
+
+      if (error) {
+        console.error('❌ Error inserting staff:', error)
+        throw error
+      }
+
+      console.log('✅ Staff inserted successfully:', staff.length)
     }
 
-    console.log('✅ Staff inserted successfully:', staff.length)
+    // Recupera tutti gli staff (esistenti + appena inseriti) per il linking
+    const { data: allStaff } = await supabase
+      .from('staff')
+      .select('id, email')
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: true })
+
+    const insertedStaff = allStaff || []
+
+    console.log('✅ Staff totali per company:', insertedStaff.length)
 
     // ⚠️ IMPORTANTE: Collega il primo staff member (admin) al company_member dell'utente corrente
     if (insertedStaff && insertedStaff.length > 0) {
@@ -1770,6 +1855,10 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
 
     console.log('✅ Calendar settings inserted successfully')
   }
+
+  // ✅ RITORNA IL COMPANY ID
+  console.log('🎯 Ritorno company_id da saveAllDataToSupabase:', companyId)
+  return companyId
 }
 
 /**
@@ -1823,11 +1912,21 @@ export const debugAuthState = async (): Promise<void> => {
 export const completeOnboarding = async (
   companyIdParam?: string,
   formDataParam?: OnboardingData
-): Promise<void> => {
-  console.log('🔄 Completamento automatico onboarding...')
+): Promise<string | null> => {
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('🔵 [completeOnboarding] FUNZIONE PRINCIPALE AVVIATA')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('📥 Parametri ricevuti:')
+  console.log('  - companyIdParam:', companyIdParam || 'NON FORNITO')
+  console.log('  - formDataParam:', formDataParam ? 'FORNITO' : 'NON FORNITO')
+  if (formDataParam) {
+    console.log('  - formDataParam keys:', Object.keys(formDataParam))
+  }
+  console.log('⏰ Timestamp inizio:', new Date().toISOString())
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 
   // DEBUG: Verifica SUBITO localStorage all'inizio
-  console.log('🔍 DEBUG - Verifica localStorage all\'inizio:')
+  console.log('🔍 [completeOnboarding] Verifica localStorage all\'inizio:')
   const allKeys = Object.keys(localStorage)
   console.log('📦 Tutte le chiavi localStorage:', allKeys)
   allKeys.forEach(key => {
@@ -1870,12 +1969,70 @@ export const completeOnboarding = async (
         const devCompanyId = await getCompanyIdForOnboarding()
         
         if (devCompanyId) {
-          companyId = devCompanyId
-          console.log('✅ Dev company trovata e verrà riutilizzata:', companyId)
-          toast.info('🛠️ Modalità sviluppo: riutilizzo company esistente', {
-            position: 'top-right',
-            autoClose: 2000,
-          })
+          // 🚨 NUOVO: Controlla se la company ha già dati completi
+          const { data: existingCompany } = await supabase
+            .from('companies')
+            .select(`
+              id, name, email,
+              departments:departments(id),
+              staff:staff(id),
+              products:products(id),
+              conservation_points:conservation_points(id),
+              tasks:tasks(id)
+            `)
+            .eq('id', devCompanyId)
+            .single()
+
+          if (existingCompany && (
+            (existingCompany.departments?.length || 0) > 0 ||
+            (existingCompany.staff?.length || 0) > 0 ||
+            (existingCompany.products?.length || 0) > 0 ||
+            (existingCompany.conservation_points?.length || 0) > 0 ||
+            (existingCompany.tasks?.length || 0) > 0
+          )) {
+            // 🎯 Company ha dati esistenti - chiedi conferma per sovrascrittura
+            const confirmOverwrite = confirm(
+              `🏢 Azienda "${existingCompany.name}" ha già dati completi.\n\n` +
+              `📊 Dati esistenti:\n` +
+              `• Reparti: ${existingCompany.departments?.length || 0}\n` +
+              `• Staff: ${existingCompany.staff?.length || 0}\n` +
+              `• Prodotti: ${existingCompany.products?.length || 0}\n` +
+              `• Punti conservazione: ${existingCompany.conservation_points?.length || 0}\n` +
+              `• Task: ${existingCompany.tasks?.length || 0}\n\n` +
+              `⚠️ Vuoi CANCELLARE tutti i dati esistenti e ricreare l'onboarding?\n\n` +
+              `✅ SÌ = Cancella tutto e ricrea\n` +
+              `❌ NO = Annulla onboarding`
+            )
+
+            if (confirmOverwrite) {
+              console.log('🗑️ Utente ha confermato cancellazione dati esistenti')
+              toast.warning('🗑️ Cancellazione dati esistenti in corso...', {
+                position: 'top-right',
+                autoClose: 3000,
+              })
+              
+              // Cancella tutti i dati associati alla company
+              await deleteCompanyData(devCompanyId)
+              
+              companyId = devCompanyId
+              console.log('✅ Company pulita e pronta per nuovo onboarding:', companyId)
+            } else {
+              console.log('❌ Utente ha annullato - onboarding interrotto')
+              toast.info('❌ Onboarding annullato', {
+                position: 'top-right',
+                autoClose: 2000,
+              })
+              return
+            }
+          } else {
+            // Company esiste ma è vuota - riutilizza normalmente
+            companyId = devCompanyId
+            console.log('✅ Dev company trovata (vuota) e verrà riutilizzata:', companyId)
+            toast.info('🛠️ Modalità sviluppo: riutilizzo company esistente (vuota)', {
+              position: 'top-right',
+              autoClose: 2000,
+            })
+          }
         }
       }
 
@@ -1944,10 +2101,12 @@ export const completeOnboarding = async (
       }
     }
 
-    console.log('🏢 Company ID:', companyId)
+    console.log('🏢 Company ID (prima saveAll):', companyId)
 
-    // Salva tutti i dati su Supabase
-    await saveAllDataToSupabase(formData, companyId ?? null)
+    // Salva tutti i dati su Supabase - CATTURA IL COMPANY ID RITORNATO!
+    companyId = await saveAllDataToSupabase(formData, companyId ?? null)
+
+    console.log('🏢 Company ID (dopo saveAll):', companyId)
 
     // CRITICAL: Assicurati che user_sessions sia creata/aggiornata con il company_id corretto
     if (companyId) {
@@ -2042,25 +2201,49 @@ export const completeOnboarding = async (
     // Pulisci localStorage onboarding data
     localStorage.removeItem('onboarding-data')
 
-    console.log('✅ Onboarding completato automaticamente')
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('✅ [completeOnboarding] COMPLETATO CON SUCCESSO')
+    console.log('🔄 Reindirizzamento a /dashboard tra 1 secondo...')
+    console.log('⏰ Timestamp fine:', new Date().toISOString())
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    
     toast.success('Onboarding completato con successo!', {
       position: 'top-right',
       autoClose: 3000,
     })
 
+    // 🔧 FIX: Imposta company ID nel localStorage PRIMA del redirect
+    console.log('🔧 Impostazione company ID nel localStorage:', companyId)
+    if (companyId) {
+      localStorage.setItem('active_company_id', companyId) // ✅ Chiave principale usata da useAuth
+      localStorage.setItem('haccp-company-id', companyId) // Backup per compatibilità
+      localStorage.setItem('company-id', companyId) // Backup per compatibilità
+    }
+
     // Reindirizza alla dashboard con reload per invalidare cache React Query
-    setTimeout(() => {
-      window.location.href = '/dashboard'
-      // Forza reload completo per invalidare tutta la cache
-      setTimeout(() => {
-        window.location.reload()
-      }, 100)
-    }, 1000)
+    console.log('✅✅✅ ONBOARDING COMPLETATO CON SUCCESSO! ✅✅✅')
+    console.log('📊 Company ID salvato in localStorage:', companyId)
+    console.log('📊 active_company_id:', localStorage.getItem('active_company_id'))
+    console.log('📊 haccp-company-id:', localStorage.getItem('haccp-company-id'))
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('🎯 Restituendo controllo al componente per navigazione React Router')
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+
+    // ✅ RITORNA IL COMPANY ID al componente invece di fare reload
+    return companyId || null
   } catch (error) {
-    console.error('❌ Errore nel completamento automatico:', error)
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('❌ [completeOnboarding] ERRORE!')
+    console.error('❌ Errore completo:', error)
+    console.log('⏰ Timestamp errore:', new Date().toISOString())
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+
     toast.error(`Errore durante il completamento: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`, {
       position: 'top-right',
       autoClose: 5000,
     })
+
+    // Rilancia errore per far gestire al componente
+    throw error
   }
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
 import { X } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
@@ -32,6 +33,7 @@ const TOTAL_STEPS = 7
 
 const OnboardingWizard = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { companyId } = useAuth()
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState<OnboardingData>({})
@@ -74,8 +76,35 @@ const OnboardingWizard = () => {
   }, [])
 
   const handleCompleteOnboarding = useCallback(async () => {
-    await completeOnboardingHelper(companyId, formData)
-  }, [companyId, formData])
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('🟢 [OnboardingWizard] handleCompleteOnboarding CHIAMATO')
+    console.log('📍 Sorgente: Callback da DevButtons')
+    console.log('📊 CompanyId ricevuto:', companyId || 'NULL')
+    console.log('📦 FormData presente:', !!formData)
+    console.log('📦 FormData keys:', Object.keys(formData))
+    console.log('⏰ Timestamp:', new Date().toISOString())
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+
+    try {
+      const resultCompanyId = await completeOnboardingHelper(companyId, formData)
+      console.log('✅ Onboarding completato (DevButtons), companyId:', resultCompanyId)
+      console.log('🔄 Invalidazione cache React Query...')
+
+      // Invalida TUTTE le query per ricaricare i dati
+      await queryClient.invalidateQueries()
+
+      console.log('✅ Cache invalidata')
+      console.log('🚀 Navigazione a /dashboard...')
+
+      // Naviga a dashboard con React Router (NO RELOAD!)
+      navigate('/dashboard', { replace: true })
+
+      console.log('✅ Navigazione completata!')
+    } catch (error) {
+      console.error('❌ Errore handleCompleteOnboarding:', error)
+      toast.error("Errore durante il completamento dell'onboarding")
+    }
+  }, [companyId, formData, queryClient, navigate])
 
   const handleResetOnboarding = useCallback(() => {
     resetOnboarding()
@@ -194,6 +223,14 @@ const OnboardingWizard = () => {
   }
 
   const completeOnboardingFromWizard = async () => {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('🟣 [OnboardingWizard] completeOnboardingFromWizard CHIAMATO')
+    console.log('📍 Sorgente: Pulsante "Avanti" ultimo step wizard')
+    console.log('📊 CompanyId attuale:', companyId || 'NULL')
+    console.log('📦 FormData presente:', !!formData)
+    console.log('⏰ Timestamp:', new Date().toISOString())
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+
     setIsCompleting(true)
     setIsLoading(true)
 
@@ -207,9 +244,25 @@ const OnboardingWizard = () => {
         finalCompanyId = null // Passerà null e verrà creata
       }
 
+      console.log('🚀 Chiamando completeOnboardingHelper con finalCompanyId:', finalCompanyId)
+
       // Usa la funzione helper unificata passando i dati correnti
-      // La funzione gestisce: creazione company, salvataggio su Supabase, pulizia localStorage, redirect
-      await completeOnboardingHelper(finalCompanyId, formData)
+      // Ora ritorna il companyId invece di fare reload
+      const resultCompanyId = await completeOnboardingHelper(finalCompanyId, formData)
+
+      console.log('✅ Onboarding completato, companyId ricevuto:', resultCompanyId)
+      console.log('🔄 Invalidazione cache React Query...')
+
+      // Invalida TUTTE le query per ricaricare i dati
+      await queryClient.invalidateQueries()
+
+      console.log('✅ Cache invalidata')
+      console.log('🚀 Navigazione a /dashboard...')
+
+      // Naviga a dashboard con React Router (NO RELOAD!)
+      navigate('/dashboard', { replace: true })
+
+      console.log('✅ Navigazione completata - dovresti vedere i dati ora!')
 
     } catch (error) {
       console.error('Error completing onboarding:', error)

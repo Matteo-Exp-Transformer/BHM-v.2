@@ -83,10 +83,10 @@ export const Calendar: React.FC<CalendarProps> = ({
   calendarSettings = null,
 }) => {
   // ✅ Debug: Log quando events cambiano
-  console.log('📅 Calendar received events:', {
-    count: events?.length || 0,
-    sample: events?.slice(0, 2).map(e => ({ title: e.title, type: e.type }))
-  })
+  // console.log('📅 Calendar received events:', {
+  //   count: events?.length || 0,
+  //   sample: events?.slice(0, 2).map(e => ({ title: e.title, type: e.type }))
+  // })
   
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
@@ -153,27 +153,27 @@ export const Calendar: React.FC<CalendarProps> = ({
     : transformToFullCalendarEvents(events)
 
   // ✅ Debug: Log eventi trasformati per FullCalendar
-  console.log('📅 FullCalendarEvents for FullCalendar:', {
-    count: fullCalendarEvents.length,
-    sample: fullCalendarEvents.slice(0, 3).map(e => ({
-      title: e.title,
-      type: e.extendedProps?.type || 'unknown'
-    }))
-  })
+  // console.log('📅 FullCalendarEvents for FullCalendar:', {
+  //   count: fullCalendarEvents.length,
+  //   sample: fullCalendarEvents.slice(0, 3).map(e => ({
+  //     title: e.title,
+  //     type: e.extendedProps?.type || 'unknown'
+  //   }))
+  // })
 
   // ✅ Forza refresh del calendario quando events cambiano
   useEffect(() => {
     if (calendarRef.current) {
-      console.log('🔄 Forcing calendar refresh with new events:', {
-        originalEvents: events.length,
-        transformedEvents: fullCalendarEvents.length
-      })
+      // console.log('🔄 Forcing calendar refresh with new events:', {
+      //   originalEvents: events.length,
+      //   transformedEvents: fullCalendarEvents.length
+      // })
       try {
         const api = calendarRef.current.getApi()
         // Prova diversi metodi di refresh
         api.refetchEvents()
         api.render()
-        console.log('✅ Calendar refresh methods called')
+        // console.log('✅ Calendar refresh methods called')
       } catch (error) {
         console.warn('⚠️ Calendar API not ready yet:', error)
       }

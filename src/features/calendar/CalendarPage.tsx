@@ -43,35 +43,35 @@ import type { Product } from '@/types/inventory'
 export const CalendarPage = () => {
   const navigate = useNavigate()
   const { settings: calendarSettings, isLoading: settingsLoading, isConfigured } = useCalendarSettings()
-  console.log('⚙️ Calendar settings:', { 
-    settings: calendarSettings, 
-    settingsLoading, 
-    isConfigured: isConfigured(),
-    fiscalYearEnd: calendarSettings?.fiscal_year_end
-  })
+  // console.log('⚙️ Calendar settings:', { 
+  //   settings: calendarSettings, 
+  //   settingsLoading, 
+  //   isConfigured: isConfigured(),
+  //   fiscalYearEnd: calendarSettings?.fiscal_year_end
+  // })
   const { events: aggregatedEvents, isLoading, sources } = useAggregatedEvents(
     calendarSettings?.fiscal_year_end ? new Date(calendarSettings.fiscal_year_end) : undefined
   )
-  console.log('📊 useAggregatedEvents result:', { 
-    eventsCount: aggregatedEvents?.length || 0, 
-    isLoading, 
-    sources,
-    sampleEvents: aggregatedEvents?.slice(0, 2)
-  })
+  // console.log('📊 useAggregatedEvents result:', { 
+  //   eventsCount: aggregatedEvents?.length || 0, 
+  //   isLoading, 
+  //   sources,
+  //   sampleEvents: aggregatedEvents?.slice(0, 2)
+  // })
   
   const { filteredEvents } = useFilteredEvents(aggregatedEvents)
-  console.log('🔍 useFilteredEvents result:', { 
-    filteredCount: filteredEvents?.length || 0,
-    originalCount: aggregatedEvents?.length || 0,
-    sampleFiltered: filteredEvents?.slice(0, 2)
-  })
+  // console.log('🔍 useFilteredEvents result:', { 
+  //   filteredCount: filteredEvents?.length || 0,
+  //   originalCount: aggregatedEvents?.length || 0,
+  //   sampleFiltered: filteredEvents?.slice(0, 2)
+  // })
   
   // ✅ BYPASS: Usa aggregatedEvents se useFilteredEvents restituisce 0 eventi
   const eventsForFiltering = filteredEvents.length > 0 ? filteredEvents : aggregatedEvents
-  console.log('🔧 Events for filtering:', {
-    source: filteredEvents.length > 0 ? 'filteredEvents' : 'aggregatedEvents',
-    count: eventsForFiltering.length,
-    filteredEventsCount: filteredEvents.length,
+  // console.log('🔧 Events for filtering:', {
+  //   source: filteredEvents.length > 0 ? 'filteredEvents' : 'aggregatedEvents',
+  //   count: eventsForFiltering.length,
+  //   filteredEventsCount: filteredEvents.length,
     aggregatedEventsCount: aggregatedEvents.length
   })
   const [view, setView] = useCalendarView('month')
@@ -79,14 +79,14 @@ export const CalendarPage = () => {
   const { staff } = useStaff()
   const { departments } = useDepartments()
   const { products } = useProducts()
-  console.log('👥 Staff data:', { 
-    staffCount: staff?.length || 0, 
-    sampleStaff: staff?.slice(0, 2)
-  })
-  console.log('🏢 Departments data:', { 
-    departmentsCount: departments?.length || 0, 
-    sampleDepartments: departments?.slice(0, 2)
-  })
+  // console.log('👥 Staff data:', { 
+  //   staffCount: staff?.length || 0, 
+  //   sampleStaff: staff?.slice(0, 2)
+  // })
+  // console.log('🏢 Departments data:', { 
+  //   departmentsCount: departments?.length || 0, 
+  //   sampleDepartments: departments?.slice(0, 2)
+  // })
   const [showAlertModal, setShowAlertModal] = useState(false)
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null)
   const [showConfigModal, setShowConfigModal] = useState(false)
@@ -97,21 +97,21 @@ export const CalendarPage = () => {
   const [calendarFilters, setCalendarFilters] = useState<NewCalendarFiltersType>(DEFAULT_CALENDAR_FILTERS)
 
   const handleFilterChange = useCallback((newFilters: NewCalendarFiltersType) => {
-    console.log('🔧 Filtri aggiornati:', JSON.stringify(newFilters, null, 2))
-    console.log('🔧 Filtri precedenti:', JSON.stringify(calendarFilters, null, 2))
+    // console.log('🔧 Filtri aggiornati:', JSON.stringify(newFilters, null, 2))
+    // console.log('🔧 Filtri precedenti:', JSON.stringify(calendarFilters, null, 2))
     setCalendarFilters(newFilters)
   }, [calendarFilters])
 
   const displayEvents = useMemo(() => {
     if (eventsForFiltering.length === 0) {
-      console.log('⚠️ No events to filter - check useAggregatedEvents')
+      // console.log('⚠️ No events to filter - check useAggregatedEvents')
       return []
     }
     
-    console.log('🔍 Applying new filters to events:', {
-      totalEvents: eventsForFiltering.length,
-      filters: JSON.stringify(calendarFilters, null, 2),
-      sampleEvents: eventsForFiltering.slice(0, 2).map(e => ({
+    // console.log('🔍 Applying new filters to events:', {
+    //   totalEvents: eventsForFiltering.length,
+    //   filters: JSON.stringify(calendarFilters, null, 2),
+    //   sampleEvents: eventsForFiltering.slice(0, 2).map(e => ({
         title: e.title,
         source: e.source,
         type: e.type
@@ -144,10 +144,10 @@ export const CalendarPage = () => {
 
       // Debug per primi 5 eventi
       if (eventsForFiltering.indexOf(event) < 5) {
-        console.log(`🔍 Evento ${eventsForFiltering.indexOf(event)}:`, {
-          title: event.title,
-          source: event.source,
-          department_id: event.department_id,
+        // console.log(`🔍 Evento ${eventsForFiltering.indexOf(event)}:`, {
+        //   title: event.title,
+        //   source: event.source,
+        //   department_id: event.department_id,
           status: event.status,
           calculatedStatus: eventStatus,
           calculatedType: eventType,
@@ -164,11 +164,11 @@ export const CalendarPage = () => {
   }, [eventsForFiltering, calendarFilters])
 
   // ✅ Debug risultato finale
-  console.log('🎯 Final displayEvents count:', displayEvents.length)
-  console.log('🎯 Events breakdown:', {
-    aggregatedEvents: aggregatedEvents.length,
-    filteredEvents: filteredEvents.length,
-    eventsForFiltering: eventsForFiltering.length,
+  // console.log('🎯 Final displayEvents count:', displayEvents.length)
+  // console.log('🎯 Events breakdown:', {
+  //   aggregatedEvents: aggregatedEvents.length,
+  //   filteredEvents: filteredEvents.length,
+  //   eventsForFiltering: eventsForFiltering.length,
     displayEvents: displayEvents.length,
     calendarFilters: JSON.stringify(calendarFilters, null, 2)
   })
