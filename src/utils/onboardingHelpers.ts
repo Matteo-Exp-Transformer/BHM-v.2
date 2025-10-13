@@ -395,7 +395,7 @@ export const getPrefillData = (): OnboardingData => {
           name: 'Carni Fresche',
           color: '#ef4444',
           conservationRules: {
-            minTemp: 0,
+            minTemp: 1,
             maxTemp: 4,
             maxStorageDays: 3,
             requiresBlastChilling: true,
@@ -406,7 +406,7 @@ export const getPrefillData = (): OnboardingData => {
           name: 'Pesce Fresco',
           color: '#3b82f6',
           conservationRules: {
-            minTemp: 0,
+            minTemp: 1,
             maxTemp: 2,
             maxStorageDays: 2,
             requiresBlastChilling: true,
@@ -427,9 +427,60 @@ export const getPrefillData = (): OnboardingData => {
           name: 'Verdure Fresche',
           color: '#10b981',
           conservationRules: {
-            minTemp: 4,
+            minTemp: 2,
             maxTemp: 8,
             maxStorageDays: 5,
+          },
+        },
+        {
+          id: generateId(),
+          name: 'Bevande',
+          color: '#06b6d4',
+          conservationRules: {
+            minTemp: 2,
+            maxTemp: 12,
+            maxStorageDays: 30,
+          },
+        },
+        {
+          id: generateId(),
+          name: 'Dispensa Secca',
+          color: '#d97706',
+          conservationRules: {
+            minTemp: 15,
+            maxTemp: 25,
+            maxStorageDays: 180,
+          },
+        },
+        {
+          id: generateId(),
+          name: 'Congelati',
+          color: '#6366f1',
+          conservationRules: {
+            minTemp: -25,
+            maxTemp: -1,
+            maxStorageDays: 180,
+          },
+        },
+        {
+          id: generateId(),
+          name: 'Ultracongelati',
+          color: '#8b5cf6',
+          conservationRules: {
+            minTemp: -25,
+            maxTemp: -1,
+            maxStorageDays: 365,
+          },
+        },
+        {
+          id: generateId(),
+          name: 'Abbattimento Rapido',
+          color: '#ec4899',
+          conservationRules: {
+            minTemp: -90,
+            maxTemp: -15,
+            maxStorageDays: 1,
+            requiresBlastChilling: true,
           },
         },
       ],

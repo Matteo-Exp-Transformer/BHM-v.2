@@ -24,6 +24,7 @@ import { useAggregatedEvents } from './hooks/useAggregatedEvents'
 import { useFilteredEvents } from './hooks/useFilteredEvents'
 import { useGenericTasks } from './hooks/useGenericTasks'
 import { useStaff } from '@/features/management/hooks/useStaff'
+import { useDepartments } from '@/features/management/hooks/useDepartments'
 import { useCalendarSettings } from '@/hooks/useCalendarSettings'
 
 export const CalendarPage = () => {
@@ -55,9 +56,14 @@ export const CalendarPage = () => {
   const [view, setView] = useCalendarView('month')
   const { createTask, isCreating } = useGenericTasks()
   const { staff } = useStaff()
+  const { departments } = useDepartments()
   console.log('👥 Staff data:', { 
     staffCount: staff?.length || 0, 
     sampleStaff: staff?.slice(0, 2)
+  })
+  console.log('🏢 Departments data:', { 
+    departmentsCount: departments?.length || 0, 
+    sampleDepartments: departments?.slice(0, 2)
   })
   const [showAlertModal, setShowAlertModal] = useState(false)
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null)
@@ -202,6 +208,7 @@ export const CalendarPage = () => {
       assigned_to_role: taskData.assegnatoARuolo,
       assigned_to_category: taskData.assegnatoACategoria,
       assigned_to_staff_id: taskData.assegnatoADipendenteSpecifico,
+      department_id: taskData.departmentId, // Reparto assegnato (opzionale)
       note: taskData.note,
       custom_days: taskData.giorniCustom,
       start_date: taskData.dataInizio, // Data di inizio opzionale
@@ -218,6 +225,17 @@ export const CalendarPage = () => {
         categories: [member.category] || [],
       })),
     [staff]
+  )
+
+  const departmentOptions = useMemo(
+    () =>
+      (departments ?? [])
+        .filter(dept => dept.is_active)
+        .map(dept => ({
+          id: dept.id,
+          name: dept.name,
+        })),
+    [departments]
   )
 
   return (
@@ -271,6 +289,7 @@ export const CalendarPage = () => {
             <div className="p-4">
               <GenericTaskForm
                 staffOptions={staffOptions}
+                departmentOptions={departmentOptions}
                 onSubmit={handleCreateGenericTask}
                 onCancel={() => {}}
                 isLoading={isCreating}

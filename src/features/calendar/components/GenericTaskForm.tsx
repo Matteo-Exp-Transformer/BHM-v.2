@@ -353,8 +353,8 @@ export const GenericTaskForm = ({
         <div>
           <Label>Reparto (opzionale)</Label>
           <Select
-            value={formData.departmentId ?? ''}
-            onValueChange={value => updateField({ departmentId: value || undefined })}
+            value={formData.departmentId ?? 'none'}
+            onValueChange={value => updateField({ departmentId: value === 'none' ? undefined : value })}
             disabled={departmentOptions.length === 0}
           >
             <SelectTrigger>
@@ -365,7 +365,7 @@ export const GenericTaskForm = ({
               } />
             </SelectTrigger>
             <SelectContent>
-              <SelectOption value="">Nessun reparto</SelectOption>
+              <SelectOption value="none">Nessun reparto</SelectOption>
               {departmentOptions.map(dept => (
                 <SelectOption key={dept.id} value={dept.id}>
                   {dept.name}

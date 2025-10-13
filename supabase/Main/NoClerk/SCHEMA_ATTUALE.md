@@ -1,7 +1,7 @@
 # 📊 SCHEMA DATABASE ATTUALE - BHM v.2
 **Progetto**: Business HACCP Manager v2
-**Data**: 12 Ottobre 2025
-**Versione**: 1.4.0
+**Data**: 13 Ottobre 2025
+**Versione**: 1.7.0
 **Database**: Supabase PostgreSQL
 **Branch**: NoClerk
 
@@ -13,17 +13,17 @@ Questo documento descrive lo schema database completo dell'applicazione BHM v.2 
 
 ### 📋 Statistiche Schema
 
-- **Tabelle totali**: 21 tabelle
+- **Tabelle totali**: 22 tabelle (+1 product_expiry_completions) 🆕
 - **Tabelle core**: 10 (companies, departments, staff, products, conservation_points, tasks, maintenance_tasks, events, notes, non_conformities)
 - **Tabelle auth**: 5 (company_members, user_sessions, user_profiles, invite_tokens, audit_logs)
 - **Tabelle shopping**: 2 (shopping_lists, shopping_list_items)
-- **Tabelle tracking**: 2 (user_activity_logs, task_completions)
+- **Tabelle tracking**: 3 (user_activity_logs, task_completions, product_expiry_completions) 🆕
 - **Tabelle supporto**: 2 (product_categories, temperature_readings)
-- **Tabelle configurazione**: 1 (company_calendar_settings) ✨ NEW
-- **Relazioni**: 43+ foreign keys
-- **Indici**: 68+ per performance
-- **Funzioni RLS**: 8 helper functions
-- **Policies RLS**: 76+ policies (4 aggiunte per calendar settings)
+- **Tabelle configurazione**: 1 (company_calendar_settings)
+- **Relazioni**: 45+ foreign keys (+2 per department_id) 🆕
+- **Indici**: 72+ per performance (+4 nuovi) 🆕
+- **Funzioni RLS**: 9 helper functions (+1 auto_expire_products) 🆕
+- **Policies RLS**: 79+ policies (+3 per product_expiry_completions) 🆕
 
 ---
 
@@ -1102,16 +1102,93 @@ Trigger `update_[table]_updated_at` aggiorna `updated_at` automaticamente.
 
 ---
 
-**Versione Schema**: 1.6.0  
-**Ultimo Aggiornamento**: 12 Ottobre 2025  
+**Versione Schema**: 1.7.0  
+**Ultimo Aggiornamento**: 13 Ottobre 2025  
 **Stato**: ✅ Schema verificato e allineato con database Supabase  
 **Compliance**: ✅ 100% allineamento con SQL schema attuale  
 **Sistema Multi-Tenant**: ✅ Implementato con prevenzione duplicate company  
-**Sistema Calendario**: ✅ Configurazione completa con contatore giorni lavorativi
+**Sistema Calendario**: ✅ Configurazione completa con contatore giorni lavorativi  
+**Sistema Filtri**: ✅ Filtri calendario avanzati con reparto, stato e tipo 🆕
 
 ---
 
 ## 📝 CHANGELOG
+
+### v1.7.0 - 13 Ottobre 2025
+
+**🔍 Nuovo Sistema Filtri Calendario**
+- ✅ **Filtri per Reparto** - Filtra eventi per reparto assegnato
+  - Aggiunto campo `department_id` (opzionale) a `tasks` e `maintenance_tasks`
+  - Solo reparti con eventi vengono mostrati nei filtri
+  - Eventi senza reparto vengono nascosti quando filtri reparto attivi
+  
+- ✅ **Filtri per Stato** - 4 stati possibili
+  - `to_complete`: Da completare (oggi, non completato)
+  - `completed`: Completato (oggi, completato)
+  - `overdue`: In ritardo (fino a 7 giorni fa, non completato)
+  - `future`: Eventi futuri (da domani in poi)
+  
+- ✅ **Filtri per Tipo** - 3 tipi di eventi
+  - `generic_task`: Mansioni/Attività generiche
+  - `maintenance`: Manutenzioni (temperature, sanitization, defrosting)
+  - `product_expiry`: Scadenze prodotti
+
+**📦 Gestione Scadenze Prodotti**
+- ✅ **Nuova tabella `product_expiry_completions`** - Traccia completamenti scadenze
+  - Campi: `id`, `company_id`, `product_id`, `completed_by`, `completed_at`, `action`, `notes`
+  - Actions: `expired` (consumato/cucinato) o `waste` (smaltito)
+  - 3 RLS policies: SELECT, INSERT, DELETE (entro 24h per chi ha completato)
+  - Trigger auto-update per `updated_at`
+  
+- ✅ **Function `auto_expire_products()`** - Scade automaticamente prodotti
+  - Update status da `active` a `expired` per prodotti con `expiry_date < today`
+  - Può essere chiamata da cron job o manualmente
+  
+- ✅ **Stati Prodotto aggiornati**
+  - Rimosso stato `consumed` (merged con `expired`)
+  - Stati finali: `active`, `expired`, `waste`
+
+**🎨 UI Componenti**
+- ✅ **Campo Reparto in form task** - `GenericTaskForm.tsx`
+  - Dropdown "Reparto (opzionale)" con lista reparti attivi
+  - Validazione e gestione errori Radix UI
+  - Salvataggio `department_id` nel database
+  
+- ✅ **Nuovo componente `NewCalendarFilters.tsx`**
+  - 3 sezioni filtri interattive
+  - Chips per stati e tipi
+  - Multi-select per reparti
+  - Info box con spiegazione logica filtri cumulativi
+  - Badge count filtri attivi
+  - Pulsante Reset
+
+**🔧 TypeScript Interfaces**
+- ✅ **Nuovo file `src/types/calendar-filters.ts`**
+  - `CalendarFilters` interface
+  - `EventStatus` type con 4 stati
+  - `EventType` type con 3 tipi
+  - Utility functions: `calculateEventStatus()`, `determineEventType()`, `doesEventPassFilters()`
+  - Labels, icone e colori per UI
+  
+- ✅ **Aggiornato `src/types/inventory.ts`**
+  - Nuova interface `ProductExpiryCompletion`
+  - Stati prodotto semplificati
+
+**📊 Database Indices**
+- `idx_tasks_department_id` su `tasks(department_id)`
+- `idx_maintenance_tasks_department_id` su `maintenance_tasks(department_id)`
+- `idx_product_expiry_completions_company_id` su `product_expiry_completions(company_id)`
+- `idx_product_expiry_completions_product_id` su `product_expiry_completions(product_id)`
+- `idx_product_expiry_completions_completed_by` su `product_expiry_completions(completed_by)`
+- `idx_product_expiry_completions_completed_at` su `product_expiry_completions(completed_at DESC)`
+
+**🚧 In Progress**
+- ⏳ Integrazione `useAggregatedEvents` con nuova logica stati
+- ⏳ Componente `ProductExpiryModal` per gestione scadenze UI
+- ⏳ Sostituzione filtri legacy con `NewCalendarFilters`
+- ⏳ Logica filtri cumulativi in `CalendarPage`
+
+---
 
 ### v1.6.0 - 12 Ottobre 2025
 
