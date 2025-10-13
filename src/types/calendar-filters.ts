@@ -165,6 +165,7 @@ export function determineEventType(
 
 /**
  * Utility: Verifica se evento passa i filtri
+ * LOGICA: AND tra categorie diverse (tipo E stato E reparto), OR dentro stessa categoria
  */
 export function doesEventPassFilters(
   event: {
@@ -179,30 +180,33 @@ export function doesEventPassFilters(
     return true
   }
 
-  // Logica OR: se uno qualsiasi dei filtri selezionati corrisponde, mostra l'evento
-  let matches = false
+  // AND tra categorie: l'evento deve passare TUTTE le categorie attive
 
   // Filtro Reparto (OR tra reparti selezionati)
   if (filters.departments.length > 0) {
-    if (event.department_id && filters.departments.includes(event.department_id)) {
-      matches = true
+    // Se evento non ha reparto O reparto non è tra i selezionati, escludi
+    if (!event.department_id || !filters.departments.includes(event.department_id)) {
+      return false
     }
   }
 
   // Filtro Stato (OR tra stati selezionati)
   if (filters.statuses.length > 0) {
-    if (filters.statuses.includes(event.status)) {
-      matches = true
+    // Se stato evento non è tra i selezionati, escludi
+    if (!filters.statuses.includes(event.status)) {
+      return false
     }
   }
 
   // Filtro Tipo (OR tra tipi selezionati)
   if (filters.types.length > 0) {
-    if (filters.types.includes(event.type)) {
-      matches = true
+    // Se tipo evento non è tra i selezionati, escludi
+    if (!filters.types.includes(event.type)) {
+      return false
     }
   }
 
-  return matches
+  // Se arrivato qui, l'evento passa tutti i filtri attivi
+  return true
 }
 

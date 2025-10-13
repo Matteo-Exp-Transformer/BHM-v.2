@@ -587,16 +587,20 @@ export const Calendar: React.FC<CalendarProps> = ({
 
         /* Griglia orizzontale tra eventi nelle celle del giorno */
         .fc-daygrid-event-harness {
+          border-top: 1px solid #e5e7eb !important;
           border-bottom: 1px solid #e5e7eb !important;
-          padding-bottom: 2px !important;
-          margin-bottom: 2px !important;
+          padding: 2px 0 !important;
+          margin: 1px 0 !important;
         }
 
-        /* Ultimo evento della cella senza riga inferiore */
+        /* Primo evento con riga superiore */
+        .fc-daygrid-event-harness:first-child {
+          margin-top: 2px !important;
+        }
+
+        /* Ultimo evento con riga inferiore */
         .fc-daygrid-event-harness:last-child {
-          border-bottom: none !important;
-          margin-bottom: 0 !important;
-          padding-bottom: 0 !important;
+          margin-bottom: 2px !important;
         }
 
         .fc-event-content-custom {
