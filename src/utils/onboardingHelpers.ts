@@ -115,29 +115,52 @@ const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
   const maintenancePlans: any[] = []
 
   conservationPoints.forEach(point => {
-    standardMaintenances.forEach(maintenance => {
-      // I punti di tipo "ambient" non hanno "sbrinamento" (defrosting)
-      // Database usa 'ambient' (inglese), non 'ambiente'
-      if (
-        point.pointType === 'ambient' &&
-        maintenance.manutenzione === 'sbrinamento'
-      ) {
-        return
-      }
-
-      maintenancePlans.push({
-        id: generateId(),
-        conservationPointId: point.id,
-        manutenzione: maintenance.manutenzione,
-        frequenza: maintenance.frequenza,
-        assegnatoARuolo: maintenance.assegnatoARuolo,
-        assegnatoACategoria: maintenance.assegnatoACategoria,
-        assegnatoADipendenteSpecifico:
-          maintenance.assegnatoADipendenteSpecifico,
-        giorniCustom: maintenance.giorniCustom,
-        note: maintenance.note,
+    // Per punti di tipo "ambient" (ambiente), solo sanificazione e controllo scadenze
+    if (point.pointType === 'ambient') {
+      standardMaintenances.forEach(maintenance => {
+        // Solo sanificazione e controllo scadenze per ambiente
+        if (
+          maintenance.manutenzione === 'sanificazione' ||
+          maintenance.manutenzione === 'controllo_scadenze'
+        ) {
+          maintenancePlans.push({
+            id: generateId(),
+            conservationPointId: point.id,
+            manutenzione: maintenance.manutenzione,
+            frequenza: maintenance.frequenza,
+            assegnatoARuolo: maintenance.assegnatoARuolo,
+            assegnatoACategoria: maintenance.assegnatoACategoria,
+            assegnatoADipendenteSpecifico: maintenance.assegnatoADipendenteSpecifico,
+            giorniCustom: maintenance.giorniCustom,
+            note: maintenance.note,
+          })
+        }
       })
-    })
+    } else {
+      // Per altri tipi (refrigerated, frozen), tutte le manutenzioni tranne sbrinamento per ambient
+      standardMaintenances.forEach(maintenance => {
+        // I punti di tipo "ambient" non hanno "sbrinamento" (defrosting)
+        if (
+          point.pointType === 'ambient' &&
+          maintenance.manutenzione === 'sbrinamento'
+        ) {
+          return
+        }
+
+        maintenancePlans.push({
+          id: generateId(),
+          conservationPointId: point.id,
+          manutenzione: maintenance.manutenzione,
+          frequenza: maintenance.frequenza,
+          assegnatoARuolo: maintenance.assegnatoARuolo,
+          assegnatoACategoria: maintenance.assegnatoACategoria,
+          assegnatoADipendenteSpecifico:
+            maintenance.assegnatoADipendenteSpecifico,
+          giorniCustom: maintenance.giorniCustom,
+          note: maintenance.note,
+        })
+      })
+    }
   })
 
   return maintenancePlans

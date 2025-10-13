@@ -123,7 +123,7 @@ const TasksStep = ({
 
       const requiredMaintenances =
         point.pointType === 'ambient'
-          ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value !== 'sbrinamento')
+          ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value === 'sanificazione' || m.value === 'controllo_scadenze')
           : STANDARD_MAINTENANCE_TYPES
 
       // Verifica che abbiano tutte le manutenziioni richieste assegnate
@@ -378,7 +378,7 @@ const TasksStep = ({
 
                 const requiredMaintenances =
                   point.pointType === 'ambient'
-                    ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value !== 'sbrinamento')
+                    ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value === 'sanificazione' || m.value === 'controllo_scadenze')
                     : STANDARD_MAINTENANCE_TYPES
 
                 const allAssigned = requiredMaintenances.every(
@@ -489,7 +489,7 @@ const MaintenanceAssignmentForm = ({
 }: MaintenanceAssignmentFormProps) => {
   const requiredMaintenances =
     conservationPoint.pointType === 'ambient'
-      ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value !== 'sbrinamento')
+      ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value === 'sanificazione' || m.value === 'controllo_scadenze')
       : STANDARD_MAINTENANCE_TYPES
 
   // Precompila i dati esistenti se disponibili

@@ -338,34 +338,63 @@ export function AddPointModal({
     productCategories: [] as string[],
   })
 
+  // Genera manutenzioni obbligatorie basate sul tipo di punto
+  const getRequiredMaintenanceTasks = (pointType: ConservationPointType): MandatoryMaintenanceTask[] => {
+    if (pointType === 'ambient') {
+      // Per punti di tipo "ambiente", solo sanificazione e controllo scadenze
+      return [
+        {
+          manutenzione: 'sanificazione',
+          frequenza: '' as MaintenanceFrequency,
+          assegnatoARuolo: '' as StaffRole,
+          assegnatoACategoria: undefined,
+        },
+        {
+          manutenzione: 'controllo_scadenze',
+          frequenza: '' as MaintenanceFrequency,
+          assegnatoARuolo: '' as StaffRole,
+          assegnatoACategoria: undefined,
+        },
+      ]
+    } else {
+      // Per altri tipi (refrigerated, frozen), tutte le manutenzioni
+      return [
+        {
+          manutenzione: 'rilevamento_temperatura',
+          frequenza: '' as MaintenanceFrequency,
+          assegnatoARuolo: '' as StaffRole,
+          assegnatoACategoria: undefined,
+        },
+        {
+          manutenzione: 'sanificazione',
+          frequenza: '' as MaintenanceFrequency,
+          assegnatoARuolo: '' as StaffRole,
+          assegnatoACategoria: undefined,
+        },
+        {
+          manutenzione: 'sbrinamento',
+          frequenza: '' as MaintenanceFrequency,
+          assegnatoARuolo: '' as StaffRole,
+          assegnatoACategoria: undefined,
+        },
+        {
+          manutenzione: 'controllo_scadenze',
+          frequenza: '' as MaintenanceFrequency,
+          assegnatoARuolo: '' as StaffRole,
+          assegnatoACategoria: undefined,
+        },
+      ]
+    }
+  }
+
   const [maintenanceTasks, setMaintenanceTasks] = useState<
     MandatoryMaintenanceTask[]
-  >([
-    {
-      manutenzione: 'rilevamento_temperatura',
-      frequenza: '' as MaintenanceFrequency,
-      assegnatoARuolo: '' as StaffRole,
-      assegnatoACategoria: undefined,
-    },
-    {
-      manutenzione: 'sanificazione',
-      frequenza: '' as MaintenanceFrequency,
-      assegnatoARuolo: '' as StaffRole,
-      assegnatoACategoria: undefined,
-    },
-    {
-      manutenzione: 'sbrinamento',
-      frequenza: '' as MaintenanceFrequency,
-      assegnatoARuolo: '' as StaffRole,
-      assegnatoACategoria: undefined,
-    },
-    {
-      manutenzione: 'controllo_scadenze',
-      frequenza: '' as MaintenanceFrequency,
-      assegnatoARuolo: '' as StaffRole,
-      assegnatoACategoria: undefined,
-    },
-  ])
+  >(getRequiredMaintenanceTasks(formData.pointType))
+
+  // Aggiorna le manutenzioni quando cambia il tipo di punto
+  useEffect(() => {
+    setMaintenanceTasks(getRequiredMaintenanceTasks(formData.pointType))
+  }, [formData.pointType])
 
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
