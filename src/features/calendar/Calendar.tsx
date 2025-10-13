@@ -583,13 +583,20 @@ export const Calendar: React.FC<CalendarProps> = ({
           background-color: transparent !important;
           border: none !important;
           box-shadow: none !important;
-          border-bottom: 1px solid #e5e7eb !important; /* Griglia leggera tra eventi */
-          margin-bottom: 2px;
         }
 
-        /* Ultimo evento senza riga */
-        .fc-event:last-child {
+        /* Griglia orizzontale tra eventi nelle celle del giorno */
+        .fc-daygrid-event-harness {
+          border-bottom: 1px solid #e5e7eb !important;
+          padding-bottom: 2px !important;
+          margin-bottom: 2px !important;
+        }
+
+        /* Ultimo evento della cella senza riga inferiore */
+        .fc-daygrid-event-harness:last-child {
           border-bottom: none !important;
+          margin-bottom: 0 !important;
+          padding-bottom: 0 !important;
         }
 
         .fc-event-content-custom {
