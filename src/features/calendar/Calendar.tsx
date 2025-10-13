@@ -104,25 +104,6 @@ export const Calendar: React.FC<CalendarProps> = ({
   const calendarRef = useRef<FullCalendar>(null)
   const finalConfig = { ...defaultConfig, ...config }
 
-  // ✅ Forza refresh del calendario quando events cambiano
-  useEffect(() => {
-    if (calendarRef.current) {
-      console.log('🔄 Forcing calendar refresh with new events:', {
-        originalEvents: events.length,
-        transformedEvents: fullCalendarEvents.length
-      })
-      try {
-        const api = calendarRef.current.getApi()
-        // Prova diversi metodi di refresh
-        api.refetchEvents()
-        api.render()
-        console.log('✅ Calendar refresh methods called')
-      } catch (error) {
-        console.warn('⚠️ Calendar API not ready yet:', error)
-      }
-    }
-  }, [events, fullCalendarEvents])
-
   const calendarView = currentView === 'year'
     ? 'multiMonthYear'
     : currentView === 'month'
@@ -179,6 +160,25 @@ export const Calendar: React.FC<CalendarProps> = ({
       type: e.extendedProps?.type || 'unknown'
     }))
   })
+
+  // ✅ Forza refresh del calendario quando events cambiano
+  useEffect(() => {
+    if (calendarRef.current) {
+      console.log('🔄 Forcing calendar refresh with new events:', {
+        originalEvents: events.length,
+        transformedEvents: fullCalendarEvents.length
+      })
+      try {
+        const api = calendarRef.current.getApi()
+        // Prova diversi metodi di refresh
+        api.refetchEvents()
+        api.render()
+        console.log('✅ Calendar refresh methods called')
+      } catch (error) {
+        console.warn('⚠️ Calendar API not ready yet:', error)
+      }
+    }
+  }, [events, fullCalendarEvents])
 
   const handleEventClick = useCallback(
     (clickInfo: { event: { extendedProps?: { originalEvent?: any; type?: string; category?: MacroCategory; items?: any[] }; start: Date | null } }) => {
