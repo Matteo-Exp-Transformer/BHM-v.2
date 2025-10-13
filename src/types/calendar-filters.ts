@@ -144,15 +144,22 @@ export function determineEventType(
   source: string,
   metadata?: { [key: string]: any }
 ): EventType {
-  if (source === 'maintenance' || metadata?.maintenance_id) {
+  // Manutenzioni (include temperature, sanitization, defrosting)
+  if (source === 'maintenance' || metadata?.maintenance_id || metadata?.conservation_point_id) {
     return 'maintenance'
   }
-  
+
+  // Scadenze prodotti
   if (source === 'product_expiry' || metadata?.product_id) {
     return 'product_expiry'
   }
-  
-  // Default: generic_task
+
+  // Scadenze HACCP dipendenti (anche se source è 'custom')
+  if (metadata?.staff_id && !metadata?.task_id && !metadata?.maintenance_id) {
+    return 'product_expiry' // Trattiamo scadenze HACCP come product_expiry
+  }
+
+  // Mansioni generiche (generic_task o general_task)
   return 'generic_task'
 }
 
@@ -167,68 +174,35 @@ export function doesEventPassFilters(
   },
   filters: CalendarFilters
 ): boolean {
-  console.log('🔍 doesEventPassFilters called:', {
-    event: { department_id: event.department_id, status: event.status, type: event.type },
-    filters: filters
-  })
-  
   // Se tutti i filtri sono vuoti, mostra tutto
   if (areAllFiltersEmpty(filters)) {
-    console.log('✅ All filters empty, showing all events:', {
-      departments: filters.departments.length,
-      statuses: filters.statuses.length,
-      types: filters.types.length
-    })
     return true
   }
-  
-  // Filtro Reparto
+
+  // Logica OR: se uno qualsiasi dei filtri selezionati corrisponde, mostra l'evento
+  let matches = false
+
+  // Filtro Reparto (OR tra reparti selezionati)
   if (filters.departments.length > 0) {
-    console.log('🔍 Checking department filter:', {
-      eventDepartment: event.department_id,
-      filterDepartments: filters.departments,
-      hasDepartment: !!event.department_id,
-      departmentIncluded: event.department_id ? filters.departments.includes(event.department_id) : false
-    })
-    // Se evento non ha reparto, escludi
-    if (!event.department_id) {
-      console.log('❌ Event has no department, excluding')
-      return false
-    }
-    // Se reparto non è tra i selezionati, escludi
-    if (!filters.departments.includes(event.department_id)) {
-      console.log('❌ Event department not in filter, excluding')
-      return false
+    if (event.department_id && filters.departments.includes(event.department_id)) {
+      matches = true
     }
   }
-  
-  // Filtro Stato
+
+  // Filtro Stato (OR tra stati selezionati)
   if (filters.statuses.length > 0) {
-    console.log('🔍 Checking status filter:', {
-      eventStatus: event.status,
-      filterStatuses: filters.statuses,
-      statusIncluded: filters.statuses.includes(event.status)
-    })
-    if (!filters.statuses.includes(event.status)) {
-      console.log('❌ Event status not in filter, excluding')
-      return false
+    if (filters.statuses.includes(event.status)) {
+      matches = true
     }
   }
-  
-  // Filtro Tipo
+
+  // Filtro Tipo (OR tra tipi selezionati)
   if (filters.types.length > 0) {
-    console.log('🔍 Checking type filter:', {
-      eventType: event.type,
-      filterTypes: filters.types,
-      typeIncluded: filters.types.includes(event.type)
-    })
-    if (!filters.types.includes(event.type)) {
-      console.log('❌ Event type not in filter, excluding')
-      return false
+    if (filters.types.includes(event.type)) {
+      matches = true
     }
   }
-  
-  console.log('✅ Event passes all filters')
-  return true
+
+  return matches
 }
 

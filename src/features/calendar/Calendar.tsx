@@ -573,145 +573,132 @@ export const Calendar: React.FC<CalendarProps> = ({
           --fc-today-bg-color: #eff6ff;
         }
 
+        /* ============================================
+           NUOVO STILE: Icona grande + Nome + Conteggio
+           Senza strisce colorate
+           ============================================ */
+        
+        /* Rimuovi colori di sfondo e bordi dagli eventi */
+        .fc-event {
+          background-color: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          border-bottom: 1px solid #e5e7eb !important; /* Griglia leggera tra eventi */
+          margin-bottom: 2px;
+        }
+
+        /* Ultimo evento senza riga */
+        .fc-event:last-child {
+          border-bottom: none !important;
+        }
+
         .fc-event-content-custom {
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          padding: 2px 4px;
+          justify-content: center;
+          padding: 4px 6px;
+          background-color: transparent !important;
+          border: none !important;
+          min-height: 28px;
         }
 
         .fc-event-title-container {
           display: flex;
           align-items: center;
-          gap: 4px;
-          flex: 1;
-          min-width: 0;
+          gap: 6px;
+          width: 100%;
+          justify-content: center;
         }
 
         .fc-event-type-icon {
-          font-size: 12px;
+          font-size: 18px;
           flex-shrink: 0;
+          line-height: 1;
         }
 
         .fc-event-title {
-          font-size: 11px;
-          font-weight: 500;
-          truncate: true;
-          flex: 1;
-          min-width: 0;
+          font-size: 12px;
+          font-weight: 600;
+          color: #374151;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 120px;
+        }
+
+        .fc-event-count-badge {
+          font-size: 13px;
+          font-weight: 700;
+          color: #1f2937;
+          background-color: rgba(255, 255, 255, 0.95);
+          border-radius: 12px;
+          padding: 2px 8px;
+          min-width: 20px;
+          text-align: center;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+          border: 1px solid #e5e7eb;
         }
 
         .fc-event-priority-indicator {
-          font-size: 10px;
-          flex-shrink: 0;
+          display: none; /* Nascondi l'indicatore di priorità */
         }
 
         .fc-event-all-completed {
           display: flex;
           align-items: center;
-          justify-content: flex-end;
-          padding: 2px 6px;
+          justify-content: center;
+          padding: 4px;
           background-color: transparent !important;
-          border-color: transparent !important;
+          border: none !important;
         }
 
         .fc-event-checkmark {
-          font-size: 20px;
+          font-size: 22px;
           font-weight: bold;
           color: #10b981;
         }
 
-        /* Event type styling */
-        .event-type-maintenance {
-          background-color: #fef3c7 !important;
-          border-color: #f59e0b !important;
-          color: #92400e !important;
-        }
-
-        .event-type-general_task {
-          background-color: #dbeafe !important;
-          border-color: #3b82f6 !important;
-          color: #1e40af !important;
-        }
-
-        .event-type-temperature_reading {
-          background-color: #dcfce7 !important;
-          border-color: #10b981 !important;
-          color: #065f46 !important;
-        }
-
+        /* Event type styling - DISABILITATO (niente più colori di sfondo)
+        .event-type-maintenance,
+        .event-type-general_task,
+        .event-type-temperature_reading,
         .event-type-custom {
-          background-color: #f3e8ff !important;
-          border-color: #8b5cf6 !important;
-          color: #5b21b6 !important;
+          background-color: transparent !important;
+          border: none !important;
         }
+        */
 
-        /* Status styling */
-        .event-status-completed {
-          background-color: #dcfce7 !important;
-          border-color: #10b981 !important;
-          color: #065f46 !important;
-          opacity: 0.8;
-        }
-
-        .event-status-overdue {
-          background-color: #fee2e2 !important;
-          border-color: #ef4444 !important;
-          color: #991b1b !important;
-          animation: pulse 2s infinite;
-        }
-
-        .event-status-cancelled {
-          background-color: #f9fafb !important;
-          border-color: #9ca3af !important;
-          color: #6b7280 !important;
+        /* Status styling - Manteniamo solo gli stili per completati e in ritardo */
+        .event-status-completed .fc-event-title {
           opacity: 0.6;
           text-decoration: line-through;
         }
 
-        /* Priority styling */
-        .event-priority-critical {
-          background-color: #7f1d1d !important;
-          border-color: #991b1b !important;
-          color: #ffffff !important;
-          font-weight: 600;
+        .event-status-overdue .fc-event-type-icon {
+          animation: pulse 2s infinite;
         }
 
-        .event-priority-high {
-          border-width: 2px !important;
-          font-weight: 500;
+        .event-status-cancelled .fc-event-title {
+          opacity: 0.4;
+          text-decoration: line-through;
         }
 
-        .fc-event-count-badge {
-          font-size: 10px;
-          font-weight: 600;
-          margin-left: 4px;
-          color: inherit;
+        /* Priority styling - Evidenziamo solo le priorità critiche con l'icona */
+        .event-priority-critical .fc-event-count-badge {
+          background-color: #fecaca !important;
+          border-color: #ef4444 !important;
+          color: #991b1b !important;
+          font-weight: 800;
         }
 
+        /* Macro category styling - anche qui niente colori di sfondo */
         .event-type-macro_category {
           cursor: pointer;
           font-weight: 600;
-          border-width: 2px !important;
         }
 
-        /* Macro category specific colors */
-        .fc-event[style*="#FEF3C7"] {
-          background-color: #FEF3C7 !important;
-          border-color: #F59E0B !important;
-          color: #92400E !important;
-        }
-
-        .fc-event[style*="#D1FAE5"] {
-          background-color: #D1FAE5 !important;
-          border-color: #10B981 !important;
-          color: #065F46 !important;
-        }
-
-        .fc-event[style*="#FECACA"] {
-          background-color: #FECACA !important;
-          border-color: #EF4444 !important;
-          color: #991B1B !important;
+        .event-type-macro_category .fc-event-type-icon {
+          font-size: 20px; /* Icona leggermente più grande per macro-categorie */
         }
 
         /* Day closed styling */
