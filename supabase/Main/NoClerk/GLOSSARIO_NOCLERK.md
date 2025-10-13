@@ -3384,3 +3384,62 @@ console.log('📥 Parametri ricevuti:', { companyIdParam, formDataParam })
 **Stato**: ✅ Produzione Ready  
 **Maintainer**: Dev Team BHM v.2
 
+
+---
+
+## 11. SISTEMA DI RESET E RICOMPLETAMENTO ONBOARDING
+
+### 11.1 FILOSOFIA DEL SISTEMA
+
+Il sistema permette di **rifare l'onboarding senza creare duplicati** di company/user:
+
+- ✅ **MANTIENE**: `companies` (id, name, email), `auth.users`, `company_members`, `user_sessions`, `user_profiles`
+- ❌ **CANCELLA**: Tutti i dati operativi (staff, departments, products, tasks, etc.)
+
+### 11.2 FUNZIONE PRINCIPALE: resetOperationalData()
+
+Posizione: `src/utils/onboardingHelpers.ts`
+
+**Cosa fa:**
+1. Chiede conferma all'utente con dialog dettagliato
+2. Ottiene company_id dell'utente corrente
+3. Cancella tutti i dati operativi
+4. Pulisce localStorage onboarding
+5. Ritorna true se successo, false se annullato
+
+**Tabelle cancellate:**
+- products, product_categories, tasks, maintenance_tasks
+- conservation_points, staff, departments
+- invite_tokens, events, notes, temperature_readings
+- shopping_lists, non_conformities, audit_logs
+
+**Tabelle PRESERVATE:**
+- companies, auth.users, company_members
+- user_sessions, user_profiles
+
+### 11.3 PULSANTI UI
+
+**Header - "Cancella Dati e Ricomincia"** (SEMPRE VISIBILE)
+- Icona: Trash2
+- Colore: Arancione
+- Comportamento: Dopo reset, apre automaticamente onboarding
+
+**DevButtons - Solo 2 pulsanti:**
+1. "Precompila"
+2. "Completa Onboarding"
+
+### 11.4 FUNZIONI CONSOLE
+
+Disponibili in window object (modalità DEV):
+- resetOperationalData() - Reset dati operativi
+- resetTotAndUsers() - ⚠️ PERICOLOSO: Cancella TUTTO
+- prefillOnboarding(), completeOnboarding(), syncHosts()
+
+RIMOSSI: resetManualData(), resetOnboardingData(), resetAllData()
+
+---
+
+**Versione Glossario**: 1.6.0  
+**Ultimo Aggiornamento**: 13 Ottobre 2025  
+**Stato**: ✅ Produzione Ready + Reset System  
+**Maintainer**: Dev Team BHM v.2

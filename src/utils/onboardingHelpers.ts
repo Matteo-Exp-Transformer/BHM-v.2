@@ -2247,3 +2247,108 @@ export const completeOnboarding = async (
     throw error
   }
 }
+
+/**
+ * =============================================
+ * 🔄 RESET OPERATIONAL DATA
+ * =============================================
+ * Cancella tutti i dati operativi mantenendo:
+ * - Company (id, name, email, address)
+ * - Auth users
+ * - Company members
+ * - User sessions
+ * - User profiles
+ *
+ * Usa questa funzione per "ricominciare" l'onboarding
+ * senza creare duplicati di company/user.
+ */
+export const resetOperationalData = async (): Promise<boolean> => {
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('🔄 [resetOperationalData] AVVIO RESET DATI OPERATIVI')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+
+  // Conferma utente
+  const confirmed = window.confirm(
+    '⚠️ ATTENZIONE!\n\n' +
+    'Questa operazione cancellerà TUTTI i dati operativi:\n' +
+    '• Staff\n' +
+    '• Reparti\n' +
+    '• Prodotti e Categorie\n' +
+    '• Punti di Conservazione\n' +
+    '• Task ed Eventi\n' +
+    '• Note e Temperature\n' +
+    '• Inviti pendenti\n\n' +
+    '✅ MANTERRÀ:\n' +
+    '• Azienda (nome, email, indirizzo)\n' +
+    '• Utente admin\n' +
+    '• Associazione utente-azienda\n\n' +
+    'Potrai rifare l\'onboarding senza duplicare l\'azienda.\n\n' +
+    'Vuoi continuare?'
+  )
+
+  if (!confirmed) {
+    console.log('❌ Reset annullato dall\'utente')
+    toast.info('Reset annullato', {
+      position: 'top-right',
+      autoClose: 2000,
+    })
+    return false
+  }
+
+  try {
+    // Ottieni company ID dell'utente corrente
+    const companyId = await getCurrentCompanyId()
+
+    if (!companyId) {
+      throw new Error('Company ID non trovato. Effettua il login e riprova.')
+    }
+
+    console.log('🏢 Company ID:', companyId)
+    console.log('🗑️ Inizio cancellazione dati operativi...')
+
+    // Usa la funzione esistente per pulire i dati
+    await cleanExistingOnboardingData(companyId)
+
+    // Cancella anche altri dati operativi non inclusi in cleanExistingOnboardingData
+    console.log('🗑️ Cancellazione dati aggiuntivi...')
+
+    await supabase.from('invite_tokens').delete().eq('company_id', companyId)
+    await supabase.from('events').delete().eq('company_id', companyId)
+    await supabase.from('notes').delete().eq('company_id', companyId)
+    await supabase.from('temperature_readings').delete().eq('company_id', companyId)
+    await supabase.from('shopping_lists').delete().eq('company_id', companyId)
+    await supabase.from('non_conformities').delete().eq('company_id', companyId)
+    await supabase.from('audit_logs').delete().eq('company_id', companyId)
+
+    // Pulisci localStorage onboarding
+    localStorage.removeItem('onboarding-data')
+    localStorage.removeItem('onboarding-completed')
+    localStorage.removeItem('onboarding-completed-at')
+
+    console.log('✅ Reset completato con successo!')
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+
+    toast.success('✅ Dati operativi cancellati! Puoi rifare l\'onboarding.', {
+      position: 'top-right',
+      autoClose: 4000,
+    })
+
+    return true
+
+  } catch (error) {
+    console.error('❌ Errore durante reset:', error)
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+
+    toast.error(`Errore durante il reset: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`, {
+      position: 'top-right',
+      autoClose: 5000,
+    })
+
+    return false
+  }
+}
+
+// Esponi funzione globalmente per uso in console
+if (typeof window !== 'undefined') {
+  ;(window as any).resetOperationalData = resetOperationalData
+}

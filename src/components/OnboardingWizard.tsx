@@ -23,7 +23,6 @@ import DevButtons from './DevButtons'
 // Onboarding Helpers
 import {
   getPrefillData,
-  resetOnboarding,
   completeOnboarding as completeOnboardingHelper,
 } from '@/utils/onboardingHelpers'
 
@@ -105,10 +104,6 @@ const OnboardingWizard = () => {
       toast.error("Errore durante il completamento dell'onboarding")
     }
   }, [companyId, formData, queryClient, navigate])
-
-  const handleResetOnboarding = useCallback(() => {
-    resetOnboarding()
-  }, [])
 
   const handleSkipOnboarding = useCallback(() => {
     const confirmed = window.confirm(
@@ -375,7 +370,6 @@ const OnboardingWizard = () => {
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
             <DevButtons
               onPrefillOnboarding={handlePrefillOnboarding}
-              onResetOnboarding={handleResetOnboarding}
               onCompleteOnboarding={handleCompleteOnboarding}
               isDevMode={import.meta.env.DEV}
             />

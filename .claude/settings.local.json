@@ -54,7 +54,8 @@
       "Bash(git restore:*)",
       "Bash(npm run dev:client:*)",
       "Bash(npx supabase migration:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(printf \"https://tucqgcfrlzmwyfadiodo.supabase.co\")"
     ],
     "deny": [],
     "ask": []

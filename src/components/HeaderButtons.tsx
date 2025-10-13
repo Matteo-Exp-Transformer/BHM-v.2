@@ -1,13 +1,11 @@
 import React from 'react'
-import { Users, RotateCcw, Bell, Database, UserX, RefreshCw } from 'lucide-react'
+import { Users, Bell, UserX, RefreshCw, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAlertBadge } from '@/features/calendar/hooks/useCalendarAlerts'
 import { useAggregatedEvents } from '@/features/calendar/hooks/useAggregatedEvents'
 import { useFilteredEvents } from '@/features/calendar/hooks/useFilteredEvents'
 import {
-  resetManualData,
-  resetOnboardingData,
-  resetAllData,
+  resetOperationalData,
   resetTotAndUsers,
   debugAuthState
 } from '@/utils/onboardingHelpers'
@@ -48,6 +46,23 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
         )}
       </Link>
 
+      {/* 🔄 Cancella Dati e Ricomincia - SEMPRE VISIBILE */}
+      <button
+        onClick={async () => {
+          const success = await resetOperationalData()
+          if (success) {
+            // Dopo il reset, apri automaticamente l'onboarding
+            setTimeout(() => onOpenOnboarding(), 500)
+          }
+        }}
+        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-orange-600 bg-white border border-orange-200 rounded-md hover:text-orange-700 hover:bg-orange-50 transition-colors"
+        title="Cancella tutti i dati operativi e ricomincia l'onboarding"
+      >
+        <Trash2 className="h-4 w-4" />
+        <span className="hidden sm:inline">Cancella e Ricomincia</span>
+        <span className="sm:hidden">Reset</span>
+      </button>
+
       {/* Pulsante Riapri Onboarding */}
       <button
         onClick={onOpenOnboarding}
@@ -84,47 +99,14 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
             <span className="sm:hidden">Sync</span>
           </button>
 
-          {/* Reset Manuale */}
-          <button
-            onClick={() => resetManualData()}
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-yellow-600 bg-white border border-yellow-200 rounded-md hover:text-yellow-700 hover:bg-yellow-50 transition-colors"
-            title="Reset Manuale - Solo dati utente manuali"
-          >
-            <RotateCcw className="h-4 w-4" />
-            <span className="hidden sm:inline">Reset Man.</span>
-            <span className="sm:hidden">Man.</span>
-          </button>
-
-          {/* Reset Onboarding */}
-          <button
-            onClick={() => resetOnboardingData()}
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-orange-600 bg-white border border-orange-200 rounded-md hover:text-orange-700 hover:bg-orange-50 transition-colors"
-            title="Reset Onboarding - Solo dati Precompila"
-          >
-            <RotateCcw className="h-4 w-4" />
-            <span className="hidden sm:inline">Reset Onb.</span>
-            <span className="sm:hidden">Onb.</span>
-          </button>
-
-          {/* Reset All Data */}
-          <button
-            onClick={() => resetAllData()}
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-md hover:text-red-700 hover:bg-red-50 transition-colors"
-            title="Reset All Data - Tutti i dati"
-          >
-            <Database className="h-4 w-4" />
-            <span className="hidden sm:inline">All Data</span>
-            <span className="sm:hidden">All</span>
-          </button>
-
-          {/* Reset Tot+Utenti */}
+          {/* Reset Tot+Utenti - PERICOLOSO */}
           <button
             onClick={() => resetTotAndUsers()}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-800 bg-white border border-red-300 rounded-md hover:text-red-900 hover:bg-red-50 transition-colors"
-            title="Reset Tot+Utenti - Tutto + utenti + token"
+            title="⚠️ PERICOLOSO: Cancella TUTTO incluso users e companies"
           >
             <UserX className="h-4 w-4" />
-            <span className="hidden sm:inline">Tot+Utenti</span>
+            <span className="hidden sm:inline">Reset Tot+Users</span>
             <span className="sm:hidden">Tot</span>
           </button>
         </>
