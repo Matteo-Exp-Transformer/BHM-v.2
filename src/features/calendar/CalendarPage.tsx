@@ -28,7 +28,7 @@ import { useStaff } from '@/features/management/hooks/useStaff'
 import { useDepartments } from '@/features/management/hooks/useDepartments'
 import { useProducts } from '@/features/inventory/hooks/useProducts'
 import { useCalendarSettings } from '@/hooks/useCalendarSettings'
-import { toast } from 'sonner'
+import { toast } from 'react-toastify'
 import { 
   CalendarFilters as NewCalendarFiltersType,
   DEFAULT_CALENDAR_FILTERS,
