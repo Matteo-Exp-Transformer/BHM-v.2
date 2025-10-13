@@ -37,10 +37,6 @@ export const useCategories = () => {
         throw error
       }
 
-      console.log('🔍 Categories fetched for company:', companyId)
-      console.log('🔍 Categories count:', data?.length || 0)
-      console.log('🔍 Categories data:', data)
-
       return data as ProductCategory[]
     },
     enabled: !!companyId && !!user,

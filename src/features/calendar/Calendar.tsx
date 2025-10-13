@@ -108,7 +108,12 @@ export const Calendar: React.FC<CalendarProps> = ({
   useEffect(() => {
     if (calendarRef.current) {
       console.log('🔄 Forcing calendar refresh with new events:', events.length)
-      calendarRef.current.refetchEvents()
+      try {
+        const api = calendarRef.current.getApi()
+        api.refetchEvents()
+      } catch (error) {
+        console.warn('⚠️ Calendar API not ready yet:', error)
+      }
     }
   }, [events])
 
