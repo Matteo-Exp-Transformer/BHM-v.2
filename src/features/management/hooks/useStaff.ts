@@ -77,12 +77,14 @@ export const useStaff = () => {
     queryFn: async (): Promise<StaffMember[]> => {
       if (!companyId) throw new Error('Company ID not found')
 
-      console.log('🔗 Supabase: Caricamento staff...')
+      console.log('🔗 Supabase: Caricamento staff...', { companyId })
       const { data, error } = await supabase
         .from('staff')
         .select('*')
         .eq('company_id', companyId)
         .order('name', { ascending: true })
+      
+      console.log('🔗 Supabase staff result:', { data: data?.length || 0, error })
 
       if (error) {
         console.error('❌ Supabase: Errore caricamento staff:', error)
@@ -334,6 +336,14 @@ export const useStaff = () => {
       return expiryDate <= thirtyDaysFromNow && expiryDate > now
     }).length,
   }
+
+  // ✅ Debug: Log risultato useStaff
+  console.log('🎯 useStaff result:', {
+    staffCount: staff.length,
+    isLoading,
+    error: error?.message,
+    companyId
+  })
 
   return {
     // Data
