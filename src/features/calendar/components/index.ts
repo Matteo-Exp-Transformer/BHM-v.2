@@ -4,6 +4,8 @@ export type { EventBadgeProps, EventBadgeListProps, EventBadgeType } from './Eve
 export { CalendarLegend, CompactCalendarLegend } from './CalendarLegend'
 export type { CalendarLegendProps, LegendItem } from './CalendarLegend'
 
+export { CalendarEventLegend } from './CalendarEventLegend'
+
 export { CalendarFilters } from './CalendarFilters'
 export type { CalendarFiltersProps, CalendarFilterOptions } from './CalendarFilters'
 
