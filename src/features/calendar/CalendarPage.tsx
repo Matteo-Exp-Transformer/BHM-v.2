@@ -17,6 +17,7 @@ import {
   GenericTaskForm,
   ProductExpiryModal,
   NewCalendarFilters,
+  CalendarEventLegend,
 } from './components'
 import { AlertModal } from './components/AlertModal'
 import { CalendarConfigModal } from './components/CalendarConfigModal'
@@ -487,7 +488,7 @@ export const CalendarPage = () => {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">🔧 Manutenzioni</span>
                       <span className="font-medium">
-                        {sources?.maintenance || 0}
+                        {(sources?.maintenance || 0) + (sources?.temperatureChecks || 0)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -508,12 +509,6 @@ export const CalendarPage = () => {
                       <span className="text-gray-600">⏰ Alert HACCP</span>
                       <span className="font-medium">
                         {sources?.haccpDeadlines || 0}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">🌡️ Controlli Temp</span>
-                      <span className="font-medium">
-                        {sources?.temperatureChecks || 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">

@@ -14,6 +14,7 @@ import { transformToFullCalendarEvents } from './utils/eventTransform'
 import { EventDetailsModal } from './EventDetailsModal'
 import QuickActions from './components/QuickActions'
 import MacroCategoryModal from './components/MacroCategoryModal'
+import { CalendarEventLegend } from './components/CalendarEventLegend'
 import { Calendar as CalendarIcon, Plus } from 'lucide-react'
 import { useMacroCategoryEvents, type MacroCategory } from './hooks/useMacroCategoryEvents'
 import './calendar-custom.css' // ✅ Import stili personalizzati calendario
@@ -321,11 +322,19 @@ export const Calendar: React.FC<CalendarProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
-                Calendario Unified
+                Calendario
               </h2>
-              <p className="text-sm text-gray-600">
-                Mansioni, manutenzioni e attività in un unico calendario
-              </p>
+              <div className="mt-1">
+                <CalendarEventLegend sources={events?.reduce((acc, event) => {
+                  if (event.type === 'maintenance') acc.maintenance = (acc.maintenance || 0) + 1
+                  else if (event.type === 'temperature_reading') acc.temperatureChecks = (acc.temperatureChecks || 0) + 1
+                  else if (event.type === 'haccp_expiry') acc.haccpExpiry = (acc.haccpExpiry || 0) + 1
+                  else if (event.type === 'product_expiry') acc.productExpiry = (acc.productExpiry || 0) + 1
+                  else if (event.type === 'haccp_deadline') acc.haccpDeadlines = (acc.haccpDeadlines || 0) + 1
+                  else if (event.type === 'general_task') acc.genericTasks = (acc.genericTasks || 0) + 1
+                  return acc
+                }, {} as any)} compact={true} />
+              </div>
             </div>
           </div>
 
