@@ -107,17 +107,17 @@ export const CalendarPage = () => {
       // console.log('⚠️ No events to filter - check useAggregatedEvents')
       return []
     }
-    
+
     // console.log('🔍 Applying new filters to events:', {
     //   totalEvents: eventsForFiltering.length,
     //   filters: JSON.stringify(calendarFilters, null, 2),
     //   sampleEvents: eventsForFiltering.slice(0, 2).map(e => ({
-        title: e.title,
-        source: e.source,
-        type: e.type
-      }))
-    })
-    
+    //     title: e.title,
+    //     source: e.source,
+    //     type: e.type
+    //   }))
+    // })
+
     return eventsForFiltering.filter(event => {
       // ✅ NUOVA LOGICA FILTRI CUMULATIVI:
       // - Nessun filtro = Mostra TUTTO
@@ -143,21 +143,21 @@ export const CalendarPage = () => {
       )
 
       // Debug per primi 5 eventi
-      if (eventsForFiltering.indexOf(event) < 5) {
-        // console.log(`🔍 Evento ${eventsForFiltering.indexOf(event)}:`, {
-        //   title: event.title,
-        //   source: event.source,
-        //   department_id: event.department_id,
-          status: event.status,
-          calculatedStatus: eventStatus,
-          calculatedType: eventType,
-          filters: JSON.stringify(calendarFilters, null, 2),
-          passesFilters,
-          eventTypeMatch: calendarFilters.types.length === 0 || calendarFilters.types.includes(eventType),
-          statusMatch: calendarFilters.statuses.length === 0 || calendarFilters.statuses.includes(eventStatus),
-          departmentMatch: calendarFilters.departments.length === 0 || (event.department_id && calendarFilters.departments.includes(event.department_id))
-        })
-      }
+      // if (eventsForFiltering.indexOf(event) < 5) {
+      //   console.log(`🔍 Evento ${eventsForFiltering.indexOf(event)}:`, {
+      //     title: event.title,
+      //     source: event.source,
+      //     department_id: event.department_id,
+      //     status: event.status,
+      //     calculatedStatus: eventStatus,
+      //     calculatedType: eventType,
+      //     filters: JSON.stringify(calendarFilters, null, 2),
+      //     passesFilters,
+      //     eventTypeMatch: calendarFilters.types.length === 0 || calendarFilters.types.includes(eventType),
+      //     statusMatch: calendarFilters.statuses.length === 0 || calendarFilters.statuses.includes(eventStatus),
+      //     departmentMatch: calendarFilters.departments.length === 0 || (event.department_id && calendarFilters.departments.includes(event.department_id))
+      //   })
+      // }
 
       return passesFilters
     })
@@ -169,9 +169,9 @@ export const CalendarPage = () => {
   //   aggregatedEvents: aggregatedEvents.length,
   //   filteredEvents: filteredEvents.length,
   //   eventsForFiltering: eventsForFiltering.length,
-    displayEvents: displayEvents.length,
-    calendarFilters: JSON.stringify(calendarFilters, null, 2)
-  })
+  //   displayEvents: displayEvents.length,
+  //   calendarFilters: JSON.stringify(calendarFilters, null, 2)
+  // })
 
   // ✅ Calcola alert dopo displayEvents
   const { alertCount, criticalCount, alerts } = useCalendarAlerts(displayEvents)
