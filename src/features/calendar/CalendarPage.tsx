@@ -65,7 +65,7 @@ export const CalendarPage = () => {
     originalCount: aggregatedEvents?.length || 0,
     sampleFiltered: filteredEvents?.slice(0, 2)
   })
-  const { alertCount, criticalCount, alerts } = useCalendarAlerts(filteredEvents)
+  const { alertCount, criticalCount, alerts } = useCalendarAlerts(displayEvents)
   const [view, setView] = useCalendarView('month')
   const { createTask, isCreating } = useGenericTasks()
   const { staff } = useStaff()
@@ -90,15 +90,23 @@ export const CalendarPage = () => {
 
   const handleFilterChange = useCallback((newFilters: NewCalendarFiltersType) => {
     console.log('🔧 Filtri aggiornati:', newFilters)
+    console.log('🔧 Filtri precedenti:', calendarFilters)
     setCalendarFilters(newFilters)
-  }, [])
+  }, [calendarFilters])
 
   const displayEvents = useMemo(() => {
-    if (filteredEvents.length === 0) {
-      console.log('⚠️ No events to filter - check useFilteredEvents or useAggregatedEvents')
+    if (aggregatedEvents.length === 0) {
+      console.log('⚠️ No events to filter - check useAggregatedEvents')
+      return []
     }
     
-    return filteredEvents.filter(event => {
+    console.log('🔍 Applying new filters to events:', {
+      totalEvents: aggregatedEvents.length,
+      filters: calendarFilters,
+      sampleEvents: aggregatedEvents.slice(0, 2)
+    })
+    
+    return aggregatedEvents.filter(event => {
       // ✅ NUOVA LOGICA FILTRI CUMULATIVI:
       // - Nessun filtro = Mostra TUTTO
       // - Filtri attivi = Mostra SOLO eventi che corrispondono a TUTTI i filtri
@@ -122,9 +130,23 @@ export const CalendarPage = () => {
         calendarFilters
       )
 
+      // Debug per primi 3 eventi
+      if (aggregatedEvents.indexOf(event) < 3) {
+        console.log(`🔍 Evento ${aggregatedEvents.indexOf(event)}:`, {
+          title: event.title,
+          source: event.source,
+          department_id: event.department_id,
+          status: event.status,
+          calculatedStatus: eventStatus,
+          calculatedType: eventType,
+          filters: calendarFilters,
+          passesFilters
+        })
+      }
+
       return passesFilters
     })
-  }, [filteredEvents, calendarFilters])
+  }, [aggregatedEvents, calendarFilters])
 
   // ✅ Calcola statistiche
   const todayEvents = useMemo(() => {

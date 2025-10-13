@@ -55,6 +55,14 @@ export interface ProductCategory {
   id: string
   company_id: string
   name: string
+  description?: string
+  temperature_requirements?: {
+    min_temp: number
+    max_temp: number
+    storage_type: ConservationPointType
+  }
+  default_expiry_days?: number
+  allergen_info: string[]
   created_at: Date
   updated_at: Date
 }
@@ -176,6 +184,14 @@ export interface CreateProductForm {
 
 export interface CreateCategoryForm {
   name: string
+  description?: string
+  temperature_requirements?: {
+    min_temp: number
+    max_temp: number
+    storage_type: ConservationPointType
+  }
+  default_expiry_days?: number
+  allergen_info: string[]
 }
 
 // Filter and search interfaces
