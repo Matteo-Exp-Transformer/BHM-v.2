@@ -20,6 +20,7 @@ export type CalendarEventType =
   | 'maintenance'
   | 'general_task'
   | 'temperature_reading'
+  | 'product_expiry'
   | 'custom'
 export type CalendarEventStatus =
   | 'pending'
