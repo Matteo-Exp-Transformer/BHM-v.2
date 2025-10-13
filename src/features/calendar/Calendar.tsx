@@ -107,15 +107,21 @@ export const Calendar: React.FC<CalendarProps> = ({
   // ✅ Forza refresh del calendario quando events cambiano
   useEffect(() => {
     if (calendarRef.current) {
-      console.log('🔄 Forcing calendar refresh with new events:', events.length)
+      console.log('🔄 Forcing calendar refresh with new events:', {
+        originalEvents: events.length,
+        transformedEvents: fullCalendarEvents.length
+      })
       try {
         const api = calendarRef.current.getApi()
+        // Prova diversi metodi di refresh
         api.refetchEvents()
+        api.render()
+        console.log('✅ Calendar refresh methods called')
       } catch (error) {
         console.warn('⚠️ Calendar API not ready yet:', error)
       }
     }
-  }, [events])
+  }, [events, fullCalendarEvents])
 
   const calendarView = currentView === 'year'
     ? 'multiMonthYear'
@@ -164,6 +170,15 @@ export const Calendar: React.FC<CalendarProps> = ({
         }
       })
     : transformToFullCalendarEvents(events)
+
+  // ✅ Debug: Log eventi trasformati per FullCalendar
+  console.log('📅 FullCalendarEvents for FullCalendar:', {
+    count: fullCalendarEvents.length,
+    sample: fullCalendarEvents.slice(0, 3).map(e => ({
+      title: e.title,
+      type: e.extendedProps?.type || 'unknown'
+    }))
+  })
 
   const handleEventClick = useCallback(
     (clickInfo: { event: { extendedProps?: { originalEvent?: any; type?: string; category?: MacroCategory; items?: any[] }; start: Date | null } }) => {
