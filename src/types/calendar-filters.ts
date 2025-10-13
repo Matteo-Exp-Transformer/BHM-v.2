@@ -174,7 +174,11 @@ export function doesEventPassFilters(
   
   // Se tutti i filtri sono vuoti, mostra tutto
   if (areAllFiltersEmpty(filters)) {
-    console.log('✅ All filters empty, showing all events')
+    console.log('✅ All filters empty, showing all events:', {
+      departments: filters.departments.length,
+      statuses: filters.statuses.length,
+      types: filters.types.length
+    })
     return true
   }
   
