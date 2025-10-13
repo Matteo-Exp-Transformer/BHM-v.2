@@ -65,7 +65,6 @@ export const CalendarPage = () => {
     originalCount: aggregatedEvents?.length || 0,
     sampleFiltered: filteredEvents?.slice(0, 2)
   })
-  const { alertCount, criticalCount, alerts } = useCalendarAlerts(displayEvents)
   const [view, setView] = useCalendarView('month')
   const { createTask, isCreating } = useGenericTasks()
   const { staff } = useStaff()
@@ -147,6 +146,9 @@ export const CalendarPage = () => {
       return passesFilters
     })
   }, [aggregatedEvents, calendarFilters])
+
+  // ✅ Calcola alert dopo displayEvents
+  const { alertCount, criticalCount, alerts } = useCalendarAlerts(displayEvents)
 
   // ✅ Calcola statistiche
   const todayEvents = useMemo(() => {
