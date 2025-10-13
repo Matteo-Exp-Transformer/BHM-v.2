@@ -563,7 +563,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       {/* Calendar Styles */}
       <style>{`
         .calendar-container {
-          --fc-border-color: #e5e7eb;
+          --fc-border-color: #d1d5db;
           --fc-button-bg-color: #3b82f6;
           --fc-button-border-color: #3b82f6;
           --fc-button-hover-bg-color: #2563eb;
@@ -571,6 +571,41 @@ export const Calendar: React.FC<CalendarProps> = ({
           --fc-button-active-bg-color: #1d4ed8;
           --fc-button-active-border-color: #1d4ed8;
           --fc-today-bg-color: #eff6ff;
+        }
+
+        /* ============================================
+           GRIGLIA PRINCIPALE CALENDARIO - Bordi più spessi
+           ============================================ */
+        
+        /* Bordi delle celle del giorno */
+        .fc-daygrid-day {
+          border-width: 2px !important;
+          border-color: #d1d5db !important;
+        }
+
+        /* Bordi della griglia principale */
+        .fc-scrollgrid {
+          border-width: 2px !important;
+          border-color: #d1d5db !important;
+        }
+
+        .fc-scrollgrid-section > td {
+          border-width: 2px !important;
+        }
+
+        /* Header del calendario */
+        .fc-col-header-cell {
+          border-width: 2px !important;
+          border-color: #d1d5db !important;
+        }
+
+        /* Righe e colonne della griglia */
+        .fc-daygrid-day-frame {
+          border-width: 2px !important;
+        }
+
+        .fc th, .fc td {
+          border-color: #d1d5db !important;
         }
 
         /* ============================================
