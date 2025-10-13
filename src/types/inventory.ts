@@ -28,10 +28,25 @@ export interface Product {
   notes?: string
 
   // Status
-  status: 'active' | 'expired' | 'consumed' | 'waste'
+  status: 'active' | 'expired' | 'waste'
   compliance_status?: 'compliant' | 'warning' | 'non_compliant'
 
   // Metadata
+  created_at: Date
+  updated_at: Date
+}
+
+/**
+ * Traccia completamenti scadenze prodotti
+ */
+export interface ProductExpiryCompletion {
+  id: string
+  company_id: string
+  product_id: string
+  completed_by?: string
+  completed_at: Date
+  action: 'expired' | 'waste' // expired = consumato/cucinato, waste = smaltito
+  notes?: string
   created_at: Date
   updated_at: Date
 }

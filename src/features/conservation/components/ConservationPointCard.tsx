@@ -185,12 +185,12 @@ export function ConservationPointCard({
       {/* Product Categories */}
       {point.product_categories && point.product_categories.length > 0 && (
         <div className="mt-3">
-          <div className="text-sm text-gray-600 mb-1">Categorie prodotti:</div>
-          <div className="flex flex-wrap gap-1">
+          <div className="text-sm text-gray-600 mb-2">Categorie prodotti:</div>
+          <div className="flex flex-wrap gap-2">
             {point.product_categories.map((category, index) => (
               <span
                 key={index}
-                className="px-2 py-1 bg-white bg-opacity-50 rounded text-xs font-medium"
+                className="px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full text-xs font-medium text-gray-700 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
               >
                 {category}
               </span>
@@ -209,10 +209,6 @@ export function ConservationPointCard({
 
       {showDetails && (
         <div className="mt-3 p-3 bg-white bg-opacity-50 rounded border space-y-2">
-          <div className="text-sm">
-            <strong>Range di temperatura:</strong> {tempRange.min}°C -{' '}
-            {tempRange.max}°C
-          </div>
           <div className="text-sm">
             <strong>Temperatura ottimale:</strong> {tempRange.optimal}°C
           </div>

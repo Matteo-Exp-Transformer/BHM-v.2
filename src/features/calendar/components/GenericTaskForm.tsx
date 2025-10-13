@@ -25,11 +25,13 @@ interface GenericTaskFormData {
   giorniCustom?: CustomFrequencyDays[]
   dataInizio?: string // Data di inizio in formato ISO (YYYY-MM-DD)
   dataFine?: string // Data fine in formato ISO (YYYY-MM-DD) - Opzionale per intervallo
+  departmentId?: string // Reparto assegnato (opzionale) - per filtri calendario
   note?: string
 }
 
 interface GenericTaskFormProps {
   staffOptions: Array<{ id: string; label: string; role: string; categories: string[] }>
+  departmentOptions?: Array<{ id: string; name: string }> // Lista reparti attivi
   onSubmit: (data: GenericTaskFormData) => void
   onCancel: () => void
   isLoading?: boolean
@@ -61,6 +63,7 @@ const CUSTOM_DAYS: Array<{
 
 export const GenericTaskForm = ({
   staffOptions,
+  departmentOptions = [],
   onSubmit,
   onCancel,
   isLoading = false,
@@ -344,6 +347,35 @@ export const GenericTaskForm = ({
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Reparto (opzionale) */}
+        <div>
+          <Label>Reparto (opzionale)</Label>
+          <Select
+            value={formData.departmentId ?? ''}
+            onValueChange={value => updateField({ departmentId: value || undefined })}
+            disabled={departmentOptions.length === 0}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={
+                departmentOptions.length > 0
+                  ? "Nessun reparto specifico"
+                  : "Nessun reparto disponibile"
+              } />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectOption value="">Nessun reparto</SelectOption>
+              {departmentOptions.map(dept => (
+                <SelectOption key={dept.id} value={dept.id}>
+                  {dept.name}
+                </SelectOption>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="mt-1 text-xs text-gray-500">
+            💡 Assegna un reparto per filtrare l'attività nel calendario
+          </p>
         </div>
 
         {/* Giorni custom se frequenza personalizzata */}
