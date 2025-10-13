@@ -70,7 +70,9 @@ export const CalendarPage = () => {
   const eventsForFiltering = filteredEvents.length > 0 ? filteredEvents : aggregatedEvents
   console.log('🔧 Events for filtering:', {
     source: filteredEvents.length > 0 ? 'filteredEvents' : 'aggregatedEvents',
-    count: eventsForFiltering.length
+    count: eventsForFiltering.length,
+    filteredEventsCount: filteredEvents.length,
+    aggregatedEventsCount: aggregatedEvents.length
   })
   const [view, setView] = useCalendarView('month')
   const { createTask, isCreating } = useGenericTasks()
@@ -163,6 +165,13 @@ export const CalendarPage = () => {
 
   // ✅ Debug risultato finale
   console.log('🎯 Final displayEvents count:', displayEvents.length)
+  console.log('🎯 Events breakdown:', {
+    aggregatedEvents: aggregatedEvents.length,
+    filteredEvents: filteredEvents.length,
+    eventsForFiltering: eventsForFiltering.length,
+    displayEvents: displayEvents.length,
+    calendarFilters: JSON.stringify(calendarFilters, null, 2)
+  })
 
   // ✅ Calcola alert dopo displayEvents
   const { alertCount, criticalCount, alerts } = useCalendarAlerts(displayEvents)
