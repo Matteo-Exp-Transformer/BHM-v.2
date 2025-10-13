@@ -72,8 +72,8 @@ export const CalendarPage = () => {
   //   source: filteredEvents.length > 0 ? 'filteredEvents' : 'aggregatedEvents',
   //   count: eventsForFiltering.length,
   //   filteredEventsCount: filteredEvents.length,
-    aggregatedEventsCount: aggregatedEvents.length
-  })
+  //   aggregatedEventsCount: aggregatedEvents.length
+  // })
   const [view, setView] = useCalendarView('month')
   const { createTask, isCreating } = useGenericTasks()
   const { staff } = useStaff()
