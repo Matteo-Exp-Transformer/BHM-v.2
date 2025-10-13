@@ -36,7 +36,14 @@ const DevButtons: React.FC<DevButtonsProps> = ({
 
       {/* PULSANTE COMPLETA ONBOARDING */}
       <button
-        onClick={onCompleteOnboarding}
+        onClick={() => {
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+          console.log('🔵 [DevButtons] CLICK su "Completa Onboarding"')
+          console.log('📍 Sorgente: DevButtons nell\'OnboardingWizard')
+          console.log('⏰ Timestamp:', new Date().toISOString())
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+          onCompleteOnboarding()
+        }}
         className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-md hover:text-blue-700 hover:bg-blue-50 transition-colors"
         title="Completa onboarding automaticamente"
       >

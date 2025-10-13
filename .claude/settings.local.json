@@ -53,7 +53,8 @@
       "Bash(test:*)",
       "Bash(git restore:*)",
       "Bash(npm run dev:client:*)",
-      "Bash(npx supabase migration:*)"
+      "Bash(npx supabase migration:*)",
+      "Bash(awk:*)"
     ],
     "deny": [],
     "ask": []

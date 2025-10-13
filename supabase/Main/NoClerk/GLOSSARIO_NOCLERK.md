@@ -29,6 +29,7 @@ Questo glossario garantisce la **compliance perfetta** tra:
 7. [Validation Rules](#7-validation-rules)
 8. [Best Practices](#8-best-practices)
 9. [Features Recenti](#9-features-recenti)
+10. [Pulsanti e Controlli UI](#10-pulsanti-e-controlli-ui)
 
 ---
 
@@ -3276,8 +3277,110 @@ SELECT get_user_role_for_company('[company-id]');
 
 ---
 
-**Versione Glossario**: 1.4.0  
-**Ultimo Aggiornamento**: 12 Ottobre 2025  
+---
+
+## 10. PULSANTI E CONTROLLI UI
+
+### 10.1 ONBOARDING WIZARD - PULSANTI DEV
+
+#### **DevButtons Component** (`src/components/DevButtons.tsx`)
+```typescript
+// Raggruppamento: Header dell'OnboardingWizard
+// Posizione: Sopra il navigatore degli step
+// Visibilità: Solo in modalità sviluppo (DEV)
+
+interface DevButtonsProps {
+  onPrefillOnboarding: () => void      // Pulsante "Precompila"
+  onResetOnboarding: () => void        // Pulsante "Reset Onboarding" 
+  onCompleteOnboarding: () => void     // Pulsante "Completa Onboarding"
+  isDevMode: boolean                   // Visibilità condizionale
+}
+```
+
+#### **Pulsanti Specifici:**
+1. **"Precompila"** 
+   - Funzione: `handlePrefillOnboarding`
+   - Icona: `FileText`
+   - Colore: Verde (`text-green-600`, `border-green-200`)
+
+2. **"Completa Onboarding"** ⭐ *[PULSANTE PRINCIPALE]*
+   - Funzione: `handleCompleteOnboarding`
+   - Icona: `CheckCircle`
+   - Colore: Blu (`text-blue-600`, `border-blue-200`)
+   - **Log Debug**: `🔵 [DevButtons] CLICK su "Completa Onboarding"`
+
+3. **"Reset Onboarding"**
+   - Funzione: `handleResetOnboarding`
+   - Icona: `RotateCcw`
+   - Colore: Arancione (`text-orange-600`, `border-orange-200`)
+
+### 10.2 NAVIGAZIONE ONBOARDING
+
+#### **Pulsante "Salta"** (Header Wizard)
+- Posizione: Top-right dell'header
+- Funzione: `handleSkipOnboarding`
+- Icona: `X`
+- Colore: Grigio (`text-gray-600`, `border-gray-300`)
+
+#### **Pulsante "Avanti"** (Step Navigator)
+- Posizione: Footer di ogni step
+- Funzione: `completeOnboardingFromWizard` (ultimo step)
+- **Log Debug**: `🟣 [OnboardingWizard] completeOnboardingFromWizard CHIAMATO`
+
+### 10.3 HEADER NAVIGAZIONE PRINCIPALE
+
+#### **HeaderButtons Component** (`src/components/HeaderButtons.tsx`)
+```typescript
+// Raggruppamento: Top navigation bar
+// Posizione: Sopra il contenuto principale
+// Visibilità: Sempre visibile
+
+interface HeaderButtonsProps {
+  // Pulsanti di debug/sviluppo
+  onSyncHost?: () => void              // "Sync Host"
+  onResetManual?: () => void           // "Reset Man."
+  onResetOnboarding?: () => void       // "Reset Onb."
+  onResetAllData?: () => void          // "All Data"
+  onResetTotAndUsers?: () => void      // "Tot+Utenti"
+  onPrefillOnboarding?: () => void     // "Prefill"
+  onCompleteOnboarding?: () => void    // "Complete" ⭐
+}
+```
+
+### 10.4 MAPPING FUNZIONI → PULSANTI
+
+| **Funzione** | **Pulsante UI** | **Posizione** | **Componente** |
+|--------------|-----------------|---------------|----------------|
+| `completeOnboarding()` | "Completa Onboarding" | Header Wizard | `DevButtons` |
+| `completeOnboarding()` | "Complete" | Top Nav | `HeaderButtons` |
+| `completeOnboardingFromWizard()` | "Avanti" | Step Footer | `OnboardingWizard` |
+| `handlePrefillOnboarding()` | "Precompila" | Header Wizard | `DevButtons` |
+| `handleResetOnboarding()` | "Reset Onboarding" | Header Wizard | `DevButtons` |
+| `handleSkipOnboarding()` | "Salta" | Header Wizard | `OnboardingWizard` |
+
+### 10.5 LOG DEBUG PATTERN
+
+#### **Struttura Log Completa:**
+```typescript
+// 1. Click Detection
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+console.log('🔵 [DevButtons] CLICK su "Completa Onboarding"')
+console.log('📍 Sorgente: DevButtons nell\'OnboardingWizard')
+console.log('⏰ Timestamp:', new Date().toISOString())
+
+// 2. Function Call
+console.log('🟢 [OnboardingWizard] handleCompleteOnboarding CHIAMATO')
+console.log('📊 CompanyId ricevuto:', companyId || 'NULL')
+
+// 3. Core Function
+console.log('🔵 [completeOnboarding] FUNZIONE PRINCIPALE AVVIATA')
+console.log('📥 Parametri ricevuti:', { companyIdParam, formDataParam })
+```
+
+---
+
+**Versione Glossario**: 1.5.0  
+**Ultimo Aggiornamento**: 9 Gennaio 2025  
 **Stato**: ✅ Produzione Ready  
 **Maintainer**: Dev Team BHM v.2
 

@@ -164,18 +164,25 @@ export const useAuth = () => {
       if (!user?.id) return null
 
       console.log('🔗 Supabase: Caricamento user profile...')
+      console.log('📊 User ID:', user.id)
+
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('auth_user_id', user.id)
         .single()
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('⚠️ Supabase: User profile non trovato (PGRST116), ritorno null')
+          return null
+        }
         console.error('❌ Supabase: Errore caricamento user profile:', error)
+        console.error('❌ Error details:', { code: error.code, message: error.message, details: error.details })
         return null
       }
 
-      console.log(`✅ Supabase: User profile caricato (${data?.role || 'guest'})`)
+      console.log(`✅ Supabase: User profile caricato:`, data)
       return data
     },
     enabled: !!user?.id,
@@ -195,6 +202,9 @@ export const useAuth = () => {
     queryFn: async (): Promise<CompanyMembership[]> => {
       if (!user?.id) return []
 
+      console.log('🔗 Supabase: Caricamento companies...')
+      console.log('📊 User ID:', user.id)
+
       const { data, error } = await supabase
         .from('company_members')
         .select(
@@ -213,8 +223,12 @@ export const useAuth = () => {
 
       if (error) {
         console.error('❌ Errore caricamento companies:', error)
-        throw error
+        console.error('❌ Error details:', { code: error.code, message: error.message })
+        return [] // Ritorna array vuoto invece di throw
       }
+
+      console.log('✅ Companies caricate:', data?.length || 0)
+      console.log('📊 Companies data:', data)
 
       return (data || []).map(m => ({
         company_id: m.company_id,
@@ -241,6 +255,9 @@ export const useAuth = () => {
     queryFn: async (): Promise<UserSession | null> => {
       if (!user?.id) return null
 
+      console.log('🔗 Supabase: Caricamento user session...')
+      console.log('📊 User ID:', user.id)
+
       // Prova a ottenere sessione esistente
       let { data: existing, error } = await supabase
         .from('user_sessions')
@@ -250,13 +267,17 @@ export const useAuth = () => {
 
       if (error && error.code !== 'PGRST116') {
         console.error('❌ Errore caricamento sessione:', error)
-        throw error
+        console.error('❌ Error details:', { code: error.code, message: error.message })
+        return null // Ritorna null invece di throw
       }
 
       // Se sessione esiste, ritornala
       if (existing) {
+        console.log('✅ User session trovata:', existing)
         return existing as UserSession
       }
+
+      console.log('⚠️ User session non trovata, creando...')
 
       // Se non esiste, creala con prima company disponibile
       if (companies.length > 0) {

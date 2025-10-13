@@ -338,12 +338,12 @@ export const useStaff = () => {
   }
 
   // ✅ Debug: Log risultato useStaff
-  console.log('🎯 useStaff result:', {
-    staffCount: staff.length,
-    isLoading,
-    error: error?.message,
-    companyId
-  })
+  // console.log('🎯 useStaff result:', {
+  //   staffCount: staff.length,
+  //   isLoading,
+  //   error: error?.message,
+  //   companyId
+  // })
 
   return {
     // Data
