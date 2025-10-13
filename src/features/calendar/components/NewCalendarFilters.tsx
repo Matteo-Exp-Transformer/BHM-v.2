@@ -7,7 +7,7 @@
 // - Filtro Per Tipo (chips)
 
 import { useState, useMemo } from 'react'
-import { Filter, X, Building2, Calendar, ListChecks } from 'lucide-react'
+import { Filter, X, Building2, Calendar, ListChecks, ChevronUp, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import {
   CalendarFilters,
@@ -87,7 +87,10 @@ export const NewCalendarFilters = ({
   return (
     <div className={`bg-white rounded-lg border border-gray-200 ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div 
+        className="flex items-center justify-between p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
         <div className="flex items-center gap-3">
           <Filter className="h-5 w-5 text-gray-500" />
           <h3 className="font-semibold text-gray-900">Filtri Calendario</h3>
@@ -103,20 +106,23 @@ export const NewCalendarFilters = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={resetFilters}
+              onClick={(e) => {
+                e.stopPropagation()
+                resetFilters()
+              }}
               className="text-red-600 hover:text-red-700 hover:bg-red-50"
             >
               <X className="h-4 w-4 mr-1" />
               Reset
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            {isExpanded ? 'Nascondi' : 'Mostra'}
-          </Button>
+          <div className="p-1 rounded-md hover:bg-gray-100 transition-colors">
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4 text-gray-500" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-gray-500" />
+            )}
+          </div>
         </div>
       </div>
 
