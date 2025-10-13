@@ -65,6 +65,13 @@ export const CalendarPage = () => {
     originalCount: aggregatedEvents?.length || 0,
     sampleFiltered: filteredEvents?.slice(0, 2)
   })
+  
+  // ✅ BYPASS: Usa aggregatedEvents se useFilteredEvents restituisce 0 eventi
+  const eventsForFiltering = filteredEvents.length > 0 ? filteredEvents : aggregatedEvents
+  console.log('🔧 Events for filtering:', {
+    source: filteredEvents.length > 0 ? 'filteredEvents' : 'aggregatedEvents',
+    count: eventsForFiltering.length
+  })
   const [view, setView] = useCalendarView('month')
   const { createTask, isCreating } = useGenericTasks()
   const { staff } = useStaff()
@@ -94,18 +101,18 @@ export const CalendarPage = () => {
   }, [calendarFilters])
 
   const displayEvents = useMemo(() => {
-    if (aggregatedEvents.length === 0) {
+    if (eventsForFiltering.length === 0) {
       console.log('⚠️ No events to filter - check useAggregatedEvents')
       return []
     }
     
     console.log('🔍 Applying new filters to events:', {
-      totalEvents: aggregatedEvents.length,
+      totalEvents: eventsForFiltering.length,
       filters: calendarFilters,
-      sampleEvents: aggregatedEvents.slice(0, 2)
+      sampleEvents: eventsForFiltering.slice(0, 2)
     })
     
-    return aggregatedEvents.filter(event => {
+    return eventsForFiltering.filter(event => {
       // ✅ NUOVA LOGICA FILTRI CUMULATIVI:
       // - Nessun filtro = Mostra TUTTO
       // - Filtri attivi = Mostra SOLO eventi che corrispondono a TUTTI i filtri
@@ -130,8 +137,8 @@ export const CalendarPage = () => {
       )
 
       // Debug per primi 3 eventi
-      if (aggregatedEvents.indexOf(event) < 3) {
-        console.log(`🔍 Evento ${aggregatedEvents.indexOf(event)}:`, {
+      if (eventsForFiltering.indexOf(event) < 3) {
+        console.log(`🔍 Evento ${eventsForFiltering.indexOf(event)}:`, {
           title: event.title,
           source: event.source,
           department_id: event.department_id,
@@ -145,7 +152,7 @@ export const CalendarPage = () => {
 
       return passesFilters
     })
-  }, [aggregatedEvents, calendarFilters])
+  }, [eventsForFiltering, calendarFilters])
 
   // ✅ Calcola alert dopo displayEvents
   const { alertCount, criticalCount, alerts } = useCalendarAlerts(displayEvents)
