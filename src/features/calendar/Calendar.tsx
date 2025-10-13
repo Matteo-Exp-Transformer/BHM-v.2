@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
@@ -82,6 +82,12 @@ export const Calendar: React.FC<CalendarProps> = ({
   useMacroCategories = false,
   calendarSettings = null,
 }) => {
+  // ✅ Debug: Log quando events cambiano
+  console.log('📅 Calendar received events:', {
+    count: events?.length || 0,
+    sample: events?.slice(0, 2).map(e => ({ title: e.title, type: e.type }))
+  })
+  
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
   const [selectedMacroCategory, setSelectedMacroCategory] = useState<{
@@ -97,6 +103,14 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   const calendarRef = useRef<FullCalendar>(null)
   const finalConfig = { ...defaultConfig, ...config }
+
+  // ✅ Forza refresh del calendario quando events cambiano
+  useEffect(() => {
+    if (calendarRef.current) {
+      console.log('🔄 Forcing calendar refresh with new events:', events.length)
+      calendarRef.current.refetchEvents()
+    }
+  }, [events])
 
   const calendarView = currentView === 'year'
     ? 'multiMonthYear'

@@ -325,8 +325,15 @@ export const normalizeMaintenanceTask = (
   status: task.status ?? 'scheduled',
 })
 
+// Deprecated: usa categorie dal database invece
 export const getCategoryById = (id: string) =>
   CONSERVATION_CATEGORIES.find(category => category.id === id)
+
+// Nuova versione che accetta categorie dinamiche
+export const findCategoryByName = (
+  name: string,
+  categories: Array<{ name: string; temperature_requirements?: any }>
+) => categories.find(cat => cat.name === name)
 
 export const getConservationPointType = (
   type: ConservationPoint['pointType']
@@ -367,6 +374,7 @@ export const validateTemperatureForType = (
   return { valid: true }
 }
 
+// Deprecated: usa getCompatibleCategoriesFromDB invece
 export const getCompatibleCategories = (
   temperature: number | null,
   pointType: ConservationPoint['pointType']
@@ -396,6 +404,48 @@ export const getCompatibleCategories = (
     }
 
     return true
+  })
+}
+
+// Nuova versione che accetta categorie dal database
+export const getCompatibleCategoriesFromDB = (
+  temperature: number | null,
+  pointType: ConservationPoint['pointType'],
+  categories: Array<{
+    name: string
+    temperature_requirements?: {
+      min_temp: number
+      max_temp: number
+      storage_type: string
+    }
+  }>
+) => {
+  if (!temperature || !categories || categories.length === 0) {
+    return categories || []
+  }
+
+  return categories.filter(category => {
+    if (!category.temperature_requirements) return true
+
+    const tempReq = category.temperature_requirements
+
+    // Filtra per storage_type se specificato
+    if (tempReq.storage_type && tempReq.storage_type !== pointType) {
+      // Permetti comunque le categorie che hanno storage_type compatibile
+      const compatibilityMap: Record<string, string[]> = {
+        fridge: ['fridge', 'ambient'],
+        freezer: ['freezer'],
+        blast: ['blast'],
+        ambient: ['ambient'],
+      }
+
+      if (!compatibilityMap[pointType]?.includes(tempReq.storage_type)) {
+        return false
+      }
+    }
+
+    // Controlla compatibilità con la temperatura
+    return temperature >= tempReq.min_temp && temperature <= tempReq.max_temp
   })
 }
 
