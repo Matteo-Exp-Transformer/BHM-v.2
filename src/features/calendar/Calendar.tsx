@@ -41,6 +41,7 @@ interface CalendarProps {
     haccpDeadlines?: number
     genericTasks?: number
   }
+  filters?: React.ReactNode
 }
 
 const defaultConfig: CalendarViewConfig = {
@@ -91,6 +92,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   useMacroCategories = false,
   calendarSettings = null,
   eventSources,
+  filters,
 }) => {
   // ✅ Debug: Log quando events cambiano
   // console.log('📅 Calendar received events:', {
@@ -329,14 +331,9 @@ export const Calendar: React.FC<CalendarProps> = ({
             <div className="p-2 bg-blue-100 rounded-lg">
               <CalendarIcon className="h-5 w-5 text-blue-600" />
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                Calendario
-              </h2>
-              <div className="mt-1">
-                <CalendarEventLegend sources={eventSources || {}} compact={true} />
-              </div>
-            </div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Calendario Aziendale
+            </h2>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -362,6 +359,17 @@ export const Calendar: React.FC<CalendarProps> = ({
         </div>
       </div>
 
+      {/* Filtri */}
+      {filters && (
+        <div className="px-4 py-3 border-b border-gray-200">
+          {filters}
+        </div>
+      )}
+
+      {/* Legenda */}
+      <div className="px-4 py-3 border-b border-gray-200">
+        <CalendarEventLegend sources={eventSources || {}} compact={true} />
+      </div>
 
       {/* Calendar Content */}
       <div className="p-4">

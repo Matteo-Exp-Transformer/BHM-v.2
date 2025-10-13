@@ -608,15 +608,6 @@ export const CalendarPage = () => {
           )}
         </div>
 
-        {/* Nuovi Filtri Calendario */}
-        <div className="mb-6">
-          <NewCalendarFilters
-            filters={calendarFilters}
-            onFiltersChange={handleFilterChange}
-            availableDepartments={availableDepartments}
-          />
-        </div>
-
         {/* Calendario */}
         <div className="mb-6 relative">
           {!isConfigured() && (
@@ -679,6 +670,13 @@ export const CalendarPage = () => {
             useMacroCategories={true}
             calendarSettings={calendarSettings}
             eventSources={sources}
+            filters={
+              <NewCalendarFilters
+                filters={calendarFilters}
+                onFiltersChange={handleFilterChange}
+                availableDepartments={availableDepartments}
+              />
+            }
           />
         </div>
 
