@@ -95,8 +95,8 @@ export const CalendarPage = () => {
   const [calendarFilters, setCalendarFilters] = useState<NewCalendarFiltersType>(DEFAULT_CALENDAR_FILTERS)
 
   const handleFilterChange = useCallback((newFilters: NewCalendarFiltersType) => {
-    console.log('🔧 Filtri aggiornati:', newFilters)
-    console.log('🔧 Filtri precedenti:', calendarFilters)
+    console.log('🔧 Filtri aggiornati:', JSON.stringify(newFilters, null, 2))
+    console.log('🔧 Filtri precedenti:', JSON.stringify(calendarFilters, null, 2))
     setCalendarFilters(newFilters)
   }, [calendarFilters])
 
@@ -108,8 +108,12 @@ export const CalendarPage = () => {
     
     console.log('🔍 Applying new filters to events:', {
       totalEvents: eventsForFiltering.length,
-      filters: calendarFilters,
-      sampleEvents: eventsForFiltering.slice(0, 2)
+      filters: JSON.stringify(calendarFilters, null, 2),
+      sampleEvents: eventsForFiltering.slice(0, 2).map(e => ({
+        title: e.title,
+        source: e.source,
+        type: e.type
+      }))
     })
     
     return eventsForFiltering.filter(event => {
@@ -145,7 +149,7 @@ export const CalendarPage = () => {
           status: event.status,
           calculatedStatus: eventStatus,
           calculatedType: eventType,
-          filters: calendarFilters,
+          filters: JSON.stringify(calendarFilters, null, 2),
           passesFilters
         })
       }
@@ -153,6 +157,9 @@ export const CalendarPage = () => {
       return passesFilters
     })
   }, [eventsForFiltering, calendarFilters])
+
+  // ✅ Debug risultato finale
+  console.log('🎯 Final displayEvents count:', displayEvents.length)
 
   // ✅ Calcola alert dopo displayEvents
   const { alertCount, criticalCount, alerts } = useCalendarAlerts(displayEvents)

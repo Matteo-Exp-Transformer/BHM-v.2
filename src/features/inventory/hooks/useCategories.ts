@@ -47,28 +47,20 @@ export const useCategories = () => {
     mutationFn: async (
       categoryData: CreateCategoryForm
     ): Promise<ProductCategory> => {
-      console.log('🔍 Creating category with data:', categoryData)
-      console.log('🔍 Company ID:', companyId)
-      
-      const insertData = {
-        ...categoryData,
-        company_id: companyId,
-      }
-      console.log('🔍 Final insert data:', insertData)
-
       const { data, error } = await supabase
         .from('product_categories')
-        .insert(insertData)
+        .insert({
+          ...categoryData,
+          company_id: companyId,
+        })
         .select()
         .single()
 
       if (error) {
-        console.error('❌ Error creating category:', error)
-        console.error('❌ Error details:', JSON.stringify(error, null, 2))
+        console.error('Error creating category:', error)
         throw error
       }
 
-      console.log('✅ Category created successfully:', data)
       return data as ProductCategory
     },
     onSuccess: () => {
