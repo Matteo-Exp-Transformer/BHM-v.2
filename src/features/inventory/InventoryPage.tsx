@@ -71,11 +71,6 @@ export default function InventoryPage() {
     refetch: refetchCategories,
   } = useCategories()
 
-  // Debug: Log categories info
-  console.log('🔍 InventoryPage - DEFAULT_CATEGORIES.length:', DEFAULT_CATEGORIES.length)
-  console.log('🔍 InventoryPage - categories.length:', categories.length)
-  console.log('🔍 InventoryPage - categories:', categories)
-
   const {
     expiryAlerts,
     expiryStats,
