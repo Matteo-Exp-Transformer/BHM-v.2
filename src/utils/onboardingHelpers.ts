@@ -641,6 +641,21 @@ export const getPrefillData = (): OnboardingData => {
         },
       ],
     },
+    calendar: {
+      fiscal_year_start: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0], // 1 gennaio
+      fiscal_year_end: new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0], // 31 dicembre
+      closure_dates: [],
+      open_weekdays: [1, 2, 3, 4, 5, 6, 0], // Tutti i giorni della settimana
+      business_hours: {
+        '1': [{ start: '08:00', end: '22:00' }], // Lunedì
+        '2': [{ start: '08:00', end: '22:00' }], // Martedì
+        '3': [{ start: '08:00', end: '22:00' }], // Mercoledì
+        '4': [{ start: '08:00', end: '22:00' }], // Giovedì
+        '5': [{ start: '08:00', end: '22:00' }], // Venerdì
+        '6': [{ start: '08:00', end: '22:00' }], // Sabato
+        '0': [{ start: '10:00', end: '20:00' }], // Domenica
+      },
+    },
   }
 }
 
