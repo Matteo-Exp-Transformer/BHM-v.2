@@ -1272,9 +1272,9 @@ const getTasksForCurrentUser = async (companyId: string) => {
 }
 ```
 
-#### Complete Task
+#### Complete Task (AGGIORNATO 2025-10-14)
 ```typescript
-// Completa un task per il periodo corrente
+// Completa un task per il periodo specifico
 const completeTask = async (input: CompleteTaskInput, companyId: string) => {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Non autenticato')
@@ -1289,37 +1289,39 @@ const completeTask = async (input: CompleteTaskInput, companyId: string) => {
 
   if (!task) throw new Error('Task non trovato')
 
-  // Calcola period_start e period_end in base a frequency
-  const now = new Date()
+  // ⚠️ IMPORTANTE: Usa eventDate se fornito, altrimenti next_due o data corrente
+  const referenceDate = input.eventDate || (task.next_due ? new Date(task.next_due) : new Date())
+  
+  // Calcola period_start e period_end in base a frequency E referenceDate
   let period_start: Date
   let period_end: Date
 
   switch (task.frequency) {
     case 'daily':
-      period_start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
-      period_end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+      period_start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 0, 0, 0)
+      period_end = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 23, 59, 59)
       break
     case 'weekly':
-      const dayOfWeek = now.getDay() || 7
-      const monday = new Date(now)
-      monday.setDate(now.getDate() - (dayOfWeek - 1))
+      const dayOfWeek = referenceDate.getDay() || 7
+      const monday = new Date(referenceDate)
+      monday.setDate(referenceDate.getDate() - (dayOfWeek - 1))
       period_start = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 0, 0, 0)
       const sunday = new Date(monday)
       sunday.setDate(monday.getDate() + 6)
       period_end = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate(), 23, 59, 59)
       break
     case 'monthly':
-      period_start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0)
-      period_end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+      period_start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1, 0, 0, 0)
+      period_end = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 0, 23, 59, 59)
       break
     case 'annually':
     case 'annual':
-      period_start = new Date(now.getFullYear(), 0, 1, 0, 0, 0)
-      period_end = new Date(now.getFullYear(), 11, 31, 23, 59, 59)
+      period_start = new Date(referenceDate.getFullYear(), 0, 1, 0, 0, 0)
+      period_end = new Date(referenceDate.getFullYear(), 11, 31, 23, 59, 59)
       break
     default:
-      period_start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
-      period_end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+      period_start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 0, 0, 0)
+      period_end = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 23, 59, 59)
   }
 
   // Insert task completion
@@ -1339,6 +1341,9 @@ const completeTask = async (input: CompleteTaskInput, companyId: string) => {
   if (error) throw error
   return data
 }
+
+// ⚠️ BEST PRACTICE: Quando completi un evento specifico, PASSA LA DATA DELL'EVENTO
+// Esempio: completeTask({ taskId: 'xxx', eventDate: new Date(item.dueDate) })
 ```
 
 #### Get Task Completions
@@ -2261,7 +2266,148 @@ const { data } = await supabase
 
 ## 9. FEATURES RECENTI
 
-### 9.1 Sistema Onboarding con Primo Membro Admin (2025-10-12)
+### 9.1 Fix Completamento Eventi in Ritardo (2025-10-14)
+
+**Feature:** Risolto bug critico: eventi in ritardo non sparivano dopo completamento.
+
+#### Problema Identificato
+
+**Sintomi:**
+- Utente completava mansioni in ritardo
+- Il completamento veniva salvato con successo in `task_completions`
+- Ma l'evento rimaneva visibile nel calendario e in "Attività in Ritardo"
+- Toast di successo mostrato ma nessun cambiamento UI
+
+**Causa Radice - Doppio Problema:**
+
+**Problema 1: useState invece di useQuery**
+- `useAggregatedEvents` e `useMacroCategoryEvents` usavano `useState` per `taskCompletions`
+- Dopo completamento, `invalidateQueries(['task-completions'])` non aveva effetto
+- `taskCompletions` non veniva ricaricato
+
+**Problema 2: Periodo Salvato Sbagliato**
+```typescript
+// Esempio del bug:
+Evento in ritardo: 10 ottobre
+Oggi: 14 ottobre
+
+// PRIMA ❌
+completeTask({ taskId })
+// Sistema usava task.next_due (es. 14 ottobre)
+// Periodo salvato: 14-20 ottobre (settimana corrente)
+// Controllo cerca completamento per 10 ottobre
+// → MISMATCH! Evento non trovato come completato
+
+// DOPO ✅
+completeTask({ taskId, eventDate: new Date('2025-10-10') })
+// Sistema usa la data dell'evento
+// Periodo salvato: 10-16 ottobre (settimana dell'evento)
+// Controllo trova completamento per 10 ottobre
+// → MATCH! Evento marcato come completato
+```
+
+#### Soluzione Implementata
+
+**Fix 1: React Query per taskCompletions**
+
+**Files modificati:** 
+- `src/features/calendar/hooks/useAggregatedEvents.ts`
+- `src/features/calendar/hooks/useMacroCategoryEvents.ts`
+
+```typescript
+// PRIMA ❌
+const [taskCompletions, setTaskCompletions] = useState<TaskCompletion[]>([])
+useEffect(() => {
+  if (!companyId) return
+  loadCompletions().then(setTaskCompletions)
+}, [companyId])
+
+// DOPO ✅
+const { data: taskCompletions = [], isLoading: completionsLoading } = useQuery({
+  queryKey: ['task-completions', companyId],
+  queryFn: async (): Promise<TaskCompletion[]> => {
+    const { data } = await supabase
+      .from('task_completions')
+      .select('*')
+      .eq('company_id', companyId)
+    return data.map(/* ... */)
+  },
+  enabled: !!companyId,
+})
+```
+
+**Fix 2: Parametro eventDate**
+
+**File modificato:** `src/features/calendar/hooks/useGenericTasks.ts`
+
+```typescript
+// Interfaccia completeTask aggiornata
+interface CompleteTaskInput {
+  taskId: string
+  notes?: string
+  eventDate?: Date  // ← NUOVO parametro
+}
+
+// Logica nella mutation
+const referenceDate = eventDate || (task.next_due ? new Date(task.next_due) : new Date())
+// Calcola period_start/period_end basato su referenceDate
+```
+
+**Files modificati per passare eventDate:**
+- `src/features/calendar/components/CategoryEventsModal.tsx` (ex MacroCategoryModal)
+- `src/features/calendar/CalendarPage.tsx` (sezione Attività in Ritardo)
+
+```typescript
+// Sempre passa la data specifica dell'evento
+completeTask({ 
+  taskId: item.metadata.taskId || item.id,
+  eventDate: new Date(item.dueDate)
+})
+```
+
+#### Invalidazione Query Completa
+
+**Query invalidate dopo completamento:**
+```typescript
+queryClient.invalidateQueries({ queryKey: ['generic-tasks', companyId] })
+queryClient.invalidateQueries({ queryKey: ['calendar-events', companyId] })
+queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
+queryClient.invalidateQueries({ queryKey: ['macro-category-events'] }) // ← AGGIUNTO!
+```
+
+#### Logging per Debug
+
+**Aggiunto logging dettagliato in:**
+- `useGenericTasks.ts`: taskId, eventDate, periodo calcolato, inserimento DB
+- `CategoryEventsModal.tsx`: itemId, taskId, dueDate
+- `CalendarPage.tsx`: taskId, eventStart
+- `useAggregatedEvents.ts`: fetch completions, count caricati
+- `useMacroCategoryEvents.ts`: fetch completions, count caricati
+
+**Log completo:**
+```
+🔍 [CategoryEventsModal] Completamento: {taskId, dueDate}
+🔍 [useGenericTasks] completeTask mutation: {taskId, eventDate}
+✅ [useGenericTasks] Task trovato: {name, frequency}
+📅 [useGenericTasks] Data di riferimento: <eventDate>
+💾 [useGenericTasks] Inserimento task_completion: {period_start, period_end}
+✅ [useGenericTasks] Task completion salvato
+🔄 [useGenericTasks] onSuccess - Invalidating all queries...
+✅ [useGenericTasks] Tutte le query invalidate
+🔄 [useMacroCategoryEvents] Fetching task completions...
+✅ [useMacroCategoryEvents] Task completions loaded: X
+```
+
+#### Refactoring Modal
+
+**Rename:** `MacroCategoryModal.tsx` → `CategoryEventsModal.tsx`
+- Nome più descrittivo della funzione (mostra eventi di una categoria)
+- Aggiunta sezione "Attività in Ritardo" separata
+- Delay chiusura modal (800ms) per permettere aggiornamento UI
+
+---
+
+### 9.2 Sistema Onboarding con Primo Membro Admin (2025-10-12)
 
 **Feature:** Logica migliorata per riconoscimento automatico del primo admin nell'onboarding.
 
@@ -3439,7 +3585,16 @@ RIMOSSI: resetManualData(), resetOnboardingData(), resetAllData()
 
 ---
 
-**Versione Glossario**: 1.6.0  
-**Ultimo Aggiornamento**: 13 Ottobre 2025  
-**Stato**: ✅ Produzione Ready + Reset System  
+**Versione Glossario**: 1.7.0  
+**Ultimo Aggiornamento**: 14 Ottobre 2025  
+**Stato**: ✅ Produzione Ready + Eventi Fix  
 **Maintainer**: Dev Team BHM v.2
+
+**Changelog v1.7.0 (2025-10-14):**
+- ✅ Fix critico: Eventi in ritardo non sparivano dopo completamento
+- ✅ useState → useQuery per taskCompletions (useAggregatedEvents + useMacroCategoryEvents)
+- ✅ Parametro eventDate in completeTask per occorrenze specifiche
+- ✅ Invalidazione macro-category-events aggiunta
+- ✅ Logging dettagliato per troubleshooting
+- ✅ Refactoring: MacroCategoryModal → CategoryEventsModal
+- ✅ Best practice: NON usare useState per dati da database
