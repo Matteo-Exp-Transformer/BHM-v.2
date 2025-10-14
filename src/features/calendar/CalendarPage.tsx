@@ -97,18 +97,22 @@ export const CalendarPage = () => {
   // ✅ Nuovi filtri calendario
   const [calendarFilters, setCalendarFilters] = useState<NewCalendarFiltersType>(DEFAULT_CALENDAR_FILTERS)
 
-  const handleFilterChange = useCallback((newFilters: NewCalendarFiltersType) => {
-    // console.log('🔧 Filtri aggiornati:', JSON.stringify(newFilters, null, 2))
-    // console.log('🔧 Filtri precedenti:', JSON.stringify(calendarFilters, null, 2))
+  const handleFilterChange = (newFilters: NewCalendarFiltersType) => {
+    console.log('🔧 Filtri aggiornati:', JSON.stringify(newFilters, null, 2))
     setCalendarFilters(newFilters)
-  }, [calendarFilters])
+  }
 
   const displayEvents = useMemo(() => {
+    console.log('🔄 displayEvents useMemo triggered', {
+      eventsCount: eventsForFiltering.length,
+      filters: calendarFilters
+    })
+
     if (eventsForFiltering.length === 0) {
       return []
     }
 
-    return eventsForFiltering.filter(event => {
+    const filtered = eventsForFiltering.filter(event => {
       // ✅ NUOVA LOGICA FILTRI CUMULATIVI:
       // - Nessun filtro = Mostra TUTTO
       // - Filtri attivi = Mostra SOLO eventi che corrispondono a TUTTI i filtri
@@ -132,6 +136,14 @@ export const CalendarPage = () => {
         calendarFilters
       )
     })
+
+    console.log('🔍 Filtri applicati:', {
+      totalEvents: eventsForFiltering.length,
+      filteredEvents: filtered.length,
+      filters: calendarFilters
+    })
+
+    return filtered
   }, [eventsForFiltering, calendarFilters])
 
   // ✅ Debug risultato finale

@@ -144,9 +144,14 @@ export function determineEventType(
   source: string,
   metadata?: { [key: string]: any }
 ): EventType {
-  // Manutenzioni (include temperature, sanitization, defrosting)
-  if (source === 'maintenance' || metadata?.maintenance_id || metadata?.conservation_point_id) {
+  // Manutenzioni (SOLO se source è maintenance O ha maintenance_id)
+  if (source === 'maintenance' || metadata?.maintenance_id) {
     return 'maintenance'
+  }
+
+  // Mansioni generiche (source general_task O task_id presente)
+  if (source === 'general_task' || metadata?.task_id) {
+    return 'generic_task'
   }
 
   // Scadenze prodotti
@@ -154,12 +159,12 @@ export function determineEventType(
     return 'product_expiry'
   }
 
-  // Scadenze HACCP dipendenti (anche se source è 'custom')
-  if (metadata?.staff_id && !metadata?.task_id && !metadata?.maintenance_id) {
+  // Scadenze HACCP dipendenti (source custom con staff_id)
+  if (source === 'custom' && metadata?.staff_id) {
     return 'product_expiry' // Trattiamo scadenze HACCP come product_expiry
   }
 
-  // Mansioni generiche (generic_task o general_task)
+  // Default: generic_task
   return 'generic_task'
 }
 
