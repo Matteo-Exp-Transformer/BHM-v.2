@@ -184,6 +184,7 @@ export const CalendarPage = () => {
     oneWeekAgo.setDate(now.getDate() - 7)
 
     return displayEvents.filter(event => {
+      if (!event || !event.start) return false
       if (event.status === 'completed') return false
 
       const eventDate = new Date(event.start)
@@ -606,7 +607,7 @@ export const CalendarPage = () => {
               className="bg-red-50 border-red-200"
             >
               <div className="space-y-3">
-                {overdueEvents.map(event => (
+                {overdueEvents.filter(e => e && e.id && e.title).map(event => (
                   <div
                     key={event.id}
                     className="bg-white border border-red-200 rounded-lg p-3 hover:shadow-md transition-shadow"
@@ -828,7 +829,7 @@ export const CalendarPage = () => {
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {overdueEvents.slice(0, 3).map(event => (
+                  {overdueEvents.filter(e => e && e.id && e.title && e.start).slice(0, 3).map(event => (
                     <div
                       key={event.id}
                       className="flex items-center justify-between p-2 bg-red-50 rounded-md border border-red-200"
@@ -846,7 +847,7 @@ export const CalendarPage = () => {
                         </p>
                       </div>
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        ⚠️ {event.priority}
+                        ⚠️ {event.priority || 'medium'}
                       </span>
                     </div>
                   ))}
@@ -875,7 +876,7 @@ export const CalendarPage = () => {
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {todayEvents.slice(0, 3).map(event => (
+                  {todayEvents.filter(e => e && e.id && e.title && e.start).slice(0, 3).map(event => (
                     <div
                       key={event.id}
                       className="flex items-center justify-between p-2 bg-blue-50 rounded-md"
@@ -934,7 +935,7 @@ export const CalendarPage = () => {
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {tomorrowEvents.slice(0, 3).map(event => (
+                  {tomorrowEvents.filter(e => e && e.id && e.title && e.start).slice(0, 3).map(event => (
                     <div
                       key={event.id}
                       className="flex items-center justify-between p-2 bg-green-50 rounded-md"
