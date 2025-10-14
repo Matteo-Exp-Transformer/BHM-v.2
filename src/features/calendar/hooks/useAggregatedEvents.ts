@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
 import { useConservationPoints } from '@/features/conservation/hooks/useConservationPoints'
