@@ -171,12 +171,19 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   const handleEventClick = useCallback(
     (clickInfo: { event: { extendedProps?: { originalEvent?: any; type?: string; category?: MacroCategory; items?: any[] }; start: Date | null } }) => {
-      if (useMacroCategories && clickInfo.event.extendedProps?.type === 'macro_category') {
-        const { category, items } = clickInfo.event.extendedProps
+      const extendedProps = clickInfo.event.extendedProps
+      
+      if (!extendedProps) {
+        console.warn('Event clicked without extendedProps:', clickInfo.event)
+        return
+      }
+
+      if (useMacroCategories && extendedProps.type === 'macro_category') {
+        const { category, items } = extendedProps
         const date = clickInfo.event.start ? new Date(clickInfo.event.start) : new Date()
         setSelectedMacroCategory({ category, date, items: items || [] })
       } else {
-        const originalEvent = clickInfo.event.extendedProps?.originalEvent
+        const originalEvent = extendedProps.originalEvent
         if (originalEvent) {
           setSelectedEvent(originalEvent)
           setShowEventModal(true)
@@ -433,10 +440,10 @@ export const Calendar: React.FC<CalendarProps> = ({
               const extendedProps = arg.event.extendedProps
               if (extendedProps) {
                 return [
-                  `event-type-${extendedProps.type}`,
-                  `event-status-${extendedProps.status}`,
-                  `event-priority-${extendedProps.priority}`,
-                ]
+                  extendedProps.type ? `event-type-${extendedProps.type}` : '',
+                  extendedProps.status ? `event-status-${extendedProps.status}` : '',
+                  extendedProps.priority ? `event-priority-${extendedProps.priority}` : '',
+                ].filter(Boolean)
               }
               return []
             }}
