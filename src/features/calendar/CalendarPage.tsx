@@ -350,7 +350,7 @@ export const CalendarPage = () => {
       temperatureChecks: 0, // Già incluso in maintenance
       haccpExpiry: currentMonthEvents.filter(e => e.source === 'custom' && e.metadata?.staff_id).length,
       productExpiry: currentMonthEvents.filter(e => e.source === 'custom' && e.metadata?.product_id).length,
-      haccpDeadlines: 0, // Non più usato
+      haccpDeadlines: 0, // Unificato in haccpExpiry per coerenza con legenda
       genericTasks: currentMonthEvents.filter(e => e.source === 'general_task' && e.status !== 'completed').length,
     }
   }, [displayEvents])
@@ -556,12 +556,6 @@ export const CalendarPage = () => {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">👥 Scadenze HACCP</span>
-                      <span className="font-medium">
-                        {sources?.haccpExpiry || 0}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">
                         📦 Scadenze Prodotti
                       </span>
@@ -572,7 +566,7 @@ export const CalendarPage = () => {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">⏰ Alert HACCP</span>
                       <span className="font-medium">
-                        {sources?.haccpDeadlines || 0}
+                        {(sources?.haccpExpiry || 0) + (sources?.haccpDeadlines || 0)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -734,6 +728,7 @@ export const CalendarPage = () => {
             useMacroCategories={true}
             calendarSettings={calendarSettings}
             eventSources={currentMonthSources}
+            calendarFilters={calendarFilters}
             filters={
               <NewCalendarFilters
                 filters={calendarFilters}

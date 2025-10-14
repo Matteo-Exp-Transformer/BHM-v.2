@@ -10,6 +10,7 @@ import {
   CalendarViewConfig,
   CompanyCalendarSettings,
 } from '@/types/calendar'
+import type { CalendarFilters } from '@/types/calendar-filters'
 import { transformToFullCalendarEvents } from './utils/eventTransform'
 import { EventDetailsModal } from './EventDetailsModal'
 import QuickActions from './components/QuickActions'
@@ -42,6 +43,7 @@ interface CalendarProps {
     genericTasks?: number
   }
   filters?: React.ReactNode
+  calendarFilters?: CalendarFilters
 }
 
 const defaultConfig: CalendarViewConfig = {
@@ -93,6 +95,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   calendarSettings = null,
   eventSources,
   filters,
+  calendarFilters,
 }) => {
   // ✅ Debug: Log quando events cambiano
   // console.log('📅 Calendar received events:', {
@@ -111,7 +114,8 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [calendarKey, setCalendarKey] = useState(0) // ✅ Force re-mount quando events cambiano
 
   const { events: macroCategoryEvents } = useMacroCategoryEvents(
-    calendarSettings?.fiscal_year_end ? new Date(calendarSettings.fiscal_year_end) : undefined
+    calendarSettings?.fiscal_year_end ? new Date(calendarSettings.fiscal_year_end) : undefined,
+    calendarFilters
   )
 
   const calendarRef = useRef<FullCalendar>(null)
