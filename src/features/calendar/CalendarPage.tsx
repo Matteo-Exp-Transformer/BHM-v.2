@@ -114,12 +114,18 @@ export const CalendarPage = () => {
     }
 
     return eventsForFiltering.filter(event => {
+      // ✅ Sicurezza: Salta eventi malformati
+      if (!event || !event.start || !event.status) {
+        console.warn('⚠️ Evento malformato saltato:', event)
+        return false
+      }
+
       const eventStatus = calculateEventStatus(
         event.start,
         event.status === 'completed'
       )
 
-      const eventType = determineEventType(event.source || '', event.metadata)
+      const eventType = determineEventType(event.source || '', event.metadata || {})
 
       return doesEventPassFilters(
         {
@@ -153,6 +159,7 @@ export const CalendarPage = () => {
     tomorrow.setDate(tomorrow.getDate() + 1)
     return displayEvents.filter(
       event => {
+        if (!event || !event.start || !event.status) return false
         const eventDate = new Date(event.start)
         return eventDate >= today &&
                eventDate < tomorrow &&
@@ -171,6 +178,7 @@ export const CalendarPage = () => {
 
     return displayEvents.filter(
       event => {
+        if (!event || !event.start) return false
         const eventDate = new Date(event.start)
         return eventDate >= tomorrow && eventDate < dayAfterTomorrow
       }
@@ -301,7 +309,7 @@ export const CalendarPage = () => {
     const deptMap = new Map<string, { id: string; name: string; event_count: number }>()
 
     filteredEvents.forEach(event => {
-      if (event.department_id) {
+      if (event && event.department_id) {
         const dept = departments?.find(d => d.id === event.department_id)
         if (dept) {
           const existing = deptMap.get(dept.id)
@@ -328,17 +336,18 @@ export const CalendarPage = () => {
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
 
     const currentMonthEvents = displayEvents.filter(event => {
+      if (!event || !event.start) return false
       const eventDate = new Date(event.start)
       return eventDate >= monthStart && eventDate <= monthEnd
     })
 
     return {
-      maintenance: currentMonthEvents.filter(e => e.source === 'maintenance' && e.status !== 'completed').length,
+      maintenance: currentMonthEvents.filter(e => e && e.source === 'maintenance' && e.status !== 'completed').length,
       temperatureChecks: 0, // Già incluso in maintenance
-      haccpExpiry: currentMonthEvents.filter(e => e.source === 'custom' && e.metadata?.staff_id).length,
-      productExpiry: currentMonthEvents.filter(e => e.source === 'custom' && e.metadata?.product_id).length,
+      haccpExpiry: currentMonthEvents.filter(e => e && e.source === 'custom' && e.metadata?.staff_id).length,
+      productExpiry: currentMonthEvents.filter(e => e && e.source === 'custom' && e.metadata?.product_id).length,
       haccpDeadlines: 0, // Unificato in haccpExpiry per coerenza con legenda
-      genericTasks: currentMonthEvents.filter(e => e.source === 'general_task' && e.status !== 'completed').length,
+      genericTasks: currentMonthEvents.filter(e => e && e.source === 'general_task' && e.status !== 'completed').length,
     }
   }, [displayEvents])
 
@@ -428,13 +437,13 @@ export const CalendarPage = () => {
                 </div>
                 <div className="group relative bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 border-2 border-green-200 hover:border-green-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
                   <div className="text-3xl font-extrabold text-green-600">
-                    {displayEvents.filter(e => e.status === 'completed').length}
+                    {displayEvents.filter(e => e && e.status === 'completed').length}
                   </div>
                   <div className="text-sm font-semibold text-gray-600 mt-1">✅ Completati</div>
                 </div>
                 <div className="group relative bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl p-5 border-2 border-yellow-200 hover:border-yellow-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
                   <div className="text-3xl font-extrabold text-yellow-600">
-                    {displayEvents.filter(e => e.status === 'pending').length}
+                    {displayEvents.filter(e => e && e.status === 'pending').length}
                   </div>
                   <div className="text-sm font-semibold text-gray-600 mt-1">⏳ In Attesa</div>
                 </div>
@@ -456,7 +465,7 @@ export const CalendarPage = () => {
                   <span className="text-lg font-extrabold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                     {displayEvents.length > 0
                       ? (
-                          (displayEvents.filter(e => e.status === 'completed')
+                          (displayEvents.filter(e => e && e.status === 'completed')
                             .length /
                             displayEvents.length) *
                           100
@@ -469,7 +478,7 @@ export const CalendarPage = () => {
                   <div
                     className="absolute inset-0 bg-gradient-to-r from-green-400 via-green-500 to-emerald-500 h-4 rounded-full transition-all duration-500 ease-out shadow-lg"
                     style={{
-                      width: `${displayEvents.length > 0 ? Math.min((displayEvents.filter(e => e.status === 'completed').length / displayEvents.length) * 100, 100) : 0}%`,
+                      width: `${displayEvents.length > 0 ? Math.min((displayEvents.filter(e => e && e.status === 'completed').length / displayEvents.length) * 100, 100) : 0}%`,
                     }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent rounded-full"></div>
@@ -487,6 +496,7 @@ export const CalendarPage = () => {
                   <div className="group bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 text-center border-2 border-blue-200 hover:border-blue-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
                     <div className="text-2xl font-extrabold text-blue-600 mb-1">
                       {displayEvents.filter(e => {
+                        if (!e || !e.start) return false
                         const eventDate = new Date(e.start)
                         const today = new Date()
                         today.setHours(0, 0, 0, 0)
@@ -500,6 +510,7 @@ export const CalendarPage = () => {
                   <div className="group bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 text-center border-2 border-green-200 hover:border-green-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
                     <div className="text-2xl font-extrabold text-green-600 mb-1">
                       {displayEvents.filter(e => {
+                        if (!e || !e.start) return false
                         const eventDate = new Date(e.start)
                         const now = new Date()
                         const weekStart = new Date(now)
@@ -517,6 +528,7 @@ export const CalendarPage = () => {
                   <div className="group bg-gradient-to-br from-purple-50 to-fuchsia-50 rounded-xl p-4 text-center border-2 border-purple-200 hover:border-purple-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
                     <div className="text-2xl font-extrabold text-purple-600 mb-1">
                       {displayEvents.filter(e => {
+                        if (!e || !e.start) return false
                         const eventDate = new Date(e.start)
                         const now = new Date()
                         return eventDate.getMonth() === now.getMonth() &&
@@ -529,6 +541,7 @@ export const CalendarPage = () => {
                   <div className="group bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-4 text-center border-2 border-orange-200 hover:border-orange-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
                     <div className="text-2xl font-extrabold text-orange-600 mb-1">
                       {displayEvents.filter(e => {
+                        if (!e || !e.start) return false
                         const eventDate = new Date(e.start)
                         const now = new Date()
                         return eventDate.getFullYear() === now.getFullYear()
@@ -654,7 +667,7 @@ export const CalendarPage = () => {
                         </div>
 
                         {/* Pulsante Completa */}
-                        {(event.source === 'general_task' || event.source === 'maintenance') && (
+                        {event.source && (event.source === 'general_task' || event.source === 'maintenance') && (
                           <div className="mt-3 pt-3 border-t border-red-300">
                             <button
                               onClick={async (e) => {
@@ -669,13 +682,19 @@ export const CalendarPage = () => {
 
                                   setIsCompletingMaintenance(true)
                                   try {
+                                    const maintenanceId = event.metadata?.maintenance_id || event.id
+                                    if (!maintenanceId) {
+                                      toast.error('ID manutenzione non trovato')
+                                      return
+                                    }
+
                                     const { error } = await supabase
                                       .from('maintenance_tasks')
                                       .update({
                                         status: 'completed',
                                         updated_at: new Date().toISOString()
                                       })
-                                      .eq('id', event.metadata?.maintenance_id || event.id)
+                                      .eq('id', maintenanceId)
                                       .eq('company_id', companyId)
 
                                     if (error) throw error
@@ -705,6 +724,11 @@ export const CalendarPage = () => {
                                   }
 
                                   const taskId = event.metadata?.task_id || event.id
+                                  if (!taskId) {
+                                    toast.error('ID mansione non trovato')
+                                    return
+                                  }
+                                  
                                   completeTask(
                                     { taskId: taskId },
                                     {
