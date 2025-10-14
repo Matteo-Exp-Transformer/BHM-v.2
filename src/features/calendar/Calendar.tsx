@@ -14,7 +14,7 @@ import type { CalendarFilters } from '@/types/calendar-filters'
 import { transformToFullCalendarEvents } from './utils/eventTransform'
 import { EventDetailsModal } from './EventDetailsModal'
 import QuickActions from './components/QuickActions'
-import EventModal from './components/EventModal'
+import { MacroCategoryModal } from './components/MacroCategoryModal'
 import { CalendarEventLegend } from './components/CalendarEventLegend'
 import { Calendar as CalendarIcon, Plus } from 'lucide-react'
 import { useMacroCategoryEvents, type MacroCategory } from './hooks/useMacroCategoryEvents'
@@ -533,9 +533,9 @@ export const Calendar: React.FC<CalendarProps> = ({
         />
       )}
 
-      {/* Event Modal */}
+      {/* Macro Category Modal */}
       {useMacroCategories && selectedMacroCategory && (
-        <EventModal
+        <MacroCategoryModal
           isOpen={true}
           onClose={() => setSelectedMacroCategory(null)}
           category={selectedMacroCategory.category}

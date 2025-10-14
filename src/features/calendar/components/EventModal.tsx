@@ -35,7 +35,7 @@ export const EventModal: React.FC<EventModalProps> = ({
   const [, setIsEditing] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  if (!isOpen) return null
+  if (!isOpen || !event) return null
 
   const handleMarkComplete = () => {
     if (onUpdate && event.status === 'pending') {
