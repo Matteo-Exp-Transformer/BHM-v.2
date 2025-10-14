@@ -272,19 +272,34 @@ export const useGenericTasks = () => {
     mutationFn: async ({
       taskId,
       notes,
+      eventDate,
     }: {
       taskId: string
       notes?: string
+      eventDate?: Date
     }) => {
       if (!companyId || !user) throw new Error('No company ID or user available')
 
-      // Trova il task per determinare il periodo
-      const task = tasks.find(t => t.id === taskId)
-      if (!task) throw new Error('Task not found')
+      console.log('🔍 [useGenericTasks] completeTask mutation:', {
+        taskId,
+        eventDate,
+        availableTasks: tasks?.map(t => ({ id: t.id, name: t.name })),
+        tasksCount: tasks?.length
+      })
 
-      // Usa next_due se disponibile, altrimenti usa data corrente
-      // Questo permette di completare una mansione "per la sua scadenza" anche se fatta in anticipo
-      const referenceDate = task.next_due ? new Date(task.next_due) : new Date()
+      // Trova il task per determinare il periodo
+      const task = tasks?.find(t => t.id === taskId)
+      if (!task) {
+        console.error('❌ [useGenericTasks] Task non trovato:', { taskId, tasks })
+        throw new Error(`Task not found: ${taskId}`)
+      }
+      
+      console.log('✅ [useGenericTasks] Task trovato:', { task: task.name, frequency: task.frequency })
+
+      // USA LA DATA DELL'EVENTO se fornita, altrimenti usa next_due o data corrente
+      // Questo è CRITICO per completare eventi in ritardo correttamente
+      const referenceDate = eventDate || (task.next_due ? new Date(task.next_due) : new Date())
+      console.log('📅 [useGenericTasks] Data di riferimento per periodo:', referenceDate)
       
       // Calcola period_start e period_end basato sulla frequenza
       let period_start: Date
@@ -330,24 +345,34 @@ export const useGenericTasks = () => {
         ? `${userData.user.user_metadata.first_name} ${userData.user.user_metadata.last_name}`
         : userData.user?.email || null
 
+      const completionData = {
+        company_id: companyId,
+        task_id: taskId,
+        completed_by: user.id,
+        completed_by_name: completedByName,
+        period_start: period_start.toISOString(),
+        period_end: period_end.toISOString(),
+        notes,
+      }
+
+      console.log('💾 [useGenericTasks] Inserimento task_completion:', completionData)
+
       const { data, error } = await supabase
         .from('task_completions')
-        .insert({
-          company_id: companyId,
-          task_id: taskId,
-          completed_by: user.id,
-          completed_by_name: completedByName,
-          period_start: period_start.toISOString(),
-          period_end: period_end.toISOString(),
-          notes,
-        })
+        .insert(completionData)
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('❌ [useGenericTasks] Errore inserimento:', error)
+        throw error
+      }
+
+      console.log('✅ [useGenericTasks] Task completion salvato:', data)
       return data
     },
     onSuccess: () => {
+      console.log('🔄 [useGenericTasks] onSuccess - Invalidating all queries...')
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.genericTasks(companyId || ''),
       })
@@ -357,6 +382,10 @@ export const useGenericTasks = () => {
       queryClient.invalidateQueries({
         queryKey: ['task-completions', companyId],
       })
+      queryClient.invalidateQueries({
+        queryKey: ['macro-category-events'],
+      })
+      console.log('✅ [useGenericTasks] Tutte le query invalidate')
       toast.success('Mansione completata')
     },
     onError: (error: Error) => {
