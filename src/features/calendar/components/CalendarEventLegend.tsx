@@ -50,12 +50,12 @@ export const CalendarEventLegend: React.FC<CalendarEventLegendProps> = ({
 
   if (compact) {
     return (
-      <div className="flex flex-wrap gap-3 text-xs">
+      <div className="flex flex-wrap gap-4 text-sm">
         {legendItems.map((item, index) => (
-          <div key={index} className="flex items-center gap-1">
-            <span>{item.icon}</span>
-            <span className="text-gray-600">{item.label}</span>
-            <span className="text-gray-500">({item.count})</span>
+          <div key={index} className="flex items-center gap-2">
+            <span className="text-base">{item.icon}</span>
+            <span className="text-gray-600 font-medium">{item.label}</span>
+            <span className="text-gray-500 font-semibold">({item.count})</span>
           </div>
         ))}
       </div>
@@ -63,13 +63,13 @@ export const CalendarEventLegend: React.FC<CalendarEventLegendProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-sm">
       {legendItems.map((item, index) => (
-        <div key={index} className="flex items-center gap-2">
-          <span className="text-lg">{item.icon}</span>
+        <div key={index} className="flex items-center gap-3">
+          <span className="text-xl">{item.icon}</span>
           <div>
-            <div className="font-medium text-gray-700">{item.label}</div>
-            <div className="text-gray-500">
+            <div className="font-semibold text-gray-700">{item.label}</div>
+            <div className="text-gray-500 font-medium">
               {item.count} {item.description ? `(${item.description})` : ''}
             </div>
           </div>

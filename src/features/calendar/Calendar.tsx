@@ -99,7 +99,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   //   count: events?.length || 0,
   //   sample: events?.slice(0, 2).map(e => ({ title: e.title, type: e.type }))
   // })
-  
+
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
   const [selectedMacroCategory, setSelectedMacroCategory] = useState<{
@@ -108,6 +108,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     items: any[]
   } | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null) // ✅ Traccia giorno selezionato
+  const [calendarKey, setCalendarKey] = useState(0) // ✅ Force re-mount quando events cambiano
 
   const { events: macroCategoryEvents } = useMacroCategoryEvents(
     calendarSettings?.fiscal_year_end ? new Date(calendarSettings.fiscal_year_end) : undefined
@@ -165,32 +166,22 @@ export const Calendar: React.FC<CalendarProps> = ({
     : transformToFullCalendarEvents(events)
 
   // ✅ Debug: Log eventi trasformati per FullCalendar
-  // console.log('📅 FullCalendarEvents for FullCalendar:', {
-  //   count: fullCalendarEvents.length,
-  //   sample: fullCalendarEvents.slice(0, 3).map(e => ({
-  //     title: e.title,
-  //     type: e.extendedProps?.type || 'unknown'
-  //   }))
-  // })
+  console.log('📅 FullCalendarEvents for FullCalendar:', {
+    inputEvents: events.length,
+    outputEvents: fullCalendarEvents.length,
+    useMacroCategories,
+    sample: fullCalendarEvents.slice(0, 2).map(e => ({
+      title: e.title,
+      start: e.start,
+      type: e.extendedProps?.type || 'unknown'
+    }))
+  })
 
-  // ✅ Forza refresh del calendario quando events cambiano
+  // ✅ Force FullCalendar to re-mount when events change
   useEffect(() => {
-    if (calendarRef.current) {
-      // console.log('🔄 Forcing calendar refresh with new events:', {
-      //   originalEvents: events.length,
-      //   transformedEvents: fullCalendarEvents.length
-      // })
-      try {
-        const api = calendarRef.current.getApi()
-        // Prova diversi metodi di refresh
-        api.refetchEvents()
-        api.render()
-        // console.log('✅ Calendar refresh methods called')
-      } catch (error) {
-        console.warn('⚠️ Calendar API not ready yet:', error)
-      }
-    }
-  }, [events, fullCalendarEvents])
+    setCalendarKey(prev => prev + 1)
+    console.log('🔄 Calendar key updated, new events count:', events.length)
+  }, [events.length])
 
   const handleEventClick = useCallback(
     (clickInfo: { event: { extendedProps?: { originalEvent?: any; type?: string; category?: MacroCategory; items?: any[] }; start: Date | null } }) => {
@@ -384,7 +375,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               multiMonthPlugin,
             ]}
             initialView={calendarView}
-            key={calendarView}
+            key={`${calendarView}-${calendarKey}`}
             headerToolbar={finalConfig.headerToolbar}
             customButtons={customButtons}
             height={finalConfig.height}
