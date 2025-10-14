@@ -396,19 +396,17 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                 if (category === 'maintenance') {
                                   handleCompleteMaintenance(item.id)
                                 } else {
-                                  // Permetti completamento fino a 1 giorno prima della scadenza
+                                  // Permetti completamento solo per eventi passati e presenti, NON futuri
                                   const today = new Date()
                                   today.setHours(0, 0, 0, 0)
-                                  
+
                                   const taskDate = new Date(item.dueDate)
                                   taskDate.setHours(0, 0, 0, 0)
 
-                                  // Blocca solo se la mansione è più di 1 giorno nel futuro
-                                  const daysDiff = Math.floor((taskDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-                                  
-                                  if (daysDiff > 1) {
+                                  // Blocca SOLO se la mansione è nel futuro
+                                  if (taskDate > today) {
                                     const taskDateStr = taskDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })
-                                    toast.warning(`⚠️ Puoi completare mansioni fino a 1 giorno prima!\nQuesta mansione è del ${taskDateStr}.`, {
+                                    toast.warning(`⚠️ Non puoi completare eventi futuri!\nQuesta mansione è del ${taskDateStr}.`, {
                                       autoClose: 5000
                                     })
                                     return
@@ -562,19 +560,17 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                     if (category === 'maintenance') {
                                       handleCompleteMaintenance(item.id)
                                     } else {
-                                      // Permetti completamento fino a 1 giorno prima della scadenza
+                                      // Permetti completamento solo per eventi passati e presenti, NON futuri
                                       const today = new Date()
                                       today.setHours(0, 0, 0, 0)
-                                      
+
                                       const taskDate = new Date(item.dueDate)
                                       taskDate.setHours(0, 0, 0, 0)
 
-                                      // Blocca solo se la mansione è più di 1 giorno nel futuro
-                                      const daysDiff = Math.floor((taskDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-                                      
-                                      if (daysDiff > 1) {
+                                      // Blocca SOLO se la mansione è nel futuro
+                                      if (taskDate > today) {
                                         const taskDateStr = taskDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })
-                                        toast.warning(`⚠️ Puoi completare mansioni fino a 1 giorno prima!\nQuesta mansione è del ${taskDateStr}.`, {
+                                        toast.warning(`⚠️ Non puoi completare eventi futuri!\nQuesta mansione è del ${taskDateStr}.`, {
                                           autoClose: 5000
                                         })
                                         return

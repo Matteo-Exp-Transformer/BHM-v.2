@@ -7,6 +7,7 @@ import {
   TrendingUp,
   ClipboardCheck,
   Settings,
+  Check,
 } from 'lucide-react'
 import Calendar from './Calendar'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
@@ -30,7 +31,7 @@ import { useDepartments } from '@/features/management/hooks/useDepartments'
 import { useProducts } from '@/features/inventory/hooks/useProducts'
 import { useCalendarSettings } from '@/hooks/useCalendarSettings'
 import { toast } from 'react-toastify'
-import { 
+import {
   CalendarFilters as NewCalendarFiltersType,
   DEFAULT_CALENDAR_FILTERS,
   doesEventPassFilters,
@@ -40,9 +41,14 @@ import {
   type EventType
 } from '@/types/calendar-filters'
 import type { Product } from '@/types/inventory'
+import { useQueryClient } from '@tanstack/react-query'
+import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
 
 export const CalendarPage = () => {
   const navigate = useNavigate()
+  const { companyId, user } = useAuth()
+  const queryClient = useQueryClient()
   const { settings: calendarSettings, isLoading: settingsLoading, isConfigured } = useCalendarSettings()
   // console.log('⚙️ Calendar settings:', { 
   //   settings: calendarSettings, 
@@ -76,7 +82,8 @@ export const CalendarPage = () => {
   //   aggregatedEventsCount: aggregatedEvents.length
   // })
   const [view, setView] = useCalendarView('month')
-  const { createTask, isCreating } = useGenericTasks()
+  const { createTask, isCreating, completeTask, isCompleting } = useGenericTasks()
+  const [isCompletingMaintenance, setIsCompletingMaintenance] = useState(false)
   const { staff } = useStaff()
   const { departments } = useDepartments()
   const { products } = useProducts()
@@ -98,35 +105,22 @@ export const CalendarPage = () => {
   const [calendarFilters, setCalendarFilters] = useState<NewCalendarFiltersType>(DEFAULT_CALENDAR_FILTERS)
 
   const handleFilterChange = (newFilters: NewCalendarFiltersType) => {
-    console.log('🔧 Filtri aggiornati:', JSON.stringify(newFilters, null, 2))
     setCalendarFilters(newFilters)
   }
 
   const displayEvents = useMemo(() => {
-    console.log('🔄 displayEvents useMemo triggered', {
-      eventsCount: eventsForFiltering.length,
-      filters: calendarFilters
-    })
-
     if (eventsForFiltering.length === 0) {
       return []
     }
 
-    const filtered = eventsForFiltering.filter(event => {
-      // ✅ NUOVA LOGICA FILTRI CUMULATIVI:
-      // - Nessun filtro = Mostra TUTTO
-      // - Filtri attivi = Mostra SOLO eventi che corrispondono a TUTTI i filtri
-
-      // Calcola stato evento dinamicamente
+    return eventsForFiltering.filter(event => {
       const eventStatus = calculateEventStatus(
         event.start,
         event.status === 'completed'
       )
 
-      // Determina tipo evento
       const eventType = determineEventType(event.source || '', event.metadata)
 
-      // Verifica filtri usando utility function
       return doesEventPassFilters(
         {
           department_id: event.department_id,
@@ -136,14 +130,6 @@ export const CalendarPage = () => {
         calendarFilters
       )
     })
-
-    console.log('🔍 Filtri applicati:', {
-      totalEvents: eventsForFiltering.length,
-      filteredEvents: filtered.length,
-      filters: calendarFilters
-    })
-
-    return filtered
   }, [eventsForFiltering, calendarFilters])
 
   // ✅ Debug risultato finale
@@ -613,10 +599,7 @@ export const CalendarPage = () => {
                 {overdueEvents.map(event => (
                   <div
                     key={event.id}
-                    className="bg-white border border-red-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => {
-                      // TODO: Aprire modal dettagli evento
-                    }}
+                    className="bg-white border border-red-200 rounded-lg p-3 hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -657,6 +640,84 @@ export const CalendarPage = () => {
                              '🔵 Basso'}
                           </span>
                         </div>
+
+                        {/* Pulsante Completa */}
+                        {(event.source === 'general_task' || event.source === 'maintenance') && (
+                          <div className="mt-3 pt-3 border-t border-red-300">
+                            <button
+                              onClick={async (e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+
+                                if (event.source === 'maintenance') {
+                                  if (!companyId || !user) {
+                                    toast.error('Utente non autenticato')
+                                    return
+                                  }
+
+                                  setIsCompletingMaintenance(true)
+                                  try {
+                                    const { error } = await supabase
+                                      .from('maintenance_tasks')
+                                      .update({
+                                        status: 'completed',
+                                        updated_at: new Date().toISOString()
+                                      })
+                                      .eq('id', event.metadata?.maintenance_id || event.id)
+                                      .eq('company_id', companyId)
+
+                                    if (error) throw error
+
+                                    await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
+                                    await queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] })
+                                    toast.success('Manutenzione completata!')
+                                  } catch (error) {
+                                    console.error('Error completing maintenance:', error)
+                                    toast.error('Errore nel completamento della manutenzione')
+                                  } finally {
+                                    setIsCompletingMaintenance(false)
+                                  }
+                                } else {
+                                  const today = new Date()
+                                  today.setHours(0, 0, 0, 0)
+
+                                  const taskDate = new Date(event.start)
+                                  taskDate.setHours(0, 0, 0, 0)
+
+                                  if (taskDate > today) {
+                                    const taskDateStr = taskDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })
+                                    toast.warning(`⚠️ Non puoi completare eventi futuri!\nQuesta mansione è del ${taskDateStr}.`, {
+                                      autoClose: 5000
+                                    })
+                                    return
+                                  }
+
+                                  const taskId = event.metadata?.task_id || event.id
+                                  completeTask(
+                                    { taskId: taskId },
+                                    {
+                                      onSuccess: async () => {
+                                        await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
+                                        await queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
+                                        await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
+                                        toast.success('Mansione completata!')
+                                      },
+                                      onError: (error) => {
+                                        console.error('Error completing task:', error)
+                                        toast.error('Errore nel completamento')
+                                      }
+                                    }
+                                  )
+                                }
+                              }}
+                              disabled={isCompleting || isCompletingMaintenance}
+                              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                            >
+                              <Check className="w-4 h-4" />
+                              {(isCompleting || isCompletingMaintenance) ? 'Completando...' : event.source === 'maintenance' ? 'Completa Manutenzione' : 'Completa Mansione'}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
