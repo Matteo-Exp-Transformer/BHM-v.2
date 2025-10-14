@@ -112,29 +112,28 @@ export function calculateEventStatus(
 ): EventStatus {
   const now = new Date()
   now.setHours(0, 0, 0, 0)
-  
+
   const eventDay = new Date(eventDate)
   eventDay.setHours(0, 0, 0, 0)
-  
+
   const diffDays = Math.floor((now.getTime() - eventDay.getTime()) / (1000 * 60 * 60 * 24))
-  
-  // Futuro (da domani in poi)
+
+  // Futuro (da domani in poi) - eventi futuri NON possono essere completati
   if (diffDays < 0) {
     return 'future'
   }
-  
+
   // Oggi
   if (diffDays === 0) {
     return isCompleted ? 'completed' : 'to_complete'
   }
-  
-  // In ritardo (fino a 7 giorni fa, non completato)
-  if (diffDays >= 1 && diffDays <= 7) {
+
+  // Passato (in ritardo)
+  if (diffDays > 0) {
     return isCompleted ? 'completed' : 'overdue'
   }
-  
-  // Più di 7 giorni fa
-  return isCompleted ? 'completed' : 'overdue'
+
+  return 'to_complete'
 }
 
 /**

@@ -97,11 +97,6 @@ export const Calendar: React.FC<CalendarProps> = ({
   filters,
   calendarFilters,
 }) => {
-  // ✅ Debug: Log quando events cambiano
-  // console.log('📅 Calendar received events:', {
-  //   count: events?.length || 0,
-  //   sample: events?.slice(0, 2).map(e => ({ title: e.title, type: e.type }))
-  // })
 
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
@@ -169,22 +164,9 @@ export const Calendar: React.FC<CalendarProps> = ({
       })
     : transformToFullCalendarEvents(events)
 
-  // ✅ Debug: Log eventi trasformati per FullCalendar
-  console.log('📅 FullCalendarEvents for FullCalendar:', {
-    inputEvents: events.length,
-    outputEvents: fullCalendarEvents.length,
-    useMacroCategories,
-    sample: fullCalendarEvents.slice(0, 2).map(e => ({
-      title: e.title,
-      start: e.start,
-      type: e.extendedProps?.type || 'unknown'
-    }))
-  })
 
-  // ✅ Force FullCalendar to re-mount when events change
   useEffect(() => {
     setCalendarKey(prev => prev + 1)
-    console.log('🔄 Calendar key updated, new events count:', events.length)
   }, [events.length])
 
   const handleEventClick = useCallback(
