@@ -619,6 +619,7 @@ export const CalendarPage = () => {
                             {event.type === 'general_task' && '📋'}
                             {event.type === 'temperature_reading' && '🌡️'}
                             {event.type === 'custom' && '📌'}
+                            {!event.type && '📅'}
                           </span>
                           <h4 className="text-sm font-semibold text-gray-900">
                             {event.title}
