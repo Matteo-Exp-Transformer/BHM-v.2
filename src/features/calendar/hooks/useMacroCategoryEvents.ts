@@ -8,6 +8,8 @@ import type { MaintenanceTask } from '@/types/conservation'
 import type { Product } from '@/types/inventory'
 import type { GenericTask } from './useGenericTasks'
 import { supabase } from '@/lib/supabase/client'
+import type { CalendarFilters, EventStatus, EventType } from '@/types/calendar-filters'
+import { areAllFiltersEmpty, calculateEventStatus, determineEventType } from '@/types/calendar-filters'
 
 export type MacroCategory = 'maintenance' | 'generic_tasks' | 'product_expiry'
 
@@ -52,7 +54,7 @@ function extractEndDate(description?: string): Date | null {
   return match ? new Date(match[1]) : null
 }
 
-export function useMacroCategoryEvents(fiscalYearEnd?: Date): MacroCategoryResult {
+export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarFilters): MacroCategoryResult {
   const { user, companyId } = useAuth()
   const { maintenanceTasks, isLoading: maintenanceLoading } = useMaintenanceTasks()
   const { products, isLoading: productsLoading } = useProducts()
@@ -96,23 +98,89 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date): MacroCategoryResul
   const maintenanceItems = useMemo(() => {
     if (!maintenanceTasks || maintenanceTasks.length === 0) return []
 
-    return maintenanceTasks.map(task =>
+    const items = maintenanceTasks.map(task =>
       convertMaintenanceToItem(task)
     )
-  }, [maintenanceTasks])
+
+    // Apply filters if provided
+    if (!filters || areAllFiltersEmpty(filters)) {
+      return items
+    }
+
+    return items.filter(item => {
+      // Filter by department
+      if (filters.departments.length > 0) {
+        const deptId = item.metadata.departmentId as string | undefined
+        if (!deptId || !filters.departments.includes(deptId)) {
+          return false
+        }
+      }
+
+      // Filter by status
+      if (filters.statuses.length > 0) {
+        const eventStatus: EventStatus = item.status === 'completed' ? 'completed' :
+                                        item.status === 'overdue' ? 'overdue' : 'to_complete'
+        if (!filters.statuses.includes(eventStatus)) {
+          return false
+        }
+      }
+
+      // Filter by type (maintenance)
+      if (filters.types.length > 0) {
+        if (!filters.types.includes('maintenance')) {
+          return false
+        }
+      }
+
+      return true
+    })
+  }, [maintenanceTasks, filters])
 
   const genericTaskItems = useMemo(() => {
     if (!genericTasks || genericTasks.length === 0) return []
 
-    return genericTasks.flatMap(task =>
+    const items = genericTasks.flatMap(task =>
       expandTaskWithCompletions(task, taskCompletions, fiscalYearEnd)
     )
-  }, [genericTasks, taskCompletions, fiscalYearEnd])
+
+    // Apply filters if provided
+    if (!filters || areAllFiltersEmpty(filters)) {
+      return items
+    }
+
+    return items.filter(item => {
+      // Filter by department
+      if (filters.departments.length > 0) {
+        const deptId = item.metadata.departmentId as string | undefined
+        if (!deptId || !filters.departments.includes(deptId)) {
+          return false
+        }
+      }
+
+      // Filter by status
+      if (filters.statuses.length > 0) {
+        const eventStatus: EventStatus = item.status === 'completed' ? 'completed' :
+                                        item.status === 'overdue' ? 'overdue' : 'to_complete'
+        if (!filters.statuses.includes(eventStatus)) {
+          return false
+        }
+      }
+
+      // Filter by type (generic_task)
+      if (filters.types.length > 0) {
+        if (!filters.types.includes('generic_task')) {
+          return false
+        }
+      }
+
+      return true
+    })
+  }, [genericTasks, taskCompletions, fiscalYearEnd, filters])
 
   const productExpiryItems = useMemo(() => {
     if (!products || products.length === 0) return []
 
-    return products
+    const items = products
       .filter(product =>
         product.expiry_date &&
         product.status === 'active' &&
@@ -121,7 +189,39 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date): MacroCategoryResul
       .map(product =>
         convertProductToItem(product)
       )
-  }, [products])
+
+    // Apply filters if provided
+    if (!filters || areAllFiltersEmpty(filters)) {
+      return items
+    }
+
+    return items.filter(item => {
+      // Filter by department
+      if (filters.departments.length > 0) {
+        const deptId = item.metadata.departmentId as string | undefined
+        if (!deptId || !filters.departments.includes(deptId)) {
+          return false
+        }
+      }
+
+      // Filter by status (product expiry can only be pending or overdue)
+      if (filters.statuses.length > 0) {
+        const eventStatus: EventStatus = item.status === 'overdue' ? 'overdue' : 'to_complete'
+        if (!filters.statuses.includes(eventStatus)) {
+          return false
+        }
+      }
+
+      // Filter by type (product_expiry)
+      if (filters.types.length > 0) {
+        if (!filters.types.includes('product_expiry')) {
+          return false
+        }
+      }
+
+      return true
+    })
+  }, [products, filters])
 
   const events = useMemo(() => {
     const allItems = [
@@ -212,6 +312,7 @@ function convertMaintenanceToItem(task: MaintenanceTask): MacroCategoryItem {
       sourceId: task.id,
       notes: task.description,
       conservationPointId: task.conservation_point_id,
+      departmentId: task.department_id,
       estimatedDuration: task.estimated_duration,
       instructions: task.instructions,
     },
@@ -363,6 +464,7 @@ function convertGenericTaskToItem(
       category: 'generic_tasks',
       sourceId: task.id,
       notes: task.description,
+      departmentId: task.department_id,
       estimatedDuration: task.estimated_duration,
       taskId: task.id,
       // Aggiungi informazioni di completamento se disponibili

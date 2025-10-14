@@ -18,6 +18,9 @@ export const CalendarEventLegend: React.FC<CalendarEventLegendProps> = ({
 }) => {
   // Unifica temperature checks in manutenzioni
   const totalMaintenance = (sources.maintenance || 0) + (sources.temperatureChecks || 0)
+  
+  // Unifica scadenze HACCP e alert HACCP in una sola categoria
+  const totalHaccpAlerts = (sources.haccpExpiry || 0) + (sources.haccpDeadlines || 0)
 
   const legendItems = [
     {
@@ -27,11 +30,6 @@ export const CalendarEventLegend: React.FC<CalendarEventLegendProps> = ({
       description: 'Incluye rilevamento temperature'
     },
     {
-      icon: '👥',
-      label: 'Scadenze HACCP',
-      count: sources.haccpExpiry || 0
-    },
-    {
       icon: '📦',
       label: 'Scadenze Prodotti',
       count: sources.productExpiry || 0
@@ -39,7 +37,8 @@ export const CalendarEventLegend: React.FC<CalendarEventLegendProps> = ({
     {
       icon: '⏰',
       label: 'Alert HACCP',
-      count: sources.haccpDeadlines || 0
+      count: totalHaccpAlerts,
+      description: 'Incluye scadenze certificazioni'
     },
     {
       icon: '📋',
