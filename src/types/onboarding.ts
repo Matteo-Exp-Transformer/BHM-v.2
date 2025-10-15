@@ -195,7 +195,7 @@ export interface GenericTask {
   assegnatoARuolo: StaffRole | 'specifico' | string
   assegnatoACategoria?: string
   assegnatoADipendenteSpecifico?: string
-  departmentId?: string // ID del reparto assegnato
+  departmentId: string // ID del reparto assegnato (obbligatorio)
   note?: string
   priority?: TaskPriority
   giorniCustom?: CustomFrequencyDays[]

@@ -811,6 +811,9 @@ const GenericTaskForm = ({
     if (updates.frequenza === 'custom' && (!updates.giorniCustom || updates.giorniCustom.length === 0)) {
       newErrors.giorni = 'Seleziona almeno un giorno per frequenza custom'
     }
+    if (!updates.departmentId && !task.departmentId) {
+      newErrors.departmentId = 'Reparto obbligatorio'
+    }
     
     setErrors(newErrors)
   }
@@ -932,20 +935,19 @@ const GenericTaskForm = ({
             </div>
 
             <div>
-              <Label>Reparto</Label>
+              <Label>Reparto *</Label>
               <Select
-                value={task.departmentId || 'all'}
+                value={task.departmentId || ''}
                 onValueChange={value =>
                   updateTask({
-                    departmentId: value === 'all' ? undefined : value
+                    departmentId: value
                   })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger aria-invalid={Boolean(errors.departmentId)}>
                   <SelectValue placeholder="Seleziona reparto" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectOption value="all">Tutti i reparti</SelectOption>
                   {departmentOptions.map(department => (
                     <SelectOption key={department.id} value={department.id}>
                       {department.name}
@@ -953,6 +955,9 @@ const GenericTaskForm = ({
                   ))}
                 </SelectContent>
               </Select>
+              {errors.departmentId && (
+                <p className="mt-1 text-sm text-red-600">{errors.departmentId}</p>
+              )}
             </div>
 
             {task.assegnatoARuolo && (

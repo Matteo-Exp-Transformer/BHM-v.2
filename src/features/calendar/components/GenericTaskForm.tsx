@@ -25,7 +25,7 @@ interface GenericTaskFormData {
   giorniCustom?: CustomFrequencyDays[]
   dataInizio?: string // Data di inizio in formato ISO (YYYY-MM-DD)
   dataFine?: string // Data fine in formato ISO (YYYY-MM-DD) - Opzionale per intervallo
-  departmentId?: string // Reparto assegnato (opzionale) - per filtri calendario
+  departmentId: string // Reparto assegnato (obbligatorio) - per filtri calendario
   note?: string
   
   // Gestione Orario Attività
@@ -87,6 +87,7 @@ export const GenericTaskForm = ({
     frequenza: 'settimanale',
     assegnatoARuolo: 'dipendente',
     assegnatoACategoria: 'all',
+    departmentId: '',
     note: '',
   })
 
@@ -137,6 +138,9 @@ export const GenericTaskForm = ({
     if (formData.frequenza === 'custom' && (!formData.giorniCustom || formData.giorniCustom.length === 0)) {
       newErrors.giorni = 'Seleziona almeno un giorno per frequenza personalizzata'
     }
+    if (!formData.departmentId || formData.departmentId === 'none') {
+      newErrors.departmentId = 'Reparto obbligatorio'
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -151,6 +155,7 @@ export const GenericTaskForm = ({
         frequenza: 'settimanale',
         assegnatoARuolo: 'dipendente',
         assegnatoACategoria: 'all',
+        departmentId: '',
         note: '',
       })
       setErrors({})
@@ -319,15 +324,15 @@ export const GenericTaskForm = ({
           </Select>
         </div>
 
-        {/* Reparto (opzionale) */}
+        {/* Reparto (obbligatorio) */}
         <div>
-          <Label>Reparto (opzionale)</Label>
+          <Label>Reparto *</Label>
           <Select
-            value={formData.departmentId ?? 'none'}
-            onValueChange={value => updateField({ departmentId: value === 'none' ? undefined : value })}
+            value={formData.departmentId}
+            onValueChange={value => updateField({ departmentId: value })}
             disabled={departmentOptions.length === 0}
           >
-            <SelectTrigger>
+            <SelectTrigger aria-invalid={Boolean(errors.departmentId)}>
               <SelectValue placeholder={
                 departmentOptions.length > 0
                   ? "Seleziona reparto"
@@ -335,8 +340,6 @@ export const GenericTaskForm = ({
               } />
             </SelectTrigger>
             <SelectContent>
-              <SelectOption value="all">Tutti</SelectOption>
-              <SelectOption value="none">Nessun reparto</SelectOption>
               {departmentOptions.map(dept => (
                 <SelectOption key={dept.id} value={dept.id}>
                   {dept.name}
@@ -344,8 +347,11 @@ export const GenericTaskForm = ({
               ))}
             </SelectContent>
           </Select>
+          {errors.departmentId && (
+            <p className="mt-1 text-sm text-red-600">{errors.departmentId}</p>
+          )}
           <p className="mt-1 text-xs text-gray-500">
-            💡 Assegna un reparto per filtrare l'attività nel calendario
+            💡 Il reparto è obbligatorio per organizzare le attività
           </p>
         </div>
 
