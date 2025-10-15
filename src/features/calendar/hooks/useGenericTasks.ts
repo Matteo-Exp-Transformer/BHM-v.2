@@ -45,7 +45,7 @@ export interface CreateGenericTaskInput {
   assigned_to_staff_id?: string
   note?: string
   custom_days?: string[] // Giorni della settimana se frequenza custom
-  department_id?: string // Reparto assegnato (opzionale)
+  department_id: string // Reparto assegnato (obbligatorio)
   
   // Gestione Orario Attività
   time_management?: {
@@ -213,9 +213,8 @@ export const useGenericTasks = () => {
       if (input.assigned_to_category && input.assigned_to_category !== 'all') {
         payload.assigned_to_category = input.assigned_to_category
       }
-      if (input.department_id) {
-        payload.department_id = input.department_id
-      }
+      // department_id è ora obbligatorio
+      payload.department_id = input.department_id
       if (next_due) payload.next_due = next_due.toISOString()
       
       // Gestione Orario Attività - aggiungi solo se configurato
