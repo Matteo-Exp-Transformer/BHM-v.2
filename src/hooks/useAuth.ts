@@ -163,8 +163,6 @@ export const useAuth = () => {
     queryFn: async () => {
       if (!user?.id) return null
 
-      console.log('🔗 Supabase: Caricamento user profile...')
-      console.log('📊 User ID:', user.id)
 
       const { data, error } = await supabase
         .from('user_profiles')
@@ -174,7 +172,6 @@ export const useAuth = () => {
 
       if (error) {
         if (error.code === 'PGRST116') {
-          console.log('⚠️ Supabase: User profile non trovato (PGRST116), ritorno null')
           return null
         }
         console.error('❌ Supabase: Errore caricamento user profile:', error)
@@ -202,8 +199,6 @@ export const useAuth = () => {
     queryFn: async (): Promise<CompanyMembership[]> => {
       if (!user?.id) return []
 
-      console.log('🔗 Supabase: Caricamento companies...')
-      console.log('📊 User ID:', user.id)
 
       const { data, error } = await supabase
         .from('company_members')
@@ -227,8 +222,6 @@ export const useAuth = () => {
         return [] // Ritorna array vuoto invece di throw
       }
 
-      console.log('✅ Companies caricate:', data?.length || 0)
-      console.log('📊 Companies data:', data)
 
       return (data || []).map(m => ({
         company_id: m.company_id,
@@ -255,8 +248,6 @@ export const useAuth = () => {
     queryFn: async (): Promise<UserSession | null> => {
       if (!user?.id) return null
 
-      console.log('🔗 Supabase: Caricamento user session...')
-      console.log('📊 User ID:', user.id)
 
       // Prova a ottenere sessione esistente
       let { data: existing, error } = await supabase
@@ -273,7 +264,6 @@ export const useAuth = () => {
 
       // Se sessione esiste, ritornala
       if (existing) {
-        console.log('✅ User session trovata:', existing)
         return existing as UserSession
       }
 

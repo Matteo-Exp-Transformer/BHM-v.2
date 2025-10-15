@@ -80,3 +80,4 @@ COMMENT ON CONSTRAINT user_activity_logs_activity_type_check ON public.user_acti
 -- END Migration 008
 -- =====================================================
 
+

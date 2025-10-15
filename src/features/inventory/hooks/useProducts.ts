@@ -82,7 +82,6 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
         throw new Error('No company ID available')
       }
 
-      console.log('🔗 Supabase: Caricamento prodotti...')
       const { data, error } = await supabase
         .from('products')
         .select(
@@ -118,7 +117,6 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
         throw new Error('No company ID or products available')
       }
 
-      console.log('🔧 Computing product stats from loaded data')
 
       // Compute stats from actual products data
       const now = new Date()

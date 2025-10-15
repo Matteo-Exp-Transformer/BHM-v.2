@@ -241,12 +241,25 @@ export const getPrefillData = (): OnboardingData => {
     const dept = departments.find(dept =>
       dept.name.toLowerCase().includes(name.toLowerCase())
     )
+    if (!dept) {
+      console.warn(`⚠️ Reparto non trovato per nome: "${name}". Reparti disponibili:`, departments.map(d => d.name))
+    }
     return dept?.id || ''
   }
 
   // ⚠️ IMPORTANTE: Il PRIMO membro è sempre l'admin che sta facendo l'onboarding
   // Questo membro NON riceverà invito (è già registrato)
   // Gli altri membri riceveranno inviti automatici
+  
+  // Debug: Verifica che tutti i reparti siano trovati
+  console.log('🔍 Verifica reparti per staff assignments:')
+  console.log('  - Sala:', getDepartmentId('Sala'))
+  console.log('  - Sala B:', getDepartmentId('Sala B'))
+  console.log('  - Plonge:', getDepartmentId('Plonge'))
+  console.log('  - Deoor:', getDepartmentId('Deoor'))
+  console.log('  - Cucina:', getDepartmentId('Cucina'))
+  console.log('  - Bancone:', getDepartmentId('Bancone'))
+  
   const staff = [
     // 1️⃣ PRIMO MEMBRO: Admin che sta creando l'azienda (Paolo)
     {
@@ -287,14 +300,14 @@ export const getPrefillData = (): OnboardingData => {
       email: '0cavuz0@gmail.com',
       phone: '3334578532',
       department_assignments: [
-        getDepartmentId('Bancone'),
         getDepartmentId('Sala'),
         getDepartmentId('Sala B'),
-        getDepartmentId('Deoor'),
         getDepartmentId('Plonge'),
-      ].filter(Boolean), // Bancone + Sala + Sala B + Deoor + Plonge
+        getDepartmentId('Deoor'),
+        getDepartmentId('Cucina'),
+      ].filter(Boolean), // Sala + Sala B + Plonge + Deoor + Cucina
       haccpExpiry: '2026-10-01',
-      notes: 'Dipendente multiruolo con accesso a più reparti',
+      notes: 'Dipendente multiruolo con accesso a Sala, Sala B, Plonge, Deoor e Cucina',
     },
     {
       id: generateId(),
@@ -323,9 +336,12 @@ export const getPrefillData = (): OnboardingData => {
       categories: ['Banconisti'],
       email: 'Eddy@gmail.com',
       phone: '3334578533',
-      department_assignments: [getDepartmentId('Bancone')].filter(Boolean), // Bancone
+      department_assignments: [
+        getDepartmentId('Bancone'),
+        getDepartmentId('Deoor'),
+      ].filter(Boolean), // Bancone + Deoor
       haccpExpiry: '2026-10-01',
-      notes: 'Dipendente specializzato al bancone',
+      notes: 'Dipendente specializzato al bancone e Deoor',
     },
   ]
 
@@ -429,6 +445,7 @@ export const getPrefillData = (): OnboardingData => {
           assegnatoARuolo: 'dipendente' as const,
           assegnatoACategoria: 'Cuochi',
           assegnatoADipendenteSpecifico: undefined,
+          departmentId: departments.find(d => d.name === 'Cucina')?.id,
           giorniCustom: undefined,
           note: 'Pulizia e sanificazione completa area cucina ogni settimana',
         },
@@ -439,6 +456,7 @@ export const getPrefillData = (): OnboardingData => {
           assegnatoARuolo: 'responsabile' as const,
           assegnatoACategoria: undefined,
           assegnatoADipendenteSpecifico: undefined,
+          departmentId: departments.find(d => d.name === 'Magazzino')?.id,
           giorniCustom: undefined,
           note: 'Verifica inventario e ordini settimanali',
         },
@@ -449,6 +467,7 @@ export const getPrefillData = (): OnboardingData => {
           assegnatoARuolo: 'dipendente' as const,
           assegnatoACategoria: 'Banconisti',
           assegnatoADipendenteSpecifico: undefined,
+          departmentId: departments.find(d => d.name === 'Bancone')?.id,
           giorniCustom: undefined,
           note: 'Sanificazione quotidiana bancone e attrezzature',
         },
@@ -459,6 +478,7 @@ export const getPrefillData = (): OnboardingData => {
           assegnatoARuolo: 'dipendente' as const,
           assegnatoACategoria: 'Camerieri',
           assegnatoADipendenteSpecifico: undefined,
+          departmentId: departments.find(d => d.name === 'Sala')?.id,
           giorniCustom: undefined,
           note: 'Pulizia tavoli, pavimenti e controllo generale sala',
         },
@@ -705,18 +725,8 @@ export const prefillOnboarding = async (): Promise<void> => {
         }))
       }
 
-      if (data.staff) {
-        data.staff = data.staff.map(member => ({
-          ...member,
-          department_assignments: member.categories.includes(
-            'Responsabile Sala'
-          )
-            ? [banconeId || '']
-            : member.categories.includes('Cuochi')
-              ? [cucinaId || '']
-              : [data.departments?.[0]?.id || ''],
-        }))
-      }
+      // ⚠️ RIMOSSO: Logica errata che sovrascriveva le assegnazioni reparti staff
+      // Le assegnazioni sono già corrette nelle definizioni staff (righe 250-333)
 
       if (data.inventory?.categories?.length) {
         const carniId = data.inventory.categories.find(
@@ -775,7 +785,7 @@ export const prefillOnboarding = async (): Promise<void> => {
 /**
  * Reset completo dell'onboarding con conferma
  */
-export const resetOnboarding = (): void => {
+export const resetOnboarding = async (): Promise<void> => {
   const confirmed = window.confirm(
     '⚠️ ATTENZIONE!\n\n' +
       "Questa operazione cancellerà TUTTI i dati dell'onboarding e dell'app.\n\n" +
@@ -790,8 +800,15 @@ export const resetOnboarding = (): void => {
   console.log('🔄 Reset completo onboarding...')
 
   try {
-    // Pulisce tutti i dati HACCP e onboarding
+    // Pulisce tutti i dati HACCP e onboarding dal localStorage
     clearHaccpData()
+
+    // Cancella anche i dati dal database se c'è una company attiva
+    const companyId = await getCurrentCompanyId()
+    if (companyId) {
+      console.log('🗑️ Cancellazione dati dal database per company:', companyId)
+      await deleteCompanyData(companyId)
+    }
 
     console.log('✅ Reset onboarding completato con successo')
     toast.success('Onboarding resettato completamente!', {
@@ -1398,12 +1415,15 @@ const cleanExistingOnboardingData = async (companyId: string) => {
  * Crea company durante onboarding per primo cliente
  */
 const createCompanyFromOnboarding = async (formData: OnboardingData): Promise<string> => {
-  console.log('🏢 Creando company per primo cliente...')
+  console.log('🏢 [createCompanyFromOnboarding] INIZIO')
+  console.log('📦 FormData business:', formData.business)
   
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user?.id) {
-    throw new Error('Utente non autenticato')
-  }
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user?.id) {
+      throw new Error('Utente non autenticato')
+    }
+    console.log('✅ Utente autenticato:', user.email)
 
   const { data: company, error } = await supabase
     .from('companies')
@@ -1420,39 +1440,51 @@ const createCompanyFromOnboarding = async (formData: OnboardingData): Promise<st
     throw new Error(`Errore creazione company: ${error?.message}`)
   }
 
-  console.log('✅ Company creata:', company.id)
+    console.log('✅ Company creata:', company.id)
 
-  // Associa l'utente alla company come admin (usa upsert per prevenire duplicati)
-  const { error: memberError } = await supabase
-    .from('company_members')
-    .upsert({
-      user_id: user.id,
-      company_id: company.id,
-      role: 'admin',
-      staff_id: null,
-      is_active: true,
-    }, {
-      onConflict: 'user_id,company_id'
-    })
+    // Associa l'utente alla company come admin (usa upsert per prevenire duplicati)
+    const { error: memberError } = await supabase
+      .from('company_members')
+      .upsert({
+        user_id: user.id,
+        company_id: company.id,
+        role: 'admin',
+        staff_id: null,
+        is_active: true,
+      }, {
+        onConflict: 'user_id,company_id'
+      })
 
-  if (memberError) {
-    console.error('❌ Errore associazione company_member:', memberError)
-    throw new Error(`Errore associazione utente: ${memberError.message}`)
+    if (memberError) {
+      console.error('❌ Errore associazione company_member:', memberError)
+      throw new Error(`Errore associazione utente: ${memberError.message}`)
+    }
+
+    console.log('✅ Utente associato alla company come admin')
+    return company.id
+  } catch (error) {
+    console.error('❌ [createCompanyFromOnboarding] ERRORE:', error)
+    console.error('❌ Error message:', error instanceof Error ? error.message : 'No message')
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack')
+    throw error
   }
-
-  console.log('✅ Utente associato alla company come admin')
-  return company.id
 }
 
 /**
  * Salva tutti i dati su Supabase
  */
 const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string | null): Promise<string> => {
-  // Se companyId è NULL, crea la company
-  if (!companyId) {
-    console.log('🔧 Creando company durante onboarding...')
-    companyId = await createCompanyFromOnboarding(formData)
-  }
+  console.log('🔄 [saveAllDataToSupabase] INIZIO')
+  console.log('📊 CompanyId ricevuto:', companyId)
+  console.log('📦 FormData keys:', Object.keys(formData))
+  
+  try {
+    // Se companyId è NULL, crea la company
+    if (!companyId) {
+      console.log('🔧 Creando company durante onboarding...')
+      companyId = await createCompanyFromOnboarding(formData)
+      console.log('✅ Company creata:', companyId)
+    }
 
   // Verifica che companyId sia una stringa valida
   if (!companyId || typeof companyId !== 'string') {
@@ -1745,12 +1777,19 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
 
   // Salva generic tasks
   if (formData.tasks?.genericTasks?.length) {
-    const genericTasks = formData.tasks.genericTasks.map((task: any) => ({
-      company_id: companyId,
-      name: task.name,
-      frequency: mapFrequenza(task.frequenza),
-      description: task.note || '',
-      department_id: null,
+    console.log('📤 Inserting generic tasks:', formData.tasks.genericTasks.length)
+    console.log('📤 Departments ID mapping:', Object.fromEntries(departmentsIdMap))
+    
+    const genericTasks = formData.tasks.genericTasks.map((task: any) => {
+      const mappedDepartmentId = task.departmentId ? departmentsIdMap.get(task.departmentId) || null : null
+      console.log(`📤 Task "${task.name}": frontend dept ID ${task.departmentId} → mapped dept ID ${mappedDepartmentId}`)
+      
+      return {
+        company_id: companyId,
+        name: task.name,
+        frequency: mapFrequenza(task.frequenza),
+        description: task.note || '',
+        department_id: mappedDepartmentId,
       conservation_point_id: null,
       priority: 'medium',
       estimated_duration: 60,
@@ -1769,9 +1808,10 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
       assigned_to:
         task.assegnatoADipendenteSpecifico || task.assegnatoARuolo || '',
       assignment_type: task.assegnatoARuolo === 'specifico' ? 'staff' : 'role',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }))
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+    })
 
     const { error } = await supabase.from('tasks').insert(genericTasks)
 
@@ -1890,9 +1930,15 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
     console.log('ℹ️ User must configure calendar manually after onboarding')
   }
 
-  // ✅ RITORNA IL COMPANY ID
-  console.log('🎯 Ritorno company_id da saveAllDataToSupabase:', companyId)
-  return companyId
+    // ✅ RITORNA IL COMPANY ID
+    console.log('🎯 Ritorno company_id da saveAllDataToSupabase:', companyId)
+    return companyId
+  } catch (error) {
+    console.error('❌ [saveAllDataToSupabase] ERRORE:', error)
+    console.error('❌ Error message:', error instanceof Error ? error.message : 'No message')
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack')
+    throw error
+  }
 }
 
 /**
@@ -2269,10 +2315,15 @@ export const completeOnboarding = async (
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log('❌ [completeOnboarding] ERRORE!')
     console.error('❌ Errore completo:', error)
+    console.error('❌ Error type:', typeof error)
+    console.error('❌ Error message:', error instanceof Error ? error.message : 'No message')
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack')
+    console.error('❌ Full error object:', JSON.stringify(error, null, 2))
     console.log('⏰ Timestamp errore:', new Date().toISOString())
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 
-    toast.error(`Errore durante il completamento: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`, {
+    const errorMessage = error instanceof Error ? error.message : 'Errore sconosciuto'
+    toast.error(`Errore durante il completamento: ${errorMessage}`, {
       position: 'top-right',
       autoClose: 5000,
     })
@@ -2354,10 +2405,8 @@ export const resetOperationalData = async (): Promise<boolean> => {
     await supabase.from('non_conformities').delete().eq('company_id', companyId)
     await supabase.from('audit_logs').delete().eq('company_id', companyId)
 
-    // Pulisci localStorage onboarding
-    localStorage.removeItem('onboarding-data')
-    localStorage.removeItem('onboarding-completed')
-    localStorage.removeItem('onboarding-completed-at')
+    // Pulisci localStorage onboarding e tutti i dati HACCP
+    clearHaccpData()
 
     console.log('✅ Reset completato con successo!')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')

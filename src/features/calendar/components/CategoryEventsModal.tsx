@@ -81,11 +81,17 @@ export const CategoryEventsModal: React.FC<CategoryEventsModalProps> = ({
 
     setIsCompletingMaintenance(true)
     try {
+      const now = new Date().toISOString()
+      
+      // Aggiorna lo stato della manutenzione a 'completed' con tutti i campi necessari
       const { error } = await supabase
         .from('maintenance_tasks')
         .update({
           status: 'completed',
-          updated_at: new Date().toISOString()
+          completed_by: user.id,
+          completed_at: now,
+          last_completed: now,
+          updated_at: now
         })
         .eq('id', maintenanceId)
         .eq('company_id', companyId)

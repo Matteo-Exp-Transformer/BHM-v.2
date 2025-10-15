@@ -304,10 +304,10 @@ const ConservationStep = ({
           <Button
             variant="ghost"
             className="gap-2"
-            onClick={() => setEditingId(null)}
+            onClick={() => setEditingId(editingId ? null : 'new')}
           >
-            <Plus className="h-4 w-4" />{' '}
-            {editingId ? 'Modifica punto' : 'Aggiungi punto'}
+            <Plus className="h-4 w-4" />
+            {editingId ? 'Annulla' : 'Aggiungi punto'}
           </Button>
         </header>
 
@@ -427,7 +427,9 @@ const ConservationStep = ({
         </div>
       </section>
 
-      <section className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+      {/* Form - Mostra solo se non ci sono punti o se stiamo editando */}
+      {(points.length === 0 || editingId) && (
+        <section className="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <header className="mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
             {editingId
@@ -653,6 +655,7 @@ const ConservationStep = ({
           </Button>
         </form>
       </section>
+      )}
     </div>
   )
 }

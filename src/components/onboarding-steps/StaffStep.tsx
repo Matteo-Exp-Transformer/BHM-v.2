@@ -375,11 +375,13 @@ const StaffStep = ({
         </div>
       </section>
 
-      <section
-        id="staff-step-form"
-        ref={formRef}
-        className="rounded-lg border border-gray-200 bg-gray-50 p-4"
-      >
+      {/* Form - Mostra sempre se non ci sono membri, altrimenti solo se stiamo editando */}
+      {(staffMembers.length === 0 || editingId) && (
+        <section
+          id="staff-step-form"
+          ref={formRef}
+          className="rounded-lg border border-gray-200 bg-gray-50 p-4"
+        >
         <header className="mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
             {editingId
@@ -711,6 +713,20 @@ const StaffStep = ({
           </Button>
         </form>
       </section>
+      )}
+
+      {/* Pulsante Aggiungi quando ci sono già membri */}
+      {staffMembers.length > 0 && !editingId && (
+        <div className="mb-4">
+          <button
+            onClick={() => setEditingId('new')}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Aggiungi Nuovo Membro
+          </button>
+        </div>
+      )}
     </div>
   )
 }
