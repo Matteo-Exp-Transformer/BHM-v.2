@@ -35,8 +35,6 @@ export function ProductCard({
         return 'bg-green-100 text-green-800'
       case 'expired':
         return 'bg-red-100 text-red-800'
-      case 'consumed':
-        return 'bg-gray-100 text-gray-800'
       case 'waste':
         return 'bg-orange-100 text-orange-800'
       default:
@@ -50,8 +48,6 @@ export function ProductCard({
         return <CheckCircle className="w-4 h-4" />
       case 'expired':
         return <AlertTriangle className="w-4 h-4" />
-      case 'consumed':
-        return <CheckCircle className="w-4 h-4" />
       case 'waste':
         return <XCircle className="w-4 h-4" />
       default:
@@ -234,16 +230,16 @@ export function ProductCard({
       {product.status === 'active' && (
         <div className="flex gap-2 pt-3 border-t border-gray-100">
           <button
-            onClick={() => onStatusChange('consumed')}
-            className="flex-1 px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium"
-          >
-            Marca come Consumato
-          </button>
-          <button
             onClick={() => onStatusChange('expired')}
             className="flex-1 px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
           >
             Marca come Scaduto
+          </button>
+          <button
+            onClick={() => onStatusChange('waste')}
+            className="flex-1 px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm font-medium"
+          >
+            Marca come Smaltito
           </button>
         </div>
       )}

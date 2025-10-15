@@ -166,9 +166,6 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
           expired: products.filter(
             (product: Product) => product.status === 'expired'
           ).length,
-          consumed: products.filter(
-            (product: Product) => product.status === 'consumed'
-          ).length,
           waste: products.filter(
             (product: Product) => product.status === 'waste'
           ).length,
@@ -283,7 +280,29 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
         throw error
       }
 
-      return transformProductRecord(data)
+      const product = transformProductRecord(data)
+
+      if (user?.id && companyId) {
+        await activityTrackingService.logActivity(
+          user.id,
+          companyId,
+          'product_updated',
+          {
+            product_id: product.id,
+            product_name: product.name,
+            category_id: product.category_id,
+            department_id: product.department_id,
+            status: product.status,
+          },
+          {
+            sessionId: sessionId || undefined,
+            entityType: 'product',
+            entityId: product.id,
+          }
+        )
+      }
+
+      return product
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -303,6 +322,8 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
   // Delete product mutation
   const deleteProductMutation = useMutation({
     mutationFn: async (productId: string): Promise<void> => {
+      const product = products.find(p => p.id === productId)
+
       const { error } = await supabase
         .from('products')
         .delete()
@@ -312,6 +333,25 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
       if (error) {
         console.error('Error deleting product:', error)
         throw error
+      }
+
+      if (user?.id && companyId && product) {
+        await activityTrackingService.logActivity(
+          user.id,
+          companyId,
+          'product_deleted',
+          {
+            product_id: productId,
+            product_name: product.name,
+            category_id: product.category_id,
+            department_id: product.department_id,
+          },
+          {
+            sessionId: sessionId || undefined,
+            entityType: 'product',
+            entityId: productId,
+          }
+        )
       }
     },
     onSuccess: () => {
@@ -371,6 +411,130 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
     },
   })
 
+  // Transfer product mutation (Agent 1 - Backend Specialist)
+  const transferProductMutation = useMutation({
+    mutationFn: async ({
+      productId,
+      fromConservationPointId,
+      toConservationPointId,
+      transferReason,
+      transferNotes,
+      authorizedById,
+    }: {
+      productId: string
+      fromConservationPointId: string
+      toConservationPointId: string
+      transferReason: string
+      transferNotes?: string
+      authorizedById: string
+    }): Promise<Product> => {
+      if (!companyId || !user) throw new Error('No company or user')
+
+      // 1. Get product details BEFORE update
+      const product = products.find(p => p.id === productId)
+      if (!product) throw new Error('Product not found')
+
+      // 2. Get from/to conservation points with department info
+      const { data: fromPoint, error: fromError } = await supabase
+        .from('conservation_points')
+        .select('id, name, department_id, departments(id, name)')
+        .eq('id', fromConservationPointId)
+        .single()
+
+      if (fromError || !fromPoint) {
+        console.error('Error fetching from conservation point:', fromError)
+        throw new Error('From conservation point not found')
+      }
+
+      const { data: toPoint, error: toError } = await supabase
+        .from('conservation_points')
+        .select('id, name, department_id, departments(id, name)')
+        .eq('id', toConservationPointId)
+        .single()
+
+      if (toError || !toPoint) {
+        console.error('Error fetching to conservation point:', toError)
+        throw new Error('To conservation point not found')
+      }
+
+      // 3. Get authorized user info
+      const { data: authorizedUser, error: userError } = await supabase
+        .from('staff')
+        .select('id, name')
+        .eq('id', authorizedById)
+        .single()
+
+      if (userError) {
+        console.warn('Could not fetch authorized user:', userError)
+      }
+
+      // 4. Update product location
+      const { data: updatedProduct, error: updateError } = await supabase
+        .from('products')
+        .update({
+          conservation_point_id: toConservationPointId,
+          department_id: toPoint.department_id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', productId)
+        .eq('company_id', companyId)
+        .select()
+        .single()
+
+      if (updateError) {
+        console.error('Error updating product:', updateError)
+        throw updateError
+      }
+
+      // 5. Log transfer activity
+      if (user?.id && companyId) {
+        await activityTrackingService.logActivity(
+          user.id,
+          companyId,
+          'product_transferred',
+          {
+            product_id: productId,
+            product_name: product.name,
+            from_conservation_point_id: fromConservationPointId,
+            from_conservation_point_name: fromPoint.name,
+            to_conservation_point_id: toConservationPointId,
+            to_conservation_point_name: toPoint.name,
+            from_department_id: fromPoint.department_id,
+            from_department_name: (fromPoint.departments as any)?.name || 'N/A',
+            to_department_id: toPoint.department_id,
+            to_department_name: (toPoint.departments as any)?.name || 'N/A',
+            quantity_transferred: product.quantity,
+            unit: product.unit,
+            transfer_reason: transferReason,
+            transfer_notes: transferNotes || undefined,
+            authorized_by_id: authorizedById,
+            authorized_by_name: authorizedUser?.name || 'N/A',
+          },
+          {
+            sessionId: sessionId || undefined,
+            entityType: 'product',
+            entityId: productId,
+          }
+        )
+      }
+
+      return transformProductRecord(updatedProduct)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.products(companyId || ''),
+      })
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.productStats(companyId || ''),
+      })
+      toast.success('Prodotto trasferito con successo')
+    },
+    onError: (error: Error) => {
+      console.error('Error transferring product:', error)
+      toast.error('Errore nel trasferimento del prodotto')
+    },
+  })
+
   return {
     // Data
     products,
@@ -383,12 +547,14 @@ export const useProducts = (searchParams?: ProductSearchParams) => {
     updateProduct: updateProductMutation.mutate,
     deleteProduct: deleteProductMutation.mutate,
     updateProductStatus: updateProductStatusMutation.mutate,
+    transferProduct: transferProductMutation.mutate,
 
     // Mutation states
     isCreating: createProductMutation.isPending,
     isUpdating: updateProductMutation.isPending,
     isDeleting: deleteProductMutation.isPending,
     isUpdatingStatus: updateProductStatusMutation.isPending,
+    isTransferring: transferProductMutation.isPending,
 
     // Utilities
     refetch,

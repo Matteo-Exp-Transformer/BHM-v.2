@@ -267,7 +267,7 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
       const { error: updateError } = await supabase
         .from('products')
         .update({
-          status: 'consumed',
+          status: 'expired',
           updated_at: new Date().toISOString(),
         })
         .eq('id', request.expired_product_id)
