@@ -260,8 +260,14 @@ const OnboardingWizard = () => {
       console.log('✅ Navigazione completata - dovresti vedere i dati ora!')
 
     } catch (error) {
-      console.error('Error completing onboarding:', error)
-      toast.error("Errore durante il completamento dell'onboarding")
+      console.error('❌ Error completing onboarding:', error)
+      console.error('❌ Error type:', typeof error)
+      console.error('❌ Error message:', error instanceof Error ? error.message : 'No message')
+      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack')
+      console.error('❌ Full error object:', JSON.stringify(error, null, 2))
+      
+      const errorMessage = error instanceof Error ? error.message : 'Errore sconosciuto durante il completamento dell\'onboarding'
+      toast.error(`Errore: ${errorMessage}`)
       setIsCompleting(false)
       setIsLoading(false)
     }

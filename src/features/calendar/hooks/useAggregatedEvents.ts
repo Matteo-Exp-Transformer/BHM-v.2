@@ -107,12 +107,10 @@ export function useAggregatedEvents(fiscalYearEnd?: Date): AggregatedEventsResul
     // ✅ Espandi attività ricorrenti per mostrare occorrenze multiple
     const events = maintenanceTasks.flatMap(task => {
       const occurrences = expandRecurringTask(task, companyId || '', user?.id || '', 'maintenance', undefined, fiscalYearEnd)
-      console.log(`🔧 Task "${task.title}" (${task.frequency}) → ${occurrences.length} occorrenze, status: ${task.status}`)
       return occurrences
     })
     
     const completedCount = events.filter(e => e.status === 'completed').length
-    console.log(`📊 Manutenzioni totali: ${events.length}, completate: ${completedCount}`)
     
     return events
   }, [maintenanceTasks, companyId, user?.id, fiscalYearEnd])

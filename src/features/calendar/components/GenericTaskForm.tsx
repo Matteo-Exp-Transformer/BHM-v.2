@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Trash2 } from 'lucide-react'
+import { Trash2, ChevronDown, ChevronRight, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/Select'
 
 type MaintenanceFrequency = 'annuale' | 'mensile' | 'settimanale' | 'giornaliera' | 'custom'
-type StaffRole = 'admin' | 'responsabile' | 'dipendente' | 'collaboratore'
+type StaffRole = 'admin' | 'responsabile' | 'dipendente' | 'collaboratore' | 'all'
 type CustomFrequencyDays = 'lunedi' | 'martedi' | 'mercoledi' | 'giovedi' | 'venerdi' | 'sabato' | 'domenica'
 
 interface GenericTaskFormData {
@@ -27,6 +27,20 @@ interface GenericTaskFormData {
   dataFine?: string // Data fine in formato ISO (YYYY-MM-DD) - Opzionale per intervallo
   departmentId?: string // Reparto assegnato (opzionale) - per filtri calendario
   note?: string
+  
+  // Gestione Orario Attività
+  timeManagement?: {
+    // Fascia oraria per visibilità evento
+    timeRange?: {
+      startTime: string // formato HH:MM
+      endTime: string   // formato HH:MM
+      isOvernight: boolean // true se endTime è del giorno dopo
+    }
+    // Opzioni di completamento
+    completionType?: 'timeRange' | 'startTime' | 'endTime' | 'none'
+    completionStartTime?: string // formato HH:MM - da quando può essere completato
+    completionEndTime?: string   // formato HH:MM - entro quando può essere completato
+  }
 }
 
 interface GenericTaskFormProps {
@@ -77,6 +91,25 @@ export const GenericTaskForm = ({
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isTimeManagementOpen, setIsTimeManagementOpen] = useState(false)
+
+  // Helper per gestire orari notturni
+  const isOvernightTime = (startTime: string, endTime: string): boolean => {
+    const start = new Date(`2000-01-01T${startTime}:00`)
+    const end = new Date(`2000-01-01T${endTime}:00`)
+    return end <= start
+  }
+
+  // Helper per aggiornare timeManagement
+  const updateTimeManagement = (updates: Partial<GenericTaskFormData['timeManagement']>) => {
+    setFormData(prev => ({
+      ...prev,
+      timeManagement: {
+        ...prev.timeManagement,
+        ...updates
+      }
+    }))
+  }
 
   const updateField = (updates: Partial<GenericTaskFormData>) => {
     setFormData(prev => ({ ...prev, ...updates }))
@@ -103,29 +136,6 @@ export const GenericTaskForm = ({
     }
     if (formData.frequenza === 'custom' && (!formData.giorniCustom || formData.giorniCustom.length === 0)) {
       newErrors.giorni = 'Seleziona almeno un giorno per frequenza personalizzata'
-    }
-    // Validazione data di inizio: non può essere nel passato
-    if (formData.dataInizio) {
-      const selectedDate = new Date(formData.dataInizio)
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      selectedDate.setHours(0, 0, 0, 0)
-      
-      if (selectedDate < today) {
-        newErrors.dataInizio = 'La data di inizio non può essere nel passato'
-      }
-    }
-
-    // Validazione data di fine: deve essere successiva alla data di inizio
-    if (formData.dataFine) {
-      const endDate = new Date(formData.dataFine)
-      const startDate = formData.dataInizio ? new Date(formData.dataInizio) : new Date()
-      startDate.setHours(0, 0, 0, 0)
-      endDate.setHours(0, 0, 0, 0)
-      
-      if (endDate <= startDate) {
-        newErrors.dataFine = 'La data di fine deve essere successiva alla data di inizio'
-      }
     }
 
     setErrors(newErrors)
@@ -222,47 +232,6 @@ export const GenericTaskForm = ({
           )}
         </div>
 
-        {/* Data di Inizio */}
-        <div>
-          <Label>Assegna Data di Inizio</Label>
-          <Input
-            type="date"
-            value={formData.dataInizio ?? ''}
-            onChange={e => updateField({ dataInizio: e.target.value })}
-            min={new Date().toISOString().split('T')[0]}
-            className="w-full"
-            placeholder="Lascia vuoto per iniziare da oggi"
-            aria-invalid={Boolean(errors.dataInizio)}
-          />
-          {errors.dataInizio ? (
-            <p className="mt-1 text-sm text-red-600">{errors.dataInizio}</p>
-          ) : (
-            <p className="mt-1 text-xs text-gray-500">
-              Opzionale - Se non specificata, l'attività inizia da oggi
-            </p>
-          )}
-        </div>
-
-        {/* Data di Fine */}
-        <div>
-          <Label>Assegna Data di Fine</Label>
-          <Input
-            type="date"
-            value={formData.dataFine ?? ''}
-            onChange={e => updateField({ dataFine: e.target.value })}
-            min={formData.dataInizio || new Date().toISOString().split('T')[0]}
-            className="w-full"
-            placeholder="Lascia vuoto per fine anno lavorativo"
-            aria-invalid={Boolean(errors.dataFine)}
-          />
-          {errors.dataFine ? (
-            <p className="mt-1 text-sm text-red-600">{errors.dataFine}</p>
-          ) : (
-            <p className="mt-1 text-xs text-gray-500">
-              Opzionale - Se non specificata, l'attività prosegue fino a fine anno lavorativo
-            </p>
-          )}
-        </div>
 
         {/* Ruolo */}
         <div>
@@ -281,6 +250,7 @@ export const GenericTaskForm = ({
               <SelectValue placeholder="Seleziona ruolo" />
             </SelectTrigger>
             <SelectContent>
+              <SelectOption value="all">Tutti</SelectOption>
               <SelectOption value="admin">Amministratore</SelectOption>
               <SelectOption value="responsabile">Responsabile</SelectOption>
               <SelectOption value="dipendente">Dipendente</SelectOption>
@@ -360,11 +330,12 @@ export const GenericTaskForm = ({
             <SelectTrigger>
               <SelectValue placeholder={
                 departmentOptions.length > 0
-                  ? "Nessun reparto specifico"
+                  ? "Seleziona reparto"
                   : "Nessun reparto disponibile"
               } />
             </SelectTrigger>
             <SelectContent>
+              <SelectOption value="all">Tutti</SelectOption>
               <SelectOption value="none">Nessun reparto</SelectOption>
               {departmentOptions.map(dept => (
                 <SelectOption key={dept.id} value={dept.id}>
@@ -406,6 +377,189 @@ export const GenericTaskForm = ({
             )}
           </div>
         )}
+
+        {/* Gestione Orario Attività - Sezione Collapse */}
+        <div className="md:col-span-2">
+          <button
+            type="button"
+            onClick={() => setIsTimeManagementOpen(!isTimeManagementOpen)}
+            className="flex items-center gap-2 w-full p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
+          >
+            <Clock className="h-5 w-5 text-gray-600" />
+            <span className="font-medium text-gray-900">Gestione Orario Attività</span>
+            {isTimeManagementOpen ? (
+              <ChevronDown className="h-4 w-4 text-gray-600 ml-auto" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-gray-600 ml-auto" />
+            )}
+          </button>
+          
+          {isTimeManagementOpen && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-4">
+              <p className="text-sm text-gray-600 mb-4">
+                💡 Configura quando l'attività può essere completata. 
+                Se non configurato, usa l'orario di apertura dell'azienda.
+              </p>
+
+              {/* Opzioni di Completamento */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Opzioni Completamento</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => updateTimeManagement({ completionType: 'none' })}
+                    className={`p-3 text-sm rounded-lg border transition-colors ${
+                      formData.timeManagement?.completionType === 'none' || !formData.timeManagement?.completionType
+                        ? 'bg-blue-50 border-blue-200 text-blue-800'
+                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Orario di Apertura
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => updateTimeManagement({ completionType: 'timeRange' })}
+                    className={`p-3 text-sm rounded-lg border transition-colors ${
+                      formData.timeManagement?.completionType === 'timeRange'
+                        ? 'bg-blue-50 border-blue-200 text-blue-800'
+                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Fascia Oraria
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => updateTimeManagement({ completionType: 'startTime' })}
+                    className={`p-3 text-sm rounded-lg border transition-colors ${
+                      formData.timeManagement?.completionType === 'startTime'
+                        ? 'bg-blue-50 border-blue-200 text-blue-800'
+                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Orario di Inizio
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => updateTimeManagement({ completionType: 'endTime' })}
+                    className={`p-3 text-sm rounded-lg border transition-colors ${
+                      formData.timeManagement?.completionType === 'endTime'
+                        ? 'bg-blue-50 border-blue-200 text-blue-800'
+                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Orario Fine
+                  </button>
+                </div>
+
+                {/* Fascia Oraria Completamento */}
+                {formData.timeManagement?.completionType === 'timeRange' && (
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <Label className="text-sm font-medium text-blue-800">Fascia Oraria per Completamento</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                      <div>
+                        <Label className="text-sm font-medium text-blue-700">Orario Inizio</Label>
+                        <Input
+                          type="time"
+                          value={formData.timeManagement?.timeRange?.startTime || '09:00'}
+                          onChange={e => {
+                            const startTime = e.target.value
+                            const endTime = formData.timeManagement?.timeRange?.endTime || '17:00'
+                            const isOvernight = isOvernightTime(startTime, endTime)
+                            
+                            updateTimeManagement({
+                              timeRange: {
+                                startTime,
+                                endTime,
+                                isOvernight
+                              }
+                            })
+                          }}
+                          className="w-full mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-blue-700">Orario Fine</Label>
+                        <Input
+                          type="time"
+                          value={formData.timeManagement?.timeRange?.endTime || '17:00'}
+                          onChange={e => {
+                            const endTime = e.target.value
+                            const startTime = formData.timeManagement?.timeRange?.startTime || '09:00'
+                            const isOvernight = isOvernightTime(startTime, endTime)
+                            
+                            updateTimeManagement({
+                              timeRange: {
+                                startTime,
+                                endTime,
+                                isOvernight
+                              }
+                            })
+                          }}
+                          className="w-full mt-1"
+                        />
+                      </div>
+                    </div>
+                    
+                    {formData.timeManagement?.timeRange?.isOvernight && (
+                      <div className="mt-3 p-2 bg-blue-100 border border-blue-300 rounded text-sm text-blue-800">
+                        🌙 Orario notturno (fine giorno dopo)
+                      </div>
+                    )}
+                    
+                    <p className="text-xs text-blue-600 mt-2">
+                      L'attività potrà essere completata solo durante questa fascia oraria
+                    </p>
+                  </div>
+                )}
+
+                {/* Orario Inizio Completamento */}
+                {formData.timeManagement?.completionType === 'startTime' && (
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <Label className="text-sm font-medium text-blue-800">Da quando può essere completata</Label>
+                    <Input
+                      type="time"
+                      value={formData.timeManagement?.completionStartTime || '09:00'}
+                      onChange={e => updateTimeManagement({ completionStartTime: e.target.value })}
+                      className="w-full max-w-xs mt-2"
+                    />
+                    <p className="text-xs text-blue-600 mt-1">
+                      L'attività potrà essere completata da questo orario in poi
+                    </p>
+                  </div>
+                )}
+
+                {/* Orario Fine Completamento */}
+                {formData.timeManagement?.completionType === 'endTime' && (
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <Label className="text-sm font-medium text-blue-800">Entro quando può essere completata</Label>
+                    <Input
+                      type="time"
+                      value={formData.timeManagement?.completionEndTime || '18:00'}
+                      onChange={e => updateTimeManagement({ completionEndTime: e.target.value })}
+                      className="w-full max-w-xs mt-2"
+                    />
+                    <p className="text-xs text-blue-600 mt-1">
+                      L'attività potrà essere completata entro questo orario
+                    </p>
+                  </div>
+                )}
+
+                {/* Orario di Apertura Default */}
+                {(!formData.timeManagement?.completionType || formData.timeManagement?.completionType === 'none') && (
+                  <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <Label className="text-sm font-medium text-gray-700">Usa orario di apertura azienda</Label>
+                    <p className="text-xs text-gray-600 mt-1">
+                      L'attività seguirà gli orari di apertura configurati per l'azienda
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Note */}
         <div className="md:col-span-2">

@@ -26,7 +26,6 @@ export function useMaintenanceTasks(conservationPointId?: string) {
         return []
       }
 
-      console.log('🔧 Loading maintenance tasks from Supabase for company:', companyId)
 
       let query = supabase
         .from('maintenance_tasks')
@@ -48,7 +47,6 @@ export function useMaintenanceTasks(conservationPointId?: string) {
         throw error
       }
 
-      console.log('✅ Loaded maintenance tasks from Supabase:', data?.length || 0)
       return data || []
     },
     enabled: !!companyId,

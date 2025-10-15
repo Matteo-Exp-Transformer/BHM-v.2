@@ -69,6 +69,7 @@ const CUSTOM_DAYS: Array<{
 
 const TasksStep = ({
   data,
+  departments,
   conservationPoints,
   staff,
   onUpdate,
@@ -109,6 +110,11 @@ const TasksStep = ({
         department: member.department_assignments,
       })),
     [staff]
+  )
+
+  const departmentOptions = useMemo(
+    () => departments?.filter(dept => dept.is_active !== false) || [],
+    [departments]
   )
 
   // Funzione di validazione per manutenzioni
@@ -212,6 +218,7 @@ const TasksStep = ({
     setEditingGenericTaskId(null)
   }, [])
 
+
   const renderMaintenanceAssignmentModal = () => {
     if (!selectedConservationPoint) return null
 
@@ -239,11 +246,11 @@ const TasksStep = ({
   }
 
   const renderGenericTasksSection = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-xl font-semibold text-gray-900">
-            👥 Attività/Mansioni Generiche
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900">
+              👥 Attività/Mansioni Generiche
         </h3>
         <p className="text-sm text-gray-500">
             Crea attività generiche e assegna responsabilità al personale
@@ -272,6 +279,7 @@ const TasksStep = ({
                 key={task.id}
                 task={task}
                 staffOptions={staffOptions}
+                departmentOptions={departmentOptions}
                 isEditing={true}
                 onUpdate={(updates) => handleUpdateGenericTask(task.id, updates)}
                 onDelete={() => handleDeleteGenericTask(task.id)}
@@ -299,6 +307,9 @@ const TasksStep = ({
                       <span>👤 {task.assegnatoARuolo}</span>
                       {task.assegnatoACategoria && task.assegnatoACategoria !== 'all' && (
                         <span>📂 {task.assegnatoACategoria}</span>
+                      )}
+                      {task.departmentId && (
+                        <span>🏢 {departmentOptions.find(d => d.id === task.departmentId)?.name}</span>
                       )}
                       {task.assegnatoADipendenteSpecifico && (
                         <span>👨‍💼 {staffOptions.find(s => s.id === task.assegnatoADipendenteSpecifico)?.label}</span>
@@ -765,6 +776,7 @@ const MaintenanceAssignmentForm = ({
 interface GenericTaskFormProps {
   task: GenericTask
   staffOptions: Array<{ id: string; label: string; role: string; categories: string[] }>
+  departmentOptions: Array<{ id: string; name: string; is_active?: boolean }>
   isEditing: boolean
   onUpdate: (updates: Partial<GenericTask>) => void
   onDelete: () => void
@@ -774,6 +786,7 @@ interface GenericTaskFormProps {
 const GenericTaskForm = ({
   task,
   staffOptions,
+  departmentOptions,
   isEditing,
   onUpdate,
   onDelete,
@@ -914,6 +927,30 @@ const GenericTaskForm = ({
                       </SelectOption>
                     ))
                   }
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Reparto</Label>
+              <Select
+                value={task.departmentId || 'all'}
+                onValueChange={value =>
+                  updateTask({
+                    departmentId: value === 'all' ? undefined : value
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona reparto" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectOption value="all">Tutti i reparti</SelectOption>
+                  {departmentOptions.map(department => (
+                    <SelectOption key={department.id} value={department.id}>
+                      {department.name}
+                    </SelectOption>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

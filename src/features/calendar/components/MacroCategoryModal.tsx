@@ -83,12 +83,17 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
 
     setIsCompletingMaintenance(true)
     try {
-      // Aggiorna lo stato della manutenzione a 'completed'
+      const now = new Date().toISOString()
+      
+      // Aggiorna lo stato della manutenzione a 'completed' con tutti i campi necessari
       const { error } = await supabase
         .from('maintenance_tasks')
         .update({
           status: 'completed',
-          updated_at: new Date().toISOString()
+          completed_by: user.id,
+          completed_at: now,
+          last_completed: now,
+          updated_at: now
         })
         .eq('id', maintenanceId)
         .eq('company_id', companyId)
@@ -418,6 +423,15 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                   const taskDate = new Date(item.dueDate)
                                   taskDate.setHours(0, 0, 0, 0)
 
+                                  // Debug: mostra le date per verificare il confronto
+                                  console.log('🔍 Debug completamento mansione:', {
+                                    taskTitle: item.title,
+                                    today: today.toISOString(),
+                                    taskDate: taskDate.toISOString(),
+                                    isFuture: taskDate > today,
+                                    comparison: `${taskDate.getTime()} > ${today.getTime()} = ${taskDate.getTime() > today.getTime()}`
+                                  })
+
                                   // Blocca SOLO se la mansione è nel futuro
                                   if (taskDate > today) {
                                     const taskDateStr = taskDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })
@@ -437,11 +451,11 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                         await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
                                         await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
 
-                                        toast.success('Mansione completata!')
+                                        toast.success('✅ Mansione completata!')
                                         setSelectedItems([]) // Chiudi tutti gli item aperti
                                         
-                                        // Chiudi e riapri il pannello per mostrare le modifiche
-                                        onClose()
+                                        // NON chiudere il modal automaticamente per permettere all'utente di vedere il risultato
+                                        // onClose()
                                       },
                                       onError: (error) => {
                                         console.error('Error completing task:', error)
@@ -601,11 +615,11 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                             await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
                                             await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
 
-                                            toast.success('Mansione completata!')
+                                            toast.success('✅ Mansione completata!')
                                             setSelectedItems([]) // Chiudi tutti gli item aperti
                                             
-                                            // Chiudi e riapri il pannello per mostrare le modifiche
-                                            onClose()
+                                            // NON chiudere il modal automaticamente per permettere all'utente di vedere il risultato
+                                            // onClose()
                                           },
                                           onError: (error) => {
                                             console.error('Error completing task:', error)

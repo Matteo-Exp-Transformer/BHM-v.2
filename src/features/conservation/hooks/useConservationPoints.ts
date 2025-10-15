@@ -24,10 +24,6 @@ export function useConservationPoints() {
         return []
       }
 
-      console.log(
-        '🔧 Loading conservation points from Supabase for company:',
-        companyId
-      )
       const { data, error } = await supabase
         .from('conservation_points')
         .select(

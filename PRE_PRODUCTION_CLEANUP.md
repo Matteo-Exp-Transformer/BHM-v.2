@@ -26,11 +26,35 @@ Questo file contiene tutte le funzionalità utili per lo sviluppo che **NON** do
 
 **IMPORTANTE:** Mantenere solo:
 - Pulsante "Attività" (Alert Badge)
-- Pulsante "Onboarding" (Riapri)
+- ❌ RIMUOVERE: Pulsante "Onboarding" (non più necessario)
 
 ---
 
-### **2. Pulsanti Dev in Onboarding (DevButtons.tsx)**
+### **2. Comportamento Onboarding (NUOVO COMPORTAMENTO)**
+**File:** `src/components/HeaderButtons.tsx` e logica onboarding
+
+**Cosa modificare:**
+- ❌ RIMUOVERE: Pulsante "Onboarding" dall'header
+- ✅ IMPLEMENTARE: Onboarding come prima pagina dopo login SOLO per admin al primo accesso
+- ✅ IMPLEMENTARE: Dopo completamento onboarding, non mostrare più mai
+
+**Logica da implementare:**
+```tsx
+// In HeaderButtons.tsx - RIMUOVERE:
+<Button onClick={handleReopenOnboarding}>
+  Riapri Onboarding
+</Button>
+
+// In App.tsx o routing - IMPLEMENTARE:
+// 1. Check se utente è admin
+// 2. Check se onboarding è già stato completato
+// 3. Se admin + primo accesso → Mostra onboarding
+// 4. Se già completato → Vai direttamente a dashboard
+```
+
+---
+
+### **3. Pulsanti Dev in Onboarding (DevButtons.tsx)**
 **File:** `src/components/DevButtons.tsx`
 
 **Cosa fare:**
@@ -45,7 +69,7 @@ Questo file contiene tutte le funzionalità utili per lo sviluppo che **NON** do
 
 ---
 
-### **3. Funzioni Globali Dev (App.tsx)**
+### **4. Funzioni Globali Dev (App.tsx)**
 **File:** `src/App.tsx`
 
 **Cosa rimuovere:**
@@ -66,7 +90,7 @@ if (import.meta.env.DEV) {
 
 ---
 
-### **4. Auto-Login Multi-Host (QUESTA MODIFICA - Opzione A)**
+### **5. Auto-Login Multi-Host (QUESTA MODIFICA - Opzione A)**
 **File:** `src/utils/multiHostAuth.ts` (da creare)
 
 **Cosa rimuovere:**
@@ -84,7 +108,7 @@ In produzione c'è un solo host (es: app.tuodominio.com)
 
 ---
 
-### **5. Script SQL di Reset (database/scripts/)**
+### **6. Script SQL di Reset (database/scripts/)**
 **Cartella:** `database/scripts/`
 
 **Cosa fare:**
@@ -99,7 +123,7 @@ In produzione c'è un solo host (es: app.tuodominio.com)
 
 ---
 
-### **6. File di Debug e Report**
+### **7. File di Debug e Report**
 **Cosa rimuovere:**
 - ❌ `DEBUG_COMPLIANCE_REPORT.md`
 - ❌ Cartella `Info per debug/`
@@ -110,7 +134,7 @@ In produzione c'è un solo host (es: app.tuodominio.com)
 
 ---
 
-### **7. Console.log di Debug**
+### **8. Console.log di Debug**
 **Dove cercare:**
 - Tutti i file `.tsx` e `.ts`
 - Cercare: `console.log`, `console.debug`, `console.info`
@@ -123,7 +147,7 @@ In produzione c'è un solo host (es: app.tuodominio.com)
 
 ---
 
-### **8. Dati di Test Precompilati**
+### **9. Dati di Test Precompilati**
 **File:** `src/utils/onboardingHelpers.ts`
 
 **Funzioni da rimuovere/modificare:**
@@ -137,9 +161,37 @@ if (import.meta.env.DEV) {
 }
 ```
 
+**IMPORTANTE - Logica Form Onboarding:**
+La logica dei form negli step onboarding è stata ottimizzata per essere **intelligente**:
+
+```tsx
+// Logica implementata:
+{(data.length === 0 || editingId) && (
+  <FormComponent />
+)}
+
+// Comportamento:
+// - Se NON ci sono dati → Form APERTO (per inserire primi dati)
+// - Se ci sono dati → Form CHIUSO (mostra solo pulsante "Aggiungi")
+// - Se stiamo editando → Form APERTO (per modificare)
+```
+
+**Vantaggi per Production:**
+- ✅ **UX Ottimale**: Form aperti solo quando necessario
+- ✅ **Nessun codice dev**: La logica funziona automaticamente
+- ✅ **Pulizia automatica**: Dopo precompilazione, form si chiudono
+- ✅ **Zero configurazione**: Non serve flag o variabili d'ambiente
+
+**File coinvolti:**
+- `src/components/onboarding-steps/DepartmentsStep.tsx`
+- `src/components/onboarding-steps/StaffStep.tsx` 
+- `src/components/onboarding-steps/ConservationStep.tsx`
+
+**Nota:** Questa logica rimane attiva anche in production perché migliora l'UX senza dipendere da dati di test.
+
 ---
 
-### **9. Environment Variables di Sviluppo**
+### **10. Environment Variables di Sviluppo**
 **File:** `.env`
 
 **Verificare:**
@@ -151,7 +203,7 @@ if (import.meta.env.DEV) {
 
 ---
 
-### **10. Service Worker e PWA**
+### **11. Service Worker e PWA**
 **File:** `vite.config.ts`
 
 **Verificare:**
@@ -168,10 +220,13 @@ if (import.meta.env.DEV) {
 
 ### **Fase 1: Pulizia Codice**
 - [ ] Rimuovere pulsanti dev da HeaderButtons
+- [ ] ❌ RIMUOVERE: Pulsante "Onboarding" dall'header
+- [ ] ✅ IMPLEMENTARE: Onboarding automatico per admin al primo accesso
 - [ ] Rimuovere DevButtons component
 - [ ] Rimuovere funzioni globali dev da App.tsx
 - [ ] Rimuovere auto-login multi-host
 - [ ] Rimuovere console.log di debug
+- [ ] ✅ VERIFICARE: Logica form intelligente funziona correttamente (form aperti/chiusi automaticamente)
 
 ### **Fase 2: Pulizia File**
 - [ ] Rimuovere script SQL di test
@@ -221,6 +276,46 @@ if (import.meta.env.DEV) {
 - In production c'è UN SOLO dominio (es: app.tuodominio.com)
 - Non servono più porte diverse
 - Il problema esiste solo in localhost
+
+---
+
+## 🎯 IMPLEMENTAZIONE ONBOARDING AUTOMATICO:
+
+### **Logica da Implementare:**
+
+```typescript
+// In App.tsx o routing principale
+const shouldShowOnboarding = () => {
+  // 1. Verifica se utente è admin
+  const isAdmin = user?.role === 'admin' || hasPermission('canManageSettings')
+  
+  // 2. Verifica se onboarding è già stato completato
+  const onboardingCompleted = localStorage.getItem('onboarding_completed') === 'true'
+  
+  // 3. Mostra onboarding solo se admin + primo accesso
+  return isAdmin && !onboardingCompleted
+}
+
+// Nel routing
+if (shouldShowOnboarding()) {
+  return <OnboardingWizard onComplete={() => {
+    localStorage.setItem('onboarding_completed', 'true')
+    // Redirect to dashboard
+  }} />
+}
+```
+
+### **File da Modificare:**
+1. **`src/components/HeaderButtons.tsx`** - Rimuovere pulsante onboarding
+2. **`src/App.tsx`** - Implementare logica automatica
+3. **`src/components/OnboardingWizard.tsx`** - Aggiungere callback onComplete
+4. **Database** - Aggiungere flag `onboarding_completed` in `user_sessions` o `companies`
+
+### **Comportamento Finale:**
+- ✅ **Admin primo accesso**: Vede onboarding automaticamente
+- ✅ **Admin dopo onboarding**: Vede direttamente dashboard
+- ✅ **Utenti non-admin**: Non vedono mai onboarding
+- ❌ **Pulsante riapri**: Non esiste più
 
 ---
 

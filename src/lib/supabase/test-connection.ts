@@ -2,8 +2,6 @@ import { supabase } from './client'
 
 // Test function to verify Supabase connection
 export const testSupabaseConnection = async () => {
-  console.log('🔍 Testing Supabase connection...')
-
   try {
     // Test 1: Basic connection
     const { data: healthCheck, error: healthError } = await supabase
@@ -16,8 +14,6 @@ export const testSupabaseConnection = async () => {
       return { success: false, error: healthError }
     }
 
-    console.log('✅ Health check passed:', healthCheck)
-
     // Test 2: Test RLS policies (should work with auth)
     const { data: userProfiles, error: profilesError } = await supabase
       .from('user_profiles')
@@ -25,9 +21,7 @@ export const testSupabaseConnection = async () => {
       .limit(1)
 
     if (profilesError) {
-      console.log('⚠️ RLS test (expected without auth):', profilesError.message)
-    } else {
-      console.log('✅ RLS test passed:', userProfiles)
+      // Expected without auth
     }
 
     // Test 3: Test specific tables that exist

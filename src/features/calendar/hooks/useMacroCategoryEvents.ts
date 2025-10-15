@@ -54,8 +54,83 @@ function extractEndDate(description?: string): Date | null {
   return match ? new Date(match[1]) : null
 }
 
+// Helper function per verificare visibilità evento basata su orario
+function isEventVisibleByTime(timeManagement?: any): boolean {
+  if (!timeManagement?.time_range) {
+    // Se non configurato, usa orario di apertura azienda (default)
+    return true
+  }
+
+  const { start_time, end_time, is_overnight } = timeManagement.time_range
+  const now = new Date()
+  const currentTime = now.getHours() * 60 + now.getMinutes() // minuti dall'inizio del giorno
+  const startMinutes = parseInt(start_time.split(':')[0]) * 60 + parseInt(start_time.split(':')[1])
+  const endMinutes = parseInt(end_time.split(':')[0]) * 60 + parseInt(end_time.split(':')[1])
+
+  if (is_overnight) {
+    // Orario notturno: da start_time a mezzanotte + da mezzanotte a end_time
+    return currentTime >= startMinutes || currentTime <= endMinutes
+  } else {
+    // Orario normale: da start_time a end_time
+    return currentTime >= startMinutes && currentTime <= endMinutes
+  }
+}
+
+// Helper function per verificare autorizzazione utente per evento
+function isUserAuthorizedForEvent(
+  assignedToRole?: string, 
+  assignedToCategory?: string, 
+  assignedToStaffId?: string,
+  userRole?: string,
+  userStaffId?: string,
+  userDepartments?: string[],
+  userCategories?: string[]
+): boolean {
+  // Admin e responsabili vedono tutto
+  if (userRole === 'admin' || userRole === 'responsabile') {
+    return true
+  }
+
+  // Se non c'è ruolo assegnato all'evento OPPURE è assegnato a "Tutti", tutti possono vederlo
+  if (!assignedToRole || assignedToRole === 'all') {
+    return true
+  }
+
+  // Se l'utente non ha ruolo (guest), non può vedere eventi con ruolo specifico
+  if (!userRole || userRole === 'guest') {
+    return false
+  }
+
+  // Controlla se l'utente corrisponde ad ALMENO UNA delle condizioni:
+  
+  // 1. Ruolo corrisponde
+  if (userRole === assignedToRole) {
+    return true
+  }
+
+  // 2. Categoria corrisponde (se utente appartiene a quella categoria)
+  if (assignedToCategory && assignedToCategory !== 'all' && userCategories?.includes(assignedToCategory)) {
+    return true
+  }
+
+  // 3. Reparto corrisponde (se utente è assegnato a quel reparto)
+  if (userDepartments && userDepartments.length > 0) {
+    // Qui dovremmo controllare se l'evento è assegnato a uno dei reparti dell'utente
+    // Per ora assumiamo che se l'utente ha reparti, può vedere eventi senza reparto specifico
+    return true
+  }
+
+  // 4. Dipendente specifico corrisponde
+  if (assignedToStaffId && userStaffId === assignedToStaffId) {
+    return true
+  }
+
+  // Se nessuna condizione è soddisfatta, non può vedere l'evento
+  return false
+}
+
 export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarFilters): MacroCategoryResult {
-  const { user, companyId } = useAuth()
+  const { user, companyId, userRole } = useAuth()
   const { maintenanceTasks, isLoading: maintenanceLoading } = useMaintenanceTasks()
   const { products, isLoading: productsLoading } = useProducts()
   const { tasks: genericTasks, isLoading: genericTasksLoading } = useGenericTasks()
@@ -102,12 +177,22 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
       convertMaintenanceToItem(task)
     )
 
+    // Applica filtro di autorizzazione
+    const authorizedItems = items.filter(item => {
+      return isUserAuthorizedForEvent(
+        item.assignedToRole,
+        item.assignedToCategory,
+        item.assignedToStaffId,
+        userRole
+      )
+    })
+
     // Apply filters if provided
     if (!filters || areAllFiltersEmpty(filters)) {
-      return items
+      return authorizedItems
     }
 
-    return items.filter(item => {
+    return authorizedItems.filter(item => {
       // Filter by department
       if (filters.departments.length > 0) {
         const deptId = item.metadata.departmentId as string | undefined
@@ -134,7 +219,7 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
 
       return true
     })
-  }, [maintenanceTasks, filters])
+  }, [maintenanceTasks, filters, userRole])
 
   const genericTaskItems = useMemo(() => {
     if (!genericTasks || genericTasks.length === 0) return []
@@ -143,12 +228,29 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
       expandTaskWithCompletions(task, taskCompletions, fiscalYearEnd)
     )
 
+    // Applica filtri di visibilità e autorizzazione
+    const visibleItems = items.filter(item => {
+      // Verifica se l'evento è visibile in base all'orario configurato
+      const task = genericTasks.find(t => t.id === item.metadata.sourceId)
+      const isVisibleByTime = isEventVisibleByTime(task?.time_management)
+      
+      // Verifica se l'utente è autorizzato a vedere l'evento
+      const isAuthorized = isUserAuthorizedForEvent(
+        item.assignedToRole,
+        item.assignedToCategory,
+        item.assignedToStaffId,
+        userRole
+      )
+      
+      return isVisibleByTime && isAuthorized
+    })
+
     // Apply filters if provided
     if (!filters || areAllFiltersEmpty(filters)) {
-      return items
+      return visibleItems
     }
 
-    return items.filter(item => {
+    return visibleItems.filter(item => {
       // Filter by department
       if (filters.departments.length > 0) {
         const deptId = item.metadata.departmentId as string | undefined
@@ -175,7 +277,7 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
 
       return true
     })
-  }, [genericTasks, taskCompletions, fiscalYearEnd, filters])
+  }, [genericTasks, taskCompletions, fiscalYearEnd, filters, userRole])
 
   const productExpiryItems = useMemo(() => {
     if (!products || products.length === 0) return []

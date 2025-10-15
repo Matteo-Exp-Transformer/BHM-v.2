@@ -330,14 +330,24 @@ export const CalendarPage = () => {
     createTask({
       name: taskData.name,
       frequency: taskData.frequenza,
-      assigned_to_role: taskData.assegnatoARuolo,
+      assigned_to_role: taskData.assegnatoARuolo === 'all' ? undefined : taskData.assegnatoARuolo,
       assigned_to_category: taskData.assegnatoACategoria,
       assigned_to_staff_id: taskData.assegnatoADipendenteSpecifico,
-      department_id: taskData.departmentId, // Reparto assegnato (opzionale)
+      department_id: taskData.departmentId === 'all' ? undefined : taskData.departmentId, // Reparto assegnato (opzionale)
       note: taskData.note,
       custom_days: taskData.giorniCustom,
-      start_date: taskData.dataInizio, // Data di inizio opzionale
-      end_date: taskData.dataFine, // Data di fine opzionale
+      
+      // Gestione Orario Attività
+      time_management: taskData.timeManagement ? {
+        time_range: taskData.timeManagement.timeRange ? {
+          start_time: taskData.timeManagement.timeRange.startTime,
+          end_time: taskData.timeManagement.timeRange.endTime,
+          is_overnight: taskData.timeManagement.timeRange.isOvernight
+        } : undefined,
+        completion_type: taskData.timeManagement.completionType,
+        completion_start_time: taskData.timeManagement.completionStartTime,
+        completion_end_time: taskData.timeManagement.completionEndTime
+      } : undefined
     })
   }
 

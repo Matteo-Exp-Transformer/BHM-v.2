@@ -204,8 +204,9 @@ const DepartmentsStep = ({
         </button>
       </div>
 
-      {/* Add/Edit Form */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+      {/* Add/Edit Form - Mostra solo se non ci sono dati o se stiamo editando */}
+      {(departments.length === 0 || editingId) && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <h3 className="font-medium text-gray-900 mb-3">
           {editingId ? 'Modifica Reparto' : 'Aggiungi Nuovo Reparto'}
         </h3>
@@ -288,6 +289,20 @@ const DepartmentsStep = ({
           </div>
         </div>
       </div>
+      )}
+
+      {/* Pulsante Aggiungi quando ci sono già dati */}
+      {departments.length > 0 && !editingId && (
+        <div className="mb-4">
+          <button
+            onClick={() => setEditingId('new')}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Aggiungi Nuovo Reparto
+          </button>
+        </div>
+      )}
 
       {/* Departments List */}
       <div>

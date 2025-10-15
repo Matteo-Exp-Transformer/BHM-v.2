@@ -45,8 +45,21 @@ export interface CreateGenericTaskInput {
   assigned_to_staff_id?: string
   note?: string
   custom_days?: string[] // Giorni della settimana se frequenza custom
-  start_date?: string // Data di inizio in formato ISO (YYYY-MM-DD)
-  end_date?: string // Data di fine in formato ISO (YYYY-MM-DD) - limita espansione eventi
+  department_id?: string // Reparto assegnato (opzionale)
+  
+  // Gestione Orario Attività
+  time_management?: {
+    // Fascia oraria per visibilità evento
+    time_range?: {
+      start_time: string // formato HH:MM
+      end_time: string   // formato HH:MM
+      is_overnight: boolean // true se endTime è del giorno dopo
+    }
+    // Opzioni di completamento
+    completion_type?: 'timeRange' | 'startTime' | 'endTime' | 'none'
+    completion_start_time?: string // formato HH:MM - da quando può essere completato
+    completion_end_time?: string   // formato HH:MM - entro quando può essere completato
+  }
 }
 
 const QUERY_KEYS = {
@@ -200,13 +213,14 @@ export const useGenericTasks = () => {
       if (input.assigned_to_category && input.assigned_to_category !== 'all') {
         payload.assigned_to_category = input.assigned_to_category
       }
+      if (input.department_id) {
+        payload.department_id = input.department_id
+      }
       if (next_due) payload.next_due = next_due.toISOString()
       
-      // Salva end_date nei metadata se specificato
-      if (input.end_date) {
-        payload.description = payload.description 
-          ? `${payload.description}\n[END_DATE:${input.end_date}]`
-          : `[END_DATE:${input.end_date}]`
+      // Gestione Orario Attività - aggiungi solo se configurato
+      if (input.time_management) {
+        payload.time_management = input.time_management
       }
 
       const { data, error } = await supabase
