@@ -1,9 +1,20 @@
 # ✅ User Activity Tracking - Task Tracking
 
 **Project:** Business HACCP Manager v.2
-**Branch:** NoClerk
+**Branch:** NoClerk → **feature/user-activity-tracking** (BRANCH DEDICATO)
 **Start Date:** 2025-01-10
 **Status:** 🚀 In Progress
+**Assigned to:** Multi-Agent Team (3 agents + Supervisore)
+
+---
+
+## ⚠️ WORKFLOW IMPORTANTE
+
+1. **Branch Setup**: Tutto il lavoro va su `feature/user-activity-tracking`
+2. **No Commit**: Solo supervisore (Claude Code) fa commit
+3. **Espandere Esistente**: NON riscrivere da zero, espandere codice funzionante
+4. **Testing Finale**: Supervisore testa prima di commit
+5. **Merge**: Solo dopo approvazione utente finale
 
 ---
 
@@ -194,16 +205,34 @@
 ---
 
 ### Task 2.5: Update Inventory Service for Logging
-**Status:** ⏳ Pending
+**Status:** ✅ Completed
 **Estimate:** 20 min
 **Priority:** MEDIUM
 
 **File:** `src/features/inventory/hooks/useProducts.ts`
 
 **Changes:**
-- [ ] On product creation: call `logActivity('product_added', {...})`
-- [ ] Include product details in activity_data
-- [ ] Include category, department, conservation_point info
+- [x] On product creation: call `logActivity('product_added', {...})`
+- [x] On product update: call `logActivity('product_updated', {...})`
+- [x] On product deletion: call `logActivity('product_deleted', {...})`
+- [x] Include product details in activity_data
+- [x] Include category, department, conservation_point info
+
+---
+
+### Task 2.6: Add Product Transfer Tracking (NEW!)
+**Status:** ⏳ Pending
+**Estimate:** 45 min
+**Priority:** HIGH
+
+**File:** `src/features/inventory/hooks/useProducts.ts`
+
+**Changes:**
+- [ ] Create `transferProduct()` mutation
+- [ ] On transfer: call `logActivity('product_transferred', {...})`
+- [ ] Include from/to conservation points and departments
+- [ ] Include transfer reason and authorization
+- [ ] Update product record with new location
 
 ---
 

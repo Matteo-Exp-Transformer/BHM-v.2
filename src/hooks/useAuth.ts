@@ -134,8 +134,8 @@ export const useAuth = () => {
             session.user.id,
             companyId
           )
-          if (sessionResult.success && sessionResult.data) {
-            setCurrentSessionId(sessionResult.data.id)
+          if (sessionResult.success && sessionResult.sessionId) {
+            setCurrentSessionId(sessionResult.sessionId)
           }
         }
       }
@@ -300,8 +300,8 @@ export const useAuth = () => {
           user.id,
           companies[0].company_id
         )
-        if (sessionResult.success && sessionResult.data) {
-          setCurrentSessionId(sessionResult.data.id)
+        if (sessionResult.success && sessionResult.sessionId) {
+          setCurrentSessionId(sessionResult.sessionId)
         }
 
         return newSession as UserSession
