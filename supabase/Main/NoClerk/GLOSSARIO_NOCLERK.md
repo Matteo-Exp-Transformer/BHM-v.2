@@ -3351,6 +3351,198 @@ export const DEFAULT_CALENDAR_CONFIG: CalendarConfigInput = {
 }
 ```
 
+### 10.9 Calendario Unificato - Design Moderno
+
+**Versione**: 2.0 (Modern Design)  
+**Data Implementazione**: Ottobre 2025  
+**Branch**: `calendario-modern-design` → `NoClerk`
+
+#### Overview
+Il sistema calendario è stato completamente rinnovato con design moderno indigo/purple e architettura ottimizzata.
+
+**📄 Documentazione Completa**: Vedi [`docs/glossario-calendario.md`](../../docs/glossario-calendario.md)
+
+#### Caratteristiche Principali
+
+**Design Moderno:**
+- ✨ Gradienti indigo/purple su tutti i componenti
+- 🎨 Animazioni fluide e micro-interazioni
+- 💫 Hover effects e transizioni CSS moderne
+- 📱 Layout responsive con card moderne
+
+**Funzionalità:**
+- 📅 Calendario unificato (manutenzioni, attività, scadenze, alert HACCP, temperature)
+- 🎯 Modalità Standard e Macro Categorie
+- 🔍 Filtri avanzati (reparti, stati, tipi evento)
+- 📊 Legenda eventi con conteggi dinamici
+- ⚡ Gestione completamento task con React Query
+
+**Componenti Chiave:**
+```
+src/features/calendar/
+├── Calendar.tsx                      # Componente calendario principale
+├── CalendarPage.tsx                  # Pagina calendario con tutti i controlli
+├── calendar-custom.css               # Stili personalizzati moderni
+└── components/
+    ├── CalendarEventLegend.tsx       # Legenda moderna con gradienti
+    ├── EventModal.tsx                # Modal dettaglio evento
+    ├── NewCalendarFilters.tsx        # Filtri riprogettati
+    └── CategoryEventsModal.tsx       # Modal eventi aggregati
+└── hooks/
+    ├── useAggregatedEvents.ts        # Aggregazione eventi da tutte le fonti
+    ├── useGenericTasks.ts            # Gestione attività generiche
+    └── useMacroCategoryEvents.ts     # Eventi in modalità macro
+```
+
+#### Aggregazione Eventi
+
+Il calendario aggrega eventi da 6 fonti diverse:
+1. **Manutenzioni** (`maintenance_tasks`)
+2. **Controlli Temperatura** (`conservation_points`)
+3. **Scadenze Prodotti** (`products`)
+4. **Scadenze HACCP Staff** (`staff.haccp_certification`)
+5. **Alert HACCP** (generati dinamicamente)
+6. **Attività Generiche** (`tasks`)
+
+**Query Pattern:**
+```typescript
+const { events, isLoading, sources } = useAggregatedEvents({
+  companyId,
+  calendarSettings,
+  useMacroCategories: false
+})
+
+// sources contiene il conteggio per ogni tipo:
+// { maintenance: 45, temperatureChecks: 120, productExpiry: 23, ... }
+```
+
+#### Sistema di Completamento Task
+
+**Logica Multi-Periodo:**
+- Task ricorrenti generano completamenti per periodo specifico
+- Previene doppi completamenti dello stesso task nello stesso periodo
+- Invalida automaticamente cache React Query
+
+```typescript
+// Completamento task con data specifica
+await completeTask({
+  taskId: 'xxx',
+  eventDate: '2025-01-15',  // Data evento specifico
+  notes: 'Completato con successo'
+})
+
+// Invalida cache:
+queryClient.invalidateQueries(['generic-tasks', companyId])
+queryClient.invalidateQueries(['task-completions', companyId])
+queryClient.invalidateQueries(['calendar-events', companyId])
+queryClient.invalidateQueries(['macro-category-events'])
+```
+
+#### Modalità Visualizzazione
+
+**1. Standard Mode:**
+- Eventi individuali su calendario
+- Click su evento → modal dettaglio
+- Filtri applicabili
+
+**2. Macro Categorie Mode:**
+- Eventi aggregati per tipo (es. "15 Manutenzioni")
+- Click su categoria → modal lista eventi
+- Conteggio dinamico badge
+
+**Trigger Macro:**
+```typescript
+// Attivazione automatica quando troppi eventi
+const eventCountPerDay = events.length / visibleDays
+if (eventCountPerDay > THRESHOLD) {
+  setUseMacroCategories(true)
+}
+```
+
+#### Filtri Calendario
+
+**File**: `src/features/calendar/components/NewCalendarFilters.tsx`
+
+**Dimensioni Filtraggio:**
+1. **Per Reparto** - Multi-select con conteggio eventi
+2. **Per Stato** - pending | completed | overdue | cancelled
+3. **Per Tipo** - maintenance | product_expiry | haccp_alert | task | temperature
+
+**Pattern:**
+```typescript
+const filteredEvents = events.filter(event => 
+  doesEventPassFilters(event, filters)
+)
+```
+
+#### Design System
+
+**Palette Colori:**
+```css
+/* Gradienti Primari */
+from-indigo-500 to-purple-600
+from-indigo-50 to-purple-50
+from-indigo-100 to-purple-100
+
+/* Stati */
+.pending: border-yellow-500
+.completed: border-green-500
+.overdue: border-red-500
+
+/* Hover Effects */
+hover:shadow-lg hover:-translate-y-1
+transition-all duration-300
+```
+
+**Componenti UI:**
+- Card con `rounded-xl` e `shadow-sm`
+- Badge con gradienti e `border-2`
+- Bottoni con `group-hover:scale-110`
+- Transizioni `duration-200` / `duration-300`
+
+#### Performance
+
+**Ottimizzazioni:**
+- React Query caching per tutte le query
+- useMemo per filtri e aggregazioni
+- Debounce su filtri e ricerche
+- Lazy loading componenti modal
+
+**Cache Keys:**
+```typescript
+['generic-tasks', companyId]
+['task-completions', companyId, startDate, endDate]
+['calendar-events', companyId]
+['macro-category-events']
+['calendar-settings', companyId]
+```
+
+#### Troubleshooting
+
+**Problema**: Eventi non si aggiornano dopo completamento
+**Soluzione**: Verifica invalidazione cache React Query completa
+
+**Problema**: Task ricorrente si duplica
+**Soluzione**: Controlla che `eventDate` sia passato correttamente
+
+**Problema**: Filtri non funzionano
+**Soluzione**: Verifica `doesEventPassFilters()` e presenza `extendedProps`
+
+#### Migration Notes
+
+**Da Branch**: `calendario-modern-design`  
+**A Branch**: `NoClerk`  
+**Files Importati**: Calendar.tsx, CalendarPage.tsx, calendar-custom.css, componenti e hooks  
+**Breaking Changes**: Nessuno - backward compatible
+
+**Backup**: `componenti funzionanti backup/calendar/`
+
+**Testing:**
+- ✅ Build TypeScript (0 errori)
+- ✅ Compilazione Vite
+- ✅ Linter (warning minimizzati)
+- ✅ Logiche intatte (filtri, modal, completamento)
+
 ---
 
 ## 🎯 CHECKLIST COMPLIANCE

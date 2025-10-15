@@ -171,6 +171,59 @@ Sistema completo di tracciamento attività utente:
     unit: 'kg'
   }
 }
+
+// product_updated
+{
+  activity_type: 'product_updated',
+  entity_type: 'product',
+  entity_id: 'uuid-product-id',
+  activity_data: {
+    product_name: 'Mozzarella Bufala',
+    changes: {
+      quantity: { old: 10, new: 8 },
+      status: { old: 'active', new: 'active' }
+    },
+    update_reason: 'Consumo parziale per servizio'
+  }
+}
+
+// product_deleted
+{
+  activity_type: 'product_deleted',
+  entity_type: 'product',
+  entity_id: 'uuid-product-id',
+  activity_data: {
+    product_name: 'Mozzarella Bufala',
+    category: 'Latticini',
+    department: 'Cucina',
+    deletion_reason: 'Scaduto',
+    final_status: 'expired'
+  }
+}
+
+// product_transferred (NEW!)
+{
+  activity_type: 'product_transferred',
+  entity_type: 'product',
+  entity_id: 'uuid-product-id',
+  activity_data: {
+    product_name: 'Parmigiano Reggiano',
+    from_conservation_point_id: 'uuid-frigo1',
+    from_conservation_point_name: 'Frigo 1 - Magazzino',
+    to_conservation_point_id: 'uuid-frigo2',
+    to_conservation_point_name: 'Frigo 2 - Cucina',
+    from_department_id: 'uuid-magazzino',
+    from_department_name: 'Magazzino',
+    to_department_id: 'uuid-cucina',
+    to_department_name: 'Cucina',
+    quantity_transferred: 5,
+    unit: 'kg',
+    transfer_reason: 'Richiesta chef per servizio cena',
+    transfer_notes: 'Urgente per menu degustazione',
+    authorized_by_id: 'uuid-responsabile',
+    authorized_by_name: 'Mario Rossi'
+  }
+}
 ```
 
 ### 4. Shopping List Operations

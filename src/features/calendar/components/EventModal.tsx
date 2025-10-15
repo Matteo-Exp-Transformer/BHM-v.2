@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+﻿import React, { useState } from 'react'
 import {
   X,
   Clock,
@@ -35,7 +35,7 @@ export const EventModal: React.FC<EventModalProps> = ({
   const [, setIsEditing] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  if (!isOpen) return null
+  if (!isOpen || !event) return null
 
   const handleMarkComplete = () => {
     if (onUpdate && event.status === 'pending') {
@@ -333,7 +333,7 @@ export const EventModal: React.FC<EventModalProps> = ({
                     <div className="mt-2">
                       <p className="text-sm text-gray-500">
                         Sei sicuro di voler eliminare questo evento? Questa
-                        azione non può essere annullata.
+                        azione non pu├▓ essere annullata.
                       </p>
                     </div>
                   </div>

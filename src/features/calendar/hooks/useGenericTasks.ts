@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'react-toastify'
+import { activityTrackingService } from '@/services/activityTrackingService'
 
 export interface GenericTask {
   id: string
@@ -120,7 +121,7 @@ const calculateNextDue = (frequency: string, customDays?: string[], startDate?: 
 }
 
 export const useGenericTasks = () => {
-  const { user, companyId } = useAuth()
+  const { user, companyId, sessionId } = useAuth()
   const queryClient = useQueryClient()
 
   // Fetch generic tasks
@@ -272,34 +273,19 @@ export const useGenericTasks = () => {
     mutationFn: async ({
       taskId,
       notes,
-      eventDate,
     }: {
       taskId: string
       notes?: string
-      eventDate?: Date
     }) => {
       if (!companyId || !user) throw new Error('No company ID or user available')
 
-      console.log('🔍 [useGenericTasks] completeTask mutation:', {
-        taskId,
-        eventDate,
-        availableTasks: tasks?.map(t => ({ id: t.id, name: t.name })),
-        tasksCount: tasks?.length
-      })
-
       // Trova il task per determinare il periodo
-      const task = tasks?.find(t => t.id === taskId)
-      if (!task) {
-        console.error('❌ [useGenericTasks] Task non trovato:', { taskId, tasks })
-        throw new Error(`Task not found: ${taskId}`)
-      }
-      
-      console.log('✅ [useGenericTasks] Task trovato:', { task: task.name, frequency: task.frequency })
+      const task = tasks.find(t => t.id === taskId)
+      if (!task) throw new Error('Task not found')
 
-      // USA LA DATA DELL'EVENTO se fornita, altrimenti usa next_due o data corrente
-      // Questo è CRITICO per completare eventi in ritardo correttamente
-      const referenceDate = eventDate || (task.next_due ? new Date(task.next_due) : new Date())
-      console.log('📅 [useGenericTasks] Data di riferimento per periodo:', referenceDate)
+      // Usa next_due se disponibile, altrimenti usa data corrente
+      // Questo permette di completare una mansione "per la sua scadenza" anche se fatta in anticipo
+      const referenceDate = task.next_due ? new Date(task.next_due) : new Date()
       
       // Calcola period_start e period_end basato sulla frequenza
       let period_start: Date
@@ -345,48 +331,65 @@ export const useGenericTasks = () => {
         ? `${userData.user.user_metadata.first_name} ${userData.user.user_metadata.last_name}`
         : userData.user?.email || null
 
-      const completionData = {
-        company_id: companyId,
-        task_id: taskId,
-        completed_by: user.id,
-        completed_by_name: completedByName,
-        period_start: period_start.toISOString(),
-        period_end: period_end.toISOString(),
-        notes,
-      }
-
-      console.log('💾 [useGenericTasks] Inserimento task_completion:', completionData)
-
       const { data, error } = await supabase
         .from('task_completions')
-        .insert(completionData)
+        .insert({
+          company_id: companyId,
+          task_id: taskId,
+          completed_by: user.id,
+          completed_by_name: completedByName,
+          period_start: period_start.toISOString(),
+          period_end: period_end.toISOString(),
+          notes,
+        })
         .select()
         .single()
 
-      if (error) {
-        console.error('❌ [useGenericTasks] Errore inserimento:', error)
-        throw error
+      if (error) throw error
+
+      if (user?.id && companyId) {
+        await activityTrackingService.logActivity(
+          user.id,
+          companyId,
+          'task_completed',
+          {
+            task_id: taskId,
+            task_name: task.name,
+            task_type: 'generic',
+            frequency: task.frequency,
+            completed_at: new Date().toISOString(),
+            period_start: period_start.toISOString(),
+            period_end: period_end.toISOString(),
+            notes: notes || undefined,
+          },
+          {
+            sessionId: sessionId || undefined,
+            entityType: 'generic_task',
+            entityId: taskId,
+          }
+        )
       }
 
-      console.log('✅ [useGenericTasks] Task completion salvato:', data)
       return data
     },
     onSuccess: () => {
-      console.log('🔄 [useGenericTasks] onSuccess - Invalidating all queries...')
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.genericTasks(companyId || ''),
+        refetchType: 'all',
       })
       queryClient.invalidateQueries({
-        queryKey: ['calendar-events', companyId],
+        queryKey: ['calendar-events'],
+        refetchType: 'all',
       })
       queryClient.invalidateQueries({
-        queryKey: ['task-completions', companyId],
+        queryKey: ['task-completions'],
+        refetchType: 'all',
       })
       queryClient.invalidateQueries({
         queryKey: ['macro-category-events'],
+        refetchType: 'all',
       })
-      console.log('✅ [useGenericTasks] Tutte le query invalidate')
-      toast.success('Mansione completata')
+      toast.success('✅ Mansione completata - Calendario aggiornato')
     },
     onError: (error: Error) => {
       console.error('Error completing task:', error)
@@ -433,11 +436,21 @@ export const useGenericTasks = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.genericTasks(companyId || ''),
+        refetchType: 'all',
       })
       queryClient.invalidateQueries({
-        queryKey: ['task-completions', companyId],
+        queryKey: ['task-completions'],
+        refetchType: 'all',
       })
-      toast.success('Mansione ripristinata come "da completare"')
+      queryClient.invalidateQueries({
+        queryKey: ['calendar-events'],
+        refetchType: 'all',
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['macro-category-events'],
+        refetchType: 'all',
+      })
+      toast.success('🔄 Mansione ripristinata - Calendario aggiornato')
     },
     onError: (error: Error) => {
       console.error('Error uncompleting task:', error)

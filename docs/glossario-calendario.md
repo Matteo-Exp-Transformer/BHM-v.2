@@ -144,7 +144,7 @@ interface CalendarEvent {
 ### Flusso Completamento
 
 1. **Utente clicca "Completa" su una mansione/manutenzione**
-   - Location: `CategoryEventsModal.tsx`, `EventDetailsModal.tsx`, o `CalendarPage.tsx` (Attività in Ritardo)
+   - Location: `MacroCategoryModal.tsx` o `EventDetailsModal.tsx`
 
 2. **Chiamata a `completeTask` mutation**
    - File: `src/features/calendar/hooks/useGenericTasks.ts`
@@ -335,19 +335,16 @@ if (useMacroCategories && extendedProps?.type === 'macro_category') {
 }
 ```
 
-### CategoryEventsModal (ex MacroCategoryModal)
+### MacroCategoryModal
 
 **Sezioni:**
 1. **Attività Attive** - `activeItems = items.filter(i => i.status !== 'completed')`
-2. **Attività in Ritardo** - `overdueItems = items.filter(i => i.status !== 'completed' && data in range)`
-3. **Attività Completate** - `completedItems = items.filter(i => i.status === 'completed')`
+2. **Attività Completate** - `completedItems = items.filter(i => i.status === 'completed')`
 
-**Pulsante Completa (Fix 2025-10-14):**
+**Pulsante Completa:**
 - Visibile solo per `category === 'generic_tasks'` o `category === 'maintenance'`
 - Usa `metadata.taskId` per ottenere l'ID originale del task
-- **IMPORTANTE:** Passa `eventDate: new Date(item.dueDate)` per completare l'occorrenza specifica
-- Dopo completamento: query invalidate automaticamente, UI aggiornata via React Query
-- Modal si chiude dopo 800ms per permettere l'aggiornamento
+- Dopo completamento: reload pagina per aggiornare UI
 
 ---
 
@@ -402,13 +399,13 @@ const shouldShowOverdueSection = useMemo(() => {
 - ✅ Eventi completati esclusi dal count
 - ✅ Sezione nascosta se utente seleziona data futura nel calendario
 - ✅ Count "In Ritardo" nascosto in tutte le sezioni quando `shouldShowOverdueSection = false`
-- ✅ CategoryEventsModal nasconde count "In Ritardo" per date future
+- ✅ MacroCategoryModal nasconde count "In Ritardo" per date future
 
 **Locations count "In Ritardo":**
 1. Overview Stats box (riga ~264): Condizionale con `shouldShowOverdueSection`
 2. Sezione "Urgenti" (riga ~352): Condizionale con `shouldShowOverdueSection`
 3. Sezione "Attività in Ritardo" (riga ~372): Condizionale con `shouldShowOverdueSection`
-4. CategoryEventsModal (header): Calcola `shouldShowOverdue` basato su overdueItems
+4. MacroCategoryModal (header): Calcola `isFutureDate` e nascondi se vero
 
 ---
 
@@ -421,7 +418,7 @@ src/features/calendar/
 ├── Calendar.tsx                  # Componente FullCalendar
 ├── EventDetailsModal.tsx         # Modal dettagli evento singolo
 ├── components/
-│   ├── CategoryEventsModal.tsx   # Modal eventi per categoria (slide-in panel)
+│   ├── MacroCategoryModal.tsx    # Modal macro categoria
 │   ├── FilterPanel.tsx           # Filtri calendario
 │   ├── QuickActions.tsx          # Azioni rapide evento
 │   ├── GenericTaskForm.tsx       # Form creazione task
@@ -518,30 +515,21 @@ convertGenericTaskToItem(task, dueDate, completions)
 ```typescript
 createTaskMutation
 deleteTaskMutation
-completeTaskMutation({ taskId, notes?, eventDate? }) ← Gestisce completamento
+completeTaskMutation ← Gestisce completamento
 ```
 
-**IMPORTANTE (Fix 2025-10-14):**
-- Parametro `eventDate` permette di completare eventi con data specifica
-- Se `eventDate` fornito → usa quella data per calcolare il periodo
-- Se non fornito → usa `task.next_due` o data corrente
-- **Critico per eventi in ritardo**: passa `eventDate` per completare l'occorrenza corretta
-
-#### `CategoryEventsModal.tsx` (ex MacroCategoryModal)
+#### `MacroCategoryModal.tsx`
 **Responsabilità:**
-- Mostra lista eventi per categoria e data (pannello laterale slide-in)
-- Separa activeItems, overdueItems e completedItems
+- Mostra lista eventi per categoria e data
+- Separa activeItems e completedItems
 - Pulsante "Completa" per mansioni/manutenzioni
-- Tre sezioni: Attive, In Ritardo, Completate
+- Due sezioni: Attive e Completate
 - Nasconde count "In Ritardo" per date future
 
-**Logica completamento (Fix 2025-10-14):**
+**Logica completamento:**
 ```typescript
 const taskId = item.metadata.taskId || item.id // ID originale task
-completeTask({ 
-  taskId, 
-  eventDate: new Date(item.dueDate) // ← PASSA DATA EVENTO!
-}, {
+completeTask({ taskId }, {
   onSuccess: async () => {
     await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
     await queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
@@ -600,41 +588,14 @@ const shouldShowOverdue = overdueItems.length > 0 && !isFutureDate
 
 ## Troubleshooting
 
-### Problema: Task completata non scompare subito ✅ RISOLTO
+### Problema: Task completata non scompare subito
 
-**SOLUZIONE (2025-10-14) - Due Fix Applicati:**
+**Possibili cause:**
+1. Query non invalidate correttamente
+2. Cache React Query non aggiornata
+3. Completamento salvato ma evento non ri-processato
 
-#### Fix 1: React Query invece di useState
-```typescript
-// PRIMA ❌
-const [taskCompletions, setTaskCompletions] = useState<TaskCompletion[]>([])
-useEffect(() => { loadData() }, [companyId])
-
-// DOPO ✅
-const { data: taskCompletions = [] } = useQuery({
-  queryKey: ['task-completions', companyId],
-  queryFn: loadTaskCompletions,
-  enabled: !!companyId,
-})
-```
-
-#### Fix 2: Parametro eventDate in completeTask
-**Problema:** Eventi in ritardo salvati con periodo sbagliato.
-
-```typescript
-// PRIMA ❌
-completeTask({ taskId })
-// Usava task.next_due → periodo sbagliato per eventi in ritardo
-
-// DOPO ✅
-completeTask({ 
-  taskId, 
-  eventDate: new Date(item.dueDate) 
-})
-// Usa data specifica evento → periodo corretto
-```
-
-**Debug (se problema persiste):**
+**Debug:**
 ```typescript
 // 1. Verifica completamento salvato
 const { data } = await supabase
@@ -642,12 +603,12 @@ const { data } = await supabase
   .select('*')
   .eq('task_id', taskId)
 
-// 2. Verifica periodo corretto
-console.log('Period start:', data.period_start)
-console.log('Period end:', data.period_end)
-console.log('Event date:', item.dueDate)
+// 2. Verifica query invalidate
+console.log('Invalidating queries...')
+await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
 
 // 3. Verifica evento status
+const event = events.find(e => e.metadata.task_id === taskId)
 console.log('Event status:', event.status)
 console.log('isCompletedInPeriod:', event.extendedProps.isCompletedInPeriod)
 ```
@@ -763,7 +724,7 @@ WHERE task_id = $1
 - [x] Sezione dedicata "Attività in Ritardo"
 - [x] Nascondere sezione/count per date future selezionate
 - [x] Esclusione eventi completati dal count
-- [x] Nascondere count in CategoryEventsModal per date future
+- [x] Nascondere count in MacroCategoryModal per date future
 
 ### ✅ Overview Cards
 - [x] Card "Eventi in Ritardo" (ultima settimana, non completati)
@@ -773,17 +734,15 @@ WHERE task_id = $1
 - [x] Layout griglia orizzontale (3 card)
 
 ### ✅ Completamento Task
-- [x] Pulsante "Completa" in CategoryEventsModal (ex MacroCategoryModal)
+- [x] Pulsante "Completa" in MacroCategoryModal
 - [x] Pulsante "Completa" in EventDetailsModal
-- [x] Pulsante "Completa" in CalendarPage (Attività in Ritardo)
 - [x] Period-based tracking (daily/weekly/monthly/annually)
-- [x] Invalidazione automatica query con React Query
+- [x] Invalidazione automatica query
 - [x] Status "completed" basato su completions
-- [x] Separazione UI Attive vs Completate vs In Ritardo
-- [x] Parametro `eventDate` per completare occorrenza specifica (Fix 2025-10-14)
-- [x] Validazione: passati/presenti ✅ completabili, futuri ❌ bloccati
+- [x] Separazione UI Attive vs Completate
+- [x] Completamento usa next_due come data di riferimento per periodo corretto
+- [x] Validazione permette completamento fino a 1 giorno prima
 - [x] Mansioni precompilate con scadenza a OGGI (completabili immediatamente)
-- [x] Logging dettagliato per debug
 
 ### ✅ UI/UX Features
 - [x] Toggle indipendente per mansioni completate (non accordion)
@@ -872,21 +831,10 @@ for (const closureDate of formData.closure_dates) {
 
 ## Versioning
 
-**Versione Documento:** 1.3
+**Versione Documento:** 1.2
 **Data Creazione:** 2025-01-12
-**Ultimo Aggiornamento:** 2025-10-14
+**Ultimo Aggiornamento:** 2025-10-12
 **Autore:** Claude (Anthropic)
-
-**Changelog v1.3 (2025-10-14):**
-- ✅ **Fix critico**: Eventi in ritardo non sparivano dopo completamento
-  - Convertito taskCompletions da useState a useQuery in useAggregatedEvents
-  - Aggiunto parametro `eventDate` a completeTask per completare occorrenza specifica
-  - Invalidazione query macro-category-events aggiunta
-- ✅ **Logica completamento**: Passati/presenti completabili, futuri bloccati
-- ✅ **Pulsante completamento** in sezione "Attività in Ritardo" (CalendarPage)
-- ✅ **Refactoring**: MacroCategoryModal → CategoryEventsModal (nome più descrittivo)
-- ✅ **Debug logging**: Logging dettagliato in tutti i punti critici
-- ✅ **UI/UX**: Delay chiusura modal per permettere aggiornamento React Query
 
 ---
 
