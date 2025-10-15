@@ -5,6 +5,7 @@ export type ActivityType =
   | 'product_added'
   | 'product_updated'
   | 'product_deleted'
+  | 'product_transferred'
   | 'shopping_list_created'
   | 'shopping_list_updated'
   | 'shopping_list_completed'

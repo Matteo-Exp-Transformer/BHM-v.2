@@ -14,7 +14,7 @@ import type { CalendarFilters } from '@/types/calendar-filters'
 import { transformToFullCalendarEvents } from './utils/eventTransform'
 import { EventDetailsModal } from './EventDetailsModal'
 import QuickActions from './components/QuickActions'
-import CategoryEventsModal from './components/CategoryEventsModal'
+import { MacroCategoryModal } from './components/MacroCategoryModal'
 import { CalendarEventLegend } from './components/CalendarEventLegend'
 import { Calendar as CalendarIcon, Plus } from 'lucide-react'
 import { useMacroCategoryEvents, type MacroCategory } from './hooks/useMacroCategoryEvents'
@@ -171,12 +171,19 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   const handleEventClick = useCallback(
     (clickInfo: { event: { extendedProps?: { originalEvent?: any; type?: string; category?: MacroCategory; items?: any[] }; start: Date | null } }) => {
-      if (useMacroCategories && clickInfo.event.extendedProps?.type === 'macro_category') {
-        const { category, items } = clickInfo.event.extendedProps
+      const extendedProps = clickInfo.event.extendedProps
+      
+      if (!extendedProps) {
+        console.warn('Event clicked without extendedProps:', clickInfo.event)
+        return
+      }
+
+      if (useMacroCategories && extendedProps.type === 'macro_category') {
+        const { category, items } = extendedProps
         const date = clickInfo.event.start ? new Date(clickInfo.event.start) : new Date()
         setSelectedMacroCategory({ category, date, items: items || [] })
       } else {
-        const originalEvent = clickInfo.event.extendedProps?.originalEvent
+        const originalEvent = extendedProps.originalEvent
         if (originalEvent) {
           setSelectedEvent(originalEvent)
           setShowEventModal(true)
@@ -433,10 +440,10 @@ export const Calendar: React.FC<CalendarProps> = ({
               const extendedProps = arg.event.extendedProps
               if (extendedProps) {
                 return [
-                  `event-type-${extendedProps.type}`,
-                  `event-status-${extendedProps.status}`,
-                  `event-priority-${extendedProps.priority}`,
-                ]
+                  extendedProps.type ? `event-type-${extendedProps.type}` : '',
+                  extendedProps.status ? `event-status-${extendedProps.status}` : '',
+                  extendedProps.priority ? `event-priority-${extendedProps.priority}` : '',
+                ].filter(Boolean)
               }
               return []
             }}
@@ -479,6 +486,9 @@ export const Calendar: React.FC<CalendarProps> = ({
                       </span>
                     )}
                     <span className="fc-event-title">{event.title}</span>
+                    {extendedProps?.status === 'completed' && (
+                      <span className="fc-event-status-icon">✅</span>
+                    )}
                   </div>
                   {extendedProps?.priority === 'critical' && (
                     <span className="fc-event-priority-indicator">🔴</span>
@@ -526,9 +536,9 @@ export const Calendar: React.FC<CalendarProps> = ({
         />
       )}
 
-      {/* Category Events Modal */}
+      {/* Macro Category Modal */}
       {useMacroCategories && selectedMacroCategory && (
-        <CategoryEventsModal
+        <MacroCategoryModal
           isOpen={true}
           onClose={() => setSelectedMacroCategory(null)}
           category={selectedMacroCategory.category}
@@ -540,14 +550,42 @@ export const Calendar: React.FC<CalendarProps> = ({
       {/* Calendar Styles */}
       <style>{`
         .calendar-container {
-          --fc-border-color: #d1d5db;
-          --fc-button-bg-color: #3b82f6;
-          --fc-button-border-color: #3b82f6;
-          --fc-button-hover-bg-color: #2563eb;
-          --fc-button-hover-border-color: #2563eb;
-          --fc-button-active-bg-color: #1d4ed8;
-          --fc-button-active-border-color: #1d4ed8;
-          --fc-today-bg-color: #eff6ff;
+          --fc-border-color: #e5e7eb;
+          --fc-button-bg-color: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+          --fc-button-border-color: #6366f1;
+          --fc-button-hover-bg-color: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+          --fc-button-hover-border-color: #4f46e5;
+          --fc-button-active-bg-color: #4338ca;
+          --fc-button-active-border-color: #4338ca;
+          --fc-today-bg-color: rgba(99, 102, 241, 0.05);
+        }
+        
+        /* Pulsanti moderni con gradiente */
+        .calendar-container .fc-button {
+          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+          border: none !important;
+          border-radius: 8px !important;
+          padding: 8px 16px !important;
+          font-weight: 600 !important;
+          transition: all 0.3s ease !important;
+          box-shadow: 0 2px 6px rgba(99, 102, 241, 0.25) !important;
+        }
+        
+        .calendar-container .fc-button:hover {
+          background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+          transform: translateY(-1px) !important;
+          box-shadow: 0 4px 10px rgba(99, 102, 241, 0.35) !important;
+        }
+        
+        .calendar-container .fc-button:active,
+        .calendar-container .fc-button-active {
+          background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%) !important;
+          transform: translateY(0) !important;
+        }
+        
+        .calendar-container .fc-button:disabled {
+          opacity: 0.5 !important;
+          cursor: not-allowed !important;
         }
 
         /* ============================================
@@ -586,80 +624,109 @@ export const Calendar: React.FC<CalendarProps> = ({
         }
 
         /* ============================================
-           NUOVO STILE: Icona grande + Nome + Conteggio
-           Senza strisce colorate
+           EVENTI MODERNI - Design card elegante
            ============================================ */
         
-        /* Rimuovi colori di sfondo e bordi dagli eventi */
         .fc-event {
-          background-color: transparent !important;
-          border: none !important;
-          box-shadow: none !important;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 250, 251, 0.98) 100%) !important;
+          border: 1px solid rgba(229, 231, 235, 0.8) !important;
+          border-radius: 8px !important;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          overflow: hidden !important;
         }
 
-        /* Griglia orizzontale tra eventi nelle celle del giorno */
+        .fc-event:hover {
+          transform: translateY(-1px) !important;
+          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+          border-color: rgba(99, 102, 241, 0.3) !important;
+          z-index: 100 !important;
+        }
+
+        /* Separatore tra eventi */
         .fc-daygrid-event-harness {
-          border-top: 1px solid #e5e7eb !important;
-          border-bottom: 1px solid #e5e7eb !important;
-          padding: 2px 0 !important;
-          margin: 1px 0 !important;
+          padding: 3px 4px !important;
+          margin: 2px 0 !important;
         }
 
-        /* Primo evento con riga superiore */
         .fc-daygrid-event-harness:first-child {
-          margin-top: 2px !important;
+          margin-top: 4px !important;
         }
 
-        /* Ultimo evento con riga inferiore */
         .fc-daygrid-event-harness:last-child {
-          margin-bottom: 2px !important;
+          margin-bottom: 4px !important;
         }
 
         .fc-event-content-custom {
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 4px 6px;
-          background-color: transparent !important;
-          border: none !important;
-          min-height: 28px;
+          padding: 6px 10px;
+          background: transparent !important;
+          min-height: 32px;
+          position: relative;
+        }
+
+        /* Striscia colorata laterale per tipo evento */
+        .fc-event-content-custom::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 3px;
+          background: linear-gradient(180deg, var(--event-color, #6366f1) 0%, var(--event-color-dark, #4f46e5) 100%);
+          border-radius: 8px 0 0 8px;
         }
 
         .fc-event-title-container {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
           width: 100%;
           justify-content: center;
         }
 
         .fc-event-type-icon {
-          font-size: 18px;
+          font-size: 20px;
           flex-shrink: 0;
           line-height: 1;
+          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+          transition: transform 0.2s ease;
+        }
+
+        .fc-event:hover .fc-event-type-icon {
+          transform: scale(1.1);
         }
 
         .fc-event-title {
-          font-size: 12px;
+          font-size: 13px;
           font-weight: 600;
-          color: #374151;
+          color: #1f2937;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
           max-width: 120px;
+          letter-spacing: -0.01em;
         }
 
         .fc-event-count-badge {
-          font-size: 13px;
+          font-size: 12px;
           font-weight: 700;
-          color: #1f2937;
-          background-color: rgba(255, 255, 255, 0.95);
-          border-radius: 12px;
-          padding: 2px 8px;
-          min-width: 20px;
+          color: #4f46e5;
+          background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%);
+          border-radius: 10px;
+          padding: 3px 10px;
+          min-width: 24px;
           text-align: center;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-          border: 1px solid #e5e7eb;
+          box-shadow: 0 1px 3px rgba(99, 102, 241, 0.2);
+          border: 1px solid rgba(99, 102, 241, 0.2);
+          transition: all 0.2s ease;
+        }
+
+        .fc-event:hover .fc-event-count-badge {
+          background: linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(139, 92, 246, 0.18) 100%);
+          transform: scale(1.05);
         }
 
         .fc-event-priority-indicator {
@@ -670,58 +737,114 @@ export const Calendar: React.FC<CalendarProps> = ({
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 4px;
-          background-color: transparent !important;
-          border: none !important;
+          padding: 8px;
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.08) 100%) !important;
+          border: 1px solid rgba(16, 185, 129, 0.3) !important;
+          border-radius: 8px !important;
         }
 
         .fc-event-checkmark {
-          font-size: 22px;
+          font-size: 24px;
           font-weight: bold;
           color: #10b981;
+          filter: drop-shadow(0 1px 2px rgba(16, 185, 129, 0.3));
         }
 
-        /* Event type styling - DISABILITATO (niente più colori di sfondo)
-        .event-type-maintenance,
-        .event-type-general_task,
-        .event-type-temperature_reading,
-        .event-type-custom {
-          background-color: transparent !important;
-          border: none !important;
+        /* Colori per tipologia di evento - Striscia laterale colorata */
+        .event-type-maintenance .fc-event-content-custom::before {
+          --event-color: #f59e0b;
+          --event-color-dark: #d97706;
         }
-        */
 
-        /* Status styling - Manteniamo solo gli stili per completati e in ritardo */
+        .event-type-general_task .fc-event-content-custom::before {
+          --event-color: #10b981;
+          --event-color-dark: #059669;
+        }
+
+        .event-type-temperature_reading .fc-event-content-custom::before {
+          --event-color: #06b6d4;
+          --event-color-dark: #0891b2;
+        }
+
+        .event-type-custom .fc-event-content-custom::before {
+          --event-color: #8b5cf6;
+          --event-color-dark: #7c3aed;
+        }
+
+        /* Status styling - Eventi completati */
+        .event-status-completed {
+          opacity: 0.75;
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%) !important;
+        }
+
         .event-status-completed .fc-event-title {
-          opacity: 0.6;
+          opacity: 0.7;
           text-decoration: line-through;
+          color: #6b7280;
+        }
+
+        .event-status-completed .fc-event-content-custom::before {
+          --event-color: #10b981;
+          --event-color-dark: #059669;
+        }
+
+        /* Eventi in ritardo - Animazione pulse */
+        @keyframes pulse-urgent {
+          0%, 100% {
+            opacity: 1;
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+          }
+          50% {
+            opacity: 0.95;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+          }
+        }
+
+        .event-status-overdue {
+          animation: pulse-urgent 2s infinite;
+          border-color: rgba(239, 68, 68, 0.3) !important;
+        }
+
+        .event-status-overdue .fc-event-content-custom::before {
+          --event-color: #ef4444;
+          --event-color-dark: #dc2626;
         }
 
         .event-status-overdue .fc-event-type-icon {
-          animation: pulse 2s infinite;
+          filter: drop-shadow(0 1px 3px rgba(239, 68, 68, 0.4));
         }
 
         .event-status-cancelled .fc-event-title {
-          opacity: 0.4;
+          opacity: 0.5;
           text-decoration: line-through;
+          color: #9ca3af;
         }
 
-        /* Priority styling - Evidenziamo solo le priorità critiche con l'icona */
+        /* Priority styling - Badge priorità critica */
         .event-priority-critical .fc-event-count-badge {
-          background-color: #fecaca !important;
-          border-color: #ef4444 !important;
+          background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.15) 100%) !important;
+          border-color: rgba(239, 68, 68, 0.4) !important;
           color: #991b1b !important;
           font-weight: 800;
+          box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25) !important;
         }
 
-        /* Macro category styling - anche qui niente colori di sfondo */
+        /* Macro category styling - Card speciale */
         .event-type-macro_category {
           cursor: pointer;
-          font-weight: 600;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(243, 244, 246, 0.95) 100%) !important;
+          border: 2px solid rgba(99, 102, 241, 0.2) !important;
+          box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15) !important;
+        }
+
+        .event-type-macro_category:hover {
+          border-color: rgba(99, 102, 241, 0.4) !important;
+          box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25) !important;
         }
 
         .event-type-macro_category .fc-event-type-icon {
-          font-size: 20px; /* Icona leggermente più grande per macro-categorie */
+          font-size: 22px;
+          filter: drop-shadow(0 2px 4px rgba(99, 102, 241, 0.2));
         }
 
         /* Day closed styling */

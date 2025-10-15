@@ -14,7 +14,6 @@ import { generateHaccpDeadlineEvents } from '../utils/haccpDeadlineGenerator'
 import { generateTemperatureCheckEvents } from '../utils/temperatureCheckGenerator'
 import { addDays, addWeeks, addMonths, startOfDay, endOfDay } from 'date-fns'
 import { supabase } from '@/lib/supabase/client'
-import { calculateEventStatus } from '@/types/calendar-filters'
 
 interface AggregatedEventsResult {
   events: CalendarEvent[]
@@ -106,9 +105,16 @@ export function useAggregatedEvents(fiscalYearEnd?: Date): AggregatedEventsResul
     if (!maintenanceTasks || maintenanceTasks.length === 0) return []
 
     // ✅ Espandi attività ricorrenti per mostrare occorrenze multiple
-    return maintenanceTasks.flatMap(task =>
-      expandRecurringTask(task, companyId || '', user?.id || '', 'maintenance', undefined, fiscalYearEnd)
-    )
+    const events = maintenanceTasks.flatMap(task => {
+      const occurrences = expandRecurringTask(task, companyId || '', user?.id || '', 'maintenance', undefined, fiscalYearEnd)
+      console.log(`🔧 Task "${task.title}" (${task.frequency}) → ${occurrences.length} occorrenze, status: ${task.status}`)
+      return occurrences
+    })
+    
+    const completedCount = events.filter(e => e.status === 'completed').length
+    console.log(`📊 Manutenzioni totali: ${events.length}, completate: ${completedCount}`)
+    
+    return events
   }, [maintenanceTasks, companyId, user?.id, fiscalYearEnd])
 
   const haccpExpiryEvents = useMemo(() => {
@@ -341,12 +347,13 @@ function convertMaintenanceTaskToEvent(
     startDate.getTime() + (task.estimated_duration || 60) * 60 * 1000
   )
 
+  // ✅ FIX: Per manutenzioni ricorrenti, non usare task.status
+  // Solo per manutenzioni AS_NEEDED usare task.status
+  // Per ricorrenti, lo status deve essere calcolato in base alla data
   const status =
-    task.status === 'completed'
-      ? 'completed'
-      : startDate < new Date()
-        ? 'overdue'
-        : 'pending'
+    task.frequency === 'as_needed' || task.frequency === 'custom'
+      ? (task.status === 'completed' ? 'completed' : (startDate < new Date() ? 'overdue' : 'pending'))
+      : (startDate < new Date() ? 'overdue' : 'pending')
 
   const colors = getEventColors(
     'maintenance',

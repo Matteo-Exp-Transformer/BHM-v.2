@@ -92,14 +92,32 @@ export const CategoryEventsModal: React.FC<CategoryEventsModalProps> = ({
 
       if (error) throw error
 
-      await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
-      await queryClient.invalidateQueries({ queryKey: ['maintenance-tasks', companyId] })
-      await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
+      // ✅ Invalida TUTTE le query maintenance (senza conservationPointId specifico)
+      await queryClient.invalidateQueries({ 
+        queryKey: ['maintenance-tasks'],
+        refetchType: 'all'
+      })
+      await queryClient.invalidateQueries({ 
+        queryKey: ['calendar-events'],
+        refetchType: 'all'
+      })
+      await queryClient.invalidateQueries({ 
+        queryKey: ['macro-category-events'],
+        refetchType: 'all'
+      })
+      await queryClient.invalidateQueries({ 
+        queryKey: ['maintenance-completions'],
+        refetchType: 'all'
+      })
 
-      toast.success('Manutenzione completata')
+      toast.success('✅ Manutenzione completata - Calendario aggiornato')
       setSelectedItems([])
       
-      setTimeout(() => onClose(), 800)
+      // ✅ Forza aggiornamento UI con delay per permettere alla query di completarsi
+      setTimeout(() => {
+        onClose()
+        window.dispatchEvent(new Event('calendar-refresh'))
+      }, 800)
     } catch (error) {
       console.error('Error completing maintenance:', error)
       toast.error('Errore nel completamento della manutenzione')

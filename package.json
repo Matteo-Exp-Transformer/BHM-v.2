@@ -28,7 +28,10 @@
     "deploy:dev": "npm run build:clean && vercel --env=development",
     "deploy:staging": "npm run build:prod && vercel --env=staging --prod",
     "deploy:prod": "npm run build:prod && vercel --env=production --prod",
-    "deploy:force": "npm run clean && npm run build:prod && vercel --force --prod"
+    "deploy:force": "npm run clean && npm run build:prod && vercel --force --prod",
+    "debug:pre-beta": "node scripts/debug-pre-beta.js",
+    "report:generate": "node scripts/generate-test-report.js",
+    "report:open": "start \"Report Agenti\\BETA_TEST_REPORT.html\""
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.19",
