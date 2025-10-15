@@ -333,7 +333,7 @@ export const CalendarPage = () => {
       assigned_to_role: taskData.assegnatoARuolo === 'all' ? undefined : taskData.assegnatoARuolo,
       assigned_to_category: taskData.assegnatoACategoria,
       assigned_to_staff_id: taskData.assegnatoADipendenteSpecifico,
-      department_id: taskData.departmentId === 'all' ? undefined : taskData.departmentId, // Reparto assegnato (opzionale)
+      department_id: taskData.departmentId, // Reparto assegnato (obbligatorio)
       note: taskData.note,
       custom_days: taskData.giorniCustom,
       
