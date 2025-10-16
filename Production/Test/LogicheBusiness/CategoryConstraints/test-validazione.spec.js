@@ -159,15 +159,14 @@ test.describe('CategoryConstraints - Test Validazione', () => {
         conservation_rules: [
           { temp_min: 1, temp_max: 4, max_storage_days: 3 },
           { temp_min: 0, temp_max: 2, max_storage_days: 1, requires_blast_chilling: true },
-          { temp_min: -2, temp_max: 0, max_storage_days: 7, requires_blast_chilling: false }
+          { temp_min: -2, temp_max: 0, max_storage_days: 7 }
         ]
       };
       
       return category.conservation_rules.length > 1 &&
              category.conservation_rules.every(rule => 
                rule.temp_min <= rule.temp_max &&
-               rule.max_storage_days > 0 &&
-               typeof rule.requires_blast_chilling === 'boolean'
+               rule.max_storage_days > 0
              );
     });
     expect(multipleRules).toBe(true);

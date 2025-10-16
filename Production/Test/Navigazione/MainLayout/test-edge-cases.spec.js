@@ -4,7 +4,22 @@ test.describe('MainLayout - Test Edge Cases', () => {
   
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:3004/dashboard');
-    await expect(page.locator('header')).toBeVisible();
+    
+    // Se siamo reindirizzati a login, autenticarsi
+    if (await page.url().includes('sign-in')) {
+      const emailInput = page.locator('input[type="email"], input[name="email"]').first();
+      const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
+      const loginButton = page.locator('button[type="submit"], button:has-text("Accedi")').first();
+      
+      if (await emailInput.isVisible()) {
+        await emailInput.fill('matteo.cavallaro.work@gmail.com');
+        await passwordInput.fill('Cavallaro');
+        await loginButton.click();
+        await page.waitForURL(/.*dashboard/, { timeout: 10000 });
+      }
+    }
+    
+    await expect(page.locator('header')).toBeVisible({ timeout: 10000 });
   });
 
   test('Dovrebbe gestire correttamente viewport molto piccolo', async ({ page }) => {

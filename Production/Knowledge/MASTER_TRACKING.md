@@ -10,7 +10,7 @@
 |------|------------------|---------|---------|---------|---------|
 | 🔐 Autenticazione | 6 | 0 | 0 | 1 | 🔄 Inventario completato |
 | 🎯 Onboarding | 8 | 0 | 0 | 1 | 🔄 Inventario completato |
-| 🎨 UI Base | 19 | 5 | 5 | 2 | 🔄 5 componenti blindate |
+| 🎨 UI Base | 19 | 8 | 8 | 2 | 🔄 8 componenti blindate |
 | 📊 Dashboard | **8** | 0 | 0 | 1 | 🔄 **Inventario completato** |
 | 📅 Calendario | **37** | 0 | 0 | 1 | 🔄 **Inventario completato** |
 | 📦 Inventario | **18** | 0 | 0 | 2 | 🔄 **Inventario completato** |
@@ -74,8 +74,14 @@
 - **TemperatureValidation** - 🔒 LOCKED (2025-01-16) - 6 test passati, tutte le funzioni temperatura testate
   - File: temperatureStatus.ts, AddTemperatureModal.tsx, TemperatureReadingCard.tsx, useDashboardData.ts
   - Funzioni: getToleranceForType, calculateTemperatureStatus, calculateComplianceRate, getReadingStatus, filterReadingsByStatus, getToleranceRange
+- **CategoryConstraints** - 🔒 LOCKED (2025-01-16) - 30 test passati, tutte le validazioni categorie testate
+  - File: conservation.ts (ProductCategory, ConservationRule), defaultCategories.ts, AddProductModal.tsx
+  - Funzioni: validazione temperature, storage_type, allergeni, expiry_days, conservation_rules, humidity constraints
 - **Alert.tsx** - 🔒 LOCKED (2025-01-16) - 12 test passati, tutte le varianti e componenti testati
 - **Badge.tsx** - 🔒 LOCKED (2025-01-16) - 18 test passati, 5 varianti × 5 tonality × 2 dimensioni testate
+- **Card.tsx** - 🔒 LOCKED (2025-01-16) - 24 test passati, 6 componenti composizione completa testata
+- **LoadingSpinner.tsx** - 🔒 LOCKED (2025-01-16) - 21 test passati, 3 dimensioni e accessibilità testati
+- **Tooltip.tsx** - 🔒 LOCKED (2025-01-16) - 36 test passati, 4 posizioni e interazioni complete testate
 
 ## 📈 Statistiche
 
@@ -84,9 +90,9 @@
   - Dashboard: 8, Calendario: 37, Inventario: 18, Conservazione: 17
   - Liste Spesa: 10, Gestione: 9, Impostazioni: 5, Admin: 5
   - Shared: 4, Navigazione: 8, Hooks: 13, Services: 47, Utils: 15
-- **Componenti Testate**: 5 (2.5%)
-- **Componenti Locked**: 5 (2.5%)
-- **Test Totali Eseguiti**: 137
+- **Componenti Testate**: 8 (4%)
+- **Componenti Locked**: 8 (4%)
+- **Test Totali Eseguiti**: 218
 - **Test Falliti**: 0
 - **Tempo Totale Speso**: 1h 30m
 - **Metodo Mappatura**: Analisi statica + Playwright MCP dinamica

@@ -79,8 +79,13 @@
 ### 6. Card.tsx
 - **File**: `src/components/ui/Card.tsx`
 - **Tipo**: Componente base
-- **Stato**: ⏳ Da analizzare
-- **Complessità**: Da valutare
+- **Funzionalità**:
+  - 6 componenti: Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter
+  - Composizione completa con forwardRef
+  - ClassName personalizzabile e props HTML
+  - Styling con shadow e border
+- **Stato**: 🔒 LOCKED (2025-01-16) - 24 test passati
+- **Complessità**: Media
 
 ### 7. CollapsibleCard.tsx
 - **File**: `src/components/ui/CollapsibleCard.tsx`
@@ -103,8 +108,13 @@
 ### 10. LoadingSpinner.tsx
 - **File**: `src/components/ui/LoadingSpinner.tsx`
 - **Tipo**: Componente base
-- **Stato**: ⏳ Da analizzare
-- **Complessità**: Da valutare
+- **Funzionalità**:
+  - 3 dimensioni: sm, md, lg
+  - Animazione spin con CSS
+  - Accessibilità con role="status" e aria-label
+  - Container flex centrato
+- **Stato**: 🔒 LOCKED (2025-01-16) - 21 test passati
+- **Complessità**: Bassa
 
 ### 11. OptimizedImage.tsx
 - **File**: `src/components/ui/OptimizedImage.tsx`
@@ -151,8 +161,14 @@
 ### 18. Tooltip.tsx
 - **File**: `src/components/ui/Tooltip.tsx`
 - **Tipo**: Componente base
-- **Stato**: ⏳ Da analizzare
-- **Complessità**: Da valutare
+- **Funzionalità**:
+  - 4 posizioni: top, bottom, left, right
+  - Interazioni mouse e keyboard
+  - Delay configurabile e disabled state
+  - Accessibilità completa con aria-describedby
+  - Lifecycle management e cleanup
+- **Stato**: 🔒 LOCKED (2025-01-16) - 36 test passati
+- **Complessità**: Alta
 
 ### 19. index.ts
 - **File**: `src/components/ui/index.ts`

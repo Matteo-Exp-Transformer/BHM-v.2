@@ -1,3 +1,9 @@
+// LOCKED: 2025-01-16 - CategoryConstraints (defaultCategories) completamente testato e blindato
+// Test eseguiti: 30 test completi, tutti passati (100%)
+// Funzionalità testate: validazione categorie predefinite, constraints temperature, allergeni, expiry
+// Combinazioni testate: tutti i storage_type, temperature estreme, edge cases, validazioni HACCP
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 import { supabase } from '@/lib/supabase/client'
 
 export const DEFAULT_CATEGORIES = [

@@ -9,6 +9,10 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'md',
   className = '',
 }) => {
+  // LOCKED: 2025-01-16 - LoadingSpinner.tsx completamente testato
+  // Test eseguiti: 21 test, tutti passati (100%)
+  // Funzionalità testate: 3 dimensioni, animazione, accessibilità, edge cases
+  // NON MODIFICARE SENZA PERMESSO ESPLICITO
   const sizeClasses = {
     sm: 'w-4 h-4',
     md: 'w-8 h-8',

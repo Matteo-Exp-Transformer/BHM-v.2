@@ -2,14 +2,28 @@ import { test, expect } from '@playwright/test';
 
 test.describe('MainLayout - Test Funzionali', () => {
   
-  // Setup: navigare alla pagina prima di ogni test
+  // Setup: navigare alla pagina e autenticarsi prima di ogni test
   test.beforeEach(async ({ page }) => {
     // Navigare alla dashboard (protetta)
     await page.goto('http://localhost:3004/dashboard');
     
+    // Se siamo reindirizzati a login, autenticarsi
+    if (await page.url().includes('sign-in')) {
+      const emailInput = page.locator('input[type="email"], input[name="email"]').first();
+      const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
+      const loginButton = page.locator('button[type="submit"], button:has-text("Accedi")').first();
+      
+      if (await emailInput.isVisible()) {
+        await emailInput.fill('matteo.cavallaro.work@gmail.com');
+        await passwordInput.fill('Cavallaro');
+        await loginButton.click();
+        await page.waitForURL(/.*dashboard/, { timeout: 10000 });
+      }
+    }
+    
     // Aspettare che il MainLayout sia caricato
-    await expect(page.locator('header')).toBeVisible();
-    await expect(page.locator('nav[role="navigation"]')).toBeVisible();
+    await expect(page.locator('header')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('nav[role="navigation"]')).toBeVisible({ timeout: 10000 });
   });
 
   test('Dovrebbe mostrare header con titolo e controlli', async ({ page }) => {
