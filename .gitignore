@@ -18,6 +18,11 @@ dist-ssr
 .idea
 .DS_Store
 *.suo
+
+# Agent lock files
+.agent-locks/
+*.lock
+*.heartbeat
 *.ntvs*
 *.njsproj
 *.sln
