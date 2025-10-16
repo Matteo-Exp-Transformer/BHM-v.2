@@ -50,7 +50,7 @@
   - Body scroll prevention
   - Accessibility (ARIA)
   - ModalActions component
-- **Stato**: ⏳ Da testare
+- **Stato**: 🔒 LOCKED (2025-01-16) - 39 test passati
 - **Complessità**: Media
 
 ### 4. Alert.tsx

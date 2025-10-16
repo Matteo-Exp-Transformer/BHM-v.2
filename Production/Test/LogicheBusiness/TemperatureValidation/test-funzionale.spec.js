@@ -228,7 +228,7 @@ test.describe('TemperatureValidation - Test Funzionali', () => {
         return 'critical';
       };
       const reading = {
-        temperature: 6,
+        temperature: 7, // 7°C su setpoint 4°C = +3°C (warning per frigo con tolleranza ±2°C)
         conservation_point: { setpoint_temp: 4, type: 'fridge' }
       };
       return getReadingStatus(reading);
