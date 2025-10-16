@@ -25,8 +25,8 @@ test.describe('PermissionLogic - Test Funzionali', () => {
     expect(userRoles.hasDipendente).toBe(true)
     expect(userRoles.hasCollaboratore).toBe(true)
     expect(userRoles.hasGuest).toBe(true)
-    expect(userRoles.isValidRole('admin')).toBe(true)
-    expect(userRoles.isValidRole('responsabile')).toBe(true)
+    expect(userRoles.adminValid).toBe(true)
+    expect(userRoles.responsabileValid).toBe(true)
     expect(userRoles.invalidRoleTest).toBe(true)
   })
 
@@ -157,7 +157,7 @@ test.describe('PermissionLogic - Test Funzionali', () => {
         canManageConservationCheck: hasPermission('canManageConservation'),
         canExportDataCheck: hasPermission('canExportData'),
         canManageSettingsCheck: hasPermission('canManageSettings'),
-        invalidPermissionCheck: hasPermission('invalidPermission')
+        invalidPermissionCheck: hasPermission('invalidPermission') || false
       }
     })
 

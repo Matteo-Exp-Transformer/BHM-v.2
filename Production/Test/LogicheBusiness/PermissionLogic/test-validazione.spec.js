@@ -130,7 +130,7 @@ test.describe('PermissionLogic - Test Validazione', () => {
 
       return {
         adminHasAllTrue: Object.values(adminPerms).every(p => p === true),
-        responsabileHasMixed: adminPerms.canManageStaff === true && adminPerms.canExportData === false,
+        responsabileHasMixed: responsabilePerms.canManageStaff === true && responsabilePerms.canExportData === false,
         dipendenteHasAllFalse: Object.values(dipendentePerms).every(p => p === false),
         guestHasAllFalse: Object.values(guestPerms).every(p => p === false),
         adminMoreThanResponsabile: adminPerms.canExportData && !responsabilePerms.canExportData,
