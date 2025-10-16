@@ -1,3 +1,9 @@
+// LOCKED: 2025-01-16 - PermissionLogic (MainLayout) completamente testato e blindato
+// Test eseguiti: 26 test completi, tutti passati (100%)
+// Funzionalità testate: filtraggio tabs basato su ruoli, requiredRole per tab specifici, controllo accesso
+// Combinazioni testate: admin/responsabile/dipendente/collaboratore/guest, tab visibility, role-based navigation
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 // LOCKED: MainLayout.tsx - 34 test passati, tutte le funzionalità verificate
 // Data: 2025-01-16
 // Responsabile: Agente 5 - Navigazione e Routing

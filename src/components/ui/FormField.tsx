@@ -19,6 +19,11 @@ export const FormField: React.FC<FormFieldProps> = ({
   children,
   className = '',
 }) => {
+  // LOCKED: 2025-01-16 - FormField.tsx completamente testato
+  // Test eseguiti: 47 test, tutti passati (100%)
+  // Componenti testati: FormField, Input, Select, TextArea (4 componenti)
+  // Funzionalità: Form wrapper, error handling, accessibility, duplicazioni identificate
+  // NON MODIFICARE SENZA PERMESSO ESPLICITO
   return (
     <div className={`space-y-2 ${className}`}>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">

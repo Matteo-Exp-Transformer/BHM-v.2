@@ -101,15 +101,25 @@
 
 ### 8. FormField.tsx
 - **File**: `src/components/ui/FormField.tsx`
-- **Tipo**: Componente base
-- **Stato**: ⏳ Da analizzare
-- **Complessità**: Da valutare
+- **Tipo**: Componente base (Complesso - 4 componenti)
+- **Funzionalità**:
+  - FormField wrapper con label, error, help text
+  - Input, Select, TextArea components (duplicati)
+  - Error handling e accessibility
+  - Conditional rendering per error/helpText
+- **Stato**: 🔒 LOCKED (2025-01-16) - 47 test passati
+- **Complessità**: Alta
 
 ### 9. Label.tsx
 - **File**: `src/components/ui/Label.tsx`
 - **Tipo**: Componente base
-- **Stato**: ⏳ Da analizzare
-- **Complessità**: Da valutare
+- **Funzionalità**:
+  - Label base con forwardRef
+  - Peer states (peer-disabled)
+  - Accessibilità con htmlFor
+  - ClassName personalizzabile
+- **Stato**: 🔒 LOCKED (2025-01-16) - 21 test passati
+- **Complessità**: Bassa
 
 ### 10. LoadingSpinner.tsx
 - **File**: `src/components/ui/LoadingSpinner.tsx`
@@ -125,14 +135,24 @@
 ### 11. OptimizedImage.tsx
 - **File**: `src/components/ui/OptimizedImage.tsx`
 - **Tipo**: Componente base
-- **Stato**: ⏳ Da analizzare
-- **Complessità**: Da valutare
+- **Funzionalità**:
+  - Image loading con state management
+  - Loading/error states con callbacks
+  - Placeholder e error handling
+  - Performance optimization
+- **Stato**: 🔒 LOCKED (2025-01-16) - 36 test passati
+- **Complessità**: Media
 
 ### 12. Progress.tsx
 - **File**: `src/components/ui/Progress.tsx`
-- **Tipo**: Componente base
-- **Stato**: ⏳ Da analizzare
-- **Complessità**: Da valutare
+- **Tipo**: Componente base (Radix UI)
+- **Funzionalità**:
+  - ProgressRoot e ProgressIndicator
+  - Value management (0-100%)
+  - Smooth animations
+  - Accessibilità completa
+- **Stato**: 🔒 LOCKED (2025-01-16) - 30 test passati
+- **Complessità**: Bassa
 
 ### 13. Select.tsx
 - **File**: `src/components/ui/Select.tsx`
@@ -183,8 +203,13 @@
 ### 17. Textarea.tsx
 - **File**: `src/components/ui/Textarea.tsx`
 - **Tipo**: Componente base
-- **Stato**: ⏳ Da analizzare
-- **Complessità**: Da valutare
+- **Funzionalità**:
+  - Textarea base con forwardRef
+  - Focus management e transitions
+  - Min-height e resize handling
+  - Accessibility completa
+- **Stato**: 🔒 LOCKED (2025-01-16) - 30 test passati
+- **Complessità**: Bassa
 
 ### 18. Tooltip.tsx
 - **File**: `src/components/ui/Tooltip.tsx`

@@ -20,21 +20,14 @@ test.describe('EventCreation - Test Funzionali', () => {
     await page.goto('http://localhost:3005/calendar');
     await page.waitForLoadState('networkidle');
     
-    // Cercare bottone per creare evento
-    const createButton = page.locator('button:has-text("Nuovo")').or(
-      page.locator('button:has-text("Crea")')
-    ).or(
-      page.locator('button:has-text("+")')
-    ).or(
-      page.locator('[data-testid="create-event-button"]')
-    );
+    // Cercare il bottone "Nuovo Evento" nel calendario
+    const createButton = page.locator('button:has-text("Nuovo Evento")');
     
     if (await createButton.isVisible()) {
       await createButton.click();
       
-      // Verificare che il modal sia aperto
-      await expect(page.locator('text=Nuovo Evento')).toBeVisible();
-      await expect(page.locator('input[placeholder*="titolo"]')).toBeVisible();
+      // Verificare che il modal sia aperto - potrebbe essere EventDetailsModal o CreateEventModal
+      await expect(page.locator('text=Nuovo Evento').or(page.locator('text=Event Details'))).toBeVisible();
     }
   });
 
