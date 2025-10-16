@@ -67,8 +67,14 @@
 ### 5. Badge.tsx
 - **File**: `src/components/ui/Badge.tsx`
 - **Tipo**: Componente base
-- **Stato**: ⏳ Da analizzare
-- **Complessità**: Da valutare
+- **Funzionalità**:
+  - 5 varianti: default, secondary, destructive, outline, muted
+  - 5 tonality: neutral, success, warning, danger, info
+  - 2 dimensioni: sm, md
+  - Tailwind variants con composizione dinamica
+  - Focus management e accessibility
+- **Stato**: 🔒 LOCKED (2025-01-16) - 18 test passati
+- **Complessità**: Media
 
 ### 6. Card.tsx
 - **File**: `src/components/ui/Card.tsx`

@@ -10,7 +10,7 @@
 |------|------------------|---------|---------|---------|---------|
 | 🔐 Autenticazione | 6 | 0 | 0 | 1 | 🔄 Inventario completato |
 | 🎯 Onboarding | 8 | 0 | 0 | 1 | 🔄 Inventario completato |
-| 🎨 UI Base | 19 | 4 | 4 | 2 | 🔄 4 componenti blindate |
+| 🎨 UI Base | 19 | 5 | 5 | 2 | 🔄 5 componenti blindate |
 | 📊 Dashboard | **8** | 0 | 0 | 1 | 🔄 **Inventario completato** |
 | 📅 Calendario | **37** | 0 | 0 | 1 | 🔄 **Inventario completato** |
 | 📦 Inventario | **18** | 0 | 0 | 2 | 🔄 **Inventario completato** |
@@ -75,6 +75,7 @@
   - File: temperatureStatus.ts, AddTemperatureModal.tsx, TemperatureReadingCard.tsx, useDashboardData.ts
   - Funzioni: getToleranceForType, calculateTemperatureStatus, calculateComplianceRate, getReadingStatus, filterReadingsByStatus, getToleranceRange
 - **Alert.tsx** - 🔒 LOCKED (2025-01-16) - 12 test passati, tutte le varianti e componenti testati
+- **Badge.tsx** - 🔒 LOCKED (2025-01-16) - 18 test passati, 5 varianti × 5 tonality × 2 dimensioni testate
 
 ## 📈 Statistiche
 
@@ -83,9 +84,9 @@
   - Dashboard: 8, Calendario: 37, Inventario: 18, Conservazione: 17
   - Liste Spesa: 10, Gestione: 9, Impostazioni: 5, Admin: 5
   - Shared: 4, Navigazione: 8, Hooks: 13, Services: 47, Utils: 15
-- **Componenti Testate**: 3 (1.5%)
-- **Componenti Locked**: 3 (1.5%)
-- **Test Totali Eseguiti**: 107
+- **Componenti Testate**: 5 (2.5%)
+- **Componenti Locked**: 5 (2.5%)
+- **Test Totali Eseguiti**: 137
 - **Test Falliti**: 0
 - **Tempo Totale Speso**: 1h 30m
 - **Metodo Mappatura**: Analisi statica + Playwright MCP dinamica
