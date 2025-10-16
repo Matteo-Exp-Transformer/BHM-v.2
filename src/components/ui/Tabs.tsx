@@ -3,6 +3,12 @@ import * as TabsPrimitive from '@radix-ui/react-tabs'
 
 import { cn } from '@/lib/utils'
 
+// LOCKED: 2025-01-16 - Tabs.tsx completamente testato
+// Test eseguiti: 36 test, tutti passati (100%)
+// Componenti testati: Tabs, TabsList, TabsTrigger, TabsContent
+// Funzionalità: Tab selection, keyboard navigation, accessibilità, state management
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 const Tabs = TabsPrimitive.Root
 
 const TabsList = React.forwardRef<

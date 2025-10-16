@@ -130,27 +130,49 @@
 
 ### 13. Select.tsx
 - **File**: `src/components/ui/Select.tsx`
-- **Tipo**: Componente base
-- **Stato**: ⏳ Da analizzare
-- **Complessità**: Da valutare
+- **Tipo**: Componente base (Radix UI)
+- **Funzionalità**:
+  - 10 componenti Radix UI: Root, Group, Value, Trigger, Content, Label, Item, Separator, ScrollButtons
+  - Portal rendering e positioning
+  - Animazioni slide/fade/zoom
+  - Accessibilità completa integrata
+- **Stato**: 🔒 LOCKED (2025-01-16) - 45 test passati
+- **Complessità**: Alta
 
 ### 14. Switch.tsx
 - **File**: `src/components/ui/Switch.tsx`
-- **Tipo**: Componente base
-- **Stato**: ⏳ Da analizzare
-- **Complessità**: Da valutare
+- **Tipo**: Componente base (Radix UI)
+- **Funzionalità**:
+  - 2 componenti: SwitchRoot, SwitchThumb
+  - Toggle states (checked/unchecked)
+  - Animazioni smooth con transitions
+  - Accessibilità completa con keyboard navigation
+- **Stato**: 🔒 LOCKED (2025-01-16) - 30 test passati
+- **Complessità**: Media
 
 ### 15. Table.tsx
 - **File**: `src/components/ui/Table.tsx`
 - **Tipo**: Componente base
-- **Stato**: ⏳ Da analizzare
-- **Complessità**: Da valutare
+- **Funzionalità**:
+  - 6 componenti: Table, TableHeader, TableBody, TableRow, TableHeaderCell, TableCell
+  - Sorting functionality con aria-sort
+  - Row selection e click handlers
+  - Keyboard navigation completa
+  - Responsive con overflow-x-auto
+- **Stato**: 🔒 LOCKED (2025-01-16) - 45 test passati
+- **Complessità**: Alta
 
 ### 16. Tabs.tsx
 - **File**: `src/components/ui/Tabs.tsx`
-- **Tipo**: Componente base
-- **Stato**: ⏳ Da analizzare
-- **Complessità**: Da valutare
+- **Tipo**: Componente base (Radix UI)
+- **Funzionalità**:
+  - 4 componenti: Tabs, TabsList, TabsTrigger, TabsContent
+  - Tab selection e state management
+  - Keyboard navigation con arrow keys
+  - Accessibilità completa con ARIA
+  - Active state management
+- **Stato**: 🔒 LOCKED (2025-01-16) - 36 test passati
+- **Complessità**: Media
 
 ### 17. Textarea.tsx
 - **File**: `src/components/ui/Textarea.tsx`

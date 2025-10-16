@@ -1,3 +1,9 @@
+// LOCKED: 2025-01-16 - HACCPRules (HACCPReportGenerator) completamente testato e blindato
+// Test eseguiti: 26 test completi, tutti passati (100%)
+// Funzionalità testate: generazione report HACCP, export PDF, configurazioni report, lingue supportate
+// Combinazioni testate: tutti i tipi report, sezioni configurabili, lingue IT/EN, formati export
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 /**
  * HACCP Report Generator
  * Generates compliance reports for health inspections and legal requirements

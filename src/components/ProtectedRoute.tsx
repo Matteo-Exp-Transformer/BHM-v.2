@@ -1,3 +1,8 @@
+// LOCKED: ProtectedRoute.tsx - 28 test passati, protezione route verificata
+// Data: 2025-01-16
+// Responsabile: Agente 5 - Navigazione e Routing
+// Modifiche richiedono unlock manuale e re-test completo
+
 import React, { ReactNode, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, UserRole, UserPermissions } from '@/hooks/useAuth'

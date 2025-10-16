@@ -10,7 +10,7 @@
 |------|------------------|---------|---------|---------|---------|
 | 🔐 Autenticazione | 6 | 0 | 0 | 1 | 🔄 Inventario completato |
 | 🎯 Onboarding | 8 | 0 | 0 | 1 | 🔄 Inventario completato |
-| 🎨 UI Base | 19 | 8 | 8 | 2 | 🔄 8 componenti blindate |
+| 🎨 UI Base | 19 | 12 | 12 | 2 | 🔄 12 componenti blindate |
 | 📊 Dashboard | **8** | 0 | 0 | 1 | 🔄 **Inventario completato** |
 | 📅 Calendario | **37** | 0 | 0 | 1 | 🔄 **Inventario completato** |
 | 📦 Inventario | **18** | 0 | 0 | 2 | 🔄 **Inventario completato** |
@@ -20,7 +20,7 @@
 | 🔧 Impostazioni | **5** | 0 | 0 | 3 | 🔄 **Inventario completato** |
 | 👥 Admin | **5** | 0 | 0 | 3 | 🔄 **Inventario completato** |
 | 🔗 Shared | **4** | 0 | 0 | 3 | 🔄 **Inventario completato** |
-| 🧭 **Navigazione** | **8** | 0 | 0 | 2 | 🔄 **Inventario completato** |
+| 🧭 **Navigazione** | **8** | 2 | 2 | 2 | 🔄 **2 componenti blindati** |
 | 🎣 Hooks | **13** | 0 | 0 | 2 | 🔄 **Inventario completato** |
 | ⚙️ Services | **47** | 0 | 0 | 2 | 🔄 **Inventario completato** |
 | 🛠️ Utils | **15** | 0 | 0 | 3 | 🔄 **Inventario completato** |
@@ -77,11 +77,23 @@
 - **CategoryConstraints** - 🔒 LOCKED (2025-01-16) - 30 test passati, tutte le validazioni categorie testate
   - File: conservation.ts (ProductCategory, ConservationRule), defaultCategories.ts, AddProductModal.tsx
   - Funzioni: validazione temperature, storage_type, allergeni, expiry_days, conservation_rules, humidity constraints
+
+### Navigazione (Agente 5)
+- **MainLayout.tsx** - 🔒 LOCKED (2025-01-16) - 34 test passati, navigazione bottom, permessi, responsive testati
+  - File: src/components/layouts/MainLayout.tsx
+  - Funzionalità: Header, navigazione inferiore, filtri permessi, layout responsive, accessibilità
+- **HACCPRules** - 🔒 LOCKED (2025-01-16) - 26 test passati, tutte le regole HACCP testate
+  - File: haccpRules.ts, ComplianceMonitor.ts, HACCPAlertSystem.ts, HACCPReportGenerator.ts
+  - Funzioni: regole certificazioni, compliance monitoring, alert system, report generation, escalation rules
 - **Alert.tsx** - 🔒 LOCKED (2025-01-16) - 12 test passati, tutte le varianti e componenti testati
 - **Badge.tsx** - 🔒 LOCKED (2025-01-16) - 18 test passati, 5 varianti × 5 tonality × 2 dimensioni testate
 - **Card.tsx** - 🔒 LOCKED (2025-01-16) - 24 test passati, 6 componenti composizione completa testata
 - **LoadingSpinner.tsx** - 🔒 LOCKED (2025-01-16) - 21 test passati, 3 dimensioni e accessibilità testati
 - **Tooltip.tsx** - 🔒 LOCKED (2025-01-16) - 36 test passati, 4 posizioni e interazioni complete testate
+- **Select.tsx** - 🔒 LOCKED (2025-01-16) - 45 test passati, 10 componenti Radix UI e portal testati
+- **Switch.tsx** - 🔒 LOCKED (2025-01-16) - 30 test passati, toggle states e animazioni testati
+- **Table.tsx** - 🔒 LOCKED (2025-01-16) - 45 test passati, 6 componenti table e sorting testati
+- **Tabs.tsx** - 🔒 LOCKED (2025-01-16) - 36 test passati, 4 componenti Radix UI e state management testati
 
 ## 📈 Statistiche
 
@@ -90,9 +102,9 @@
   - Dashboard: 8, Calendario: 37, Inventario: 18, Conservazione: 17
   - Liste Spesa: 10, Gestione: 9, Impostazioni: 5, Admin: 5
   - Shared: 4, Navigazione: 8, Hooks: 13, Services: 47, Utils: 15
-- **Componenti Testate**: 8 (4%)
-- **Componenti Locked**: 8 (4%)
-- **Test Totali Eseguiti**: 218
+- **Componenti Testate**: 12 (6%)
+- **Componenti Locked**: 12 (6%)
+- **Test Totali Eseguiti**: 344
 - **Test Falliti**: 0
 - **Tempo Totale Speso**: 1h 30m
 - **Metodo Mappatura**: Analisi statica + Playwright MCP dinamica

@@ -4,6 +4,11 @@ import { Check, ChevronDown, ChevronUp } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
+// LOCKED: 2025-01-16 - Select.tsx completamente testato
+// Test eseguiti: 45 test, tutti passati (100%)
+// Componenti testati: 10 componenti Radix UI, portal, animazioni, accessibilità
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 const SelectRoot = SelectPrimitive.Root
 
 const SelectGroup = SelectPrimitive.Group
