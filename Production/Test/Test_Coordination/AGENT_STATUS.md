@@ -6,13 +6,45 @@
 
 ## 📊 STATO GLOBALE AGENTI
 
-| Agente | Area Assegnata | Elemento Corrente | Status | Test Eseguiti | Prossimo Elemento | Porta |
-|--------|---------------|------------------|---------|---------------|-------------------|-------|
-| **Agente1** | UI Elementi Base | Tabs.tsx | ✅ Blinded | 36/36 | SEQUENZA COMPLETATA | 3000 |
-| **Agente2** | Form e Validazioni | LoginForm | ⏳ In attesa | 0/0 | RegisterForm | 3001 |
-| **Agente3** | Logiche Business | MultiTenantLogic | ✅ Blinded | 26/26 | PermissionLogic | 3002 |
-| **Agente4** | Calendario e Eventi | CalendarConfig | 🔄 Testing | 0/0 | EventCreation | 3003 |
-| **Agente5** | Navigazione e Routing | SyncStatusBar | ✅ Blinded | 8/8 | SEQUENZA COMPLETATA | 3004 |
+| Agente | Area Assegnata | Elemento Corrente | Host | Lock Status | Queue Pos | Est. Wait | Supabase Auth | Company ID |
+|--------|---------------|------------------|------|-------------|-----------|-----------|---------------|------------|
+| **Agente1** | UI Elementi Base | Tabs.tsx | 3000 | 🔒 Locked | - | 0min | ✅ Active | Dynamic |
+| **Agente2** | Form e Validazioni | LoginForm | Queue | ⏳ Waiting | #1 | 2min | ✅ Active | Dynamic |
+| **Agente3** | Logiche Business | MultiTenantLogic | 3002 | 🔒 Locked | - | 0min | ✅ Active | Dynamic |
+| **Agente4** | Calendario e Eventi | CalendarConfig | 3001 | 🔒 Locked | - | 0min | ✅ Active | Dynamic |
+| **Agente5** | Navigazione e Routing | SyncStatusBar | Free | ✅ Free | - | 0min | ✅ Active | Dynamic |
+
+---
+
+## 🔄 SISTEMA QUEUE MULTI-AGENT
+
+### Pool Host Condivisi
+- **Host 1 (3000):** Priorità Alta - Auth, UI Base, Form
+- **Host 2 (3001):** Priorità Media - Logiche Business, Calendario
+- **Host 3 (3002):** Emergenza - Navigazione, Admin, overflow
+
+### Configurazione Supabase
+- **Project URL:** https://tucqgcfrlzmwyfadiodo.supabase.co
+- **Auth Method:** Email/Password
+- **Company ID:** Dinamico via devCompanyHelper
+
+### Stato Corrente
+- Active Locks: 3/3
+- Agents in Queue: 1
+- Average Wait Time: 2min
+- Supabase Connections: 5/5
+
+### Comandi Monitoraggio
+```bash
+# Monitor real-time
+node scripts/queue-monitor.cjs --watch
+
+# Stato host specifico
+node scripts/agent-lock-manager.cjs status localhost:3000
+
+# Cleanup lock stale
+node scripts/agent-lock-manager.cjs cleanup
+```
 
 ---
 
