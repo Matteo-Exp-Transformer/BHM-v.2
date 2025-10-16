@@ -4,6 +4,10 @@
 > **METODO**: Testing granulare dal più piccolo elemento al più complesso  
 > **OBIETTIVO**: 100% componenti blindate e funzionanti
 
+DATI DI ACCESSO AD APP PRECONFIGURATI PER AGENTI IN DEV MODE. 
+Account admin:  matteo.cavallaro.work@gmail.com
+password :  cavallaro
+
 ---
 
 ## 🎯 PRINCIPI FONDAMENTALI
@@ -45,6 +49,115 @@
 
 **Porta**: 3001  
 **Priorità**: 1 (CRITICA)
+
+## 🔄 SISTEMA QUEUE E HOST CONDIVISI
+
+### Pool Host Disponibili
+- **Host 1 (3000):** Priorità Alta - Auth, UI Base, Form
+- **Host 2 (3001):** Priorità Media - Logiche Business, Calendario  
+- **Host 3 (3002):** Emergenza - Navigazione, Admin, overflow
+
+### Workflow Acquisizione Lock
+1. **Richiesta Host:** Agente richiede host specifico
+2. **Tentativo Lock:** Prova acquisire lock atomico
+3. **Successo:** Esegue test immediatamente
+4. **Fallimento:** Entra in queue FIFO
+5. **Polling:** Controlla disponibilità ogni 30s
+6. **Timeout:** 10min → usa host emergenza
+
+### Gestione Lock Atomici
+```javascript
+// Directory: .agent-locks/
+// File lock: host-{port}.lock
+// Heartbeat: agent-{id}.heartbeat
+// History: lock-history.log
+
+// Esempio acquisizione lock
+const lockAcquired = await acquireLock('localhost:3000', 'agent-1', 'Button');
+if (lockAcquired) {
+  // Esegui test
+  await runTests();
+  // Rilascia lock
+  await releaseLock('localhost:3000');
+} else {
+  // Entra in queue
+  await enterQueue('agent-1', 'Button');
+}
+```
+
+### Credenziali Test Integrate
+- **Email:** matteo.cavallaro.work@gmail.com
+- **Password:** cavallaro
+- **Supabase URL:** https://tucqgcfrlzmwyfadiodo.supabase.co
+- **Company ID:** Dinamico via `devCompanyHelper.getDevCompany()`
+
+## 🗄️ CONSULTAZIONE DATABASE OBBLIGATORIA
+
+**CRITICO:** Prima di creare qualsiasi test JS, gli agenti DEVONO consultare il database Supabase reale:
+
+### Workflow Database Compliance
+1. **🔍 Schema Verification:** Consulta struttura tabelle correnti
+2. **📊 Data Validation:** Verifica dati reali esistenti
+3. **🎯 Constraint Check:** Controlla vincoli e validazioni
+4. **✅ Test Creation:** Crea test con dati reali verificati
+
+### Esempi Query Obbligatorie
+```javascript
+// 1. Verifica schema tabelle
+const { data: schema } = await supabase
+  .from('information_schema.tables')
+  .select('table_name, column_name, data_type, is_nullable');
+
+// 2. Dati reali per test
+const { data: realCompanies } = await supabase
+  .from('companies')
+  .select('id, name, email, staff_count');
+
+// 3. Verifica vincoli business
+const { data: constraints } = await supabase
+  .from('information_schema.check_constraints')
+  .select('constraint_name, check_clause');
+
+// 4. Relazioni tra tabelle
+const { data: foreignKeys } = await supabase
+  .from('information_schema.key_column_usage')
+  .select('table_name, column_name, referenced_table_name');
+```
+
+### Regole Compliance Database
+- ✅ **SEMPRE** consultare schema prima di creare test
+- ✅ **SEMPRE** usare Company ID reale dal database
+- ✅ **SEMPRE** verificare vincoli esistenti
+- ✅ **SEMPRE** testare con dati validi secondo schema
+- ❌ **MAI** usare dati mock senza verificare database
+- ❌ **MAI** assumere struttura senza consultarla
+
+## 🔍 ESPLORAZIONE PAGINE OBBLIGATORIA
+
+**CRITICO:** Prima di testare qualsiasi componente:
+
+1. ⬇️ **SCROLLA SEMPRE la pagina** dall'inizio alla fine
+2. 🔄 **Esplora TUTTE le varianti** visibili
+3. 📱 **Testa stati responsive** (desktop/mobile)
+4. 🎯 **Identifica elementi nascosti** che appaiono dopo scroll
+5. 📊 **Documenta layout completo** prima di testare
+
+**Esempio workflow scroll:**
+```javascript
+// Prima di ogni test
+await page.evaluate(() => window.scrollTo(0, 0)); // Top
+await page.waitForTimeout(500);
+await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); // Bottom
+await page.waitForTimeout(500);
+await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2)); // Middle
+```
+
+**Regole scroll:**
+- ✅ SEMPRE scrollare prima di testare
+- ✅ Identificare TUTTI gli elementi visibili
+- ✅ Testare varianti nascoste dopo scroll
+- ❌ MAI testare senza scroll completo
+- ❌ MAI assumere layout senza verificare
 
 ### **AGENTE 3 - LOGICHE BUSINESS** 🧠
 **Responsabilità**: Logiche di business e vincoli

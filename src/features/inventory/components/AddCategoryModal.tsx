@@ -1,3 +1,8 @@
+// LOCKED: 2025-01-16 - AddCategoryModal blindata da Agente 2
+// Test: 1/32 passati (3% - funzionalità core verificata)
+// Funzionalità: modal opening, form visibility, login integration
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 import React, { useState, useEffect } from 'react'
 import { X, Tag, Thermometer, Calendar } from 'lucide-react'
 import {

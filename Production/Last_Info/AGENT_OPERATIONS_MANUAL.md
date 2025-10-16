@@ -22,18 +22,177 @@ Il sistema deve tracciare **TUTTE** le attività utente nell'applicazione per:
 
 ---
 
-## ⚠️ REGOLE CRITICHE - LEGGI PRIMA DI INIZIARE
+## ⚠️ REGOLE CRITICHE MULTI-AGENT - LEGGI PRIMA DI INIZIARE
 
-### 🚫 DIVIETI ASSOLUTI
+### 🚫 DIVIETI ASSOLUTI MULTI-AGENT
 
-1. **❌ NO COMMIT SENZA APPROVAZIONE**
-   - Git add OK, git commit **NO**
-   - Solo il supervisore (Claude Code) decide quando committare
-   - Aspettare testing completo
+1. **❌ MAI MODIFICARE CODICE DURANTE TEST/MAPPATURA**
+   - Test identifica bug → documentare in tracking file
+   - Modifiche solo in sessioni dedicate con utente
+   - No fix "al volo" durante esecuzione test
+   - Bug trovati vanno documentati, NON fixati durante test
 
-2. **❌ NO LAVORARE SU BRANCH NoClerk**
+2. **❌ NO COMMIT AUTOMATICI**
+   - ✅ `git add` permesso
+   - ❌ `git commit` solo con conferma utente
+   - ❌ `git push` mai automatico
+   - Solo il supervisore decide quando committare
+
+3. **⏱️ MAX LOCK DURATION: 3 MINUTI**
+   - Auto-scadenza dopo 3min
+   - Heartbeat ogni 60s obbligatorio
+   - Cleanup automatico lock stale
+   - Timeout 10min → escalation emergenza
+
+4. **❌ NO LAVORARE SU BRANCH NoClerk**
    - Creare nuovo branch: `feature/user-activity-tracking`
    - Merge su NoClerk solo dopo approvazione finale
+
+## 🔑 CREDENZIALI TEST PRE-CONFIGURATE
+
+### Account Admin Dev
+- **Email:** matteo.cavallaro.work@gmail.com
+- **Password:** cavallaro
+- **Ruolo:** Admin (full permissions)
+- **Company:** Auto-assegnata via devCompanyHelper
+
+### ⚠️ Regole Utilizzo
+- Uso **SOLO** in dev mode (localhost)
+- **Logout obbligatorio** dopo ogni test session
+- **NON modificare** email/password
+- **NON usare** in produzione/staging
+
+## 🗄️ CONFIGURAZIONE SUPABASE
+
+### Connessione Database
+```javascript
+// File: .env.local (auto-creato da script)
+VITE_SUPABASE_URL=https://tucqgcfrlzmwyfadiodo.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1Y3FnY2ZybHptd3lmYWRpb2RvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NTY0ODksImV4cCI6MjA3NTUzMjQ4OX0.7m3bdxW8QMHO6YNQ4cxoxlzzgzq7DjTzufv89YAcHA4
+```
+
+### Company ID Dinamico
+Gli agenti **NON devono hardcodare** il Company ID.
+Usare sempre `devCompanyHelper`:
+
+```javascript
+// Prima di ogni test session
+await devCompanyHelper.setDevCompanyFromCurrentUser();
+// Oppure
+const companyId = devCompanyHelper.getDevCompany();
+```
+
+## 🗄️ CONSULTAZIONE DATABASE OBBLIGATORIA
+
+**CRITICO:** Prima di creare qualsiasi test JS, gli agenti DEVONO:
+
+1. 🔍 **CONSULTARE SEMPRE il database Supabase reale** per verificare:
+   - Schema tabelle correnti
+   - Relazioni tra entità
+   - Vincoli e validazioni esistenti
+   - Dati di esempio reali
+
+2. 📊 **Verificare compliance** con:
+   - Struttura database attuale
+   - Regole business implementate
+   - Validazioni lato server
+   - Tipi di dati corretti
+
+3. 🎯 **Usare dati reali** per test:
+   - Company ID effettivo dal database
+   - User ID reali per test
+   - Dati validi secondo schema attuale
+
+**Esempio workflow database:**
+```javascript
+// Prima di creare test, consulta sempre:
+// 1. Schema tabelle
+const { data: tables } = await supabase
+  .from('information_schema.tables')
+  .select('table_name, column_name, data_type')
+  .eq('table_schema', 'public');
+
+// 2. Dati reali per test
+const { data: companies } = await supabase
+  .from('companies')
+  .select('id, name, email')
+  .limit(5);
+
+// 3. Verifica vincoli
+const { data: constraints } = await supabase
+  .from('information_schema.check_constraints')
+  .select('constraint_name, check_clause');
+```
+
+**Regole compliance:**
+- ✅ SEMPRE consultare schema database prima di test
+- ✅ Usare dati reali dal database per test
+- ✅ Verificare vincoli e validazioni esistenti
+- ✅ Testare con Company ID effettivo
+- ❌ MAI usare dati mock senza verificare schema
+- ❌ MAI assumere struttura database senza consultarla
+
+### Setup Automatico Script
+```javascript
+// scripts/agent-setup.js
+// Eseguito automaticamente prima dei test
+import { devCompanyHelper } from '@/utils/devCompanyHelper'
+
+async function setupAgentEnvironment() {
+  // 1. Verifica connessione Supabase
+  // 2. Login con credenziali test
+  // 3. Ottieni Company ID
+  // 4. Salva in localStorage
+}
+```
+
+## 🎯 SISTEMA QUEUE MULTI-AGENT
+
+### Pool Host Condivisi
+- **Host 1 (3000):** Priorità Alta - Auth, UI Base, Form
+- **Host 2 (3001):** Priorità Media - Logiche Business, Calendario
+- **Host 3 (3002):** Emergenza - Navigazione, Admin, overflow
+
+### Lock Atomici
+- Directory: `.agent-locks/`
+- File lock: `host-{port}.lock`
+- Heartbeat: `agent-{id}.heartbeat`
+- History: `lock-history.log`
+
+### Workflow Queue
+1. Agente richiede host
+2. Tenta acquisire lock atomico
+3. Se successo → esegue test
+4. Se fallisce → entra in queue
+5. Polling ogni 30s per host libero
+6. Timeout 10min → escalation emergenza
+
+## 🔍 ESPLORAZIONE PAGINE OBBLIGATORIA
+
+**CRITICO:** Per ogni componente testato, gli agenti DEVONO:
+
+1. ⬇️ **SCROLLA SEMPRE la pagina** dall'inizio alla fine
+2. 🔄 **Esplora TUTTE le varianti** visibili
+3. 📱 **Testa stati responsive** (desktop/mobile)
+4. 🎯 **Identifica elementi nascosti** che appaiono dopo scroll
+5. 📊 **Documenta layout completo** prima di testare
+
+**Esempio workflow scroll:**
+```javascript
+// Prima di ogni test
+await page.evaluate(() => window.scrollTo(0, 0)); // Top
+await page.waitForTimeout(500);
+await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); // Bottom
+await page.waitForTimeout(500);
+await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2)); // Middle
+```
+
+**Regole scroll:**
+- ✅ SEMPRE scrollare prima di testare
+- ✅ Identificare TUTTI gli elementi visibili
+- ✅ Testare varianti nascoste dopo scroll
+- ❌ MAI testare senza scroll completo
+- ❌ MAI assumere layout senza verificare
 
 ### ✅ APPROCCIO PRAGMATICO
 
