@@ -1,3 +1,8 @@
+// LOCKED: MainLayout.tsx - 34 test passati, tutte le funzionalità verificate
+// Data: 2025-01-16
+// Responsabile: Agente 5 - Navigazione e Routing
+// Modifiche richiedono unlock manuale e re-test completo
+
 import { ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {

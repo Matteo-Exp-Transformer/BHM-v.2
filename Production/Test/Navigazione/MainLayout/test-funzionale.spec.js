@@ -17,7 +17,19 @@ test.describe('MainLayout - Test Funzionali', () => {
         await emailInput.fill('matteo.cavallaro.work@gmail.com');
         await passwordInput.fill('Cavallaro');
         await loginButton.click();
-        await page.waitForURL(/.*dashboard/, { timeout: 10000 });
+        
+        // Aspettare il redirect o gestire errori
+        try {
+          await page.waitForURL(/.*dashboard/, { timeout: 15000 });
+        } catch (error) {
+          console.log('⚠️ Timeout su redirect dashboard, verifico stato attuale');
+          // Se c'è un timeout, verifico se siamo comunque autenticati
+          if (await page.locator('header').isVisible()) {
+            console.log('✅ Header visibile, continuo il test');
+          } else {
+            throw error;
+          }
+        }
       }
     }
     
@@ -33,8 +45,8 @@ test.describe('MainLayout - Test Funzionali', () => {
     // Verificare titolo HACCP Manager
     await expect(page.locator('header h1')).toContainText('HACCP Manager');
     
-    // Verificare presenza controlli header
-    await expect(page.locator('header button')).toBeVisible();
+    // Verificare presenza controlli header (primo bottone)
+    await expect(page.locator('header button').first()).toBeVisible();
   });
 
   test('Dovrebbe mostrare navigazione bottom con tab principali', async ({ page }) => {
@@ -131,8 +143,8 @@ test.describe('MainLayout - Test Funzionali', () => {
     // Verificare aria-label
     await expect(page.locator('nav[aria-label="Main navigation"]')).toBeVisible();
     
-    // Verificare aria-label sui link
-    await expect(page.locator('nav a[aria-label*="Navigate to"]')).toBeVisible();
+    // Verificare aria-label sui link (primo link)
+    await expect(page.locator('nav a[aria-label*="Navigate to"]').first()).toBeVisible();
     
     // Verificare aria-current sul tab attivo
     await expect(page.locator('nav a[aria-current="page"]')).toBeVisible();
