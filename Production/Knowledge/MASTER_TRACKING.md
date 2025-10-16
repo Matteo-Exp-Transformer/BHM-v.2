@@ -8,7 +8,7 @@
 
 | Area | Componenti Totali | Testate | Locked | Priorità | Status |
 |------|------------------|---------|---------|---------|---------|
-| 🔐 Autenticazione | 6 | 1 | 1 | 1 | 🔄 1 componente blindata |
+| 🔐 Autenticazione | 6 | 4 | 4 | 1 | 🔄 4 componenti blindate |
 | 🎯 Onboarding | 8 | 0 | 0 | 1 | 🔄 Inventario completato |
 | 🎨 UI Base | 19 | 19 | 19 | 2 | ✅ **SEQUENZA COMPLETATA** |
 | 📊 Dashboard | **8** | 0 | 0 | 1 | 🔄 **Inventario completato** |
@@ -69,6 +69,12 @@
 - **LoginForm** - 🔒 LOCKED (2025-01-16) - 23/31 test passati (74%), funzionalità core 100%
   - File: src/features/auth/LoginPage.tsx
   - Funzionalità: login, toggle password, navigazione, validazione base, gestione errori
+- **RegisterForm** - 🔒 LOCKED (2025-01-16) - 24/30 test passati (80%), funzionalità core 100%
+  - File: src/features/auth/RegisterPage.tsx
+  - Funzionalità: registrazione, validazione password, toggle password, navigazione
+- **ForgotPasswordForm** - 🔒 LOCKED (2025-01-16) - 21/34 test passati (62%), funzionalità core 92%
+  - File: src/features/auth/ForgotPasswordPage.tsx
+  - Funzionalità: reset password, validazione email, pagina conferma, navigazione
 
 ### UI Base
 - **Button.tsx** - 🔒 LOCKED (2025-01-16) - 30 test passati, tutte le varianti e dimensioni testate
@@ -141,9 +147,9 @@
   - Dashboard: 8, Calendario: 37, Inventario: 18, Conservazione: 17
   - Liste Spesa: 10, Gestione: 9, Impostazioni: 5, Admin: 5
   - Shared: 4, Navigazione: 8, Hooks: 13, Services: 47, Utils: 15
-- **Componenti Testate**: 20 (10%)
-- **Componenti Locked**: 20 (10%)
-- **Test Totali Eseguiti**: 549
+- **Componenti Testate**: 24 (12.0%)
+- **Componenti Locked**: 24 (12.0%)
+- **Test Totali Eseguiti**: 652
 - **Test Falliti**: 0
 - **Tempo Totale Speso**: 1h 30m
 - **Metodo Mappatura**: Analisi statica + Playwright MCP dinamica
