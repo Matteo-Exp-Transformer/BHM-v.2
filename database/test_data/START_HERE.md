@@ -25,7 +25,7 @@ Esegui lo script `FULL_DATABASE_RESET.sql` in **Supabase SQL Editor**.
 **Output finale**:
 ```
 🔗 LINK INVITO (copia questo):
-http://localhost:5173/accept-invite?token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+http://localhost:3000/accept-invite?token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
 **📋 COPIA E SALVA IL LINK!**
@@ -69,7 +69,7 @@ Dopo che Paolo ha completato l'onboarding, esegui:
 SELECT 
   email,
   role,
-  CONCAT('http://localhost:5173/accept-invite?token=', token) as invite_link,
+  CONCAT('http://localhost:3000/accept-invite?token=', token) as invite_link,
   CASE 
     WHEN used_at IS NOT NULL THEN '✅ Usato'
     ELSE '⏳ Pending'
@@ -81,8 +81,8 @@ ORDER BY created_at DESC;
 
 **Output**:
 ```
-matti169cava@libero.it | responsabile | http://localhost:5173/... | ⏳ Pending
-0cavuz0@gmail.com | dipendente | http://localhost:5173/... | ⏳ Pending
+matti169cava@libero.it | responsabile | http://localhost:3000/... | ⏳ Pending
+0cavuz0@gmail.com | dipendente | http://localhost:3000/... | ⏳ Pending
 ```
 
 **📋 COPIA I 2 LINK!**

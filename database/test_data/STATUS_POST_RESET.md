@@ -50,7 +50,7 @@ Esegui questa query in **Supabase SQL Editor**:
 
 ```sql
 SELECT 
-  CONCAT('http://localhost:5173/accept-invite?token=', token) as invite_link,
+  CONCAT('http://localhost:3000/accept-invite?token=', token) as invite_link,
   email,
   role,
   expires_at::date as scade_il
@@ -61,7 +61,7 @@ LIMIT 1;
 
 **Output**:
 ```
-invite_link: http://localhost:5173/accept-invite?token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+invite_link: http://localhost:3000/accept-invite?token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 email: matteo.cavallaro.work@gmail.com
 role: admin
 scade_il: 2025-11-11
@@ -88,7 +88,7 @@ scade_il: 2025-11-11
 
 ### Step 1: Paolo Apre Link
 ```
-Browser → http://localhost:5173/accept-invite?token=xxx
+Browser → http://localhost:3000/accept-invite?token=xxx
 ↓
 Pagina AcceptInvite mostra:
 📩 Sei stato invitato come ADMIN
@@ -188,7 +188,7 @@ Dopo l'onboarding di Paolo:
 SELECT 
   email,
   role,
-  CONCAT('http://localhost:5173/accept-invite?token=', token) as invite_link,
+  CONCAT('http://localhost:3000/accept-invite?token=', token) as invite_link,
   expires_at::date as scade_il
 FROM public.invite_tokens
 WHERE company_id IS NOT NULL  -- Solo inviti per company esistente
@@ -198,10 +198,10 @@ ORDER BY role DESC, email;
 
 **Output atteso**:
 ```
-Fabri@gmail.com | admin | http://localhost:5173/... | 2025-10-19
-matti169cava@libero.it | responsabile | http://localhost:5173/... | 2025-10-19
-0cavuz0@gmail.com | dipendente | http://localhost:5173/... | 2025-10-19
-Eddy@gmail.com | dipendente | http://localhost:5173/... | 2025-10-19
+Fabri@gmail.com | admin | http://localhost:3000/... | 2025-10-19
+matti169cava@libero.it | responsabile | http://localhost:3000/... | 2025-10-19
+0cavuz0@gmail.com | dipendente | http://localhost:3000/... | 2025-10-19
+Eddy@gmail.com | dipendente | http://localhost:3000/... | 2025-10-19
 ```
 
 **📋 Copia questi link per Matteo ed Elena (gli altri opzionali)**

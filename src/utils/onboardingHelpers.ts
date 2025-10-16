@@ -661,8 +661,35 @@ export const getPrefillData = (): OnboardingData => {
         },
       ],
     },
-    // ❌ RIMOSSO: Calendario NON deve essere preconfigurato automaticamente
-    // L'utente deve configurarlo manualmente durante l'onboarding
+    // ✅ AGGIUNTO: Dati calendario preconfigurati per il DevButton
+    calendar: {
+      fiscal_year_start: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0], // 1 gennaio anno corrente
+      fiscal_year_end: new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0], // 31 dicembre anno corrente
+      open_weekdays: [1, 2, 3, 4, 5, 6], // Lunedì-Domenica (1=Lunedì, 6=Domenica)
+      closure_dates: [
+        // Festività principali 2024
+        '2024-01-01', // Capodanno
+        '2024-04-01', // Pasqua
+        '2024-04-02', // Lunedì dell'Angelo
+        '2024-04-25', // Festa della Liberazione
+        '2024-05-01', // Festa del Lavoro
+        '2024-06-02', // Festa della Repubblica
+        '2024-08-15', // Ferragosto
+        '2024-11-01', // Ognissanti
+        '2024-12-08', // Immacolata Concezione
+        '2024-12-25', // Natale
+        '2024-12-26', // Santo Stefano
+      ],
+      business_hours: {
+        '1': [{ open: '08:00', close: '18:00' }], // Lunedì
+        '2': [{ open: '08:00', close: '18:00' }], // Martedì
+        '3': [{ open: '08:00', close: '18:00' }], // Mercoledì
+        '4': [{ open: '08:00', close: '18:00' }], // Giovedì
+        '5': [{ open: '08:00', close: '18:00' }], // Venerdì
+        '6': [{ open: '08:00', close: '14:00' }], // Sabato
+        '0': [], // Domenica chiuso
+      },
+    },
   }
 }
 
@@ -1900,8 +1927,10 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
     calendarData: formData.calendar
   })
 
-  if (formData.calendar) {
+  if (formData.calendar && Object.keys(formData.calendar).length > 0) {
     console.log('📤 Inserting calendar settings...')
+    console.log('📅 Calendar data keys:', Object.keys(formData.calendar))
+    console.log('📅 Calendar data:', formData.calendar)
 
     const calendarSettings = {
       company_id: companyId,
@@ -1927,6 +1956,8 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
     console.log('✅ Calendar settings inserted successfully')
   } else {
     console.log('⚠️ No calendar data provided - calendar will remain unconfigured')
+    console.log('ℹ️ Calendar data:', formData.calendar)
+    console.log('ℹ️ Calendar data keys:', formData.calendar ? Object.keys(formData.calendar) : 'NULL')
     console.log('ℹ️ User must configure calendar manually after onboarding')
   }
 
@@ -2356,17 +2387,18 @@ export const resetOperationalData = async (): Promise<boolean> => {
   const confirmed = window.confirm(
     '⚠️ ATTENZIONE!\n\n' +
     'Questa operazione cancellerà TUTTI i dati operativi:\n' +
-    '• Staff\n' +
-    '• Reparti\n' +
+    '• Staff e Reparti (onboarding)\n' +
     '• Prodotti e Categorie\n' +
     '• Punti di Conservazione\n' +
     '• Task ed Eventi\n' +
     '• Note e Temperature\n' +
-    '• Inviti pendenti\n\n' +
-    '✅ MANTERRÀ:\n' +
+    '• Inviti pendenti\n' +
+    '• Impostazioni calendario\n\n' +
+    '✅ MANTERRÀ (per permettere il rientro):\n' +
     '• Azienda (nome, email, indirizzo)\n' +
-    '• Utente admin\n' +
-    '• Associazione utente-azienda\n\n' +
+    '• Utente admin e autenticazione\n' +
+    '• Associazione utente-azienda\n' +
+    '• Sessione utente attiva\n\n' +
     'Potrai rifare l\'onboarding senza duplicare l\'azienda.\n\n' +
     'Vuoi continuare?'
   )
@@ -2391,22 +2423,14 @@ export const resetOperationalData = async (): Promise<boolean> => {
     console.log('🏢 Company ID:', companyId)
     console.log('🗑️ Inizio cancellazione dati operativi...')
 
-    // Usa la funzione esistente per pulire i dati
-    await cleanExistingOnboardingData(companyId)
-
-    // Cancella anche altri dati operativi non inclusi in cleanExistingOnboardingData
-    console.log('🗑️ Cancellazione dati aggiuntivi...')
-
-    await supabase.from('invite_tokens').delete().eq('company_id', companyId)
-    await supabase.from('events').delete().eq('company_id', companyId)
-    await supabase.from('notes').delete().eq('company_id', companyId)
-    await supabase.from('temperature_readings').delete().eq('company_id', companyId)
-    await supabase.from('shopping_lists').delete().eq('company_id', companyId)
-    await supabase.from('non_conformities').delete().eq('company_id', companyId)
-    await supabase.from('audit_logs').delete().eq('company_id', companyId)
+    // Cancella SOLO i dati operativi e di onboarding, preservando auth e azienda
+    await resetOperationalDataOnly(companyId)
 
     // Pulisci localStorage onboarding e tutti i dati HACCP
     clearHaccpData()
+
+    // Le query cache vengono invalidate dal componente che chiama questa funzione
+    console.log('🔄 Reset completato - le query cache verranno invalidate dal componente')
 
     console.log('✅ Reset completato con successo!')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
@@ -2428,6 +2452,62 @@ export const resetOperationalData = async (): Promise<boolean> => {
     })
 
     return false
+  }
+}
+
+/**
+ * Cancella SOLO i dati operativi e di onboarding, preservando:
+ * - companies (azienda)
+ * - company_members (associazione utente-azienda)
+ * - user_sessions (sessione attiva)
+ * - user_profiles (profilo utente)
+ * - auth.users (autenticazione)
+ */
+const resetOperationalDataOnly = async (companyId: string): Promise<void> => {
+  console.log('🧹 Cancellazione dati operativi per company:', companyId)
+  
+  try {
+    // Cancella in ordine di dipendenze (FK constraints)
+    // 1. Dati operativi che dipendono da altri dati
+    await supabase.from('product_expiry_completions').delete().eq('company_id', companyId)
+    await supabase.from('shopping_list_items').delete().eq('company_id', companyId)
+    await supabase.from('task_completions').delete().eq('company_id', companyId)
+    await supabase.from('temperature_readings').delete().eq('company_id', companyId)
+    
+    // 2. Shopping lists (dopo gli items)
+    await supabase.from('shopping_lists').delete().eq('company_id', companyId)
+    
+    // 3. Tasks e maintenance tasks (dopo i completamenti)
+    await supabase.from('tasks').delete().eq('company_id', companyId)
+    await supabase.from('maintenance_tasks').delete().eq('company_id', companyId)
+    
+    // 4. Products (dopo le categorie e conservation points)
+    await supabase.from('products').delete().eq('company_id', companyId)
+    await supabase.from('product_categories').delete().eq('company_id', companyId)
+    
+    // 5. Conservation points (dopo departments)
+    await supabase.from('conservation_points').delete().eq('company_id', companyId)
+    
+    // 6. Staff (dopo departments per le foreign keys)
+    await supabase.from('staff').delete().eq('company_id', companyId)
+    await supabase.from('departments').delete().eq('company_id', companyId)
+    
+    // 7. Altri dati operativi
+    await supabase.from('events').delete().eq('company_id', companyId)
+    await supabase.from('notes').delete().eq('company_id', companyId)
+    await supabase.from('non_conformities').delete().eq('company_id', companyId)
+    await supabase.from('invite_tokens').delete().eq('company_id', companyId)
+    await supabase.from('company_calendar_settings').delete().eq('company_id', companyId)
+    
+    // 8. Log e audit (dati storici operativi)
+    await supabase.from('audit_logs').delete().eq('company_id', companyId)
+    await supabase.from('user_activity_logs').delete().eq('company_id', companyId)
+    
+    console.log('✅ Dati operativi cancellati con successo')
+    
+  } catch (error) {
+    console.error('❌ Errore durante cancellazione dati operativi:', error)
+    throw error
   }
 }
 

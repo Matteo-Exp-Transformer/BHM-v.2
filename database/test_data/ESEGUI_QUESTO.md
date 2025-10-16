@@ -15,7 +15,7 @@ Pulisci tutto il database e testi il flusso completo: Paolo crea azienda → inv
 **Output finale**:
 ```
 🔗 LINK INVITO (copia questo):
-http://localhost:5173/accept-invite?token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+http://localhost:3000/accept-invite?token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
 **📋 SALVA IL LINK!**
@@ -50,7 +50,7 @@ Dopo che Paolo completa l'onboarding:
 SELECT 
   email,
   role,
-  CONCAT('http://localhost:5173/accept-invite?token=', token) as link
+  CONCAT('http://localhost:3000/accept-invite?token=', token) as link
 FROM public.invite_tokens
 WHERE company_id IS NOT NULL
 ORDER BY role DESC;

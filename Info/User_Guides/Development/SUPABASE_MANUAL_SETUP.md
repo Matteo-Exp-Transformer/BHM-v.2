@@ -292,9 +292,9 @@ WHERE schemaname = 'public';
 2. Configure these options:
 
 ```
-Site URL: https://your-production-domain.com (or http://localhost:5173 for dev)
+Site URL: https://your-production-domain.com (or http://localhost:3000 for dev)
 Redirect URLs:
-  - http://localhost:5173/auth/callback
+  - http://localhost:3000/auth/callback
   - https://your-production-domain.com/auth/callback
 
 Mailer settings:

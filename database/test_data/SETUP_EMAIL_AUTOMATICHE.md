@@ -257,7 +257,7 @@ SELECT
     E'\n\n',
     'Clicca qui per accettare l\'invito:',
     E'\n',
-    'http://localhost:5173/accept-invite?token=', token,
+    'http://localhost:3000/accept-invite?token=', token,
     E'\n\n',
     'L\'invito scade il: ', expires_at::date,
     E'\n\n',

@@ -359,7 +359,7 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
         result.push({
           date: dateKey,
           category,
-          count: activeItems.length,
+          count: activeItems.length, // Count solo per attività attive (non completate)
           items: items.sort((a, b) => {
             const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
             return priorityOrder[a.priority] - priorityOrder[b.priority]
@@ -539,7 +539,13 @@ function convertGenericTaskToItem(
     const completionEnd = c.period_end.getTime()
     const eventTime = dueDate.getTime()
 
-    return eventTime >= completionStart && eventTime <= completionEnd
+    // Migliora la logica di matching: controlla se l'evento cade nel periodo del completamento
+    // oppure se il completamento è stato fatto nello stesso giorno dell'evento
+    const eventDayStart = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 0, 0, 0).getTime()
+    const eventDayEnd = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 59).getTime()
+    
+    return (eventTime >= completionStart && eventTime <= completionEnd) ||
+           (c.completed_at.getTime() >= eventDayStart && c.completed_at.getTime() <= eventDayEnd)
   })
 
   const isCompletedInPeriod = !!completion
