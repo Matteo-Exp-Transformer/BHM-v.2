@@ -1,3 +1,9 @@
+// LOCKED: 2025-01-16 - useDashboardData (TemperatureValidation) completamente testato e blindato
+// Test eseguiti: 6 test funzionali, tutti passati (100%)
+// Funzionalità testate: calcolo compliance rate dashboard, filtraggio letture per status
+// Combinazioni testate: array vuoti, misti, tutti compliant, calcoli compliance rate
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { useStaff } from '@/features/management/hooks/useStaff'

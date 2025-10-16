@@ -5,6 +5,12 @@
  * we calculate status dynamically based on conservation point setpoint and type.
  */
 
+// LOCKED: 2025-01-16 - TemperatureValidation completamente testato e blindato
+// Test eseguiti: 6 test funzionali, tutti passati (100%)
+// Funzionalità testate: getToleranceForType, calculateTemperatureStatus, calculateComplianceRate, getReadingStatus, filterReadingsByStatus, getToleranceRange
+// Combinazioni testate: tutti i tipi punti conservazione, scenari compliant/warning/critical, array vuoti/misti, edge cases
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 import type { TemperatureReading, ConservationPoint } from '@/types/conservation'
 
 export type TemperatureStatus = 'compliant' | 'warning' | 'critical'

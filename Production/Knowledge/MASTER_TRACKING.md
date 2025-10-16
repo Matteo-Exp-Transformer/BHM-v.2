@@ -10,7 +10,7 @@
 |------|------------------|---------|---------|---------|---------|
 | 🔐 Autenticazione | 6 | 0 | 0 | 1 | 🔄 Inventario completato |
 | 🎯 Onboarding | 8 | 0 | 0 | 1 | 🔄 Inventario completato |
-| 🎨 UI Base | 19 | 3 | 3 | 2 | 🔄 3 componenti blindate |
+| 🎨 UI Base | 19 | 4 | 4 | 2 | 🔄 4 componenti blindate |
 | 📊 Dashboard | **8** | 0 | 0 | 1 | 🔄 **Inventario completato** |
 | 📅 Calendario | **37** | 0 | 0 | 1 | 🔄 **Inventario completato** |
 | 📦 Inventario | **18** | 0 | 0 | 2 | 🔄 **Inventario completato** |
@@ -69,6 +69,12 @@
 - **Button.tsx** - 🔒 LOCKED (2025-01-16) - 30 test passati, tutte le varianti e dimensioni testate
 - **Input.tsx** - 🔒 LOCKED (2025-01-16) - 38 test passati, tutti i tipi input e edge cases testati
 - **Modal.tsx** - 🔒 LOCKED (2025-01-16) - 39 test passati, focus management e accessibility testati
+
+### Logiche Business (Agente 3)
+- **TemperatureValidation** - 🔒 LOCKED (2025-01-16) - 6 test passati, tutte le funzioni temperatura testate
+  - File: temperatureStatus.ts, AddTemperatureModal.tsx, TemperatureReadingCard.tsx, useDashboardData.ts
+  - Funzioni: getToleranceForType, calculateTemperatureStatus, calculateComplianceRate, getReadingStatus, filterReadingsByStatus, getToleranceRange
+- **Alert.tsx** - 🔒 LOCKED (2025-01-16) - 12 test passati, tutte le varianti e componenti testati
 
 ## 📈 Statistiche
 

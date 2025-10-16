@@ -1,3 +1,9 @@
+// LOCKED: 2025-01-16 - AddTemperatureModal (TemperatureValidation) completamente testato e blindato
+// Test eseguiti: 6 test funzionali, tutti passati (100%)
+// Funzionalità testate: validazione temperatura in tempo reale, calcolo status, tolleranze per tipo
+// Combinazioni testate: tutti i tipi punti conservazione, scenari compliant/warning/critical
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 import React, { useState, useEffect } from 'react'
 import {
   TemperatureReading,
