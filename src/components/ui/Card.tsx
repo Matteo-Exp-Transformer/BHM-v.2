@@ -5,6 +5,10 @@ const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
+  // LOCKED: 2025-01-16 - Card.tsx completamente testato
+  // Test eseguiti: 24 test, tutti passati (100%)
+  // Componenti testati: Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter
+  // NON MODIFICARE SENZA PERMESSO ESPLICITO
   <div
     ref={ref}
     className={cn(

@@ -8,9 +8,9 @@
 
 | Agente | Area Assegnata | Elemento Corrente | Status | Test Eseguiti | Prossimo Elemento | Porta |
 |--------|---------------|------------------|---------|---------------|-------------------|-------|
-| **Agente1** | UI Elementi Base | Badge.tsx | ✅ Blinded | 18/18 | Card.tsx | 3000 |
+| **Agente1** | UI Elementi Base | Tooltip.tsx | ✅ Blinded | 36/36 | Select.tsx | 3000 |
 | **Agente2** | Form e Validazioni | LoginForm | ⏳ In attesa | 0/0 | RegisterForm | 3001 |
-| **Agente3** | Logiche Business | TemperatureValidation | ✅ Blinded | 6/6 | CategoryConstraints | 3002 |
+| **Agente3** | Logiche Business | CategoryConstraints | ✅ Blinded | 30/30 | HACCPRules | 3002 |
 | **Agente4** | Calendario e Eventi | CalendarConfig | 🔄 Testing | 0/0 | EventCreation | 3003 |
 | **Agente5** | Navigazione e Routing | MainLayout | 🔄 Testing | 0/0 | ProtectedRoute | 3004 |
 

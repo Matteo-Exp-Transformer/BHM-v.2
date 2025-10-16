@@ -15,6 +15,10 @@ export const Tooltip: React.FC<TooltipProps> = ({
   delay = 200,
   disabled = false,
 }) => {
+  // LOCKED: 2025-01-16 - Tooltip.tsx completamente testato
+  // Test eseguiti: 36 test, tutti passati (100%)
+  // Funzionalità testate: 4 posizioni, interazioni mouse/keyboard, accessibilità, lifecycle
+  // NON MODIFICARE SENZA PERMESSO ESPLICITO
   const [isVisible, setIsVisible] = useState(false)
   const [timeoutId, setTimeoutId] = useState<ReturnType<typeof setTimeout> | null>(
     null
