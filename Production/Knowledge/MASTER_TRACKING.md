@@ -10,7 +10,7 @@
 |------|------------------|---------|---------|---------|---------|
 | 🔐 Autenticazione | 6 | 0 | 0 | 1 | 🔄 Inventario completato |
 | 🎯 Onboarding | 8 | 0 | 0 | 1 | 🔄 Inventario completato |
-| 🎨 UI Base | 19 | 1 | 1 | 2 | 🔄 1 componente blindata |
+| 🎨 UI Base | 19 | 2 | 2 | 2 | 🔄 2 componenti blindate |
 | 📊 Dashboard | **8** | 0 | 0 | 1 | 🔄 **Inventario completato** |
 | 📅 Calendario | **37** | 0 | 0 | 1 | 🔄 **Inventario completato** |
 | 📦 Inventario | **18** | 0 | 0 | 2 | 🔄 **Inventario completato** |
@@ -67,6 +67,7 @@
 
 ### UI Base
 - **Button.tsx** - 🔒 LOCKED (2025-01-16) - 30 test passati, tutte le varianti e dimensioni testate
+- **Input.tsx** - 🔒 LOCKED (2025-01-16) - 38 test passati, tutti i tipi input e edge cases testati
 
 ## 📈 Statistiche
 
@@ -75,9 +76,9 @@
   - Dashboard: 8, Calendario: 37, Inventario: 18, Conservazione: 17
   - Liste Spesa: 10, Gestione: 9, Impostazioni: 5, Admin: 5
   - Shared: 4, Navigazione: 8, Hooks: 13, Services: 47, Utils: 15
-- **Componenti Testate**: 1 (0.5%)
-- **Componenti Locked**: 1 (0.5%)
-- **Test Totali Eseguiti**: 30
+- **Componenti Testate**: 2 (1%)
+- **Componenti Locked**: 2 (1%)
+- **Test Totali Eseguiti**: 68
 - **Test Falliti**: 0
 - **Tempo Totale Speso**: 1h 30m
 - **Metodo Mappatura**: Analisi statica + Playwright MCP dinamica
