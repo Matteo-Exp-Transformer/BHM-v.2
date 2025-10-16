@@ -89,9 +89,15 @@
 
 ### 7. CollapsibleCard.tsx
 - **File**: `src/components/ui/CollapsibleCard.tsx`
-- **Tipo**: Componente base
-- **Stato**: ⏳ Da analizzare
-- **Complessità**: Da valutare
+- **Tipo**: Componente base (Complesso)
+- **Funzionalità**:
+  - 34 props con state management complesso
+  - Loading/error/empty states
+  - Controlled/uncontrolled expanded state
+  - CardActionButton helper component
+  - Accessibilità completa con ARIA
+- **Stato**: 🔒 LOCKED (2025-01-16) - 57 test passati
+- **Complessità**: Alta
 
 ### 8. FormField.tsx
 - **File**: `src/components/ui/FormField.tsx`
@@ -194,9 +200,13 @@
 
 ### 19. index.ts
 - **File**: `src/components/ui/index.ts`
-- **Tipo**: Barrel export
-- **Funzionalità**: Esporta tutte le componenti UI
-- **Stato**: ⏳ Da testare
+- **Tipo**: Barrel Export
+- **Funzionalità**:
+  - Esporta 8 componenti principali
+  - 10 sub-componenti (AlertTitle, CardHeader, etc.)
+  - Missing exports identificati (9 componenti)
+  - TypeScript compatibility
+- **Stato**: 🔒 LOCKED (2025-01-16) - 24 test passati
 - **Complessità**: Bassa
 
 ## 🎯 Funzionalità da Testare

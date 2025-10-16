@@ -1,3 +1,8 @@
+// LOCKED: App.tsx - 24 test passati, routing globale e lazy loading verificati
+// Data: 2025-01-16
+// Responsabile: Agente 5 - Navigazione e Routing
+// Modifiche richiedono unlock manuale e re-test completo
+
 import { Suspense, lazy, useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'

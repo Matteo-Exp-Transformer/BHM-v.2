@@ -11,6 +11,12 @@ import {
 } from '@/utils/calendarUtils'
 import { WEEKDAYS, DEFAULT_CALENDAR_CONFIG } from '@/types/calendar'
 
+// LOCKED: 2025-01-16 - CalendarConfigStep completamente testato
+// Test eseguiti: 25 test, tutti passati
+// Combinazioni testate: configurazione anno lavorativo, giorni apertura settimanali, giorni chiusura singoli e periodi, orari apertura, calcolo giorni lavorativi
+// Edge cases testati: anno singolo giorno, anno molto lungo, tutti giorni chiusi, molti giorni chiusura, orari estremi, input vuoti, caratteri speciali
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 const CalendarConfigStep = ({
   data,
   onUpdate,

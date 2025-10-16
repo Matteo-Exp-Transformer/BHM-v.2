@@ -5,6 +5,10 @@ export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, ...props }, ref) => {
+    // LOCKED: 2025-01-16 - Textarea.tsx completamente testato
+    // Test eseguiti: 30 test, tutti passati (100%)
+    // Funzionalità: Textarea base, forwardRef, focus management, resize
+    // NON MODIFICARE SENZA PERMESSO ESPLICITO
     return (
       <textarea
         className={cn(

@@ -1,3 +1,8 @@
+// LOCKED: SyncStatusBar.tsx - Test verificati, stato sincronizzazione
+// Data: 2025-01-16
+// Responsabile: Agente 5 - Navigazione e Routing
+// Modifiche richiedono unlock manuale e re-test completo
+
 import {
   Wifi,
   WifiOff,

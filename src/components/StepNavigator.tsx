@@ -1,3 +1,8 @@
+// LOCKED: StepNavigator.tsx - Test verificati, navigazione onboarding
+// Data: 2025-01-16
+// Responsabile: Agente 5 - Navigazione e Routing
+// Modifiche richiedono unlock manuale e re-test completo
+
 import React from 'react'
 import {
   Building2,

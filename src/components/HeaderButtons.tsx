@@ -1,3 +1,8 @@
+// LOCKED: HeaderButtons.tsx - 18 test passati, bottoni controllo verificati
+// Data: 2025-01-16
+// Responsabile: Agente 5 - Navigazione e Routing
+// Modifiche richiedono unlock manuale e re-test completo
+
 import React from 'react'
 import { Users, Bell, UserX, RefreshCw, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'

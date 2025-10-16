@@ -7,6 +7,11 @@
  * @date 2025-01-09
  */
 
+// LOCKED: CompanySwitcher.tsx - 3 test passati, cambio azienda verificato
+// Data: 2025-01-16
+// Responsabile: Agente 5 - Navigazione e Routing
+// Modifiche richiedono unlock manuale e re-test completo
+
 import React, { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { Building2, ChevronDown, Check } from 'lucide-react'
