@@ -4,7 +4,7 @@ test.describe('LoginPage - Test Funzionali', () => {
   
   // Setup: navigare alla pagina prima di ogni test
   test.beforeEach(async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/sign-in');
     // Aspettare che la componente sia caricata
     await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
   });

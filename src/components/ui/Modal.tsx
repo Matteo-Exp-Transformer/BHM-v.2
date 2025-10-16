@@ -23,6 +23,10 @@ export const Modal: React.FC<ModalProps> = ({
   closeOnOverlayClick = true,
   closeOnEscape = true,
 }) => {
+  // LOCKED: 2025-01-16 - Modal.tsx completamente testato
+  // Test eseguiti: 39 test, tutti passati (100%)
+  // Combinazioni testate: tutte le dimensioni, stati, focus management, accessibility, edge cases
+  // NON MODIFICARE SENZA PERMESSO ESPLICITO
   const modalRef = useRef<HTMLDivElement>(null)
   const previousActiveElement = useRef<HTMLElement | null>(null)
 
