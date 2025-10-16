@@ -4,13 +4,13 @@
  * Multi-Host Authentication Sync
  * Sincronizza la sessione Supabase tra diverse porte localhost
  * 
- * Porte supportate: 3000, 3002, 5173, 5174
+ * Porte supportate: 3000, 3001, 3002, 3003, 3004, 3005
  * 
  * IMPORTANTE: Questa funzionalità serve SOLO per sviluppo locale.
  * In production c'è un solo dominio, quindi non serve.
  */
 
-const SUPPORTED_PORTS = [3000, 3001, 3002, 3003, 3004, 3005, 5173, 5174]
+const SUPPORTED_PORTS = [3000, 3001, 3002, 3003, 3004, 3005]
 const STORAGE_KEYS = {
   SUPABASE_AUTH: 'bhm-supabase-auth', // Chiave corretta configurata in client.ts
   // Fallback per vecchia chiave (se esiste)

@@ -208,7 +208,7 @@ const handleSendInvite = async (staffMember: StaffMember) => {
 ### Development (Manual)
 1. Crea invito in StaffManagement
 2. Copia token da database (`invite_tokens` table)
-3. Apri manualmente: `http://localhost:5173/accept-invite?token=YOUR_TOKEN`
+3. Apri manualmente: `http://localhost:3000/accept-invite?token=YOUR_TOKEN`
 
 ### Production (Automated)
 1. Edge Function invia email automaticamente

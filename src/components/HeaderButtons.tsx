@@ -1,6 +1,8 @@
 import React from 'react'
 import { Users, Bell, UserX, RefreshCw, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '@/hooks/useAuth'
 import { useAlertBadge } from '@/features/calendar/hooks/useCalendarAlerts'
 import { useAggregatedEvents } from '@/features/calendar/hooks/useAggregatedEvents'
 import { useFilteredEvents } from '@/features/calendar/hooks/useFilteredEvents'
@@ -20,6 +22,10 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
   onOpenOnboarding,
   showDevButtons = false,
 }) => {
+  // ✅ Query client per invalidare cache
+  const queryClient = useQueryClient()
+  const { companyId } = useAuth()
+  
   // ✅ Alert badge logic
   const { events } = useAggregatedEvents()
   const { filteredEvents } = useFilteredEvents(events)
@@ -51,6 +57,43 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
         onClick={async () => {
           const success = await resetOperationalData()
           if (success) {
+            // Invalida TUTTE le query per forzare il ricaricamento completo
+            console.log('🔄 Invalidazione cache React Query dopo reset...')
+            
+            // Invalida query specifiche con companyId
+            if (companyId) {
+              await queryClient.invalidateQueries({ queryKey: ['departments', companyId] })
+              await queryClient.invalidateQueries({ queryKey: ['staff', companyId] })
+              await queryClient.invalidateQueries({ queryKey: ['products', companyId] })
+              await queryClient.invalidateQueries({ queryKey: ['tasks', companyId] })
+              await queryClient.invalidateQueries({ queryKey: ['maintenance_tasks', companyId] })
+              await queryClient.invalidateQueries({ queryKey: ['conservation_points', companyId] })
+              await queryClient.invalidateQueries({ queryKey: ['events', companyId] })
+              await queryClient.invalidateQueries({ queryKey: ['shopping_lists', companyId] })
+              await queryClient.invalidateQueries({ queryKey: ['generic-tasks', companyId] })
+              await queryClient.invalidateQueries({ queryKey: ['calendar-events', companyId] })
+              await queryClient.invalidateQueries({ queryKey: ['company-calendar-settings', companyId] })
+              await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
+              await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
+            }
+            
+            // Invalida anche le query senza companyId per sicurezza
+            await queryClient.invalidateQueries({ queryKey: ['departments'] })
+            await queryClient.invalidateQueries({ queryKey: ['staff'] })
+            await queryClient.invalidateQueries({ queryKey: ['products'] })
+            await queryClient.invalidateQueries({ queryKey: ['tasks'] })
+            await queryClient.invalidateQueries({ queryKey: ['maintenance_tasks'] })
+            await queryClient.invalidateQueries({ queryKey: ['conservation_points'] })
+            await queryClient.invalidateQueries({ queryKey: ['events'] })
+            await queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
+            await queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
+            await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
+            await queryClient.invalidateQueries({ queryKey: ['company-calendar-settings'] })
+            await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
+            await queryClient.invalidateQueries({ queryKey: ['task-completions'] })
+            
+            console.log('✅ Cache invalidata completamente')
+            
             // Dopo il reset, apri automaticamente l'onboarding
             setTimeout(() => onOpenOnboarding(), 500)
           }
@@ -92,7 +135,7 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
           <button
             onClick={manualSyncWithOtherPorts}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-purple-600 bg-white border border-purple-200 rounded-md hover:text-purple-700 hover:bg-purple-50 transition-colors"
-            title="Sincronizza sessione con altre porte (3000, 3002, 5173)"
+            title="Sincronizza sessione con altre porte (3000, 3001, 3002, 3003, 3004, 3005)"
           >
             <RefreshCw className="h-4 w-4" />
             <span className="hidden sm:inline">Sync Host</span>

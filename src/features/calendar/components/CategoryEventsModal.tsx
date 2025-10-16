@@ -115,6 +115,10 @@ export const CategoryEventsModal: React.FC<CategoryEventsModalProps> = ({
         queryKey: ['maintenance-completions'],
         refetchType: 'all'
       })
+      await queryClient.invalidateQueries({ 
+        queryKey: ['task-completions'],
+        refetchType: 'all'
+      })
 
       toast.success('✅ Manutenzione completata - Calendario aggiornato')
       setSelectedItems([])
@@ -437,6 +441,12 @@ export const CategoryEventsModal: React.FC<CategoryEventsModalProps> = ({
                                           eventDate: new Date(item.dueDate)
                                         })
                                         
+                                        // Forza invalidazione immediata per aggiornare il modal
+                                        queryClient.invalidateQueries({ 
+                                          queryKey: ['macro-category-events'],
+                                          refetchType: 'all'
+                                        })
+                                        
                                         setTimeout(() => {
                                           setSelectedItems([])
                                           onClose()
@@ -527,6 +537,12 @@ export const CategoryEventsModal: React.FC<CategoryEventsModalProps> = ({
 
                                       const taskId = item.metadata.taskId || item.id
                                       uncompleteTask({ taskId: taskId })
+                                      
+                                      // Forza invalidazione immediata per aggiornare il modal
+                                      queryClient.invalidateQueries({ 
+                                        queryKey: ['macro-category-events'],
+                                        refetchType: 'all'
+                                      })
                                       
                                       setTimeout(() => {
                                         setSelectedItems([])

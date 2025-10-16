@@ -103,7 +103,7 @@ In produzione c'è un solo host (es: app.tuodominio.com)
 
 **IMPORTANTE:** Questa funzionalità serve SOLO per:
 - Sviluppo locale con Vite (porta 3002)
-- Sviluppo locale con altro server (porta 3000, 5173, etc.)
+- Sviluppo locale con altro server (porta 3000, 3001, 3002, etc.)
 - NON serve in produzione dove c'è un solo dominio
 
 ---
@@ -260,7 +260,7 @@ La logica dei form negli step onboarding è stata ottimizzata per essere **intel
 
 ### **Auto-Login Multi-Host (Opzione A):**
 **Implementata:** [DATA]
-**Scopo:** Sincronizzare sessione Supabase tra localhost:3000, localhost:3002, localhost:5173
+**Scopo:** Sincronizzare sessione Supabase tra localhost:3000, localhost:3001, localhost:3002
 **Rimuovere:** Prima di production (non serve con un solo dominio)
 **File coinvolti:**
 - `src/utils/multiHostAuth.ts`

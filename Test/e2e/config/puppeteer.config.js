@@ -32,7 +32,7 @@ export const PUPPETEER_CONFIG = {
 
   // App configuration
   app: {
-    baseUrl: process.env.BASE_URL || 'http://localhost:3001',
+    baseUrl: process.env.BASE_URL || 'http://localhost:3000',
     timeout: parseInt(process.env.TIMEOUT) || 30000,
     slowActionDelay: 100,
     fastActionDelay: 50,

@@ -12,7 +12,7 @@
 SELECT 
   email,
   role,
-  CONCAT('http://localhost:5173/accept-invite?token=', token) as link,
+  CONCAT('http://localhost:3000/accept-invite?token=', token) as link,
   expires_at::date as scade_il
 FROM public.invite_tokens
 WHERE used_at IS NULL
@@ -21,8 +21,8 @@ ORDER BY role DESC, email;
 
 **Output**:
 ```
-matti169cava@libero.it | responsabile | http://localhost:5173/... | 2025-10-19
-0cavuz0@gmail.com | dipendente | http://localhost:5173/... | 2025-10-19
+matti169cava@libero.it | responsabile | http://localhost:3000/... | 2025-10-19
+0cavuz0@gmail.com | dipendente | http://localhost:3000/... | 2025-10-19
 ```
 
 **Poi**: 
@@ -216,7 +216,7 @@ export const sendInviteEmail = async (invite: InviteToken): Promise<boolean> => 
    ```sql
    SELECT 
      email,
-     CONCAT('http://localhost:5173/accept-invite?token=', token) as link
+     CONCAT('http://localhost:3000/accept-invite?token=', token) as link
    FROM invite_tokens
    WHERE company_id IS NOT NULL AND used_at IS NULL;
    ```
@@ -251,7 +251,7 @@ SELECT
     '.',
     E'\n\nClicca qui per accettare:',
     E'\n', 
-    'http://localhost:5173/accept-invite?token=', 
+    'http://localhost:3000/accept-invite?token=', 
     token,
     E'\n\n⚠️ Link valido fino al ', 
     expires_at::date,
@@ -270,7 +270,7 @@ ORDER BY email;
 Sei stato invitato a far parte di Al Ritrovo SRL come RESPONSABILE.
 
 Clicca qui per accettare:
-http://localhost:5173/accept-invite?token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+http://localhost:3000/accept-invite?token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 ⚠️ Link valido fino al 2025-10-19
 ```
@@ -287,7 +287,7 @@ http://localhost:5173/accept-invite?token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 2. ⏳ Paolo accetta invito e completa onboarding
 3. ⏳ Esegui questa query:
    ```sql
-   SELECT CONCAT('http://localhost:5173/accept-invite?token=', token) 
+   SELECT CONCAT('http://localhost:3000/accept-invite?token=', token) 
    FROM invite_tokens WHERE email = 'matti169cava@libero.it';
    ```
 4. ⏳ Copia link e invia a Matteo (te stesso)

@@ -75,7 +75,7 @@ Verrà eliminato:
 👤 Nome: Paolo Dettori (Admin)
 📧 Email: matteo.cavallaro.work@gmail.com
 🔗 LINK INVITO:
-http://localhost:5173/accept-invite?token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+http://localhost:3000/accept-invite?token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
 ### Step 1.2: Copia il link invito
@@ -83,7 +83,7 @@ http://localhost:5173/accept-invite?token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 **IMPORTANTE**: Copia e salva il link che appare nell'output!
 
 ```
-http://localhost:5173/accept-invite?token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+http://localhost:3000/accept-invite?token=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
 **Questo link serve per Paolo!**
@@ -184,7 +184,7 @@ Vai su **Supabase Dashboard** → **SQL Editor** ed esegui:
 SELECT 
   email,
   role,
-  CONCAT('http://localhost:5173/accept-invite?token=', token) as invite_link,
+  CONCAT('http://localhost:3000/accept-invite?token=', token) as invite_link,
   expires_at::date as scade_il,
   CASE 
     WHEN used_at IS NOT NULL THEN '✅ Usato'
@@ -200,19 +200,19 @@ ORDER BY created_at DESC;
 
 | email | role | invite_link | scade_il | status |
 |-------|------|-------------|----------|--------|
-| matti169cava@libero.it | responsabile | http://localhost:5173/accept-invite?token=xxx | 2025-10-19 | ⏳ Pending |
-| 0cavuz0@gmail.com | dipendente | http://localhost:5173/accept-invite?token=yyy | 2025-10-19 | ⏳ Pending |
+| matti169cava@libero.it | responsabile | http://localhost:3000/accept-invite?token=xxx | 2025-10-19 | ⏳ Pending |
+| 0cavuz0@gmail.com | dipendente | http://localhost:3000/accept-invite?token=yyy | 2025-10-19 | ⏳ Pending |
 
 ### Step 3.2: Copia i 2 link
 
 **Link 1 - Matteo (Responsabile)**:
 ```
-http://localhost:5173/accept-invite?token=xxx
+http://localhost:3000/accept-invite?token=xxx
 ```
 
 **Link 2 - Elena (Dipendente)**:
 ```
-http://localhost:5173/accept-invite?token=yyy
+http://localhost:3000/accept-invite?token=yyy
 ```
 
 📋 **Salva questi link!**
