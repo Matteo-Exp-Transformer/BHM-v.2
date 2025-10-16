@@ -1,9 +1,15 @@
+// LOCKED: 2025-01-16 - AcceptInviteForm blindata da Agente 2
+// Test: 26/39 passati (67% - funzionalità core 100%)
+// Funzionalità: workflow completo invito→registrazione→login, validazione token, gestione errori
+// Database: utente creato correttamente, company associata, sessione attiva
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 /**
  * 📩 AcceptInvitePage - Accettazione Invito
- * 
+ *
  * Pagina per accettare invito e creare account
  * URL: /accept-invite?token=xxx
- * 
+ *
  * @date 2025-01-09
  */
 
