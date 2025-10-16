@@ -4,6 +4,146 @@
 
 ## 🔒 REGOLE BLINDATURA - NON NEGOZIABILI
 
+## 🔐 PROTOCOLLO LOCK MULTI-AGENT
+
+### Lock Files Atomici
+Gli agenti DEVONO usare il sistema di lock atomici per coordinarsi:
+
+```javascript
+// Directory: .agent-locks/
+// File lock: host-{port}.lock
+// Heartbeat: agent-{id}.heartbeat
+// History: lock-history.log
+
+// Esempio acquisizione lock
+const lockAcquired = await acquireLock('localhost:3000', 'agent-1', 'Button');
+if (lockAcquired) {
+  // Esegui test
+  await runTests();
+  // Rilascia lock
+  await releaseLock('localhost:3000');
+} else {
+  // Entra in queue
+  await enterQueue('agent-1', 'Button');
+}
+```
+
+### Regole Lock Files
+1. **Acquisizione:** Solo UN agente per host alla volta
+2. **Heartbeat:** Aggiorna ogni 60s obbligatorio
+3. **Scadenza:** Lock scade automaticamente dopo 3min
+4. **Cleanup:** Lock stale rimossi automaticamente
+5. **Queue:** FIFO per agenti in attesa
+
+### Gestione Conflitti Automatica
+```javascript
+// Se lock non disponibile
+if (!lockAcquired) {
+  // Entra in queue
+  const queuePosition = await enterQueue(agentId, component);
+  console.log(`In queue position: ${queuePosition}`);
+  
+  // Polling ogni 30s
+  while (true) {
+    await sleep(30000);
+    const available = await checkHostAvailability(port);
+    if (available) {
+      break;
+    }
+  }
+}
+```
+
+### Esempi Codice Lock Atomico
+```javascript
+// scripts/agent-lock-manager.js
+const fs = require('fs').promises;
+const path = require('path');
+
+async function acquireLock(host, agentId, component) {
+  const lockFile = path.join('.agent-locks', `host-${host}.lock`);
+  const heartbeatFile = path.join('.agent-locks', `agent-${agentId}.heartbeat`);
+  
+  try {
+    // Tentativo lock atomico
+    await fs.writeFile(lockFile, JSON.stringify({
+      agentId,
+      component,
+      timestamp: Date.now(),
+      host
+    }), { flag: 'wx' });
+    
+    // Crea heartbeat
+    await fs.writeFile(heartbeatFile, JSON.stringify({
+      agentId,
+      timestamp: Date.now(),
+      status: 'active'
+    }));
+    
+    return true;
+  } catch (error) {
+    if (error.code === 'EEXIST') {
+      return false; // Lock già esistente
+    }
+    throw error;
+  }
+}
+
+async function releaseLock(host) {
+  const lockFile = path.join('.agent-locks', `host-${host}.lock`);
+  await fs.unlink(lockFile);
+}
+```
+
+## 🗄️ CONSULTAZIONE DATABASE OBBLIGATORIA
+
+**CRITICO:** Prima di creare qualsiasi test JS, gli agenti DEVONO consultare il database Supabase reale per garantire compliance:
+
+### Workflow Database Compliance
+1. **🔍 Schema Check:** Verifica struttura tabelle correnti
+2. **📊 Data Verification:** Controlla dati reali esistenti  
+3. **🎯 Constraint Validation:** Verifica vincoli e validazioni
+4. **✅ Real Data Usage:** Usa dati reali per test
+
+### Esempi Query Obbligatorie
+```javascript
+// Prima di creare test, consulta sempre:
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  'https://tucqgcfrlzmwyfadiodo.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+);
+
+// 1. Verifica schema tabelle
+const { data: schema } = await supabase
+  .from('information_schema.tables')
+  .select('table_name, column_name, data_type, is_nullable')
+  .eq('table_schema', 'public');
+
+// 2. Dati reali per test
+const { data: companies } = await supabase
+  .from('companies')
+  .select('id, name, email, staff_count')
+  .limit(5);
+
+// 3. Verifica vincoli business
+const { data: constraints } = await supabase
+  .from('information_schema.check_constraints')
+  .select('constraint_name, check_clause');
+
+// 4. Company ID reale
+const companyId = await devCompanyHelper.getDevCompany();
+```
+
+### Regole Database Compliance
+- ✅ **SEMPRE** consultare schema database prima di test
+- ✅ **SEMPRE** usare Company ID reale dal database
+- ✅ **SEMPRE** verificare vincoli esistenti
+- ✅ **SEMPRE** testare con dati validi secondo schema
+- ❌ **MAI** usare dati mock senza verificare database
+- ❌ **MAI** assumere struttura senza consultarla
+
 ### 1. COMPONENTI LOCKED - ZONA VIETATA
 ```
 🚫 MAI MODIFICARE FILE CON COMMENTI:

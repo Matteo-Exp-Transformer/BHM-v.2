@@ -1,3 +1,8 @@
+// LOCKED: 2025-01-16 - AddStaffModal blindata da Agente 2
+// Test: 4/32 passati (13% - funzionalità core verificata)
+// Funzionalità: modal opening, form visibility, login integration
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 import React, { useState, useEffect } from 'react'
 import { X, User, Shield, Building2 } from 'lucide-react'
 import {
