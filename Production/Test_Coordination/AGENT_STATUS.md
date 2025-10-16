@@ -8,7 +8,7 @@
 
 | Agente | Area Assegnata | Elemento Corrente | Status | Test Eseguiti | Prossimo Elemento | Porta |
 |--------|---------------|------------------|---------|---------------|-------------------|-------|
-| **Agente1** | UI Elementi Base | Button.tsx | ✅ Blinded | 30/30 | Input.tsx | 3000 |
+| **Agente1** | UI Elementi Base | Input.tsx | ✅ Blinded | 38/38 | Modal.tsx | 3000 |
 | **Agente2** | Form e Validazioni | LoginForm | ⏳ In attesa | 0/0 | RegisterForm | 3001 |
 | **Agente3** | Logiche Business | TemperatureValidation | ⏳ In attesa | 0/0 | CategoryConstraints | 3002 |
 | **Agente4** | Calendario e Eventi | CalendarConfig | 🔄 Testing | 0/0 | EventCreation | 3003 |

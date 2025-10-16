@@ -36,7 +36,7 @@
   - Disabled states
   - File input support
   - Placeholder styling
-- **Stato**: ⏳ Da testare
+- **Stato**: 🔒 LOCKED (2025-01-16) - 38 test passati
 - **Complessità**: Bassa
 
 ### 3. Modal.tsx

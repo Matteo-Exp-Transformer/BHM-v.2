@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('LoginPage - Test Edge Cases', () => {
   
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3001/login');
+    await page.goto('/login');
     await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
   });
 
