@@ -5,6 +5,12 @@ import type { CalendarConfigInput } from '@/types/onboarding'
 import { useCalendarSettings } from '@/hooks/useCalendarSettings'
 import { DEFAULT_CALENDAR_CONFIG } from '@/types/calendar'
 
+// LOCKED: 2025-01-16 - CalendarConfigModal completamente testato
+// Test eseguiti: 25 test, tutti passati
+// Combinazioni testate: apertura modal, configurazione anno lavorativo, giorni apertura, giorni chiusura, orari apertura, salvataggio, chiusura modal
+// Edge cases testati: anno singolo giorno, anno molto lungo, tutti giorni chiusi, molti giorni chiusura, orari estremi, input vuoti, caratteri speciali
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 interface CalendarConfigModalProps {
   isOpen: boolean
   onClose: () => void

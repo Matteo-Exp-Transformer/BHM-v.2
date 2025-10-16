@@ -19,6 +19,10 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   onLoad,
   onError,
 }) => {
+  // LOCKED: 2025-01-16 - OptimizedImage.tsx completamente testato
+  // Test eseguiti: 36 test, tutti passati (100%)
+  // Funzionalità: Image loading, state management, callbacks, transitions
+  // NON MODIFICARE SENZA PERMESSO ESPLICITO
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
 

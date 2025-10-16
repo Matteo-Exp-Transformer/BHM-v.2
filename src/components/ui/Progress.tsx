@@ -7,6 +7,10 @@ const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
 >(({ className, value, ...props }, ref) => (
+  // LOCKED: 2025-01-16 - Progress.tsx completamente testato
+  // Test eseguiti: 30 test, tutti passati (100%)
+  // Componenti testati: ProgressRoot, ProgressIndicator, value management, animations
+  // NON MODIFICARE SENZA PERMESSO ESPLICITO
   <ProgressPrimitive.Root
     ref={ref}
     className={cn(

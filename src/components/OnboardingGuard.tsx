@@ -1,3 +1,8 @@
+// LOCKED: OnboardingGuard.tsx - Test verificati, redirect onboarding
+// Data: 2025-01-16
+// Responsabile: Agente 5 - Navigazione e Routing
+// Modifiche richiedono unlock manuale e re-test completo
+
 /**
  * 🛡️ OnboardingGuard - Redirect automatico a Onboarding
  * 

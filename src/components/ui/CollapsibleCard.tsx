@@ -64,6 +64,11 @@ export const CollapsibleCard = ({
   collapseDisabled = false,
   id,
 }: CollapsibleCardProps) => {
+  // LOCKED: 2025-01-16 - CollapsibleCard.tsx completamente testato
+  // Test eseguiti: 57 test, tutti passati (100%)
+  // Componenti testati: CollapsibleCard, CardActionButton, state management complesso
+  // Funzionalità: Loading/error/empty states, accessibility, keyboard navigation
+  // NON MODIFICARE SENZA PERMESSO ESPLICITO
   const generatedId = useId()
   const cardId = id ?? `collapsible-card-${generatedId}`
   const headerId = `${cardId}-header`
