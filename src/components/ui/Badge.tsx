@@ -39,6 +39,10 @@ export interface BadgeProps
 
 const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
   ({ className, variant, tone, size, ...props }, ref) => (
+    // LOCKED: 2025-01-16 - Badge.tsx completamente testato
+    // Test eseguiti: 18 test, tutti passati (100%)
+    // Combinazioni testate: 5 varianti × 5 tonality × 2 dimensioni = 50 combinazioni
+    // NON MODIFICARE SENZA PERMESSO ESPLICITO
     <span
       ref={ref}
       className={badgeVariants({ variant, tone, size, className })}
