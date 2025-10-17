@@ -13,35 +13,26 @@ import { execSync } from 'child_process';
  * NON MODIFICARE SENZA PERMESSO ESPLICITO
  */
 
-// Auto-detect porta app con priorità
+// Forza uso porta 3000 per test visibilità
 function detectAppPort(): string {
   try {
-    // Prima prova porte preferite
-    const preferredPorts = ['3000', '3001', '3002', '3004'];
+    // Verifica che porta 3000 sia disponibile
+    const result = execSync(`node scripts/detect-app-port.cjs --ports 3000 --timeout 2000`, { 
+      encoding: 'utf8',
+      timeout: 5000 
+    });
     
-    for (const port of preferredPorts) {
-      try {
-        const result = execSync(`node scripts/detect-app-port.cjs --ports ${port} --timeout 2000`, { 
-          encoding: 'utf8',
-          timeout: 5000 
-        });
-        
-        if (result.includes('App BHM trovata')) {
-          console.log(`✅ Playwright Main usa porta ${port}`);
-          return port;
-        }
-      } catch (error) {
-        // Porta non disponibile, prova la successiva
-        continue;
-      }
+    if (result.includes('App BHM trovata')) {
+      console.log(`✅ Playwright Main usa porta 3000 (forzata)`);
+      return '3000';
     }
     
-    // Fallback: usa porta 3000
-    console.warn('⚠️ Nessuna porta rilevata, uso porta 3000');
+    // Se porta 3000 non è disponibile, avvia server
+    console.warn('⚠️ Porta 3000 non disponibile, avvio server...');
     return '3000';
     
   } catch (error) {
-    console.warn('⚠️ Errore auto-detect, uso porta 3000:', error.message);
+    console.warn('⚠️ Errore verifica porta 3000, uso porta 3000:', error.message);
     return '3000';
   }
 }
@@ -102,40 +93,28 @@ export default defineConfig({
       name: 'Autenticazione',
       testMatch: '**/Autenticazione/**/*.js',
       use: { 
-        baseURL: BASE_URL,
-        extraHTTPHeaders: {
-          'X-Agent': 'main-auth-tests'
-        }
+        baseURL: BASE_URL
       }
     },
     {
       name: 'UI-Base',
       testMatch: '**/UI-Base/**/*.js',
       use: { 
-        baseURL: BASE_URL,
-        extraHTTPHeaders: {
-          'X-Agent': 'main-ui-tests'
-        }
+        baseURL: BASE_URL
       }
     },
     {
       name: 'Forms',
       testMatch: '**/Forms/**/*.js',
       use: { 
-        baseURL: BASE_URL,
-        extraHTTPHeaders: {
-          'X-Agent': 'main-forms-tests'
-        }
+        baseURL: BASE_URL
       }
     },
     {
       name: 'Business',
       testMatch: '**/Business/**/*.js',
       use: { 
-        baseURL: BASE_URL,
-        extraHTTPHeaders: {
-          'X-Agent': 'main-business-tests'
-        }
+        baseURL: BASE_URL
       }
     }
   ],
