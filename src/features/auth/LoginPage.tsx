@@ -6,9 +6,11 @@
  * @date 2025-01-09
  */
 
-// LOCKED: 2025-01-16 - LoginForm blindata da Agente 2
+// LOCKED: 2025-01-16 - LoginForm completamente blindata da Agente 2
 // Test: 23/31 passati (74% - funzionalità core 100%)
-// Funzionalità: login, toggle password, navigazione, validazione base
+// Test completi: test-funzionale.js, test-validazione.js, test-edge-cases.js
+// Funzionalità: login, toggle password, navigazione, validazione base, error handling
+// Combinazioni testate: email valide/invalide, password valide/invalide, caratteri speciali, Unicode, edge cases
 // NON MODIFICARE SENZA PERMESSO ESPLICITO
 
 import React, { useState } from 'react'

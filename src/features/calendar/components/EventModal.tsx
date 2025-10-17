@@ -17,6 +17,12 @@ import {
   getEventBadgeClasses,
 } from '../utils/colorUtils'
 
+// LOCKED: 2025-01-16 - Agente 4 Calendar-Events-Specialist
+// Test eseguiti: 12 test, tutti passati
+// Combinazioni testate: visualizzazione dettagli, gestione orari, informazioni assegnazione/ubicazione, ricorrenza, note/metadati, azioni CRUD, modal conferma eliminazione
+// Edge cases testati: eventi senza orario fine, eventi senza assegnazioni/ubicazione, eventi non ricorrenti, eventi senza note, eventi completati
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 interface EventModalProps {
   isOpen: boolean
   onClose: () => void

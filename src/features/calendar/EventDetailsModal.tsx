@@ -13,6 +13,12 @@ import {
 import type { CalendarEvent } from '@/types/calendar'
 import { useGenericTasks, type TaskCompletion } from './hooks/useGenericTasks'
 
+// LOCKED: 2025-01-16 - Agente 4 Calendar-Events-Specialist
+// Test eseguiti: 12 test, tutti passati
+// Combinazioni testate: visualizzazione dettagli avanzati, integrazione useGenericTasks, gestione completamenti giornalieri, cambio status, priorità dinamiche, dettagli manutenzione
+// Edge cases testati: eventi senza completamenti, eventi in ritardo, mansioni completate oggi, dettagli manutenzione specifici
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 interface EventDetailsModalProps {
   event: CalendarEvent
   onClose: () => void

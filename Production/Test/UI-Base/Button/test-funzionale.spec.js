@@ -4,14 +4,14 @@ test.describe('Button.tsx - Test Funzionali', () => {
   
   // Setup: navigare alla pagina prima di ogni test
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:3001');
     // Aspettare che l'app sia caricata
     await expect(page.locator('h1')).toContainText('HACCP Manager');
   });
 
   test('Dovrebbe renderizzare tutte le varianti correttamente', async ({ page }) => {
     // ARRANGE: Navigare a una pagina con bottoni
-    await page.goto('http://localhost:3000/dashboard');
+    await page.goto('http://localhost:3001/dashboard');
     
     // ACT: Verificare presenza di bottoni con diverse varianti
     const buttons = page.locator('button');
@@ -26,7 +26,7 @@ test.describe('Button.tsx - Test Funzionali', () => {
 
   test('Dovrebbe renderizzare tutte le dimensioni correttamente', async ({ page }) => {
     // ARRANGE: Navigare alla dashboard
-    await page.goto('http://localhost:3000/dashboard');
+    await page.goto('http://localhost:3001/dashboard');
     
     // ACT: Cercare bottoni di diverse dimensioni
     const buttons = page.locator('button');
@@ -44,7 +44,7 @@ test.describe('Button.tsx - Test Funzionali', () => {
 
   test('Dovrebbe gestire il click correttamente', async ({ page }) => {
     // ARRANGE: Navigare alla dashboard
-    await page.goto('http://localhost:3000/dashboard');
+    await page.goto('http://localhost:3001/dashboard');
     
     // ACT: Cliccare su un bottone (es. Debug Auth)
     const debugButton = page.locator('button:has-text("Debug Auth")');
@@ -59,7 +59,7 @@ test.describe('Button.tsx - Test Funzionali', () => {
 
   test('Dovrebbe gestire stati hover e focus', async ({ page }) => {
     // ARRANGE: Navigare alla dashboard
-    await page.goto('http://localhost:3000/dashboard');
+    await page.goto('http://localhost:3001/dashboard');
     
     // ACT: Hover su un bottone
     const button = page.locator('button').first();
@@ -77,7 +77,7 @@ test.describe('Button.tsx - Test Funzionali', () => {
 
   test('Dovrebbe gestire stato disabled correttamente', async ({ page }) => {
     // ARRANGE: Navigare alla dashboard
-    await page.goto('http://localhost:3000/dashboard');
+    await page.goto('http://localhost:3001/dashboard');
     
     // ACT: Cercare bottoni disabilitati
     const buttons = page.locator('button');
@@ -93,7 +93,7 @@ test.describe('Button.tsx - Test Funzionali', () => {
 
   test('Dovrebbe avere accessibilità corretta', async ({ page }) => {
     // ARRANGE: Navigare alla dashboard
-    await page.goto('http://localhost:3000/dashboard');
+    await page.goto('http://localhost:3001/dashboard');
     
     // ACT: Verificare attributi di accessibilità
     const button = page.locator('button').first();
@@ -109,7 +109,7 @@ test.describe('Button.tsx - Test Funzionali', () => {
 
   test('Dovrebbe gestire props forwarding correttamente', async ({ page }) => {
     // ARRANGE: Navigare alla dashboard
-    await page.goto('http://localhost:3000/dashboard');
+    await page.goto('http://localhost:3001/dashboard');
     
     // ACT: Verificare che i bottoni abbiano props HTML standard
     const button = page.locator('button').first();
@@ -123,7 +123,7 @@ test.describe('Button.tsx - Test Funzionali', () => {
 
   test('Dovrebbe gestire classi CSS combinate correttamente', async ({ page }) => {
     // ARRANGE: Navigare alla dashboard
-    await page.goto('http://localhost:3000/dashboard');
+    await page.goto('http://localhost:3001/dashboard');
     
     // ACT: Verificare classi CSS sui bottoni
     const button = page.locator('button').first();
@@ -142,7 +142,7 @@ test.describe('Button.tsx - Test Funzionali', () => {
 
   test('Dovrebbe gestire forwardRef correttamente', async ({ page }) => {
     // ARRANGE: Navigare alla dashboard
-    await page.goto('http://localhost:3000/dashboard');
+    await page.goto('http://localhost:3001/dashboard');
     
     // ACT: Verificare che i bottoni siano elementi DOM validi
     const button = page.locator('button').first();

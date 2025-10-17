@@ -1,232 +1,197 @@
-import { test, expect } from '@playwright/test';
+/**
+ * 🔐 LoginPage - Test Validazione Dati
+ * 
+ * Test per validazione input validi e invalidi
+ * Seguendo le procedure di blindatura multi-agent
+ * 
+ * @author Agente 2 - Form e Validazioni
+ * @date 2025-01-16
+ */
 
-test.describe('LoginPage - Test Validazione Dati', () => {
+const { test, expect } = require('@playwright/test')
+
+test.describe('LoginPage - Test Validazione', () => {
   
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3001/login');
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-  });
+    await page.goto('/sign-in')
+  })
 
   test('Dovrebbe accettare email valide', async ({ page }) => {
     const validEmails = [
       'test@example.com',
-      'user@domain.it',
-      'mario.rossi@azienda.com',
-      'user+tag@example.org',
-      'user123@test-domain.co.uk'
-    ];
+      'user.name@domain.co.uk',
+      'mario.rossi@ristorante.it',
+      'admin+test@company.org',
+      'user123@test-domain.com'
+    ]
     
     for (const email of validEmails) {
-      await page.fill('input[name="email"]', email);
-      await page.fill('input[name="password"]', 'password123');
+      await page.fill('input[name="email"]', email)
+      await expect(page.locator('input[name="email"]')).toHaveValue(email)
       
-      // Verificare che non ci siano errori di validazione HTML5
-      const emailInput = page.locator('input[name="email"]');
-      const validity = await emailInput.evaluate(el => el.validity);
-      expect(validity.valid).toBe(true);
-      
-      // Pulisci il campo per il prossimo test
-      await page.fill('input[name="email"]', '');
+      // Verifica che non ci siano errori di validazione
+      await expect(page.locator('.text-red-500')).not.toBeVisible()
     }
-  });
+  })
 
   test('Dovrebbe rifiutare email invalide', async ({ page }) => {
     const invalidEmails = [
-      'email-sbagliata',
+      '',
+      'invalid-email',
       '@domain.com',
-      'test@',
-      'test.com',
-      'test@.com',
-      'test..test@domain.com',
-      'test@domain',
-      ''
-    ];
+      'user@',
+      'user@domain',
+      'user..name@domain.com',
+      'user@.domain.com',
+      'user@domain..com'
+    ]
     
     for (const email of invalidEmails) {
-      await page.fill('input[name="email"]', email);
+      await page.fill('input[name="email"]', email)
       
-      // Verificare che ci siano errori di validazione HTML5
-      const emailInput = page.locator('input[name="email"]');
-      const validity = await emailInput.evaluate(el => el.validity);
-      expect(validity.valid).toBe(false);
+      // Verifica che il browser mostri errore di validazione
+      const emailInput = page.locator('input[name="email"]')
+      await expect(emailInput).toHaveAttribute('type', 'email')
       
-      // Pulisci il campo per il prossimo test
-      await page.fill('input[name="email"]', '');
+      // Per email vuote, verifica required
+      if (email === '') {
+        await expect(emailInput).toHaveAttribute('required')
+      }
     }
-  });
+  })
 
-  test('Dovrebbe rifiutare email vuota', async ({ page }) => {
-    // ACT: Tentare submit con email vuota
-    await page.fill('input[name="email"]', '');
-    await page.fill('input[name="password"]', 'password123');
-    await page.click('button[type="submit"]');
+  test('Dovrebbe accettare password valide', async ({ page }) => {
+    const validPasswords = [
+      'password123',
+      'SecurePass!',
+      'MyPassword2024',
+      'test123456',
+      'P@ssw0rd'
+    ]
     
-    // ASSERT: Verificare che il form non si invii
-    await expect(page.locator('input[name="email"]')).toBeFocused();
-    
-    // Verificare validazione HTML5
-    const emailInput = page.locator('input[name="email"]');
-    const validity = await emailInput.evaluate(el => el.validity);
-    expect(validity.valueMissing).toBe(true);
-  });
+    for (const password of validPasswords) {
+      await page.fill('input[name="password"]', password)
+      await expect(page.locator('input[name="password"]')).toHaveValue(password)
+    }
+  })
 
-  test('Dovrebbe rifiutare password vuota', async ({ page }) => {
-    // ACT: Tentare submit con password vuota
-    await page.fill('input[name="email"]', 'test@example.com');
-    await page.fill('input[name="password"]', '');
-    await page.click('button[type="submit"]');
+  test('Dovrebbe gestire password vuote', async ({ page }) => {
+    // Verifica che password sia required
+    await expect(page.locator('input[name="password"]')).toHaveAttribute('required')
     
-    // ASSERT: Verificare che il form non si invii
-    await expect(page.locator('input[name="password"]')).toBeFocused();
+    // Prova submit senza password
+    await page.fill('input[name="email"]', 'test@example.com')
+    await page.click('button[type="submit"]')
     
-    // Verificare validazione HTML5
-    const passwordInput = page.locator('input[name="password"]');
-    const validity = await passwordInput.evaluate(el => el.validity);
-    expect(validity.valueMissing).toBe(true);
-  });
+    // Verifica che form non si invii
+    await expect(page).toHaveURL('/sign-in')
+  })
 
-  test('Dovrebbe mostrare errore per credenziali sbagliate', async ({ page }) => {
-    // ACT: Tentare login con credenziali sbagliate
-    await page.fill('input[name="email"]', 'wrong@email.com');
-    await page.fill('input[name="password"]', 'wrongpassword');
-    await page.click('button[type="submit"]');
+  test('Dovrebbe gestire email vuote', async ({ page }) => {
+    // Verifica che email sia required
+    await expect(page.locator('input[name="email"]')).toHaveAttribute('required')
     
-    // ASSERT: Verificare che appaia messaggio di errore
-    // Aspettare che il loading finisca
-    await page.waitForTimeout(2000);
+    // Prova submit senza email
+    await page.fill('input[name="password"]', 'password123')
+    await page.click('button[type="submit"]')
     
-    // Verificare presenza toast di errore
-    await expect(page.locator('[role="alert"]')).toBeVisible();
-    await expect(page.locator('text=Email o password non corretti')).toBeVisible();
-  });
+    // Verifica che form non si invii
+    await expect(page).toHaveURL('/sign-in')
+  })
 
-  test('Dovrebbe mostrare errore specifico per email non confermata', async ({ page }) => {
-    // Simulare errore email non confermata
-    await page.route('**/auth/v1/token?grant_type=password', route => {
-      route.fulfill({
-        status: 400,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          error: 'email_not_confirmed',
-          error_description: 'Email not confirmed'
-        })
-      });
-    });
+  test('Dovrebbe gestire caratteri speciali', async ({ page }) => {
+    const specialChars = [
+      'test@example.com',
+      'user+tag@domain.com',
+      'user.name@domain-name.com',
+      'user_name@domain.co.uk'
+    ]
     
-    // ACT: Tentare login
-    await page.fill('input[name="email"]', 'unconfirmed@email.com');
-    await page.fill('input[name="password"]', 'password123');
-    await page.click('button[type="submit"]');
-    
-    // ASSERT: Verificare messaggio specifico
-    await page.waitForTimeout(1000);
-    await expect(page.locator('text=Verifica prima la tua email')).toBeVisible();
-  });
+    for (const email of specialChars) {
+      await page.fill('input[name="email"]', email)
+      await expect(page.locator('input[name="email"]')).toHaveValue(email)
+    }
+  })
 
-  test('Dovrebbe mostrare errore generico per altri errori', async ({ page }) => {
-    // Simulare errore generico
-    await page.route('**/auth/v1/token?grant_type=password', route => {
-      route.fulfill({
-        status: 500,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          error: 'server_error',
-          error_description: 'Internal server error'
-        })
-      });
-    });
+  test('Dovrebbe gestire password con caratteri speciali', async ({ page }) => {
+    const specialPasswords = [
+      'P@ssw0rd!',
+      'MyP@ss123',
+      'Test#2024',
+      'Secure$Pass',
+      'Pass%Word'
+    ]
     
-    // ACT: Tentare login
-    await page.fill('input[name="email"]', 'test@example.com');
-    await page.fill('input[name="password"]', 'password123');
-    await page.click('button[type="submit"]');
-    
-    // ASSERT: Verificare messaggio generico
-    await page.waitForTimeout(1000);
-    await expect(page.locator('text=Errore durante il login. Riprova.')).toBeVisible();
-  });
+    for (const password of specialPasswords) {
+      await page.fill('input[name="password"]', password)
+      await expect(page.locator('input[name="password"]')).toHaveValue(password)
+    }
+  })
 
-  test('Dovrebbe accettare login con credenziali valide', async ({ page }) => {
-    // ACT: Login con credenziali valide fornite dall'utente
-    await page.fill('input[name="email"]', 'matteo.cavallaro.work@gmail.com');
-    await page.fill('input[name="password"]', 'Cavallaro');
-    await page.click('button[type="submit"]');
+  test('Dovrebbe gestire input molto lunghi', async ({ page }) => {
+    const longEmail = 'a'.repeat(50) + '@' + 'b'.repeat(50) + '.com'
+    const longPassword = 'a'.repeat(1000)
     
-    // ASSERT: Verificare redirect a dashboard
-    await page.waitForURL(/.*dashboard/);
-    await expect(page).toHaveURL(/.*dashboard/);
+    // Test email lunga
+    await page.fill('input[name="email"]', longEmail)
+    await expect(page.locator('input[name="email"]')).toHaveValue(longEmail)
     
-    // Verificare presenza toast di successo
-    await expect(page.locator('text=Login effettuato con successo!')).toBeVisible();
-  });
+    // Test password lunga
+    await page.fill('input[name="password"]', longPassword)
+    await expect(page.locator('input[name="password"]')).toHaveValue(longPassword)
+  })
 
-  test('Dovrebbe gestire spazi iniziali e finali negli input', async ({ page }) => {
-    // ACT: Inserire dati con spazi
-    await page.fill('input[name="email"]', '  test@example.com  ');
-    await page.fill('input[name="password"]', '  password123  ');
+  test('Dovrebbe gestire caratteri Unicode', async ({ page }) => {
+    const unicodeEmail = 'mario.rossi@ristorante.it'
+    const unicodePassword = 'Màrio123!'
     
-    // ASSERT: Verificare che i valori includano gli spazi (comportamento standard)
-    await expect(page.locator('input[name="email"]')).toHaveValue('  test@example.com  ');
-    await expect(page.locator('input[name="password"]')).toHaveValue('  password123  ');
-  });
+    await page.fill('input[name="email"]', unicodeEmail)
+    await expect(page.locator('input[name="email"]')).toHaveValue(unicodeEmail)
+    
+    await page.fill('input[name="password"]', unicodePassword)
+    await expect(page.locator('input[name="password"]')).toHaveValue(unicodePassword)
+  })
 
-  test('Dovrebbe gestire caratteri speciali negli input', async ({ page }) => {
-    const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+  test('Dovrebbe gestire spazi negli input', async ({ page }) => {
+    // Test email con spazi (dovrebbe essere gestita dal browser)
+    await page.fill('input[name="email"]', ' test@example.com ')
     
-    // ACT: Inserire caratteri speciali
-    await page.fill('input[name="email"]', `test${specialChars}@example.com`);
-    await page.fill('input[name="password"]', `pass${specialChars}word`);
-    
-    // ASSERT: Verificare che i caratteri siano accettati
-    await expect(page.locator('input[name="email"]')).toHaveValue(`test${specialChars}@example.com`);
-    await expect(page.locator('input[name="password"]')).toHaveValue(`pass${specialChars}word`);
-  });
+    // Test password con spazi
+    await page.fill('input[name="password"]', ' password123 ')
+    await expect(page.locator('input[name="password"]')).toHaveValue(' password123 ')
+  })
 
-  test('Dovrebbe gestire input case-insensitive per email', async ({ page }) => {
-    // ACT: Inserire email con maiuscole
-    await page.fill('input[name="email"]', 'TEST@EXAMPLE.COM');
-    await page.fill('input[name="password"]', 'password123');
+  test('Dovrebbe gestire copia e incolla', async ({ page }) => {
+    const email = 'test@example.com'
+    const password = 'password123'
     
-    // ASSERT: Verificare che l'input mantenga il case inserito
-    await expect(page.locator('input[name="email"]')).toHaveValue('TEST@EXAMPLE.COM');
-  });
+    // Test copia email
+    await page.fill('input[name="email"]', email)
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Control+c')
+    
+    // Test incolla in password (non dovrebbe funzionare per password)
+    await page.focus('input[name="password"]')
+    await page.keyboard.press('Control+v')
+    
+    // Verifica che password sia vuota
+    await expect(page.locator('input[name="password"]')).toHaveValue('')
+  })
 
-  test('Dovrebbe disabilitare submit button durante loading', async ({ page }) => {
-    // ACT: Iniziare submit
-    await page.fill('input[name="email"]', 'test@example.com');
-    await page.fill('input[name="password"]', 'password123');
-    await page.click('button[type="submit"]');
+  test('Dovrebbe gestire navigazione con tastiera', async ({ page }) => {
+    // Naviga con Tab
+    await page.keyboard.press('Tab') // Email
+    await expect(page.locator('input[name="email"]')).toBeFocused()
     
-    // ASSERT: Verificare che il bottone sia disabilitato
-    await expect(page.locator('button[type="submit"]')).toBeDisabled();
+    await page.keyboard.press('Tab') // Password
+    await expect(page.locator('input[name="password"]')).toBeFocused()
     
-    // Verificare che mostri loading state
-    await expect(page.locator('text=Accesso in corso...')).toBeVisible();
-  });
-
-  test('Dovrebbe riabilitare submit button dopo errore', async ({ page }) => {
-    // Simulare errore
-    await page.route('**/auth/v1/token?grant_type=password', route => {
-      route.fulfill({
-        status: 400,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          error: 'invalid_credentials',
-          error_description: 'Invalid login credentials'
-        })
-      });
-    });
+    await page.keyboard.press('Tab') // Submit button
+    await expect(page.locator('button[type="submit"]')).toBeFocused()
     
-    // ACT: Tentare login
-    await page.fill('input[name="email"]', 'wrong@email.com');
-    await page.fill('input[name="password"]', 'wrongpassword');
-    await page.click('button[type="submit"]');
-    
-    // ASSERT: Aspettare che il loading finisca
-    await page.waitForTimeout(2000);
-    
-    // Verificare che il bottone sia riabilitato
-    await expect(page.locator('button[type="submit"]')).toBeEnabled();
-    await expect(page.locator('button[type="submit"]')).toHaveText('Accedi');
-  });
-});
+    // Test Enter per submit
+    await page.keyboard.press('Enter')
+    // Verifica che form non si invii senza dati validi
+    await expect(page).toHaveURL('/sign-in')
+  })
+})

@@ -42,9 +42,10 @@ async function initLockDir() {
  * @param {string} host - Host da bloccare (es: "localhost:3000")
  * @param {string} agentId - ID dell'agente
  * @param {string} component - Componente da testare
+ * @param {number} port - Porta effettiva dell'app (opzionale)
  * @returns {boolean} - true se lock acquisito, false se già occupato
  */
-async function acquireLock(host, agentId, component) {
+async function acquireLock(host, agentId, component, port = null) {
   await initLockDir();
   
   const lockFile = path.join(LOCK_DIR, `host-${host.replace(':', '-')}.lock`);
@@ -57,7 +58,9 @@ async function acquireLock(host, agentId, component) {
       component,
       timestamp: Date.now(),
       host,
-      status: 'locked'
+      port: port || extractPortFromHost(host),
+      status: 'locked',
+      pid: process.pid
     };
     
     await fs.writeFile(lockFile, JSON.stringify(lockData, null, 2), { flag: 'wx' });
@@ -68,6 +71,7 @@ async function acquireLock(host, agentId, component) {
       timestamp: Date.now(),
       status: 'active',
       host,
+      port: lockData.port,
       component
     };
     
@@ -76,7 +80,7 @@ async function acquireLock(host, agentId, component) {
     // Log operazione
     await logOperation('ACQUIRE', agentId, host, component, 'SUCCESS');
     
-    console.log(`✅ Lock acquisito: ${agentId} su ${host} per ${component}`);
+    console.log(`✅ Lock acquisito: ${agentId} su ${host} (porta ${lockData.port}) per ${component}`);
     return true;
     
   } catch (error) {
@@ -88,6 +92,16 @@ async function acquireLock(host, agentId, component) {
     }
     throw error;
   }
+}
+
+/**
+ * Estrae porta da host string
+ * @param {string} host - Host string (es: "localhost:3000")
+ * @returns {number} - Porta estratta
+ */
+function extractPortFromHost(host) {
+  const portMatch = host.match(/:(\d+)$/);
+  return portMatch ? parseInt(portMatch[1]) : 3000;
 }
 
 /**
@@ -415,5 +429,6 @@ module.exports = {
   updateHeartbeat,
   cleanStaleLocks,
   enterQueue,
-  showStatus
+  showStatus,
+  extractPortFromHost
 };

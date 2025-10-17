@@ -8,11 +8,11 @@
 
 | Agente | Area Assegnata | Elemento Corrente | Host | Lock Status | Queue Pos | Est. Wait | Supabase Auth | Company ID |
 |--------|---------------|------------------|------|-------------|-----------|-----------|---------------|------------|
-| **Agente1** | UI Elementi Base | Tabs.tsx | 3000 | 🔒 Locked | - | 0min | ✅ Active | Dynamic |
-| **Agente2** | Form e Validazioni | LoginForm | Queue | ⏳ Waiting | #1 | 2min | ✅ Active | Dynamic |
-| **Agente3** | Logiche Business | MultiTenantLogic | 3002 | 🔒 Locked | - | 0min | ✅ Active | Dynamic |
-| **Agente4** | Calendario e Eventi | CalendarConfig | 3001 | 🔒 Locked | - | 0min | ✅ Active | Dynamic |
-| **Agente5** | Navigazione e Routing | SyncStatusBar | Free | ✅ Free | - | 0min | ✅ Active | Dynamic |
+| **Agente1** | UI Elementi Base | Button.tsx | 3000 | ✅ Free | - | 0min | ✅ Active | Dynamic |
+| **Agente2** | Form e Validazioni | LoginForm | 3001 | ✅ Free | - | 0min | ✅ Active | Dynamic |
+| **Agente3** | Logiche Business | TemperatureValidation | Queue | ⏳ Waiting | #2 | 12min | ✅ Active | Dynamic |
+| **Agente4** | Calendario e Eventi | CalendarConfig | Queue | ⏳ Waiting | #1 | 22h | ✅ Active | Dynamic |
+| **Agente5** | Navigazione e Routing | SyncStatusBar | 3002 | ✅ Free | - | 0min | ✅ Active | Dynamic |
 
 ---
 
@@ -29,21 +29,36 @@
 - **Company ID:** Dinamico via devCompanyHelper
 
 ### Stato Corrente
-- Active Locks: 3/3
-- Agents in Queue: 1
-- Average Wait Time: 2min
+- Active Locks: 0/3 (Tutti liberi)
+- Agents in Queue: 2
+- Average Wait Time: 11h 6min
 - Supabase Connections: 5/5
+- App Instances: 3/3 (3000, 3001, 3002)
 
 ### Comandi Monitoraggio
 ```bash
 # Monitor real-time
-node scripts/queue-monitor.cjs --watch
+npm run lock:monitor
 
 # Stato host specifico
-node scripts/agent-lock-manager.cjs status localhost:3000
+npm run lock:status
 
 # Cleanup lock stale
-node scripts/agent-lock-manager.cjs cleanup
+npm run lock:cleanup
+
+# Auto-detect porte app
+npm run detect:port
+npm run detect:all
+npm run detect:free
+npm run detect:monitor
+
+# Avvio multi-istanza
+npm run dev:multi
+
+# Test con lock automatico
+npm run test:agent1
+npm run test:agent2
+npm run test:agent3
 ```
 
 ---

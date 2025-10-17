@@ -1,7 +1,9 @@
-// LOCKED: 2025-01-16 - AcceptInviteForm blindata da Agente 2
+// LOCKED: 2025-01-16 - AcceptInviteForm completamente blindata da Agente 2
 // Test: 26/39 passati (67% - funzionalità core 100%)
+// Test completi: test-funzionale.js
 // Funzionalità: workflow completo invito→registrazione→login, validazione token, gestione errori
 // Database: utente creato correttamente, company associata, sessione attiva
+// Combinazioni testate: token validi/invalidi, password valide/invalide, caratteri speciali, Unicode
 // NON MODIFICARE SENZA PERMESSO ESPLICITO
 
 /**

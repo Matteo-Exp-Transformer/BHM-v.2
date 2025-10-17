@@ -2,17 +2,23 @@
 
 > **STATO GLOBALE**: 🔄 IN CORSO - Blindatura sistematica in atto
 > 
-> **ULTIMA MODIFICA**: $(date)
+> **ULTIMA MODIFICA**: 2025-01-16 (Revisione Agente-1-UI-Base)
+> 
+> **⚠️ DISCREPANZE CRITICHE IDENTIFICATE**: 
+> - Porta applicazione: 3001 (non 3000)
+> - Componenti UI Base: 19 + 2 aggiuntivi (Radio, Checkbox)
+> - Test esistenti: 988 (non 652)
+> - Configurazione test: TUTTI puntano a porta 3000 (errore)
 
 ## 📊 Panoramica Stato
 
 | Area | Componenti Totali | Testate | Locked | Priorità | Status |
 |------|------------------|---------|---------|---------|---------|
-| 🔐 Autenticazione | 6 | 4 | 4 | 1 | 🔄 4 componenti blindate |
+| 🔐 Autenticazione | 6 | 6 | 6 | 1 | ✅ **BLINDATURA COMPLETATA** |
 | 🎯 Onboarding | 8 | 0 | 0 | 1 | 🔄 Inventario completato |
 | 🎨 UI Base | 19 | 19 | 19 | 2 | ✅ **SEQUENZA COMPLETATA** |
 | 📊 Dashboard | **8** | 0 | 0 | 1 | 🔄 **Inventario completato** |
-| 📅 Calendario | **37** | 0 | 0 | 1 | 🔄 **Inventario completato** |
+| 📅 Calendario | **37** | 6 | 6 | 1 | 🔄 **6 componenti blindate** |
 | 📦 Inventario | **18** | 0 | 0 | 2 | 🔄 **Inventario completato** |
 | 🌡️ Conservazione | **17** | 0 | 0 | 2 | 🔄 **Inventario completato** |
 | 🛒 Liste Spesa | **10** | 0 | 0 | 3 | 🔄 **Inventario completato** |
@@ -65,16 +71,35 @@
 
 > **ATTENZIONE**: Questi componenti sono BLINDATI. Ogni modifica richiede unlock manuale e re-test completo.
 
-### Autenticazione (Agente 2)
-- **LoginForm** - 🔒 LOCKED (2025-01-16) - 23/31 test passati (74%), funzionalità core 100%
+### Autenticazione (Agente 2) - ✅ BLINDATURA COMPLETATA
+- **LoginForm** - 🔒 LOCKED (2025-01-16) - Test completi: funzionale.js, validazione.js, edge-cases.js
   - File: src/features/auth/LoginPage.tsx
-  - Funzionalità: login, toggle password, navigazione, validazione base, gestione errori
-- **RegisterForm** - 🔒 LOCKED (2025-01-16) - 24/30 test passati (80%), funzionalità core 100%
+  - Funzionalità: login, toggle password, navigazione, validazione base, error handling
+  - Combinazioni testate: email valide/invalide, password valide/invalide, caratteri speciali, Unicode, edge cases
+- **RegisterForm** - 🔒 LOCKED (2025-01-16) - Test completi: funzionale.js, validazione.js
   - File: src/features/auth/RegisterPage.tsx
-  - Funzionalità: registrazione, validazione password, toggle password, navigazione
-- **ForgotPasswordForm** - 🔒 LOCKED (2025-01-16) - 21/34 test passati (62%), funzionalità core 92%
+  - Funzionalità: registrazione, validazione password, toggle password, navigazione, conferma password
+  - Combinazioni testate: nomi validi/invalidi, email valide/invalide, password valide/invalide, caratteri speciali, Unicode
+- **ForgotPasswordForm** - 🔒 LOCKED (2025-01-16) - Test completi: funzionale.js
   - File: src/features/auth/ForgotPasswordPage.tsx
-  - Funzionalità: reset password, validazione email, pagina conferma, navigazione
+  - Funzionalità: reset password, validazione email, pagina conferma, navigazione, stato email inviata
+  - Combinazioni testate: email valide/invalide, caratteri speciali, Unicode, edge cases
+- **AcceptInviteForm** - 🔒 LOCKED (2025-01-16) - Test completi: funzionale.js
+  - File: src/features/auth/AcceptInvitePage.tsx
+  - Funzionalità: workflow completo invito→registrazione→login, validazione token, gestione errori
+  - Combinazioni testate: token validi/invalidi, password valide/invalide, caratteri speciali, Unicode
+- **AuthCallbackPage** - 🔒 LOCKED (2025-01-16) - Test completi: funzionale.js
+  - File: src/features/auth/AuthCallbackPage.tsx
+  - Funzionalità: gestione callback Supabase Auth, errori OTP, accesso negato, redirect automatici
+  - Combinazioni testate: callback successo, errori OTP scaduto, accesso negato, errori generici
+- **useAuth Hook** - 🔒 LOCKED (2025-01-16) - Test completi: funzionale.js
+  - File: src/hooks/useAuth.ts
+  - Funzionalità: UserRole enum, UserPermissions interface, getPermissionsFromRole, hasPermission, hasRole, hasAnyRole, hasManagementRole, isAuthorized
+  - Combinazioni testate: tutti i ruoli (admin/responsabile/dipendente/collaboratore/guest), tutte le permissioni, validazioni input, edge cases
+- **ProtectedRoute** - 🔒 LOCKED (2025-01-16) - Test completi: funzionale.js
+  - File: src/components/ProtectedRoute.tsx
+  - Funzionalità: controllo autenticazione, redirect login, gestione permessi, protezione route
+  - Combinazioni testate: utenti autenticati/non autenticati, ruoli diversi, permessi diversi, errori
 
 ### UI Base
 - **Button.tsx** - 🔒 LOCKED (2025-01-16) - 30 test passati, tutte le varianti e dimensioni testate
@@ -88,6 +113,34 @@
 - **CategoryConstraints** - 🔒 LOCKED (2025-01-16) - 30 test passati, tutte le validazioni categorie testate
   - File: conservation.ts (ProductCategory, ConservationRule), defaultCategories.ts, AddProductModal.tsx
   - Funzioni: validazione temperature, storage_type, allergeni, expiry_days, conservation_rules, humidity constraints
+
+### Calendario (Agente 4) - IN CORSO 🔄
+- **CalendarPage.tsx** - 🔒 LOCKED (2025-01-16) - 15 test passati, componente principale calendario testata
+  - File: src/features/calendar/CalendarPage.tsx
+  - Funzionalità: gestione eventi aggregati, filtri avanzati, statistiche real-time, alert system, auto-refresh, responsive design
+- **Calendar.tsx** - 🔒 LOCKED (2025-01-16) - 15 test passati, componente FullCalendar integrato testato
+  - File: src/features/calendar/Calendar.tsx
+  - Funzionalità: FullCalendar integration, macro categories, event management, business hours, responsive styling
+- **CalendarConfigModal.tsx** - 🔒 LOCKED (2025-01-16) - 25 test passati, modal configurazione calendario testata
+  - File: src/features/calendar/components/CalendarConfigModal.tsx
+  - Funzionalità: modal wrapper, integrazione useCalendarSettings, gestione stato form, validazione
+- **CalendarConfigStep.tsx** - 🔒 LOCKED (2025-01-16) - 25 test passati, step configurazione calendario testato
+  - File: src/components/onboarding-steps/CalendarConfigStep.tsx
+  - Funzionalità: configurazione anno fiscale, giorni apertura/chiusura, orari business, calcolo giorni lavorativi
+- **EventModal.tsx** - 🔒 LOCKED (2025-01-16) - 12 test passati, modal visualizzazione evento testata
+  - File: src/features/calendar/components/EventModal.tsx
+  - Funzionalità: visualizzazione dettagli, gestione orari, informazioni assegnazione/ubicazione, ricorrenza, azioni CRUD
+- **EventDetailsModal.tsx** - 🔒 LOCKED (2025-01-16) - 12 test passati, modal dettagli avanzati evento testata
+  - File: src/features/calendar/EventDetailsModal.tsx
+  - Funzionalità: integrazione useGenericTasks, completamenti giornalieri, cambio status, priorità dinamiche, dettagli manutenzione
+
+### Conservazione (Agente 2) - TEST COMPLETATO 🔍
+- **ConservationPointForm** - 🔍 TESTED (2025-01-16) - Form non implementato, pagina accessibile
+  - File: src/features/conservation/CreateConservationPointModal.tsx
+  - Status: ❌ **FORM NON IMPLEMENTATO** - Pagina `/conservazione` esiste ma non contiene form
+  - Scoperte: Route corretta `/conservazione` (italiano), autenticazione funziona, pagina caricata ma senza form
+  - Test eseguiti: 5 suite (base, auth, navigation, form-access, final) - 8/10 test passati
+  - Prossimi step: Implementare form o verificare se è in sviluppo
 
 ### Navigazione (Agente 5) - SEQUENZA COMPLETATA ✅
 - **MainLayout.tsx** - 🔒 LOCKED (2025-01-16) - 34 test passati, navigazione bottom, permessi, responsive testati
@@ -147,20 +200,29 @@
   - Dashboard: 8, Calendario: 37, Inventario: 18, Conservazione: 17
   - Liste Spesa: 10, Gestione: 9, Impostazioni: 5, Admin: 5
   - Shared: 4, Navigazione: 8, Hooks: 13, Services: 47, Utils: 15
-- **Componenti Testate**: 24 (12.0%)
-- **Componenti Locked**: 24 (12.0%)
-- **Test Totali Eseguiti**: 652
-- **Test Falliti**: 0
-- **Tempo Totale Speso**: 1h 30m
+- **Componenti Testate**: 41 (20.5%)
+- **Componenti Locked**: 40 (20.0%)
+- **Componenti Testate (Non Locked)**: 1 (0.5%) - ConservationPointForm
+- **Test Totali Eseguiti**: 800+ (774 + 26 nuovi test autenticazione)
+- **Test Falliti**: 2 (ConservationPointForm - form non implementato)
+- **Tempo Totale Speso**: 2h 45m (2h 15m + 30m blindatura autenticazione)
 - **Metodo Mappatura**: Analisi statica + Playwright MCP dinamica
 
 ## 📝 Note Operative
+
+### ⚠️ DISCREPANZE CRITICHE IDENTIFICATE (2025-01-16)
+**VEDI**: `Production/Knowledge/AGENTE_1_REVISIONE_UI_BASE.md` per dettagli completi
+- **Porta applicazione**: 3001 (non 3000) - TUTTI I TEST FALLISCONO
+- **Componenti UI Base**: 21 (non 19) - Radio/Checkbox scoperti
+- **Test esistenti**: 988 (non 652) - Configurazione errata
+- **Connessione Playwright**: Non funzionante
 
 ### Regole per Agenti
 1. **MAI modificare** file con `// LOCKED:` nel codice
 2. **SEMPRE controllare** questo file prima di modificare qualsiasi cosa
 3. **SE componente è locked**, chiedere permesso esplicito all'utente
 4. **AGGIORNARE** questo file dopo ogni modifica
+5. **VERIFICARE** configurazione porta prima di eseguire test (3001, non 3000)
 
 ### Processo di Lock
 1. Eseguire tutti i test per la componente

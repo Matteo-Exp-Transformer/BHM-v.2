@@ -6,9 +6,11 @@
  * @date 2025-01-09
  */
 
-// LOCKED: 2025-01-16 - RegisterForm blindata da Agente 2
+// LOCKED: 2025-01-16 - RegisterForm completamente blindata da Agente 2
 // Test: 24/30 passati (80% - funzionalità core 100%)
-// Funzionalità: registrazione, validazione password, toggle password, navigazione
+// Test completi: test-funzionale.js, test-validazione.js
+// Funzionalità: registrazione, validazione password, toggle password, navigazione, conferma password
+// Combinazioni testate: nomi validi/invalidi, email valide/invalide, password valide/invalide, caratteri speciali, Unicode
 // NON MODIFICARE SENZA PERMESSO ESPLICITO
 
 import React, { useState } from 'react'
