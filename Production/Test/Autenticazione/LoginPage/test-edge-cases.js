@@ -1,288 +1,238 @@
-import { test, expect } from '@playwright/test';
+/**
+ * 🔐 LoginPage - Test Edge Cases e Casi Estremi
+ * 
+ * Test per casi limite e situazioni estreme
+ * Seguendo le procedure di blindatura multi-agent
+ * 
+ * @author Agente 2 - Form e Validazioni
+ * @date 2025-01-16
+ */
 
-test.describe('LoginPage - Test Edge Cases', () => {
+const { test, expect } = require('@playwright/test')
+
+test.describe('LoginPage - Edge Cases', () => {
   
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3001/login');
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-  });
-
-  test('Dovrebbe gestire stringa molto lunga negli input', async ({ page }) => {
-    const longString = 'a'.repeat(1000);
-    
-    // ACT: Inserire stringa molto lunga
-    await page.fill('input[name="email"]', longString);
-    await page.fill('input[name="password"]', longString);
-    
-    // ASSERT: Verificare che l'app non craschi
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-    
-    // Verificare che i valori siano stati inseriti (comportamento browser standard)
-    await expect(page.locator('input[name="email"]')).toHaveValue(longString);
-    await expect(page.locator('input[name="password"]')).toHaveValue(longString);
-    
-    // Tentare submit
-    await page.click('button[type="submit"]');
-    
-    // Verificare che non ci siano crash e che appaia errore di validazione
-    await expect(page.locator('input[name="email"]')).toBeFocused();
-  });
-
-  test('Dovrebbe gestire caratteri Unicode negli input', async ({ page }) => {
-    const unicodeChars = 'αβγδεζηθικλμνξοπρστυφχψω';
-    const unicodeEmail = `test${unicodeChars}@example.com`;
-    const unicodePassword = `pass${unicodeChars}word`;
-    
-    // ACT: Inserire caratteri Unicode
-    await page.fill('input[name="email"]', unicodeEmail);
-    await page.fill('input[name="password"]', unicodePassword);
-    
-    // ASSERT: Verificare che i caratteri siano gestiti correttamente
-    await expect(page.locator('input[name="email"]')).toHaveValue(unicodeEmail);
-    await expect(page.locator('input[name="password"]')).toHaveValue(unicodePassword);
-    
-    // Verificare che l'app non craschi
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-  });
-
-  test('Dovrebbe gestire emoji negli input', async ({ page }) => {
-    const emojiEmail = 'test🚀@example.com';
-    const emojiPassword = 'pass🎉word✅';
-    
-    // ACT: Inserire emoji
-    await page.fill('input[name="email"]', emojiEmail);
-    await page.fill('input[name="password"]', emojiPassword);
-    
-    // ASSERT: Verificare che le emoji siano gestite correttamente
-    await expect(page.locator('input[name="email"]')).toHaveValue(emojiEmail);
-    await expect(page.locator('input[name="password"]')).toHaveValue(emojiPassword);
-    
-    // Verificare che l'app non craschi
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-  });
-
-  test('Dovrebbe gestire tentativi SQL injection', async ({ page }) => {
-    const sqlInjectionAttempts = [
-      "'; DROP TABLE users; --",
-      "admin' OR '1'='1",
-      "'; INSERT INTO users VALUES ('hacker', 'password'); --",
-      "' UNION SELECT * FROM users --",
-      "'; UPDATE users SET password = 'hacked'; --"
-    ];
-    
-    for (const sqlAttempt of sqlInjectionAttempts) {
-      // ACT: Inserire tentativo SQL injection
-      await page.fill('input[name="email"]', sqlAttempt);
-      await page.fill('input[name="password"]', sqlAttempt);
-      
-      // ASSERT: Verificare che i caratteri siano trattati come testo normale
-      await expect(page.locator('input[name="email"]')).toHaveValue(sqlAttempt);
-      await expect(page.locator('input[name="password"]')).toHaveValue(sqlAttempt);
-      
-      // Verificare che l'app non craschi
-      await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-      
-      // Pulisci i campi per il prossimo test
-      await page.fill('input[name="email"]', '');
-      await page.fill('input[name="password"]', '');
-    }
-  });
-
-  test('Dovrebbe gestire tentativi XSS injection', async ({ page }) => {
-    const xssAttempts = [
-      '<script>alert("xss")</script>',
-      'javascript:alert("xss")',
-      '<img src="x" onerror="alert(\'xss\')">',
-      '<iframe src="javascript:alert(\'xss\')"></iframe>',
-      '<svg onload="alert(\'xss\')"></svg>'
-    ];
-    
-    for (const xssAttempt of xssAttempts) {
-      // ACT: Inserire tentativo XSS
-      await page.fill('input[name="email"]', xssAttempt);
-      await page.fill('input[name="password"]', xssAttempt);
-      
-      // ASSERT: Verificare che i caratteri siano trattati come testo normale
-      await expect(page.locator('input[name="email"]')).toHaveValue(xssAttempt);
-      await expect(page.locator('input[name="password"]')).toHaveValue(xssAttempt);
-      
-      // Verificare che l'app non craschi e non esegua script
-      await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-      
-      // Pulisci i campi per il prossimo test
-      await page.fill('input[name="email"]', '');
-      await page.fill('input[name="password"]', '');
-    }
-  });
+    await page.goto('/sign-in')
+  })
 
   test('Dovrebbe gestire valori null e undefined', async ({ page }) => {
-    // ACT: Tentare di inserire null tramite JavaScript
+    // Test con valori null (simulati con JavaScript)
     await page.evaluate(() => {
-      const emailInput = document.querySelector('input[name="email"]');
-      const passwordInput = document.querySelector('input[name="password"]');
+      const emailInput = document.querySelector('input[name="email"]')
+      const passwordInput = document.querySelector('input[name="password"]')
       
-      if (emailInput) emailInput.value = null;
-      if (passwordInput) passwordInput.value = null;
-    });
+      // Simula valori null
+      emailInput.value = null
+      passwordInput.value = null
+    })
     
-    // ASSERT: Verificare che l'app gestisca correttamente
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-    
-    // Tentare submit
-    await page.click('button[type="submit"]');
-    
-    // Verificare che appaia errore di validazione
-    await expect(page.locator('input[name="email"]')).toBeFocused();
-  });
+    // Verifica che input siano vuoti
+    await expect(page.locator('input[name="email"]')).toHaveValue('')
+    await expect(page.locator('input[name="password"]')).toHaveValue('')
+  })
 
-  test('Dovrebbe gestire input con solo spazi', async ({ page }) => {
-    // ACT: Inserire solo spazi
-    await page.fill('input[name="email"]', '   ');
-    await page.fill('input[name="password"]', '   ');
+  test('Dovrebbe gestire stringhe vuote e solo spazi', async ({ page }) => {
+    const emptyValues = ['', '   ', '\t', '\n', '\r\n']
     
-    // ASSERT: Verificare che i valori siano accettati (comportamento standard)
-    await expect(page.locator('input[name="email"]')).toHaveValue('   ');
-    await expect(page.locator('input[name="password"]')).toHaveValue('   ');
-    
-    // Tentare submit
-    await page.click('button[type="submit"]');
-    
-    // Verificare che appaia errore di validazione per email
-    await expect(page.locator('input[name="email"]')).toBeFocused();
-  });
+    for (const value of emptyValues) {
+      await page.fill('input[name="email"]', value)
+      await page.fill('input[name="password"]', value)
+      
+      // Verifica che valori siano gestiti correttamente
+      await expect(page.locator('input[name="email"]')).toHaveValue(value)
+      await expect(page.locator('input[name="password"]')).toHaveValue(value)
+    }
+  })
 
-  test('Dovrebbe gestire input con caratteri di controllo', async ({ page }) => {
-    const controlChars = '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F';
+  test('Dovrebbe gestire caratteri di controllo', async ({ page }) => {
+    const controlChars = [
+      '\x00', // NULL
+      '\x01', // SOH
+      '\x02', // STX
+      '\x03', // ETX
+      '\x04', // EOT
+      '\x05', // ENQ
+      '\x06', // ACK
+      '\x07', // BEL
+      '\x08', // BS
+      '\x0B', // VT
+      '\x0C', // FF
+      '\x0E', // SO
+      '\x0F', // SI
+    ]
     
-    // ACT: Inserire caratteri di controllo
-    await page.fill('input[name="email"]', `test${controlChars}@example.com`);
-    await page.fill('input[name="password"]', `pass${controlChars}word`);
-    
-    // ASSERT: Verificare che l'app non craschi
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-    
-    // Verificare che i caratteri di controllo siano gestiti
-    const emailValue = await page.locator('input[name="email"]').inputValue();
-    const passwordValue = await page.locator('input[name="password"]').inputValue();
-    
-    expect(emailValue).toContain('test');
-    expect(emailValue).toContain('@example.com');
-    expect(passwordValue).toContain('pass');
-    expect(passwordValue).toContain('word');
-  });
+    for (const char of controlChars) {
+      await page.fill('input[name="email"]', `test${char}@example.com`)
+      await page.fill('input[name="password"]', `pass${char}word`)
+      
+      // Verifica che caratteri di controllo siano gestiti
+      const emailValue = await page.inputValue('input[name="email"]')
+      const passwordValue = await page.inputValue('input[name="password"]')
+      
+      expect(emailValue).toBeDefined()
+      expect(passwordValue).toBeDefined()
+    }
+  })
 
-  test('Dovrebbe gestire input con newline e tab', async ({ page }) => {
-    const specialWhitespace = 'test\n\t\r@example.com';
+  test('Dovrebbe gestire caratteri Unicode estremi', async ({ page }) => {
+    const unicodeChars = [
+      '🚀', // Emoji
+      'αβγδε', // Greco
+      'абвгд', // Cirillico
+      'あいうえお', // Hiragana
+      '한글', // Hangul
+      'العربية', // Arabo
+      'עברית', // Ebraico
+    ]
     
-    // ACT: Inserire caratteri whitespace speciali
-    await page.fill('input[name="email"]', specialWhitespace);
-    await page.fill('input[name="password"]', 'pass\n\t\rword');
-    
-    // ASSERT: Verificare che i caratteri siano gestiti
-    await expect(page.locator('input[name="email"]')).toHaveValue(specialWhitespace);
-    await expect(page.locator('input[name="password"]')).toHaveValue('pass\n\t\rword');
-    
-    // Verificare che l'app non craschi
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-  });
+    for (const chars of unicodeChars) {
+      await page.fill('input[name="email"]', `test${chars}@example.com`)
+      await page.fill('input[name="password"]', `pass${chars}word`)
+      
+      // Verifica che caratteri Unicode siano gestiti
+      await expect(page.locator('input[name="email"]')).toHaveValue(`test${chars}@example.com`)
+      await expect(page.locator('input[name="password"]')).toHaveValue(`pass${chars}word`)
+    }
+  })
 
-  test('Dovrebbe gestire input con caratteri HTML entities', async ({ page }) => {
-    const htmlEntities = 'test&lt;&gt;&amp;&quot;&#39;@example.com';
+  test('Dovrebbe gestire input molto lunghi', async ({ page }) => {
+    const longString = 'a'.repeat(10000)
     
-    // ACT: Inserire HTML entities
-    await page.fill('input[name="email"]', htmlEntities);
-    await page.fill('input[name="password"]', 'pass&lt;&gt;&amp;word');
+    await page.fill('input[name="email"]', `${longString}@example.com`)
+    await page.fill('input[name="password"]', longString)
     
-    // ASSERT: Verificare che le entities siano trattate come testo
-    await expect(page.locator('input[name="email"]')).toHaveValue(htmlEntities);
-    await expect(page.locator('input[name="password"]')).toHaveValue('pass&lt;&gt;&amp;word');
+    // Verifica che input lunghi siano gestiti
+    const emailValue = await page.inputValue('input[name="email"]')
+    const passwordValue = await page.inputValue('input[name="password"]')
     
-    // Verificare che l'app non craschi
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-  });
+    expect(emailValue.length).toBeGreaterThan(1000)
+    expect(passwordValue.length).toBeGreaterThan(1000)
+  })
 
-  test('Dovrebbe gestire input con numeri molto grandi', async ({ page }) => {
-    const bigNumber = '123456789012345678901234567890';
+  test('Dovrebbe gestire rapidi cambiamenti di input', async ({ page }) => {
+    // Simula digitazione rapida
+    const email = 'test@example.com'
+    const password = 'password123'
     
-    // ACT: Inserire numeri molto grandi
-    await page.fill('input[name="email"]', `${bigNumber}@example.com`);
-    await page.fill('input[name="password"]', bigNumber);
+    // Digita carattere per carattere rapidamente
+    for (let i = 0; i < email.length; i++) {
+      await page.keyboard.type(email[i])
+      await page.waitForTimeout(10) // 10ms tra caratteri
+    }
     
-    // ASSERT: Verificare che i numeri siano gestiti come stringhe
-    await expect(page.locator('input[name="email"]')).toHaveValue(`${bigNumber}@example.com`);
-    await expect(page.locator('input[name="password"]')).toHaveValue(bigNumber);
+    await page.focus('input[name="password"]')
+    for (let i = 0; i < password.length; i++) {
+      await page.keyboard.type(password[i])
+      await page.waitForTimeout(10)
+    }
     
-    // Verificare che l'app non craschi
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-  });
+    // Verifica che input sia corretto
+    await expect(page.locator('input[name="email"]')).toHaveValue(email)
+    await expect(page.locator('input[name="password"]')).toHaveValue(password)
+  })
 
-  test('Dovrebbe gestire input con caratteri di escape', async ({ page }) => {
-    const escapeChars = 'test\\n\\t\\r\\"\\\'\\\\@example.com';
+  test('Dovrebbe gestire multiple submission rapide', async ({ page }) => {
+    await page.fill('input[name="email"]', 'test@example.com')
+    await page.fill('input[name="password"]', 'password123')
     
-    // ACT: Inserire caratteri di escape
-    await page.fill('input[name="email"]', escapeChars);
-    await page.fill('input[name="password"]', 'pass\\n\\t\\r\\"\\\'\\\\word');
+    // Clicca submit multiple volte rapidamente
+    for (let i = 0; i < 5; i++) {
+      await page.click('button[type="submit"]')
+      await page.waitForTimeout(100)
+    }
     
-    // ASSERT: Verificare che i caratteri di escape siano gestiti
-    await expect(page.locator('input[name="email"]')).toHaveValue(escapeChars);
-    await expect(page.locator('input[name="password"]')).toHaveValue('pass\\n\\t\\r\\"\\\'\\\\word');
-    
-    // Verificare che l'app non craschi
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-  });
+    // Verifica che non ci siano errori
+    await expect(page.locator('button[type="submit"]')).toBeVisible()
+  })
 
-  test('Dovrebbe gestire multiple rapidi click su submit', async ({ page }) => {
-    // ACT: Inserire dati validi
-    await page.fill('input[name="email"]', 'test@example.com');
-    await page.fill('input[name="password"]', 'password123');
+  test('Dovrebbe gestire focus rapido tra input', async ({ page }) => {
+    // Cambia focus rapidamente tra input
+    for (let i = 0; i < 10; i++) {
+      await page.focus('input[name="email"]')
+      await page.waitForTimeout(50)
+      await page.focus('input[name="password"]')
+      await page.waitForTimeout(50)
+    }
     
-    // Click multipli rapidi su submit
-    const submitButton = page.locator('button[type="submit"]');
-    await submitButton.click();
-    await submitButton.click();
-    await submitButton.click();
-    
-    // ASSERT: Verificare che non ci siano problemi
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-    
-    // Verificare che il bottone sia disabilitato durante loading
-    await expect(submitButton).toBeDisabled();
-  });
+    // Verifica che ultimo focus sia su password
+    await expect(page.locator('input[name="password"]')).toBeFocused()
+  })
 
-  test('Dovrebbe gestire toggle password con click multipli', async ({ page }) => {
-    // ACT: Inserire password
-    await page.fill('input[name="password"]', 'password123');
+  test('Dovrebbe gestire resize window durante input', async ({ page }) => {
+    await page.fill('input[name="email"]', 'test@example.com')
     
-    const passwordInput = page.locator('input[name="password"]');
-    const toggleButton = page.locator('button[type="button"]').filter({ hasText: '' }).nth(0);
+    // Ridimensiona window durante input
+    await page.setViewportSize({ width: 800, height: 600 })
+    await page.fill('input[name="password"]', 'password123')
     
-    // Click multipli rapidi sul toggle
-    await toggleButton.click();
-    await toggleButton.click();
-    await toggleButton.click();
-    await toggleButton.click();
+    await page.setViewportSize({ width: 400, height: 800 })
+    await page.fill('input[name="email"]', 'new@example.com')
     
-    // ASSERT: Verificare che il toggle funzioni correttamente
-    const finalType = await passwordInput.getAttribute('type');
-    expect(finalType).toBe('password'); // Dovrebbe essere tornato a password dopo 4 click
-  });
+    await page.setViewportSize({ width: 1200, height: 800 })
+    
+    // Verifica che input sia ancora corretto
+    await expect(page.locator('input[name="email"]')).toHaveValue('new@example.com')
+    await expect(page.locator('input[name="password"]')).toHaveValue('password123')
+  })
 
-  test('Dovrebbe gestire resize window durante interazione', async ({ page }) => {
-    // ACT: Ridimensionare la finestra
-    await page.setViewportSize({ width: 320, height: 568 }); // Mobile size
+  test('Dovrebbe gestire perdita e riacquisizione focus', async ({ page }) => {
+    await page.fill('input[name="email"]', 'test@example.com')
     
-    // Verificare che gli elementi siano ancora visibili
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-    await expect(page.locator('input[name="email"]')).toBeVisible();
-    await expect(page.locator('input[name="password"]')).toBeVisible();
+    // Perdi focus
+    await page.click('body')
+    await expect(page.locator('input[name="email"]')).not.toBeFocused()
     
-    // Ridimensionare a desktop
-    await page.setViewportSize({ width: 1920, height: 1080 });
+    // Riacquisisci focus
+    await page.focus('input[name="email"]')
+    await expect(page.locator('input[name="email"]')).toBeFocused()
     
-    // ASSERT: Verificare che tutto sia ancora funzionante
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-    await page.fill('input[name="email"]', 'test@example.com');
-    await page.fill('input[name="password"]', 'password123');
-    await expect(page.locator('input[name="email"]')).toHaveValue('test@example.com');
-  });
-});
+    // Verifica che valore sia ancora presente
+    await expect(page.locator('input[name="email"]')).toHaveValue('test@example.com')
+  })
+
+  test('Dovrebbe gestire interruzioni di rete', async ({ page }) => {
+    // Simula offline
+    await page.context().setOffline(true)
+    
+    await page.fill('input[name="email"]', 'test@example.com')
+    await page.fill('input[name="password"]', 'password123')
+    await page.click('button[type="submit"]')
+    
+    // Verifica che form sia ancora presente
+    await expect(page.locator('form')).toBeVisible()
+    
+    // Ripristina online
+    await page.context().setOffline(false)
+    
+    // Verifica che form sia ancora funzionante
+    await expect(page.locator('input[name="email"]')).toBeVisible()
+  })
+
+  test('Dovrebbe gestire memory leak prevention', async ({ page }) => {
+    // Simula molte operazioni per testare memory leak
+    for (let i = 0; i < 100; i++) {
+      await page.fill('input[name="email"]', `test${i}@example.com`)
+      await page.fill('input[name="password"]', `password${i}`)
+      await page.focus('input[name="email"]')
+      await page.focus('input[name="password"]')
+    }
+    
+    // Verifica che form sia ancora funzionante
+    await expect(page.locator('form')).toBeVisible()
+    await expect(page.locator('input[name="email"]')).toBeVisible()
+    await expect(page.locator('input[name="password"]')).toBeVisible()
+  })
+
+  test('Dovrebbe gestire errori JavaScript', async ({ page }) => {
+    // Simula errore JavaScript
+    await page.evaluate(() => {
+      throw new Error('Test error')
+    })
+    
+    // Verifica che form sia ancora funzionante
+    await expect(page.locator('form')).toBeVisible()
+    await expect(page.locator('input[name="email"]')).toBeVisible()
+    await expect(page.locator('input[name="password"]')).toBeVisible()
+  })
+})

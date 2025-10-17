@@ -1,142 +1,173 @@
-import { test, expect } from '@playwright/test';
+/**
+ * 🔐 LoginPage - Test Funzionali Completi
+ * 
+ * Test per tutte le funzionalità della pagina di login
+ * Seguendo le procedure di blindatura multi-agent
+ * 
+ * @author Agente 2 - Form e Validazioni
+ * @date 2025-01-16
+ */
+
+const { test, expect } = require('@playwright/test')
 
 test.describe('LoginPage - Test Funzionali', () => {
   
-  // Setup: navigare alla pagina prima di ogni test
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3001/login');
-    // Aspettare che la componente sia caricata
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-  });
+    // Naviga alla pagina di login
+    await page.goto('/sign-in')
+    
+    // Scroll completo per identificare tutti gli elementi
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.waitForTimeout(500)
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+    await page.waitForTimeout(500)
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2))
+    await page.waitForTimeout(500)
+  })
 
-  test('Dovrebbe mostrare tutti gli elementi del form di login', async ({ page }) => {
-    // Verificare presenza elementi principali
-    await expect(page.locator('h1:has-text("Business Haccp Manager")')).toBeVisible();
-    await expect(page.locator('h2:has-text("Accedi al Sistema")')).toBeVisible();
-    await expect(page.locator('input[name="email"]')).toBeVisible();
-    await expect(page.locator('input[name="password"]')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toBeVisible();
-    await expect(page.locator('text=Password dimenticata?')).toBeVisible();
-    await expect(page.locator('text=Registrati ora')).toBeVisible();
-    await expect(page.locator('text=Torna alla home')).toBeVisible();
-  });
+  test('Dovrebbe caricare correttamente la pagina di login', async ({ page }) => {
+    // Verifica elementi principali
+    await expect(page.locator('h1')).toContainText('Business Haccp Manager')
+    await expect(page.locator('h2')).toContainText('Accedi al Sistema')
+    
+    // Verifica form presente
+    await expect(page.locator('form')).toBeVisible()
+    await expect(page.locator('input[name="email"]')).toBeVisible()
+    await expect(page.locator('input[name="password"]')).toBeVisible()
+    await expect(page.locator('button[type="submit"]')).toBeVisible()
+  })
+
+  test('Dovrebbe mostrare tutti i link di navigazione', async ({ page }) => {
+    // Link password dimenticata
+    await expect(page.locator('a[href="/forgot-password"]')).toBeVisible()
+    await expect(page.locator('a[href="/forgot-password"]')).toContainText('Password dimenticata?')
+    
+    // Link registrazione
+    await expect(page.locator('a[href="/sign-up"]')).toBeVisible()
+    await expect(page.locator('a[href="/sign-up"]')).toContainText('Registrati ora')
+    
+    // Bottone torna alla home
+    await expect(page.locator('button:has-text("Torna alla home")')).toBeVisible()
+  })
 
   test('Dovrebbe permettere inserimento email e password', async ({ page }) => {
-    // ARRANGE: Elementi del form
-    const emailInput = page.locator('input[name="email"]');
-    const passwordInput = page.locator('input[name="password"]');
+    const email = 'test@example.com'
+    const password = 'password123'
     
-    // ACT: Inserire dati
-    await emailInput.fill('test@example.com');
-    await passwordInput.fill('password123');
+    // Inserisci email
+    await page.fill('input[name="email"]', email)
+    await expect(page.locator('input[name="email"]')).toHaveValue(email)
     
-    // ASSERT: Verificare che i valori siano stati inseriti
-    await expect(emailInput).toHaveValue('test@example.com');
-    await expect(passwordInput).toHaveValue('password123');
-  });
+    // Inserisci password
+    await page.fill('input[name="password"]', password)
+    await expect(page.locator('input[name="password"]')).toHaveValue(password)
+  })
 
-  test('Dovrebbe mostrare/nascondere password con toggle', async ({ page }) => {
-    // ARRANGE: Elementi
-    const passwordInput = page.locator('input[name="password"]');
-    const toggleButton = page.locator('button[type="button"]').filter({ hasText: '' }).nth(0);
+  test('Dovrebbe gestire toggle password visibility', async ({ page }) => {
+    const password = 'password123'
     
-    // ACT: Inserire password e click toggle
-    await passwordInput.fill('password123');
+    // Inserisci password
+    await page.fill('input[name="password"]', password)
     
-    // Verificare che inizialmente sia nascosta
-    await expect(passwordInput).toHaveAttribute('type', 'password');
+    // Verifica che password sia nascosta inizialmente
+    await expect(page.locator('input[name="password"]')).toHaveAttribute('type', 'password')
     
-    // Click sul toggle (icona occhio)
-    await toggleButton.click();
+    // Clicca toggle password
+    await page.click('button[type="button"]:has(svg)')
     
-    // ASSERT: Verificare che ora sia visibile
-    await expect(passwordInput).toHaveAttribute('type', 'text');
+    // Verifica che password sia visibile
+    await expect(page.locator('input[name="password"]')).toHaveAttribute('type', 'text')
     
-    // Click di nuovo per nascondere
-    await toggleButton.click();
-    await expect(passwordInput).toHaveAttribute('type', 'password');
-  });
+    // Clicca di nuovo per nascondere
+    await page.click('button[type="button"]:has(svg)')
+    
+    // Verifica che password sia nascosta
+    await expect(page.locator('input[name="password"]')).toHaveAttribute('type', 'password')
+  })
 
-  test('Dovrebbe mostrare loading state durante submit', async ({ page }) => {
-    // ARRANGE: Form con dati validi
-    await page.fill('input[name="email"]', 'matteo.cavallaro.work@gmail.com');
-    await page.fill('input[name="password"]', 'Cavallaro');
+  test('Dovrebbe mostrare stato loading durante submit', async ({ page }) => {
+    // Inserisci credenziali
+    await page.fill('input[name="email"]', 'test@example.com')
+    await page.fill('input[name="password"]', 'password123')
     
-    // ACT: Click submit
-    await page.click('button[type="submit"]');
+    // Clicca submit
+    await page.click('button[type="submit"]')
     
-    // ASSERT: Verificare loading state
-    await expect(page.locator('text=Accesso in corso...')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toBeDisabled();
-  });
+    // Verifica stato loading
+    await expect(page.locator('button[type="submit"]:has-text("Accesso in corso...")')).toBeVisible()
+    await expect(page.locator('button[type="submit"]')).toBeDisabled()
+  })
 
-  test('Dovrebbe navigare a password dimenticata quando si clicca il link', async ({ page }) => {
-    // ACT: Click sul link password dimenticata
-    await page.click('text=Password dimenticata?');
+  test('Dovrebbe navigare correttamente ai link', async ({ page }) => {
+    // Test link password dimenticata
+    await page.click('a[href="/forgot-password"]')
+    await expect(page).toHaveURL('/forgot-password')
     
-    // ASSERT: Verificare navigazione
-    await expect(page).toHaveURL(/.*forgot-password/);
-  });
-
-  test('Dovrebbe navigare a registrazione quando si clicca il link', async ({ page }) => {
-    // ACT: Click sul link registrazione
-    await page.click('text=Registrati ora');
+    // Torna indietro
+    await page.goBack()
     
-    // ASSERT: Verificare navigazione
-    await expect(page).toHaveURL(/.*sign-up/);
-  });
-
-  test('Dovrebbe navigare alla home quando si clicca il bottone torna', async ({ page }) => {
-    // ACT: Click sul bottone torna alla home
-    await page.click('text=Torna alla home');
+    // Test link registrazione
+    await page.click('a[href="/sign-up"]')
+    await expect(page).toHaveURL('/sign-up')
     
-    // ASSERT: Verificare navigazione
-    await expect(page).toHaveURL(/.*\/$/);
-  });
-
-  test('Dovrebbe avere placeholder corretti nei campi input', async ({ page }) => {
-    // ASSERT: Verificare placeholder
-    await expect(page.locator('input[name="email"]')).toHaveAttribute('placeholder', 'mario@esempio.com');
-    await expect(page.locator('input[name="password"]')).toHaveAttribute('placeholder', '••••••••');
-  });
-
-  test('Dovrebbe avere attributi di accessibilità corretti', async ({ page }) => {
-    // ASSERT: Verificare attributi accessibilità
-    await expect(page.locator('input[name="email"]')).toHaveAttribute('autocomplete', 'email');
-    await expect(page.locator('input[name="password"]')).toHaveAttribute('autocomplete', 'current-password');
-    await expect(page.locator('input[name="email"]')).toHaveAttribute('required');
-    await expect(page.locator('input[name="password"]')).toHaveAttribute('required');
-  });
-
-  test('Dovrebbe avere styling responsive e gradient background', async ({ page }) => {
-    // ASSERT: Verificare elementi di styling
-    const background = page.locator('div.min-h-screen');
-    await expect(background).toBeVisible();
-    await expect(background).toHaveClass(/bg-gradient-to-br/);
+    // Torna indietro
+    await page.goBack()
     
-    // Verificare card bianca con shadow
-    const card = page.locator('div.bg-white.shadow-2xl');
-    await expect(card).toBeVisible();
-    await expect(card).toHaveClass(/rounded-2xl/);
-  });
+    // Test bottone torna alla home
+    await page.click('button:has-text("Torna alla home")')
+    await expect(page).toHaveURL('/')
+  })
 
-  test('Dovrebbe avere titolo con font Tangerine personalizzato', async ({ page }) => {
-    // ASSERT: Verificare titolo con font personalizzato
-    const title = page.locator('h1:has-text("Business Haccp Manager")');
-    await expect(title).toBeVisible();
-    await expect(title).toHaveClass(/text-6xl/);
-    await expect(title).toHaveClass(/font-bold/);
-    await expect(title).toHaveClass(/text-blue-700/);
-  });
+  test('Dovrebbe avere accessibilità corretta', async ({ page }) => {
+    // Verifica label associati agli input
+    await expect(page.locator('label[for="email"]')).toBeVisible()
+    await expect(page.locator('label[for="password"]')).toBeVisible()
+    
+    // Verifica placeholder
+    await expect(page.locator('input[name="email"]')).toHaveAttribute('placeholder', 'mario@esempio.com')
+    await expect(page.locator('input[name="password"]')).toHaveAttribute('placeholder', '••••••••')
+    
+    // Verifica autocomplete
+    await expect(page.locator('input[name="email"]')).toHaveAttribute('autocomplete', 'email')
+    await expect(page.locator('input[name="password"]')).toHaveAttribute('autocomplete', 'current-password')
+  })
 
-  test('Dovrebbe avere bottone submit con gradient e hover effects', async ({ page }) => {
-    // ASSERT: Verificare bottone submit
-    const submitButton = page.locator('button[type="submit"]');
-    await expect(submitButton).toBeVisible();
-    await expect(submitButton).toHaveClass(/bg-gradient-to-r/);
-    await expect(submitButton).toHaveClass(/from-blue-600/);
-    await expect(submitButton).toHaveClass(/to-green-600/);
-    await expect(submitButton).toHaveClass(/hover:from-blue-700/);
-    await expect(submitButton).toHaveClass(/hover:to-green-700/);
-  });
-});
+  test('Dovrebbe gestire responsive design', async ({ page }) => {
+    // Test desktop
+    await page.setViewportSize({ width: 1200, height: 800 })
+    await expect(page.locator('.max-w-md')).toBeVisible()
+    
+    // Test tablet
+    await page.setViewportSize({ width: 768, height: 1024 })
+    await expect(page.locator('.max-w-md')).toBeVisible()
+    
+    // Test mobile
+    await page.setViewportSize({ width: 375, height: 667 })
+    await expect(page.locator('.max-w-md')).toBeVisible()
+  })
+
+  test('Dovrebbe avere styling corretto', async ({ page }) => {
+    // Verifica gradient background
+    await expect(page.locator('.bg-gradient-to-br')).toBeVisible()
+    
+    // Verifica card shadow
+    await expect(page.locator('.shadow-2xl')).toBeVisible()
+    
+    // Verifica button gradient
+    await expect(page.locator('button[type="submit"]')).toHaveClass(/bg-gradient-to-r/)
+  })
+
+  test('Dovrebbe gestire focus management', async ({ page }) => {
+    // Focus su email
+    await page.focus('input[name="email"]')
+    await expect(page.locator('input[name="email"]')).toBeFocused()
+    
+    // Tab per password
+    await page.keyboard.press('Tab')
+    await expect(page.locator('input[name="password"]')).toBeFocused()
+    
+    // Tab per submit button
+    await page.keyboard.press('Tab')
+    await expect(page.locator('button[type="submit"]')).toBeFocused()
+  })
+})

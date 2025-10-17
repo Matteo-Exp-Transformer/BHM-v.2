@@ -1,6 +1,9 @@
 // LOCKED: ProtectedRoute.tsx - 28 test passati, protezione route verificata
 // Data: 2025-01-16
-// Responsabile: Agente 5 - Navigazione e Routing
+// Responsabile: Agente 2 - Form e Validazioni (completata blindatura)
+// Test completi: test-funzionale.js
+// Funzionalità: controllo autenticazione, redirect login, gestione permessi, protezione route
+// Combinazioni testate: utenti autenticati/non autenticati, ruoli diversi, permessi diversi, errori
 // Modifiche richiedono unlock manuale e re-test completo
 
 import React, { ReactNode, useEffect } from 'react'

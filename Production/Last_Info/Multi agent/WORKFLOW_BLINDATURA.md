@@ -9,6 +9,24 @@ Il processo di blindatura segue un ciclo iterativo per ogni componente:
 ```
 Esplorazione → Analisi → Test → Fix → Re-Test → Lock
 ```
+Dati per test : 
+Email : matteo.cavallaro.work@gmail.com
+password : cavallaro
+Host: 3000
+Project name : BHM-V.2.1
+
+Project ID : tucqgcfrlzmwyfadiodo
+
+Database password : ISkTwpNK2zkYv12R
+
+URL : https://tucqgcfrlzmwyfadiodo.supabase.co
+
+
+Api Keys
+
+anon/public : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1Y3FnY2ZybHptd3lmYWRpb2RvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NTY0ODksImV4cCI6MjA3NTUzMjQ4OX0.7m3bdxW8QMHO6YNQ4cxoxlzzgzq7DjTzufv89YAcHA4
+
+
 
 ## 🔍 FASE 1: ESPLORAZIONE E MAPPATURA
 

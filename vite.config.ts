@@ -10,6 +10,8 @@ export default defineConfig({
     // ✅ Inietta info Git come variabili ambiente
     'import.meta.env.VITE_GIT_BRANCH': JSON.stringify(process.env.GIT_BRANCH || 'NoClerk'),
     'import.meta.env.VITE_GIT_COMMIT': JSON.stringify(process.env.GIT_COMMIT || 'unknown'),
+    // ✅ Inietta porta effettiva per debugging
+    'import.meta.env.VITE_ACTUAL_PORT': JSON.stringify(process.env.VITE_PORT || '3000'),
   },
   plugins: [
     react(),
@@ -77,7 +79,6 @@ export default defineConfig({
       'react-dom',
       'react-router-dom',
       '@tanstack/react-query',
-      '@clerk/clerk-react',
       '@sentry/react',
     ],
   },
@@ -88,7 +89,7 @@ export default defineConfig({
   },
   server: {
     host: true,
-    port: 3000,
+    port: parseInt(process.env.VITE_PORT || '3000'),
     cors: true,
     headers: {
       'Access-Control-Allow-Origin': '*',
