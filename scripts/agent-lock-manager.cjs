@@ -232,6 +232,84 @@ async function cleanStaleLocks() {
 }
 
 /**
+ * AUTO-RECOVERY: Verifica se processo è ancora vivo
+ * @param {number} pid - Process ID
+ * @returns {boolean} - true se processo vivo, false se morto
+ */
+function isProcessAlive(pid) {
+  try {
+    // process.kill(pid, 0) non killa ma verifica esistenza
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error.code === 'EPERM'; // Processo esiste ma non abbiamo permessi
+  }
+}
+
+/**
+ * AUTO-RECOVERY: Rilascia lock se processo morto
+ * @param {string} lockFile - Path al file lock
+ * @returns {boolean} - true se recovery eseguito, false se non necessario
+ */
+async function autoRecover(lockFile) {
+  try {
+    const lockData = JSON.parse(await fs.readFile(lockFile, 'utf8'));
+    const pid = lockData.pid;
+
+    // Check se PID processo ancora vivo
+    if (!isProcessAlive(pid)) {
+      console.log(`🔧 AUTO-RECOVERY: Processo ${pid} morto, rilascio lock ${lockData.host}`);
+
+      await fs.unlink(lockFile);
+      await logOperation('AUTO_RECOVERY', lockData.agentId, lockData.host, lockData.component, `Dead PID ${pid}`);
+
+      // Cleanup heartbeat se esiste
+      const heartbeatFile = path.join(LOCK_DIR, `agent-${lockData.agentId}.heartbeat`);
+      try {
+        await fs.unlink(heartbeatFile);
+      } catch (error) {
+        // Heartbeat già rimosso, OK
+      }
+
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Errore auto-recovery:', error.message);
+    return false;
+  }
+}
+
+/**
+ * AUTO-RECOVERY: Cleanup automatico con verifica processo
+ */
+async function autoRecoveryCleanup() {
+  try {
+    await initLockDir();
+    const files = await fs.readdir(LOCK_DIR);
+    const lockFiles = files.filter(f => f.startsWith('host-') && f.endsWith('.lock'));
+
+    let recovered = 0;
+
+    for (const file of lockFiles) {
+      const lockFile = path.join(LOCK_DIR, file);
+
+      // Esegui auto-recovery se processo morto
+      if (await autoRecover(lockFile)) {
+        recovered++;
+      }
+    }
+
+    if (recovered > 0) {
+      console.log(`🔧 AUTO-RECOVERY completato: ${recovered} lock rilasciati`);
+    }
+  } catch (error) {
+    console.error('Errore auto-recovery cleanup:', error.message);
+  }
+}
+
+/**
  * Gestisce queue per agenti in attesa
  * @param {string} agentId - ID dell'agente
  * @param {string} component - Componente da testare
@@ -379,6 +457,11 @@ async function main() {
         
       case 'cleanup':
         await cleanStaleLocks();
+        await autoRecoveryCleanup(); // Auto-recovery integrato
+        break;
+
+      case 'auto-recovery':
+        await autoRecoveryCleanup();
         break;
         
       case 'queue':
@@ -392,7 +475,7 @@ async function main() {
         
       default:
         console.log(`
-🔐 AGENT LOCK MANAGER
+🔐 AGENT LOCK MANAGER (v2.0 with Auto-Recovery)
 
 Usage:
   node scripts/agent-lock-manager.js acquire <host> <agentId> <component>
@@ -400,13 +483,14 @@ Usage:
   node scripts/agent-lock-manager.js status [host]
   node scripts/agent-lock-manager.js heartbeat <agentId>
   node scripts/agent-lock-manager.js cleanup
+  node scripts/agent-lock-manager.js auto-recovery
   node scripts/agent-lock-manager.js queue <agentId> <component>
 
 Examples:
   node scripts/agent-lock-manager.js acquire localhost:3000 agent-1 Button
   node scripts/agent-lock-manager.js release localhost:3000
   node scripts/agent-lock-manager.js status
-  node scripts/agent-lock-manager.js heartbeat agent-1
+  node scripts/agent-lock-manager.js auto-recovery
         `);
         break;
     }
