@@ -512,6 +512,7 @@ module.exports = {
   checkLockStatus,
   updateHeartbeat,
   cleanStaleLocks,
+  autoRecoveryCleanup,
   enterQueue,
   showStatus,
   extractPortFromHost
