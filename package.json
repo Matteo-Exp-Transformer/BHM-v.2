@@ -33,6 +33,8 @@
     "lock:status": "node scripts/agent-lock-manager.cjs status",
     "lock:monitor": "node scripts/queue-monitor.cjs --watch",
     "lock:cleanup": "node scripts/agent-lock-manager.cjs cleanup",
+    "validate:pre-test": "node scripts/pre-test-validation.cjs",
+    "cleanup:post-test": "node scripts/post-test-cleanup.cjs",
     "detect:port": "node scripts/detect-app-port.cjs",
     "detect:all": "node scripts/detect-app-port.cjs --all",
     "detect:free": "node scripts/detect-app-port.cjs --free",

@@ -93,9 +93,9 @@ export default defineConfig({
     stderr: 'pipe',
   },
   
-  // Global setup/teardown (commentato - file non esistenti)
-  // globalSetup: require.resolve('./scripts/global-setup-agent2.js'),
-  // globalTeardown: require.resolve('./scripts/global-teardown-agent2.js'),
+  // Global setup/teardown - auto-cleanup
+  globalSetup: require.resolve('./scripts/pre-test-validation.cjs'),
+  globalTeardown: require.resolve('./scripts/post-test-cleanup.cjs'),
   
   // Configurazione progetti semplificata (solo test funzionanti)
   projects: [
