@@ -59,7 +59,9 @@
       "Bash(npx playwright test:*)",
       "Bash(for file in playwright-agent3.config.ts playwright-agent4.config.ts playwright-agent5.config.ts)",
       "Bash(do echo \"Patching $file...\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(npm run validate:pre-test:*)",
+      "Bash(npm run cleanup:post-test:*)"
     ],
     "deny": [],
     "ask": []
