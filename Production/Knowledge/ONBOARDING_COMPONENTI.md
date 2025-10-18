@@ -8,7 +8,7 @@
 |-------|--------|
 | **Area** | Onboarding |
 | **Priorità** | 1 - Critica |
-| **Componenti Totali** | 8 |
+| **Componenti Totali** | 7 |
 | **Stato** | 🔄 Inventario completato |
 
 ## 🗂️ Componenti Identificate
@@ -17,7 +17,8 @@
 - **File**: `src/components/OnboardingWizard.tsx`
 - **Tipo**: Wizard principale
 - **Funzionalità**:
-  - Gestione 7 step di onboarding
+  - Gestione 7 step di onboarding (OnboardingWizard + 7 step components = 8 totali)
+  - **NOTA**: Componenti reali = 7 step + OnboardingWizard wrapper = 8 file totali
   - Navigazione tra step (Avanti/Indietro)
   - Salvataggio automatico in localStorage
   - Gestione stato validazione per step

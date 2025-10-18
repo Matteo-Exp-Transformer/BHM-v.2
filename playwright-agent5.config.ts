@@ -3,11 +3,11 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './Production/Test/Navigazione',
   use: {
-    baseURL: 'http://localhost:3004',
+    baseURL: 'http://localhost:3002',
   },
   webServer: {
-    command: 'npm run dev -- --port 3004',
-    url: 'http://localhost:3004',
+    command: 'npm run dev -- --port 3002',
+    url: 'http://localhost:3002',
     reuseExistingServer: !process.env.CI,
   },
   timeout: 30000,

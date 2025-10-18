@@ -1,0 +1,62 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - heading "HACCP Manager" [level=1] [ref=e7]
+      - generic [ref=e8]:
+        - link "Attività" [ref=e9] [cursor=pointer]:
+          - /url: /attivita
+          - img [ref=e10]
+          - generic [ref=e13]: Attività
+        - button "Cancella e Ricomincia" [ref=e14] [cursor=pointer]:
+          - img [ref=e15]
+          - generic [ref=e18]: Cancella e Ricomincia
+        - button "Onboarding" [ref=e19] [cursor=pointer]:
+          - img [ref=e20]
+          - generic [ref=e25]: Onboarding
+        - button "Debug Auth" [ref=e26] [cursor=pointer]:
+          - img [ref=e27]
+          - generic [ref=e30]: Debug Auth
+        - button "Sync Host" [ref=e31] [cursor=pointer]:
+          - img [ref=e32]
+          - generic [ref=e37]: Sync Host
+        - button "Reset Tot+Users" [ref=e38] [cursor=pointer]:
+          - img [ref=e39]
+          - generic [ref=e44]: Reset Tot+Users
+  - main "Main content" [ref=e45]:
+    - generic [ref=e46]:
+      - img [ref=e47]
+      - heading "Accesso Non Autorizzato" [level=2] [ref=e52]
+      - generic [ref=e53]:
+        - paragraph [ref=e54]: La tua email non è registrata nel sistema come membro dello staff.
+        - paragraph [ref=e55]: Per accedere all'applicazione, la tua email deve essere associata a un dipendente nell'anagrafica aziendale.
+      - generic [ref=e56]:
+        - heading "Cosa fare:" [level=3] [ref=e57]:
+          - img [ref=e58]
+          - text: "Cosa fare:"
+        - list [ref=e60]:
+          - listitem [ref=e61]: 1. Contatta il tuo amministratore
+          - listitem [ref=e62]: 2. Verifica che la tua email sia corretta
+          - listitem [ref=e63]: 3. Richiedi l'inserimento nell'anagrafica staff
+      - paragraph [ref=e65]: "Ruolo assegnato: Guest (Accesso negato)"
+  - navigation "Main navigation" [ref=e66]:
+    - generic [ref=e67]:
+      - link "Navigate to Home" [ref=e68] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e69]
+        - generic [ref=e72]: Home
+      - link "Navigate to Conservazione" [ref=e73] [cursor=pointer]:
+        - /url: /conservazione
+        - img [ref=e74]
+        - generic [ref=e87]: Conservazione
+      - link "Navigate to Attività" [ref=e88] [cursor=pointer]:
+        - /url: /attivita
+        - img [ref=e89]
+        - generic [ref=e92]: Attività
+      - link "Navigate to Inventario" [ref=e93] [cursor=pointer]:
+        - /url: /inventario
+        - img [ref=e94]
+        - generic [ref=e98]: Inventario
+```

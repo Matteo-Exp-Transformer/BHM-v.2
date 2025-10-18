@@ -22,9 +22,9 @@ Password: cavallaro
 
 ### Porte App
 ```
-Agent 1 (UI Base):         3000
-Agent 2 (Forms):           3001
-Agent 3 (Business Logic):  3002
+Agent 1 (UI Base):         3000 (attiva)
+Agent 2 (Forms):           3001 (attiva)  
+Agent 3 (Business Logic):  3002 (disponibile)
 ```
 
 ---

@@ -7,6 +7,7 @@ import { Suspense, lazy, useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { DynamicImportErrorBoundary } from './components/ErrorBoundary'
 
 // Onboarding helpers
 import {
@@ -50,7 +51,9 @@ const AuthCallbackPage = lazy(() => import('./features/auth/AuthCallbackPage'))
 const ManagementPage = lazy(
   () => import('./features/management/ManagementPage')
 )
-const CalendarPage = lazy(() => import('./features/calendar/CalendarPage'))
+// Temporaneo: import diretto per debug
+import CalendarPageComponent from './features/calendar/CalendarPage'
+const CalendarPage = CalendarPageComponent
 const ConservationPage = lazy(
   () => import('./features/conservation/ConservationPage')
 )
@@ -113,7 +116,7 @@ function App() {
   }, [])
 
   return (
-    <>
+    <DynamicImportErrorBoundary>
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public routes (Auth pages) */}
@@ -230,7 +233,7 @@ function App() {
         pauseOnHover
         theme="light"
       />
-    </>
+    </DynamicImportErrorBoundary>
   )
 }
 
