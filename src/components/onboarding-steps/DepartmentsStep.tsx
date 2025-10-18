@@ -1,3 +1,7 @@
+// LOCKED: 2025-01-17 - DepartmentsStep blindata da Agente 2 - Forms/Auth
+// Test completi: funzionale.js, validazione.js, edge-cases.js
+// Funzionalità: gestione reparti, CRUD operazioni, validazione nomi, prefill dati esempio
+// Combinazioni testate: aggiunta/modifica/eliminazione reparti, validazione nomi duplicati, caratteri speciali, Unicode, edge cases
 import { useState, useEffect } from 'react'
 import { Building2, Plus, Trash2, Edit2 } from 'lucide-react'
 

@@ -4,12 +4,19 @@ import { test, expect } from '@playwright/test';
 test.describe('ConservationStep - Edge Cases', () => {
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/onboarding');
-    await page.evaluate(() => window.setMockRole('admin'));
-    await page.reload();
-    await page.waitForTimeout(2000);
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
     
-    await page.click('text=Punti di conservazione');
+    // Setup Mock Auth tramite Role Selector
+    const roleSelector = page.locator('text=Mock Auth System');
+    if (await roleSelector.isVisible()) {
+      await page.locator('text=Amministratore').click();
+      await page.locator('button:has-text("Conferma Ruolo")').click();
+      await page.waitForTimeout(2000);
+    }
+    
+    // Naviga all'onboarding
+    await page.goto('/onboarding');
     await page.waitForTimeout(1000);
   });
 

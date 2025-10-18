@@ -4,10 +4,20 @@ import { test, expect } from '@playwright/test';
 test.describe('TasksStep - Test Funzionali', () => {
 
   test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    
+    // Setup Mock Auth tramite Role Selector
+    const roleSelector = page.locator('text=Mock Auth System');
+    if (await roleSelector.isVisible()) {
+      await page.locator('text=Amministratore').click();
+      await page.locator('button:has-text("Conferma Ruolo")').click();
+      await page.waitForTimeout(2000);
+    }
+    
+    // Naviga all'onboarding
     await page.goto('/onboarding');
-    await page.evaluate(() => window.setMockRole('admin'));
-    await page.reload();
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(1000);
     
     await page.click('text=Attività e controlli HACCP');
     await page.waitForTimeout(1000);
