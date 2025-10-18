@@ -1,7 +1,8 @@
-// LOCKED: 2025-01-17 - BusinessInfoStep blindata da Agente 2 - Forms/Auth
+// LOCKED DEFINITIVO: 2025-01-17 - BusinessInfoStep blindata da Agente 2 - Forms/Auth ✅ BLINDATO CON SUPERVISIONE UTENTE
 // Test completi: funzionale.js, validazione.js, edge-cases.js
 // Funzionalità: form informazioni aziendali, validazione campi, prefill dati esempio
 // Combinazioni testate: validazione nome/indirizzo, email/telefono/P.IVA, caratteri speciali, Unicode, edge cases
+// Test eseguiti con successo: login automatico, apertura onboarding, rendering campi, pulsante prefill, input utente, validazione errori
 import { useState, useEffect } from 'react'
 import {
   Building2,

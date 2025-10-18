@@ -112,7 +112,12 @@ export const safeRemoveItem = (key: string): boolean => {
 export const clearHaccpData = (): boolean => {
   try {
     const keysToRemove = [
+      // Dati onboarding
       'onboarding-data',
+      'onboarding-completed',
+      'onboarding-completed-at',
+      
+      // Dati HACCP
       'haccp-onboarding',
       'haccp-onboarding-new',
       'haccp-departments',
@@ -127,13 +132,21 @@ export const clearHaccpData = (): boolean => {
       'haccp-last-check',
       'haccp-last-sync',
       'haccp-company-id',
+      
+      // ID azienda (tutti i backup)
+      'active_company_id',
+      'company-id',
+      'bhm-dev-company-id',
+      
+      // Dati operativi pendenti
+      'haccp_pending_operations',
     ]
 
     keysToRemove.forEach(key => {
       safeRemoveItem(key)
     })
 
-    console.log('[SafeStorage] Dati HACCP puliti con successo')
+    console.log('[SafeStorage] Dati HACCP e onboarding puliti con successo')
     return true
   } catch (error) {
     console.error('[SafeStorage] Errore nella pulizia dati HACCP:', error)

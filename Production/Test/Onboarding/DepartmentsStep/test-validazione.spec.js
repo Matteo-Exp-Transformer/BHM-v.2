@@ -239,3 +239,4 @@ test.describe('DepartmentsStep - Test Validazione', () => {
     await expect(page.locator('text=Cucina')).toBeVisible();
   });
 });
+

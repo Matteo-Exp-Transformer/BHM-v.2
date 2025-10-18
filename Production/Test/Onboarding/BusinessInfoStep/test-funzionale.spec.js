@@ -4,12 +4,45 @@ import { test, expect } from '@playwright/test';
 test.describe('BusinessInfoStep - Test Funzionali', () => {
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/onboarding');
+    // Vai alla homepage
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    
+    // Se non siamo loggati, fai il login
+    const isLoggedIn = await page.locator('button:has-text("Onboarding")').isVisible().catch(() => false);
+    
+    if (!isLoggedIn) {
+      console.log('🔐 Eseguendo login...');
+      
+      // Compila email
+      await page.fill('input[type="email"]', 'matteo.cavallaro.work@gmail.com');
+      
+      // Compila password
+      await page.fill('input[type="password"]', 'cavallaro');
+      
+      // Clicca su Accedi
+      await page.click('button:has-text("Accedi")');
+      
+      // Attendi che il login sia completato
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(5000);
+      
+      console.log('✅ Login completato');
+    }
+    
+    // Clicca sul pulsante "Onboarding" per aprire l'onboarding
+    await page.click('button:has-text("Onboarding")');
+    
     // Attendi caricamento componente
     await page.waitForSelector('h2:has-text("Informazioni Aziendali")');
   });
 
   test('Dovrebbe renderizzare correttamente tutti i campi', async ({ page }) => {
+    console.log('🔍 Test: Verifica rendering campi BusinessInfoStep');
+    
+    // Pausa per vedere il componente
+    await page.waitForTimeout(2000);
+    
     // Verifica header
     await expect(page.locator('h2:has-text("Informazioni Aziendali")')).toBeVisible();
     
@@ -30,8 +63,17 @@ test.describe('BusinessInfoStep - Test Funzionali', () => {
   });
 
   test('Dovrebbe gestire il pulsante prefill correttamente', async ({ page }) => {
+    console.log('🚀 Test: Verifica pulsante prefill BusinessInfoStep');
+    
+    // Pausa per vedere il componente
+    await page.waitForTimeout(2000);
+    
     // Click pulsante prefill
+    console.log('🚀 Cliccando pulsante prefill...');
     await page.click('button:has-text("🚀 Compila con dati di esempio")');
+    
+    // Pausa per vedere il risultato
+    await page.waitForTimeout(3000);
     
     // Verifica che i campi siano stati compilati
     await expect(page.locator('input[value="Al Ritrovo SRL"]')).toBeVisible();
@@ -45,20 +87,33 @@ test.describe('BusinessInfoStep - Test Funzionali', () => {
   });
 
   test('Dovrebbe gestire input utente correttamente', async ({ page }) => {
+    console.log('✏️ Test: Verifica input utente BusinessInfoStep');
+    
+    // Pausa per vedere il componente
+    await page.waitForTimeout(3000);
+    
     // Compila campo nome
+    console.log('📝 Compilando nome azienda...');
     await page.fill('input[placeholder="Inserisci il nome della tua azienda"]', 'Test Azienda');
+    await page.waitForTimeout(1500);
     await expect(page.locator('input[placeholder="Inserisci il nome della tua azienda"]')).toHaveValue('Test Azienda');
     
     // Compila campo indirizzo
+    console.log('🏠 Compilando indirizzo...');
     await page.fill('textarea[placeholder="Inserisci l\'indirizzo completo dell\'azienda"]', 'Via Test 123, Milano');
+    await page.waitForTimeout(1500);
     await expect(page.locator('textarea[placeholder="Inserisci l\'indirizzo completo dell\'azienda"]')).toContainText('Via Test 123, Milano');
     
     // Seleziona tipo di attività
+    console.log('🍕 Selezionando tipo di attività...');
     await page.selectOption('select', 'pizzeria');
+    await page.waitForTimeout(1000);
     await expect(page.locator('select')).toHaveValue('pizzeria');
     
     // Compila data
+    console.log('📅 Compilando data...');
     await page.fill('input[type="date"]', '2023-01-01');
+    await page.waitForTimeout(1000);
     await expect(page.locator('input[type="date"]')).toHaveValue('2023-01-01');
   });
 
@@ -100,3 +155,4 @@ test.describe('BusinessInfoStep - Test Funzionali', () => {
     await expect(phoneInput).toBeFocused();
   });
 });
+

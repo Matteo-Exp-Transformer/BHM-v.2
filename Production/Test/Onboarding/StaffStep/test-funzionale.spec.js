@@ -255,3 +255,4 @@ test.describe('StaffStep - Test Funzionali', () => {
     await expect(page.locator('text=Richiedono certificazione')).toBeVisible();
   });
 });
+

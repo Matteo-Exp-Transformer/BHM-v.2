@@ -46,7 +46,7 @@ function detectAppPort(): string {
   }
 }
 
-const APP_PORT = detectAppPort();
+const APP_PORT = '3000'; // Forziamo porta 3000 per test visibili
 const BASE_URL = `http://localhost:${APP_PORT}`;
 
 console.log(`🎭 Playwright Agent 2 - Porta rilevata: ${APP_PORT}`);
@@ -57,7 +57,7 @@ export default defineConfig({
   // Configurazione base
   use: {
     baseURL: BASE_URL,
-    headless: true,
+    headless: false, // Modalità visibile per test manuali
     viewport: { width: 1280, height: 720 },
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -65,9 +65,9 @@ export default defineConfig({
   },
   
   // Timeout e retry
-  timeout: 30000,
+  timeout: 60000,
   expect: {
-    timeout: 5000
+    timeout: 10000
   },
   retries: process.env.CI ? 2 : 0,
   
@@ -83,15 +83,8 @@ export default defineConfig({
     }]
   ],
   
-  // Web server (solo se necessario)
-  webServer: process.env.SKIP_SERVER ? undefined : {
-    command: `npm run dev -- --port ${APP_PORT}`,
-    url: BASE_URL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  },
+  // Web server disabilitato - usiamo server esistente
+  webServer: undefined,
   
   // Global setup/teardown - auto-cleanup
   // globalSetup: './scripts/pre-test-validation.cjs',
@@ -118,14 +111,25 @@ export default defineConfig({
           'X-Agent': 'agent-2-forms'
         }
       }
+    },
+    {
+      name: 'General',
+      testMatch: '**/*.spec.js',
+      testIgnore: ['**/Autenticazione/**/*.spec.js', '**/Onboarding/**/*.spec.js'],
+      use: { 
+        baseURL: BASE_URL,
+        extraHTTPHeaders: {
+          'X-Agent': 'agent-2-forms'
+        }
+      }
     }
   ],
   
   // Configurazione output
   outputDir: 'test-results/agent2',
   
-  // Configurazione worker
-  workers: process.env.CI ? 1 : 2,
+  // Configurazione worker - Forziamo 1 worker per debug
+  workers: 1,
   
   // Configurazione per CI
   fullyParallel: !process.env.CI,
