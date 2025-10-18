@@ -4,11 +4,20 @@ import { test, expect } from '@playwright/test';
 test.describe('ConservationStep - Test Funzionali', () => {
 
   test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    
+    // Setup Mock Auth tramite Role Selector
+    const roleSelector = page.locator('text=Mock Auth System');
+    if (await roleSelector.isVisible()) {
+      await page.locator('text=Amministratore').click();
+      await page.locator('button:has-text("Conferma Ruolo")').click();
+      await page.waitForTimeout(2000);
+    }
+    
+    // Naviga all'onboarding
     await page.goto('/onboarding');
-    // Setup Mock Auth per accesso onboarding
-    await page.evaluate(() => window.setMockRole('admin'));
-    await page.reload();
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(1000);
   });
 
   test('Dovrebbe renderizzare correttamente il componente', async ({ page }) => {

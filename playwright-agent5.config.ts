@@ -4,6 +4,11 @@ export default defineConfig({
   testDir: './Production/Test/Navigazione',
   use: {
     baseURL: 'http://localhost:3002',
+    headless: true,
+    launchOptions: {
+      headless: true,
+      args: ['--headless', '--no-sandbox', '--disable-dev-shm-usage']
+    }
   },
   webServer: {
     command: 'npm run dev -- --port 3002',

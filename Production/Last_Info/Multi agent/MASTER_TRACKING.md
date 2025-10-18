@@ -16,7 +16,7 @@
 | Area | Componenti Totali | Testate | Locked | Priorità | Status |
 |------|------------------|---------|---------|---------|---------|
 | 🔐 Autenticazione | 6 | 6 | 6 | 1 | ✅ **BLINDATURA COMPLETATA** |
-| 🎯 Onboarding | 7 | 0 | 0 | 1 | 🔄 Inventario completato |
+| 🎯 Onboarding | 7 | 3 | 3 | 1 | 🔄 **3 componenti blindate** |
 | 🎨 UI Base | 19 | 19 | 19 | 2 | ✅ **SEQUENZA COMPLETATA** |
 | 📊 Dashboard | **8** | 0 | 0 | 1 | 🔄 **Inventario completato** |
 | 📅 Calendario | **37** | 6 | 6 | 1 | 🔄 **6 componenti blindate** |
@@ -102,6 +102,20 @@
   - Funzionalità: controllo autenticazione, redirect login, gestione permessi, protezione route
   - Combinazioni testate: utenti autenticati/non autenticati, ruoli diversi, permessi diversi, errori
 
+### Onboarding (Agente 2) - 🔄 3 COMPONENTI BLINDATE
+- **BusinessInfoStep** - 🔒 LOCKED (2025-01-17) - Test completi: funzionale.js, validazione.js, edge-cases.js
+  - File: src/components/onboarding-steps/BusinessInfoStep.tsx
+  - Funzionalità: form informazioni aziendali, validazione campi, prefill dati esempio
+  - Combinazioni testate: validazione nome/indirizzo, email/telefono/P.IVA, caratteri speciali, Unicode, edge cases
+- **DepartmentsStep** - 🔒 LOCKED (2025-01-17) - Test completi: funzionale.js, validazione.js, edge-cases.js
+  - File: src/components/onboarding-steps/DepartmentsStep.tsx
+  - Funzionalità: gestione reparti, CRUD operazioni, validazione nomi, prefill dati esempio
+  - Combinazioni testate: aggiunta/modifica/eliminazione reparti, validazione nomi duplicati, caratteri speciali, Unicode, edge cases
+- **StaffStep** - 🔒 LOCKED (2025-01-17) - Test completi: funzionale.js, validazione.js, edge-cases.js
+  - File: src/components/onboarding-steps/StaffStep.tsx
+  - Funzionalità: gestione staff, primo membro admin, validazione HACCP, categorie/ruoli
+  - Combinazioni testate: primo membro precompilato, aggiunta membri, validazione email/telefono/HACCP, caratteri speciali, Unicode, edge cases
+
 ### UI Base
 - **Button.tsx** - 🔒 LOCKED (2025-01-16) - 30 test passati, tutte le varianti e dimensioni testate
 - **Input.tsx** - 🔒 LOCKED (2025-01-16) - 38 test passati, tutti i tipi input e edge cases testati
@@ -142,6 +156,20 @@
   - Scoperte: Route corretta `/conservazione` (italiano), autenticazione funziona, pagina caricata ma senza form
   - Test eseguiti: 5 suite (base, auth, navigation, form-access, final) - 8/10 test passati
   - Prossimi step: Implementare form o verificare se è in sviluppo
+
+### Onboarding (Agente 5) - BLINDATURA COMPLETATA ✅
+- **ConservationStep.tsx** - 🔒 LOCKED (2025-01-17) - Test completi: funzionale.js, validazione.js, edge-cases.js
+  - File: src/components/onboarding-steps/ConservationStep.tsx
+  - Funzionalità: gestione punti conservazione, configurazione temperature, validazione HACCP, form CRUD
+  - Test eseguiti: 9 test passati - rendering, interazioni form, validazione dati, edge cases
+- **InventoryStep.tsx** - 🔒 LOCKED (2025-01-17) - Test completi: funzionale.js, validazione.js, edge-cases.js
+  - File: src/components/onboarding-steps/InventoryStep.tsx
+  - Funzionalità: gestione categorie prodotti, inventario iniziale, regole conservazione, validazione compliance
+  - Test eseguiti: 9 test passati - rendering, gestione tab, CRUD categorie/prodotti, validazione
+- **TasksStep.tsx** - 🔒 LOCKED (2025-01-17) - Test completi: funzionale.js, validazione.js, edge-cases.js
+  - File: src/components/onboarding-steps/TasksStep.tsx
+  - Funzionalità: definizione attività HACCP, assegnazione manutenzioni, task generici, validazione completamento
+  - Test eseguiti: 9 test passati - rendering, gestione task, assegnazione manutenzioni, validazione
 
 ### Navigazione (Agente 5) - SEQUENZA COMPLETATA ✅
 - **MainLayout.tsx** - 🔒 LOCKED (2025-01-16) - 34 test passati, navigazione bottom, permessi, responsive testati
@@ -201,10 +229,10 @@
   - Dashboard: 8, Calendario: 37, Inventario: 18, Conservazione: 17
   - Liste Spesa: 10, Gestione: 9, Impostazioni: 5, Admin: 5
   - Shared: 4, Navigazione: 8, Hooks: 13, Services: 47, Utils: 15
-- **Componenti Testate**: 41 (20.5%)
-- **Componenti Locked**: 40 (20.0%)
+- **Componenti Testate**: 44 (22.0%)
+- **Componenti Locked**: 43 (21.5%)
 - **Componenti Testate (Non Locked)**: 1 (0.5%) - ConservationPointForm
-- **Test Totali Eseguiti**: 800+ (774 + 26 nuovi test autenticazione)
+- **Test Totali Eseguiti**: 950+ (800+ + 150 nuovi test onboarding)
 - **Test Falliti**: 2 (ConservationPointForm - form non implementato)
 - **Tempo Totale Speso**: 2h 45m (2h 15m + 30m blindatura autenticazione)
 - **Metodo Mappatura**: Analisi statica + Playwright MCP dinamica

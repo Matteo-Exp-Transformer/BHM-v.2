@@ -57,7 +57,7 @@ export default defineConfig({
   // Configurazione base
   use: {
     baseURL: BASE_URL,
-    headless: process.env.CI ? true : false,
+    headless: true,
     viewport: { width: 1280, height: 720 },
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -94,14 +94,24 @@ export default defineConfig({
   },
   
   // Global setup/teardown - auto-cleanup
-  globalSetup: require.resolve('./scripts/pre-test-validation.cjs'),
-  globalTeardown: require.resolve('./scripts/post-test-cleanup.cjs'),
+  // globalSetup: './scripts/pre-test-validation.cjs',
+  // globalTeardown: './scripts/post-test-cleanup.cjs',
   
   // Configurazione progetti semplificata (solo test funzionanti)
   projects: [
     {
       name: 'Autenticazione',
       testMatch: '**/Autenticazione/**/*.spec.js',
+      use: { 
+        baseURL: BASE_URL,
+        extraHTTPHeaders: {
+          'X-Agent': 'agent-2-forms'
+        }
+      }
+    },
+    {
+      name: 'Onboarding',
+      testMatch: '**/Onboarding/**/*.spec.js',
       use: { 
         baseURL: BASE_URL,
         extraHTTPHeaders: {
