@@ -4,7 +4,36 @@ import { test, expect } from '@playwright/test';
 test.describe('BusinessInfoStep - Edge Cases', () => {
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/onboarding');
+    // Vai alla homepage
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    
+    // Se non siamo loggati, fai il login
+    const isLoggedIn = await page.locator('button:has-text("Onboarding")').isVisible().catch(() => false);
+    
+    if (!isLoggedIn) {
+      console.log('🔐 Eseguendo login...');
+      
+      // Compila email
+      await page.fill('input[type="email"]', 'matteo.cavallaro.work@gmail.com');
+      
+      // Compila password
+      await page.fill('input[type="password"]', 'cavallaro');
+      
+      // Clicca su Accedi
+      await page.click('button:has-text("Accedi")');
+      
+      // Attendi che il login sia completato
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(3000);
+      
+      console.log('✅ Login completato');
+    }
+    
+    // Clicca sul pulsante "Onboarding" per aprire l'onboarding
+    await page.click('button:has-text("Onboarding")');
+    
+    // Attendi caricamento componente
     await page.waitForSelector('h2:has-text("Informazioni Aziendali")');
   });
 
@@ -183,3 +212,4 @@ test.describe('BusinessInfoStep - Edge Cases', () => {
     }
   });
 });
+

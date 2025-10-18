@@ -4,17 +4,65 @@ import { test, expect } from '@playwright/test';
 test.describe('BusinessInfoStep - Test Validazione', () => {
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/onboarding');
+    // Vai alla homepage
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    
+    // Se non siamo loggati, fai il login
+    const isLoggedIn = await page.locator('button:has-text("Onboarding")').isVisible().catch(() => false);
+    
+    if (!isLoggedIn) {
+      console.log('🔐 Eseguendo login...');
+      
+      // Compila email
+      await page.fill('input[type="email"]', 'matteo.cavallaro.work@gmail.com');
+      
+      // Compila password
+      await page.fill('input[type="password"]', 'cavallaro');
+      
+      // Clicca su Accedi
+      await page.click('button:has-text("Accedi")');
+      
+      // Attendi che il login sia completato
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(3000);
+      
+      console.log('✅ Login completato');
+    }
+    
+    // Clicca sul pulsante "Onboarding" per aprire l'onboarding
+    await page.click('button:has-text("Onboarding")');
+    
+    // Attendi caricamento componente
     await page.waitForSelector('h2:has-text("Informazioni Aziendali")');
   });
 
   test('Dovrebbe accettare input validi', async ({ page }) => {
+    console.log('✅ Test: Verifica input validi BusinessInfoStep');
+    
+    // Pausa per vedere il componente
+    await page.waitForTimeout(2000);
+    
     // Compila con dati validi
+    console.log('📝 Compilando nome azienda...');
     await page.fill('input[placeholder="Inserisci il nome della tua azienda"]', 'Azienda Test');
+    await page.waitForTimeout(1000);
+    
+    console.log('🏠 Compilando indirizzo...');
     await page.fill('textarea[placeholder="Inserisci l\'indirizzo completo dell\'azienda"]', 'Via Test 123, Milano');
+    await page.waitForTimeout(1000);
+    
+    console.log('📞 Compilando telefono...');
     await page.fill('input[placeholder="+39 051 1234567"]', '+39 051 1234567');
+    await page.waitForTimeout(1000);
+    
+    console.log('📧 Compilando email...');
     await page.fill('input[placeholder="info@azienda.it"]', 'test@azienda.it');
+    await page.waitForTimeout(1000);
+    
+    console.log('🏢 Compilando P.IVA...');
     await page.fill('input[placeholder="IT12345678901"]', 'IT12345678901');
+    await page.waitForTimeout(2000);
     
     // Verifica che non ci siano errori
     await expect(page.locator('text=Il nome dell\'azienda è obbligatorio')).not.toBeVisible();
@@ -25,11 +73,20 @@ test.describe('BusinessInfoStep - Test Validazione', () => {
   });
 
   test('Dovrebbe rifiutare nome azienda vuoto', async ({ page }) => {
+    console.log('❌ Test: Verifica errore nome azienda vuoto');
+    
+    // Pausa per vedere il componente
+    await page.waitForTimeout(2000);
+    
     // Lascia nome vuoto e compila indirizzo
+    console.log('🏠 Compilando solo indirizzo (nome vuoto)...');
     await page.fill('textarea[placeholder="Inserisci l\'indirizzo completo dell\'azienda"]', 'Via Test 123');
+    await page.waitForTimeout(2000);
     
     // Verifica errore
+    console.log('🔍 Verificando errore...');
     await expect(page.locator('text=Il nome dell\'azienda è obbligatorio')).toBeVisible();
+    await page.waitForTimeout(2000);
   });
 
   test('Dovrebbe rifiutare nome azienda troppo corto', async ({ page }) => {
@@ -157,3 +214,4 @@ test.describe('BusinessInfoStep - Test Validazione', () => {
     await expect(page.locator('text=L\'indirizzo è obbligatorio')).not.toBeVisible();
   });
 });
+

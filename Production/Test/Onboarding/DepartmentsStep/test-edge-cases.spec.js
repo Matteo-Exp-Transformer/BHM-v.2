@@ -239,3 +239,4 @@ test.describe('DepartmentsStep - Edge Cases', () => {
     await expect(page.locator('text=Descrizione originale')).toBeVisible();
   });
 });
+

@@ -187,3 +187,4 @@ test.describe('DepartmentsStep - Test Funzionali', () => {
     await expect(page.locator('text=I reparti sono utilizzati per organizzare il personale')).toBeVisible();
   });
 });
+

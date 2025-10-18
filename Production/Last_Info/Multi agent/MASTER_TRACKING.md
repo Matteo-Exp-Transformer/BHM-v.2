@@ -103,10 +103,11 @@
   - Combinazioni testate: utenti autenticati/non autenticati, ruoli diversi, permessi diversi, errori
 
 ### Onboarding (Agente 2) - 🔄 3 COMPONENTI BLINDATE
-- **BusinessInfoStep** - 🔒 LOCKED (2025-01-17) - Test completi: funzionale.js, validazione.js, edge-cases.js
+- **BusinessInfoStep** - 🔒 LOCKED DEFINITIVO (2025-01-17) - Test completi: funzionale.js, validazione.js, edge-cases.js ✅ **BLINDATO CON SUPERVISIONE UTENTE**
   - File: src/components/onboarding-steps/BusinessInfoStep.tsx
   - Funzionalità: form informazioni aziendali, validazione campi, prefill dati esempio
   - Combinazioni testate: validazione nome/indirizzo, email/telefono/P.IVA, caratteri speciali, Unicode, edge cases
+  - Test eseguiti con successo: login automatico, apertura onboarding, rendering campi, pulsante prefill, input utente, validazione errori
 - **DepartmentsStep** - 🔒 LOCKED (2025-01-17) - Test completi: funzionale.js, validazione.js, edge-cases.js
   - File: src/components/onboarding-steps/DepartmentsStep.tsx
   - Funzionalità: gestione reparti, CRUD operazioni, validazione nomi, prefill dati esempio

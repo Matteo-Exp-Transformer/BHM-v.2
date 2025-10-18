@@ -663,23 +663,10 @@ export const getPrefillData = (): OnboardingData => {
     },
     // ✅ AGGIUNTO: Dati calendario preconfigurati per il DevButton
     calendar: {
-      fiscal_year_start: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0], // 1 gennaio anno corrente
-      fiscal_year_end: new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0], // 31 dicembre anno corrente
+      fiscal_year_start: '2025-10-18', // Data inizio corretta
+      fiscal_year_end: '2026-10-17', // Data fine corretta
       open_weekdays: [1, 2, 3, 4, 5, 6], // Lunedì-Domenica (1=Lunedì, 6=Domenica)
-      closure_dates: [
-        // Festività principali 2024
-        '2024-01-01', // Capodanno
-        '2024-04-01', // Pasqua
-        '2024-04-02', // Lunedì dell'Angelo
-        '2024-04-25', // Festa della Liberazione
-        '2024-05-01', // Festa del Lavoro
-        '2024-06-02', // Festa della Repubblica
-        '2024-08-15', // Ferragosto
-        '2024-11-01', // Ognissanti
-        '2024-12-08', // Immacolata Concezione
-        '2024-12-25', // Natale
-        '2024-12-26', // Santo Stefano
-      ],
+      closure_dates: [], // Nessuna festività come richiesto
       business_hours: {
         '1': [{ open: '08:00', close: '18:00' }], // Lunedì
         '2': [{ open: '08:00', close: '18:00' }], // Martedì
