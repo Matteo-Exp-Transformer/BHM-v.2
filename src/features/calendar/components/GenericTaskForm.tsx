@@ -189,9 +189,6 @@ export const GenericTaskForm = ({
         <h4 className="font-semibold text-gray-900">
           Nuova Attività Generica
         </h4>
-        <Button variant="outline" size="icon" onClick={onCancel}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

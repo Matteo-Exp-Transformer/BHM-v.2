@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { X, Wrench, ClipboardList, Package, ChevronRight, Calendar, User, Clock, AlertCircle, Check, RotateCcw, AlertTriangle } from 'lucide-react'
 import type { MacroCategory, MacroCategoryItem } from '../hooks/useMacroCategoryEvents'
+import { useMacroCategoryEvents } from '../hooks/useMacroCategoryEvents'
 import { useGenericTasks } from '../hooks/useGenericTasks'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
@@ -11,8 +12,8 @@ interface MacroCategoryModalProps {
   isOpen: boolean
   onClose: () => void
   category: MacroCategory
-  items: MacroCategoryItem[]
   date: Date
+  onDataUpdated?: () => void // Callback per notificare aggiornamento dati
 }
 
 const categoryConfig = {
@@ -62,8 +63,8 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   isOpen,
   onClose,
   category,
-  items,
   date,
+  onDataUpdated,
 }) => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]) // Array di ID per toggle indipendente
   const { completeTask, uncompleteTask, isCompleting, isUncompleting } = useGenericTasks()
@@ -71,8 +72,22 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   const { companyId, user } = useAuth()
   const [isCompletingMaintenance, setIsCompletingMaintenance] = useState(false)
   
+  // ✅ Forza il refetch dei dati quando viene chiamato onDataUpdated
+  const [refreshKey, setRefreshKey] = useState(0)
+  
+  // ✅ Carica i dati macro direttamente nel modal per avere sempre i dati aggiornati
+  const { getCategoryForDate } = useMacroCategoryEvents(undefined, undefined, refreshKey)
+  const categoryEvent = getCategoryForDate(date, category)
+  const items = categoryEvent?.items || []
+  
   // Helper per verificare se un item è selezionato
   const isItemSelected = (itemId: string) => selectedItems.includes(itemId)
+  
+  // ✅ Funzione per forzare il refresh dei dati
+  const forceDataRefresh = () => {
+    setRefreshKey(prev => prev + 1)
+    console.log('🔄 Forcing macro data refresh in modal')
+  }
 
 
   const handleCompleteMaintenance = async (maintenanceId: string) => {
@@ -123,6 +138,12 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
       
       // ✅ Forza aggiornamento UI
       window.dispatchEvent(new Event('calendar-refresh'))
+      
+      // ✅ Forza il refresh dei dati nel modal
+      forceDataRefresh()
+      
+      // ✅ Notifica al componente padre di aggiornare i dati
+      onDataUpdated?.()
     } catch (error) {
       console.error('Error completing maintenance:', error)
       toast.error('Errore nel completamento della manutenzione')
@@ -454,6 +475,12 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                         toast.success('✅ Mansione completata!')
                                         setSelectedItems([]) // Chiudi tutti gli item aperti
                                         
+                                        // ✅ Forza il refresh dei dati nel modal
+                                        forceDataRefresh()
+                                        
+                                        // ✅ Notifica al componente padre di aggiornare i dati
+                                        onDataUpdated?.()
+                                        
                                         // NON chiudere il modal automaticamente per permettere all'utente di vedere il risultato
                                         // onClose()
                                       },
@@ -618,6 +645,12 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                             toast.success('✅ Mansione completata!')
                                             setSelectedItems([]) // Chiudi tutti gli item aperti
                                             
+                                            // ✅ Forza il refresh dei dati nel modal
+                                            forceDataRefresh()
+                                            
+                                            // ✅ Notifica al componente padre di aggiornare i dati
+                                            onDataUpdated?.()
+                                            
                                             // NON chiudere il modal automaticamente per permettere all'utente di vedere il risultato
                                             // onClose()
                                           },
@@ -757,6 +790,12 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                             await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
                                             await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
                                             setSelectedItems([]) // Chiudi tutti gli item aperti
+                                            
+                                            // ✅ Forza il refresh dei dati nel modal
+                                            forceDataRefresh()
+                                            
+                                            // ✅ Notifica al componente padre di aggiornare i dati
+                                            onDataUpdated?.()
                                             
                                             // Chiudi e riapri il pannello per mostrare le modifiche
                                             onClose()

@@ -129,7 +129,7 @@ function isUserAuthorizedForEvent(
   return false
 }
 
-export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarFilters): MacroCategoryResult {
+export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarFilters, refreshKey?: number): MacroCategoryResult {
   const { user, companyId, userRole } = useAuth()
   const { maintenanceTasks, isLoading: maintenanceLoading } = useMaintenanceTasks()
   const { products, isLoading: productsLoading } = useProducts()
@@ -137,7 +137,7 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
   
   // Usa React Query per i task completions invece di useState locale
   const { data: taskCompletions = [], isLoading: completionsLoading } = useQuery({
-    queryKey: ['task-completions', companyId],
+    queryKey: ['task-completions', companyId, refreshKey], // ✅ Aggiunge refreshKey per forzare il refetch
     queryFn: async (): Promise<TaskCompletion[]> => {
       if (!companyId) return []
 
@@ -219,7 +219,7 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
 
       return true
     })
-  }, [maintenanceTasks, filters, userRole])
+  }, [maintenanceTasks, filters, userRole, refreshKey]) // ✅ Aggiunge refreshKey per forzare il refresh
 
   const genericTaskItems = useMemo(() => {
     if (!genericTasks || genericTasks.length === 0) return []
@@ -277,7 +277,7 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
 
       return true
     })
-  }, [genericTasks, taskCompletions, fiscalYearEnd, filters, userRole])
+  }, [genericTasks, taskCompletions, fiscalYearEnd, filters, userRole, refreshKey]) // ✅ Aggiunge refreshKey per forzare il refresh
 
   const productExpiryItems = useMemo(() => {
     if (!products || products.length === 0) return []
@@ -323,7 +323,7 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
 
       return true
     })
-  }, [products, filters])
+  }, [products, filters, refreshKey]) // ✅ Aggiunge refreshKey per forzare il refresh
 
   const events = useMemo(() => {
     const allItems = [
@@ -369,7 +369,7 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
     })
 
     return result.sort((a, b) => a.date.localeCompare(b.date))
-  }, [maintenanceItems, genericTaskItems, productExpiryItems])
+  }, [maintenanceItems, genericTaskItems, productExpiryItems, refreshKey]) // ✅ Aggiunge refreshKey per forzare il refresh
 
   const getEventsForDate = (date: Date): MacroCategoryEvent[] => {
     const dateKey = date.toISOString().split('T')[0]
