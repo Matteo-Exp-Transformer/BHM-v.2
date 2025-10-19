@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Wrench, ClipboardList, Package, ChevronRight, Calendar, User, Clock, AlertCircle, Check, RotateCcw, AlertTriangle } from 'lucide-react'
+import { X, Wrench, ClipboardList, Package, ChevronRight, Calendar, User, Clock, AlertCircle, Check, RotateCcw, AlertTriangle, Filter } from 'lucide-react'
 import type { MacroCategory, MacroCategoryItem } from '../hooks/useMacroCategoryEvents'
 import { useMacroCategoryEvents } from '../hooks/useMacroCategoryEvents'
 import { useGenericTasks } from '../hooks/useGenericTasks'
@@ -7,12 +7,21 @@ import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'react-toastify'
+import { 
+  CalendarFilters, 
+  DEFAULT_CALENDAR_FILTERS,
+  determineEventType,
+  calculateEventStatus,
+  type EventType,
+  type EventStatus 
+} from '@/types/calendar-filters'
 
 interface MacroCategoryModalProps {
   isOpen: boolean
   onClose: () => void
   category: MacroCategory
   date: Date
+  events?: any[] // ✅ NUOVO: Eventi passati dal Calendar
   onDataUpdated?: () => void // Callback per notificare aggiornamento dati
 }
 
@@ -64,9 +73,12 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   onClose,
   category,
   date,
+  events: passedEvents,
   onDataUpdated,
 }) => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]) // Array di ID per toggle indipendente
+  const [filters, setFilters] = useState<CalendarFilters>(DEFAULT_CALENDAR_FILTERS)
+  const [showFilters, setShowFilters] = useState(false)
   const { completeTask, uncompleteTask, isCompleting, isUncompleting } = useGenericTasks()
   const queryClient = useQueryClient()
   const { companyId, user } = useAuth()
@@ -75,10 +87,71 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   // ✅ Forza il refetch dei dati quando viene chiamato onDataUpdated
   const [refreshKey, setRefreshKey] = useState(0)
   
-  // ✅ Carica i dati macro direttamente nel modal per avere sempre i dati aggiornati
+  // ✅ Funzione per convertire eventi CalendarEvent in MacroCategoryItem
+  const convertEventToItem = (event: any): MacroCategoryItem => {
+    const eventType = determineEventType(event.source, event.metadata)
+    const eventStatus = calculateEventStatus(new Date(event.start), event.status === 'completed')
+    
+    return {
+      id: event.id,
+      title: event.title,
+      description: event.extendedProps?.description || '',
+      status: event.status === 'completed' ? 'completed' : 
+              eventStatus === 'overdue' ? 'overdue' : 'pending',
+      priority: event.extendedProps?.priority || 'medium',
+      assignedTo: event.extendedProps?.assignedTo || '',
+      dueDate: new Date(event.start),
+      completedAt: event.status === 'completed' ? new Date() : null,
+      completedBy: event.status === 'completed' ? 'User' : null,
+      department: event.extendedProps?.department || '',
+      type: eventType,
+      metadata: {
+        category: category,
+        sourceId: event.id,
+        ...event.metadata
+      }
+    } as MacroCategoryItem & { 
+      completedAt?: Date | null
+      completedBy?: string | null
+      department?: string
+      type: EventType
+    }
+  }
+
+  // ✅ Usa eventi passati se disponibili, altrimenti carica dal database
   const { getCategoryForDate } = useMacroCategoryEvents(undefined, undefined, refreshKey)
-  const categoryEvent = getCategoryForDate(date, category)
-  const items = categoryEvent?.items || []
+  const categoryEvent = passedEvents ? 
+    { items: passedEvents.map(event => convertEventToItem(event)) } : 
+    getCategoryForDate(date, category)
+  const rawItems = categoryEvent?.items || []
+
+  // ✅ Applica filtri agli items
+  const items = rawItems.filter(item => {
+    // Filtro per stato
+    if (filters.statuses.length > 0) {
+      const itemStatus = item.status === 'completed' ? 'completed' :
+                        item.status === 'overdue' ? 'overdue' : 'to_complete'
+      if (!filters.statuses.includes(itemStatus as EventStatus)) {
+        return false
+      }
+    }
+
+    // Filtro per tipo
+    if (filters.types.length > 0) {
+      if (!filters.types.includes(item.type as EventType)) {
+        return false
+      }
+    }
+
+    // Filtro per reparto
+    if (filters.departments.length > 0) {
+      if (!item.department || !filters.departments.includes(item.department)) {
+        return false
+      }
+    }
+
+    return true
+  })
   
   // Helper per verificare se un item è selezionato
   const isItemSelected = (itemId: string) => selectedItems.includes(itemId)
@@ -212,12 +285,23 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                 </p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              <X className="h-6 w-6 text-gray-600" />
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center space-x-2 px-3 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 transition-colors"
+              >
+                <Filter className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">
+                  Filtri
+                </span>
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                <X className="h-6 w-6 text-gray-600" />
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center space-x-4">
@@ -244,6 +328,81 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
             </div>
           </div>
         </div>
+
+        {/* ✅ Filtri */}
+        {showFilters && (
+          <div className="bg-gray-50 border-b border-gray-200 p-4">
+            <div className="space-y-4">
+              {/* Filtri per Stato */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Stato
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {(['to_complete', 'completed', 'overdue'] as EventStatus[]).map(status => (
+                    <button
+                      key={status}
+                      onClick={() => {
+                        const newStatuses = filters.statuses.includes(status)
+                          ? filters.statuses.filter(s => s !== status)
+                          : [...filters.statuses, status]
+                        setFilters({ ...filters, statuses: newStatuses })
+                      }}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                        filters.statuses.includes(status)
+                          ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {status === 'to_complete' ? 'Da completare' :
+                       status === 'completed' ? 'Completato' :
+                       status === 'overdue' ? 'In ritardo' : status}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Filtri per Tipo */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tipo
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {(['generic_task', 'maintenance', 'product_expiry'] as EventType[]).map(type => (
+                    <button
+                      key={type}
+                      onClick={() => {
+                        const newTypes = filters.types.includes(type)
+                          ? filters.types.filter(t => t !== type)
+                          : [...filters.types, type]
+                        setFilters({ ...filters, types: newTypes })
+                      }}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                        filters.types.includes(type)
+                          ? 'bg-green-100 text-green-800 border border-green-300'
+                          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {type === 'generic_task' ? 'Mansioni' :
+                       type === 'maintenance' ? 'Manutenzioni' :
+                       type === 'product_expiry' ? 'Scadenze' : type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reset Filtri */}
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setFilters(DEFAULT_CALENDAR_FILTERS)}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  Reset filtri
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto p-6">
           {items.length === 0 ? (

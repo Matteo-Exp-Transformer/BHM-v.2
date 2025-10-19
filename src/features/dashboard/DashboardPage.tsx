@@ -15,7 +15,6 @@ import { ComplianceChart } from './components/ComplianceChart'
 import { TemperatureTrend } from './components/TemperatureTrend'
 import { TaskSummary } from './components/TaskSummary'
 import { ScheduledMaintenanceCard } from './components/ScheduledMaintenanceCard'
-import { ShoppingListCard } from '@/features/shopping/components/ShoppingListCard'
 import { useTemperatureReadings } from '@/features/conservation/hooks/useTemperatureReadings'
 import { useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
 import { getReadingStatus } from '@/utils/temperatureStatus'
@@ -236,8 +235,6 @@ export const DashboardPage: React.FC = () => {
       {/* Scheduled Maintenance Card */}
       <ScheduledMaintenanceCard />
 
-      {/* Shopping List Card */}
-      <ShoppingListCard />
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -67,7 +67,11 @@ export const CalendarPage = () => {
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null)
   const [showConfigModal, setShowConfigModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
-  const [showProductExpiryModal, setShowProductExpiryModal] = useState(false)
+  const [selectedMacroCategory, setSelectedMacroCategory] = useState<{
+    category: string
+    date: Date
+    events?: any[]
+  } | null>(null)
 
   // ✅ Nuovi filtri calendario
   const [calendarFilters, setCalendarFilters] = useState<NewCalendarFiltersType>(DEFAULT_CALENDAR_FILTERS)
@@ -315,6 +319,56 @@ export const CalendarPage = () => {
       } else {
         toast.error('Impossibile caricare i dettagli del prodotto')
       }
+      return // ✅ IMPORTANTE: Esce qui per non interferire con altri handler
+    }
+
+    // ✅ NUOVO: Gestione eventi per MacroCategoryModal
+    console.log('🔍 onEventClick called with event:', event)
+    
+    // Determina la tipologia dell'evento cliccato
+    const eventType = determineEventType(event.source, event.metadata)
+    console.log('🔍 Event type determined:', eventType)
+    
+    // Filtra eventi del giorno per questa tipologia
+    const clickedDate = new Date(event.start)
+    console.log('🔍 Clicked date:', clickedDate)
+    
+    const dayEvents = viewBasedEvents.filter(e => {
+      const eventDate = new Date(e.start)
+      return eventDate.toDateString() === clickedDate.toDateString() &&
+             determineEventType(e.source, e.metadata) === eventType
+    })
+    console.log('🔍 Day events found:', dayEvents.length)
+
+    // Mappa EventType a MacroCategory
+    const categoryMap: Record<EventType, string> = {
+      'generic_task': 'generic_tasks',
+      'maintenance': 'maintenance', 
+      'product_expiry': 'product_expiry'
+    }
+
+    const macroCategory = categoryMap[eventType]
+    console.log('🔍 Macro category:', macroCategory)
+    console.log('🔍 Day events length:', dayEvents.length)
+    console.log('🔍 Day events:', dayEvents)
+    
+    if (macroCategory && dayEvents.length > 0) {
+      console.log('🔍 Opening MacroCategoryModal with:', { macroCategory, clickedDate, dayEvents })
+      // ✅ Passa eventi filtrati e data al Calendar per aprire MacroCategoryModal
+      // Il Calendar.tsx gestirà l'apertura del modal
+      setSelectedMacroCategory({ 
+        category: macroCategory as any,
+        date: clickedDate,
+        events: dayEvents // ✅ Eventi già processati dal Calendar
+      })
+    } else {
+      console.log('🔍 Not opening modal:', { 
+        macroCategory, 
+        dayEventsLength: dayEvents.length,
+        hasMacroCategory: !!macroCategory,
+        eventType,
+        categoryMap
+      })
     }
   }
 
@@ -324,7 +378,18 @@ export const CalendarPage = () => {
   }
 
   const onEventUpdate = (event: any) => {
-    // Event updated - can add logic here if needed
+    // Event updated - refresh calendar data
+    console.log('Event updated:', event)
+    setRefreshKey(prev => prev + 1)
+    
+    // Invalidate relevant queries to refresh data
+    queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
+    queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] })
+    queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
+    queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
+    
+    // Show success message
+    toast.success('Evento aggiornato con successo')
   }
 
   const onEventDelete = (eventId: string) => {
@@ -723,156 +788,6 @@ export const CalendarPage = () => {
             </div>
           </CollapsibleCard>
 
-          {/* Attività in Ritardo */}
-          {shouldShowOverdueSection && (
-            <CollapsibleCard
-              title="Attività in Ritardo"
-              icon={AlertCircle}
-              defaultOpen={true}
-              className="bg-red-50 border-red-200"
-            >
-              <div className="space-y-3">
-                {overdueEvents.filter(e => e && e.id && e.title).map(event => (
-                  <div
-                    key={event.id}
-                    className="bg-white border border-red-200 rounded-lg p-3 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm">
-                            {event.type === 'maintenance' && '🔧'}
-                            {event.type === 'general_task' && '📋'}
-                            {event.type === 'temperature_reading' && '🌡️'}
-                            {event.type === 'custom' && '📌'}
-                            {!event.type && '📅'}
-                          </span>
-                          <h4 className="text-sm font-semibold text-gray-900">
-                            {event.title}
-                          </h4>
-                        </div>
-                        {event.description && (
-                          <p className="text-xs text-gray-600 mb-2">
-                            {event.description}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-3 text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <CalendarIcon className="h-3 w-3" />
-                            {new Date(event.start).toLocaleDateString('it-IT', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            event.priority === 'critical' ? 'bg-red-100 text-red-800' :
-                            event.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                            event.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {event.priority === 'critical' ? '🔴 Critico' :
-                             event.priority === 'high' ? '🟠 Alto' :
-                             event.priority === 'medium' ? '🟡 Medio' :
-                             '🔵 Basso'}
-                          </span>
-                        </div>
-
-                        {/* Pulsante Completa */}
-                        {event.source && (event.source === 'general_task' || event.source === 'maintenance') && (
-                          <div className="mt-3 pt-3 border-t border-red-300">
-                            <button
-                              onClick={async (e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-
-                                if (event.source === 'maintenance') {
-                                  if (!companyId || !user) {
-                                    toast.error('Utente non autenticato')
-                                    return
-                                  }
-
-                                  setIsCompletingMaintenance(true)
-                                  try {
-                                    const maintenanceId = event.metadata?.maintenance_id || event.id
-                                    if (!maintenanceId) {
-                                      toast.error('ID manutenzione non trovato')
-                                      return
-                                    }
-
-                                    const { error } = await supabase
-                                      .from('maintenance_tasks')
-                                      .update({
-                                        status: 'completed',
-                                        updated_at: new Date().toISOString()
-                                      })
-                                      .eq('id', maintenanceId)
-                                      .eq('company_id', companyId)
-
-                                    if (error) throw error
-
-                                    await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
-                                    await queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] })
-                                    toast.success('Manutenzione completata!')
-                                  } catch (error) {
-                                    console.error('Error completing maintenance:', error)
-                                    toast.error('Errore nel completamento della manutenzione')
-                                  } finally {
-                                    setIsCompletingMaintenance(false)
-                                  }
-                                } else {
-                                  const today = new Date()
-                                  today.setHours(0, 0, 0, 0)
-
-                                  const taskDate = new Date(event.start)
-                                  taskDate.setHours(0, 0, 0, 0)
-
-                                  if (taskDate > today) {
-                                    const taskDateStr = taskDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })
-                                    toast.warning(`⚠️ Non puoi completare eventi futuri!\nQuesta mansione è del ${taskDateStr}.`, {
-                                      autoClose: 5000
-                                    })
-                                    return
-                                  }
-
-                                  const taskId = event.metadata?.task_id || event.id
-                                  if (!taskId) {
-                                    toast.error('ID mansione non trovato')
-                                    return
-                                  }
-                                  
-                                  completeTask(
-                                    { taskId: taskId },
-                                    {
-                                      onSuccess: async () => {
-                                        await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
-                                        await queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
-                                        await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
-                                        toast.success('Mansione completata!')
-                                      },
-                                      onError: (error) => {
-                                        console.error('Error completing task:', error)
-                                        toast.error('Errore nel completamento')
-                                      }
-                                    }
-                                  )
-                                }
-                              }}
-                              disabled={isCompleting || isCompletingMaintenance}
-                              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                            >
-                              <Check className="w-4 h-4" />
-                              {(isCompleting || isCompletingMaintenance) ? 'Completando...' : event.source === 'maintenance' ? 'Completa Manutenzione' : 'Completa Mansione'}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CollapsibleCard>
-          )}
         </div>
 
         {/* Calendario */}
@@ -912,6 +827,12 @@ export const CalendarPage = () => {
             onEventDelete={onEventDelete}
             onDateSelect={onDateSelect}
             onDateClick={setSelectedCalendarDate}
+            selectedMacroCategory={selectedMacroCategory}
+            onMacroCategoryClose={() => setSelectedMacroCategory(null)}
+            onMacroCategorySelect={(category, date, events) => {
+              console.log('🔍 CalendarPage.tsx: onMacroCategorySelect called:', { category, date, events })
+              setSelectedMacroCategory({ category, date, events })
+            }}
                    config={{
                      defaultView:
                        view === 'year'
@@ -926,14 +847,14 @@ export const CalendarPage = () => {
                        center: 'title',
                        right: '',
                      },
-                     // ✅ Configurazione drag and drop corretta
-                     validRange: calendarSettings?.is_configured ? {
-                       start: calendarSettings.fiscal_year_start,
-                       end: calendarSettings.fiscal_year_end,
-                     } : undefined,
-                     // ✅ Permetti drop in date future e correnti
-                     selectConstraint: undefined,
-                     eventConstraint: undefined,
+                     // ✅ DRAG AND DROP - DISABILITATO PER ANALISI CODICE
+                     // validRange: calendarSettings?.is_configured ? {
+                     //   start: calendarSettings.fiscal_year_start,
+                     //   end: calendarSettings.fiscal_year_end,
+                     // } : undefined,
+                     // ✅ DRAG AND DROP - DISABILITATO PER ANALISI CODICE
+                     // selectConstraint: undefined,
+                     // eventConstraint: undefined,
                    }}
             currentView={view}
             loading={isLoading || settingsLoading}
@@ -1151,5 +1072,20 @@ export const CalendarPage = () => {
     </div>
   )
 }
+
+// ============================================================================
+// 🚫 DRAG AND DROP - DISABILITATO PER ANALISI CODICE
+// ============================================================================
+// Questa sezione contiene le configurazioni drag and drop commentate
+// per non interferire con l'analisi del codice principale.
+// 
+// Per riabilitare il drag and drop:
+// 1. Decommentare le configurazioni nel Calendar component:
+//    - validRange: calendarSettings?.is_configured ? { ... } : undefined
+//    - selectConstraint: undefined
+//    - eventConstraint: undefined
+// 2. Decommentare le configurazioni nel Calendar.tsx:
+//    - eventDrop, eventResize, editable, dragScroll, etc.
+// ============================================================================
 
 export default CalendarPage

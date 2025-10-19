@@ -297,6 +297,40 @@
 - **Servizi**: 47
 - **Test Coverage**: Da implementare
 
----
+## 🔧 MODIFICHE RECENTI (2025-01-17)
 
-*Questo file è il centro di controllo della blindatura. Mantenerlo sempre aggiornato.*
+### ShoppingListCard - POSIZIONE CORRETTA ✅
+- **File**: `src/features/shopping/components/ShoppingListCard.tsx`
+- **Posizione attuale**: Solo in InventoryPage come CollapseCard ✅ CORRETTO
+- **Posizione precedente**: Dashboard (❌ RIMOSSO - 2025-01-17)
+- **Stato**: CollapseCard funzionante solo in inventario
+- **Note**: Rimossa da DashboardPage.tsx, mantenuta solo in InventoryPage.tsx
+
+### CollapseCard "Attività in Ritardo" - RIMOSSA ❌
+- **File**: `src/features/calendar/CalendarPage.tsx`
+- **Problema**: Appariva/scompariva in modo intermittente
+- **Causa**: Logica `shouldShowOverdueSection` complessa
+- **Azione**: Rimossa completamente (righe 726-875)
+- **Stato**: ✅ RIMOSSA - Non più visibile
+
+### QuickActions - RIMOSSE ❌
+- **File**: `src/features/calendar/Calendar.tsx`
+- **Problema**: Scorciatoie non servivano più
+- **Azione**: Rimosse completamente QuickActions
+- **Stato**: ✅ RIMOSSE - Non più visibili
+
+### MacroCategoryModal - SINCRONIZZATA ✅
+- **File**: `src/features/calendar/components/MacroCategoryModal.tsx`
+- **Problema**: Eventi non corrispondevano tra Calendar e Modal
+- **Causa**: Due stati diversi (Calendar processato vs Modal RAW)
+- **Fix**: Modal ora usa eventi passati dal Calendar
+- **Stato**: ✅ SINCRONIZZATA - Eventi coerenti
+
+### Filtri MacroCategoryModal - AGGIUNTI ✅
+- **File**: `src/features/calendar/components/MacroCategoryModal.tsx`
+- **Funzionalità**: Filtri per Stato, Tipo, Reparto
+- **UI**: Pulsante "Filtri" nell'header del modal
+- **Logica**: Stessa logica filtri del calendario
+- **Stato**: ✅ FUNZIONANTI - Filtri integrati
+
+---
