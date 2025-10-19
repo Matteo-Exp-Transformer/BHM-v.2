@@ -13,7 +13,6 @@ import {
 import type { CalendarFilters } from '@/types/calendar-filters'
 import { transformToFullCalendarEvents } from './utils/eventTransform'
 import { EventDetailsModal } from './EventDetailsModal'
-import QuickActions from './components/QuickActions'
 import { MacroCategoryModal } from './components/MacroCategoryModal'
 // Import rimosso: CalendarEventLegend era duplicato con i filtri funzionanti
 import { Calendar as CalendarIcon, Plus } from 'lucide-react'
@@ -44,6 +43,13 @@ interface CalendarProps {
   }
   filters?: React.ReactNode
   calendarFilters?: CalendarFilters
+  selectedMacroCategory?: {
+    category: string
+    date: Date
+    events?: any[]
+  } | null
+  onMacroCategoryClose?: () => void
+  onMacroCategorySelect?: (category: string, date: Date, events?: any[]) => void
 }
 
 const defaultConfig: CalendarViewConfig = {
@@ -99,14 +105,13 @@ export const Calendar: React.FC<CalendarProps> = ({
   eventSources,
   filters,
   calendarFilters,
+  selectedMacroCategory,
+  onMacroCategoryClose,
+  onMacroCategorySelect,
 }) => {
 
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
-  const [selectedMacroCategory, setSelectedMacroCategory] = useState<{
-    category: MacroCategory
-    date: Date
-  } | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null) // ✅ Traccia giorno selezionato
   const [calendarKey, setCalendarKey] = useState(0) // ✅ Force re-mount quando events cambiano
   const [macroEventsKey, setMacroEventsKey] = useState(0) // ✅ Force refresh dati macro
@@ -181,27 +186,52 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   const handleEventClick = useCallback(
     (clickInfo: { event: { extendedProps?: { originalEvent?: any; type?: string; category?: MacroCategory; items?: any[] }; start: Date | null } }) => {
+      console.log('🔍 Calendar.tsx: handleEventClick called!', clickInfo)
+      console.log('🔍 Calendar.tsx: clickInfo.event:', clickInfo.event)
+      console.log('🔍 Calendar.tsx: clickInfo.event.extendedProps:', clickInfo.event.extendedProps)
+      
       const extendedProps = clickInfo.event.extendedProps
       
       if (!extendedProps) {
-        console.warn('Event clicked without extendedProps:', clickInfo.event)
+        console.warn('🔍 Calendar.tsx: Event clicked without extendedProps:', clickInfo.event)
         return
       }
+      
+      console.log('🔍 Calendar.tsx: extendedProps found:', extendedProps)
 
-      if (useMacroCategories && extendedProps.type === 'macro_category') {
-        const { category } = extendedProps
+      // ✅ Gestione eventi macro_category (eventi aggregati)
+      if (extendedProps.type === 'macro_category') {
+        const { category, items } = extendedProps
         const date = clickInfo.event.start ? new Date(clickInfo.event.start) : new Date()
-        setSelectedMacroCategory({ category, date })
+        console.log('🔍 Calendar.tsx: Opening MacroCategoryModal for:', { category, date, items })
+        
+        // ✅ Comunica al CalendarPage.tsx di aprire il modal
+        if (onMacroCategorySelect) {
+          onMacroCategorySelect(category, date, items)
+        } else {
+          console.warn('🔍 Calendar.tsx: onMacroCategorySelect is undefined!')
+        }
       } else {
+        // ✅ Gestione eventi individuali
         const originalEvent = extendedProps.originalEvent
+        if (originalEvent) {
+          console.log('🔍 Calendar.tsx: Calling onEventClick with:', originalEvent)
+          console.log('🔍 Calendar.tsx: onEventClick function:', onEventClick)
+          if (onEventClick) {
+            onEventClick(originalEvent)
+          } else {
+            console.warn('🔍 Calendar.tsx: onEventClick is undefined!')
+          }
+        }
+        
+        // ✅ Apri EventDetailsModal per eventi individuali
         if (originalEvent) {
           setSelectedEvent(originalEvent)
           setShowEventModal(true)
-          onEventClick?.(originalEvent)
         }
       }
     },
-    [onEventClick, useMacroCategories]
+    [onEventClick, useMacroCategories, onMacroCategorySelect]
   )
 
   // Handle date selection for new events
@@ -238,39 +268,40 @@ export const Calendar: React.FC<CalendarProps> = ({
     }
   }, [onDateClick])
 
-  // Handle event drag and drop
-  const handleEventDrop = useCallback(
-    (dropInfo: { event: { extendedProps?: { originalEvent?: any }; start: Date | null; end?: Date | null } }) => {
-      const originalEvent = dropInfo.event.extendedProps?.originalEvent
-      if (originalEvent && onEventUpdate) {
-        const updatedEvent: CalendarEvent = {
-          ...originalEvent,
-          start: dropInfo.event.start ? new Date(dropInfo.event.start) : new Date(),
-          end: dropInfo.event.end ? new Date(dropInfo.event.end) : undefined,
-          updated_at: new Date(),
-        }
-        onEventUpdate(updatedEvent)
-      }
-    },
-    [onEventUpdate]
-  )
+  // ✅ DRAG AND DROP - COMMENTATO PER ANALISI CODICE
+  // Spostato in fondo al file per non interferire con l'analisi
+  
+  // const handleEventDrop = useCallback(
+  //   (dropInfo: { event: { extendedProps?: { originalEvent?: any }; start: Date | null; end?: Date | null } }) => {
+  //     const originalEvent = dropInfo.event.extendedProps?.originalEvent
+  //     if (originalEvent && onEventUpdate) {
+  //       const updatedEvent: CalendarEvent = {
+  //         ...originalEvent,
+  //         start: dropInfo.event.start ? new Date(dropInfo.event.start) : new Date(),
+  //         end: dropInfo.event.end ? new Date(dropInfo.event.end) : undefined,
+  //         updated_at: new Date(),
+  //       }
+  //       onEventUpdate(updatedEvent)
+  //     }
+  //   },
+  //   [onEventUpdate]
+  // )
 
-  // Handle event resize
-  const handleEventResize = useCallback(
-    (resizeInfo: { event: { extendedProps?: { originalEvent?: any }; start: Date | null; end?: Date | null } }) => {
-      const originalEvent = resizeInfo.event.extendedProps?.originalEvent
-      if (originalEvent && onEventUpdate) {
-        const updatedEvent: CalendarEvent = {
-          ...originalEvent,
-          start: resizeInfo.event.start ? new Date(resizeInfo.event.start) : new Date(),
-          end: resizeInfo.event.end ? new Date(resizeInfo.event.end) : undefined,
-          updated_at: new Date(),
-        }
-        onEventUpdate(updatedEvent)
-      }
-    },
-    [onEventUpdate]
-  )
+  // const handleEventResize = useCallback(
+  //   (resizeInfo: { event: { extendedProps?: { originalEvent?: any }; start: Date | null; end?: Date | null } }) => {
+  //     const originalEvent = resizeInfo.event.extendedProps?.originalEvent
+  //     if (originalEvent && onEventUpdate) {
+  //       const updatedEvent: CalendarEvent = {
+  //         ...originalEvent,
+  //         start: resizeInfo.event.start ? new Date(resizeInfo.event.start) : new Date(),
+  //         end: resizeInfo.event.end ? new Date(resizeInfo.event.end) : undefined,
+  //         updated_at: new Date(),
+  //       }
+  //       onEventUpdate(updatedEvent)
+  //     }
+  //   },
+  //   [onEventUpdate]
+  // )
 
   // Calendar toolbar buttons
   const customButtons = {
@@ -424,10 +455,11 @@ export const Calendar: React.FC<CalendarProps> = ({
                 arg.el.appendChild(hoursEl)
               }
             }}
-            eventDrop={handleEventDrop}
-            eventResize={handleEventResize}
+            // ✅ DRAG AND DROP - DISABILITATO PER ANALISI CODICE
+            // eventDrop={handleEventDrop}
+            // eventResize={handleEventResize}
             selectable={true}
-            editable={true}
+            // editable={true}
             dayMaxEvents={3}
             moreLinkClick="popover"
             nowIndicator={true}
@@ -439,17 +471,17 @@ export const Calendar: React.FC<CalendarProps> = ({
             eventOverlap={false}
             selectMirror={true}
             unselectAuto={true}
-            eventResizableFromStart={true}
-            eventDurationEditable={true}
-            eventStartEditable={true}
-            // ✅ Configurazioni per migliorare drag and drop
-            dragScroll={true}
-            dragRevertDuration={200}
+            // eventResizableFromStart={true}
+            // eventDurationEditable={true}
+            // eventStartEditable={true}
+            // ✅ DRAG AND DROP - DISABILITATO PER ANALISI CODICE
+            // dragScroll={true}
+            // dragRevertDuration={200}
             eventDragMinDistance={5}
             scrollTime="08:00:00"
-            // ✅ Permetti drop ovunque
-            droppable={true}
-            dropAccept="*"
+            // ✅ DRAG AND DROP - DISABILITATO PER ANALISI CODICE
+            // droppable={true}
+            // dropAccept="*"
             // Custom styling
             eventClassNames={arg => {
               const extendedProps = arg.event.extendedProps
@@ -542,22 +574,15 @@ export const Calendar: React.FC<CalendarProps> = ({
         />
       )}
 
-      {/* Quick Actions for selected events */}
-      {selectedEvent && onEventUpdate && (
-        <QuickActions
-          event={selectedEvent}
-          onUpdate={onEventUpdate}
-          onClose={() => setSelectedEvent(null)}
-        />
-      )}
 
       {/* Macro Category Modal */}
-      {useMacroCategories && selectedMacroCategory && (
+      {selectedMacroCategory && (
         <MacroCategoryModal
           isOpen={true}
-          onClose={() => setSelectedMacroCategory(null)}
-          category={selectedMacroCategory.category}
+          onClose={() => onMacroCategoryClose?.()}
+          category={selectedMacroCategory.category as any}
           date={selectedMacroCategory.date}
+          events={selectedMacroCategory.events}
           onDataUpdated={handleMacroDataUpdated} // ✅ Passa il callback per aggiornare i dati
         />
       )}
@@ -933,5 +958,37 @@ export const Calendar: React.FC<CalendarProps> = ({
     </div>
   )
 }
+
+// ============================================================================
+// 🚫 DRAG AND DROP - DISABILITATO PER ANALISI CODICE
+// ============================================================================
+// Questa sezione contiene tutto il codice drag and drop commentato
+// per non interferire con l'analisi del codice principale.
+// 
+// Per riabilitare il drag and drop:
+// 1. Decommentare le funzioni handleEventDrop e handleEventResize sopra
+// 2. Decommentare le configurazioni nel FullCalendar component:
+//    - eventDrop={handleEventDrop}
+//    - eventResize={handleEventResize}
+//    - editable={true}
+//    - eventResizableFromStart={true}
+//    - eventDurationEditable={true}
+//    - eventStartEditable={true}
+//    - dragScroll={true}
+//    - dragRevertDuration={200}
+//    - droppable={true}
+//    - dropAccept="*"
+// 3. Decommentare le configurazioni nel CalendarPage.tsx:
+//    - validRange
+//    - selectConstraint
+//    - eventConstraint
+// ============================================================================
+
+// Funzioni drag and drop (già commentate sopra):
+// - handleEventDrop
+// - handleEventResize
+
+// Configurazioni FullCalendar (già commentate sopra):
+// - eventDrop, eventResize, editable, eventResizableFromStart, etc.
 
 export default Calendar
