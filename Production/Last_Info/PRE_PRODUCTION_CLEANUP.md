@@ -13,6 +13,7 @@ Questo file contiene tutte le funzionalità utili per lo sviluppo che **NON** do
 - ✅ Tutti i pulsanti mostrati solo quando `showDevButtons={true}`
 - ✅ Pulsanti: Precompila, Completa, Reset Manuale, Reset Onboarding, Reset All Data, Reset Tot+Utenti
 - ✅ Import delle funzioni: `prefillOnboarding`, `completeOnboarding`, `resetManualData`, etc.
+- ❌ **NUOVO**: Pulsante "Cancella e Ricomincia" (non sarà disponibile in produzione)
 
 **Come rimuovere:**
 ```tsx
@@ -22,11 +23,81 @@ Questo file contiene tutte le funzionalità utili per lo sviluppo che **NON** do
     {/* Tutti i pulsanti dev */}
   </>
 )}
+
+// ❌ RIMUOVERE ANCHE: Pulsante "Cancella e Ricomincia" (sempre visibile)
+<Button onClick={handleResetAndRestart}>
+  Cancella e Ricomincia
+</Button>
 ```
 
 **IMPORTANTE:** Mantenere solo:
 - Pulsante "Attività" (Alert Badge)
 - ❌ RIMUOVERE: Pulsante "Onboarding" (non più necessario)
+- ❌ RIMUOVERE: Pulsante "Cancella e Ricomincia" (funzionalità dev)
+
+---
+
+### **1.1. MODIFICHE RECENTI DA RIPRISTINARE (Pulsante "Cancella e Ricomincia")**
+**⚠️ ATTENZIONE: Queste modifiche sono state fatte per il pulsante "Cancella e Ricomincia" che NON sarà disponibile in produzione**
+
+**File modificati che vanno ripristinati:**
+
+#### **A. `src/components/HeaderButtons.tsx`**
+**Modifiche da ripristinare:**
+```tsx
+// ❌ RIMUOVERE: Invalidazione cache aggiunta per il reset
+await queryClient.invalidateQueries({ queryKey: ['company', companyId] })
+await queryClient.invalidateQueries({ queryKey: ['haccp-config', companyId] })
+await queryClient.invalidateQueries({ queryKey: ['user-profiles', companyId] })
+await queryClient.invalidateQueries({ queryKey: ['company'] })
+await queryClient.invalidateQueries({ queryKey: ['haccp-config'] })
+await queryClient.invalidateQueries({ queryKey: ['user-profiles'] })
+
+// ❌ RIMUOVERE: Handler per il pulsante reset
+const handleResetAndRestart = async () => { ... }
+```
+
+#### **B. `src/utils/onboardingHelpers.ts`**
+**Modifiche da ripristinare:**
+```typescript
+// ❌ RIMUOVERE: Aggiornamento campi company a stringhe vuote
+await supabase
+  .from('companies')
+  .update({
+    address: '',  // Era null, cambiato per constraint NOT NULL
+    email: '',    // Era null, cambiato per constraint NOT NULL
+    staff_count: 0,
+    updated_at: new Date().toISOString(),
+  })
+  .eq('id', companyId)
+
+// ❌ RIMUOVERE: Aggiunta haccp_configurations alle tabelle da cancellare
+supabase.from('haccp_configurations').delete().eq('company_id', companyId),
+```
+
+#### **C. `src/utils/safeStorage.ts`**
+**Modifiche da ripristinare:**
+```typescript
+// ❌ RIMUOVERE: Chiavi localStorage aggiunte per il reset
+'haccp-config',
+'user-profiles',
+'calendar-view-preference',
+'calendar-filters',
+'calendar-dismissed-alerts',
+'audit_logs',
+'update_analytics',
+'install_analytics',
+'automation_cache',
+'automation_cache_manager',
+```
+
+**Come ripristinare:**
+1. **Rimuovere** tutte le invalidazioni cache aggiunte per il reset
+2. **Ripristinare** i valori originali nei campi company (null invece di stringhe vuote)
+3. **Rimuovere** haccp_configurations dalle tabelle da cancellare
+4. **Ripristinare** la lista originale di chiavi localStorage
+
+**Motivo:** Queste modifiche erano specifiche per far funzionare il pulsante "Cancella e Ricomincia" che non esisterà in produzione.
 
 ---
 
@@ -219,8 +290,14 @@ La logica dei form negli step onboarding è stata ottimizzata per essere **intel
 ## 🔍 CHECKLIST PRE-PRODUCTION:
 
 ### **Fase 1: Pulizia Codice**
+- [ ] ❌ **PRIORITÀ**: Ripristinare modifiche per pulsante "Cancella e Ricomincia"
+  - [ ] Rimuovere invalidazioni cache aggiunte in HeaderButtons.tsx
+  - [ ] Ripristinare valori originali in onboardingHelpers.ts (null invece di stringhe vuote)
+  - [ ] Rimuovere haccp_configurations dalle tabelle da cancellare
+  - [ ] Ripristinare lista originale chiavi localStorage in safeStorage.ts
 - [ ] Rimuovere pulsanti dev da HeaderButtons
 - [ ] ❌ RIMUOVERE: Pulsante "Onboarding" dall'header
+- [ ] ❌ RIMUOVERE: Pulsante "Cancella e Ricomincia" (funzionalità dev)
 - [ ] ✅ IMPLEMENTARE: Onboarding automatico per admin al primo accesso
 - [ ] Rimuovere DevButtons component
 - [ ] Rimuovere funzioni globali dev da App.tsx

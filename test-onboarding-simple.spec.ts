@@ -31,3 +31,4 @@ test('Onboarding Demo - Test Semplice', async ({ page }) => {
   console.log('📸 Screenshot finale salvato: test-onboarding-demo-finale.png');
   console.log('🎉 Test demo completato con successo!');
 });
+

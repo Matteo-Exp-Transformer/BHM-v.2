@@ -7,51 +7,68 @@ import { createInviteToken, sendInviteEmail } from '@/services/auth/inviteServic
 import { getCompanyIdForOnboarding, hasDevCompany } from './devCompanyHelper'
 
 // Funzione per cancellare tutti i dati di una company (mantenendo solo la company stessa)
+// ⚠️ PRESERVA: companies, company_members, user_sessions, user_profiles, auth.users
 const deleteCompanyData = async (companyId: string): Promise<void> => {
   console.log('🗑️ Cancellazione dati company:', companyId)
+  console.log('🔒 PRESERVANDO: companies, company_members, user_sessions, user_profiles, auth.users')
   
   try {
     // Cancella in ordine di dipendenze (FK constraints)
+    // ⚠️ NON cancellare: companies, company_members, user_sessions, user_profiles
     const deleteOperations = [
-      // 1. Dati utente/sessione
-      supabase.from('user_sessions').delete().eq('company_id', companyId),
-      supabase.from('audit_logs').delete().eq('company_id', companyId),
-      supabase.from('user_profiles').delete().eq('company_id', companyId),
-      
-      // 2. Task completions e temperature
+      // 1. Dati operativi che dipendono da altri dati
+      supabase.from('product_expiry_completions').delete().eq('company_id', companyId),
+      supabase.from('shopping_list_items').delete().eq('company_id', companyId),
       supabase.from('task_completions').delete().eq('company_id', companyId),
       supabase.from('temperature_readings').delete().eq('company_id', companyId),
       
-      // 3. Shopping lists
-      supabase.from('shopping_list_items').delete().eq('company_id', companyId),
+      // 2. Shopping lists (dopo gli items)
       supabase.from('shopping_lists').delete().eq('company_id', companyId),
       
-      // 4. Maintenance tasks e events
-      supabase.from('maintenance_tasks').delete().eq('company_id', companyId),
-      supabase.from('events').delete().eq('company_id', companyId),
-      supabase.from('notes').delete().eq('company_id', companyId),
-      supabase.from('non_conformities').delete().eq('company_id', companyId),
-      
-      // 5. Tasks (dipende da departments e staff)
+      // 3. Tasks e maintenance tasks (dopo i completamenti)
       supabase.from('tasks').delete().eq('company_id', companyId),
+      supabase.from('maintenance_tasks').delete().eq('company_id', companyId),
       
-      // 6. Products e conservation points
+      // 4. Products e conservation points
       supabase.from('products').delete().eq('company_id', companyId),
       supabase.from('product_categories').delete().eq('company_id', companyId),
       supabase.from('conservation_points').delete().eq('company_id', companyId),
       
-      // 7. Staff e departments
+      // 5. Staff e departments
       supabase.from('staff').delete().eq('company_id', companyId),
       supabase.from('departments').delete().eq('company_id', companyId),
       
-      // 8. Company members (mantiene la company)
-      supabase.from('company_members').delete().eq('company_id', companyId),
+      // 6. Altri dati operativi
+      supabase.from('events').delete().eq('company_id', companyId),
+      supabase.from('notes').delete().eq('company_id', companyId),
+      supabase.from('non_conformities').delete().eq('company_id', companyId),
+      supabase.from('invite_tokens').delete().eq('company_id', companyId),
+      supabase.from('company_calendar_settings').delete().eq('company_id', companyId),
+      
+      // 7. Log e audit (dati storici operativi)
+      supabase.from('audit_logs').delete().eq('company_id', companyId),
+      supabase.from('user_activity_logs').delete().eq('company_id', companyId),
+      
+      // 8. Configurazioni HACCP
+      supabase.from('haccp_configurations').delete().eq('company_id', companyId),
     ]
     
     // Esegui tutte le cancellazioni in parallelo
     const results = await Promise.all(deleteOperations)
     
+            // 9. Pulisce i dati della company (mantiene solo ID e nome base)
+            await supabase
+              .from('companies')
+              .update({
+                address: '',
+                email: '',
+                staff_count: 0,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', companyId)
+    
     console.log('✅ Cancellazione dati completata:', results.length, 'operazioni')
+    console.log('🔒 Dati preservati: companies, company_members, user_sessions, user_profiles, auth.users')
     
   } catch (error) {
     console.error('❌ Errore durante cancellazione dati company:', error)
@@ -1184,18 +1201,19 @@ const clearLocalStoragePreservingAuth = (): void => {
 
 /**
  * Reset selettivo dei dati operativi di una company
- * PRESERVA: companies, users, company_members
+ * PRESERVA: companies, users, company_members, user_sessions, user_profiles
  * CANCELLA: staff, departments, products, conservation, etc.
  */
 const resetCompanyOperationalData = async (companyId: string): Promise<void> => {
   console.log('🗑️ Reset dati operativi per company:', companyId)
-  console.log('🔒 PRESERVANDO: Token di autenticazione Supabase in localStorage')
+  console.log('🔒 PRESERVANDO: companies, company_members, user_sessions, user_profiles, auth.users')
 
   try {
     // Lista delle tabelle da pulire (solo dati configurabili nell'onboarding)
-    // ⚠️ PRESERVATO: companies, company_members, user_sessions, staff
+    // ⚠️ PRESERVATO: companies, company_members, user_sessions, user_profiles
     const tablesToClean = [
       'departments',           // ✅ Reparti
+      'staff',                 // ✅ Staff (dipendenti)
       'products',             // ✅ Prodotti
       'product_categories',   // ✅ Categorie prodotti
       'conservation_points',  // ✅ Punti di conservazione
@@ -1205,8 +1223,17 @@ const resetCompanyOperationalData = async (companyId: string): Promise<void> => 
       'calendar_events',
       'shopping_lists',
       'shopping_list_items',
-      'audit_logs'
-      // ❌ NON cancellare: staff, companies, company_members, user_sessions
+      'events',
+      'notes',
+      'non_conformities',
+      'invite_tokens',
+      'company_calendar_settings',
+      'task_completions',
+      'product_expiry_completions',
+      'audit_logs',
+      'user_activity_logs',
+      'haccp_configurations'
+      // ❌ NON cancellare: companies, company_members, user_sessions, user_profiles
     ]
 
     // Pulisce ogni tabella
@@ -1219,7 +1246,7 @@ const resetCompanyOperationalData = async (companyId: string): Promise<void> => 
 
         if (error) {
           console.warn(`⚠️ Errore pulizia ${table}:`, error.message)
-    } else {
+        } else {
           console.log(`✅ Pulito ${table}`)
         }
       } catch (err) {
@@ -1227,7 +1254,24 @@ const resetCompanyOperationalData = async (companyId: string): Promise<void> => 
       }
     }
 
+    // Pulisce anche i dati della company (mantiene solo ID e nome base)
+    await supabase
+      .from('companies')
+      .update({
+        address: null,
+        phone: null,
+        email: null,
+        vat_number: null,
+        business_type: null,
+        established_date: null,
+        license_number: null,
+        staff_count: 0,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', companyId)
+
     console.log('✅ Reset dati operativi completato')
+    console.log('🔒 Dati preservati: companies, company_members, user_sessions, user_profiles, auth.users')
   } catch (error) {
     console.error('❌ Errore reset dati operativi:', error)
     throw error
@@ -2452,9 +2496,12 @@ export const resetOperationalData = async (): Promise<boolean> => {
  */
 const resetOperationalDataOnly = async (companyId: string): Promise<void> => {
   console.log('🧹 Cancellazione dati operativi per company:', companyId)
+  console.log('🔒 PRESERVANDO: companies, company_members, user_sessions, user_profiles, auth.users')
   
   try {
     // Cancella in ordine di dipendenze (FK constraints)
+    // ⚠️ NON cancellare: companies, company_members, user_sessions, user_profiles
+    
     // 1. Dati operativi che dipendono da altri dati
     await supabase.from('product_expiry_completions').delete().eq('company_id', companyId)
     await supabase.from('shopping_list_items').delete().eq('company_id', companyId)
@@ -2490,7 +2537,53 @@ const resetOperationalDataOnly = async (companyId: string): Promise<void> => {
     await supabase.from('audit_logs').delete().eq('company_id', companyId)
     await supabase.from('user_activity_logs').delete().eq('company_id', companyId)
     
+    // 9. Configurazioni HACCP
+    await supabase.from('haccp_configurations').delete().eq('company_id', companyId)
+    
+    // 10. Pulisce i dati della company (mantiene solo ID e nome base)
+    await supabase
+      .from('companies')
+      .update({
+        address: null,
+        phone: null,
+        email: null,
+        vat_number: null,
+        business_type: null,
+        established_date: null,
+        license_number: null,
+        staff_count: 0,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', companyId)
+    
+    // 11. Dati aggiuntivi per assicurarsi che tutto sia pulito
+    // Queste tabelle potrebbero esistere e contenere dati delle diverse pagine
+    try {
+      await supabase.from('calendar_events').delete().eq('company_id', companyId)
+    } catch (error) {
+      console.log('ℹ️ Tabella calendar_events non trovata o già pulita')
+    }
+    
+    try {
+      await supabase.from('conservation_events').delete().eq('company_id', companyId)
+    } catch (error) {
+      console.log('ℹ️ Tabella conservation_events non trovata o già pulita')
+    }
+    
+    try {
+      await supabase.from('inventory_events').delete().eq('company_id', companyId)
+    } catch (error) {
+      console.log('ℹ️ Tabella inventory_events non trovata o già pulita')
+    }
+    
+    try {
+      await supabase.from('shopping_events').delete().eq('company_id', companyId)
+    } catch (error) {
+      console.log('ℹ️ Tabella shopping_events non trovata o già pulita')
+    }
+    
     console.log('✅ Dati operativi cancellati con successo')
+    console.log('🔒 Dati preservati: companies, company_members, user_sessions, user_profiles, auth.users')
     
   } catch (error) {
     console.error('❌ Errore durante cancellazione dati operativi:', error)
