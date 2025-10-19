@@ -15,7 +15,7 @@ import { transformToFullCalendarEvents } from './utils/eventTransform'
 import { EventDetailsModal } from './EventDetailsModal'
 import QuickActions from './components/QuickActions'
 import { MacroCategoryModal } from './components/MacroCategoryModal'
-import { CalendarEventLegend } from './components/CalendarEventLegend'
+// Import rimosso: CalendarEventLegend era duplicato con i filtri funzionanti
 import { Calendar as CalendarIcon, Plus } from 'lucide-react'
 import { useMacroCategoryEvents, type MacroCategory } from './hooks/useMacroCategoryEvents'
 import './calendar-custom.css' // ✅ Import stili personalizzati calendario
@@ -106,14 +106,15 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [selectedMacroCategory, setSelectedMacroCategory] = useState<{
     category: MacroCategory
     date: Date
-    items: any[]
   } | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null) // ✅ Traccia giorno selezionato
   const [calendarKey, setCalendarKey] = useState(0) // ✅ Force re-mount quando events cambiano
+  const [macroEventsKey, setMacroEventsKey] = useState(0) // ✅ Force refresh dati macro
 
   const { events: macroCategoryEvents } = useMacroCategoryEvents(
     calendarSettings?.fiscal_year_end ? new Date(calendarSettings.fiscal_year_end) : undefined,
-    calendarFilters
+    calendarFilters,
+    macroEventsKey // ✅ Passa la key per forzare il refresh
   )
 
   const calendarRef = useRef<FullCalendar>(null)
@@ -146,6 +147,12 @@ export const Calendar: React.FC<CalendarProps> = ({
     }
     return colors[category]
   }
+
+  // ✅ Callback per aggiornare i dati macro dopo completamento eventi
+  const handleMacroDataUpdated = useCallback(() => {
+    setMacroEventsKey(prev => prev + 1)
+    console.log('🔄 Macro data updated - forcing refresh')
+  }, [])
 
   const fullCalendarEvents = useMacroCategories
     ? macroCategoryEvents.map(event => {
@@ -182,9 +189,9 @@ export const Calendar: React.FC<CalendarProps> = ({
       }
 
       if (useMacroCategories && extendedProps.type === 'macro_category') {
-        const { category, items } = extendedProps
+        const { category } = extendedProps
         const date = clickInfo.event.start ? new Date(clickInfo.event.start) : new Date()
-        setSelectedMacroCategory({ category, date, items: items || [] })
+        setSelectedMacroCategory({ category, date })
       } else {
         const originalEvent = extendedProps.originalEvent
         if (originalEvent) {
@@ -353,10 +360,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         </div>
       )}
 
-      {/* Legenda */}
-      <div className="px-4 py-3 border-b border-gray-200">
-        <CalendarEventLegend sources={eventSources || {}} compact={true} />
-      </div>
+      {/* Legenda rimossa: era duplicata con i filtri funzionanti */}
 
       {/* Calendar Content */}
       <div className="p-4">
@@ -438,6 +442,14 @@ export const Calendar: React.FC<CalendarProps> = ({
             eventResizableFromStart={true}
             eventDurationEditable={true}
             eventStartEditable={true}
+            // ✅ Configurazioni per migliorare drag and drop
+            dragScroll={true}
+            dragRevertDuration={200}
+            eventDragMinDistance={5}
+            scrollTime="08:00:00"
+            // ✅ Permetti drop ovunque
+            droppable={true}
+            dropAccept="*"
             // Custom styling
             eventClassNames={arg => {
               const extendedProps = arg.event.extendedProps
@@ -545,8 +557,8 @@ export const Calendar: React.FC<CalendarProps> = ({
           isOpen={true}
           onClose={() => setSelectedMacroCategory(null)}
           category={selectedMacroCategory.category}
-          items={selectedMacroCategory.items}
           date={selectedMacroCategory.date}
+          onDataUpdated={handleMacroDataUpdated} // ✅ Passa il callback per aggiornare i dati
         />
       )}
 

@@ -1,0 +1,290 @@
+# 🎭 BHM v.2 - Cursor AI Rules & Skills Configuration
+
+> **Business HACCP Manager v.2 - Progressive Web App per gestione sicurezza alimentare**
+
+---
+
+## 📚 SKILLS DISPONIBILI
+
+Il progetto ha 6 skills specializzate disponibili in `.cursor/rules/`:
+
+### 1. 🏗️ APP_OVERVIEW
+**Trigger**: "panoramica app", "overview", "architettura", "stack tecnologico"
+**Scopo**: Fornisce panoramica tecnica completa dell'app (architettura, tecnologie, features)
+**File**: `.cursor/rules/SKILL_APP_OVERVIEW.md`
+
+### 2. 🧪 TEST_ARCHITECT
+**Trigger**: "strategia test", "piano test", "come testare", "coverage target"
+**Scopo**: Progetta strategie di testing complete per componenti React
+**File**: `.cursor/rules/SKILL_TEST_ARCHITECT.md`
+
+### 3. ⚙️ TEST_GENERATOR
+**Trigger**: "genera test", "crea test", "implementa test", "scrivi test"
+**Scopo**: Genera test code completo (Vitest/Playwright) seguendo strategia
+**File**: `.cursor/rules/SKILL_TEST_GENERATOR.md`
+
+### 4. 🗺️ APP_MAPPING
+**Trigger**: "mappa componenti", "inventario", "esplora area", "lista componenti"
+**Scopo**: Mappa sistematicamente componenti per inventario completo
+**File**: `.cursor/rules/SKILL_APP_MAPPING.md`
+
+### 5. 📝 PROMPT_TESTER
+**Trigger**: "testa prompt", "valida prompt", "prompt quality", "review prompt"
+**Scopo**: Valida qualità prompt AI con scoring e recommendations
+**File**: `.cursor/rules/SKILL_PROMPT_TESTER.md`
+
+### 6. 🔧 ERROR_INTERPRETER
+**Trigger**: "errore", "bug", "debug", "non funziona", "fix"
+**Scopo**: Interpreta errori, identifica root cause, fornisce fix actionable
+**File**: `.cursor/rules/SKILL_ERROR_INTERPRETER.md`
+
+---
+
+## 🎯 COME USARE LE SKILLS
+
+### Metodo 1: Trigger Words (Automatico)
+Usa le parole chiave nel messaggio:
+```
+User: "Dammi una panoramica app"
+→ Attiva SKILL_APP_OVERVIEW automaticamente
+```
+
+### Metodo 2: Riferimento Esplicito
+Menziona la skill esplicitamente:
+```
+User: "@SKILL_TEST_ARCHITECT progetta test per LoginPage"
+→ Usa skill TEST_ARCHITECT
+```
+
+### Metodo 3: Context Reference
+Cursor legge automaticamente `.cursor/rules/` quando rileva contesto pertinente.
+
+---
+
+## 🏗️ ARCHITETTURA PROGETTO
+
+### Stack Tecnologico
+- **Frontend**: React 18.3.1 + TypeScript 5.6.3 + Vite 5.4.11
+- **Backend**: Supabase (PostgreSQL + Auth + Realtime)
+- **UI**: Tailwind CSS 3.4.17 + Radix UI
+- **State**: React Query 5.62.2 + Context API
+- **Testing**: Vitest 2.1.8 + Playwright 1.56.0
+- **Build**: Vite + PWA plugin + Sentry
+
+### Struttura Cartelle
+```
+src/
+├── features/          # Feature-based modules (auth, dashboard, calendar, etc.)
+├── components/        # Shared UI components
+├── hooks/            # Custom React hooks
+├── services/         # API services & business logic
+├── utils/            # Utility functions
+└── lib/              # External library configurations
+
+Production/
+├── Prompt_Context/   # Skills complete e prompt templates
+├── Knowledge/        # Component inventories & tracking
+└── Test/             # E2E test suites organized by area
+
+.cursor/
+├── rules/            # Skills per Cursor AI
+└── plans/            # Development plans
+
+.claude/
+└── skills/           # Skills per Claude Code
+```
+
+### Features Principali
+- **admin**: Pannello amministrazione
+- **auth**: Autenticazione (login, register, invites, password recovery)
+- **calendar**: Calendario eventi con FullCalendar
+- **conservation**: Gestione conservazione alimenti
+- **dashboard**: Dashboard con statistiche e KPI
+- **inventory**: Gestione inventario prodotti
+- **management**: Gestione aziendale
+- **settings**: Impostazioni applicazione
+- **shared**: Componenti condivisi
+- **shopping**: Liste spesa e ordini
+
+---
+
+## 🧪 TESTING STRATEGY
+
+### Multi-Agent Testing System
+Il progetto utilizza **4 agent Playwright paralleli**:
+
+**Agent 1 - UI Base**: Test componenti UI base
+```bash
+npm run test:agent1
+```
+
+**Agent 2 - Forms**: Test form validation e input
+```bash
+npm run test:agent2
+```
+
+**Agent 3 - Business Logic**: Test business logic e workflows
+```bash
+npm run test:agent3
+```
+
+**Agent 5 - Navigation**: Test routing e navigation
+```bash
+npm run test:agent5
+```
+
+### Unit Testing
+```bash
+npm run test              # Vitest watch mode
+npm run test:coverage     # Coverage report
+```
+
+### Best Practices
+- **Coverage target**: 85%+ statements per componenti critici
+- **Test pyramid**: Molti unit tests, alcuni integration, pochi E2E
+- **Mocking**: Usa vi.mock per dependencies, MSW per API
+- **Selectors**: Preferisci data-testid e role-based queries
+
+---
+
+## 📝 CONVENZIONI CODICE
+
+### Nomenclatura
+- **Componenti**: PascalCase (`LoginPage.tsx`, `Button.tsx`)
+- **Hooks**: camelCase con prefisso 'use' (`useAuth.ts`, `useCalendar.ts`)
+- **Utils**: camelCase (`formatDate.ts`, `validateEmail.ts`)
+- **Types**: PascalCase con prefisso tipo (`UserType`, `AuthError`)
+
+### Imports
+```typescript
+// ✅ GOOD: Use path aliases
+import { Button } from '@/components/ui/Button'
+import { useAuth } from '@/hooks/useAuth'
+
+// ❌ BAD: Relative paths lunghi
+import { Button } from '../../../components/ui/Button'
+```
+
+### TypeScript
+- **Strict mode enabled**: Tutti i file devono essere type-safe
+- **Props interfaces**: Sempre definire per componenti
+- **Return types**: Espliciti per funzioni pubbliche
+- **Any forbidden**: Usa `unknown` o type specifico
+
+### React Patterns
+- **Hooks**: Custom hooks per logic riutilizzabile
+- **Context**: Per state globale (auth, settings)
+- **React Query**: Per server state (API calls)
+- **Memoization**: Usa React.memo, useMemo, useCallback con criterio
+
+---
+
+## 🚨 REGOLE CRITICHE
+
+### ✅ SEMPRE FARE:
+- Leggere `package.json` prima di analizzare dependencies
+- Verificare `MASTER_TRACKING.md` prima di mappare componenti
+- Seguire template in `Production/Prompt_Context/TEMPLATE_*.md`
+- Usare terminologia business (es: "area" non "feature")
+- Aggiornare documentazione dopo modifiche significative
+- Eseguire test prima di commit
+- Verificare type-check: `npm run type-check`
+
+### ❌ MAI FARE:
+- Modificare file blindati (🔒 Locked) senza consultare tracking
+- Creare nuovi file senza verificare se esiste alternativa
+- Committare con test falliti
+- Ignorare errori TypeScript
+- Usare `any` type
+- Hardcodare credenziali o secrets
+- Modificare `.env` (usare `.env.local`)
+
+### 🚨 GESTIONE ERRORI:
+- **SE** errore TypeScript **ALLORA** usa SKILL_ERROR_INTERPRETER
+- **SE** test fallito **ALLORA** debug con --headed o screen.debug()
+- **SE** API error **ALLORA** verifica Supabase RLS policies
+- **SE** build error **ALLORA** verifica node_modules e reinstalla se necessario
+
+---
+
+## 📦 COMANDI PRINCIPALI
+
+### Development
+```bash
+npm run dev                # Start dev server (port 3000)
+npm run dev:multi          # Start 3 instances (multi-agent testing)
+```
+
+### Testing
+```bash
+npm run test               # Vitest unit tests
+npm run test:coverage      # Coverage report
+npm run test:e2e           # Playwright E2E tests
+npm run test:agent1        # Agent 1 UI-Base tests
+```
+
+### Build & Quality
+```bash
+npm run build              # Production build
+npm run build:clean        # Clean + build
+npm run lint               # ESLint check
+npm run lint:fix           # Auto-fix linting
+npm run type-check         # TypeScript check
+```
+
+---
+
+## 🎓 RISORSE DOCUMENTAZIONE
+
+### Prompt Templates
+- `Production/Prompt_Context/GUIDA_GENERAZIONE_PROMPT.md` - Best practices prompt engineering
+- `Production/Prompt_Context/TEMPLATE_TEST_JS.md` - Template Playwright test
+- `Production/Prompt_Context/TEMPLATE_TRACKING_COMPONENTE.md` - Template tracking componente
+
+### Skills Complete
+- `Production/Prompt_Context/SKILL_APP_OVERVIEW.md` - Overview completa app
+- `Production/Prompt_Context/SKILL_TEST_ARCHITECT.md` - Architettura testing
+- `Production/Prompt_Context/SKILL_TEST_GENERATOR.md` - Generazione test code
+- `Production/Prompt_Context/SKILL_APP_MAPPING.md` - Mappatura componenti
+- `Production/Prompt_Context/SKILL_PROMPT_TESTER.md` - Testing prompt AI
+- `Production/Prompt_Context/SKILL_ERROR_INTERPRETER.md` - Debugging errori
+
+### Tracking
+- `Production/Knowledge/MASTER_TRACKING.md` - Stato mappatura componenti (se esiste)
+- `Production/Knowledge/*_COMPONENTI.md` - Inventari per area
+
+---
+
+## 🔄 WORKFLOW STANDARD
+
+### 1. Nuova Feature
+```bash
+1. Crea branch: git checkout -b feature/nome-feature
+2. Sviluppa in src/features/[area]/
+3. Aggiungi test: src/features/[area]/__tests__/
+4. Esegui: npm run test && npm run type-check
+5. Commit: git commit -m "feat: descrizione"
+6. Push e PR
+```
+
+### 2. Bug Fix
+```bash
+1. Usa @SKILL_ERROR_INTERPRETER per diagnosi
+2. Applica quick fix
+3. Aggiungi test per prevenire regressione
+4. Verifica tutti i test passano
+5. Commit: git commit -m "fix: descrizione"
+```
+
+### 3. Refactoring
+```bash
+1. Verifica coverage attuale
+2. Refactora codice
+3. Assicurati tutti i test passano ancora
+4. Aggiungi test se coverage diminuisce
+5. Commit: git commit -m "refactor: descrizione"
+```
+
+---
+
+**🎯 Per assistenza specifica, usa le skills appropriate menzionando trigger words o riferimenti espliciti.**

@@ -49,51 +49,20 @@ export const CalendarPage = () => {
   const { companyId, user } = useAuth()
   const queryClient = useQueryClient()
   const { settings: calendarSettings, isLoading: settingsLoading, isConfigured } = useCalendarSettings()
-  // console.log('⚙️ Calendar settings:', { 
-  //   settings: calendarSettings, 
-  //   settingsLoading, 
-  //   isConfigured: isConfigured(),
-  //   fiscalYearEnd: calendarSettings?.fiscal_year_end
-  // })
   const { events: aggregatedEvents, isLoading, sources } = useAggregatedEvents(
     calendarSettings?.fiscal_year_end ? new Date(calendarSettings.fiscal_year_end) : undefined
   )
-  // console.log('📊 useAggregatedEvents result:', { 
-  //   eventsCount: aggregatedEvents?.length || 0, 
-  //   isLoading, 
-  //   sources,
-  //   sampleEvents: aggregatedEvents?.slice(0, 2)
-  // })
   
   const { filteredEvents } = useFilteredEvents(aggregatedEvents)
-  // console.log('🔍 useFilteredEvents result:', { 
-  //   filteredCount: filteredEvents?.length || 0,
-  //   originalCount: aggregatedEvents?.length || 0,
-  //   sampleFiltered: filteredEvents?.slice(0, 2)
-  // })
   
   // ✅ BYPASS: Usa aggregatedEvents se useFilteredEvents restituisce 0 eventi
   const eventsForFiltering = filteredEvents.length > 0 ? filteredEvents : aggregatedEvents
-  // console.log('🔧 Events for filtering:', {
-  //   source: filteredEvents.length > 0 ? 'filteredEvents' : 'aggregatedEvents',
-  //   count: eventsForFiltering.length,
-  //   filteredEventsCount: filteredEvents.length,
-  //   aggregatedEventsCount: aggregatedEvents.length
-  // })
   const [view, setView] = useCalendarView('month')
   const { createTask, isCreating, completeTask, isCompleting } = useGenericTasks()
   const [isCompletingMaintenance, setIsCompletingMaintenance] = useState(false)
   const { staff } = useStaff()
   const { departments } = useDepartments()
   const { products } = useProducts()
-  // console.log('👥 Staff data:', { 
-  //   staffCount: staff?.length || 0, 
-  //   sampleStaff: staff?.slice(0, 2)
-  // })
-  // console.log('🏢 Departments data:', { 
-  //   departmentsCount: departments?.length || 0, 
-  //   sampleDepartments: departments?.slice(0, 2)
-  // })
   const [showAlertModal, setShowAlertModal] = useState(false)
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null)
   const [showConfigModal, setShowConfigModal] = useState(false)
@@ -187,6 +156,7 @@ export const CalendarPage = () => {
         event.status === 'completed'
       )
 
+
       const eventType = determineEventType(event.source || '', event.metadata || {})
 
       return doesEventPassFilters(
@@ -200,18 +170,56 @@ export const CalendarPage = () => {
     })
   }, [eventsForFiltering, calendarFilters, refreshKey]) // ← Aggiunto refreshKey
 
-  // ✅ Debug risultato finale
-  // console.log('🎯 Final displayEvents count:', displayEvents.length)
-  // console.log('🎯 Events breakdown:', {
-  //   aggregatedEvents: aggregatedEvents.length,
-  //   filteredEvents: filteredEvents.length,
-  //   eventsForFiltering: eventsForFiltering.length,
-  //   displayEvents: displayEvents.length,
-  //   calendarFilters: JSON.stringify(calendarFilters, null, 2)
-  // })
+  // ✅ Calcola eventi in base alla view del calendario
+  const viewBasedEvents = useMemo(() => {
+    if (displayEvents.length === 0) return []
+    
+    const now = new Date()
+    
+    switch (view) {
+      case 'year':
+        return displayEvents.filter(event => {
+          const eventYear = new Date(event.start).getFullYear()
+          return eventYear === now.getFullYear()
+        })
+      case 'month':
+        return displayEvents.filter(event => {
+          const eventDate = new Date(event.start)
+          return eventDate.getMonth() === now.getMonth() && 
+                 eventDate.getFullYear() === now.getFullYear()
+        })
+      case 'week':
+        // Logica settimana corrente
+        const weekStart = new Date(now)
+        weekStart.setDate(now.getDate() - now.getDay() + 1) // Lunedì
+        weekStart.setHours(0, 0, 0, 0)
+        const weekEnd = new Date(weekStart)
+        weekEnd.setDate(weekStart.getDate() + 6) // Domenica
+        weekEnd.setHours(23, 59, 59, 999)
 
-  // ✅ Calcola alert dopo displayEvents
-  const { alertCount, criticalCount, alerts } = useCalendarAlerts(displayEvents)
+        return displayEvents.filter(event => {
+          const eventDate = new Date(event.start)
+          return eventDate >= weekStart && eventDate <= weekEnd
+        })
+      case 'day':
+        // Logica giorno corrente
+        const dayStart = new Date(now)
+        dayStart.setHours(0, 0, 0, 0)
+        const dayEnd = new Date(now)
+        dayEnd.setHours(23, 59, 59, 999)
+
+        return displayEvents.filter(event => {
+          const eventDate = new Date(event.start)
+          return eventDate >= dayStart && eventDate <= dayEnd
+        })
+      default:
+        return displayEvents
+    }
+  }, [displayEvents, view])
+
+
+  // ✅ Calcola alert dopo viewBasedEvents
+  const { alertCount, criticalCount, alerts } = useCalendarAlerts(viewBasedEvents)
 
   // ✅ Calcola statistiche
   const todayEvents = useMemo(() => {
@@ -219,16 +227,34 @@ export const CalendarPage = () => {
     today.setHours(0, 0, 0, 0)
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
-    return displayEvents.filter(
+    return viewBasedEvents.filter(
       event => {
         if (!event || !event.start || !event.status) return false
         const eventDate = new Date(event.start)
-        return eventDate >= today &&
-               eventDate < tomorrow &&
-               event.status !== 'completed'
+        // Per view "giorno", mostra solo eventi di oggi
+        if (view === 'day') {
+          return eventDate.getTime() === today.getTime() && event.status !== 'completed'
+        }
+        
+        // Per altre view, mostra eventi di oggi nel range della view
+        return eventDate >= today && eventDate < tomorrow && event.status !== 'completed'
       }
     )
-  }, [displayEvents, refreshKey]) // ← Aggiunto refreshKey
+  }, [viewBasedEvents, view, refreshKey]) // ← Aggiunto view e refreshKey
+
+  // ✅ Calcola eventi in attesa (oggi non completati)
+  const eventsInWaiting = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    
+    return viewBasedEvents.filter(event => {
+      if (!event || !event.start || !event.status) return false
+      const eventDate = new Date(event.start)
+      return eventDate >= today && eventDate < tomorrow && event.status !== 'completed'
+    })
+  }, [viewBasedEvents, refreshKey])
 
   const tomorrowEvents = useMemo(() => {
     const now = new Date()
@@ -238,31 +264,31 @@ export const CalendarPage = () => {
     const dayAfterTomorrow = new Date(tomorrow)
     dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1)
 
-    return displayEvents.filter(
-      event => {
-        if (!event || !event.start) return false
-        const eventDate = new Date(event.start)
-        return eventDate >= tomorrow && eventDate < dayAfterTomorrow
-      }
-    )
-  }, [displayEvents, refreshKey]) // ← Aggiunto refreshKey
+    return viewBasedEvents.filter(event => {
+      if (!event || !event.start) return false
+      const eventDate = new Date(event.start)
+      eventDate.setHours(0, 0, 0, 0)
+      
+      // ✅ Eventi di domani: data evento = domani
+      return eventDate.getTime() === tomorrow.getTime()
+    })
+  }, [viewBasedEvents, refreshKey]) // ← Aggiunto refreshKey
 
   const overdueEvents = useMemo(() => {
     const now = new Date()
     now.setHours(0, 0, 0, 0)
-    const oneWeekAgo = new Date(now)
-    oneWeekAgo.setDate(now.getDate() - 7)
 
-    return displayEvents.filter(event => {
+    return viewBasedEvents.filter(event => {
       if (!event || !event.start) return false
       if (event.status === 'completed') return false
 
       const eventDate = new Date(event.start)
       eventDate.setHours(0, 0, 0, 0)
 
-      return eventDate >= oneWeekAgo && eventDate < now
+      // ✅ Eventi in ritardo: data evento < oggi
+      return eventDate < now
     })
-  }, [displayEvents, refreshKey]) // ← Aggiunto refreshKey
+  }, [viewBasedEvents, refreshKey]) // ← Aggiunto refreshKey
 
   const shouldShowOverdueSection = useMemo(() => {
     if (overdueEvents.length === 0) return false
@@ -401,27 +427,21 @@ export const CalendarPage = () => {
     return Array.from(deptMap.values()).sort((a, b) => a.name.localeCompare(b.name))
   }, [filteredEvents, departments])
 
-  // ✅ Calcola count eventi SOLO del mese corrente per la legenda
-  const currentMonthSources = useMemo(() => {
-    const now = new Date()
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
-
-    const currentMonthEvents = displayEvents.filter(event => {
-      if (!event || !event.start) return false
-      const eventDate = new Date(event.start)
-      return eventDate >= monthStart && eventDate <= monthEnd
-    })
-
+  // ✅ Calcola count eventi basati sulla view corrente per la legenda (SOLO da completare)
+  const viewBasedSources = useMemo(() => {
+    // ✅ Usa la stessa logica degli eventi in attesa per coerenza
+    const eventsInWaiting = viewBasedEvents.filter(e => e && e.status !== 'completed')
+    
     return {
-      maintenance: currentMonthEvents.filter(e => e && e.source === 'maintenance' && e.status !== 'completed').length,
+      maintenance: eventsInWaiting.filter(e => e.source === 'maintenance').length,
       temperatureChecks: 0, // Già incluso in maintenance
-      haccpExpiry: currentMonthEvents.filter(e => e && e.source === 'custom' && e.metadata?.staff_id).length,
-      productExpiry: currentMonthEvents.filter(e => e && e.source === 'custom' && e.metadata?.product_id).length,
+      haccpExpiry: eventsInWaiting.filter(e => e.source === 'custom' && e.metadata?.staff_id).length,
+      productExpiry: eventsInWaiting.filter(e => e.source === 'custom' && e.metadata?.product_id).length,
       haccpDeadlines: 0, // Unificato in haccpExpiry per coerenza con legenda
-      genericTasks: currentMonthEvents.filter(e => e && e.source === 'general_task' && e.status !== 'completed').length,
+      genericTasks: eventsInWaiting.filter(e => e.source === 'general_task').length,
     }
-  }, [displayEvents])
+  }, [viewBasedEvents])
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20">
@@ -494,7 +514,7 @@ export const CalendarPage = () => {
           <CollapsibleCard
             title="Statistiche"
             icon={TrendingUp}
-            counter={displayEvents.length}
+            counter={viewBasedEvents.length}
             className="mb-4"
             defaultExpanded={true}
             actions={
@@ -523,19 +543,19 @@ export const CalendarPage = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="group relative bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 border-2 border-indigo-200 hover:border-indigo-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
                   <div className="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                    {displayEvents.length}
+                    {viewBasedEvents.filter(e => e && e.status !== 'completed').length}
                   </div>
-                  <div className="text-sm font-semibold text-gray-600 mt-1">📊 Eventi Totali</div>
+                  <div className="text-sm font-semibold text-gray-600 mt-1">📊 Eventi da Completare</div>
                 </div>
                 <div className="group relative bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 border-2 border-green-200 hover:border-green-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
                   <div className="text-3xl font-extrabold text-green-600">
-                    {displayEvents.filter(e => e && e.status === 'completed').length}
+                    {viewBasedEvents.filter(e => e && e.status === 'completed').length}
                   </div>
                   <div className="text-sm font-semibold text-gray-600 mt-1">✅ Completati</div>
                 </div>
                 <div className="group relative bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl p-5 border-2 border-yellow-200 hover:border-yellow-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
                   <div className="text-3xl font-extrabold text-yellow-600">
-                    {displayEvents.filter(e => e && e.status === 'pending').length}
+                    {eventsInWaiting.length}
                   </div>
                   <div className="text-sm font-semibold text-gray-600 mt-1">⏳ In Attesa</div>
                 </div>
@@ -555,11 +575,11 @@ export const CalendarPage = () => {
                     Tasso di Completamento
                   </span>
                   <span className="text-lg font-extrabold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                    {displayEvents.length > 0
+                    {viewBasedEvents.length > 0
                       ? (
-                          (displayEvents.filter(e => e && e.status === 'completed')
+                          (viewBasedEvents.filter(e => e && e.status === 'completed')
                             .length /
-                            displayEvents.length) *
+                            viewBasedEvents.length) *
                           100
                         ).toFixed(1)
                       : '0.0'}
@@ -570,7 +590,7 @@ export const CalendarPage = () => {
                   <div
                     className="absolute inset-0 bg-gradient-to-r from-green-400 via-green-500 to-emerald-500 h-4 rounded-full transition-all duration-500 ease-out shadow-lg"
                     style={{
-                      width: `${displayEvents.length > 0 ? Math.min((displayEvents.filter(e => e && e.status === 'completed').length / displayEvents.length) * 100, 100) : 0}%`,
+                      width: `${viewBasedEvents.length > 0 ? Math.min((viewBasedEvents.filter(e => e && e.status === 'completed').length / viewBasedEvents.length) * 100, 100) : 0}%`,
                     }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent rounded-full"></div>
@@ -587,7 +607,7 @@ export const CalendarPage = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="group bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 text-center border-2 border-blue-200 hover:border-blue-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
                     <div className="text-2xl font-extrabold text-blue-600 mb-1">
-                      {displayEvents.filter(e => {
+                      {viewBasedEvents.filter(e => {
                         if (!e || !e.start) return false
                         const eventDate = new Date(e.start)
                         const today = new Date()
@@ -601,7 +621,7 @@ export const CalendarPage = () => {
 
                   <div className="group bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 text-center border-2 border-green-200 hover:border-green-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
                     <div className="text-2xl font-extrabold text-green-600 mb-1">
-                      {displayEvents.filter(e => {
+                      {viewBasedEvents.filter(e => {
                         if (!e || !e.start) return false
                         const eventDate = new Date(e.start)
                         const now = new Date()
@@ -619,7 +639,7 @@ export const CalendarPage = () => {
 
                   <div className="group bg-gradient-to-br from-purple-50 to-fuchsia-50 rounded-xl p-4 text-center border-2 border-purple-200 hover:border-purple-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
                     <div className="text-2xl font-extrabold text-purple-600 mb-1">
-                      {displayEvents.filter(e => {
+                      {viewBasedEvents.filter(e => {
                         if (!e || !e.start) return false
                         const eventDate = new Date(e.start)
                         const now = new Date()
@@ -632,7 +652,7 @@ export const CalendarPage = () => {
 
                   <div className="group bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-4 text-center border-2 border-orange-200 hover:border-orange-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
                     <div className="text-2xl font-extrabold text-orange-600 mb-1">
-                      {displayEvents.filter(e => {
+                      {viewBasedEvents.filter(e => {
                         if (!e || !e.start) return false
                         const eventDate = new Date(e.start)
                         const now = new Date()
@@ -654,7 +674,7 @@ export const CalendarPage = () => {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">🔧 Manutenzioni</span>
                       <span className="font-medium">
-                        {(sources?.maintenance || 0) + (sources?.temperatureChecks || 0)}
+                        {(viewBasedSources?.maintenance || 0) + (viewBasedSources?.temperatureChecks || 0)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -662,19 +682,19 @@ export const CalendarPage = () => {
                         📦 Scadenze Prodotti
                       </span>
                       <span className="font-medium">
-                        {sources?.productExpiry || 0}
+                        {viewBasedSources?.productExpiry || 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">⏰ Alert HACCP</span>
                       <span className="font-medium">
-                        {(sources?.haccpExpiry || 0) + (sources?.haccpDeadlines || 0)}
+                        {(viewBasedSources?.haccpExpiry || 0) + (viewBasedSources?.haccpDeadlines || 0)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">📋 Attività Generiche</span>
                       <span className="font-medium">
-                        {sources?.genericTasks || 0}
+                        {viewBasedSources?.genericTasks || 0}
                       </span>
                     </div>
                   </div>
@@ -884,39 +904,43 @@ export const CalendarPage = () => {
               </div>
             </>
           )}
-          <Calendar
-            events={displayEvents}
+                 <Calendar
+                   events={viewBasedEvents}
             onEventClick={onEventClick}
             onEventCreate={handleCreateEvent}
             onEventUpdate={onEventUpdate}
             onEventDelete={onEventDelete}
             onDateSelect={onDateSelect}
             onDateClick={setSelectedCalendarDate}
-            config={{
-              defaultView:
-                view === 'year'
-                  ? 'multiMonthYear'
-                  : view === 'month'
-                    ? 'dayGridMonth'
-                    : view === 'week'
-                      ? 'timeGridWeek'
-                      : 'timeGridDay',
-              headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: '',
-              },
-              validRange: calendarSettings?.is_configured ? {
-                start: calendarSettings.fiscal_year_start,
-                end: calendarSettings.fiscal_year_end,
-              } : undefined,
-            }}
+                   config={{
+                     defaultView:
+                       view === 'year'
+                         ? 'multiMonthYear'
+                         : view === 'month'
+                           ? 'dayGridMonth'
+                           : view === 'week'
+                             ? 'timeGridWeek'
+                             : 'timeGridDay',
+                     headerToolbar: {
+                       left: 'prev,next today',
+                       center: 'title',
+                       right: '',
+                     },
+                     // ✅ Configurazione drag and drop corretta
+                     validRange: calendarSettings?.is_configured ? {
+                       start: calendarSettings.fiscal_year_start,
+                       end: calendarSettings.fiscal_year_end,
+                     } : undefined,
+                     // ✅ Permetti drop in date future e correnti
+                     selectConstraint: undefined,
+                     eventConstraint: undefined,
+                   }}
             currentView={view}
             loading={isLoading || settingsLoading}
             error={null}
             useMacroCategories={true}
             calendarSettings={calendarSettings}
-            eventSources={currentMonthSources}
+                   eventSources={viewBasedSources}
             calendarFilters={calendarFilters}
             filters={
               <NewCalendarFilters
