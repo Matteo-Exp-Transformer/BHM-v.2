@@ -4,9 +4,57 @@ import { test, expect } from '@playwright/test';
 test.describe('DepartmentsStep - Test Funzionali', () => {
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/onboarding');
-    // Naviga al step departments (assumendo che sia il secondo step)
-    await page.waitForSelector('h2:has-text("Configurazione Reparti")');
+    console.log('🔐 Eseguendo login automatico...')
+    
+    // Vai alla pagina di login
+    await page.goto('http://localhost:3000/')
+    await page.waitForLoadState('networkidle')
+    
+    // Compila il form di login
+    await page.fill('input[type="email"]', 'matteo.cavallaro.work@gmail.com')
+    await page.fill('input[type="password"]', 'cavallaro')
+    
+    console.log('📝 Credenziali inserite, cliccando Accedi...')
+    await page.click('button:has-text("Accedi")')
+    
+    // Attendi il login e il caricamento della dashboard
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(1000)
+    
+    console.log('🏢 Cliccando pulsante Onboarding...')
+    // Cerca e clicca il pulsante Onboarding nell'header
+    const onboardingButton = page.locator('button:has-text("Onboarding")')
+    await expect(onboardingButton).toBeVisible()
+    await onboardingButton.click()
+    
+    // Attendi che si apra l'onboarding
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(1500)
+    
+    // Completa il primo step (BusinessInfoStep) per poter accedere al secondo
+    console.log('📝 Completando BusinessInfoStep...')
+    
+    // Compila i campi obbligatori del primo step
+    await page.fill('input[placeholder*="nome azienda"], input[placeholder*="Nome azienda"]', 'Test Azienda')
+    await page.waitForTimeout(1000)
+    
+    await page.fill('input[placeholder*="indirizzo"], input[placeholder*="Indirizzo"]', 'Via Test 123')
+    await page.waitForTimeout(1000)
+    
+    await page.fill('input[placeholder*="email"], input[placeholder*="Email"]', 'test@azienda.com')
+    await page.waitForTimeout(1000)
+    
+    await page.fill('input[placeholder*="telefono"], input[placeholder*="Telefono"]', '1234567890')
+    await page.waitForTimeout(1000)
+    
+    // Clicca Avanti per completare il primo step
+    console.log('➡️ Cliccando Avanti per completare BusinessInfoStep...')
+    const nextButton = page.locator('button:has-text("Avanti"), button:has-text("Continua"), button:has-text("Next")')
+    await expect(nextButton).toBeVisible()
+    await nextButton.click()
+    await page.waitForTimeout(1500)
+    
+    console.log('✅ BusinessInfoStep completato, DepartmentsStep aperto')
   });
 
   test('Dovrebbe renderizzare correttamente', async ({ page }) => {

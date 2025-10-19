@@ -240,10 +240,6 @@ const StaffStep = ({
               Elenco dei membri registrati durante l'onboarding
             </p>
           </div>
-          <Button variant="ghost" className="gap-2" onClick={scrollToForm}>
-            <Plus className="h-4 w-4" />
-            {editingId ? 'Modifica membro' : 'Aggiungi membro'}
-          </Button>
         </header>
 
         <div className="divide-y divide-gray-100">

@@ -43,12 +43,12 @@ const BASE_URL = `http://localhost:${APP_PORT}`;
 console.log(`🎭 Playwright Main - Porta rilevata: ${APP_PORT}`);
 
 export default defineConfig({
-  testDir: './Production/Test',
+  testDir: './tests',
   
   // Configurazione base con visibilità estesa
   use: {
     baseURL: BASE_URL,
-    headless: process.env.CI ? true : false,
+    headless: true,
     viewport: { width: 1280, height: 720 },
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -89,6 +89,13 @@ export default defineConfig({
   
   // Configurazione progetti per test completi
   projects: [
+    {
+      name: 'Onboarding',
+      testMatch: '**/onboarding*.{ts,js}',
+      use: { 
+        baseURL: BASE_URL
+      }
+    },
     {
       name: 'Autenticazione',
       testMatch: '**/Autenticazione/**/*.js',

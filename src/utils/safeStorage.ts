@@ -140,13 +140,27 @@ export const clearHaccpData = (): boolean => {
       
       // Dati operativi pendenti
       'haccp_pending_operations',
+      
+      // Dati calendario
+      'calendar-view-preference',
+      'calendar-filters',
+      'calendar-dismissed-alerts',
+      
+      // Dati audit e log
+      'audit_logs',
+      
+      // Dati PWA e cache
+      'update_analytics',
+      'install_analytics',
+      'automation_cache',
+      'automation_cache_manager',
     ]
 
     keysToRemove.forEach(key => {
       safeRemoveItem(key)
     })
 
-    console.log('[SafeStorage] Dati HACCP e onboarding puliti con successo')
+    console.log('[SafeStorage] Dati HACCP, onboarding e app puliti con successo')
     return true
   } catch (error) {
     console.error('[SafeStorage] Errore nella pulizia dati HACCP:', error)

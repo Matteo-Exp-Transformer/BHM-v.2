@@ -67,6 +67,7 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
             
             // Invalida query specifiche con companyId
             if (companyId) {
+              await queryClient.invalidateQueries({ queryKey: ['company', companyId] })
               await queryClient.invalidateQueries({ queryKey: ['departments', companyId] })
               await queryClient.invalidateQueries({ queryKey: ['staff', companyId] })
               await queryClient.invalidateQueries({ queryKey: ['products', companyId] })
@@ -80,9 +81,12 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
               await queryClient.invalidateQueries({ queryKey: ['company-calendar-settings', companyId] })
               await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
               await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
+              await queryClient.invalidateQueries({ queryKey: ['haccp-config', companyId] })
+              await queryClient.invalidateQueries({ queryKey: ['user-profiles', companyId] })
             }
             
             // Invalida anche le query senza companyId per sicurezza
+            await queryClient.invalidateQueries({ queryKey: ['company'] })
             await queryClient.invalidateQueries({ queryKey: ['departments'] })
             await queryClient.invalidateQueries({ queryKey: ['staff'] })
             await queryClient.invalidateQueries({ queryKey: ['products'] })
@@ -96,6 +100,8 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
             await queryClient.invalidateQueries({ queryKey: ['company-calendar-settings'] })
             await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
             await queryClient.invalidateQueries({ queryKey: ['task-completions'] })
+            await queryClient.invalidateQueries({ queryKey: ['haccp-config'] })
+            await queryClient.invalidateQueries({ queryKey: ['user-profiles'] })
             
             console.log('✅ Cache invalidata completamente')
             
