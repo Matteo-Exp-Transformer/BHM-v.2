@@ -106,6 +106,32 @@ const StaffStep = ({
     [departments]
   )
 
+  // Filtra categorie in base al ruolo selezionato
+  const availableCategories = useMemo(() => {
+    // Solo ruoli gerarchici possono essere "Amministratore" come categoria
+    const canBeAdmin = ['admin', 'responsabile'].includes(formData.role)
+    
+    return STAFF_CATEGORIES.filter(category => {
+      // Se non può essere admin, escludi "Amministratore"
+      if (category.value === 'Amministratore' && !canBeAdmin) {
+        return false
+      }
+      return true
+    })
+  }, [formData.role])
+
+  // Pulisci categorie incompatibili quando cambia il ruolo
+  useEffect(() => {
+    const canBeAdmin = ['admin', 'responsabile'].includes(formData.role)
+    
+    if (!canBeAdmin && formData.categories.includes('Amministratore')) {
+      setFormData(prev => ({
+        ...prev,
+        categories: prev.categories.filter(cat => cat !== 'Amministratore')
+      }))
+    }
+  }, [formData.role])
+
   const resetForm = () => {
     setFormData(EMPTY_FORM)
     setErrors({})
@@ -375,8 +401,8 @@ const StaffStep = ({
         </div>
       </section>
 
-      {/* Form - Mostra sempre se non ci sono membri, altrimenti solo se stiamo editando */}
-      {(staffMembers.length === 0 || editingId) && (
+      {/* Form - Mostra se stiamo editando o se non ci sono membri */}
+      {(editingId || staffMembers.length === 0) && (
         <section
           id="staff-step-form"
           ref={formRef}
@@ -550,6 +576,11 @@ const StaffStep = ({
             </div>
             <div>
               <Label>Categorie *</Label>
+              {!['admin', 'responsabile'].includes(formData.role) && (
+                <p className="text-xs text-amber-600 mb-2">
+                  ℹ️ Solo Amministratori e Responsabili possono avere categoria "Amministratore"
+                </p>
+              )}
               <div className="space-y-2">
                 {formData.categories.map((category, index) => (
                   <div
@@ -571,7 +602,7 @@ const StaffStep = ({
                         <SelectValue placeholder="Seleziona categoria" />
                       </SelectTrigger>
                       <SelectContent>
-                        {STAFF_CATEGORIES.map(option => (
+                        {availableCategories.map(option => (
                           <SelectOption key={option.value} value={option.value}>
                             {option.label}
                           </SelectOption>
@@ -606,7 +637,7 @@ const StaffStep = ({
                       ...prev,
                       categories: [
                         ...prev.categories,
-                        STAFF_CATEGORIES[0].value,
+                        availableCategories[0].value,
                       ],
                     }))
                   }

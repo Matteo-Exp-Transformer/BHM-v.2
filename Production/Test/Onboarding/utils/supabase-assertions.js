@@ -7,7 +7,7 @@
  * Per Playwright, usa supabase-js client con admin key
  */
 
-const { createClient } = require('@supabase/supabase-js')
+import { createClient } from '@supabase/supabase-js'
 
 // Supabase client (admin per bypass RLS nei test)
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co'
@@ -416,7 +416,7 @@ async function cleanupTestData(companyId) {
 
 // ============= EXPORTS =============
 
-module.exports = {
+export {
   supabase,
   getCurrentCompanyId,
   assertBusinessInfoSaved,

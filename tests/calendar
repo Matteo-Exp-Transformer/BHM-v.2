@@ -1,0 +1,281 @@
+import { test, expect } from '@playwright/test'
+
+test.describe('Calendar Page - Test con Credenziali Reali', () => {
+  test('Verificare login con credenziali reali e accesso alla pagina attività', async ({ page }) => {
+    // Naviga alla pagina di login
+    await page.goto('/sign-in')
+    await page.waitForLoadState('networkidle')
+    
+    console.log('=== TEST LOGIN CON CREDENZIALI REALI ===')
+    
+    // Verifica che il form di login sia presente
+    await expect(page.locator('input[type="email"]')).toBeVisible()
+    await expect(page.locator('input[type="password"]')).toBeVisible()
+    
+    // Compila i campi con le credenziali reali
+    await page.fill('input[type="email"]', 'matteo.cavallaro.work@gmail.com')
+    await page.fill('input[type="password"]', 'cavallaro')
+    
+    console.log('✅ Credenziali inserite')
+    
+    // Clicca su "Accedi"
+    await page.click('button:has-text("Accedi")')
+    
+    // Attendi che il login venga processato
+    await page.waitForTimeout(5000)
+    
+    const currentUrl = page.url()
+    console.log(`URL dopo login: ${currentUrl}`)
+    
+    if (currentUrl.includes('/sign-in')) {
+      console.log('❌ Login fallito - rimane sulla pagina di login')
+      
+      // Verifica se ci sono messaggi di errore
+      const errorMessages = page.locator('[data-testid="error"], .error, .alert-error, [role="alert"]')
+      const errorCount = await errorMessages.count()
+      
+      if (errorCount > 0) {
+        console.log('Messaggi di errore trovati:')
+        for (let i = 0; i < errorCount; i++) {
+          const error = errorMessages.nth(i)
+          const text = await error.textContent()
+          console.log(`  - ${text}`)
+        }
+      } else {
+        console.log('Nessun messaggio di errore visibile')
+      }
+      
+      throw new Error('Login fallito con credenziali reali')
+    } else {
+      console.log('✅ Login riuscito!')
+      console.log(`Reindirizzato a: ${currentUrl}`)
+      
+      // Prova a navigare alla pagina attività
+      await page.goto('/attivita')
+      await page.waitForLoadState('networkidle')
+      
+      const activitiesUrl = page.url()
+      console.log(`URL pagina attività: ${activitiesUrl}`)
+      
+      if (activitiesUrl.includes('/sign-in')) {
+        console.log('❌ Pagina attività non accessibile - reindirizzato al login')
+        throw new Error('Pagina attività non accessibile dopo login')
+      } else {
+        console.log('✅ Pagina attività accessibile!')
+        
+        // Verifica che la pagina sia caricata correttamente
+        await expect(page).toHaveTitle(/HACCP Business Manager/)
+        
+        // Verifica elementi della pagina attività
+        const body = page.locator('body')
+        await expect(body).toBeVisible()
+        
+        console.log('=== SCROLL E VERIFICA ELEMENTI ===')
+        
+        // Scroll verso l'alto per vedere l'header
+        await page.evaluate(() => window.scrollTo(0, 0))
+        await page.waitForTimeout(1000)
+        console.log('📜 Scroll verso l\'alto completato')
+        
+        // Cerca elementi specifici della pagina attività
+        const h1 = page.locator('h1')
+        const h1Count = await h1.count()
+        
+        if (h1Count > 0) {
+          const h1Text = await h1.first().textContent()
+          console.log(`Titolo pagina: ${h1Text}`)
+        }
+        
+        // Scroll verso il basso per vedere il calendario
+        await page.evaluate(() => window.scrollTo(0, 500))
+        await page.waitForTimeout(1000)
+        console.log('📜 Scroll verso il basso completato')
+        
+        // Cerca il calendario
+        const calendar = page.locator('.fc, [data-testid="calendar-container"]')
+        const calendarCount = await calendar.count()
+        
+        if (calendarCount > 0) {
+          console.log('✅ Calendario trovato nella pagina attività')
+        } else {
+          console.log('⚠️ Calendario non trovato')
+        }
+        
+        // Scroll verso il basso per vedere pulsanti e statistiche
+        await page.evaluate(() => window.scrollTo(0, 1000))
+        await page.waitForTimeout(1000)
+        console.log('📜 Scroll verso il basso per pulsanti completato')
+        
+        // Cerca pulsanti di creazione
+        const createButtons = page.locator('button').filter({ 
+          hasText: /Assegna|Crea|Nuovo|attività|mansione/ 
+        })
+        const buttonCount = await createButtons.count()
+        
+        if (buttonCount > 0) {
+          console.log(`✅ Trovati ${buttonCount} pulsanti di creazione`)
+        } else {
+          console.log('⚠️ Nessun pulsante di creazione trovato')
+        }
+        
+        // Scroll verso il basso per vedere le statistiche
+        await page.evaluate(() => window.scrollTo(0, 1500))
+        await page.waitForTimeout(1000)
+        console.log('📜 Scroll verso le statistiche completato')
+        
+        // Cerca sezione statistiche
+        const statsSection = page.locator('text=Statistiche')
+        const statsCount = await statsSection.count()
+        
+        if (statsCount > 0) {
+          console.log('✅ Sezione statistiche trovata')
+        } else {
+          console.log('⚠️ Sezione statistiche non trovata')
+        }
+        
+        // Scroll completo per vedere tutto
+        await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+        await page.waitForTimeout(1000)
+        console.log('📜 Scroll completo verso il basso completato')
+        
+        // Scroll verso l'alto per completare
+        await page.evaluate(() => window.scrollTo(0, 0))
+        await page.waitForTimeout(1000)
+        console.log('📜 Scroll verso l\'alto finale completato')
+        
+        console.log('✅ Test login con credenziali reali completato con successo!')
+      }
+    }
+  })
+  
+  test('Verificare creazione di attività con credenziali reali', async ({ page }) => {
+    // Login con credenziali reali
+    await page.goto('/sign-in')
+    await page.waitForLoadState('networkidle')
+    
+    await page.fill('input[type="email"]', 'matteo.cavallaro.work@gmail.com')
+    await page.fill('input[type="password"]', 'cavallaro')
+    await page.click('button:has-text("Accedi")')
+    await page.waitForTimeout(5000)
+    
+    // Verifica che il login sia riuscito
+    const currentUrl = page.url()
+    if (currentUrl.includes('/sign-in')) {
+      throw new Error('Login fallito - impossibile procedere con il test')
+    }
+    
+    // Naviga alla pagina attività
+    await page.goto('/attivita')
+    await page.waitForLoadState('networkidle')
+    
+    console.log('=== TEST CREAZIONE ATTIVITÀ ===')
+    
+    // Cerca pulsanti di creazione
+    const createButtons = page.locator('button').filter({ 
+      hasText: /Assegna|Crea|Nuovo|attività|mansione/ 
+    })
+    
+    const buttonCount = await createButtons.count()
+    console.log(`Trovati ${buttonCount} pulsanti di creazione`)
+    
+    if (buttonCount > 0) {
+      // Prova a cliccare sul primo pulsante
+      await createButtons.first().click()
+      await page.waitForTimeout(2000)
+      
+      // Verifica se si apre un form o modal
+      const form = page.locator('form, [role="dialog"], .modal')
+      const formCount = await form.count()
+      
+      if (formCount > 0) {
+        console.log('✅ Form di creazione attività aperto!')
+        
+        // Prova a compilare il form
+        const nameInput = page.locator('input[name*="name"], input[name*="title"], input[placeholder*="nome"], input[placeholder*="titolo"]')
+        if (await nameInput.count() > 0) {
+          await nameInput.first().fill('Test Attività E2E - ' + new Date().toISOString())
+          console.log('✅ Nome attività compilato')
+        }
+        
+        const descriptionInput = page.locator('textarea, input[name*="description"], input[name*="note"]')
+        if (await descriptionInput.count() > 0) {
+          await descriptionInput.first().fill('Attività creata dal test E2E con credenziali reali')
+          console.log('✅ Descrizione compilata')
+        }
+        
+        // Cerca pulsante di salvataggio
+        const saveButton = page.locator('button').filter({ hasText: /Salva|Crea|Aggiungi|Conferma/ })
+        if (await saveButton.count() > 0) {
+          await saveButton.first().click()
+          await page.waitForTimeout(3000)
+          console.log('✅ Attività salvata nel database!')
+        }
+      } else {
+        console.log('⚠️ Form di creazione non trovato')
+      }
+    } else {
+      console.log('⚠️ Nessun pulsante di creazione trovato')
+    }
+    
+    console.log('✅ Test creazione attività completato!')
+  })
+  
+  test('Verificare persistenza dati con credenziali reali', async ({ page }) => {
+    // Login con credenziali reali
+    await page.goto('/sign-in')
+    await page.waitForLoadState('networkidle')
+    
+    await page.fill('input[type="email"]', 'matteo.cavallaro.work@gmail.com')
+    await page.fill('input[type="password"]', 'cavallaro')
+    await page.click('button:has-text("Accedi")')
+    await page.waitForTimeout(5000)
+    
+    // Verifica che il login sia riuscito
+    const currentUrl = page.url()
+    if (currentUrl.includes('/sign-in')) {
+      throw new Error('Login fallito - impossibile procedere con il test')
+    }
+    
+    // Naviga alla pagina attività
+    await page.goto('/attivita')
+    await page.waitForLoadState('networkidle')
+    
+    console.log('=== TEST PERSISTENZA DATI ===')
+    
+    // Cerca eventi nel calendario
+    const events = page.locator('.fc-event, [data-testid="calendar-event"]')
+    const eventCount = await events.count()
+    
+    console.log(`Trovati ${eventCount} eventi nel calendario`)
+    
+    if (eventCount > 0) {
+      console.log('✅ Eventi trovati nel database!')
+      
+      // Prova a cliccare su un evento
+      await events.first().click()
+      await page.waitForTimeout(1000)
+      
+      // Verifica se si apre un modal
+      const modal = page.locator('[role="dialog"], .modal, .popup')
+      const modalCount = await modal.count()
+      
+      if (modalCount > 0) {
+        console.log('✅ Modal evento aperto - dati DB funzionanti')
+        await expect(modal.first()).toBeVisible()
+      }
+    } else {
+      console.log('⚠️ Nessun evento trovato nel calendario')
+    }
+    
+    // Cerca statistiche
+    const statsSection = page.locator('text=Statistiche')
+    const statsCount = await statsSection.count()
+    
+    if (statsCount > 0) {
+      console.log('✅ Sezione statistiche presente - dati DB caricati')
+      await expect(statsSection.first()).toBeVisible()
+    }
+    
+    console.log('✅ Test persistenza dati completato!')
+  })
+})

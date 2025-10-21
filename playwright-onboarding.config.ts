@@ -1,4 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
+import * as dotenv from 'dotenv'
+import * as path from 'path'
+import { fileURLToPath } from 'url'
 
 /**
  * Playwright Configuration per Test Onboarding BHM v.2
@@ -8,9 +11,26 @@ import { defineConfig, devices } from '@playwright/test'
  * - Headed demo mode (per visualizzazione)
  */
 
+// ES modules compatibility
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// Carica variabili d'ambiente da .env.test
+dotenv.config({ path: path.resolve(__dirname, '.env.test') })
+
 export default defineConfig({
   // Directory test onboarding
   testDir: './Production/Test/Onboarding',
+
+  // Match SOLO file Playwright (.pw.js)
+  testMatch: '**/*.pw.js',
+
+  // Ignora file Vitest
+  testIgnore: [
+    '**/Incremental/**',  // Directory con test Vitest
+    '**/*.test.{ts,tsx,js}',  // File test Vitest
+    '**/*.spec.{ts,tsx}',  // File spec Vitest
+  ],
 
   // Timeout per test (onboarding può essere lungo)
   timeout: 120000, // 2 minuti per test completo

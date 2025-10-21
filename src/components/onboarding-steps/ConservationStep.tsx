@@ -63,6 +63,7 @@ const ConservationStep = ({
     Record<string, string>
   >({})
   const [temperatureError, setTemperatureError] = useState<string | null>(null)
+  const [categoryUpdateMessage, setCategoryUpdateMessage] = useState<string | null>(null)
 
   useEffect(() => {
     onUpdate({ points })
@@ -112,11 +113,39 @@ const ConservationStep = ({
     return getCompatibleCategories(temperature, formData.pointType)
   }, [formData.targetTemperature, formData.pointType])
 
+  // Pulisci categorie incompatibili quando cambiano temperatura o tipologia
+  useEffect(() => {
+    if (formData.productCategories.length > 0) {
+      const compatibleIds = compatibleCategories.map(cat => cat.id)
+      const incompatibleCategories = formData.productCategories.filter(
+        catId => !compatibleIds.includes(catId)
+      )
+      
+      if (incompatibleCategories.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          productCategories: prev.productCategories.filter(
+            catId => compatibleIds.includes(catId)
+          )
+        }))
+        
+        // Mostra messaggio informativo
+        setCategoryUpdateMessage(
+          `⚠️ Alcune categorie sono state rimosse perché incompatibili con la temperatura ${formData.targetTemperature}°C e tipologia ${formData.pointType}`
+        )
+        
+        // Nascondi messaggio dopo 5 secondi
+        setTimeout(() => setCategoryUpdateMessage(null), 5000)
+      }
+    }
+  }, [compatibleCategories, formData.productCategories, formData.targetTemperature, formData.pointType])
+
   const resetForm = () => {
     setFormData(EMPTY_FORM)
     setEditingId(null)
     setValidationErrors({})
     setTemperatureError(null)
+    setCategoryUpdateMessage(null)
   }
 
   const handleEditPoint = (point: ConservationPoint) => {
@@ -427,8 +456,8 @@ const ConservationStep = ({
         </div>
       </section>
 
-      {/* Form - Mostra solo se non ci sono punti o se stiamo editando */}
-      {(points.length === 0 || editingId) && (
+      {/* Form - Mostra se stiamo editando o se non ci sono punti */}
+      {(editingId || points.length === 0) && (
         <section className="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <header className="mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
@@ -583,6 +612,12 @@ const ConservationStep = ({
               questo punto di conservazione. Solo le categorie compatibili con
               la temperatura impostata sono disponibili.
             </p>
+            
+            {categoryUpdateMessage && (
+              <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-sm text-amber-800">{categoryUpdateMessage}</p>
+              </div>
+            )}
             <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
               {compatibleCategories.map(category => {
                 const isSelected = formData.productCategories.includes(

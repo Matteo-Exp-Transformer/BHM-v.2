@@ -1,0 +1,376 @@
+{
+  "users": {
+    "admin": {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "email": "admin@test.com",
+      "password": "AdminPassword123",
+      "first_name": "Admin",
+      "last_name": "User",
+      "role": "admin",
+      "tenant_id": "550e8400-e29b-41d4-a716-446655440000",
+      "is_active": true,
+      "created_at": "2025-01-27T10:00:00Z",
+      "updated_at": "2025-01-27T10:00:00Z",
+      "last_login_at": "2025-01-27T09:30:00Z"
+    },
+    "responsabile": {
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "email": "responsabile@test.com",
+      "password": "ResponsabilePassword123",
+      "first_name": "Responsabile",
+      "last_name": "User",
+      "role": "responsabile",
+      "tenant_id": "550e8400-e29b-41d4-a716-446655440000",
+      "is_active": true,
+      "created_at": "2025-01-27T10:00:00Z",
+      "updated_at": "2025-01-27T10:00:00Z",
+      "last_login_at": "2025-01-27T09:15:00Z"
+    },
+    "dipendente": {
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "email": "dipendente@test.com",
+      "password": "DipendentePassword123",
+      "first_name": "Dipendente",
+      "last_name": "User",
+      "role": "dipendente",
+      "tenant_id": "550e8400-e29b-41d4-a716-446655440000",
+      "is_active": true,
+      "created_at": "2025-01-27T10:00:00Z",
+      "updated_at": "2025-01-27T10:00:00Z",
+      "last_login_at": "2025-01-27T09:00:00Z"
+    },
+    "collaboratore": {
+      "id": "550e8400-e29b-41d4-a716-446655440004",
+      "email": "collaboratore@test.com",
+      "password": "CollaboratorePassword123",
+      "first_name": "Collaboratore",
+      "last_name": "User",
+      "role": "collaboratore",
+      "tenant_id": "550e8400-e29b-41d4-a716-446655440000",
+      "is_active": true,
+      "created_at": "2025-01-27T10:00:00Z",
+      "updated_at": "2025-01-27T10:00:00Z",
+      "last_login_at": "2025-01-27T08:45:00Z"
+    },
+    "inactive": {
+      "id": "550e8400-e29b-41d4-a716-446655440005",
+      "email": "inactive@test.com",
+      "password": "InactivePassword123",
+      "first_name": "Inactive",
+      "last_name": "User",
+      "role": "dipendente",
+      "tenant_id": "550e8400-e29b-41d4-a716-446655440000",
+      "is_active": false,
+      "created_at": "2025-01-27T10:00:00Z",
+      "updated_at": "2025-01-27T10:00:00Z",
+      "last_login_at": "2025-01-20T10:00:00Z"
+    },
+    "locked": {
+      "id": "550e8400-e29b-41d4-a716-446655440006",
+      "email": "locked@test.com",
+      "password": "LockedPassword123",
+      "first_name": "Locked",
+      "last_name": "User",
+      "role": "dipendente",
+      "tenant_id": "550e8400-e29b-41d4-a716-446655440000",
+      "is_active": true,
+      "created_at": "2025-01-27T10:00:00Z",
+      "updated_at": "2025-01-27T10:00:00Z",
+      "last_login_at": "2025-01-27T08:00:00Z",
+      "locked_until": "2025-01-27T10:30:00Z"
+    }
+  },
+  "invalid_users": {
+    "wrong_password": {
+      "email": "admin@test.com",
+      "password": "WrongPassword123"
+    },
+    "wrong_email": {
+      "email": "nonexistent@test.com",
+      "password": "AdminPassword123"
+    },
+    "invalid_email": {
+      "email": "invalid-email",
+      "password": "AdminPassword123"
+    },
+    "empty_email": {
+      "email": "",
+      "password": "AdminPassword123"
+    },
+    "empty_password": {
+      "email": "admin@test.com",
+      "password": ""
+    },
+    "short_password": {
+      "email": "admin@test.com",
+      "password": "Short"
+    },
+    "invalid_password_format": {
+      "email": "admin@test.com",
+      "password": "Password123!"
+    }
+  },
+  "sessions": {
+    "valid_admin": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAxIiwicm9sZSI6ImFkbWluIiwidGVuYW50X2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAwIiwiZXhwIjoxNzM4MDY0MDAwfQ.example_signature",
+      "csrf_token": "csrf_token_admin_123456789",
+      "expires_at": "2025-01-27T18:00:00Z",
+      "refresh_token": "refresh_token_admin_123456789",
+      "user": "admin"
+    },
+    "expired": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAxIiwicm9sZSI6ImFkbWluIiwidGVuYW50X2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAwIiwiZXhwIjoxNzM4MDY0MDAwfQ.expired_signature",
+      "csrf_token": "csrf_token_expired_123456789",
+      "expires_at": "2025-01-27T08:00:00Z",
+      "user": "admin"
+    },
+    "invalid": {
+      "token": "invalid_token",
+      "csrf_token": "invalid_csrf_token",
+      "expires_at": "2025-01-27T18:00:00Z",
+      "user": "admin"
+    }
+  },
+  "csrf_tokens": {
+    "valid": {
+      "csrf_token": "csrf_token_valid_123456789",
+      "expires_at": "2025-01-27T14:00:00Z"
+    },
+    "expired": {
+      "csrf_token": "csrf_token_expired_123456789",
+      "expires_at": "2025-01-27T08:00:00Z"
+    },
+    "invalid": {
+      "csrf_token": "invalid_csrf_token",
+      "expires_at": "2025-01-27T14:00:00Z"
+    }
+  },
+  "rate_limits": {
+    "login": {
+      "email": {
+        "max_requests": 5,
+        "window_ms": 300000,
+        "lockout_duration": 600
+      },
+      "ip": {
+        "max_requests": 30,
+        "window_ms": 300000,
+        "lockout_duration": 600
+      }
+    },
+    "recovery": {
+      "email": {
+        "max_requests": 3,
+        "window_ms": 900000,
+        "lockout_duration": 1800
+      },
+      "ip": {
+        "max_requests": 10,
+        "window_ms": 900000,
+        "lockout_duration": 1800
+      }
+    }
+  },
+  "invites": {
+    "valid": {
+      "id": "550e8400-e29b-41d4-a716-446655440010",
+      "token": "invite_token_valid_123456789",
+      "email": "newuser@test.com",
+      "role": "dipendente",
+      "department_id": "550e8400-e29b-41d4-a716-446655440020",
+      "expires_at": "2025-01-28T10:00:00Z",
+      "created_by": "550e8400-e29b-41d4-a716-446655440001",
+      "created_at": "2025-01-27T10:00:00Z"
+    },
+    "expired": {
+      "id": "550e8400-e29b-41d4-a716-446655440011",
+      "token": "invite_token_expired_123456789",
+      "email": "expired@test.com",
+      "role": "dipendente",
+      "department_id": "550e8400-e29b-41d4-a716-446655440020",
+      "expires_at": "2025-01-20T10:00:00Z",
+      "created_by": "550e8400-e29b-41d4-a716-446655440001",
+      "created_at": "2025-01-20T10:00:00Z"
+    },
+    "invalid": {
+      "id": "550e8400-e29b-41d4-a716-446655440012",
+      "token": "invalid_invite_token",
+      "email": "invalid@test.com",
+      "role": "dipendente",
+      "department_id": "550e8400-e29b-41d4-a716-446655440020",
+      "expires_at": "2025-01-28T10:00:00Z",
+      "created_by": "550e8400-e29b-41d4-a716-446655440001",
+      "created_at": "2025-01-27T10:00:00Z"
+    }
+  },
+  "recovery_tokens": {
+    "valid": {
+      "token": "recovery_token_valid_123456789",
+      "email": "admin@test.com",
+      "expires_at": "2025-01-27T12:00:00Z",
+      "created_at": "2025-01-27T10:00:00Z"
+    },
+    "expired": {
+      "token": "recovery_token_expired_123456789",
+      "email": "admin@test.com",
+      "expires_at": "2025-01-20T12:00:00Z",
+      "created_at": "2025-01-20T10:00:00Z"
+    },
+    "invalid": {
+      "token": "invalid_recovery_token",
+      "email": "admin@test.com",
+      "expires_at": "2025-01-27T12:00:00Z",
+      "created_at": "2025-01-27T10:00:00Z"
+    }
+  },
+  "error_responses": {
+    "auth_failed": {
+      "success": false,
+      "error": {
+        "code": "AUTH_FAILED",
+        "message": "Credenziali non valide",
+        "devMessage": "Invalid email or password"
+      }
+    },
+    "rate_limited": {
+      "success": false,
+      "error": {
+        "code": "RATE_LIMITED",
+        "message": "Troppi tentativi. Riprova più tardi",
+        "devMessage": "Rate limit exceeded",
+        "details": {
+          "retry_after": 300
+        }
+      }
+    },
+    "csrf_required": {
+      "success": false,
+      "error": {
+        "code": "CSRF_REQUIRED",
+        "message": "La sessione non è valida. Riprova",
+        "devMessage": "CSRF token missing or invalid"
+      }
+    },
+    "account_locked": {
+      "success": false,
+      "error": {
+        "code": "ACCOUNT_LOCKED",
+        "message": "Account temporaneamente bloccato",
+        "devMessage": "Account locked due to too many failed attempts",
+        "details": {
+          "locked_until": "2025-01-27T10:30:00Z"
+        }
+      }
+    },
+    "validation_error": {
+      "success": false,
+      "error": {
+        "code": "VALIDATION_ERROR",
+        "message": "Dati non validi",
+        "devMessage": "Validation failed",
+        "details": {
+          "field_errors": [
+            {
+              "field": "email",
+              "message": "Formato email non valido"
+            },
+            {
+              "field": "password",
+              "message": "Password deve essere di almeno 12 caratteri"
+            }
+          ]
+        }
+      }
+    },
+    "session_expired": {
+      "success": false,
+      "error": {
+        "code": "SESSION_EXPIRED",
+        "message": "La sessione è scaduta. Accedi di nuovo",
+        "devMessage": "Session expired"
+      }
+    },
+    "network_error": {
+      "success": false,
+      "error": {
+        "code": "NETWORK_ERROR",
+        "message": "Errore di connessione. Riprova",
+        "devMessage": "Network request failed"
+      }
+    }
+  },
+  "test_scenarios": {
+    "successful_login": {
+      "description": "Login con credenziali valide",
+      "user": "admin",
+      "expected_result": "success",
+      "expected_redirect": "/dashboard"
+    },
+    "failed_login": {
+      "description": "Login con credenziali non valide",
+      "user": "wrong_password",
+      "expected_result": "error",
+      "expected_message": "Credenziali non valide"
+    },
+    "rate_limited_login": {
+      "description": "Login dopo troppi tentativi",
+      "user": "wrong_password",
+      "attempts": 6,
+      "expected_result": "rate_limited",
+      "expected_message": "Troppi tentativi"
+    },
+    "csrf_protection": {
+      "description": "Login senza token CSRF",
+      "user": "admin",
+      "csrf_token": null,
+      "expected_result": "error",
+      "expected_message": "Token di sicurezza non valido"
+    },
+    "session_expired": {
+      "description": "Accesso con sessione scaduta",
+      "session": "expired",
+      "expected_result": "redirect",
+      "expected_redirect": "/login"
+    },
+    "recovery_request": {
+      "description": "Richiesta reset password",
+      "user": "admin",
+      "expected_result": "success",
+      "expected_message": "Email di recupero inviata"
+    },
+    "recovery_confirm": {
+      "description": "Conferma reset password",
+      "token": "valid",
+      "new_password": "NewPassword123",
+      "expected_result": "success"
+    },
+    "invite_accept": {
+      "description": "Accettazione invito",
+      "invite": "valid",
+      "user_data": {
+        "first_name": "New",
+        "last_name": "User",
+        "password": "NewUserPassword123"
+      },
+      "expected_result": "success"
+    }
+  },
+  "performance_benchmarks": {
+    "login_page_load": {
+      "max_time_ms": 2500,
+      "description": "Tempo massimo per caricare pagina login"
+    },
+    "csrf_token_refresh": {
+      "max_time_ms": 100,
+      "description": "Tempo massimo per refresh token CSRF"
+    },
+    "rate_limit_check": {
+      "max_time_ms": 50,
+      "description": "Tempo massimo per verifica rate limiting"
+    },
+    "form_validation": {
+      "max_time_ms": 200,
+      "description": "Tempo massimo per validazione form"
+    }
+  }
+}

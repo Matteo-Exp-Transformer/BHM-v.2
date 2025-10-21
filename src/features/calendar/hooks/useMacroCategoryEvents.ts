@@ -203,8 +203,7 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
 
       // Filter by status
       if (filters.statuses.length > 0) {
-        const eventStatus: EventStatus = item.status === 'completed' ? 'completed' :
-                                        item.status === 'overdue' ? 'overdue' : 'to_complete'
+        const eventStatus = calculateEventStatus(item.dueDate, item.status === 'completed')
         if (!filters.statuses.includes(eventStatus)) {
           return false
         }
@@ -261,8 +260,7 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
 
       // Filter by status
       if (filters.statuses.length > 0) {
-        const eventStatus: EventStatus = item.status === 'completed' ? 'completed' :
-                                        item.status === 'overdue' ? 'overdue' : 'to_complete'
+        const eventStatus = calculateEventStatus(item.dueDate, item.status === 'completed')
         if (!filters.statuses.includes(eventStatus)) {
           return false
         }
@@ -308,7 +306,7 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
 
       // Filter by status (product expiry can only be pending or overdue)
       if (filters.statuses.length > 0) {
-        const eventStatus: EventStatus = item.status === 'overdue' ? 'overdue' : 'to_complete'
+        const eventStatus = calculateEventStatus(item.dueDate, item.status === 'completed')
         if (!filters.statuses.includes(eventStatus)) {
           return false
         }

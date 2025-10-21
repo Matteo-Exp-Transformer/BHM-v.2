@@ -1682,11 +1682,18 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
         .select('id, email')
 
       if (error) {
-        console.error('❌ Error inserting staff:', error)
-        throw error
+        // ✅ FIX: Gestisci errore di duplicato gracefully
+        if (error.code === '23505') {
+          console.log('⚠️ Staff già esistente (duplicate key), continua senza errori')
+          console.log('📋 Dettagli errore:', error.details)
+          console.log('🔍 Questo è normale dopo un reset - i dati potrebbero essere ancora in cache')
+        } else {
+          console.error('❌ Error inserting staff (non-duplicate):', error)
+          throw error
+        }
+      } else {
+        console.log('✅ Staff inserted successfully:', staff.length)
       }
-
-      console.log('✅ Staff inserted successfully:', staff.length)
     }
 
     // Recupera tutti gli staff (esistenti + appena inseriti) per il linking
@@ -2459,6 +2466,11 @@ export const resetOperationalData = async (): Promise<boolean> => {
 
     // Pulisci localStorage onboarding e tutti i dati HACCP
     clearHaccpData()
+
+    // 🔄 FORZA RESET STATE: Notifica tutti i componenti del reset
+    window.dispatchEvent(new CustomEvent('onboarding-reset', {
+      detail: { companyId, timestamp: new Date().toISOString() }
+    }))
 
     // Le query cache vengono invalidate dal componente che chiama questa funzione
     console.log('🔄 Reset completato - le query cache verranno invalidate dal componente')

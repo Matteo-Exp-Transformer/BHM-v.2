@@ -5,7 +5,7 @@
  * Naviga alle varie sezioni app e controlla presenza dati nelle tab
  */
 
-const { expect } = require('@playwright/test')
+import { expect } from '@playwright/test'
 
 // ============= NAVIGATION HELPERS =============
 
@@ -349,7 +349,7 @@ async function screenshotOnError(page, testName, error) {
 
 // ============= EXPORTS =============
 
-module.exports = {
+export {
   navigateToSection,
   assertDashboardShowsData,
   assertDepartmentsVisible,
