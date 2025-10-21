@@ -94,8 +94,8 @@ export default defineConfig({
   },
   
   // Global setup/teardown - auto-cleanup
-  globalSetup: require.resolve('./scripts/pre-test-validation.cjs'),
-  globalTeardown: require.resolve('./scripts/post-test-cleanup.cjs'),
+  globalSetup: './scripts/pre-test-validation.mjs',
+  globalTeardown: './scripts/post-test-cleanup.mjs',
   
   // Configurazione progetti semplificata (solo test funzionanti)
   projects: [

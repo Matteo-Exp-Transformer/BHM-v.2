@@ -1,0 +1,455 @@
+Ô£à Playwright Main usa porta 3000 (forzata)
+­ƒÄ¡ Playwright Main - Porta rilevata: 3000
+{
+  "config": {
+    "configFile": "C:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\playwright.config.ts",
+    "rootDir": "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2/tests",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 2
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2/test-results/main",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "Onboarding",
+        "name": "Onboarding",
+        "testDir": "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/onboarding*.{ts,js}"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2/test-results/main",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "Calendar",
+        "name": "Calendar",
+        "testDir": "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/calendar*.{ts,js}"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2/test-results/main",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "Login",
+        "name": "Login",
+        "testDir": "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/login*.{ts,js}"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2/test-results/main",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "Autenticazione",
+        "name": "Autenticazione",
+        "testDir": "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/Autenticazione/**/*.js"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2/test-results/main",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "UI-Base",
+        "name": "UI-Base",
+        "testDir": "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/UI-Base/**/*.js"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2/test-results/main",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "Forms",
+        "name": "Forms",
+        "testDir": "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/Forms/**/*.js"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2/test-results/main",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "Business",
+        "name": "Business",
+        "testDir": "C:/Users/matte.MIO/Documents/GitHub/BHM-v.2/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/Business/**/*.js"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.0",
+    "workers": 2,
+    "webServer": {
+      "command": "npm run dev -- --port 3000",
+      "url": "http://localhost:3000",
+      "reuseExistingServer": true,
+      "timeout": 120000,
+      "stdout": "pipe",
+      "stderr": "pipe"
+    }
+  },
+  "suites": [
+    {
+      "title": "calendar-final-working-test.spec.ts",
+      "file": "calendar-final-working-test.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Calendar Page - Test Funzionante Finale",
+          "file": "calendar-final-working-test.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "E1: Verificare che il sistema sia pronto per test E2E",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Calendar",
+                  "projectName": "Calendar",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4212,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Ô£à Sistema pronto per test E2E\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-19T22:37:53.509Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d73ef7a52addcf11c02f-9910234150a12eff306b",
+              "file": "calendar-final-working-test.spec.ts",
+              "line": 4,
+              "column": 3
+            },
+            {
+              "title": "E2: Verificare che le route protette funzionino",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Calendar",
+                  "projectName": "Calendar",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 4221,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Ô£à Route /attivita correttamente protetta\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-19T22:37:53.509Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d73ef7a52addcf11c02f-3b438904cee29210da13",
+              "file": "calendar-final-working-test.spec.ts",
+              "line": 24,
+              "column": 3
+            },
+            {
+              "title": "F1: Verificare che il sistema di autenticazione sia configurato",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Calendar",
+                  "projectName": "Calendar",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1325,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Ô£à Sistema di autenticazione configurato\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-19T22:37:57.843Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d73ef7a52addcf11c02f-8c30bda17445d196c9f5",
+              "file": "calendar-final-working-test.spec.ts",
+              "line": 35,
+              "column": 3
+            },
+            {
+              "title": "L1: Verificare che il sistema di routing funzioni",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Calendar",
+                  "projectName": "Calendar",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 3150,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Ô£à Route /sign-in funzionante\n"
+                        },
+                        {
+                          "text": "Ô£à Route /sign-up funzionante\n"
+                        },
+                        {
+                          "text": "Ô£à Route /forgot-password funzionante\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-19T22:37:57.850Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d73ef7a52addcf11c02f-3eeb3d84288e4f98428d",
+              "file": "calendar-final-working-test.spec.ts",
+              "line": 50,
+              "column": 3
+            },
+            {
+              "title": "M1: Verificare che il sistema sia pronto per dati reali",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Calendar",
+                  "projectName": "Calendar",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1259,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Ô£à Sistema pronto per dati reali\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-19T22:37:59.178Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d73ef7a52addcf11c02f-4144ea28c44250d56685",
+              "file": "calendar-final-working-test.spec.ts",
+              "line": 68,
+              "column": 3
+            },
+            {
+              "title": "N1: Verificare login completo con credenziali reali e accesso ai dati",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Calendar",
+                  "projectName": "Calendar",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7686,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "=== TEST COMPLETO CON CREDENZIALI REALI ===\n"
+                        },
+                        {
+                          "text": "Ô£à Login riuscito con credenziali reali\n"
+                        },
+                        {
+                          "text": "Ô£à Pagina attivit├á accessibile\n"
+                        },
+                        {
+                          "text": "Ô£à Trovati 27 eventi reali nel database\n"
+                        },
+                        {
+                          "text": "Ô£à Calendario presente e funzionante\n"
+                        },
+                        {
+                          "text": "Ô£à Statistiche presenti - dati DB caricati\n"
+                        },
+                        {
+                          "text": "\n­ƒÄë TEST COMPLETO CON DATI REALI RIUSCITO!\n"
+                        },
+                        {
+                          "text": "Ô£à Sistema completamente funzionante con:\n"
+                        },
+                        {
+                          "text": "   - Autenticazione reale\n"
+                        },
+                        {
+                          "text": "   - Accesso alla pagina attivit├á\n"
+                        },
+                        {
+                          "text": "   - Dati reali dal database\n"
+                        },
+                        {
+                          "text": "   - Interfaccia utente completa\n"
+                        },
+                        {
+                          "text": "\nÔ£à Test sistema completo con dati reali completato!\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-19T22:38:00.448Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d73ef7a52addcf11c02f-5b89e3f51d10672d8c68",
+              "file": "calendar-final-working-test.spec.ts",
+              "line": 83,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-10-19T22:37:52.942Z",
+    "duration": 15261.565,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -20,7 +20,10 @@ const DevButtons: React.FC<DevButtonsProps> = ({
 
   return (
     <div className="flex gap-2 flex-wrap">
-      {/* PULSANTE PRECOMPILA */}
+      {/* 🔒 LOCKED: PULSANTE PRECOMPILA - Onboarding completato con successo */}
+      {/* Data: 2025-01-19 */}
+      {/* Responsabile: Claude AI Assistant */}
+      {/* Modifiche richiedono unlock manuale e re-test completo */}
       <button
         onClick={onPrefillOnboarding}
         className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-green-600 bg-white border border-green-200 rounded-md hover:text-green-700 hover:bg-green-50 transition-colors"
@@ -31,7 +34,10 @@ const DevButtons: React.FC<DevButtonsProps> = ({
         <span className="sm:hidden">Precompila</span>
       </button>
 
-      {/* PULSANTE COMPLETA ONBOARDING */}
+      {/* 🔒 LOCKED: PULSANTE COMPLETA ONBOARDING - Onboarding completato con successo */}
+      {/* Data: 2025-01-19 */}
+      {/* Responsabile: Claude AI Assistant */}
+      {/* Modifiche richiedono unlock manuale e re-test completo */}
       <button
         onClick={() => {
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')

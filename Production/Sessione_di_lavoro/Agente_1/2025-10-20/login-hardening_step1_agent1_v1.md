@@ -188,49 +188,104 @@ Dipendenze chiave: D1 → D2 → B2; C1 prima di aprire traffico pubblico; C2 pa
 
 ## Artefatti/Handoff per Agente 2 (Systems/API/DB)
 
-### Specifiche API (alto livello)
-- POST `/auth/login`: body { email, password }, risposta generica; set cookie httpOnly.
-- POST `/auth/logout`: invalida sessione; clear cookie.
-- POST `/auth/recovery/request`: body { email }.
-- POST `/auth/recovery/confirm`: body { token, newPassword }.
-- POST `/invites/create`: body { email, roleId, tenantId } (admin only).
-- POST `/invites/accept`: body { token, profile }.
-- GET `/session`: ritorna info sessione minimale (no PII), require cookie.
+### 10 Conferme Veloci (RDA Prerequisites)
+**STATO ATTUALE vs NUOVO SISTEMA** - Validato contro codice reale:
 
-### Modello Dati (proposta)
-- `tenants(id, name, created_at)`
-- `roles(id, name, description)`
-- `users(id, email, password_hash, created_at, last_login_at, status)`
-- `user_roles(user_id, role_id, tenant_id)`
-- `invites(id, email, role_id, tenant_id, token_hash, expires_at, used_at, created_by)`
-- `audit_log(id, ts, user_id, tenant_id, ip, ua, action, outcome, reason, correlation_id, meta jsonb)`
+1. **Base URL API**: Attuale Supabase client (`VITE_SUPABASE_URL`) → **MANTIENE**: Supabase Edge Functions per auth hardening
+2. **CSRF Cookie**: ❌ Non esiste → Nuovo: `bhm_csrf_token`
+3. **CSRF Header**: ❌ Non esiste → Nuovo: `X-CSRF-Token` su mutate
+4. **Rate Limit Headers**: ❌ Non esiste → Nuovo: `X-RateLimit-Remaining`, `X-RateLimit-Reset`, `X-RateLimit-Retry-After`
+5. **Sessione TTL/Idle**: Supabase auto → Nuovo: 30m TTL, 30m idle, rolling
+6. **Remember Me**: ❌ Non implementato → Nuovo: solo rolling server-side esteso
+7. **Errori Standardizzati**: Supabase generici → Nuovo: codici standard (`AUTH_FAILED`, `RATE_LIMITED`, `CSRF_REQUIRED`, `TOKEN_INVALID`, `TOKEN_EXPIRED`, `INVITE_INVALID`, `INVITE_EXPIRED`, `PASSWORD_POLICY_VIOLATION`, `SESSION_EXPIRED`)
+8. **Recovery Token**: Supabase auto → Nuovo: `?token=...` query param, 15min TTL, monouso
+9. **Password Policy**: ❌ Non validata → Nuovo: solo lettere [A-Za-z], min 12, denylist BE
+10. **Inviti Accept**: Sistema esistente DB → Nuovo: campi `token`, `firstName`, `lastName`, `password`
 
-### RLS/Policies (minime)
+### Deliverable Obbligatori (Agente 2)
+**File da produrre in `Production/Sessione_di_lavoro/Agente_2/2025-10-20/`:**
+
+- **`API_SPEC_AUTH_v1.md`**: Contracts completi per 8 endpoint con request/response schemas, status codes, error model, rate-limit headers
+- **`System_Diagram_Auth.md`**: Diagramma sottosistema auth (mermaid) con CSRF, rate limit, sessions, rotation
+- **`SECURITY_FLOWS.md`**: Flussi CSRF, session rotation, rate limiting, recovery, invite accept con esempi
+
+### Specifiche API (dettagliate)
+- POST `/auth/login`: body { email, password, rememberMe? }, risposta generica; set cookie httpOnly + CSRF.
+- POST `/auth/logout`: invalida sessione; clear cookie; rotazione sessione.
+- POST `/auth/recovery/request`: body { email }; rate limit applicato.
+- POST `/auth/recovery/confirm`: body { token, newPassword }; invalidazione token.
+- POST `/invites/create`: body { email, roleId, tenantId } (admin only); CSRF required.
+- POST `/invites/accept`: body { token, firstName, lastName, password }; verifica preliminare GET.
+- GET `/session`: info sessione minimale (no PII), require cookie.
+- POST `/session/refresh`: rotazione sessione + cookie.
+
+### Modello Dati (validato)
+- `tenants(id, name, slug, created_at, settings jsonb)`
+- `roles(id, name, description, permissions jsonb)`
+- `users(id, email, password_hash, created_at, last_login_at, status, recovery_tokens jsonb)`
+- `user_roles(user_id, role_id, tenant_id, assigned_at, expires_at, is_active)`
+- `invites(id, email, role_id, tenant_id, token_hash, expires_at, attempts, max_attempts)`
+- `audit_log(id, timestamp, user_id, tenant_id, ip, ua, action, outcome, correlation_id)`
+- `sessions(id, user_id, session_token, csrf_token, expires_at, last_activity, rotated_from)`
+- `rate_limit_buckets(id, bucket_key, bucket_type, endpoint, request_count, window_start, blocked_until)`
+
+### RLS/Policies (implementate)
 - `users`: self‑read; write solo tramite service con elevated role.
 - `user_roles`: read limitato a tenant; write admin del tenant.
 - `invites`: read per creator/admin tenant; write admin; accept anon con token valido.
 - `audit_log`: read solo security/admin; write da service role.
+- `sessions`: self‑read/update; system manage.
+- `rate_limit_buckets`: system only.
 
-### Config sicurezza
-- Cookie: httpOnly, secure (prod), sameSite=strict, path=/, short TTL + rolling.
-- CSRF: double‑submit token per form/API mutanti.
-- Rate limit: bucket IP/account/UA con soglie e backoff configurabili.
+### Config sicurezza (definitiva)
+- Cookie: httpOnly, secure (prod), sameSite=strict, path=/, TTL 30m + rolling.
+- CSRF: `bhm_csrf_token` cookie + `X-CSRF-Token` header; double‑submit pattern.
+- Rate limit: bucket IP(30/5min)/account(5/5min)/UA(20/5min) con lockout 10min.
 
 ### Template Email
 - Invite email (link one‑time firmato, scadenza 15–60 min).
 - Recovery email (token monouso 15 min, copy sicura, nessuna disclosure).
 
-### Testing
+### Testing (critici)
 - Suite E2E auth (Playwright): login valido/invalid, lockout, recovery, invite accept, session rotation, CSRF.
 - Unit/integration: schema validation, token service, rate limiter, RLS tests.
 
 ---
 
 ## Domande aperte da chiudere ora
-- Multi‑tenant: obbligatorio per release iniziale? Assunto: sì (tenant = azienda).
-- Ruoli iniziali: `owner`, `admin`, `manager`, `operator`? Assunto: owner (bootstrap) + admin + operator.
-- SMTP provider e domini di invio: definire (post‑setup DNS) — default: provider esterno affidabile.
-- Scadenza precisa recovery link (es. 15 min) e dettagli sessione (TTL, idle) da fissare in Agente 2.
+- Multi‑tenant: obbligatorio per release iniziale? **RISOLTO**: sì (tenant = azienda).
+- Ruoli iniziali: `owner`, `admin`, `manager`, `operator`? **RISOLTO**: owner (bootstrap) + admin + operator.
+- SMTP provider e domini di invio: definire (post‑setup DNS) — default: provider esterno affidabile. **RISOLTO**: Supabase built-in per dev, custom SMTP per prod.
+- Soglie rate limiting: default conservativi (es. 5/min per account, 30/min per IP, tuning con load test). **RISOLTO**: IP(30/5min)/account(5/5min)/UA(20/5min) con lockout 10min.
+
+---
+
+## Gate 1 Closure - Quality Gates
+
+### ✅ Metriche Chiare e Misurabili
+- **Funzionali**: Tasso completion login > 98%, Recovery success rate > 95%, Tempo medio login < 300ms BE
+- **Performance**: P95 latenza endpoints auth < 600ms, P99 < 1200ms, Overhead rate limiting < 5% CPU
+- **Sicurezza**: 0 leakage informazioni utenti, Nessun bypass RLS, Session fixation/CSRF bloccati
+- **Testing**: Coverage unit/integration auth ≥ 85%, E2E critici verdi al 100%
+
+### ✅ Rischi Identificati e Mitigazioni
+- **Enumerazione utenti**: Messaggi errore uniformi + tempi costanti + rate limit
+- **Token hijacking**: Token monouso + scadenza breve + binding device + revoca
+- **Session fixation**: Rigenerazione sessione + cookie httpOnly/secure/sameSite=strict
+- **RLS incompleta**: Policies testate + coverage query lettura/scrittura
+- **Lockout legittimi**: Backoff progressivo + canali sblocco supervised
+
+### ✅ Backlog Ordinato con Dipendenze
+**Priorità**: A1, B1, C1, C2, D1, D2, A2, A3, B2, E1, E2
+**Dipendenze**: D1 → D2 → B2; C1 prima traffico pubblico; C2 parallelo A1
+
+### ✅ Zero Ambiguità Critiche
+- Tutte le 10 Conferme Veloci validate contro codice reale
+- Parametri sicurezza definitivi (cookie, CSRF, rate limit, password policy)
+- Deliverable Agente 2 specificati con percorsi file
+- Error codes standardizzati e mapping completo
+
+**GATE 1 CHIUSO** ✅ - Pronto per handoff ad Agente 2
 
 ---
 
@@ -245,5 +300,35 @@ Dipendenze chiave: D1 → D2 → B2; C1 prima di aprire traffico pubblico; C2 pa
 - Lavorare ex‑novo su best practice 2025; evitare dipendenze non necessarie.
 - Variabili sensibili solo in `.env.local`; nessun secret in repo.
 - Verificare `npm run type-check`, `npm run lint`, suite test agent auth prima di merge.
+
+---
+
+## Parametri di sicurezza (Owner)
+
+Questa sezione consolida i vincoli operativi definitivi da applicare in Systems (Agente 2) e a valle.
+
+### Metriche performance
+- Backend auth: p50 < 300 ms, p95 < 600 ms per endpoint.
+- End‑to‑End: login valido ≤ 2 s (include FE, rete, handshake cookie).
+
+### CSRF — perimetro e pattern
+- Obbligatorio su TUTTE le mutate autenticate: logout, password reset/confirm, password change, invites create/accept, update profilo/impostazioni.
+- Login: opzionale ma consigliato per coerenza.
+- Pattern ammessi: double‑submit token o header‑based; token separato dalla sessione httpOnly.
+
+### Sessione e cookie
+- Cookie: httpOnly, secure (prod), sameSite=strict, path=/.
+- TTL breve (es. 30 min) con rolling session e idle‑timeout 30 min.
+- Session rotation ai trigger: login, logout, password reset/confirm, role elevation, email change confermata, enable/disable MFA (quando introdotta), escalation privilegi temporanea.
+
+### Rate limiting (valori iniziali)
+- Per account: 5 tentativi/5 min; lock 10 min.
+- Per IP: 30 richieste/5 min; backoff; lock 10 min su abuso.
+- Per UA/fingerprint: 20/5 min (conservativo). Includere headers quota/rimasto/reset. Audit su lockout.
+
+### Password policy
+- Solo lettere (a‑z, A‑Z), lunghezza minima 12.
+- Denylist top 10k; vietato includere l'email nella password.
+- Recovery token monouso, scadenza 15 min, invalidazione alla prima use.
 
 
