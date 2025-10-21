@@ -87,35 +87,28 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   // ✅ Forza il refetch dei dati quando viene chiamato onDataUpdated
   const [refreshKey, setRefreshKey] = useState(0)
   
-  // ✅ NUOVO: Stato locale per tracciare modifiche agli eventi
-  const [localEventUpdates, setLocalEventUpdates] = useState<Record<string, any>>({})
-  
   // ✅ Funzione per convertire eventi CalendarEvent in MacroCategoryItem
   const convertEventToItem = (event: any): MacroCategoryItem => {
-    // ✅ Applica modifiche locali se presenti
-    const localUpdate = localEventUpdates[event.id]
-    const updatedEvent = localUpdate ? { ...event, ...localUpdate } : event
-    
-    const eventType = determineEventType(updatedEvent.source, updatedEvent.metadata)
-    const eventStatus = calculateEventStatus(new Date(updatedEvent.start), updatedEvent.status === 'completed')
+    const eventType = determineEventType(event.source, event.metadata)
+    const eventStatus = calculateEventStatus(new Date(event.start), event.status === 'completed')
     
     return {
-      id: updatedEvent.id,
-      title: updatedEvent.title,
-      description: updatedEvent.extendedProps?.description || '',
-      status: updatedEvent.status === 'completed' ? 'completed' : 
+      id: event.id,
+      title: event.title,
+      description: event.extendedProps?.description || '',
+      status: event.status === 'completed' ? 'completed' : 
               eventStatus === 'overdue' ? 'overdue' : 'pending',
-      priority: updatedEvent.extendedProps?.priority || 'medium',
-      assignedTo: updatedEvent.extendedProps?.assignedTo || '',
-      dueDate: new Date(updatedEvent.start),
-      completedAt: updatedEvent.status === 'completed' ? new Date() : null,
-      completedBy: updatedEvent.status === 'completed' ? 'User' : null,
-      department: updatedEvent.extendedProps?.department || '',
+      priority: event.extendedProps?.priority || 'medium',
+      assignedTo: event.extendedProps?.assignedTo || '',
+      dueDate: new Date(event.start),
+      completedAt: event.status === 'completed' ? new Date() : null,
+      completedBy: event.status === 'completed' ? 'User' : null,
+      department: event.extendedProps?.department || '',
       type: eventType,
       metadata: {
         category: category,
-        sourceId: updatedEvent.id,
-        ...updatedEvent.metadata
+        sourceId: event.id,
+        ...event.metadata
       }
     } as MacroCategoryItem & { 
       completedAt?: Date | null
@@ -169,12 +162,6 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
     console.log('🔄 Forcing macro data refresh in modal')
   }
 
-  // ✅ NUOVO: Funzione per pulire le modifiche locali quando il modal viene chiuso
-  const handleClose = () => {
-    setLocalEventUpdates({}) // Pulisci le modifiche locali
-    onClose()
-  }
-
 
   const handleCompleteMaintenance = async (maintenanceId: string) => {
     if (!companyId || !user) {
@@ -221,18 +208,6 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
 
       toast.success('✅ Manutenzione completata - Calendario aggiornato')
       setSelectedItems([]) // Chiudi tutti gli item aperti
-      
-      // ✅ NUOVO: Aggiorna immediatamente lo stato locale dell'evento
-      setLocalEventUpdates(prev => ({
-        ...prev,
-        [maintenanceId]: {
-          status: 'completed',
-          extendedProps: {
-            ...prev[maintenanceId]?.extendedProps,
-            status: 'completed'
-          }
-        }
-      }))
       
       // ✅ Forza aggiornamento UI
       window.dispatchEvent(new Event('calendar-refresh'))
@@ -294,7 +269,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
-      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={handleClose} />
+      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
 
       <div className="absolute right-0 top-0 bottom-0 w-full max-w-3xl bg-white shadow-2xl overflow-hidden flex flex-col">
         <div className={`${config.bgColor} border-b ${config.borderColor} p-6`}>
@@ -321,7 +296,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                 </span>
               </button>
               <button
-                onClick={handleClose}
+                onClick={onClose}
                 className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
               >
                 <X className="h-6 w-6 text-gray-600" />
@@ -651,18 +626,6 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                     { taskId: taskId },
                                     {
                                       onSuccess: async () => {
-                                        // ✅ NUOVO: Aggiorna immediatamente lo stato locale dell'evento
-                                        setLocalEventUpdates(prev => ({
-                                          ...prev,
-                                          [taskId]: {
-                                            status: 'completed',
-                                            extendedProps: {
-                                              ...prev[taskId]?.extendedProps,
-                                              status: 'completed'
-                                            }
-                                          }
-                                        }))
-                                        
                                         await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
                                         await queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
                                         await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
@@ -833,18 +796,6 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                         { taskId: taskId },
                                         {
                                           onSuccess: async () => {
-                                            // ✅ NUOVO: Aggiorna immediatamente lo stato locale dell'evento
-                                            setLocalEventUpdates(prev => ({
-                                              ...prev,
-                                              [taskId]: {
-                                                status: 'completed',
-                                                extendedProps: {
-                                                  ...prev[taskId]?.extendedProps,
-                                                  status: 'completed'
-                                                }
-                                              }
-                                            }))
-                                            
                                             await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
                                             await queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
                                             await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
@@ -993,18 +944,6 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                         { taskId: taskId },
                                         {
                                           onSuccess: async () => {
-                                            // ✅ NUOVO: Aggiorna immediatamente lo stato locale dell'evento
-                                            setLocalEventUpdates(prev => ({
-                                              ...prev,
-                                              [taskId]: {
-                                                status: 'pending',
-                                                extendedProps: {
-                                                  ...prev[taskId]?.extendedProps,
-                                                  status: 'pending'
-                                                }
-                                              }
-                                            }))
-                                            
                                             await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
                                             await queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
                                             await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
@@ -1018,7 +957,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                             onDataUpdated?.()
                                             
                                             // Chiudi e riapri il pannello per mostrare le modifiche
-                                            handleClose()
+                                            onClose()
                                           },
                                           onError: (error) => {
                                             console.error('Error uncompleting task:', error)

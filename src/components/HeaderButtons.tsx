@@ -60,25 +60,10 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
       {/* 🔄 Cancella Dati e Ricomincia - SEMPRE VISIBILE */}
       <button
         onClick={async () => {
-          // 🔄 STEP 1: Invalida TUTTA la cache PRIMA del reset per evitare race conditions
-          console.log('🔄 Invalidazione cache React Query PRIMA del reset...')
-          
-          // Pulisce TUTTA la cache per evitare che i componenti mostrino dati vecchi
-          queryClient.clear()
-          
-          // Invalida TUTTE le query per forzare il ricaricamento completo
-          await queryClient.invalidateQueries()
-          
-          console.log('✅ Cache pulita e invalidata PRIMA del reset')
-          
-          // 🔄 STEP 2: Esegui il reset del database
           const success = await resetOperationalData()
-          
           if (success) {
-            console.log('✅ Reset database completato')
-            
-            // 🔄 STEP 3: Invalida nuovamente la cache dopo il reset per sicurezza
-            console.log('🔄 Invalidazione cache React Query DOPO il reset...')
+            // Invalida TUTTE le query per forzare il ricaricamento completo
+            console.log('🔄 Invalidazione cache React Query dopo reset...')
             
             // Invalida query specifiche con companyId
             if (companyId) {
@@ -118,13 +103,10 @@ const HeaderButtons: React.FC<HeaderButtonsProps> = ({
             await queryClient.invalidateQueries({ queryKey: ['haccp-config'] })
             await queryClient.invalidateQueries({ queryKey: ['user-profiles'] })
             
-            console.log('✅ Cache invalidata completamente DOPO il reset')
+            console.log('✅ Cache invalidata completamente')
             
-            // 🔄 STEP 4: Forza il refresh della pagina per assicurarsi che tutti i componenti si aggiornino
-            console.log('🔄 Refresh della pagina per aggiornamento completo...')
-            setTimeout(() => {
-              window.location.reload()
-            }, 1000)
+            // Dopo il reset, apri automaticamente l'onboarding
+            setTimeout(() => onOpenOnboarding(), 500)
           }
         }}
         className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-orange-600 bg-white border border-orange-200 rounded-md hover:text-orange-700 hover:bg-orange-50 transition-colors"

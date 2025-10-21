@@ -11,13 +11,6 @@ import {
 } from '@/utils/calendarUtils'
 import { WEEKDAYS, DEFAULT_CALENDAR_CONFIG } from '@/types/calendar'
 
-// Helper per gestire orari notturni (da GenericTaskForm.tsx)
-const isOvernightTime = (startTime: string, endTime: string): boolean => {
-  const start = new Date(`2000-01-01T${startTime}:00`)
-  const end = new Date(`2000-01-01T${endTime}:00`)
-  return end <= start
-}
-
 // LOCKED: 2025-01-16 - CalendarConfigStep completamente testato
 // Test eseguiti: 25 test, tutti passati
 // Combinazioni testate: configurazione anno lavorativo, giorni apertura settimanali, giorni chiusura singoli e periodi, orari apertura, calcolo giorni lavorativi
@@ -148,15 +141,7 @@ const CalendarConfigStep = ({
     if (!newSlots[slotIndex]) {
       newSlots[slotIndex] = { open: '', close: '' }
     }
-    
-    // Aggiorna il campo specifico
     newSlots[slotIndex][field] = value
-    
-    // Se stiamo aggiornando l'orario di chiusura, verifica se diventa notturno
-    if (field === 'close' && newSlots[slotIndex].open) {
-      const isOvernight = isOvernightTime(newSlots[slotIndex].open, value)
-      // Potremmo aggiungere un flag per tracciare orari notturni se necessario
-    }
 
     updateField('business_hours', {
       ...formData.business_hours,
@@ -470,47 +455,32 @@ const CalendarConfigStep = ({
                     )}
                   </div>
                   <div className="space-y-2">
-                    {slots.map((slot, slotIndex) => {
-                      const isOvernight = slot.open && slot.close ? isOvernightTime(slot.open, slot.close) : false
-                      
-                      return (
-                        <div key={slotIndex} className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="time"
-                              value={slot.open}
-                              onChange={(e) => updateBusinessHours(weekday, slotIndex, 'open', e.target.value)}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                            />
-                            <span className="text-gray-500">-</span>
-                            <input
-                              type="time"
-                              value={slot.close}
-                              onChange={(e) => updateBusinessHours(weekday, slotIndex, 'close', e.target.value)}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                            />
-                            {slots.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => removeTimeSlot(weekday, slotIndex)}
-                                className="p-2 text-gray-400 hover:text-red-600"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                          
-                          {isOvernight && (
-                            <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
-                              <span className="text-blue-600">🌙</span>
-                              <span className="text-sm text-blue-800 font-medium">
-                                Orario notturno (fine giorno dopo)
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })}
+                    {slots.map((slot, slotIndex) => (
+                      <div key={slotIndex} className="flex items-center gap-2">
+                        <input
+                          type="time"
+                          value={slot.open}
+                          onChange={(e) => updateBusinessHours(weekday, slotIndex, 'open', e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
+                        <span className="text-gray-500">-</span>
+                        <input
+                          type="time"
+                          value={slot.close}
+                          onChange={(e) => updateBusinessHours(weekday, slotIndex, 'close', e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
+                        {slots.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeTimeSlot(weekday, slotIndex)}
+                            className="p-2 text-gray-400 hover:text-red-600"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
                     {slots.length === 0 && (
                       <button
                         type="button"

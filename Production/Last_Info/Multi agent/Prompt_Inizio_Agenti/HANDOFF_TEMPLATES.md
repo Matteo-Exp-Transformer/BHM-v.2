@@ -173,21 +173,21 @@
 ## TRACKING LAVORO
 
 ### 🐛 Problemi Identificati
-- [2025-01-27] - API endpoint /feature/list non funziona - Status: Risolto (fix in commit abc123)
-- [2025-01-27] - Componente Button non rispetta design tokens - Status: In corso
+- [{DATA_CORRENTE}] - API endpoint /feature/list non funziona - Status: Risolto (fix in commit abc123)
+- [{DATA_CORRENTE}] - Componente Button non rispetta design tokens - Status: In corso
 
 ### ❓ Dubbi/Questioni
-- [2025-01-27] - Come gestire loading state per liste lunghe? - Status: Risolto (usare virtualizzazione)
-- [2025-01-27] - Validazione form lato client o server? - Status: In attesa risposta Agente 4
+- [{DATA_CORRENTE}] - Come gestire loading state per liste lunghe? - Status: Risolto (usare virtualizzazione)
+- [{DATA_CORRENTE}] - Validazione form lato client o server? - Status: In attesa risposta Agente 4
 
 ### 📝 Note Agente
-- [2025-01-27] - Implementato componente principale, performance buona
-- [2025-01-27] - Deciso di usare React Query per caching, funziona bene
-- [2025-01-27] - Idea: aggiungere skeleton loading per UX migliore
+- [{DATA_CORRENTE}] - Implementato componente principale, performance buona
+- [{DATA_CORRENTE}] - Deciso di usare React Query per caching, funziona bene
+- [{DATA_CORRENTE}] - Idea: aggiungere skeleton loading per UX migliore
 
 ### ✅ Completamento
-- [2025-01-27] - Componenti React implementati - Tutti i test passano
-- [2025-01-27] - Handoff ad Agente 6 pronto - Test E2E da implementare
+- [{DATA_CORRENTE}] - Componenti React implementati - Tutti i test passano
+- [{DATA_CORRENTE}] - Handoff ad Agente 6 pronto - Test E2E da implementare
 ```
 
 ---

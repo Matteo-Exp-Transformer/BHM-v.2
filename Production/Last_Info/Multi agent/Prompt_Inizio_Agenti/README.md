@@ -2,7 +2,7 @@
 
 > **Sistema Multi-Agent per Sviluppo Software Strategico**
 > **Metodologia**: 90% Planning / 10% Coding
-> **Versione**: 2.0 | **Data**: 2025-10-20
+> **Versione**: 2.0 | **Data**: 20-10-2025
 
 ---
 
@@ -123,7 +123,7 @@ Prima di avviare Agenti 4–7:
 [Handoff] (Model 1-2-3)
   - Skills: .cursor/rules/Skills-agent-1-product-strategy.md
   - Prompt: Production/Last_Info/Multi agent/Prompt_Inizio_Agenti/Agente 1.md
-  - Richiesta: Production/Sessione_di_lavoro/Agente_0/2025-10-20/notifiche-push.md
+  - Richiesta: Production/Sessione_di_lavoro/Agente_0/{DATA_CORRENTE}/notifiche-push.md
    ↓
 [Agente 1] → MVP Brief (3 giorni)
    - Feature core: Notifiche task, alert scadenza, storico

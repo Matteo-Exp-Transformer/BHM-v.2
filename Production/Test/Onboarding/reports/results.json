@@ -10,9 +10,7 @@
     "grep": {},
     "grepInvert": null,
     "maxFailures": 0,
-    "metadata": {
-      "actualWorkers": 1
-    },
+    "metadata": {},
     "preserveOutput": "always",
     "reporter": [
       [
@@ -43,19 +41,13 @@
         "outputDir": "c:/Users/matte.MIO/Documents/GitHub/BHM-v.2/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {
-          "actualWorkers": 1
-        },
+        "metadata": {},
         "id": "chromium-headless",
         "name": "chromium-headless",
         "testDir": "c:/Users/matte.MIO/Documents/GitHub/BHM-v.2/Production/Test/Onboarding",
-        "testIgnore": [
-          "**/Incremental/**",
-          "**/*.test.{ts,tsx,js}",
-          "**/*.spec.{ts,tsx}"
-        ],
+        "testIgnore": [],
         "testMatch": [
-          "**/*.pw.js"
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
         "timeout": 120000
       },
@@ -63,19 +55,13 @@
         "outputDir": "c:/Users/matte.MIO/Documents/GitHub/BHM-v.2/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {
-          "actualWorkers": 1
-        },
+        "metadata": {},
         "id": "chromium-headed-demo",
         "name": "chromium-headed-demo",
         "testDir": "c:/Users/matte.MIO/Documents/GitHub/BHM-v.2/Production/Test/Onboarding",
-        "testIgnore": [
-          "**/Incremental/**",
-          "**/*.test.{ts,tsx,js}",
-          "**/*.spec.{ts,tsx}"
-        ],
+        "testIgnore": [],
         "testMatch": [
-          "**/*.pw.js"
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
         "timeout": 120000
       },
@@ -83,19 +69,13 @@
         "outputDir": "c:/Users/matte.MIO/Documents/GitHub/BHM-v.2/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {
-          "actualWorkers": 1
-        },
+        "metadata": {},
         "id": "firefox-headless",
         "name": "firefox-headless",
         "testDir": "c:/Users/matte.MIO/Documents/GitHub/BHM-v.2/Production/Test/Onboarding",
-        "testIgnore": [
-          "**/Incremental/**",
-          "**/*.test.{ts,tsx,js}",
-          "**/*.spec.{ts,tsx}"
-        ],
+        "testIgnore": [],
         "testMatch": [
-          "**/*.pw.js"
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
         "timeout": 120000
       }
@@ -112,320 +92,41 @@
       "timeout": 120000
     }
   },
-  "suites": [
+  "suites": [],
+  "errors": [
     {
-      "title": "01-onboarding-precompila.pw.js",
-      "file": "01-onboarding-precompila.pw.js",
-      "column": 0,
-      "line": 0,
-      "specs": [],
-      "suites": [
-        {
-          "title": "TEST 1: Onboarding con Precompila",
-          "file": "01-onboarding-precompila.pw.js",
-          "line": 90,
-          "column": 6,
-          "specs": [
-            {
-              "title": "dovrebbe completare onboarding usando pulsante Precompila",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 120000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-headless",
-                  "projectName": "chromium-headless",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 53287,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/.*dashboard/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:3000/onboarding\"\u001b[39m\nTimeout: 15000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 15000ms\u001b[22m\n\u001b[2m    19 × unexpected value \"http://localhost:3000/onboarding\"\u001b[22m\n",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/.*dashboard/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:3000/onboarding\"\u001b[39m\nTimeout: 15000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 15000ms\u001b[22m\n\u001b[2m    19 × unexpected value \"http://localhost:3000/onboarding\"\u001b[22m\n\n    at c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\Production\\Test\\Onboarding\\01-onboarding-precompila.pw.js:222:24",
-                        "location": {
-                          "file": "c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\Production\\Test\\Onboarding\\01-onboarding-precompila.pw.js",
-                          "column": 24,
-                          "line": 222
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 220 |\u001b[39m\n \u001b[90m 221 |\u001b[39m     \u001b[90m// Verifica redirect a dashboard\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 222 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/.*dashboard/\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m15000\u001b[39m })\n \u001b[90m     |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 223 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m'✅ A. Redirect a /dashboard verificato'\u001b[39m)\n \u001b[90m 224 |\u001b[39m\n \u001b[90m 225 |\u001b[39m     \u001b[90m// Verifica che dashboard sia renderizzata\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\Production\\Test\\Onboarding\\01-onboarding-precompila.pw.js",
-                            "column": 24,
-                            "line": 222
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/.*dashboard/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:3000/onboarding\"\u001b[39m\nTimeout: 15000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 15000ms\u001b[22m\n\u001b[2m    19 × unexpected value \"http://localhost:3000/onboarding\"\u001b[22m\n\n\n  220 |\n  221 |     // Verifica redirect a dashboard\n> 222 |     await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 })\n      |                        ^\n  223 |     console.log('✅ A. Redirect a /dashboard verificato')\n  224 |\n  225 |     // Verifica che dashboard sia renderizzata\n    at c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\Production\\Test\\Onboarding\\01-onboarding-precompila.pw.js:222:24"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "🚀 Setup: Navigazione e login...\n"
-                        },
-                        {
-                          "text": "📝 Compilazione credenziali...\n"
-                        },
-                        {
-                          "text": "🔐 Invio credenziali...\n"
-                        },
-                        {
-                          "text": "🌐 URL dopo login: http://localhost:3000/dashboard\n"
-                        },
-                        {
-                          "text": "✅ Login completato, URL attuale: http://localhost:3000/dashboard\n"
-                        },
-                        {
-                          "text": "⚠️ Utente già con onboarding completo, navigazione forzata a /onboarding\n"
-                        },
-                        {
-                          "text": "✅ Setup completato: su pagina onboarding\n"
-                        },
-                        {
-                          "text": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                        },
-                        {
-                          "text": "🧪 TEST 1: Onboarding con Precompila\n"
-                        },
-                        {
-                          "text": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                        },
-                        {
-                          "text": "\n📝 STEP 0: Click pulsante Precompila\n"
-                        },
-                        {
-                          "text": "✅ Step 1 (BusinessInfo) visibile\n"
-                        },
-                        {
-                          "text": "✅ Click pulsante Precompila\n"
-                        },
-                        {
-                          "text": "✅ Dati precompilati caricati\n"
-                        },
-                        {
-                          "text": "\n🔄 Navigazione attraverso wizard onboarding...\n"
-                        },
-                        {
-                          "text": "\n━━━ STEP 1/7: BusinessInfo ━━━\n"
-                        },
-                        {
-                          "text": "✅ Step 1 (BusinessInfo) visibile\n"
-                        },
-                        {
-                          "text": "  → Attesa pulsante Avanti abilitato...\n"
-                        },
-                        {
-                          "text": "✅ Pulsante Avanti abilitato\n"
-                        },
-                        {
-                          "text": "  → Click Avanti\n"
-                        },
-                        {
-                          "text": "✅ Click pulsante Avanti\n"
-                        },
-                        {
-                          "text": "✅ Step 1 completato\n"
-                        },
-                        {
-                          "text": "\n━━━ STEP 2/7: Departments ━━━\n"
-                        },
-                        {
-                          "text": "✅ Step 2 (Departments) visibile\n"
-                        },
-                        {
-                          "text": "  → Attesa pulsante Avanti abilitato...\n"
-                        },
-                        {
-                          "text": "✅ Pulsante Avanti abilitato\n"
-                        },
-                        {
-                          "text": "  → Click Avanti\n"
-                        },
-                        {
-                          "text": "✅ Click pulsante Avanti\n"
-                        },
-                        {
-                          "text": "✅ Step 2 completato\n"
-                        },
-                        {
-                          "text": "\n━━━ STEP 3/7: Staff ━━━\n"
-                        },
-                        {
-                          "text": "✅ Step 3 (Staff) visibile\n"
-                        },
-                        {
-                          "text": "  → Attesa pulsante Avanti abilitato...\n"
-                        },
-                        {
-                          "text": "✅ Pulsante Avanti abilitato\n"
-                        },
-                        {
-                          "text": "  → Click Avanti\n"
-                        },
-                        {
-                          "text": "✅ Click pulsante Avanti\n"
-                        },
-                        {
-                          "text": "✅ Step 3 completato\n"
-                        },
-                        {
-                          "text": "\n━━━ STEP 4/7: Conservation ━━━\n"
-                        },
-                        {
-                          "text": "✅ Step 4 (Conservation) visibile\n"
-                        },
-                        {
-                          "text": "  → Attesa pulsante Avanti abilitato...\n"
-                        },
-                        {
-                          "text": "✅ Pulsante Avanti abilitato\n"
-                        },
-                        {
-                          "text": "  → Click Avanti\n"
-                        },
-                        {
-                          "text": "✅ Click pulsante Avanti\n"
-                        },
-                        {
-                          "text": "✅ Step 4 completato\n"
-                        },
-                        {
-                          "text": "\n━━━ STEP 5/7: Tasks ━━━\n"
-                        },
-                        {
-                          "text": "✅ Step 5 (Tasks) visibile\n"
-                        },
-                        {
-                          "text": "  → Attesa pulsante Avanti abilitato...\n"
-                        },
-                        {
-                          "text": "✅ Pulsante Avanti abilitato\n"
-                        },
-                        {
-                          "text": "  → Click Avanti\n"
-                        },
-                        {
-                          "text": "✅ Click pulsante Avanti\n"
-                        },
-                        {
-                          "text": "✅ Step 5 completato\n"
-                        },
-                        {
-                          "text": "\n━━━ STEP 6/7: Inventory ━━━\n"
-                        },
-                        {
-                          "text": "✅ Step 6 (Inventory) visibile\n"
-                        },
-                        {
-                          "text": "  → Attesa pulsante Avanti abilitato...\n"
-                        },
-                        {
-                          "text": "✅ Pulsante Avanti abilitato\n"
-                        },
-                        {
-                          "text": "  → Click Avanti\n"
-                        },
-                        {
-                          "text": "✅ Click pulsante Avanti\n"
-                        },
-                        {
-                          "text": "✅ Step 6 completato\n"
-                        },
-                        {
-                          "text": "\n━━━ STEP 7/7: CalendarConfig ━━━\n"
-                        },
-                        {
-                          "text": "✅ Step 7 (CalendarConfig) visibile\n"
-                        },
-                        {
-                          "text": "  → Attesa pulsante Completa visibile...\n"
-                        },
-                        {
-                          "text": "✅ Pulsante Completa Configurazione visibile (ultimo step)\n"
-                        },
-                        {
-                          "text": "  → Click Completa Onboarding\n"
-                        },
-                        {
-                          "text": "✅ Click pulsante Completa Configurazione\n"
-                        },
-                        {
-                          "text": "🌐 URL dopo click: http://localhost:3000/onboarding\n"
-                        },
-                        {
-                          "text": "⏳ Attesa redirect a dashboard...\n"
-                        },
-                        {
-                          "text": "⚠️ Timeout redirect - URL corrente: http://localhost:3000/onboarding\n"
-                        },
-                        {
-                          "text": "✅ Completamento onboarding processato\n"
-                        },
-                        {
-                          "text": "✅ Step 7 completato\n"
-                        },
-                        {
-                          "text": "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                        },
-                        {
-                          "text": "✅ ASSERT A: Onboarding completato con successo\n"
-                        },
-                        {
-                          "text": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-19T18:08:35.390Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\test-results\\01-onboarding-precompila.p-2fe68--usando-pulsante-Precompila-chromium-headless\\test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\test-results\\01-onboarding-precompila.p-2fe68--usando-pulsante-Precompila-chromium-headless\\video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\test-results\\01-onboarding-precompila.p-2fe68--usando-pulsante-Precompila-chromium-headless\\error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\Production\\Test\\Onboarding\\01-onboarding-precompila.pw.js",
-                        "column": 24,
-                        "line": 222
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "f0adc8902cf4066812a8-9b59325a5b8b819ee7d5",
-              "file": "01-onboarding-precompila.pw.js",
-              "line": 157,
-              "column": 3
-            }
-          ]
-        }
-      ]
+      "message": "ReferenceError: require is not defined in ES module scope, you can use import instead\nThis file is being treated as an ES module because it has a '.js' file extension and 'c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\package.json' contains \"type\": \"module\". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.",
+      "stack": "ReferenceError: require is not defined in ES module scope, you can use import instead\nThis file is being treated as an ES module because it has a '.js' file extension and 'c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\package.json' contains \"type\": \"module\". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.\n    at c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\Production\\Test\\Onboarding\\01-onboarding-precompila.spec.js:19:26",
+      "location": {
+        "file": "c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\Production\\Test\\Onboarding\\01-onboarding-precompila.spec.js",
+        "column": 26,
+        "line": 19
+      },
+      "snippet": "\u001b[90m   at \u001b[39m01-onboarding-precompila.spec.js:19\n\n\u001b[0m \u001b[90m 17 |\u001b[39m \u001b[90m */\u001b[39m\n \u001b[90m 18 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 19 |\u001b[39m \u001b[36mconst\u001b[39m { test\u001b[33m,\u001b[39m expect } \u001b[33m=\u001b[39m require(\u001b[32m'@playwright/test'\u001b[39m)\n \u001b[90m    |\u001b[39m                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m \u001b[90m// Fixtures\u001b[39m\n \u001b[90m 22 |\u001b[39m \u001b[36mconst\u001b[39m { prefillBusinessData } \u001b[33m=\u001b[39m require(\u001b[32m'./fixtures/business-data'\u001b[39m)\u001b[0m"
+    },
+    {
+      "message": "TypeError: Cannot redefine property: Symbol($$jest-matchers-object)",
+      "stack": "TypeError: Cannot redefine property: Symbol($$jest-matchers-object)\n    at c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\node_modules\\@vitest\\expect\\dist\\index.js:589:10"
+    },
+    {
+      "message": "TypeError: Cannot redefine property: Symbol($$jest-matchers-object)",
+      "stack": "TypeError: Cannot redefine property: Symbol($$jest-matchers-object)\n    at c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\node_modules\\@vitest\\expect\\dist\\index.js:589:10"
+    },
+    {
+      "message": "TypeError: Cannot redefine property: Symbol($$jest-matchers-object)",
+      "stack": "TypeError: Cannot redefine property: Symbol($$jest-matchers-object)\n    at c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\node_modules\\@vitest\\expect\\dist\\index.js:589:10"
+    },
+    {
+      "message": "TypeError: Cannot redefine property: Symbol($$jest-matchers-object)",
+      "stack": "TypeError: Cannot redefine property: Symbol($$jest-matchers-object)\n    at c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\node_modules\\@vitest\\expect\\dist\\index.js:589:10"
     }
   ],
-  "errors": [],
   "stats": {
-    "startTime": "2025-10-19T18:08:34.753Z",
-    "duration": 54049.453,
+    "startTime": "2025-10-19T12:24:41.047Z",
+    "duration": 1254.9210000000003,
     "expected": 0,
     "skipped": 0,
-    "unexpected": 1,
+    "unexpected": 0,
     "flaky": 0
   }
 }

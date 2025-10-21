@@ -22,6 +22,7 @@ import DevButtons from './DevButtons'
 
 // Onboarding Helpers
 import {
+  getPrefillData,
   completeOnboarding as completeOnboardingHelper,
 } from '@/utils/onboardingHelpers'
 
@@ -49,58 +50,10 @@ const OnboardingWizard = () => {
       } catch (error) {
         console.error('Error parsing saved onboarding data:', error)
       }
-    } else {
-      // Se non ci sono dati salvati, resetta lo state
-      setFormData({})
-      setCurrentStep(0)
-      setIsValid(false)
     }
   }, [])
 
-  // 🔄 RESET STATE: Resetta lo state quando localStorage viene pulito o reset esplicito
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const savedData = localStorage.getItem('onboarding-data')
-      if (!savedData) {
-        // localStorage è stato pulito, resetta lo state
-        console.log('🔄 OnboardingWizard: localStorage pulito, reset state locale')
-        setFormData({})
-        setCurrentStep(0)
-        setIsValid(false)
-        setIsLoading(false)
-        setIsCompleting(false)
-      }
-    }
-
-    const handleOnboardingReset = () => {
-      // Reset esplicito tramite pulsante "Cancella e ricomincia"
-      console.log('🔄 OnboardingWizard: Reset esplicito ricevuto, reset state locale')
-      setFormData({})
-      setCurrentStep(0)
-      setIsValid(false)
-      setIsLoading(false)
-      setIsCompleting(false)
-    }
-
-    // Ascolta i cambiamenti al localStorage
-    window.addEventListener('storage', handleStorageChange)
-    
-    // Ascolta il reset esplicito dell'onboarding
-    window.addEventListener('onboarding-reset', handleOnboardingReset)
-    
-    // Controlla anche al mount se localStorage è vuoto
-    handleStorageChange()
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('onboarding-reset', handleOnboardingReset)
-    }
-  }, [])
-
-  // 🔒 LOCKED: handlePrefillOnboarding - Onboarding completato con successo
-  // Data: 2025-01-19
-  // Responsabile: Claude AI Assistant
-  // Modifiche richiedono unlock manuale e re-test completo
+  // Gestori per i pulsanti di controllo
   const handlePrefillOnboarding = useCallback(async () => {
     try {
       // ⚠️ NUOVO: prefillOnboarding è ora async (usa email utente corrente)
@@ -121,10 +74,6 @@ const OnboardingWizard = () => {
     }
   }, [])
 
-  // 🔒 LOCKED: handleCompleteOnboarding - Onboarding completato con successo
-  // Data: 2025-01-19
-  // Responsabile: Claude AI Assistant
-  // Modifiche richiedono unlock manuale e re-test completo
   const handleCompleteOnboarding = useCallback(async () => {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log('🟢 [OnboardingWizard] handleCompleteOnboarding CHIAMATO')
@@ -136,7 +85,7 @@ const OnboardingWizard = () => {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 
     try {
-      const resultCompanyId = await completeOnboardingHelper(companyId || undefined, formData)
+      const resultCompanyId = await completeOnboardingHelper(companyId, formData)
       console.log('✅ Onboarding completato (DevButtons), companyId:', resultCompanyId)
       console.log('🔄 Invalidazione cache React Query...')
 
@@ -156,10 +105,6 @@ const OnboardingWizard = () => {
     }
   }, [companyId, formData, queryClient, navigate])
 
-  // 🔒 LOCKED: handleSkipOnboarding - Onboarding completato con successo
-  // Data: 2025-01-19
-  // Responsabile: Claude AI Assistant
-  // Modifiche richiedono unlock manuale e re-test completo
   const handleSkipOnboarding = useCallback(() => {
     const confirmed = window.confirm(
       '⚠️ ATTENZIONE!\n\n' +
@@ -298,7 +243,7 @@ const OnboardingWizard = () => {
 
       // Usa la funzione helper unificata passando i dati correnti
       // Ora ritorna il companyId invece di fare reload
-      const resultCompanyId = await completeOnboardingHelper(finalCompanyId || undefined, formData)
+      const resultCompanyId = await completeOnboardingHelper(finalCompanyId, formData)
 
       console.log('✅ Onboarding completato, companyId ricevuto:', resultCompanyId)
       console.log('🔄 Invalidazione cache React Query...')
@@ -415,10 +360,6 @@ const OnboardingWizard = () => {
               </p>
             </div>
             <div className="flex-1 flex justify-end">
-              {/* 🔒 LOCKED: Tasto Salta Configurazione - Onboarding completato con successo */}
-              {/* Data: 2025-01-19 */}
-              {/* Responsabile: Claude AI Assistant */}
-              {/* Modifiche richiedono unlock manuale e re-test completo */}
               <button
                 type="button"
                 onClick={handleSkipOnboarding}
@@ -464,10 +405,6 @@ const OnboardingWizard = () => {
             Indietro
           </button>
 
-          {/* 🔒 LOCKED: Tasto Completa Configurazione - Onboarding completato con successo */}
-          {/* Data: 2025-01-19 */}
-          {/* Responsabile: Claude AI Assistant */}
-          {/* Modifiche richiedono unlock manuale e re-test completo */}
           <button
             type="button"
             onClick={handleNext}

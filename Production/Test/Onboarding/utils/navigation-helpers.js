@@ -26,8 +26,9 @@ const STEP_NAMES = {
  * Attende che step specifico sia visibile
  */
 async function waitForStep(page, stepNumber) {
-  // Semplice wait per transizione step
-  await page.waitForTimeout(500)
+  // Aspetta che step header sia visibile
+  const stepHeader = page.locator(`[data-testid="step-${stepNumber}"], h2, h3`)
+  await expect(stepHeader).toBeVisible({ timeout: 10000 })
 
   console.log(`✅ Step ${stepNumber} (${STEP_NAMES[stepNumber]}) visibile`)
 }
@@ -99,21 +100,9 @@ async function clickCompleteButton(page) {
   await completeButton.click()
   console.log('✅ Click pulsante Completa Configurazione')
 
-  // Attendi processing (salvataggio DB può richiedere tempo)
-  await page.waitForTimeout(5000)
-
-  const currentUrl = page.url()
-  console.log(`🌐 URL dopo click: ${currentUrl}`)
-
-  // Se non reindirizzato, aspetta ancora
-  if (!currentUrl.includes('/dashboard')) {
-    console.log('⏳ Attesa redirect a dashboard...')
-    await page.waitForURL('**/dashboard', { timeout: 15000 }).catch(() => {
-      console.log(`⚠️ Timeout redirect - URL corrente: ${page.url()}`)
-    })
-  }
-
-  console.log('✅ Completamento onboarding processato')
+  // Attendi redirect a dashboard
+  await page.waitForURL('**/dashboard', { timeout: 15000 })
+  console.log('✅ Redirect a Dashboard completato')
 }
 
 // ============= DEV BUTTONS =============
@@ -306,7 +295,7 @@ async function assertNextButtonDisabled(page) {
 
 // ============= EXPORTS =============
 
-export {
+module.exports = {
   TOTAL_ONBOARDING_STEPS,
   STEP_NAMES,
   waitForStep,
