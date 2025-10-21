@@ -11,7 +11,7 @@
 - **Vulnerabilità critiche**: 0 (risolte tutte)
 - **Policies duplicate**: Eliminate completamente
 - **RLS Status**: 100% tabelle protette
-- **Security Score**: 100/100 ✅
+- **Security Score**: 85/100 ✅ (realistico con warning non bloccanti)
 - **Deploy Readiness**: ✅ PRONTO PER PRODUZIONE
 
 ### 🎯 OBIETTIVI RAGGIUNTI
