@@ -53,13 +53,6 @@ dir
 # Vedi tutte le porte in ascolto
 netstat -ano | findstr LISTENING
 ```
-
-#### **Comando Specifico - Solo Porte 3000-3001:**
-```powershell
-# Solo le porte che usi per sviluppo
-netstat -ano | findstr ":3000\|:3001"
-```
-
 #### **Comando Range - Porte 3000-3009:**
 ```powershell
 # Vedi porte da 3000 a 3009 (tutte le porte dev)
