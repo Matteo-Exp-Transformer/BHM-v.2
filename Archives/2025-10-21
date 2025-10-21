@@ -1,0 +1,283 @@
+# 📝 TRACKING MODIFICHE POST-TEST
+
+## 🎯 SCOPO
+**File per annotare tutte le modifiche da fare dopo i test di blindaggio dei componenti**
+
+## 📊 CONTESTO
+- **Data**: 2025-10-21
+- **Obiettivo**: Blindaggio completo app BHM v.2
+- **Status**: 🚀 SETUP COMPLETATO
+
+## 🔍 MODIFICHE IDENTIFICATE
+
+### **AREA AUTHENTICATION**
+
+#### **LoginPage** - ✅ Già blindato
+- **Status**: Completamente testato
+- **Modifiche**: Nessuna
+
+#### **RegisterPage** - ✅ Già blindato
+- **Status**: Completamente testato
+- **Modifiche**: Nessuna
+
+#### **HomePage** - 🔄 Da completare
+- **Test necessari**: Stats loading, compliance score, logout
+- **Modifiche identificate**: 
+  - [ ] Test stats loading
+  - [ ] Test compliance score
+  - [ ] Test logout functionality
+  - [ ] Test responsive design
+
+#### **AcceptInvitePage** - ❌ Da mappare
+- **Test necessari**: Token validation, form completion, success flow
+- **Modifiche identificate**:
+  - [ ] Implementare test token validation
+  - [ ] Implementare test form completion
+  - [ ] Implementare test success flow
+  - [ ] Implementare test error handling
+
+#### **AuthCallbackPage** - ❌ Da mappare
+- **Test necessari**: Callback handling, error scenarios, redirect logic
+- **Modifiche identificate**:
+  - [ ] Implementare test callback handling
+  - [ ] Implementare test error scenarios
+  - [ ] Implementare test redirect logic
+  - [ ] Implementare test edge cases
+
+#### **ForgotPasswordPage** - ❌ Da mappare
+- **Test necessari**: Email validation, reset flow, error handling
+- **Modifiche identificate**:
+  - [ ] Implementare test email validation
+  - [ ] Implementare test reset flow
+  - [ ] Implementare test error handling
+  - [ ] Implementare test success flow
+
+### **AREA DASHBOARD**
+
+#### **DashboardPage** - ❌ Da mappare
+- **Test necessari**: KPI cards loading, charts rendering, data updates, responsive design
+- **Modifiche identificate**:
+  - [ ] Implementare test KPI cards loading
+  - [ ] Implementare test charts rendering
+  - [ ] Implementare test data updates
+  - [ ] Implementare test responsive design
+  - [ ] Implementare test performance
+
+#### **KPICard** - ❌ Da mappare
+- **Test necessari**: Data display, loading states, error states
+- **Modifiche identificate**:
+  - [ ] Implementare test data display
+  - [ ] Implementare test loading states
+  - [ ] Implementare test error states
+  - [ ] Implementare test accessibility
+
+#### **ComplianceChart** - ❌ Da mappare
+- **Test necessari**: Chart rendering, data accuracy, interactive features
+- **Modifiche identificate**:
+  - [ ] Implementare test chart rendering
+  - [ ] Implementare test data accuracy
+  - [ ] Implementare test interactive features
+  - [ ] Implementare test performance
+
+#### **TemperatureTrend** - ❌ Da mappare
+- **Test necessari**: Trend calculation, chart updates, data visualization
+- **Modifiche identificate**:
+  - [ ] Implementare test trend calculation
+  - [ ] Implementare test chart updates
+  - [ ] Implementare test data visualization
+  - [ ] Implementare test real-time updates
+
+#### **TaskSummary** - ❌ Da mappare
+- **Test necessari**: Task counting, status display, navigation
+- **Modifiche identificate**:
+  - [ ] Implementare test task counting
+  - [ ] Implementare test status display
+  - [ ] Implementare test navigation
+  - [ ] Implementare test updates
+
+#### **ScheduledMaintenanceCard** - ❌ Da mappare
+- **Test necessari**: Maintenance display, scheduling logic, status updates
+- **Modifiche identificate**:
+  - [ ] Implementare test maintenance display
+  - [ ] Implementare test scheduling logic
+  - [ ] Implementare test status updates
+  - [ ] Implementare test notifications
+
+### **AREA CALENDAR**
+
+#### **CalendarPage** - 🔄 Parzialmente blindato
+- **Test necessari**: Event creation, editing, deletion, navigation, filters, date selection
+- **Modifiche identificate**:
+  - [ ] Completare test event creation
+  - [ ] Completare test event editing
+  - [ ] Completare test event deletion
+  - [ ] Completare test navigation
+  - [ ] Completare test filters
+  - [ ] Completare test date selection
+
+### **AREA CONSERVATION**
+
+#### **ConservationPage** - ❌ Da mappare
+- **Test necessari**: Temperature monitoring, alert system, data logging, settings configuration
+- **Modifiche identificate**:
+  - [ ] Implementare test temperature monitoring
+  - [ ] Implementare test alert system
+  - [ ] Implementare test data logging
+  - [ ] Implementare test settings configuration
+  - [ ] Implementare test real-time updates
+
+### **AREA INVENTORY**
+
+#### **InventoryPage** - ❌ Da mappare
+- **Test necessari**: Product management, category management, search functionality, filter system, CRUD operations
+- **Modifiche identificate**:
+  - [ ] Implementare test product management
+  - [ ] Implementare test category management
+  - [ ] Implementare test search functionality
+  - [ ] Implementare test filter system
+  - [ ] Implementare test CRUD operations
+
+### **AREA SHOPPING**
+
+#### **ShoppingListsPage** - ❌ Da mappare
+- **Test necessari**: List management, CRUD operations, navigation
+- **Modifiche identificate**:
+  - [ ] Implementare test list management
+  - [ ] Implementare test CRUD operations
+  - [ ] Implementare test navigation
+  - [ ] Implementare test sharing
+
+### **AREA SETTINGS**
+
+#### **SettingsPage** - ❌ Da mappare
+- **Test necessari**: Settings management, form validation, save functionality
+- **Modifiche identificate**:
+  - [ ] Implementare test settings management
+  - [ ] Implementare test form validation
+  - [ ] Implementare test save functionality
+  - [ ] Implementare test reset functionality
+
+### **AREA MANAGEMENT**
+
+#### **ManagementPage** - ❌ Da mappare
+- **Test necessari**: User management, role management, company settings
+- **Modifiche identificate**:
+  - [ ] Implementare test user management
+  - [ ] Implementare test role management
+  - [ ] Implementare test company settings
+  - [ ] Implementare test permissions
+
+### **AREA LAYOUT & NAVIGATION**
+
+#### **MainLayout** - ✅ Già blindato
+- **Status**: Completamente testato
+- **Modifiche**: Nessuna
+
+#### **ProtectedRoute** - ❌ Da mappare
+- **Test necessari**: Authentication check, redirect logic, role validation
+- **Modifiche identificate**:
+  - [ ] Implementare test authentication check
+  - [ ] Implementare test redirect logic
+  - [ ] Implementare test role validation
+  - [ ] Implementare test edge cases
+
+#### **OnboardingWizard** - ❌ Da mappare
+- **Test necessari**: Step navigation, form validation, completion flow
+- **Modifiche identificate**:
+  - [ ] Implementare test step navigation
+  - [ ] Implementare test form validation
+  - [ ] Implementare test completion flow
+  - [ ] Implementare test error handling
+  - [ ] Implementare test data persistence
+
+### **AREA UI COMPONENTS**
+
+#### **UI Index** - ✅ Già blindato
+- **Status**: Completamente testato
+- **Modifiche**: Nessuna
+
+#### **Card** - ❌ Da mappare
+- **Test necessari**: Rendering, props, styling
+- **Modifiche identificate**:
+  - [ ] Implementare test rendering
+  - [ ] Implementare test props
+  - [ ] Implementare test styling
+  - [ ] Implementare test accessibility
+
+#### **Alert** - ❌ Da mappare
+- **Test necessari**: Alert types, styling, accessibility
+- **Modifiche identificate**:
+  - [ ] Implementare test alert types
+  - [ ] Implementare test styling
+  - [ ] Implementare test accessibility
+  - [ ] Implementare test animations
+
+#### **Badge** - ❌ Da mappare
+- **Test necessari**: Badge variants, styling
+- **Modifiche identificate**:
+  - [ ] Implementare test badge variants
+  - [ ] Implementare test styling
+  - [ ] Implementare test accessibility
+  - [ ] Implementare test dynamic content
+
+#### **Button** - ❌ Da mappare
+- **Test necessari**: Button variants, states, accessibility
+- **Modifiche identificate**:
+  - [ ] Implementare test button variants
+  - [ ] Implementare test states
+  - [ ] Implementare test accessibility
+  - [ ] Implementare test interactions
+
+#### **Input** - ❌ Da mappare
+- **Test necessari**: Input types, validation, accessibility
+- **Modifiche identificate**:
+  - [ ] Implementare test input types
+  - [ ] Implementare test validation
+  - [ ] Implementare test accessibility
+  - [ ] Implementare test error states
+
+#### **Modal** - ❌ Da mappare
+- **Test necessari**: Modal opening/closing, accessibility, focus management
+- **Modifiche identificate**:
+  - [ ] Implementare test modal opening/closing
+  - [ ] Implementare test accessibility
+  - [ ] Implementare test focus management
+  - [ ] Implementare test backdrop interactions
+
+#### **CollapsibleCard** - ❌ Da mappare
+- **Test necessari**: Collapse/expand, content rendering
+- **Modifiche identificate**:
+  - [ ] Implementare test collapse/expand
+  - [ ] Implementare test content rendering
+  - [ ] Implementare test accessibility
+  - [ ] Implementare test animations
+
+## 📊 RIEPILOGO MODIFICHE
+
+### **STATISTICHE**
+- **Totale componenti**: 100+
+- **Componenti già blindati**: 3 (3%)
+- **Componenti da blindare**: 97+ (97%)
+- **Modifiche identificate**: 200+ test da implementare
+
+### **PRIORITÀ**
+- **P0 (Critico)**: 15 componenti - 2 blindati (13%)
+- **P1 (Importante)**: 45 componenti - 1 parzialmente blindato (2%)
+- **P2 (Nice-to-have)**: 40+ componenti - 0 blindati (0%)
+
+### **TIMELINE**
+- **Fase 1**: Mappatura (1 giorno)
+- **Fase 2**: Test UX/UI (1 giorno)
+- **Fase 3**: Test automation (2-3 giorni)
+- **Fase 4**: Blindaggio completo (3-5 giorni)
+
+## 🎯 SUCCESS CRITERIA
+- ✅ 100% componenti mappati
+- ✅ 100% test UX/UI completi
+- ✅ 100% test automation implementati
+- ✅ 100% componenti blindati
+- ✅ 100% coverage raggiunto
+
+## 📅 Data: 2025-10-21
+## 👤 Autore: Agente 1 - Product Strategy Lead
+## 🎯 Status: 📝 TRACKING MODIFICHE POST-TEST CREATO

@@ -1,26 +1,100 @@
-# PANORAMICA SISTEMA 7 AGENTI - Product Development Framework
+# PANORAMICA SISTEMA 9 AGENTI - Product Development Framework
 
-> **Versione**: 2.0
-> **Data**: 2025-10-20
+> **Versione**: 3.0
+> **Data**: {DATA_CORRENTE_SESSIONE}
 > **Metodologia**: 90% Planning / 10% Coding
-> **Framework**: Multi-Agent Orchestration con Handoff Pattern
+> **Framework**: Multi-Agent Orchestration con Handoff Pattern e Revisione Attiva
+
+## 📅 SISTEMA DATA CORRENTE DINAMICA
+
+**IMPORTANTE**: Tutti gli agenti devono utilizzare la **data corrente di sessione di lavoro**, non date hardcoded o di esempio.
+
+### **DEFINIZIONE DATA CORRENTE SESSIONE**
+- **Data corrente sessione** = Data di inizio della sessione di lavoro attuale
+- **Formato**: YYYY-MM-DD 
+- **Utilizzo**: Per cartelle, file, e riferimenti temporali
+- **Aggiornamento**: Automatico all'inizio di ogni nuova sessione
+
+### **REGOLE PER TUTTI GLI AGENTI**
+1. **NON usare mai** date hardcoded o altre date di esempio
+2. **SEMPRE usare** `{DATA_CORRENTE_SESSIONE}` nei template e esempi
+3. **SEMPRE ottenere** la data corrente con comando appropriato prima di creare file
+4. **SEMPRE verificare** che le cartelle usino la data corrente di sessione
 
 ---
 
 ## SCOPO DEL SISTEMA
 
-Trasformare lo sviluppo software da **codifica reattiva** a **progettazione strategica**, utilizzando un team di 7 agenti AI specializzati che collaborano seguendo il principio **90% pianificazione, 10% codifica**.
+Trasformare lo sviluppo software da **codifica reattiva** a **progettazione strategica**, utilizzando un team di 9 agenti AI specializzati che collaborano seguendo il principio **90% pianificazione, 10% codifica** con **revisione attiva e controverifica**.
 
 ### Problema Risolto
 - Blocchi di sviluppo per mesi dovuti a bug accumulati
 - Perdita di allineamento tra idea iniziale e prodotto finale
 - Mancanza di struttura nelle decisioni tecniche
 - Testing inefficace e correzioni continue
+- Documentazione disorganizzata e duplicata
 
 ### Soluzione
 Un sistema multi-agente orchestrato dove:
 - **Primi 3 agenti** → Pianificazione strategica (Product, Architecture, UX/UI)
 - **Successivi 4 agenti** → Implementazione e qualità (Backend, Frontend, Testing, Security)
+- **Agenti 8-9** → Gestione documentazione e conoscenza (Documentation Manager, Knowledge Mapper)
+
+---
+
+## PATTERN DI REVISIONE ATTIVA E CONTROVERIFICA (NUOVO)
+
+### **PRINCIPI FONDAMENTALI**
+
+#### **1. REVISIONE ATTIVA (NON PASSIVA)**
+- ❌ **NON**: "Leggo e approvo"
+- ✅ **SÌ**: "Analizzo, verifico, controverifico, modifico"
+
+#### **2. CONTROVERIFICA DATI REALI**
+- ✅ **Confronto** con dati reali dell'app
+- ✅ **Verifica** file esistenti nel codebase
+- ✅ **Controllo** dipendenze e contratti reali
+- ✅ **Validazione** metriche e performance
+
+#### **3. FIRMA = VINCOLO QUALITÀ**
+- ✅ **Firma** = "Ho verificato tutto e rispettato tutti i criteri"
+- ✅ **Auto-controllo** per falsi positivi
+- ✅ **Verifica** dati test e metriche
+- ✅ **Controllo** completezza e accuratezza
+
+#### **4. REVISIONE A CASCATA**
+- ✅ **Ogni modifica** → 2 agenti di planning diversi
+- ✅ **Controllo incrociato** tra agenti
+- ✅ **Nessuna modifica** senza doppia verifica
+
+### **WORKFLOW REVISIONE ATTIVA**
+1. **Agente 0**: Crea proposta iniziale con dati reali verificati
+2. **Agente 1**: Revisione attiva + controverifica dati reali
+3. **Agente 2**: Revisione attiva + controverifica architetturale
+4. **Agente 0**: Consolidamento finale con triple check
+5. **Agente 9**: Check finale allineamento con intenzioni utente + domande chiarificatrici
+6. **Esecuzione**: Coordinata da Agente 0 solo dopo approvazione Agente 9
+
+### **CHECK FINALE AGENTE 9 - ALLINEAMENTO INTENZIONI UTENTE**
+
+#### **5.1 RUOLO CRITICO**
+- ✅ **Accesso privilegiato** alla conoscenza reale del flusso utente
+- ✅ **Analisi approfondita** del piano rispetto alle intenzioni reali
+- ✅ **Domande chiarificatrici** per eliminare ambiguità
+- ✅ **Veto power** se il piano non è allineato
+
+#### **5.2 PROCESSO DI VERIFICA**
+1. **Analisi piano**: Confronta piano con conoscenza utente reale
+2. **Identificazione gap**: Trova discrepanze tra piano e intenzioni
+3. **Domande mirate**: Chiede chiarimenti specifici all'utente
+4. **Conferma allineamento**: Approva solo se piano è davvero allineato
+5. **Handoff sicuro**: Garantisce che l'esecuzione sia corretta
+
+#### **5.3 CRITERI DI APPROVAZIONE**
+- ✅ **Piano comprensibile**: L'utente capisce cosa succederà
+- ✅ **Allineamento confermato**: Piano corrisponde alle intenzioni reali
+- ✅ **Ambiguity risolte**: Tutte le domande chiarificatrici risolte
+- ✅ **Rischi mitigati**: Problemi potenziali identificati e gestiti
 
 ---
 
@@ -165,8 +239,65 @@ Deliverable tipici:
 | 5 | **Front-End Agent** | UI visibile | Wireframe, API | Components, routing | LCP/TTI in budget |
 | 6 | **Testing Agent** | Prevenzione bug | Codice, stories | Suite test, coverage | Coverage ≥80% |
 | 7 | **Security & Risk Agent** | Protezione | Codice, infra | Checklist, fix | 0 vuln High |
+| 8 | **Documentation Manager** | Gestione documentazione | File esistenti | Struttura organizzata | 100% file posizionati |
+| 9 | **Knowledge Brain Mapper** | Allineamento intenzioni utente | Piano approvato, conoscenza utente | Check finale + domande | 100% piano allineato |
 
 > Nota: Tutte le attività partono e si chiudono tramite **Agente 0** che gestisce priorità, handoff e cartelle di output.
+> **Agenti 8-9** gestiscono documentazione e conoscenza in coordinamento con gli altri agenti.
+
+---
+
+## SISTEMA DI CARTELLE E DATE DINAMICHE (NUOVO)
+
+### **STRUTTURA CARTELLE OBBLIGATORIA**
+```
+Production/
+  KnowledgeBase/                      # fonte di verità stabile
+    features/
+      FEAT-<ID>/
+        FEATURE_SPEC.md
+        DoD_[FEATURE].md
+        patterns/
+          PAT-<SCOPE>-<ID>.md
+    components/
+      COMP-<slug>/
+        COMP-<slug>.md               # scheda componente
+        history/                     # cronologia decisioni per componente
+          YYYY-MM-DD_CHANGELOG.md
+    traceability/
+      TRACEABILITY_MATRIX.md
+  Sessioni_di_lavoro/
+    YYYY-MM-DD_HHmm_[scope]/
+      Agente_1/
+      Agente_2/
+      Agente_3/
+      Agente_4/
+      Agente_5/
+      Agente_6/
+      Agente_7/
+      Agente_8/
+      Agente_9/
+    Neo/                                # Hub condiviso per sessione corrente
+      YYYY-MM-DD/
+        README_SESSIONE_CORRENTE.md
+        CHECKLIST_PLANNING_CONSOLIDATA.md
+        REAL_DATA_FOR_SESSION.md
+        PRIORITA_CONDIVISE.md
+        HANDOFF_ACTIVE.md
+        STATUS_AGENTI.md
+```
+
+### **REGOLE DATE DINAMICHE**
+- ✅ **SEMPRE** usa data corrente (YYYY-MM-DD) per cartelle sessione
+- ❌ **MAI** date hardcoded fisse
+- ✅ **Verifica** data corrente con comando `date` prima di creare cartelle
+- ✅ **Formato** standard: `YYYY-MM-DD_HHmm_[scope]`
+
+### **GESTIONE CARTELLA NEO**
+- ✅ **Hub condiviso** per file di sessione corrente
+- ✅ **Cleanup automatico** da Agente 8 a fine sessione
+- ✅ **Archiviazione** file nelle cartelle specifiche degli agenti
+- ✅ **Sincronizzazione** con stato lavoro corrente
 
 ---
 
@@ -358,7 +489,7 @@ Su decisioni strategiche:
 ### Regole di Flusso
 - Innesco: sempre tramite **Agente 0** (orchestratore).
 - Input unificato per ogni avvio: 3 file forniti dall'utente o preparati da Agente 0
-  1) **Skills da usare** (es. `.cursor/rules/Skills-agent-1-product-strategy.md`)
+  1) **Skills da usare** (es. `.cursor/rules/Agente_1/Skills-product-strategy.md`)
   2) **Prompt agente di inizio conversazione** (es. `Production/Last_Info/Multi agent/Prompt_Inizio_Agenti/Agente 1.md`)
   3) **Richiesta utente** (file `.md` dedicato con contesto e obiettivi)
 - Fase Planning obbligatoria: la richiesta passa SEMPRE da **Agente 1 (Product)** → **Agente 2 (Systems)** → **Agente 3 (Experience)** prima di qualsiasi implementazione.

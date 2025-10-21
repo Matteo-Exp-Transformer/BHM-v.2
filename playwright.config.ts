@@ -97,20 +97,6 @@ export default defineConfig({
       }
     },
     {
-      name: 'Calendar',
-      testMatch: '**/calendar*.{ts,js}',
-      use: { 
-        baseURL: BASE_URL
-      }
-    },
-    {
-      name: 'Login',
-      testMatch: '**/login*.{ts,js}',
-      use: { 
-        baseURL: BASE_URL
-      }
-    },
-    {
       name: 'Autenticazione',
       testMatch: '**/Autenticazione/**/*.js',
       use: { 

@@ -9,13 +9,7 @@
       "Bash(cat supabase/.gitignore)",
       "Bash(mkdir -p skills)",
       "Bash(netstat -ano)",
-      "Bash(npm run test:onboarding)",
-      "Bash(npx playwright test --config=playwright-onboarding.config.ts --project=chromium-headless)",
-      "Bash(cat \"c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\tsconfig.json\")",
-      "Bash(cat \"c:\\Users\\matte.MIO\\Documents\\GitHub\\BHM-v.2\\vitest.config.ts\")",
-      "Bash(tee /tmp/test-output.log)",
-      "Bash(tee /tmp/final-test.log)",
-      "Bash(cd /c/Users/matte.MIO/Documents/GitHub/BHM-v.2/Production/Last_Info/Multi agent/Prompt_Inizio_Agenti)"
+      "Bash(npm run test:onboarding)"
     ],
     "deny": [],
     "ask": []

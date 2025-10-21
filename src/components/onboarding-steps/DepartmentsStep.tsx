@@ -197,8 +197,7 @@ const DepartmentsStep = ({
         </p>
       </div>
 
-      {/* Quick Fill Button - Rimosso per pulizia UI */}
-      {/* 
+      {/* Quick Fill Button */}
       <div className="flex justify-center">
         <button
           type="button"
@@ -208,10 +207,9 @@ const DepartmentsStep = ({
           🚀 Carica reparti predefiniti
         </button>
       </div>
-      */}
 
-      {/* Add/Edit Form - Mostra se stiamo editando o se non ci sono reparti */}
-      {(editingId || departments.length === 0) && (
+      {/* Add/Edit Form - Mostra solo se non ci sono dati o se stiamo editando */}
+      {(departments.length === 0 || editingId) && (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <h3 className="font-medium text-gray-900 mb-3">
           {editingId ? 'Modifica Reparto' : 'Aggiungi Nuovo Reparto'}
@@ -278,7 +276,7 @@ const DepartmentsStep = ({
             <button
               type="button"
               onClick={editingId ? updateDepartment : addDepartment}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+              className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
             >
               {editingId ? (
                 <>
