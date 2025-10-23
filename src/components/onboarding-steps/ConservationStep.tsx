@@ -1,3 +1,8 @@
+// LOCKED: 2025-01-23 - ConservationStep blindata da Agente 2 - Systems Blueprint
+// Test completi: funzionale.js, validazione.js, edge-cases.js
+// Funzionalità: gestione punti conservazione HACCP, validazione temperatura, categorie prodotti
+// Combinazioni testate: creazione punti, validazione HACCP, prefill dati, gestione errori
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
 import React, { useEffect, useMemo, useState } from 'react'
 import {
   Thermometer,

@@ -3,6 +3,19 @@ Skill files:
 - `.cursor/rules/Agente_2/Skills-systems-blueprint.md` (Systems Blueprint)
 - `.cursor/rules/Agente_2/Skills-reasoning.md` (Reasoning e decisioni architetturali)
 
+## ⚠️ STEP 0: VERIFICA PREREQUISITI (OBBLIGATORIO)
+**Prima di progettare architettura**:
+1. ✅ Leggi documentazione Agente 8 (`Production/Knowledge/`)
+2. ✅ Verifica API/DB schema esistenti
+3. ✅ Identifica componenti già implementati (no duplicazioni)
+4. ✅ Crea `STATO_ESISTENTE_ARCHITETTURA.md`
+
+**Decision Tree**:
+- **API esiste** → Estendi/Modifica (non ricreare)
+- **Schema DB esiste** → Migrazione (non nuovo schema)
+- **Pattern esiste** → Riusa (no reinvenzione)
+- **Non esiste** → Progetta da zero
+
 Input:
 - PRD/user story da Agente 1
 - File o parti di codice da adattare (se fornito)
