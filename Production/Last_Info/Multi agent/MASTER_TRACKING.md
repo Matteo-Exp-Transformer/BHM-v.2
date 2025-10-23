@@ -1,21 +1,22 @@
 # 🛡️ MASTER TRACKING - Blindatura Componenti App
 
 > **STATO GLOBALE**: 🔄 IN CORSO - Blindatura sistematica in atto
-> 
-> **ULTIMA MODIFICA**: 2025-01-17 (Analisi Allineamento Multi-Agent)
-> 
-> **✅ STATO AGGIORNATO**: 
+>
+> **ULTIMA MODIFICA**: 2025-10-23 (Nuova Skill CODE_MAPPING v2.0 Distribuita)
+>
+> **✅ STATO AGGIORNATO**:
 > - Branch corrente: NoClerk (Supabase Auth attivo)
 > - Porte applicazione: 3000 E 3001 (entrambe attive)
 > - Componenti UI Base: 19 (Checkbox/Radio non implementati)
 > - Onboarding: 7 componenti step (8 file totali con OnboardingWizard)
-> - Autenticazione: 6 componenti (completamente blindata)
+> - Autenticazione: 6 componenti (5 blindati, 1 parziale)
+> - **🗺️ SKILL CODE_MAPPING v2.0**: Disponibile per tutti gli agenti
 
 ## 📊 Panoramica Stato
 
 | Area | Componenti Totali | Testate | Locked | Priorità | Status |
 |------|------------------|---------|---------|---------|---------|
-| 🔐 Autenticazione | 6 | 6 | 6 | 1 | ✅ **BLINDATURA COMPLETATA** |
+| 🔐 Autenticazione | 6 | 6 | 5 | 1 | ⚠️ **BLINDATURA PARZIALE** |
 | 🎯 Onboarding | 7 | 3 | 3 | 1 | 🔄 **3 componenti blindate** |
 | 🎨 UI Base | 19 | 19 | 19 | 2 | ✅ **SEQUENZA COMPLETATA** |
 | 📊 Dashboard | **8** | 0 | 0 | 1 | 🔄 **Inventario completato** |
@@ -63,7 +64,7 @@
 | Simbolo | Significato | Descrizione |
 |---------|-------------|-------------|
 | ⏳ | Da iniziare | Componente identificata, non ancora testata |
-| 🔄 | In corso | Test in esecuzione, fix in atto |
+| ⚠️ | Parziale | Alcuni test passano, richiede completamento |
 | ✅ | Testata | Tutti i test passano, componente funzionante |
 | 🔒 | Locked | Componente blindata, NON MODIFICABILE |
 | ❌ | Problemi | Test falliscono, richiede fix |
@@ -72,11 +73,24 @@
 
 > **ATTENZIONE**: Questi componenti sono BLINDATI. Ogni modifica richiede unlock manuale e re-test completo.
 
-### Autenticazione (Agente 2) - ✅ BLINDATURA COMPLETATA
-- **LoginForm** - 🔒 LOCKED (2025-01-16) - Test completi: funzionale.js, validazione.js, edge-cases.js
+## ⚠️ Componenti Parziali (RICHIEDONO COMPLETAMENTO)
+
+> **ATTENZIONE**: Questi componenti sono PARZIALMENTE BLINDATI. Richiedono completamento test per blindatura completa.
+
+### Autenticazione (Agente 2) - ⚠️ BLINDATURA PARZIALE
+- **LoginPage** - ⚠️ PARTIAL (2025-10-23) - Test parziali: 20/25 passati (80%)
   - File: src/features/auth/LoginPage.tsx
-  - Funzionalità: login, toggle password, navigazione, validazione base, error handling
-  - Combinazioni testate: email valide/invalide, password valide/invalide, caratteri speciali, Unicode, edge cases
+  - Funzionalità: UI completa (12/12), Login reale (8/13), Validazione parziale (8/13)
+  - Test funzionanti: UI, navigazione, loading states, password toggle, responsive design
+  - Test parziali: Validazione HTML5 (8/13), Error handling (8/13)
+  - Test mancanti: CSRF Protection (non testato), Rate Limiting (non testato), Remember Me (non testato)
+  - Azione richiesta: Completare test mancanti per raggiungere 100% coverage
+
+## 🔒 Componenti Locked (NON MODIFICABILI)
+
+> **ATTENZIONE**: Questi componenti sono BLINDATI. Ogni modifica richiede unlock manuale e re-test completo.
+
+### Autenticazione (Agente 2) - ✅ BLINDATURA COMPLETATA
 - **RegisterForm** - 🔒 LOCKED (2025-01-16) - Test completi: funzionale.js, validazione.js
   - File: src/features/auth/RegisterPage.tsx
   - Funzionalità: registrazione, validazione password, toggle password, navigazione, conferma password
@@ -287,6 +301,38 @@
 - Blindare componenti testate al 100%
 - Documentare dipendenze tra componenti
 
+## 🗺️ SKILL CODE_MAPPING v2.0 - DISPONIBILE
+
+**Data Rilascio**: 2025-10-23
+**Versione**: 2.0
+**Disponibilità**: Tutti gli agenti
+
+### 📋 Cosa fa la skill:
+- Mappa sistematicamente aree dell'applicazione
+- Crea knowledge base strutturata in `Production/Knowledge/[AREA]/`
+- Documenta architettura basandosi su **codice reale** (compliance 100%)
+- Identifica gap testing e priorità P0-P3
+- Aggiorna statistiche globali e changelog
+
+### 🔑 Trigger Words:
+`knowledge base`, `mappa`, `mappare`, `mappatura`, `scansiona`, `scansione`, `ricerca approfondita`, `inventario`, `documenta componenti`, `analizza area`
+
+### ⚠️ Regola Critica:
+**SEMPRE leggere codice con Read tool - MAI assumere strutture**
+
+### 📚 Riferimenti:
+- **Skill completa**: `skills/code-mapping.md`
+- **Guida distribuzione**: `Production/Last_Info/Multi agent/SKILL_CODE_MAPPING_V2_DISTRIBUTION.md`
+- **README skills**: `skills/README.md` (sezione CODE_MAPPING aggiornata)
+
+### 🎯 Quando usarla:
+- Prima di iniziare testing nuova area
+- Dopo modifiche al codice (aggiornamento documentazione)
+- Per creare inventario componenti
+- Per identificare gap testing
+
+---
+
 ## 📊 RISULTATI MAPPATURA RIESEGUITA
 
 - **Metodo Utilizzato**: Analisi statica + Playwright MCP dinamica
@@ -296,6 +342,7 @@
 - **Hook Personalizzati**: 25+
 - **Servizi**: 47
 - **Test Coverage**: Da implementare
+- **🆕 Skill CODE_MAPPING v2.0**: Disponibile per mappature future
 
 ## 🔧 MODIFICHE RECENTI (2025-01-17)
 
