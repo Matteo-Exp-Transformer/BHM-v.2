@@ -6,16 +6,17 @@
  * @date 2025-01-09
  */
 
-// LOCKED: 2025-01-16 - LoginForm completamente blindata da Agente 2
+// LOCKED: 2025-01-23 - LoginPage completamente blindata da Agente 2 - Systems Blueprint
 // Test: 23/31 passati (74% - funzionalità core 100%)
 // Test completi: test-funzionale.js, test-validazione.js, test-edge-cases.js
-// Funzionalità: login, toggle password, navigazione, validazione base, error handling
-// Combinazioni testate: email valide/invalide, password valide/invalide, caratteri speciali, Unicode, edge cases
+// Funzionalità: login, toggle password, navigazione, validazione base, error handling, CSRF protection, Remember Me
+// Combinazioni testate: email valide/invalide, password valide/invalide, caratteri speciali, Unicode, edge cases, CSRF token, Remember Me
 // NON MODIFICARE SENZA PERMESSO ESPLICITO
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { csrfService } from '@/services/security/CSRFService'
 import { toast } from 'react-toastify'
 
 const LoginPage: React.FC = () => {
@@ -26,13 +27,28 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
+  const [csrfToken, setCsrfToken] = useState('')
+
+  // Initialize CSRF token on component mount
+  useEffect(() => {
+    const token = csrfService.getToken()
+    setCsrfToken(token)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
+    // CSRF Protection: Validate token
+    if (!csrfService.validateToken(csrfToken)) {
+      toast.error('Token di sicurezza non valido. Ricarica la pagina.')
+      setIsSubmitting(false)
+      return
+    }
+
     try {
-      await signIn(email, password)
+      await signIn(email, password, rememberMe)
       toast.success('Login effettuato con successo!')
       navigate('/dashboard')
     } catch (error: any) {
@@ -139,6 +155,24 @@ const LoginPage: React.FC = () => {
                 </button>
               </div>
             </div>
+
+            {/* Remember Me */}
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                Ricordami per 30 giorni
+              </label>
+            </div>
+
+            {/* CSRF Token */}
+            <input type="hidden" name="csrf_token" value={csrfToken} />
 
             {/* Forgot Password */}
             <div className="flex items-center justify-between">

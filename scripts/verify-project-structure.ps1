@@ -104,3 +104,4 @@ if ($missingFolders.Count -eq 0) {
 }
 
 Write-Host "`n📊 Progetto BHM v.2 organizzato e pronto per sviluppo!" -ForegroundColor Green
+

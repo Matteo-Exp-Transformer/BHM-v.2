@@ -61,8 +61,18 @@ const AcceptInvitePage: React.FC = () => {
       return
     }
 
-    if (formData.password.length < 8) {
-      toast.error('La password deve essere almeno 8 caratteri')
+    // Password Policy: 12 caratteri, lettere + numeri
+    if (formData.password.length < 12) {
+      toast.error('La password deve essere almeno 12 caratteri')
+      return
+    }
+    
+    // Validazione lettere + numeri
+    const hasLetter = /[a-zA-Z]/.test(formData.password)
+    const hasNumber = /[0-9]/.test(formData.password)
+    
+    if (!hasLetter || !hasNumber) {
+      toast.error('La password deve contenere almeno una lettera e un numero')
       return
     }
 

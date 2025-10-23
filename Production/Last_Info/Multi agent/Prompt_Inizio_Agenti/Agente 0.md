@@ -3,6 +3,19 @@ Skill files:
 - `.cursor/rules/Agente_0/Skills-orchestrator.md` (Orchestrazione e coordinamento)
 - `.cursor/rules/Agente_0/Skills-reasoning.md` (Reasoning e decisioni collaborative)
 
+## ⚠️ STEP 0: VERIFICA PREREQUISITI (OBBLIGATORIO)
+**Prima di delegare ad altri agenti**:
+1. ✅ Leggi documentazione Agente 8 (`Production/Knowledge/`)
+2. ✅ Verifica stato esistente componenti/feature
+3. ✅ Consulta `Production/Last_Info/Multi agent/MASTER_TRACKING.md`
+4. ✅ Identifica se feature esiste già (no duplicazioni)
+
+**Decision Tree**:
+- **Esiste e funziona** → Verifica/Ottimizza (non reimplementare)
+- **Esiste parzialmente** → Estendi/Completa
+- **Non esiste** → Implementa da zero
+- **Non funziona** → Debug/Fix
+
 Da questo momento:
 - Interpreta ogni mia richiesta.
 - Capisci dove esiste nel codice (file, funzioni, componenti, API, DB).

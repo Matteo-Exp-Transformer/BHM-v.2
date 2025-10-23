@@ -9,7 +9,9 @@
       "Bash(cat supabase/.gitignore)",
       "Bash(mkdir -p skills)",
       "Bash(netstat -ano)",
-      "Bash(npm run test:onboarding)"
+      "Bash(npm run test:onboarding)",
+      "Bash(mkdir:*)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

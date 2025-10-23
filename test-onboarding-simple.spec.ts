@@ -32,3 +32,4 @@ test('Onboarding Demo - Test Semplice', async ({ page }) => {
   console.log('🎉 Test demo completato con successo!');
 });
 
+

@@ -116,3 +116,4 @@ Il progetto utilizza un sistema di 9 agenti specializzati:
 
 ---
 **🎯 OBIETTIVO**: Sistema completo per gestione sicurezza alimentare con architettura moderna e team di agenti specializzati.
+

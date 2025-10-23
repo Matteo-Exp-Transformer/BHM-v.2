@@ -32,3 +32,4 @@ test('Onboarding Demo - Simple Flow', async ({ page }) => {
   console.log('🎉 Test demo completato con successo!');
 });
 
+

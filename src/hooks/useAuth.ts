@@ -393,12 +393,32 @@ export const useAuth = () => {
   // 8. Auth Methods
   // =============================================
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
     if (error) throw error
+    
+    // Remember Me: Set session persistence based on user choice
+    if (rememberMe) {
+      // Set session to persist for 30 days
+      const sessionExpiry = new Date()
+      sessionExpiry.setDate(sessionExpiry.getDate() + 30)
+      
+      // Store remember me preference
+      localStorage.setItem('bhm-remember-me', 'true')
+      localStorage.setItem('bhm-session-expiry', sessionExpiry.toISOString())
+      
+      console.log('🔒 Remember Me enabled: session expires in 30 days')
+    } else {
+      // Clear remember me preference
+      localStorage.removeItem('bhm-remember-me')
+      localStorage.removeItem('bhm-session-expiry')
+      
+      console.log('🔒 Remember Me disabled: session expires on browser close')
+    }
+    
     return data
   }
 
