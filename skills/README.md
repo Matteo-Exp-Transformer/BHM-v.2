@@ -6,7 +6,8 @@
 
 ## 📚 SKILLS DISPONIBILI
 
-### 1. 🏗️ **APP_OVERVIEW** - Panoramica Tecnica App
+### 1. 🏗️ **APP_OVERVIEW** - Panoramica Tecnica App (Legacy)
+**Status**: ⚠️ Deprecata - Usa CODE_MAPPING per mappature specifiche
 **Quando usarla**: Vuoi capire architettura, stack tecnologico, features, stato progetto
 
 **Trigger words**:
@@ -69,24 +70,54 @@ User: Genera test code per LoginPage seguendo la strategia
 
 ---
 
-### 4. 🗺️ **APP_MAPPING** - Mappatura Componenti
-**Quando usarla**: Devi creare inventario componenti di un'area (prerequisito per testing)
+### 4. 🗺️ **CODE_MAPPING** - Mappatura Attiva Codice ⭐ AGGIORNATA v2.0
+**Quando usarla**: Devi creare knowledge base strutturata di un'area per documentare architettura e facilitare testing
+
+**⚠️ REGOLA CRITICA**: Mappatura basata SOLO su dati reali - SEMPRE leggere codice con Read tool, MAI assumere strutture
 
 **Trigger words**:
-- "mappa componenti"
-- "inventario componenti"
-- "esplora area"
-- "lista componenti"
-- "analizza feature"
+- "knowledge base"
+- "mappa" / "mappare" / "mappatura"
+- "scansiona" / "scansione"
+- "ricerca approfondita"
+- "inventario" / "inventory"
+- "documenta componenti"
+- "analizza area"
+- "esplora feature"
 
 **Esempio uso**:
 ```
-User: Mappa tutti i componenti dell'area Dashboard
-→ Skill esplora: src/features/dashboard/, trova tutti i file,
-  analizza ogni componente, crea inventario, aggiorna MASTER_TRACKING.md
+User: Mappa tutti i componenti dell'area Dashboard e crea knowledge base
+→ Skill:
+  1. Usa Glob per identificare src/features/dashboard/**/*.tsx
+  2. Usa Read tool per LEGGERE OGNI FILE identificato
+  3. Analizza dipendenze, complessità, props REALI
+  4. Cerca test esistenti con Glob
+  5. Crea Production/Knowledge/DASHBOARD/Reports/DASHBOARD_COMPONENTI.md
+  6. Aggiorna STATISTICHE_GLOBALI.md + CHANGELOG_MAPPATURA.md
+  7. Commit git con statistiche
 ```
 
-**Output**: File `Production/Knowledge/DASHBOARD_COMPONENTI.md`, MASTER_TRACKING aggiornato
+**Output**:
+- File `Production/Knowledge/[AREA]/Reports/[AREA]_COMPONENTI.md` completo
+- Report esecutivo con statistiche REALI
+- STATISTICHE_GLOBALI.md aggiornato
+- CHANGELOG_MAPPATURA.md aggiornato
+- Commit git tracciato con reference a skill
+
+**Features v2.0**:
+- ⭐ **Compliance 100%**: SOLO dati da codice reale letto
+- ⭐ **Zero assunzioni**: Read tool obbligatorio per ogni file
+- Template strutturato per consistenza
+- Analisi dipendenze (hooks, services, components)
+- Valutazione complessità basata su LOC + business logic
+- Prioritizzazione P0-P3 per testing
+- Identificazione test gaps precisi
+- Diagrammi Mermaid per visualizzare relazioni
+- Raccomandazioni implementative data-driven
+- Struttura organizzata in [AREA]/Reports/
+- Tracking globale con STATISTICHE_GLOBALI.md
+- Changelog storico modifiche
 
 ---
 
@@ -217,21 +248,27 @@ User: "Mappa area Dashboard, poi progetta test, poi genera codice test"
 
 ### Workflow 1: Testing Completo Nuova Feature
 ```bash
-# Step 1: Mappa componenti
-User: "Mappa componenti area Calendar"
-→ SKILL_APP_MAPPING crea inventario
+# Step 1: Mappa componenti e crea knowledge base
+User: "Mappa componenti area Calendar e crea knowledge base"
+→ CODE_MAPPING skill:
+  - Scansiona src/features/calendar/
+  - Analizza 8 componenti + 3 hooks + 2 services
+  - Valuta complessità e dipendenze
+  - Crea Production/Knowledge/CALENDARIO_COMPONENTI.md
+  - Prioritizza P0-P3
+  - Aggiorna MASTER_TRACKING.md
 
-# Step 2: Progetta strategia test
-User: "Progetta test per Calendar.tsx"
-→ SKILL_TEST_ARCHITECT fornisce strategia
+# Step 2: Progetta strategia test per componenti P0
+User: "Progetta test per CalendarPage (P0)"
+→ TEST_ARCHITECT fornisce strategia dettagliata
 
 # Step 3: Genera test code
 User: "Genera test seguendo strategia"
-→ SKILL_TEST_GENERATOR crea file test
+→ TEST_GENERATOR crea file test completi
 
 # Step 4: Debug eventuali errori
 User: "Errore: Timeout waiting for locator"
-→ SKILL_ERROR_INTERPRETER diagnosi + fix
+→ ERROR_INTERPRETER diagnosi + fix
 ```
 
 ### Workflow 2: Debug Veloce
@@ -264,12 +301,14 @@ User: "Quali componenti ci sono nell'area auth?"
 
 | Situazione | Skill da Usare | Trigger Words |
 |------------|---------------|---------------|
-| Vuoi capire l'app | APP_OVERVIEW | "panoramica", "overview", "architettura" |
+| Vuoi capire l'app generalmente | APP_OVERVIEW | "panoramica", "overview", "architettura" |
+| Devi mappare area per creare knowledge base | **CODE_MAPPING** ⭐ v2.0 | "mappa", "knowledge base", "scansiona", "inventario", "ricerca approfondita" |
 | Devi testare componente nuovo | TEST_ARCHITECT → TEST_GENERATOR | "strategia test" → "genera test" |
-| Devi mappare componenti area | APP_MAPPING | "mappa componenti", "inventario" |
 | Hai scritto prompt e vuoi validarlo | PROMPT_TESTER | "testa prompt", "valida prompt" |
 | Hai un errore da risolvere | ERROR_INTERPRETER | "errore", "bug", "debug", "fix" |
-| Vuoi migliorare coverage area | APP_MAPPING → TEST_ARCHITECT → TEST_GENERATOR | workflow completo |
+| Vuoi migliorare coverage area | **CODE_MAPPING** ⭐ → TEST_ARCHITECT → TEST_GENERATOR | workflow completo mapping+testing |
+| Nuovo developer onboarding su area specifica | **CODE_MAPPING** ⭐ | "mappa [area]", "documenta [area]" |
+| Aggiornare documentazione dopo modifiche codice | **CODE_MAPPING** ⭐ | "aggiorna knowledge base [area]" |
 
 ---
 
