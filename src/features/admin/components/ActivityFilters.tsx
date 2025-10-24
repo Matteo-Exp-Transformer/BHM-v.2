@@ -7,7 +7,7 @@ interface ActivityFiltersProps {
   onFiltersChange: (filters: ActivityFilters) => void
 }
 
-export function ActivityFilters({
+export function ActivityFiltersComponent({
   filters,
   onFiltersChange,
 }: ActivityFiltersProps) {

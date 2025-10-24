@@ -111,7 +111,7 @@ const getSessionFromPort = (port: number): Promise<string | null> => {
           document.body.removeChild(iframe)
           resolve(sessionData)
         }
-      } catch (error) {
+      } catch {
         // CORS error - normale per sicurezza browser
         clearTimeout(timeout)
         if (!resolved) {

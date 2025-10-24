@@ -13,7 +13,7 @@
  * @date 2025-01-10
  */
 
-import { useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Loader2 } from 'lucide-react'

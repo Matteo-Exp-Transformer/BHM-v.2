@@ -5,8 +5,8 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { validateLoginRequest, validateBusinessRules, AggregateValidationError } from '../shared/validation.ts';
-import { errorResponse, ErrorCode, handleUnknownError, rateLimitError, csrfError, accountLockedError, invalidCredentialsError } from '../shared/errors.ts';
+import { validateLoginRequest, AggregateValidationError } from '../shared/validation.ts';
+import { errorResponse, ErrorCode, handleUnknownError, rateLimitError, accountLockedError, invalidCredentialsError } from '../shared/errors.ts';
 import { LoginRequest, LoginResponse } from '../shared/types.ts';
 import { 
     checkRateLimit, 
@@ -288,8 +288,7 @@ serve(async (req: Request) => {
                 headers: { 
                     ...corsHeaders, 
                     'Content-Type': 'application/json',
-                    'Set-Cookie': `session_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${SESSION_CONFIG.LIFETIME / 1000}`,
-                    'Set-Cookie': `csrf_token=${csrfToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${CSRF_CONFIG.LIFETIME / 1000}`
+                    'Set-Cookie': `session_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${SESSION_CONFIG.LIFETIME / 1000}; csrf_token=${csrfToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${CSRF_CONFIG.LIFETIME / 1000}`
                 }
             }
         );

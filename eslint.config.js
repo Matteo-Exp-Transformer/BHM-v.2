@@ -6,10 +6,43 @@ import tseslint from '@typescript-eslint/eslint-plugin'
 import tsparser from '@typescript-eslint/parser'
 
 export default [
-  { ignores: ['dist'] },
+  { 
+    ignores: [
+      'dist',
+      'Archives/**',
+      'Production/Sessione_di_lavoro/**',
+      'Production/Test/**',
+      'test-provisori/**',
+      'supabase/functions/**'
+    ] 
+  },
+  // Configuration for Playwright test files
+  {
+    files: ['tests/**/*.spec.ts', 'tests/**/*.spec.js', 'playwright*.config.ts'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: { ...globals.node, ...globals.es2020, ...globals.browser },
+      parser: tsparser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...tseslint.configs.recommended.rules,
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
+    },
+  },
   // Configuration for Node.js config files
   {
-    files: ['*.config.{js,ts}', 'vite.config.ts', 'vitest.config.ts'],
+    files: ['*.config.{js,ts}', 'vite.config.ts', 'vitest.config.ts', 'config/**/*.ts'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: { ...globals.node, ...globals.es2020 },

@@ -19,19 +19,19 @@ import {
 } from '../IndexedDBManager'
 
 const createMockRequest = <T>(result?: T, error?: unknown) => {
-  //@ts-ignore
+  //@ts-expect-error
   const request: IDBRequest<T> = {}
   request.onsuccess = null
   request.onerror = null
   setTimeout(() => {
     if (error && request.onerror) {
       if ('error' in request) {
-        //@ts-ignore
+        //@ts-expect-error
         request.error = error
       }
       request.onerror(new Event('error'))
     } else if (request.onsuccess) {
-      //@ts-ignore
+      //@ts-expect-error
       request.result = result
       request.onsuccess(new Event('success'))
     }
@@ -40,7 +40,7 @@ const createMockRequest = <T>(result?: T, error?: unknown) => {
 }
 
 const mockOpenDBRequest = () => {
-  //@ts-ignore
+  //@ts-expect-error
   const request: IDBOpenDBRequest = {}
   request.onsuccess = null
   request.onerror = null
@@ -80,7 +80,6 @@ beforeAll(() => {
     }),
     transaction: vi.fn((/* names: string[] */) => ({
       objectStore: (name: string) => objectStores[name],
-      //@ts-ignore
       commit: vi.fn(),
     })),
     close: vi.fn(),
@@ -106,12 +105,11 @@ describe('IndexedDBManager', () => {
 
   it('initializes database and creates stores on upgrade', async () => {
     const openSpy = vi.spyOn(indexedDB, 'open')
-    //@ts-ignore
     openSpy.mockImplementation(() => {
       const request = mockOpenDBRequest()
       setTimeout(() => {
         if (request.onupgradeneeded) {
-          //@ts-ignore
+          //@ts-expect-error
           request.result = mockDB
           request.onupgradeneeded({ target: request } as unknown as IDBVersionChangeEvent)
         }

@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ToastContainer } from 'react-toastify'
 
 import OnboardingWizard from '@/components/OnboardingWizard'
-import * as onboardingHelpers from '@/utils/onboardingHelpers'
 
 // Mock useAuth hook
 const mockUseAuth = vi.fn()

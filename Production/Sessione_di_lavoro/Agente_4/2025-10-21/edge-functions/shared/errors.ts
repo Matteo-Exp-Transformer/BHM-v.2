@@ -93,7 +93,7 @@ export function handleUnknownError(error: unknown): Response {
         ErrorCode.INTERNAL_ERROR,
         500,
         'An unexpected error occurred',
-        process.env.NODE_ENV === 'development' ? { error: String(error) } : undefined
+        Deno.env.get('NODE_ENV') === 'development' ? { error: String(error) } : undefined
     );
 }
 

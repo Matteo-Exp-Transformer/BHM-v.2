@@ -7,8 +7,7 @@ import {
     LoginRequest, 
     RecoveryRequestRequest, 
     RecoveryConfirmRequest, 
-    InviteAcceptRequest,
-    UserRole 
+    InviteAcceptRequest
 } from './types.ts';
 
 /**

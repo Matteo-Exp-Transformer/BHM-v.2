@@ -69,7 +69,7 @@ interface SyncData {
       })
       .then(() => (self as any).skipWaiting())
   )
-})
+});
 
 // Activate event - clean up old caches
 (self as any).addEventListener('activate', (event: any) => {
@@ -94,7 +94,7 @@ interface SyncData {
       })
       .then(() => (self as any).clients.claim())
   )
-})
+});
 
 // Fetch event - implement caching strategies
 (self as any).addEventListener('fetch', (event: any) => {

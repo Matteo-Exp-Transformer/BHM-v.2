@@ -8,7 +8,7 @@
 import type { CalendarEvent, CalendarEventPriority, CalendarEventStatus } from '@/types/calendar'
 import { EVENT_COLORS, STATUS_COLORS, PRIORITY_COLORS } from '@/types/calendar'
 import type { MacroCategory, MacroCategoryItem } from '@/features/calendar/hooks/useMacroCategoryEvents'
-import type { EventType, EventStatus } from '@/types/calendar-filters'
+import type { EventType } from '@/types/calendar-filters'
 import { calculateEventStatus, determineEventType } from '@/types/calendar-filters'
 
 export const BASE_NOW = new Date('2025-01-17T09:00:00Z')

@@ -2,7 +2,7 @@
 // UNIT TEST: Business Logic
 // =============================================================================
 
-import { assertEquals, assertThrows } from 'https://deno.land/std@0.168.0/testing/asserts.ts';
+import { assertEquals } from 'https://deno.land/std@0.168.0/testing/asserts.ts';
 import { 
     generateCsrfToken, 
     generateSessionToken, 
