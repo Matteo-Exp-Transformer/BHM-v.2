@@ -137,3 +137,5 @@ L'app è concepita come un **diario di lavoro** dove gli utenti:
 
 **STATUS**: 🟢 VISIONE COMPLETA - Pronto per analisi tecnica
 
+
+

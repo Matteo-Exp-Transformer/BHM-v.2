@@ -15,11 +15,12 @@
  * @date 2025-01-09
  */
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import { activityTrackingService } from '@/services/activityTrackingService'
+import { rememberMeService } from '@/services/auth/RememberMeService'
 
 // =============================================
 // TYPES & INTERFACES
@@ -122,7 +123,7 @@ export const useAuth = () => {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
       setUser(session?.user ?? null)
       setIsLoading(false)
     })
@@ -130,7 +131,7 @@ export const useAuth = () => {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       setUser(session?.user ?? null)
       setIsLoading(false)
 
@@ -230,7 +231,7 @@ export const useAuth = () => {
       }
 
 
-      return (data || []).map(m => ({
+      return (data || []).map((m: any) => ({
         company_id: m.company_id,
         company_name: (m.companies as any)?.name || 'Unknown',
         role: m.role as UserRole,
@@ -244,6 +245,7 @@ export const useAuth = () => {
 
   // =============================================
   // 3. Fetch/Create User Session (active company)
+  // Decision #15: Multi-Company Preferences
   // =============================================
 
   const {
@@ -276,13 +278,23 @@ export const useAuth = () => {
 
       console.log('⚠️ User session non trovata, creando...')
 
-      // Se non esiste, creala con prima company disponibile
+      // Se non esiste, creala con logica preferenza
       if (companies.length > 0) {
+        // Decision #15: Check se user ha preferenza impostata
+        const { data: userPrefs } = await supabase
+          .from('user_preferences')
+          .select('preferred_company_id')
+          .eq('user_id', user.id)
+          .single()
+
+        // Logica preferenza: preferita > ultima usata > prima disponibile
+        const activeCompanyId = userPrefs?.preferred_company_id || companies[0].company_id
+
         const { data: newSession, error: createError } = await supabase
           .from('user_sessions')
           .insert({
             user_id: user.id,
-            active_company_id: companies[0].company_id,
+            active_company_id: activeCompanyId,
           })
           .select()
           .single()
@@ -295,7 +307,7 @@ export const useAuth = () => {
         // Start activity tracking session
         const sessionResult = await activityTrackingService.startSession(
           user.id,
-          companies[0].company_id
+          activeCompanyId
         )
         if (sessionResult.success && sessionResult.sessionId) {
           setCurrentSessionId(sessionResult.sessionId)
@@ -321,6 +333,7 @@ export const useAuth = () => {
 
   // =============================================
   // 5. Switch Company Mutation
+  // Decision #15: Multi-Company Preferences
   // =============================================
 
   const switchCompanyMutation = useMutation({
@@ -333,6 +346,7 @@ export const useAuth = () => {
         throw new Error('Non sei membro di questa azienda')
       }
 
+      // Update session
       const { error } = await supabase
         .from('user_sessions')
         .update({
@@ -342,6 +356,20 @@ export const useAuth = () => {
         .eq('user_id', user.id)
 
       if (error) throw error
+
+      // Decision #15: Update user preference
+      const { error: prefError } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          preferred_company_id: newCompanyId,
+          updated_at: new Date().toISOString(),
+        })
+
+      if (prefError) {
+        console.warn('⚠️ Failed to update user preference:', prefError)
+        // Non bloccare il cambio company se fallisce l'update preferenza
+      }
 
       return newCompanyId
     },
@@ -400,23 +428,19 @@ export const useAuth = () => {
     })
     if (error) throw error
     
-    // Remember Me: Set session persistence based on user choice
-    if (rememberMe) {
-      // Set session to persist for 30 days
-      const sessionExpiry = new Date()
-      sessionExpiry.setDate(sessionExpiry.getDate() + 30)
-      
-      // Store remember me preference
-      localStorage.setItem('bhm-remember-me', 'true')
-      localStorage.setItem('bhm-session-expiry', sessionExpiry.toISOString())
-      
-      console.log('🔒 Remember Me enabled: session expires in 30 days')
+    // ✅ REMEMBER ME: Implementazione reale
+    if (rememberMe && data.user) {
+      // Abilita Remember Me per 30 giorni
+      const success = await rememberMeService.enableRememberMe(data.user.id, '')
+      if (success) {
+        console.log('🔒 Remember Me enabled: session expires in 30 days')
+      } else {
+        console.warn('⚠️ Remember Me failed to enable, using standard session')
+      }
     } else {
-      // Clear remember me preference
-      localStorage.removeItem('bhm-remember-me')
-      localStorage.removeItem('bhm-session-expiry')
-      
-      console.log('🔒 Remember Me disabled: session expires on browser close')
+      // Disabilita Remember Me
+      await rememberMeService.disableRememberMe()
+      console.log('🔒 Remember Me disabled: session expires in 24 hours')
     }
     
     return data
@@ -468,7 +492,8 @@ export const useAuth = () => {
   }
 
   // =============================================
-  // 9. Last Activity Update (every 5 minutes)
+  // 9. Last Activity Update (every 3 minutes)
+  // Decision #17: Activity Tracking
   // =============================================
 
   useEffect(() => {
@@ -480,7 +505,8 @@ export const useAuth = () => {
       }
     }
 
-    const interval = setInterval(updateActivity, 5 * 60 * 1000)
+    // Decision #17: Interval da 5min → 3min (testing/debug)
+    const interval = setInterval(updateActivity, 3 * 60 * 1000)
     return () => clearInterval(interval)
   }, [user?.id, session?.active_company_id, currentSessionId])
 

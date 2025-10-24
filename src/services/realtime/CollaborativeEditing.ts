@@ -88,7 +88,7 @@ class CollaborativeEditing {
     []
 
   // Operational Transformation parameters
-  private readonly _maxOperationHistory = 1000
+  // private readonly _maxOperationHistory = 1000
   private readonly conflictTimeWindow = 5000 // 5 seconds
   private readonly autoSaveInterval = 30000 // 30 seconds
 

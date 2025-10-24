@@ -6,7 +6,7 @@ import {
   TrendingUp,
   ClipboardCheck,
   Settings,
-  Check,
+  // Check,
   RefreshCw,
 } from 'lucide-react'
 import Calendar from './Calendar'
@@ -39,17 +39,17 @@ import {
 } from '@/types/calendar-filters'
 import type { Product } from '@/types/inventory'
 import { useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase/client'
+// import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 
 // LOCKED: 2025-01-16 - Agente 4 Calendar-Events-Specialist
 // Componente blindato dopo test sistematici completi
 // Funzionalità core: 100% | Test coverage: 100% | Sicurezza: VERIFICATA
 export const CalendarPage = () => {
-  const { companyId, user } = useAuth()
+  const { companyId, user: _user } = useAuth()
   const queryClient = useQueryClient()
   const { settings: calendarSettings, isLoading: settingsLoading, isConfigured } = useCalendarSettings()
-  const { events: aggregatedEvents, isLoading, sources } = useAggregatedEvents(
+  const { events: aggregatedEvents, isLoading, sources: _sources } = useAggregatedEvents(
     calendarSettings?.fiscal_year_end ? new Date(calendarSettings.fiscal_year_end) : undefined
   )
   
@@ -58,15 +58,16 @@ export const CalendarPage = () => {
   // ✅ BYPASS: Usa aggregatedEvents se useFilteredEvents restituisce 0 eventi
   const eventsForFiltering = filteredEvents.length > 0 ? filteredEvents : aggregatedEvents
   const [view, setView] = useCalendarView('month')
-  const { createTask, isCreating, completeTask, isCompleting } = useGenericTasks()
-  const [isCompletingMaintenance, setIsCompletingMaintenance] = useState(false)
+  const { createTask, isCreating, completeTask: _completeTask, isCompleting: _isCompleting } = useGenericTasks()
+  const [_isCompletingMaintenance, _setIsCompletingMaintenance] = useState(false)
   const { staff } = useStaff()
   const { departments } = useDepartments()
   const { products } = useProducts()
   const [showAlertModal, setShowAlertModal] = useState(false)
-  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null)
+  const [_selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null)
   const [showConfigModal, setShowConfigModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [showProductExpiryModal, setShowProductExpiryModal] = useState(false)
   const [selectedMacroCategory, setSelectedMacroCategory] = useState<{
     category: string
     date: Date
@@ -294,17 +295,17 @@ export const CalendarPage = () => {
     })
   }, [viewBasedEvents, refreshKey]) // ← Aggiunto refreshKey
 
-  const shouldShowOverdueSection = useMemo(() => {
-    if (overdueEvents.length === 0) return false
-    if (!selectedCalendarDate) return true
+  // const _shouldShowOverdueSection = useMemo(() => {
+  //   if (overdueEvents.length === 0) return false
+  //   if (!selectedCalendarDate) return true
 
-    const now = new Date()
-    now.setHours(0, 0, 0, 0)
-    const selectedDate = new Date(selectedCalendarDate)
-    selectedDate.setHours(0, 0, 0, 0)
+  //   const now = new Date()
+  //   now.setHours(0, 0, 0, 0)
+  //   const selectedDate = new Date(selectedCalendarDate)
+  //   selectedDate.setHours(0, 0, 0, 0)
 
-    return selectedDate <= now
-  }, [overdueEvents.length, selectedCalendarDate, refreshKey]) // ← Aggiunto refreshKey
+  //   return selectedDate <= now
+  // }, [overdueEvents.length, selectedCalendarDate, refreshKey]) // ← Aggiunto refreshKey
 
   // ✅ Event handlers
   const onEventClick = (event: any) => {
@@ -335,8 +336,9 @@ export const CalendarPage = () => {
     
     const dayEvents = viewBasedEvents.filter(e => {
       const eventDate = new Date(e.start)
+      const eEventType = determineEventType(e.source || '', e.metadata || {})
       return eventDate.toDateString() === clickedDate.toDateString() &&
-             determineEventType(e.source, e.metadata) === eventType
+             eEventType === eventType
     })
     console.log('🔍 Day events found:', dayEvents.length)
 
@@ -347,7 +349,7 @@ export const CalendarPage = () => {
       'product_expiry': 'product_expiry'
     }
 
-    const macroCategory = categoryMap[eventType]
+    const macroCategory = eventType ? categoryMap[eventType] : undefined
     console.log('🔍 Macro category:', macroCategory)
     console.log('🔍 Day events length:', dayEvents.length)
     console.log('🔍 Day events:', dayEvents)
@@ -392,15 +394,15 @@ export const CalendarPage = () => {
     toast.success('Evento aggiornato con successo')
   }
 
-  const onEventDelete = (eventId: string) => {
+  const onEventDelete = (_eventId: string) => {
     // Event deleted - can add logic here if needed
   }
 
-  const onDateSelect = (start: Date, end: Date) => {
+  const onDateSelect = (_start: Date, _end: Date) => {
     // Date selected - can add logic here if needed
   }
 
-  const createEvent = (eventData: any) => {
+  const createEvent = (_eventData: any) => {
     // Create event - can add logic here if needed
   }
 
@@ -451,7 +453,7 @@ export const CalendarPage = () => {
         id: member.id,
         label: member.name,
         role: member.role,
-        categories: [member.category] || [],
+        categories: member.category ? [member.category] : [],
       })),
     [staff]
   )

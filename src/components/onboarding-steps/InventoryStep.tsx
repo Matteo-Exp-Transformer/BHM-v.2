@@ -1,3 +1,9 @@
+// LOCKED: 2025-01-23 - InventoryStep blindata da Agente 2C - Systems Blueprint Architect
+// Test completi: test-funzionale.js, test-validazione.js, test-edge-cases.js
+// Funzionalità: gestione categorie prodotti, gestione inventario, gestione allergeni, validazione HACCP
+// Combinazioni testate: CRUD categorie, CRUD prodotti, allergeni obbligatori, unità di misura
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 import { useEffect, useMemo, useState } from 'react'
 import {
   Package,
@@ -83,7 +89,7 @@ const InventoryStep = ({
   }, [products.length])
 
   const departmentOptions = useMemo(
-    () => departments.filter(department => department.is_active),
+    () => (departments || []).filter(department => department.is_active),
     [departments]
   )
 
@@ -94,7 +100,7 @@ const InventoryStep = ({
       acc[product.id] = isProductCompliant(
         product,
         categories,
-        conservationPoints
+        conservationPoints || []
       )
       return acc
     }, {})
@@ -160,7 +166,7 @@ const InventoryStep = ({
     const result = validateInventoryProduct(
       normalized,
       categories,
-      conservationPoints
+      conservationPoints || []
     )
     if (!result.success) {
       console.error('❌ Validazione prodotto fallita:')
@@ -194,9 +200,9 @@ const InventoryStep = ({
       prev
         ? {
             ...prev,
-            allergens: prev.allergens.includes(allergen)
-              ? prev.allergens.filter(a => a !== allergen)
-              : [...prev.allergens, allergen],
+            allergens: (prev.allergens || []).includes(allergen)
+              ? (prev.allergens || []).filter(a => a !== allergen)
+              : [...(prev.allergens || []), allergen],
           }
         : prev
     )
@@ -571,10 +577,10 @@ const InventoryStep = ({
                 const category = categories.find(
                   cat => cat.id === product.categoryId
                 )
-                const department = departments.find(
+                const department = (departments || []).find(
                   dept => dept.id === product.departmentId
                 )
-                const point = conservationPoints.find(
+                const point = (conservationPoints || []).find(
                   cp => cp.id === product.conservationPointId
                 )
                 const compliance = complianceByProduct[product.id]
@@ -642,11 +648,11 @@ const InventoryStep = ({
                               Scadenza: {product.expiryDate}
                             </span>
                           )}
-                          {product.allergens.length > 0 && (
+                          {(product.allergens || []).length > 0 && (
                             <span className="rounded-full bg-red-100 px-2 py-1 text-red-700">
                               Allergeni:{' '}
-                              {product.allergens
-                                .map(getAllergenLabel)
+                              {(product.allergens || [])
+                                .map((allergen: string) => getAllergenLabel(allergen as AllergenType))
                                 .join(', ')}
                             </span>
                           )}
@@ -895,7 +901,7 @@ const InventoryStep = ({
                         }`}
                       >
                         <option value="">Seleziona punto conservazione</option>
-                        {conservationPoints.map(point => (
+                        {(conservationPoints || []).map(point => (
                           <option key={point.id} value={point.id}>
                             {point.name} ({point.targetTemperature}°C)
                           </option>
@@ -1049,7 +1055,7 @@ const InventoryStep = ({
                       <input
                         type="checkbox"
                         checked={
-                          draftProduct?.allergens.includes(allergen.value) ||
+                          (draftProduct?.allergens || []).includes(allergen.value) ||
                           false
                         }
                         onChange={() => toggleProductAllergen(allergen.value)}

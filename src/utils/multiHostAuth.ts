@@ -198,7 +198,7 @@ export const manualSyncWithOtherPorts = async (): Promise<void> => {
     `🔄 SINCRONIZZAZIONE MULTI-HOST\n\n` +
     `Porta corrente: ${currentPort}\n\n` +
     `Questa funzione cercherà una sessione valida sulle porte:\n` +
-    `${SUPPORTED_PORTS.filter(p => p !== currentPort).join(', ')}\n\n` +
+    `${SUPPORTED_PORTS.filter((p: number) => p !== currentPort).join(', ')}\n\n` +
     `Se trova una sessione, la copierà su questa porta.\n\n` +
     `⚠️ ATTENZIONE: Questa funzione è solo per sviluppo!\n` +
     `Rimuovere prima di production.\n\n` +

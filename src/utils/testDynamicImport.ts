@@ -10,7 +10,7 @@ export const testDynamicImport = async () => {
     console.log('🧪 Testing dynamic import...')
     
     // Test import diretto
-    const CalendarPage = await import('./features/calendar/CalendarPage')
+    const CalendarPage = await import('../features/calendar/CalendarPage')
     console.log('✅ CalendarPage imported successfully:', CalendarPage)
     
     return true

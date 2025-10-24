@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { authClient } from '@/features/auth/api/authClient'
+// import { authClient } from '@/features/auth/api/authClient'
 import type { UseRateLimitReturn, UseRateLimitOptions, RateLimitInfo } from '@/types/auth'
 import { RATE_LIMIT_CONFIG } from '@/types/auth'
 
@@ -18,8 +18,8 @@ import { RATE_LIMIT_CONFIG } from '@/types/auth'
 // =============================================
 
 const RATE_LIMIT_STORAGE_KEY = 'bhm_rate_limit'
-const DEFAULT_WINDOW_MS = 5 * 60 * 1000 // 5 minutes
-const DEFAULT_MAX_REQUESTS = 5
+// const DEFAULT_WINDOW_MS = 5 * 60 * 1000 // 5 minutes
+// const DEFAULT_MAX_REQUESTS = 5
 const CHECK_INTERVAL = 1000 // 1 second
 
 // =============================================
@@ -71,23 +71,23 @@ function getStoredRateLimitState(endpoint: string): StoredRateLimit | null {
 /**
  * Pulisce stato rate limiting scaduto
  */
-function cleanupExpiredRateLimitStates(): void {
-  try {
-    const stored = getStoredRateLimitStates()
-    const now = Date.now()
-    
-    Object.keys(stored).forEach(endpoint => {
-      const state = stored[endpoint]
-      if (now - state.lastReset > state.windowMs) {
-        delete stored[endpoint]
-      }
-    })
-    
-    localStorage.setItem(RATE_LIMIT_STORAGE_KEY, JSON.stringify(stored))
-  } catch (error) {
-    console.warn('Failed to cleanup rate limit states:', error)
-  }
-}
+// function cleanupExpiredRateLimitStates(): void {
+//   try {
+//     const stored = getStoredRateLimitStates()
+//     const now = Date.now()
+//     
+//     Object.keys(stored).forEach(endpoint => {
+//       const state = stored[endpoint]
+//       if (now - state.lastReset > state.windowMs) {
+//         delete stored[endpoint]
+//       }
+//     })
+//     
+//     localStorage.setItem(RATE_LIMIT_STORAGE_KEY, JSON.stringify(stored))
+//   } catch (error) {
+//     console.warn('Failed to cleanup rate limit states:', error)
+//   }
+// }
 
 // =============================================
 // RATE LIMIT LOGIC
@@ -113,7 +113,7 @@ function canMakeRequest(
  */
 function addRequest(
   requests: number[],
-  maxRequests: number,
+  _maxRequests: number,
   windowMs: number,
   now: number = Date.now()
 ): number[] {
@@ -129,7 +129,7 @@ function addRequest(
 /**
  * Calcola il tempo di reset
  */
-function calculateResetTime(requests: number[], windowMs: number, now: number = Date.now()): Date | null {
+function calculateResetTime(requests: number[], windowMs: number, _now: number = Date.now()): Date | null {
   if (requests.length === 0) return null
   
   const oldestRequest = Math.min(...requests)

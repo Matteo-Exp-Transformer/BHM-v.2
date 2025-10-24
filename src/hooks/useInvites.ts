@@ -20,7 +20,7 @@ import {
   getInviteStats,
   type CreateInviteInput,
   type AcceptInviteInput,
-  type InviteToken,
+  // type InviteToken,
 } from '@/services/auth/inviteService'
 import { toast } from 'react-toastify'
 

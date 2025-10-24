@@ -58,7 +58,7 @@ const transformEventRecord = (record: any): Event => {
 
 // Hook for events management
 export const useEvents = (filters?: EventFilters) => {
-  const { user, companyId } = useAuth()
+  const { companyId } = useAuth()
   const queryClient = useQueryClient()
 
   // Fetch events
@@ -227,8 +227,8 @@ export const useEvents = (filters?: EventFilters) => {
   // Stats
   const stats = {
     total: events?.length || 0,
-    upcoming: events?.filter(event => event.start_date > new Date()).length || 0,
-    thisMonth: events?.filter(event => {
+    upcoming: events?.filter((event: any) => event.start_date > new Date()).length || 0,
+    thisMonth: events?.filter((event: any) => {
       const eventDate = event.start_date
       const now = new Date()
       return eventDate.getMonth() === now.getMonth() &&

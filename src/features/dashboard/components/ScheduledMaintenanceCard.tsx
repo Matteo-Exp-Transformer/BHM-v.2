@@ -56,7 +56,7 @@ function getCurrentWeekBounds(): { start: Date; end: Date } {
  * Rosso: almeno una manutenzione in ritardo (scadenza questa settimana o precedente, non completata)
  */
 function calculateWeeklyStatus(maintenances: MaintenanceTask[]): WeeklyStatus {
-  const { start: weekStart, end: weekEnd } = getCurrentWeekBounds()
+  const { start: _weekStart, end: weekEnd } = getCurrentWeekBounds()
   const now = new Date()
   
   let hasOverdue = false

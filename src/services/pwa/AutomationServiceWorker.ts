@@ -398,22 +398,6 @@ export class AutomationServiceWorker {
   }
 
   /**
-   * Load cache from storage
-   */
-  private loadCacheFromStorage(): void {
-    try {
-      const stored = localStorage.getItem('automation_cache')
-      if (stored) {
-        const cacheData = JSON.parse(stored)
-        this.cache = new Map(cacheData)
-        console.log('🔧 Loaded automation cache from storage')
-      }
-    } catch (error) {
-      console.warn('Failed to load cache from storage:', error)
-    }
-  }
-
-  /**
    * Get offline data
    */
   private async getOfflineData(): Promise<any[]> {

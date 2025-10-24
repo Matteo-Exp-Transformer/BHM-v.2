@@ -18,7 +18,8 @@ import {
     getUserIP, 
     getUserAgent,
     SESSION_CONFIG,
-    cleanupExpiredSessions
+    cleanupExpiredSessions,
+    calculateLockoutDuration
 } from '../shared/business-logic.ts';
 
 /**
@@ -163,9 +164,11 @@ serve(async (req: Request) => {
             const newFailedAttempts = user.failed_login_attempts + 1;
             let lockedUntil = null;
 
-            // Lock account after 5 failed attempts
+            // Decision #4: Rate Limiting Escalation
+            // Lock account with progressive escalation
             if (newFailedAttempts >= 5) {
-                lockedUntil = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+                const lockoutDuration = calculateLockoutDuration(newFailedAttempts);
+                lockedUntil = new Date(Date.now() + lockoutDuration * 1000);
             }
 
             await supabase

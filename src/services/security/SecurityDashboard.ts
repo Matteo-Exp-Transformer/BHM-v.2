@@ -91,7 +91,7 @@ export interface SecurityDashboardData {
 class SecurityDashboardService {
   private alerts: SecurityAlert[] = []
   private metrics: SecurityMetric[] = []
-  private lastUpdateTime: Date = new Date()
+  // private lastUpdateTime: Date = new Date()
 
   /**
    * Get comprehensive security dashboard data
@@ -150,7 +150,7 @@ class SecurityDashboardService {
       trends,
     }
 
-    this.lastUpdateTime = new Date()
+    // this.lastUpdateTime = new Date()
     console.log(
       `📈 Dashboard updated: Security ${securityScore}%, Compliance ${complianceResult.overallScore}%`
     )
@@ -260,7 +260,7 @@ class SecurityDashboardService {
    * Get security metrics history
    */
   public async getMetricsHistory(
-    metricId: string,
+    // metricId: string,
     days: number = 30
   ): Promise<{ date: Date; value: number }[]> {
     // In production, this would fetch from persistent storage
@@ -502,10 +502,10 @@ class SecurityDashboardService {
   private calculateTrends(): SecurityDashboardData['trends'] {
     // Generate mock trend data for demonstration
     return {
-      securityScore: this.generateTrendData(30, 70, 100),
-      complianceScore: this.generateTrendData(30, 80, 100),
-      threatEvents: this.generateTrendData(30, 0, 10),
-      auditEvents: this.generateTrendData(30, 50, 200),
+      securityScore: this.generateTrendData(30, 70, 100) as { date: Date; score: number }[],
+      complianceScore: this.generateTrendData(30, 80, 100) as { date: Date; score: number }[],
+      threatEvents: this.generateTrendData(30, 0, 10) as { date: Date; count: number }[],
+      auditEvents: this.generateTrendData(30, 50, 200) as { date: Date; count: number }[],
     }
   }
 

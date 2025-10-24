@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'react-toastify'
-import { ExpiredProduct, WasteStats, AllergenType } from '@/types/inventory'
+import { ExpiredProduct, WasteStats } from '@/types/inventory'
 
 // Query keys
 const QUERY_KEYS = {
@@ -44,7 +44,7 @@ export const useExpiredProducts = () => {
         throw error
       }
 
-      return (data || []).map(product => ({
+      return (data || []).map((product: any) => ({
         id: product.id,
         company_id: product.company_id,
         name: product.name,
@@ -127,12 +127,12 @@ export const useExpiredProducts = () => {
         }
       }
 
-      const totalWasteCost = expiredProducts.reduce((total, product) => {
+      const totalWasteCost = expiredProducts.reduce((total: number, product: any) => {
         return total + (product.quantity || 0) * 2.5 // €2.50 per unit average
       }, 0)
 
       const today = new Date()
-      const totalExpiredDays = expiredProducts.reduce((total, product) => {
+      const totalExpiredDays = expiredProducts.reduce((total: number, product: any) => {
         if (!product.expiry_date) return total
         const expiryDate = new Date(product.expiry_date)
         const diffTime = today.getTime() - expiryDate.getTime()
@@ -145,7 +145,7 @@ export const useExpiredProducts = () => {
 
       // Find most wasted category
       const categoryCounts = expiredProducts.reduce(
-        (acc, product) => {
+        (acc: Record<string, number>, product: any) => {
           const categoryName = product.product_categories?.name || 'Senza categoria'
           acc[categoryName] = (acc[categoryName] || 0) + 1
           return acc
@@ -154,8 +154,8 @@ export const useExpiredProducts = () => {
       )
 
       const mostWastedCategory = Object.entries(categoryCounts).reduce(
-        (max, [category, count]) =>
-          count > max.count ? { category, count } : max,
+        (max: { category: string; count: number }, [category, count]: [string, unknown]) =>
+          (count as number) > max.count ? { category, count: count as number } : max,
         { category: '', count: 0 }
       ).category
 

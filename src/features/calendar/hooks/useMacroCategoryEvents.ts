@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
@@ -8,8 +8,8 @@ import type { MaintenanceTask } from '@/types/conservation'
 import type { Product } from '@/types/inventory'
 import type { GenericTask } from './useGenericTasks'
 import { supabase } from '@/lib/supabase/client'
-import type { CalendarFilters, EventStatus, EventType } from '@/types/calendar-filters'
-import { areAllFiltersEmpty, calculateEventStatus, determineEventType } from '@/types/calendar-filters'
+import type { CalendarFilters, EventStatus } from '@/types/calendar-filters'
+import { areAllFiltersEmpty } from '@/types/calendar-filters'
 
 export type MacroCategory = 'maintenance' | 'generic_tasks' | 'product_expiry'
 
@@ -130,7 +130,7 @@ function isUserAuthorizedForEvent(
 }
 
 export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarFilters, refreshKey?: number): MacroCategoryResult {
-  const { user, companyId, userRole } = useAuth()
+  const { user: _user, companyId, userRole } = useAuth()
   const { maintenanceTasks, isLoading: maintenanceLoading } = useMaintenanceTasks()
   const { products, isLoading: productsLoading } = useProducts()
   const { tasks: genericTasks, isLoading: genericTasksLoading } = useGenericTasks()
@@ -232,7 +232,7 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
     const visibleItems = items.filter(item => {
       // Verifica se l'evento è visibile in base all'orario configurato
       const task = genericTasks.find(t => t.id === item.metadata.sourceId)
-      const isVisibleByTime = isEventVisibleByTime(task?.time_management)
+      const isVisibleByTime = isEventVisibleByTime((task as any)?.time_management)
       
       // Verifica se l'utente è autorizzato a vedere l'evento
       const isAuthorized = isUserAuthorizedForEvent(
@@ -414,9 +414,9 @@ function convertMaintenanceToItem(task: MaintenanceTask): MacroCategoryItem {
       sourceId: task.id,
       notes: task.description,
       conservationPointId: task.conservation_point_id,
-      departmentId: task.department_id,
+      departmentId: (task as any).department_id,
       estimatedDuration: task.estimated_duration,
-      instructions: task.instructions,
+      instructions: (task as any).instructions,
     },
   }
 }
@@ -500,35 +500,35 @@ function convertGenericTaskToItem(
 ): MacroCategoryItem {
   const now = new Date()
 
-  let period_start: Date
-  let period_end: Date
+  // let _period_start: Date
+  // let _period_end: Date
 
   switch (task.frequency) {
     case 'daily':
-      period_start = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 0, 0, 0)
-      period_end = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 59)
+      // _period_start = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 0, 0, 0)
+      // _period_end = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 59)
       break
     case 'weekly':
       const dayOfWeek = dueDate.getDay() || 7
       const monday = new Date(dueDate)
       monday.setDate(dueDate.getDate() - (dayOfWeek - 1))
-      period_start = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 0, 0, 0)
+      // _period_start = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 0, 0, 0)
       const sunday = new Date(monday)
       sunday.setDate(monday.getDate() + 6)
-      period_end = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate(), 23, 59, 59)
+      // _period_end = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate(), 23, 59, 59)
       break
     case 'monthly':
-      period_start = new Date(dueDate.getFullYear(), dueDate.getMonth(), 1, 0, 0, 0)
-      period_end = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, 0, 23, 59, 59)
+      // _period_start = new Date(dueDate.getFullYear(), dueDate.getMonth(), 1, 0, 0, 0)
+      // _period_end = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, 0, 23, 59, 59)
       break
     case 'annually':
     case 'annual':
-      period_start = new Date(dueDate.getFullYear(), 0, 1, 0, 0, 0)
-      period_end = new Date(dueDate.getFullYear(), 11, 31, 23, 59, 59)
+      // _period_start = new Date(dueDate.getFullYear(), 0, 1, 0, 0, 0)
+      // _period_end = new Date(dueDate.getFullYear(), 11, 31, 23, 59, 59)
       break
     default:
-      period_start = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 0, 0, 0)
-      period_end = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 59)
+      // _period_start = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 0, 0, 0)
+      // _period_end = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 59)
   }
 
   // Trova il completamento per questo periodo
@@ -572,7 +572,7 @@ function convertGenericTaskToItem(
       category: 'generic_tasks',
       sourceId: task.id,
       notes: task.description,
-      departmentId: task.department_id,
+      departmentId: undefined,
       estimatedDuration: task.estimated_duration,
       taskId: task.id,
       // Aggiungi informazioni di completamento se disponibili

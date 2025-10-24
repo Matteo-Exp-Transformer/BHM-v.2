@@ -189,7 +189,7 @@ export const useGenericTasks = () => {
       if (!companyId) throw new Error('No company ID available')
 
       const frequency = mapFrequency(input.frequency)
-      const next_due = calculateNextDue(input.frequency, input.custom_days, input.start_date)
+      const next_due = calculateNextDue(input.frequency, input.custom_days, (input as any).start_date)
 
       // Payload allineato esattamente con schema onboarding (riga 998-1024 onboardingHelpers.ts)
       const payload: any = {

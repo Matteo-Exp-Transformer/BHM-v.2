@@ -27,7 +27,7 @@ import DevButtons from './DevButtons'
 
 // Onboarding Helpers
 import {
-  getPrefillData,
+  // getPrefillData,
   completeOnboarding as completeOnboardingHelper,
 } from '@/utils/onboardingHelpers'
 
@@ -90,7 +90,7 @@ const OnboardingWizard = () => {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 
     try {
-      const resultCompanyId = await completeOnboardingHelper(companyId, formData)
+      const resultCompanyId = await completeOnboardingHelper(companyId || undefined, formData)
       console.log('✅ Onboarding completato (DevButtons), companyId:', resultCompanyId)
       console.log('🔄 Invalidazione cache React Query...')
 
@@ -248,7 +248,7 @@ const OnboardingWizard = () => {
 
       // Usa la funzione helper unificata passando i dati correnti
       // Ora ritorna il companyId invece di fare reload
-      const resultCompanyId = await completeOnboardingHelper(finalCompanyId, formData)
+      const resultCompanyId = await completeOnboardingHelper(finalCompanyId || undefined, formData)
 
       console.log('✅ Onboarding completato, companyId ricevuto:', resultCompanyId)
       console.log('🔄 Invalidazione cache React Query...')

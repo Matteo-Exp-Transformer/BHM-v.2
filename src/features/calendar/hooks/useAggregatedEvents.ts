@@ -110,7 +110,7 @@ export function useAggregatedEvents(fiscalYearEnd?: Date): AggregatedEventsResul
       return occurrences
     })
     
-    const completedCount = events.filter(e => e.status === 'completed').length
+    // const _completedCount = events.filter(e => e.status === 'completed').length
     
     return events
   }, [maintenanceTasks, companyId, user?.id, fiscalYearEnd])
@@ -376,7 +376,7 @@ function convertMaintenanceTaskToEvent(
     priority: task.priority || 'medium',
     source: 'maintenance',
     sourceId: task.id,
-    assigned_to: task.assigned_to_staff_id ? [task.assigned_to_staff_id] : [],
+    assigned_to: (task as any).assigned_to_staff_id ? [(task as any).assigned_to_staff_id] : [],
     conservation_point_id: task.conservation_point_id,
     department_id: (task as any).department_id || undefined,
     recurring: false,
@@ -645,18 +645,18 @@ function convertGenericTaskToEvent(
     priority: task.priority || 'medium',
     source: 'general_task',
     sourceId: task.id,
-    assigned_to: task.assigned_to_staff_id ? [task.assigned_to_staff_id] : [],
-    department_id: task.department_id || undefined,
+    assigned_to: (task as any).assigned_to_staff_id ? [(task as any).assigned_to_staff_id] : [],
+    department_id: (task as any).department_id || undefined,
     recurring: task.frequency !== 'as_needed',
     backgroundColor: colors.backgroundColor,
     borderColor: colors.borderColor,
     textColor: colors.textColor,
     metadata: {
       task_id: task.id,
-      department_id: task.department_id,
+      department_id: (task as any).department_id,
       assigned_to_role: task.assigned_to_role,
       assigned_to_category: task.assigned_to_category,
-      assigned_to_staff_id: task.assigned_to_staff_id,
+      assigned_to_staff_id: (task as any).assigned_to_staff_id,
       notes: task.description,
     },
     extendedProps: {
@@ -667,8 +667,8 @@ function convertGenericTaskToEvent(
         | 'overdue'
         | 'cancelled',
       priority: task.priority || 'medium',
-      assignedTo: task.assigned_to_staff_id ? [task.assigned_to_staff_id] : [],
-      isCompletedInPeriod,
+      assignedTo: (task as any).assigned_to_staff_id ? [(task as any).assigned_to_staff_id] : [],
+      // isCompletedInPeriod,
       metadata: {
         id: task.id,
         task_id: task.id,

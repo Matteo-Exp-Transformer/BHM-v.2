@@ -37,7 +37,7 @@ export const cleanupAllTestData = async (): Promise<void> => {
     console.log('🏢 Company ID:', companyId)
 
     // 2. Identifica dati fake da rimuovere
-    const fakeData = await identifyFakeData(companyId)
+    const fakeData = await identifyFakeData()
     console.log('🔍 Dati fake identificati:', fakeData)
 
     // 3. Rimuovi dati fake in ordine di dipendenza
@@ -51,7 +51,7 @@ export const cleanupAllTestData = async (): Promise<void> => {
 
   } catch (error) {
     console.error('❌ Errore durante pulizia:', error)
-    toast.error(`Errore durante pulizia: ${error.message}`, {
+    toast.error(`Errore durante pulizia: ${(error as Error).message}`, {
       position: 'top-right',
       autoClose: 5000,
     })
@@ -66,7 +66,7 @@ export const cleanupAllTestData = async (): Promise<void> => {
  * ATTENZIONE: Attualmente TUTTI i dati "fake" provengono da Precompila,
  * quindi questa funzione non rimuove nulla per preservare i dati Precompila.
  */
-async function identifyFakeData(companyId: string) {
+async function identifyFakeData(/* companyId: string */) {
   const fakeData = {
     staff: [] as string[],
     departments: [] as string[],
@@ -226,7 +226,7 @@ export const cleanupSpecificTestData = async (dataTypes: string[]): Promise<void
 
   } catch (error) {
     console.error('❌ Errore durante pulizia selettiva:', error)
-    toast.error(`Errore: ${error.message}`)
+    toast.error(`Errore: ${(error as Error).message}`)
     throw error
   }
 }
@@ -240,7 +240,7 @@ async function cleanupFakeStaff(companyId: string) {
     .in('email', ['0cavuz0@gmail.com'])
 
   if (fakeStaff?.length) {
-    await supabase.from('staff').delete().in('id', fakeStaff.map(s => s.id))
+    await supabase.from('staff').delete().in('id', fakeStaff.map((s: any) => s.id))
     console.log('✅ Staff fake rimosso')
   }
 }
@@ -253,7 +253,7 @@ async function cleanupFakeDepartments(companyId: string) {
     .in('name', ['Cucina', 'Bancone', 'Sala', 'Magazzino'])
 
   if (fakeDepartments?.length) {
-    await supabase.from('departments').delete().in('id', fakeDepartments.map(d => d.id))
+    await supabase.from('departments').delete().in('id', fakeDepartments.map((d: any) => d.id))
     console.log('✅ Departments fake rimossi')
   }
 }
@@ -266,7 +266,7 @@ async function cleanupFakeConservationPoints(companyId: string) {
     .or('name.ilike.%Frigo A%,name.ilike.%Freezer A%')
 
   if (fakePoints?.length) {
-    await supabase.from('conservation_points').delete().in('id', fakePoints.map(p => p.id))
+    await supabase.from('conservation_points').delete().in('id', fakePoints.map((p: any) => p.id))
     console.log('✅ Conservation points fake rimossi')
   }
 }
@@ -279,7 +279,7 @@ async function cleanupFakeProducts(companyId: string) {
     .or('name.ilike.%Pollo%,name.ilike.%Salmone%')
 
   if (fakeProducts?.length) {
-    await supabase.from('products').delete().in('id', fakeProducts.map(p => p.id))
+    await supabase.from('products').delete().in('id', fakeProducts.map((p: any) => p.id))
     console.log('✅ Products fake rimossi')
   }
 }
@@ -303,10 +303,10 @@ async function cleanupFakeMaintenanceTasks(companyId: string) {
       .from('maintenance_tasks')
       .select('id')
       .eq('company_id', companyId)
-      .in('conservation_point_id', fakePoints.map(p => p.id))
+      .in('conservation_point_id', fakePoints.map((p: any) => p.id))
 
     if (fakeTasks?.length) {
-      await supabase.from('maintenance_tasks').delete().in('id', fakeTasks.map(t => t.id))
+      await supabase.from('maintenance_tasks').delete().in('id', fakeTasks.map((t: any) => t.id))
       console.log('✅ Maintenance tasks fake rimossi')
     }
   }
@@ -325,10 +325,10 @@ async function cleanupFakeGenericTasks(companyId: string) {
       .from('tasks')
       .select('id')
       .eq('company_id', companyId)
-      .in('assigned_to_staff_id', fakeStaff.map(s => s.id))
+      .in('assigned_to_staff_id', fakeStaff.map((s: any) => s.id))
 
     if (fakeTasks?.length) {
-      await supabase.from('tasks').delete().in('id', fakeTasks.map(t => t.id))
+      await supabase.from('tasks').delete().in('id', fakeTasks.map((t: any) => t.id))
       console.log('✅ Generic tasks fake rimossi')
     }
   }

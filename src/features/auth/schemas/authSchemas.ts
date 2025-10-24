@@ -21,12 +21,15 @@ export const emailSchema = z
   .email('Formato email non valido')
   .max(254, 'Email troppo lunga')
 
-// Password policy: solo lettere, min 12 caratteri
+// Password policy: 12 caratteri, lettere + numeri (DECISIONE #12)
 export const passwordSchema = z
   .string()
   .min(12, 'Password deve essere di almeno 12 caratteri')
   .max(128, 'Password troppo lunga')
-  .regex(/^[A-Za-z]+$/, 'Password deve contenere solo lettere (maiuscole e minuscole)')
+  .regex(
+    /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{12,}$/,
+    'Password deve contenere lettere e numeri (minimo 12 caratteri)'
+  )
 
 // Name validation
 export const nameSchema = z
@@ -43,14 +46,16 @@ export const nameSchema = z
 export const loginFormSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
-  rememberMe: z.boolean().optional().default(false)
+  rememberMe: z.boolean().optional().default(false),
+  csrf_token: z.string().optional()
 })
 
 export type LoginFormData = z.infer<typeof loginFormSchema>
 
 // Recovery Request Form
 export const recoveryRequestSchema = z.object({
-  email: emailSchema
+  email: emailSchema,
+  csrf_token: z.string().optional()
 })
 
 export type RecoveryRequestData = z.infer<typeof recoveryRequestSchema>
@@ -59,7 +64,8 @@ export type RecoveryRequestData = z.infer<typeof recoveryRequestSchema>
 export const recoveryConfirmSchema = z.object({
   token: z.string().min(1, 'Token è obbligatorio'),
   password: passwordSchema,
-  confirmPassword: passwordSchema
+  confirmPassword: passwordSchema,
+  csrf_token: z.string().optional()
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Le password non coincidono',
   path: ['confirmPassword']
@@ -73,7 +79,8 @@ export const inviteAcceptSchema = z.object({
   firstName: nameSchema,
   lastName: nameSchema,
   password: passwordSchema,
-  confirmPassword: passwordSchema
+  confirmPassword: passwordSchema,
+  csrf_token: z.string().optional()
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Le password non coincidono',
   path: ['confirmPassword']

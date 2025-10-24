@@ -498,7 +498,7 @@ export class AutomationCacheManager {
   private startCleanupTimer(): void {
     this.cleanupTimer = setInterval(() => {
       this.cleanupExpiredEntries()
-    }, this.config.cleanupInterval)
+    }, this.config.cleanupInterval) as unknown as number
   }
 
   private async cleanupExpiredEntries(): Promise<void> {

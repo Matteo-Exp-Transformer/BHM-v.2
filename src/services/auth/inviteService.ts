@@ -501,7 +501,7 @@ export const checkEmailExists = async (email: string): Promise<boolean> => {
   // Nota: Questa funzione richiede Service Role Key
   // Per ora verifichiamo solo in company_members
   
-  const { data, error } = await supabase
+  const { data, error: _error } = await supabase
     .from('company_members')
     .select('id')
     .eq('user_id', email)  // TODO: Query corretta quando RLS attivo

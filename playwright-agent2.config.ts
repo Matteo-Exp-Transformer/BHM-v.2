@@ -46,7 +46,7 @@ function detectAppPort(): string {
   }
 }
 
-const APP_PORT = '3000'; // Forziamo porta 3000 per test visibili
+const APP_PORT = '3002'; // Forziamo porta 3002 per test visibili
 const BASE_URL = `http://localhost:${APP_PORT}`;
 
 console.log(`🎭 Playwright Agent 2 - Porta rilevata: ${APP_PORT}`);
@@ -57,7 +57,7 @@ export default defineConfig({
   // Configurazione base
   use: {
     baseURL: BASE_URL,
-    headless: false, // Modalità visibile per test manuali
+    headless: true, // Modalità headless per velocità
     viewport: { width: 1280, height: 720 },
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -65,9 +65,9 @@ export default defineConfig({
   },
   
   // Timeout e retry
-  timeout: 60000,
+  timeout: 30000, // Ridotto da 60000 per velocità
   expect: {
-    timeout: 10000
+    timeout: 5000 // Ridotto da 10000 per velocità
   },
   retries: process.env.CI ? 2 : 0,
   
@@ -128,8 +128,8 @@ export default defineConfig({
   // Configurazione output
   outputDir: 'test-results/agent2',
   
-  // Configurazione worker - Forziamo 1 worker per debug
-  workers: 1,
+  // Configurazione worker - Ottimizzato per velocità
+  workers: 2,
   
   // Configurazione per CI
   fullyParallel: !process.env.CI,

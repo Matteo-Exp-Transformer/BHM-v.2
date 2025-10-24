@@ -3,22 +3,22 @@
  * Handles offline caching, background sync, and push notifications
  */
 
-declare const self: ServiceWorkerGlobalScope & {
-  skipWaiting(): void
-  clients: {
-    claim(): Promise<void>
-    openWindow(url: string): Promise<WindowClient>
-  }
-  registration: ServiceWorkerRegistration & {
-    sync: {
-      register(tag: string): Promise<void>
-    }
-    showNotification(
-      title: string,
-      options?: NotificationOptions
-    ): Promise<void>
-  }
-}
+// declare const self: ServiceWorkerGlobalScope & {
+//   skipWaiting(): void
+//   clients: {
+//     claim(): Promise<void>
+//     openWindow(url: string): Promise<WindowClient>
+//   }
+//   registration: ServiceWorkerRegistration & {
+//     sync: {
+//       register(tag: string): Promise<void>
+//     }
+//     showNotification(
+//       title: string,
+//       options?: NotificationOptions
+//     ): Promise<void>
+//   }
+// }
 
 const CACHE_VERSION = 'v1.2.0'
 const STATIC_CACHE_NAME = `haccp-static-${CACHE_VERSION}`
@@ -57,7 +57,7 @@ interface SyncData {
 }
 
 // Install event - cache static assets
-self.addEventListener('install', (event: any) => {
+(self as any).addEventListener('install', (event: any) => {
   console.log('[SW] Installing service worker version:', CACHE_VERSION)
 
   event.waitUntil(
@@ -67,12 +67,12 @@ self.addEventListener('install', (event: any) => {
         console.log('[SW] Caching static assets')
         return cache.addAll(STATIC_ASSETS)
       })
-      .then(() => self.skipWaiting())
+      .then(() => (self as any).skipWaiting())
   )
 })
 
 // Activate event - clean up old caches
-self.addEventListener('activate', (event: any) => {
+(self as any).addEventListener('activate', (event: any) => {
   console.log('[SW] Activating service worker')
 
   event.waitUntil(
@@ -92,12 +92,12 @@ self.addEventListener('activate', (event: any) => {
           })
         )
       })
-      .then(() => self.clients.claim())
+      .then(() => (self as any).clients.claim())
   )
 })
 
 // Fetch event - implement caching strategies
-self.addEventListener('fetch', (event: any) => {
+(self as any).addEventListener('fetch', (event: any) => {
   const { request } = event
   const url = new URL(request.url)
 
@@ -242,7 +242,7 @@ async function registerBackgroundSync(request: Request): Promise<void> {
     })
 
     // Register for background sync
-    await self.registration.sync.register(BACKGROUND_SYNC_TAG)
+    await (self as any).registration?.sync.register(BACKGROUND_SYNC_TAG)
 
     console.log('[SW] Registered background sync for:', request.url)
   } catch (error) {
@@ -259,7 +259,7 @@ function determineSyncType(url: string): SyncData['type'] {
 }
 
 // Background sync event handler
-self.addEventListener('sync', (event: any) => {
+(self as any).addEventListener('sync', (event: any) => {
   if (event.tag === BACKGROUND_SYNC_TAG) {
     console.log('[SW] Processing background sync')
     event.waitUntil(processBackgroundSync())
@@ -365,7 +365,7 @@ function createOfflineResponse(): Response {
 }
 
 // Push notification handler
-self.addEventListener('push', (event: any) => {
+(self as any).addEventListener('push', (event: any) => {
   console.log('[SW] Push notification received')
 
   const options = {
@@ -390,7 +390,7 @@ self.addEventListener('push', (event: any) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification('HACCP Business Manager', options)
+    (self as any).registration?.showNotification('HACCP Business Manager', options)
   )
 })
 
@@ -402,7 +402,7 @@ self.addEventListener('notificationclick', (event: any) => {
 
   if (event.action === 'view') {
     event.waitUntil(
-      self.clients.openWindow(event.notification.data?.url || '/')
+      (self as any).clients?.openWindow(event.notification.data?.url || '/')
     )
   }
 })

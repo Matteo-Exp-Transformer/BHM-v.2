@@ -7,7 +7,7 @@ import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-
 import { RateLimitBucketRow, RateLimitType, AuditLogEntry } from './types.ts';
 
 /**
- * Rate limiting configuration
+ * Rate limiting configuration with escalation
  */
 export const RATE_LIMITS = {
     LOGIN: {
@@ -28,6 +28,18 @@ export const RATE_LIMITS = {
 };
 
 /**
+ * Calculate escalation lockout duration based on failure count
+ * Decision #4: Rate Limiting Escalation
+ */
+export function calculateLockoutDuration(failureCount: number): number {
+    if (failureCount === 5) return 5 * 60      // 5 minutes
+    if (failureCount === 10) return 15 * 60   // 15 minutes  
+    if (failureCount === 15) return 60 * 60   // 1 hour
+    if (failureCount >= 20) return 24 * 60 * 60 // 24 hours
+    return 0
+}
+
+/**
  * CSRF token configuration
  */
 export const CSRF_CONFIG = {
@@ -38,10 +50,11 @@ export const CSRF_CONFIG = {
 
 /**
  * Session configuration
+ * Decision #19: Sessione durata - 24 ore fisse
  */
 export const SESSION_CONFIG = {
-    LIFETIME: 8 * 60 * 60 * 1000, // 8 hours in milliseconds
-    REFRESH_INTERVAL: 4 * 60 * 60 * 1000, // Refresh every 4 hours
+    LIFETIME: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
+    REFRESH_INTERVAL: 12 * 60 * 60 * 1000, // Refresh every 12 hours
     MAX_SESSIONS_PER_USER: 5 // Maximum concurrent sessions per user
 };
 
@@ -209,23 +222,25 @@ export function generateSessionToken(): string {
 
 /**
  * Hash password using bcrypt
+ * Decision #18: Password hash algoritmo - Passare a bcrypt
  */
 export async function hashPassword(password: string): Promise<string> {
-    // In a real implementation, you would use a proper bcrypt library
-    // For now, we'll use a simple hash (NOT SECURE FOR PRODUCTION!)
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password + 'salt');
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    // Import bcrypt for Deno
+    const bcrypt = await import('https://deno.land/x/bcrypt@v0.4.1/mod.ts');
+    const SALT_ROUNDS = 10;
+    
+    return await bcrypt.hash(password, SALT_ROUNDS);
 }
 
 /**
  * Verify password against hash
+ * Decision #18: Password hash algoritmo - Passare a bcrypt
  */
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-    const hashedPassword = await hashPassword(password);
-    return hashedPassword === hash;
+    // Import bcrypt for Deno
+    const bcrypt = await import('https://deno.land/x/bcrypt@v0.4.1/mod.ts');
+    
+    return await bcrypt.compare(password, hash);
 }
 
 /**

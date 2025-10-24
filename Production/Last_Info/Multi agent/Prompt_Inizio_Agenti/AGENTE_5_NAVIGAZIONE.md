@@ -106,6 +106,34 @@ Comprendere l'architettura navigazione di BHM v2 (routing, layouts, protected ro
 
 ## ✅ PROCEDURA VERIFICA TEST RIGOROSA
 
+### 🚨 COMANDI TEST CORRETTI
+
+**SEMPRE usare questi comandi**:
+```bash
+# ✅ CORRETTO - Usa configurazione Agente 5
+npm run test:agent5
+
+# ✅ ALTERNATIVO - Raw Playwright con config corretta
+npm run test:agent5:raw
+```
+
+**❌ MAI usare questi comandi**:
+```bash
+# ❌ SBAGLIATO - Usa config principale (cerca in ./tests invece di ./Production/Test)
+npx playwright test
+
+# ❌ SBAGLIATO - Path assoluto non funziona con config principale
+npx playwright test Production/Test/Navigazione/test-protected-route.spec.js
+
+# ❌ SBAGLIATO - Config non specificata
+playwright test --project=Navigazione
+```
+
+**Perché?**
+- `npm run test:agent5` → usa `playwright-agent5.config.ts` che cerca in `./Production/Test`
+- `npx playwright test` → usa `playwright.config.ts` che cerca in `./tests`
+- I test Agente 5 sono in `./Production/Test/Navigazione/` quindi DEVI usare config Agente 5!
+
 ### STEP 1: Dopo Test
 ```bash
 npm run test:agent5

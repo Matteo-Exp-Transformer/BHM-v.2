@@ -9,28 +9,22 @@
  */
 
 import type { 
-  LoginFormData, 
-  RecoveryRequestData, 
-  RecoveryConfirmData, 
-  InviteAcceptData, 
-  InviteCreateData,
+  RecoveryRequest, 
+  RecoveryConfirm, 
+  InviteAccept,
   ApiResponse,
   SessionData,
   InviteVerification,
   AuthErrorCode,
-  LoginCredentials,
-  RecoveryRequest,
-  RecoveryConfirm,
-  InviteAccept,
   CsrfTokenResponse,
-  RateLimitInfo
+  // RateLimitInfo as AuthRateLimitInfo
 } from '@/types/auth'
+import type { LoginFormData } from '../schemas/authSchemas'
 import { 
   loginFormSchema,
   recoveryRequestSchema,
   recoveryConfirmSchema,
-  inviteAcceptSchema,
-  csrfTokenResponseSchema
+  inviteAcceptSchema
 } from './schemas/authSchemas'
 
 // =============================================
@@ -173,9 +167,9 @@ class HttpClient {
     const url = `${API_BASE_URL}${endpoint}`
     
     // Prepara headers
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers
+      ...(options.headers as Record<string, string>)
     }
 
     // Aggiungi CSRF token per richieste mutate
@@ -271,7 +265,7 @@ class HttpClient {
 
 export class AuthClient {
   private httpClient = new HttpClient()
-  private csrfManager = CSRFManager.getInstance()
+  // private csrfManager = CSRFManager.getInstance()
   private rateLimitManager = RateLimitManager.getInstance()
 
   /**
@@ -304,7 +298,7 @@ export class AuthClient {
   /**
    * Richiesta reset password
    */
-  async requestRecovery(data: RecoveryRequestData): Promise<ApiResponse<void>> {
+  async requestRecovery(data: RecoveryRequest): Promise<ApiResponse<void>> {
     // Valida i dati con Zod
     const validatedData = recoveryRequestSchema.parse(data)
     
@@ -317,7 +311,7 @@ export class AuthClient {
   /**
    * Conferma reset password
    */
-  async confirmRecovery(data: RecoveryConfirmData): Promise<ApiResponse<SessionData>> {
+  async confirmRecovery(data: RecoveryConfirm): Promise<ApiResponse<SessionData>> {
     // Valida i dati con Zod
     const validatedData = recoveryConfirmSchema.parse(data)
     
@@ -342,7 +336,7 @@ export class AuthClient {
   /**
    * Accetta invito e crea account
    */
-  async acceptInvite(data: InviteAcceptData): Promise<ApiResponse<SessionData>> {
+  async acceptInvite(data: InviteAccept): Promise<ApiResponse<SessionData>> {
     // Valida i dati con Zod
     const validatedData = inviteAcceptSchema.parse(data)
     
@@ -361,7 +355,7 @@ export class AuthClient {
   /**
    * Crea invito (admin only)
    */
-  async createInvite(data: InviteCreateData): Promise<ApiResponse<{ inviteId: string }>> {
+  async createInvite(data: { email: string; role: string; department_id: string; csrf_token: string }): Promise<ApiResponse<{ inviteId: string }>> {
     return this.httpClient.request<{ inviteId: string }>('/invites/create', {
       method: 'POST',
       body: JSON.stringify({
@@ -437,12 +431,17 @@ export const getErrorMessage = (errorCode: AuthErrorCode): string => {
     AUTH_FAILED: 'Credenziali non valide',
     RATE_LIMITED: 'Troppi tentativi. Riprova più tardi',
     CSRF_REQUIRED: 'La sessione non è valida. Riprova',
+    CSRF_INVALID: 'Token CSRF non valido',
     TOKEN_INVALID: 'Link non valido',
     TOKEN_EXPIRED: 'Link scaduto',
     INVITE_INVALID: 'Invito non valido',
     INVITE_EXPIRED: 'Invito scaduto',
     PASSWORD_POLICY_VIOLATION: 'Password non conforme',
-    SESSION_EXPIRED: 'La sessione è scaduta. Accedi di nuovo'
+    SESSION_EXPIRED: 'La sessione è scaduta. Accedi di nuovo',
+    ACCOUNT_LOCKED: 'Account bloccato',
+    VALIDATION_ERROR: 'Errore di validazione',
+    NETWORK_ERROR: 'Errore di rete',
+    UNKNOWN_ERROR: 'Errore sconosciuto'
   }
 
   return messages[errorCode] || 'Errore sconosciuto'

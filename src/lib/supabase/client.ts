@@ -15,7 +15,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Create Supabase client (singleton pattern)
 let supabaseInstance: any = null
-let supabaseAdminInstance: any = null
+// let supabaseAdminInstance: any = null
 
 export const supabase = (() => {
   if (!supabaseInstance) {
@@ -27,6 +27,9 @@ export const supabase = (() => {
         storage:
           typeof window !== 'undefined' ? window.localStorage : undefined,
         storageKey: 'bhm-supabase-auth',
+        // ✅ REMEMBER ME: Configurazione per sessioni estese
+        flowType: 'pkce',
+        debug: import.meta.env.DEV,
       },
       global: {
         headers: {

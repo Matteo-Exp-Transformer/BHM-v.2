@@ -120,7 +120,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       // Registra la richiesta per rate limiting
       recordRequest()
       
-      const response = await authClient.login(formData)
+      const csrfResponse = await authClient.getCsrfToken()
+      const csrfToken = csrfResponse.success ? csrfResponse.data?.csrf_token || '' : ''
+      
+      const response = await authClient.login({
+        email: formData.email,
+        password: formData.password,
+        rememberMe: formData.rememberMe,
+        csrf_token: csrfToken
+      })
       
       if (response.success) {
         toast.success('Login effettuato con successo!')
@@ -284,6 +292,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
             aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
+            aria-pressed={showPassword}
           >
             {showPassword ? (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -119,7 +119,14 @@ export const RecoveryConfirmForm: React.FC<RecoveryConfirmFormProps> = ({
     setErrors({})
 
     try {
-      const response = await authClient.confirmRecovery(formData)
+      const csrfResponse = await authClient.getCsrfToken()
+      const csrfToken = csrfResponse.success ? csrfResponse.data?.csrf_token || '' : ''
+      
+      const response = await authClient.confirmRecovery({
+        token: formData.token,
+        password: formData.password,
+        csrf_token: csrfToken
+      })
       
       if (response.success) {
         toast.success('Password resettata con successo!')

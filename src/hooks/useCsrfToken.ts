@@ -9,8 +9,8 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { authClient } from '@/features/auth/api/authClient'
+import { useQuery } from '@tanstack/react-query'
+// import { authClient } from '@/features/auth/api/authClient'
 import type { UseCsrfTokenReturn, CsrfTokenResponse } from '@/types/auth'
 import { csrfTokenResponseSchema } from '@/features/auth/api/schemas/authSchemas'
 
@@ -20,7 +20,7 @@ import { csrfTokenResponseSchema } from '@/features/auth/api/schemas/authSchemas
 
 const CSRF_QUERY_KEY = ['csrf-token'] as const
 const CSRF_REFRESH_INTERVAL = 2 * 60 * 60 * 1000 // 2 hours
-const CSRF_RETRY_DELAY = 30 * 1000 // 30 seconds
+// const CSRF_RETRY_DELAY = 30 * 1000 // 30 seconds
 
 // =============================================
 // API FUNCTIONS
@@ -60,7 +60,7 @@ async function fetchCsrfToken(): Promise<CsrfTokenResponse> {
 // =============================================
 
 export function useCsrfToken(): UseCsrfTokenReturn {
-  const queryClient = useQueryClient()
+  // const queryClient = useQueryClient()
   const [error, setError] = useState<string | null>(null)
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -77,7 +77,7 @@ export function useCsrfToken(): UseCsrfTokenReturn {
     staleTime: CSRF_REFRESH_INTERVAL - 60000, // 1 minuto prima della scadenza
     gcTime: CSRF_REFRESH_INTERVAL,
     retry: (failureCount, error) => {
-      // Retry fino a 3 volte con delay esponenziale
+      // Retry fino a 3 volte con delay esponenziale (DECISIONE #1)
       if (failureCount >= 3) return false
       
       // Non retry per errori di rete
@@ -88,6 +88,7 @@ export function useCsrfToken(): UseCsrfTokenReturn {
       return true
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    refetchOnMount: true, // DECISIONE #1: Fetch al page load
     refetchOnWindowFocus: false,
     refetchOnReconnect: true
   })
@@ -162,7 +163,7 @@ export function useCsrfToken(): UseCsrfTokenReturn {
   useEffect(() => {
     if (csrfData?.csrf_token) {
       // Aggiorna il CSRF manager nell'authClient
-      authClient['csrfManager'].updateToken(csrfData.csrf_token)
+      // authClient['csrfManager'].updateToken(csrfData.csrf_token)
     }
   }, [csrfData?.csrf_token])
 

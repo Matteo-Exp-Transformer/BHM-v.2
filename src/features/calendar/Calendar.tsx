@@ -102,7 +102,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   error = null,
   useMacroCategories = false,
   calendarSettings = null,
-  eventSources,
+  eventSources: _eventSources,
   filters,
   calendarFilters,
   selectedMacroCategory,
@@ -111,7 +111,7 @@ export const Calendar: React.FC<CalendarProps> = ({
 }) => {
 
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
-  const [showEventModal, setShowEventModal] = useState(false)
+  // const [_showEventModal, setShowEventModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null) // ✅ Traccia giorno selezionato
   const [calendarKey, setCalendarKey] = useState(0) // ✅ Force re-mount quando events cambiano
   const [macroEventsKey, setMacroEventsKey] = useState(0) // ✅ Force refresh dati macro
@@ -206,8 +206,8 @@ export const Calendar: React.FC<CalendarProps> = ({
         console.log('🔍 Calendar.tsx: Opening MacroCategoryModal for:', { category, date, items })
         
         // ✅ Comunica al CalendarPage.tsx di aprire il modal
-        if (onMacroCategorySelect) {
-          onMacroCategorySelect(category, date, items)
+        if (onMacroCategorySelect && category) {
+          onMacroCategorySelect(category, date ?? new Date(), items)
         } else {
           console.warn('🔍 Calendar.tsx: onMacroCategorySelect is undefined!')
         }
@@ -227,7 +227,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         // ✅ Apri EventDetailsModal per eventi individuali
         if (originalEvent) {
           setSelectedEvent(originalEvent)
-          setShowEventModal(true)
+          // setShowEventModal(true)
         }
       }
     },
@@ -428,7 +428,7 @@ export const Calendar: React.FC<CalendarProps> = ({
 
               const date = new Date(arg.date)
               const dateString = date.toISOString().split('T')[0]
-              const dayOfWeek = date.getDay()
+              // const dayOfWeek = date.getDay()
 
               const isClosureDate = calendarSettings.closure_dates.includes(dateString)
 
@@ -552,7 +552,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         <EventDetailsModal
           event={selectedEvent}
           onClose={() => {
-            setShowEventModal(false)
+            // setShowEventModal(false)
             setSelectedEvent(null)
           }}
           onUpdate={(data) => {
@@ -567,7 +567,7 @@ export const Calendar: React.FC<CalendarProps> = ({
             if (onEventDelete) {
               onEventDelete(eventId)
             }
-            setShowEventModal(false)
+            // setShowEventModal(false)
             setSelectedEvent(null)
           }}
           selectedDate={selectedDate || undefined}

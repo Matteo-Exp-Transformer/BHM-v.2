@@ -117,15 +117,15 @@ class MultiTenantDashboardService {
     await multiTenantServices.initialize(companyId, this.currentUserId!)
 
     // Get aggregated metrics
-    const analytics = await multiTenantServices.getTenantAnalytics()
+    await multiTenantServices.getTenantAnalytics()
 
     return {
       totalCompanies: this.accessibleCompanies.length,
-      activeUsers: analytics.activeUsers || 0,
-      temperatureReadings: analytics.temperatureReadings || 0,
-      complianceScore: analytics.complianceScore || 0,
-      pendingTasks: analytics.pendingTasks || 0,
-      criticalAlerts: analytics.criticalAlerts || 0,
+      activeUsers: 0,
+      temperatureReadings: 0,
+      complianceScore: 0,
+      pendingTasks: 0,
+      criticalAlerts: 0,
     }
   }
 

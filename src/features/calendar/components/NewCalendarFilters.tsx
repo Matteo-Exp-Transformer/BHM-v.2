@@ -17,8 +17,8 @@ import {
   EVENT_TYPE_LABELS,
   EVENT_TYPE_ICONS,
   EVENT_STATUS_COLORS,
-  DEFAULT_CALENDAR_FILTERS,
-  areAllFiltersEmpty
+  DEFAULT_CALENDAR_FILTERS
+  // areAllFiltersEmpty
 } from '@/types/calendar-filters'
 
 interface Department {
@@ -82,7 +82,7 @@ export const NewCalendarFilters = ({
   }
 
   // Check se tutti filtri attivi
-  const allFiltersActive = areAllFiltersEmpty(filters)
+  // const _allFiltersActive = areAllFiltersEmpty(filters)
 
   return (
     <div className={`bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-gray-200 shadow-sm ${className}`}>

@@ -47,7 +47,7 @@ export const optimizeImage = (
 
       // Draw and compress
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-      canvas.toBlob(resolve, 'image/jpeg', quality)
+      canvas.toBlob(resolve as any, 'image/jpeg', quality)
     }
 
     img.src = URL.createObjectURL(file)
@@ -102,7 +102,7 @@ export const createCleanupManager = () => {
   return {
     add: (cleanup: () => void) => cleanupFunctions.push(cleanup),
     cleanup: () => {
-      cleanupFunctions.forEach(fn => fn())
+      cleanupFunctions.forEach((fn: () => void) => fn())
       cleanupFunctions.length = 0
     },
   }

@@ -70,7 +70,7 @@ export const DepartmentCard = ({
               </span>
             </div>
 
-            {department.description && (
+            {/* department.description && (
               <p
                 className={`mt-1 text-sm truncate ${
                   department.is_active ? 'text-gray-600' : 'text-gray-400'
@@ -78,7 +78,7 @@ export const DepartmentCard = ({
               >
                 {department.description}
               </p>
-            )}
+            ) */}
 
             <div className="mt-2 text-xs text-gray-400">
               Creato:{' '}

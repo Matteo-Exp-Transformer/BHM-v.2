@@ -102,6 +102,7 @@ export function getTypeIcon(type: CalendarEventType): string {
     maintenance: '🔧',
     general_task: '📋',
     temperature_reading: '🌡️',
+    product_expiry: '📦',
     custom: '📌',
   }
 
@@ -114,6 +115,7 @@ export function getTypeIcon(type: CalendarEventType): string {
 export function getStatusIcon(status: CalendarEventStatus): string {
   const icons = {
     pending: '⏳',
+    in_progress: '🔄',
     completed: '✅',
     overdue: '⚠️',
     cancelled: '❌',
