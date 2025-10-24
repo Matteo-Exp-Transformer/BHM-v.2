@@ -78,8 +78,8 @@ test.describe('🔐 Login Reale con Supabase Auth - CORRETTO', () => {
     await page.waitForLoadState('networkidle')
     
     // Verifica elementi reali della dashboard invece del testo "Dashboard"
-    const hasBarChart = await page.locator('svg').isVisible().catch(() => false)
-    const hasKPICards = await page.locator('[class*="grid"]').isVisible().catch(() => false)
+    // const hasBarChart = await page.locator('svg').isVisible().catch(() => false)
+    // const hasKPICards = await page.locator('[class*="grid"]').isVisible().catch(() => false)
     const hasContent = await page.locator('body').textContent()
     
     // Verifica che ci sia contenuto sulla pagina dashboard

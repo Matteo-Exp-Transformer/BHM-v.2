@@ -268,8 +268,7 @@ serve(async (req: Request) => {
                 headers: { 
                     ...corsHeaders, 
                     'Content-Type': 'application/json',
-                    'Set-Cookie': `session_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${SESSION_CONFIG.LIFETIME / 1000}`,
-                    'Set-Cookie': `csrf_token=${csrfToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${CSRF_CONFIG.LIFETIME / 1000}`
+                    'Set-Cookie': `session_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${SESSION_CONFIG.LIFETIME / 1000}; csrf_token=${csrfToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${CSRF_CONFIG.LIFETIME / 1000}`
                 }
             }
         );

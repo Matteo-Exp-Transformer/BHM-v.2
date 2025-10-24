@@ -162,7 +162,7 @@ class HttpClient {
    */
   async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: globalThis.RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${API_BASE_URL}${endpoint}`
     

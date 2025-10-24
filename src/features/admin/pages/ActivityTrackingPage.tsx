@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { ActivityLogTable } from '../components/ActivityLogTable'
-import { ActivityFilters } from '../components/ActivityFilters'
+import { ActivityFiltersComponent as ActivityFilters } from '../components/ActivityFilters'
 import { ActiveSessionsCard } from '../components/ActiveSessionsCard'
 import { ActivityStatisticsChart } from '../components/ActivityStatisticsChart'
 import type { ActivityFilters as ActivityFiltersType } from '@/types/activity'

@@ -300,7 +300,7 @@ class MultiTenantManager {
 
     // Fetch shared data based on agreements
     const sharedData: any[] = []
-    for (const _agreement of relevantAgreements) {
+    for (const _relevantAgreement of relevantAgreements) {
       const data = await this.fetchSharedDataForAgreement()
       sharedData.push(...data)
     }

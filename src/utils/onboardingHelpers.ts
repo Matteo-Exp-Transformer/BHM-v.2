@@ -2560,25 +2560,25 @@ const resetOperationalDataOnly = async (companyId: string): Promise<void> => {
     // Queste tabelle potrebbero esistere e contenere dati delle diverse pagine
     try {
       await supabase.from('calendar_events').delete().eq('company_id', companyId)
-    } catch (error) {
+    } catch {
       console.log('ℹ️ Tabella calendar_events non trovata o già pulita')
     }
     
     try {
       await supabase.from('conservation_events').delete().eq('company_id', companyId)
-    } catch (error) {
+    } catch {
       console.log('ℹ️ Tabella conservation_events non trovata o già pulita')
     }
     
     try {
       await supabase.from('inventory_events').delete().eq('company_id', companyId)
-    } catch (error) {
+    } catch {
       console.log('ℹ️ Tabella inventory_events non trovata o già pulita')
     }
     
     try {
       await supabase.from('shopping_events').delete().eq('company_id', companyId)
-    } catch (error) {
+    } catch {
       console.log('ℹ️ Tabella shopping_events non trovata o già pulita')
     }
     

@@ -1,10 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import OnboardingWizard from '../../../../src/components/OnboardingWizard'
-import * as onboardingHelpers from '../../../../src/utils/onboardingHelpers'
 
 // Mock delle dipendenze
 vi.mock('react-router-dom', async () => {

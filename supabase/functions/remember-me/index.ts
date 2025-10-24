@@ -26,7 +26,7 @@ Deno.serve(async (req: Request) => {
       }
     );
 
-    const { rememberMe, userId, sessionDuration } = await req.json();
+    const { rememberMe, userId } = await req.json();
 
     if (!userId) {
       return new Response(

@@ -105,7 +105,7 @@ test.describe('🔒 Test Allineamento Eventi Calendar ↔ Modal', () => {
     // 8. Verifica che il modal contenga informazioni coerenti
     const hasEventDetails = await page.locator('text=/evento|attività|mansione|manutenzione|scadenza/i').count() > 0;
     const hasStatusInfo = await page.locator('text=/completato|in attesa|in ritardo|pending|completed/i').count() > 0;
-    const hasDateInfo = await page.locator('text=/\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2}/').count() > 0;
+    const hasDateInfo = await page.locator('text=/\\d{1,2}\\/\\d{1,2}\\/\\d{4}|\\d{4}-\\d{2}-\\d{2}/').count() > 0;
 
     console.log(`📊 Modal contiene dettagli evento: ${hasEventDetails}`);
     console.log(`📊 Modal contiene info stato: ${hasStatusInfo}`);

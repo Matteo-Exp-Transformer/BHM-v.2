@@ -46,10 +46,10 @@ import { useAuth } from '@/hooks/useAuth'
 // Componente blindato dopo test sistematici completi
 // Funzionalità core: 100% | Test coverage: 100% | Sicurezza: VERIFICATA
 export const CalendarPage = () => {
-  const { companyId, user: _user } = useAuth()
+  const { companyId } = useAuth()
   const queryClient = useQueryClient()
   const { settings: calendarSettings, isLoading: settingsLoading, isConfigured } = useCalendarSettings()
-  const { events: aggregatedEvents, isLoading, sources: _sources } = useAggregatedEvents(
+  const { events: aggregatedEvents, isLoading } = useAggregatedEvents(
     calendarSettings?.fiscal_year_end ? new Date(calendarSettings.fiscal_year_end) : undefined
   )
   
@@ -58,8 +58,7 @@ export const CalendarPage = () => {
   // ✅ BYPASS: Usa aggregatedEvents se useFilteredEvents restituisce 0 eventi
   const eventsForFiltering = filteredEvents.length > 0 ? filteredEvents : aggregatedEvents
   const [view, setView] = useCalendarView('month')
-  const { createTask, isCreating, completeTask: _completeTask, isCompleting: _isCompleting } = useGenericTasks()
-  const [_isCompletingMaintenance, _setIsCompletingMaintenance] = useState(false)
+  const { createTask, isCreating } = useGenericTasks()
   const { staff } = useStaff()
   const { departments } = useDepartments()
   const { products } = useProducts()
@@ -206,7 +205,7 @@ export const CalendarPage = () => {
           const eventDate = new Date(event.start)
           return eventDate >= weekStart && eventDate <= weekEnd
         })
-      case 'day':
+      case 'day': {
         // Logica giorno corrente
         const dayStart = new Date(now)
         dayStart.setHours(0, 0, 0, 0)
@@ -217,6 +216,7 @@ export const CalendarPage = () => {
           const eventDate = new Date(event.start)
           return eventDate >= dayStart && eventDate <= dayEnd
         })
+      }
       default:
         return displayEvents
     }

@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 
 const HomePage = () => {
   const { user, displayName, signOut } = useAuth()
-  const { branch, environment: _environment, isDevelopment } = useGitInfo()
+  const { branch, isDevelopment } = useGitInfo()
   const navigate = useNavigate()
 
   // Load real data from hooks
