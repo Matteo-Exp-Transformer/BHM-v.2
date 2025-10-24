@@ -1,7 +1,45 @@
-# 🤝 AGENT COORDINATION - Pool Host, Lock, Queue
+# 🤝 AGENT COORDINATION - Pool Host, Lock, Queue, Verification
 
-> **FILE ESSENZIALE**: Pool host/porte, lock system, queue FIFO, dipendenze agenti
-> **Tempo lettura**: 4-6 minuti
+> **FILE ESSENZIALE**: Pool host/porte, lock system, queue FIFO, verification protocol
+> **Tempo lettura**: 6-8 minuti
+> **UPDATED**: 2025-10-24 - Added VERIFICATION SYSTEM v2.0
+
+---
+
+## 🚨 NEW: VERIFICATION SYSTEM (MANDATORY)
+
+### Core Files (Read BEFORE any verification):
+1. **SHARED_STATE.json** - Single source of truth for all verifications
+2. **FILE_PATH_REGISTRY.md** - Official paths for all components
+3. **VERIFICATION_PROTOCOL.md** - Standard process (5 steps)
+4. **CENTRAL_VERIFICATION_LOG.md** - Historical log of all verifications
+5. **ISTRUZIONI_SHARED_STATE.md** - How to update shared state
+
+### New Rules (NO EXCEPTIONS):
+
+**RULE #1: No Independent Verification**
+- ❌ PROHIBITED: Verify without consulting SHARED_STATE.json
+- ✅ REQUIRED: Read state, check if done, coordinate
+
+**RULE #2: File Path from Registry ONLY**
+- ❌ PROHIBITED: Use ambiguous names ("Step 2", "Onboarding test")
+- ✅ REQUIRED: Use exact path from FILE_PATH_REGISTRY.md
+
+**RULE #3: Double-Verification Mandatory**
+- ❌ PROHIBITED: Approve with single verification
+- ✅ REQUIRED: Two agents confirm (First + Agente_9)
+
+**RULE #4: Planning Alignment Required**
+- ❌ PROHIBITED: Verify without referencing planning files
+- ✅ REQUIRED: Link to planning file + user decision
+- ✅ REQUIRED: Execute ALL tests required by planning (not just some)
+
+**RULE #5: Discrepancy Investigation**
+- If Agent A and Agent B get different results:
+  1. STOP everything
+  2. Add to `discrepancies` in SHARED_STATE.json
+  3. Investigate: file path? command? commit? cache?
+  4. Resolve before proceeding
 
 ---
 

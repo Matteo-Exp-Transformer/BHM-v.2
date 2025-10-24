@@ -1,0 +1,56 @@
+{
+  "_metadata": {
+    "version": "1.0",
+    "last_updated": "2025-10-24T00:00:00Z",
+    "last_updated_by": "System",
+    "_instructions": "Read ISTRUZIONI_SHARED_STATE.md before editing"
+  },
+
+  "session": {
+    "date": "2025-10-24",
+    "git_commit": "PLACEHOLDER - Update on first use",
+    "branch": "NoClerk",
+    "agents_active": []
+  },
+
+  "verifications_in_progress": [],
+
+  "verified_components": {},
+
+  "discrepancies": [],
+
+  "planning_alignment": {
+    "_purpose": "Track alignment between user decisions → planning files → test execution",
+    "user_decisions_file": "Production/Sessione_di_lavoro/Agente_9/2025-10-23/DECISIONI_IN_PIU_ANALISI.md",
+    "planning_files": [],
+    "test_coverage_required": {}
+  },
+
+  "_template_verification_entry": {
+    "ComponentName": {
+      "status": "VERIFIED | DOUBLE_VERIFIED | FAILED",
+      "result": "X/Y passed (Z%)",
+      "file_path": "Full path from FILE_PATH_REGISTRY",
+      "command": "Exact command executed",
+      "verified_by": ["Agente_X"],
+      "git_commit": "abc123",
+      "timestamp": "2025-10-24T10:00:00Z",
+      "needs_confirmation": true,
+      "awaiting_agent": "Agente_9",
+      "planning_reference": "Link to planning file that requires this",
+      "user_decision_reference": "Link to user decision this implements"
+    }
+  },
+
+  "_template_discrepancy_entry": {
+    "id": "DISC_001",
+    "component": "ComponentName",
+    "agent_A": "Agente_0",
+    "result_A": "1/1 passed",
+    "agent_B": "Agente_2",
+    "result_B": "0/1 passed",
+    "timestamp": "2025-10-24T10:00:00Z",
+    "status": "INVESTIGATING | RESOLVED",
+    "resolution": "Cause identified and fixed"
+  }
+}
