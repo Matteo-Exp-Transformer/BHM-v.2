@@ -142,7 +142,42 @@ User: Testa il prompt PROMPT_MAPPATURA_AGENTI.md
 
 ---
 
-### 6. 🔧 **ERROR_INTERPRETER** - Debug & Fix Errori
+### 6. 🔍 **CRITICAL_VERIFICATION** - Verifica Rigorosa ⭐ NUOVA
+**Quando usarla**: Prima di dichiarare qualsiasi risultato, numero, o claim
+
+**⚠️ REGOLA**: Mai fidarsi - Sempre verificare. Zero tolleranza per numeri gonfiati.
+
+**Trigger words**:
+- "verifica" / "controlla" / "valida" / "conferma"
+- "è vero che"
+- "coverage" / "locked" / "test passati"
+- "risultati"
+
+**Esempio uso**:
+```
+User: Verifica se LoginPage ha davvero 74% coverage
+→ Skill esegue: npm test LoginPage.spec.js
+  Risultato: 18/31 passed (58%)
+  Conclusione: ❌ Claim FALSO - Coverage gonfiato del 16%
+```
+
+**Output**:
+- Report verifica con metodo utilizzato
+- Confronto claim vs realtà
+- Segnalazione discrepanze se trovate
+- SOLO dati verificati personalmente
+
+**Features**:
+- Verifica attiva con Read/Bash/Test
+- Template report verificato
+- Checklist qualità
+- Red flags comuni
+- Zero tolleranza per assunzioni
+- Timestamp ogni verifica
+
+---
+
+### 7. 🔧 **ERROR_INTERPRETER** - Debug & Fix Errori
 **Quando usarla**: Hai un errore e vuoi capire causa + fix rapido
 
 **Trigger words**:
@@ -305,6 +340,7 @@ User: "Quali componenti ci sono nell'area auth?"
 | Devi mappare area per creare knowledge base | **CODE_MAPPING** ⭐ v2.0 | "mappa", "knowledge base", "scansiona", "inventario", "ricerca approfondita" |
 | Devi testare componente nuovo | TEST_ARCHITECT → TEST_GENERATOR | "strategia test" → "genera test" |
 | Hai scritto prompt e vuoi validarlo | PROMPT_TESTER | "testa prompt", "valida prompt" |
+| Devi verificare claim o risultati | **CRITICAL_VERIFICATION** ⭐ | "verifica", "controlla", "è vero che", "coverage", "locked" |
 | Hai un errore da risolvere | ERROR_INTERPRETER | "errore", "bug", "debug", "fix" |
 | Vuoi migliorare coverage area | **CODE_MAPPING** ⭐ → TEST_ARCHITECT → TEST_GENERATOR | workflow completo mapping+testing |
 | Nuovo developer onboarding su area specifica | **CODE_MAPPING** ⭐ | "mappa [area]", "documenta [area]" |
