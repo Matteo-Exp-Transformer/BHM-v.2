@@ -19,7 +19,7 @@ export const AddDepartmentModal = ({
 }: AddDepartmentModalProps) => {
   const [formData, setFormData] = useState<DepartmentInput>({
     name: '',
-    description: '',
+    // description: '',
     is_active: true,
   })
 
@@ -31,13 +31,13 @@ export const AddDepartmentModal = ({
       if (department) {
         setFormData({
           name: department.name,
-          description: department.description || '',
+          // description: department.description || '',
           is_active: department.is_active,
         })
       } else {
         setFormData({
           name: '',
-          description: '',
+          // description: '',
           is_active: true,
         })
       }
@@ -56,9 +56,9 @@ export const AddDepartmentModal = ({
       newErrors.name = 'Il nome non può superare i 50 caratteri'
     }
 
-    if (formData.description && formData.description.length > 200) {
-      newErrors.description = 'La descrizione non può superare i 200 caratteri'
-    }
+    // if (formData.description && formData.description.length > 200) {
+    //   newErrors.description = 'La descrizione non può superare i 200 caratteri'
+    // }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -73,7 +73,7 @@ export const AddDepartmentModal = ({
 
     const submitData: DepartmentInput = {
       name: formData.name.trim(),
-      description: formData.description?.trim() || undefined,
+      // description: formData.description?.trim() || undefined,
       is_active: formData.is_active,
     }
 
@@ -149,8 +149,8 @@ export const AddDepartmentModal = ({
               )}
             </div>
 
-            {/* Description */}
-            <div>
+            {/* Description - Removed */}
+            {/* <div>
               <label
                 htmlFor="description"
                 className="block text-sm font-medium text-gray-700 mb-1"
@@ -176,7 +176,7 @@ export const AddDepartmentModal = ({
               <p className="mt-1 text-xs text-gray-500">
                 {formData.description?.length || 0}/200 caratteri
               </p>
-            </div>
+            </div> */}
 
             {/* Active Status */}
             <div className="flex items-center">

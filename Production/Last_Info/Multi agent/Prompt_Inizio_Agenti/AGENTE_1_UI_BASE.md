@@ -104,30 +104,81 @@ Comprendere l'architettura UI di BHM v2 (Business HACCP Manager) e prepararti pe
 
 ## ✅ PROCEDURA VERIFICA TEST RIGOROSA
 
-### STEP 1: Dopo Esecuzione Test
+### 🚨 COMANDI TEST CORRETTI
+
+**SEMPRE usare questi comandi**:
+```bash
+# ✅ CORRETTO - Usa configurazione Agente 1 (HEADLESS - Background)
+npm run test:agent1
+
+# ✅ ALTERNATIVO - Raw Playwright con config corretta (HEADLESS - Background)
+npm run test:agent1:raw
+
+# ✅ DEBUG - Solo se richiesto esplicitamente dall'utente (HEADED - Finestra visibile)
+npm run test:agent1:debug
+```
+
+**❌ MAI usare questi comandi**:
+```bash
+# ❌ SBAGLIATO - Usa config principale (cerca in ./tests invece di ./Production/Test)
+npx playwright test
+
+# ❌ SBAGLIATO - Path assoluto non funziona con config principale
+npx playwright test Production/Test/UI-Base/test-button.spec.js
+
+# ❌ SBAGLIATO - Config non specificata
+playwright test --project=UI-Base
+```
+
+**🔒 REGOLE OBBLIGATORIE TESTING**:
+1. **HEADLESS DEFAULT**: Tutti i test vengono eseguiti in background senza aprire finestra Chromium
+2. **DEBUG SOLO SU RICHIESTA**: Usa `npm run test:agent1:debug` SOLO se l'utente lo richiede esplicitamente
+3. **CHIUSURA OBBLIGATORIA**: Prima di avviare un nuovo test, è OBBLIGATORIO chiudere sempre il precedente
+4. **LOCK MANAGEMENT**: Usa il sistema di lock per evitare conflitti tra agenti
+
+**Perché?**
+- `npm run test:agent1` → usa `playwright-agent1.config.ts` che cerca in `./Production/Test`
+- `npx playwright test` → usa `playwright.config.ts` che cerca in `./tests`
+- I test Agente 1 sono in `./Production/Test/UI-Base/` quindi DEVI usare config Agente 1!
+- **HEADLESS** è più veloce e stabile per testing automatico
+- **CHIUSURA** previene conflitti e problemi di memoria
+
+### STEP 1: Chiusura Test Precedente (OBBLIGATORIO)
+```bash
+# SEMPRE chiudere test precedenti prima di avviare nuovi test
+pkill -f "playwright"
+pkill -f "chromium"
+pkill -f "chrome"
+
+# Verifica che non ci siano processi attivi
+ps aux | grep -E "(playwright|chromium|chrome)" | grep -v grep
+```
+
+### STEP 2: Esecuzione Test (HEADLESS)
 ```bash
 npm run test:agent1
 # LEGGI SEMPRE l'output completo
+# Test viene eseguito in background senza aprire finestra Chromium
 ```
 
-### STEP 2: Verifica Output
+### STEP 3: Verifica Output
 ```
 ✅ SUCCESSO: "X passed (100%)"
 ❌ FALLITO: "X failed" o "timeout"
 ```
 
-### STEP 3: Se Falliscono
+### STEP 4: Se Falliscono
 ```
 1. STOP - Leggi error completo
 2. Vai in test-results/[timestamp]/
 3. Apri screenshots/trace
 4. Identifica root cause
 5. Fix UNA volta
-6. Ri-esegui UNA volta
+6. Ri-esegui UNA volta (ricorda di chiudere test precedente)
 7. Se fallisce ancora → chiedi aiuto
 ```
 
-### STEP 4: Validazione Comportamento
+### STEP 5: Validazione Comportamento
 ```javascript
 // VERIFICA che componente UI funzioni CORRETTAMENTE
 
@@ -152,13 +203,15 @@ test('Button component', async ({ page }) => {
 })
 ```
 
-### STEP 5: Checklist Finale
+### STEP 6: Checklist Finale
 ```
 ✅ Tutti i test passano (100%)
 ✅ Nessun warning nei log
 ✅ Screenshot non mostrano errori
 ✅ Trace mostra flusso corretto
 ✅ Componente funziona come atteso
+✅ Test eseguiti in HEADLESS mode
+✅ Processi precedenti chiusi correttamente
 ```
 
 ---
@@ -324,7 +377,12 @@ Host: 3000"
 
 2. **Acquisire lock PRIMA di modificare codice**
    ```bash
-   npm run test:agent1  # Auto-acquisisce lock host 3000
+   # Chiusura OBBLIGATORIA test precedenti
+   pkill -f "playwright"
+   pkill -f "chromium"
+   pkill -f "chrome"
+   
+   npm run test:agent1  # Auto-acquisisce lock host 3000 (HEADLESS)
    ```
 
 3. **100% test coverage PRIMA di considerare completato**

@@ -103,7 +103,7 @@ export interface ShareCondition {
 }
 
 class MultiTenantManager {
-  private currentTenant: CompanyTenant | null = null
+  // private _currentTenant: CompanyTenant | null = null
   private tenantContext: TenantContext | null = null
   private dataSharingAgreements: Map<string, DataSharingAgreement[]> = new Map()
 
@@ -132,7 +132,7 @@ class MultiTenantManager {
       // Setup tenant-specific configurations
       await this.configureTenantEnvironment(tenant)
 
-      this.currentTenant = tenant
+      // this._currentTenant = tenant
       this.tenantContext = userContext
 
       console.log(`🏢 Multi-tenant context initialized for ${tenant.name}`)
@@ -200,16 +200,16 @@ class MultiTenantManager {
 
     // Configure branding
     if (tenant.settings.branding) {
-      await this.applyBranding(tenant.settings.branding)
+      await this.applyBranding()
     }
 
     // Configure integrations
     if (tenant.settings.integrations) {
-      await this.setupIntegrations(tenant.settings.integrations)
+      await this.setupIntegrations()
     }
 
     // Apply feature flags
-    this.applyFeatureFlags(tenant.features)
+    this.applyFeatureFlags()
   }
 
   /**
@@ -271,7 +271,7 @@ class MultiTenantManager {
     )
 
     // Notify target company
-    await this.notifyDataSharingRequest(agreement)
+    await this.notifyDataSharingRequest()
 
     console.log(`🤝 Data sharing agreement created: ${agreement.id}`)
     return agreement
@@ -289,10 +289,7 @@ class MultiTenantManager {
     }
 
     // Get active agreements where current company is recipient
-    const agreements = await this.getActiveDataSharingAgreements(
-      this.tenantContext.company_id,
-      'recipient'
-    )
+    const agreements = await this.getActiveDataSharingAgreements()
 
     // Filter by data type and source company
     const relevantAgreements = agreements.filter(
@@ -303,8 +300,8 @@ class MultiTenantManager {
 
     // Fetch shared data based on agreements
     const sharedData: any[] = []
-    for (const agreement of relevantAgreements) {
-      const data = await this.fetchSharedDataForAgreement(agreement, dataType)
+    for (const _agreement of relevantAgreements) {
+      const data = await this.fetchSharedDataForAgreement()
       sharedData.push(...data)
     }
 
@@ -329,7 +326,7 @@ class MultiTenantManager {
     }
 
     // Update agreement status
-    const agreement = await this.getDataSharingAgreement(agreementId)
+    const agreement = await this.getDataSharingAgreement()
     if (!agreement) {
       throw new Error(`Agreement not found: ${agreementId}`)
     }
@@ -344,7 +341,7 @@ class MultiTenantManager {
     }
 
     // Notify requesting company
-    await this.notifyDataSharingResponse(agreement, response)
+    await this.notifyDataSharingResponse()
 
     console.log(`📋 Data sharing request ${response}d: ${agreementId}`)
   }
@@ -370,13 +367,13 @@ class MultiTenantManager {
    * Migrate data between companies (for acquisitions/mergers)
    */
   public async migrateCompanyData(
-    sourceCompanyId: string,
-    targetCompanyId: string,
-    dataTypes: string[],
-    options: MigrationOptions
+    _sourceCompanyId: string,
+    _targetCompanyId: string,
+    _dataTypes: string[],
+    _options: MigrationOptions
   ): Promise<MigrationResult> {
     // Validate permissions for both companies
-    await this.validateMigrationPermissions(sourceCompanyId, targetCompanyId)
+    await this.validateMigrationPermissions()
 
     const migrationId = this.generateMigrationId()
 
@@ -384,14 +381,10 @@ class MultiTenantManager {
       console.log(`🔄 Starting data migration: ${migrationId}`)
 
       // Create migration plan
-      const plan = await this.createMigrationPlan(
-        sourceCompanyId,
-        targetCompanyId,
-        dataTypes
-      )
+      await this.createMigrationPlan()
 
       // Execute migration with progress tracking
-      const result = await this.executeMigration(plan, options)
+      const result = await this.executeMigration()
 
       console.log(`✅ Migration completed: ${migrationId}`)
       return result
@@ -511,19 +504,19 @@ class MultiTenantManager {
     return features[plan]
   }
 
-  private async applyBranding(branding: BrandingConfig): Promise<void> {
+  private async applyBranding(/* branding: BrandingConfig */): Promise<void> {
     // Apply custom branding to the application
     console.log('🎨 Applying custom branding')
   }
 
   private async setupIntegrations(
-    integrations: IntegrationConfig
+    // integrations: IntegrationConfig
   ): Promise<void> {
     // Setup third-party integrations
     console.log('🔗 Setting up integrations')
   }
 
-  private applyFeatureFlags(features: TenantFeatures): void {
+  private applyFeatureFlags(/* features: TenantFeatures */): void {
     // Apply feature flags to enable/disable functionality
     console.log('🚩 Applying feature flags')
   }
@@ -538,36 +531,36 @@ class MultiTenantManager {
 
   // Additional helper methods would be implemented here
   private async notifyDataSharingRequest(
-    agreement: DataSharingAgreement
+    // agreement: DataSharingAgreement
   ): Promise<void> {
-    console.log(`📧 Notifying data sharing request: ${agreement.id}`)
+    console.log(`📧 Notifying data sharing request: ${/* agreement.id */'agreement'}`)
   }
 
   private async notifyDataSharingResponse(
-    agreement: DataSharingAgreement,
-    response: string
+    // agreement: DataSharingAgreement,
+    // response: string
   ): Promise<void> {
-    console.log(`📬 Notifying data sharing response: ${response}`)
+    console.log(`📬 Notifying data sharing response: ${/* response */'response'}`)
   }
 
   private async getActiveDataSharingAgreements(
-    companyId: string,
-    role: 'sender' | 'recipient'
+    // companyId: string,
+    // role: 'sender' | 'recipient'
   ): Promise<DataSharingAgreement[]> {
     // Implementation would query database
     return []
   }
 
   private async fetchSharedDataForAgreement(
-    agreement: DataSharingAgreement,
-    dataType: DataShareType
+    // agreement: DataSharingAgreement,
+    // dataType: DataShareType
   ): Promise<any[]> {
     // Implementation would fetch actual data based on agreement
     return []
   }
 
   private async getDataSharingAgreement(
-    agreementId: string
+    // agreementId: string
   ): Promise<DataSharingAgreement | null> {
     // Implementation would query database
     return null
@@ -590,23 +583,23 @@ class MultiTenantManager {
   }
 
   private async validateMigrationPermissions(
-    sourceId: string,
-    targetId: string
+    // sourceId: string,
+    // targetId: string
   ): Promise<void> {
     // Validate migration permissions
   }
 
   private async createMigrationPlan(
-    sourceId: string,
-    targetId: string,
-    dataTypes: string[]
+    // sourceId: string,
+    // targetId: string,
+    // dataTypes: string[]
   ): Promise<any> {
     return {}
   }
 
   private async executeMigration(
-    plan: any,
-    options: MigrationOptions
+    // plan: any,
+    // options: MigrationOptions
   ): Promise<MigrationResult> {
     return { success: true, migrated_records: 0, errors: [] }
   }

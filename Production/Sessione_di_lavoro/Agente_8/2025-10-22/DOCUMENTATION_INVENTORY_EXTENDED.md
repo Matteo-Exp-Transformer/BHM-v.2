@@ -185,3 +185,5 @@
 **Documenti Analizzati**: 131 (vs 124 precedenti)  
 **Nuove Categorie**: 2 (Docs, Root)  
 **Prossimo**: Aggiornamento reference guide con nuove categorie
+
+

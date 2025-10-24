@@ -274,3 +274,5 @@ interface SyncStrategy {
 
 **STATUS**: 🟢 SPECIFICA COMPLETA - Pronto per implementazione
 
+
+

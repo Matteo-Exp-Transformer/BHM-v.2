@@ -1,0 +1,196 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - heading "HACCP Manager" [level=1] [ref=e7]
+        - generic [ref=e8]:
+          - img [ref=e9]
+          - generic [ref=e13]: Al Ritrovo SRL
+      - generic [ref=e14]:
+        - link "Attività" [ref=e15] [cursor=pointer]:
+          - /url: /attivita
+          - img [ref=e16]
+          - generic [ref=e19]: Attività
+        - button "Cancella e Ricomincia" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e24]: Cancella e Ricomincia
+        - button "Onboarding" [ref=e25] [cursor=pointer]:
+          - img [ref=e26]
+          - generic [ref=e31]: Onboarding
+        - button "Debug Auth" [ref=e32] [cursor=pointer]:
+          - img [ref=e33]
+          - generic [ref=e36]: Debug Auth
+        - button "Sync Host" [ref=e37] [cursor=pointer]:
+          - img [ref=e38]
+          - generic [ref=e43]: Sync Host
+        - button "Reset Tot+Users" [ref=e44] [cursor=pointer]:
+          - img [ref=e45]
+          - generic [ref=e50]: Reset Tot+Users
+  - main "Main content" [ref=e51]:
+    - generic [ref=e53]:
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - heading "Configurazione Iniziale HACCP" [level=1] [ref=e57]
+            - paragraph [ref=e58]: Configura la tua azienda per iniziare a utilizzare il sistema HACCP
+          - button "Salta" [ref=e60] [cursor=pointer]:
+            - img [ref=e61]
+            - generic [ref=e64]: Salta
+        - generic [ref=e66]:
+          - button "Precompila" [ref=e67] [cursor=pointer]:
+            - img [ref=e68]
+            - generic [ref=e73]: Precompila
+          - button "Completa Onboarding" [ref=e74] [cursor=pointer]:
+            - img [ref=e75]
+            - generic [ref=e78]: Completa Onboarding
+      - generic [ref=e81]:
+        - button "✓ 1 Informazioni Aziendali Dati base della tua azienda" [ref=e82] [cursor=pointer]:
+          - generic [ref=e83]:
+            - generic [ref=e85]: ✓
+            - generic [ref=e86]: "1"
+          - heading "Informazioni Aziendali" [level=3] [ref=e87]
+          - paragraph [ref=e88]: Dati base della tua azienda
+        - button "✓ 2 Reparti Organizzazione aziendale" [ref=e89] [cursor=pointer]:
+          - generic [ref=e90]:
+            - generic [ref=e92]: ✓
+            - generic [ref=e93]: "2"
+          - heading "Reparti" [level=3] [ref=e94]
+          - paragraph [ref=e95]: Organizzazione aziendale
+        - button "3 Personale Staff e responsabilità" [ref=e96] [cursor=pointer]:
+          - generic [ref=e97]:
+            - img [ref=e99]
+            - generic [ref=e101]: "3"
+          - heading "Personale" [level=3] [ref=e102]
+          - paragraph [ref=e103]: Staff e responsabilità
+        - button "4 Conservazione Punti di controllo temperatura" [disabled] [ref=e104]:
+          - generic [ref=e105]:
+            - img [ref=e107]
+            - generic [ref=e109]: "4"
+          - heading "Conservazione" [level=3] [ref=e110]
+          - paragraph [ref=e111]: Punti di controllo temperatura
+        - button "5 Attività Task e manutenzioni" [disabled] [ref=e112]:
+          - generic [ref=e113]:
+            - img [ref=e115]
+            - generic [ref=e118]: "5"
+          - heading "Attività" [level=3] [ref=e119]
+          - paragraph [ref=e120]: Task e manutenzioni
+        - button "6 Inventario Prodotti e categorie" [disabled] [ref=e121]:
+          - generic [ref=e122]:
+            - img [ref=e124]
+            - generic [ref=e128]: "6"
+          - heading "Inventario" [level=3] [ref=e129]
+          - paragraph [ref=e130]: Prodotti e categorie
+        - button "7 Calendario Configurazione anno lavorativo" [disabled] [ref=e131]:
+          - generic [ref=e132]:
+            - img [ref=e134]
+            - generic [ref=e136]: "7"
+          - heading "Calendario" [level=3] [ref=e137]
+          - paragraph [ref=e138]: Configurazione anno lavorativo
+      - generic [ref=e140]:
+        - generic [ref=e141]:
+          - heading "Gestione del Personale" [level=2] [ref=e142]
+          - paragraph [ref=e143]: Registra ruoli, categorie operative e certificazioni HACCP del personale per garantire la conformità normativa.
+        - generic [ref=e144]:
+          - generic [ref=e146]:
+            - heading "Staff configurato" [level=3] [ref=e147]
+            - paragraph [ref=e148]: Elenco dei membri registrati durante l'onboarding
+          - paragraph [ref=e150]: Nessun membro dello staff registrato. Aggiungi almeno un membro per procedere.
+        - generic [ref=e151]:
+          - generic [ref=e152]:
+            - 'heading "👤 Primo Membro: Amministratore (Tu)" [level=3] [ref=e153]'
+            - paragraph [ref=e154]:
+              - text: Il
+              - strong [ref=e155]: primo membro
+              - text: sei tu come
+              - strong [ref=e156]: Amministratore
+              - text: . La tua email è già precompilata. Completa i dati mancanti (nome, cognome, telefono).
+              - text: ⚠️ Non riceverai email di invito (sei già registrato).
+          - generic [ref=e157]:
+            - generic [ref=e158]:
+              - generic [ref=e159]:
+                - text: Nome *
+                - textbox "Nome *" [ref=e160]:
+                  - /placeholder: Mario
+                  - text: Test Nome
+              - generic [ref=e161]:
+                - text: Cognome *
+                - textbox "Cognome *" [active] [ref=e162]:
+                  - /placeholder: Rossi
+                  - text: Test Cognome
+            - generic [ref=e163]:
+              - generic [ref=e164]:
+                - generic [ref=e165]: Email *(La tua email)
+                - textbox "Email *(La tua email)" [disabled] [ref=e166]:
+                  - /placeholder: email@azienda.it
+                  - text: matteo.cavallaro.work@gmail.com
+                - paragraph [ref=e167]: 🔒 Email precompilata dall'account con cui hai effettuato il login
+              - generic [ref=e168]:
+                - text: Telefono
+                - textbox "Telefono" [ref=e169]:
+                  - /placeholder: +39 340 1234567
+            - generic [ref=e170]:
+              - generic [ref=e171]:
+                - generic [ref=e172]: Ruolo *(Amministratore)
+                - generic [ref=e173]:
+                  - textbox [disabled] [ref=e174]: Amministratore
+                  - paragraph [ref=e175]: 🔒 Il primo membro è sempre Amministratore
+              - generic [ref=e176]:
+                - text: Categorie *
+                - generic [ref=e177]:
+                  - generic [ref=e178]:
+                    - combobox [ref=e179] [cursor=pointer]:
+                      - generic: Amministratore
+                      - img [ref=e180]
+                    - combobox [ref=e182]
+                  - button "Aggiungi categoria" [ref=e183] [cursor=pointer]
+            - generic [ref=e184]:
+              - text: Assegnazione reparti
+              - generic [ref=e185]:
+                - generic [ref=e186]:
+                  - checkbox "🎯 Tutti i reparti" [ref=e187]
+                  - generic [ref=e188]: 🎯 Tutti i reparti
+                - generic [ref=e190]:
+                  - checkbox "Test Reparto" [ref=e191]
+                  - generic [ref=e192]: Test Reparto
+            - generic [ref=e193]:
+              - text: Scadenza certificazione HACCP *
+              - textbox "Scadenza certificazione HACCP *" [ref=e194]
+            - generic [ref=e195]:
+              - text: Note
+              - textbox "Note" [ref=e196]:
+                - /placeholder: Aggiungi note sulla certificazione HACCP o sul membro
+            - button "Aggiungi membro" [ref=e197] [cursor=pointer]
+      - generic [ref=e198]:
+        - button "Indietro" [ref=e199] [cursor=pointer]
+        - button "Avanti" [disabled] [ref=e200]
+      - paragraph [ref=e204]: Step 3 di 7
+  - navigation "Main navigation" [ref=e205]:
+    - generic [ref=e206]:
+      - link "Navigate to Home" [ref=e207] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e208]
+        - generic [ref=e211]: Home
+      - link "Navigate to Conservazione" [ref=e212] [cursor=pointer]:
+        - /url: /conservazione
+        - img [ref=e213]
+        - generic [ref=e226]: Conservazione
+      - link "Navigate to Attività" [ref=e227] [cursor=pointer]:
+        - /url: /attivita
+        - img [ref=e228]
+        - generic [ref=e231]: Attività
+      - link "Navigate to Inventario" [ref=e232] [cursor=pointer]:
+        - /url: /inventario
+        - img [ref=e233]
+        - generic [ref=e237]: Inventario
+      - link "Navigate to Impostazioni" [ref=e238] [cursor=pointer]:
+        - /url: /impostazioni
+        - img [ref=e239]
+        - generic [ref=e242]: Impostazioni
+      - link "Navigate to Gestione" [ref=e243] [cursor=pointer]:
+        - /url: /gestione
+        - img [ref=e244]
+        - generic [ref=e249]: Gestione
+```

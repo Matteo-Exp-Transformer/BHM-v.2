@@ -91,6 +91,34 @@ Comprendere l'architettura business logic di BHM v2 e prepararti per blindatura 
 
 ## ✅ PROCEDURA VERIFICA TEST RIGOROSA
 
+### 🚨 COMANDI TEST CORRETTI
+
+**SEMPRE usare questi comandi**:
+```bash
+# ✅ CORRETTO - Usa configurazione Agente 3
+npm run test:agent3
+
+# ✅ ALTERNATIVO - Raw Playwright con config corretta
+npm run test:agent3:raw
+```
+
+**❌ MAI usare questi comandi**:
+```bash
+# ❌ SBAGLIATO - Usa config principale (cerca in ./tests invece di ./Production/Test)
+npx playwright test
+
+# ❌ SBAGLIATO - Path assoluto non funziona con config principale
+npx playwright test Production/Test/LogicheBusiness/test-permissions.spec.js
+
+# ❌ SBAGLIATO - Config non specificata
+playwright test --project=Business
+```
+
+**Perché?**
+- `npm run test:agent3` → usa `playwright-agent3.config.ts` che cerca in `./Production/Test`
+- `npx playwright test` → usa `playwright.config.ts` che cerca in `./tests`
+- I test Agente 3 sono in `./Production/Test/LogicheBusiness/` quindi DEVI usare config Agente 3!
+
 ### STEP 1: Dopo Test
 ```bash
 npm run test:agent3
@@ -137,7 +165,12 @@ npm run validate:pre-test
 
 ### 3️⃣ ACQUISIZIONE LOCK (1 min)
 ```bash
-# Acquisisce automaticamente lock su host 3002
+# Chiusura OBBLIGATORIA test precedenti
+pkill -f "playwright"
+pkill -f "chromium"
+pkill -f "chrome"
+
+# Acquisisce automaticamente lock su host 3002 (HEADLESS)
 npm run test:agent3
 
 # Se host occupato → entra in queue automaticamente
@@ -155,7 +188,12 @@ npm run test:agent3
 
 ### 5️⃣ VALIDAZIONE (5-10 min)
 ```bash
-# Esegui test suite completa
+# Chiusura OBBLIGATORIA test precedenti
+pkill -f "playwright"
+pkill -f "chromium"
+pkill -f "chrome"
+
+# Esegui test suite completa (HEADLESS)
 npm run test:agent3
 
 # MUST: 100% test passed
@@ -279,7 +317,12 @@ Host: 3002"
 
 2. **Acquisire lock PRIMA di modificare codice**
    ```bash
-   npm run test:agent3  # Auto-acquisisce lock host 3002
+   # Chiusura OBBLIGATORIA test precedenti
+   pkill -f "playwright"
+   pkill -f "chromium"
+   pkill -f "chrome"
+   
+   npm run test:agent3  # Auto-acquisisce lock host 3002 (HEADLESS)
    ```
 
 3. **Testare edge cases**

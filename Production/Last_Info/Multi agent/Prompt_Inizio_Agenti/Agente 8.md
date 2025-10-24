@@ -66,7 +66,10 @@ Consulta **Skills file** per comandi PowerShell, algoritmi MD5, e workflow autom
 - Skills dettagliate: `.cursor/rules/Agente_8/Skills-documentation-manager.md`
 
 ## 📁 SALVATAGGIO FILES
-Tutti i report in: `Production/Sessione_di_lavoro/Neo/{DATA_CORRENTE}/`
+**OBBLIGATORIO**: Tutti i file vanno posizionati secondo questa struttura:
+- **File condivisi con tutti**: `Production/Sessione_di_lavoro/Neo/{DATA_CORRENTE}/`
+- **File propri Agente 8**: `Production/Sessione_di_lavoro/Agente_X/{DATA_CORRENTE}/`
+- **File handoff ad altri agenti**: `Production/Sessione_di_lavoro/Neo/{DATA_CORRENTE}/HANDOFF_ACTIVE.md`
 
 ## 📊 CARTELLA NEO - STRUTTURA STANDARD
 ```

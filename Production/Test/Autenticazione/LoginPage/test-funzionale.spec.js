@@ -60,7 +60,7 @@ test.describe('LoginPage - Test Funzionali', () => {
   test('Dovrebbe mostrare loading state durante submit', async ({ page }) => {
     // ARRANGE: Form con dati validi
     await page.fill('input[name="email"]', 'matteo.cavallaro.work@gmail.com');
-    await page.fill('input[name="password"]', 'Cavallaro');
+    await page.fill('input[name="password"]', 'cavallaro');
     
     // ACT: Click submit
     await page.click('button[type="submit"]');

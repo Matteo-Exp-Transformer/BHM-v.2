@@ -205,7 +205,7 @@ export const findBestDevCompany = async (): Promise<void> => {
 
   // Per ogni company, conta le relazioni
   const companiesWithStats = await Promise.all(
-    companies.map(async (company) => {
+    companies.map(async (company: any) => {
       const [
         { count: departmentsCount },
         { count: staffCount },

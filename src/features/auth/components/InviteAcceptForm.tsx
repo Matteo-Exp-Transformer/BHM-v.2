@@ -98,9 +98,9 @@ export const InviteAcceptForm: React.FC<InviteAcceptFormProps> = ({
         
         if (response.success && response.data?.valid) {
           setInviteInfo({
-            email: response.data.email || '',
-            role: response.data.role || '',
-            tenant: response.data.tenant || ''
+            email: (response.data as any)?.email || '',
+            role: (response.data as any)?.role || '',
+            tenant: (response.data as any)?.tenant || ''
           })
         } else {
           setErrors({ general: 'Invito non valido o scaduto.' })
@@ -153,7 +153,16 @@ export const InviteAcceptForm: React.FC<InviteAcceptFormProps> = ({
     setErrors({})
 
     try {
-      const response = await authClient.acceptInvite(formData)
+      const csrfResponse = await authClient.getCsrfToken()
+      const csrfToken = csrfResponse.success ? csrfResponse.data?.csrf_token || '' : ''
+      
+      const response = await authClient.acceptInvite({
+        token: formData.token,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        csrf_token: csrfToken
+      })
       
       if (response.success) {
         toast.success('Account creato con successo!')

@@ -103,30 +103,78 @@ await page.goto('/calendar')  // NON esiste!
 
 ## ✅ PROCEDURA VERIFICA TEST RIGOROSA
 
-### STEP 1: Dopo Test
+### 🚨 COMANDI TEST CORRETTI
+
+**SEMPRE usare questi comandi**:
+```bash
+# ✅ CORRETTO - Usa configurazione Agente 4 (HEADLESS - Background)
+npm run test:agent4
+
+# ✅ DEBUG - Solo se richiesto esplicitamente dall'utente (HEADED - Finestra visibile)
+npm run test:agent4:debug
+```
+
+**❌ MAI usare questi comandi**:
+```bash
+# ❌ SBAGLIATO - Usa config principale (cerca in ./tests)
+npx playwright test
+
+# ❌ SBAGLIATO - Path assoluto non funziona
+npx playwright test Production/Test/Calendario/test-event-creation.spec.js
+
+# ❌ SBAGLIATO - Config non specificata
+playwright test --project=Calendario
+```
+
+**🔒 REGOLE OBBLIGATORIE TESTING**:
+1. **HEADLESS DEFAULT**: Tutti i test vengono eseguiti in background senza aprire finestra Chromium
+2. **DEBUG SOLO SU RICHIESTA**: Usa `npm run test:agent4:debug` SOLO se l'utente lo richiede esplicitamente
+3. **CHIUSURA OBBLIGATORIA**: Prima di avviare un nuovo test, è OBBLIGATORIO chiudere sempre il precedente
+4. **LOCK MANAGEMENT**: Usa il sistema di lock per evitare conflitti tra agenti
+
+**Perché?**
+- `npm run test:agent4` → usa script con config specifica per Calendario
+- `npx playwright test` → usa `playwright.config.ts` che cerca in `./tests`
+- I test Calendario potrebbero essere in `./Production/Test/Calendario/`
+- **HEADLESS** è più veloce e stabile per testing automatico
+- **CHIUSURA** previene conflitti e problemi di memoria
+
+### STEP 1: Chiusura Test Precedente (OBBLIGATORIO)
+```bash
+# SEMPRE chiudere test precedenti prima di avviare nuovi test
+pkill -f "playwright"
+pkill -f "chromium"
+pkill -f "chrome"
+
+# Verifica che non ci siano processi attivi
+ps aux | grep -E "(playwright|chromium|chrome)" | grep -v grep
+```
+
+### STEP 2: Esecuzione Test (HEADLESS)
 ```bash
 npm run test:agent4
 # LEGGI output completo
+# Test viene eseguito in background senza aprire finestra Chromium
 ```
 
-### STEP 2: Verifica
+### STEP 3: Verifica
 ```
 ✅ SUCCESSO: "X passed (100%)"
 ❌ FALLITO: "X failed", "timeout"
 ```
 
-### STEP 3: Se Falliscono
+### STEP 4: Se Falliscono
 ```
 1. STOP - Leggi error
 2. Route sbagliata? (/calendar invece /attivita)
 3. Calendario non carica?
 4. Mock Auth OK?
 5. Fix UNA volta
-6. Ri-esegui UNA volta
+6. Ri-esegui UNA volta (ricorda di chiudere test precedente)
 7. Se fallisce → chiedi aiuto
 ```
 
-### STEP 4: Validazione
+### STEP 5: Validazione
 ```javascript
 test('Accesso calendario', async ({ page }) => {
   await page.goto('/')
@@ -170,7 +218,12 @@ npm run validate:pre-test
 
 ### 3️⃣ ACQUISIZIONE LOCK (1 min)
 ```bash
-# Acquisisce automaticamente lock su host 3000 (se libero) o entra in queue
+# Chiusura OBBLIGATORIA test precedenti
+pkill -f "playwright"
+pkill -f "chromium"
+pkill -f "chrome"
+
+# Acquisisce automaticamente lock su host 3000 (se libero) o entra in queue (HEADLESS)
 npm run test:agent4
 
 # Se host 3000 occupato da Agente 1 → entra in queue automaticamente

@@ -138,14 +138,14 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
 
     // Filtro per tipo
     if (filters.types.length > 0) {
-      if (!filters.types.includes(item.type as EventType)) {
+      if (!filters.types.includes((item as any).type as EventType)) {
         return false
       }
     }
 
     // Filtro per reparto
     if (filters.departments.length > 0) {
-      if (!item.department || !filters.departments.includes(item.department)) {
+      if (!(item as any).department || !filters.departments.includes((item as any).department)) {
         return false
       }
     }

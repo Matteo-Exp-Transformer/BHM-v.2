@@ -4,7 +4,7 @@
  * Gestisce gli errori di caricamento dei moduli dinamici
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react'
+import { Component, ErrorInfo, ReactNode } from 'react'
 
 interface Props {
   children: ReactNode

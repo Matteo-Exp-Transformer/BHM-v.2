@@ -11,7 +11,10 @@
       "Bash(netstat -ano)",
       "Bash(npm run test:onboarding)",
       "Bash(mkdir:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: Add CODE_MAPPING v2.0 skill for all agents\n\nNew skill for systematic code mapping based on real codebase data:\n\nSkills Added:\n- skills/code-mapping.md (v2.0 - comprehensive mapping guide)\n- skills/README.md (updated with CODE_MAPPING v2.0)\n\nDocumentation:\n- Production/Last_Info/Multi agent/SKILL_CODE_MAPPING_V2_DISTRIBUTION.md\n- Production/Last_Info/Multi agent/MASTER_TRACKING.md (updated)\n\nKey Features:\n- Compliance 100%: ONLY real code data (Read tool mandatory)\n- Zero assumptions: Must read every file\n- Structured output: Production/Knowledge/[AREA]/Reports/\n- Global tracking: STATISTICHE_GLOBALI.md + CHANGELOG_MAPPATURA.md\n- P0-P3 prioritization for testing gaps\n- Mermaid diagrams for dependencies\n- 7-step systematic process\n\nTrigger Words:\nknowledge base, mappa, mappare, mappatura, scansiona, scansione,\nricerca approfondita, inventario, documenta componenti, analizza area\n\nCritical Rule:\nALWAYS read code with Read tool - NEVER assume structures\n\n🗺️ Generated with CODE_MAPPING skill system\nAvailable for: All agents (1-9)\nEOF\n)\")",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

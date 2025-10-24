@@ -155,12 +155,12 @@ class ComplianceMonitorService {
       const passedChecks = standardChecks.filter(
         check => check.result === 'PASS'
       ).length
-      const failedChecks = standardChecks.filter(
-        check => check.result === 'FAIL'
-      ).length
-      const warningChecks = standardChecks.filter(
-        check => check.result === 'WARNING'
-      ).length
+      // const failedChecks = standardChecks.filter(
+      //   check => check.result === 'FAIL'
+      // ).length
+      // const warningChecks = standardChecks.filter(
+      //   check => check.result === 'WARNING'
+      // ).length
       const totalChecks = standardChecks.length
 
       const score = totalChecks > 0 ? (passedChecks / totalChecks) * 100 : 0
@@ -355,13 +355,13 @@ class ComplianceMonitorService {
         await this.checkDocumentationCompliance(check, requirement)
         break
       case 'TRAINING':
-        await this.checkTrainingCompliance(check, requirement)
+        await this.checkTrainingCompliance(check)
         break
       case 'MAINTENANCE':
-        await this.checkMaintenanceCompliance(check, requirement)
+        await this.checkMaintenanceCompliance(check)
         break
       case 'ACCESS_CONTROL':
-        await this.checkAccessControlCompliance(check, requirement)
+        await this.checkAccessControlCompliance(check)
         break
     }
 
@@ -675,22 +675,19 @@ class ComplianceMonitorService {
   }
 
   private async checkTrainingCompliance(
-    check: ComplianceCheck,
-    requirement: ComplianceRequirement
+    check: ComplianceCheck
   ): Promise<void> {
     check.result = 'PASS' // Simplified for demo
   }
 
   private async checkMaintenanceCompliance(
-    check: ComplianceCheck,
-    requirement: ComplianceRequirement
+    check: ComplianceCheck
   ): Promise<void> {
     check.result = 'PASS' // Simplified for demo
   }
 
   private async checkAccessControlCompliance(
-    check: ComplianceCheck,
-    requirement: ComplianceRequirement
+    check: ComplianceCheck
   ): Promise<void> {
     check.result = 'PASS' // Simplified for demo
   }

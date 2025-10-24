@@ -65,7 +65,7 @@ const transformNonConformityRecord = (record: any): NonConformity => {
 
 // Hook for non-conformities management
 export const useNonConformities = (filters?: NonConformityFilters) => {
-  const { user, companyId } = useAuth()
+  const { companyId } = useAuth()
   const queryClient = useQueryClient()
 
   // Fetch non-conformities
@@ -230,17 +230,17 @@ export const useNonConformities = (filters?: NonConformityFilters) => {
   // Stats
   const stats = {
     total: nonConformities?.length || 0,
-    open: nonConformities?.filter(nc => nc.status === 'open').length || 0,
-    inProgress: nonConformities?.filter(nc => nc.status === 'in_progress').length || 0,
-    resolved: nonConformities?.filter(nc => nc.status === 'resolved').length || 0,
-    closed: nonConformities?.filter(nc => nc.status === 'closed').length || 0,
+    open: nonConformities?.filter((nc: any) => nc.status === 'open').length || 0,
+    inProgress: nonConformities?.filter((nc: any) => nc.status === 'in_progress').length || 0,
+    resolved: nonConformities?.filter((nc: any) => nc.status === 'resolved').length || 0,
+    closed: nonConformities?.filter((nc: any) => nc.status === 'closed').length || 0,
     bySeverity: {
-      low: nonConformities?.filter(nc => nc.severity === 'low').length || 0,
-      medium: nonConformities?.filter(nc => nc.severity === 'medium').length || 0,
-      high: nonConformities?.filter(nc => nc.severity === 'high').length || 0,
-      critical: nonConformities?.filter(nc => nc.severity === 'critical').length || 0,
+      low: nonConformities?.filter((nc: any) => nc.severity === 'low').length || 0,
+      medium: nonConformities?.filter((nc: any) => nc.severity === 'medium').length || 0,
+      high: nonConformities?.filter((nc: any) => nc.severity === 'high').length || 0,
+      critical: nonConformities?.filter((nc: any) => nc.severity === 'critical').length || 0,
     },
-    critical: nonConformities?.filter(nc => nc.severity === 'critical' && nc.status !== 'closed').length || 0,
+    critical: nonConformities?.filter((nc: any) => nc.severity === 'critical' && nc.status !== 'closed').length || 0,
   }
 
   return {

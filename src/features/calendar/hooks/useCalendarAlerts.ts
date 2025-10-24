@@ -53,7 +53,7 @@ export function useCalendarAlerts(events: CalendarEvent[]): CalendarAlertsResult
       }
 
       const eventStart = new Date(event.start)
-      const isOverdue = isPast(eventStart) && event.status !== 'completed'
+      const isOverdue = isPast(eventStart) && (event.status !== 'completed' as any)
       const hoursUntilEvent = differenceInHours(eventStart, now)
 
       // ✅ FILTRO IMPORTANTE: Ignora eventi futuri oltre i 3 giorni

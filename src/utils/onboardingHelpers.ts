@@ -462,7 +462,7 @@ export const getPrefillData = (): OnboardingData => {
           assegnatoARuolo: 'dipendente' as const,
           assegnatoACategoria: 'Cuochi',
           assegnatoADipendenteSpecifico: undefined,
-          departmentId: departments.find(d => d.name === 'Cucina')?.id,
+          departmentId: departments.find(d => d.name === 'Cucina')?.id ?? '',
           giorniCustom: undefined,
           note: 'Pulizia e sanificazione completa area cucina ogni settimana',
         },
@@ -473,7 +473,7 @@ export const getPrefillData = (): OnboardingData => {
           assegnatoARuolo: 'responsabile' as const,
           assegnatoACategoria: undefined,
           assegnatoADipendenteSpecifico: undefined,
-          departmentId: departments.find(d => d.name === 'Magazzino')?.id,
+          departmentId: departments.find(d => d.name === 'Magazzino')?.id ?? '',
           giorniCustom: undefined,
           note: 'Verifica inventario e ordini settimanali',
         },
@@ -484,7 +484,7 @@ export const getPrefillData = (): OnboardingData => {
           assegnatoARuolo: 'dipendente' as const,
           assegnatoACategoria: 'Banconisti',
           assegnatoADipendenteSpecifico: undefined,
-          departmentId: departments.find(d => d.name === 'Bancone')?.id,
+          departmentId: departments.find(d => d.name === 'Bancone')?.id ?? '',
           giorniCustom: undefined,
           note: 'Sanificazione quotidiana bancone e attrezzature',
         },
@@ -495,7 +495,7 @@ export const getPrefillData = (): OnboardingData => {
           assegnatoARuolo: 'dipendente' as const,
           assegnatoACategoria: 'Camerieri',
           assegnatoADipendenteSpecifico: undefined,
-          departmentId: departments.find(d => d.name === 'Sala')?.id,
+          departmentId: departments.find(d => d.name === 'Sala')?.id ?? '',
           giorniCustom: undefined,
           note: 'Pulizia tavoli, pavimenti e controllo generale sala',
         },
@@ -1629,7 +1629,7 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
       .select('email, id')
       .eq('company_id', companyId)
 
-    const existingEmails = new Set(existingStaff?.map(s => s.email?.toLowerCase()) || [])
+    const existingEmails = new Set(existingStaff?.map((s: any) => s.email?.toLowerCase()) || [])
 
     const staff = formData.staff
       .filter((person: any) => {
@@ -1676,7 +1676,7 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
     if (staff.length === 0) {
       console.log('⚠️ Tutti gli staff members esistono già, skip inserimento')
     } else {
-      const { data: insertedStaff, error } = await supabase
+      const { error } = await supabase
         .from('staff')
         .insert(staff)
         .select('id, email')
@@ -2164,11 +2164,11 @@ export const completeOnboarding = async (
                 position: 'top-right',
                 autoClose: 2000,
               })
-              return
+              return ''
             }
           } else {
             // Company esiste ma è vuota - riutilizza normalmente
-            companyId = devCompanyId
+            companyId = devCompanyId ?? ''
             console.log('✅ Dev company trovata (vuota) e verrà riutilizzata:', companyId)
             toast.info('🛠️ Modalità sviluppo: riutilizzo company esistente (vuota)', {
               position: 'top-right',

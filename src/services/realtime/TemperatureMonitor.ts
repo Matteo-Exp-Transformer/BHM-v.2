@@ -109,7 +109,7 @@ class TemperatureMonitor {
     this.subscriptionId = realtimeManager.subscribe({
       table: 'temperature_readings',
       event: 'INSERT',
-      callback: payload => this.handleNewReading(payload.new),
+      callback: (payload: any) => this.handleNewReading(payload.new as any),
       filter: `company_id=eq.${companyId}`,
     })
 
@@ -276,8 +276,8 @@ class TemperatureMonitor {
     // Use point-specific thresholds if available
     if (point.temperature_min !== null && point.temperature_max !== null) {
       return {
-        min: point.temperature_min,
-        max: point.temperature_max,
+        min: point.temperature_min || 0,
+        max: point.temperature_max || 0,
       }
     }
 

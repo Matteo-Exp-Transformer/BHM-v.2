@@ -128,7 +128,7 @@ export function useCheckItem() {
     mutationFn: async ({
       itemId,
       checked,
-      listId,
+      // listId,
     }: {
       itemId: string
       checked: boolean

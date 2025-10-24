@@ -135,3 +135,5 @@ interface ComponentMapping {
 - **Performance**: Ottimizzare caricamento dati tra pagine
 - **UX**: Feedback visivo durante mappatura dati
 
+
+

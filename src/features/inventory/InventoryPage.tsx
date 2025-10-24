@@ -8,7 +8,6 @@ import {
   TrendingUp,
   Search,
   Filter,
-  Sparkles,
 } from 'lucide-react'
 import { useProducts } from './hooks/useProducts'
 import { useCategories } from './hooks/useCategories'
@@ -22,9 +21,9 @@ import { CategoryFilter } from './components/CategoryFilter'
 import { ExpiredProductsManager } from './components/ExpiredProductsManager'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 import { ShoppingListCard } from '@/features/shopping/components/ShoppingListCard'
-import { createDefaultCategories, DEFAULT_CATEGORIES } from '@/utils/defaultCategories'
+import { DEFAULT_CATEGORIES } from '@/utils/defaultCategories'
 import { useAuth } from '@/hooks/useAuth'
-import { toast } from 'react-toastify'
+// import { toast } from 'react-toastify'
 import {
   Product,
   ProductCategory,
@@ -33,7 +32,7 @@ import {
 } from '@/types/inventory'
 
 export default function InventoryPage() {
-  const { companyId } = useAuth()
+  const { companyId: _companyId } = useAuth()
   const [showAddProductModal, setShowAddProductModal] = useState(false)
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -42,7 +41,7 @@ export default function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showExpiredOnly, setShowExpiredOnly] = useState(false)
-  const [isCreatingDefaults, setIsCreatingDefaults] = useState(false)
+  const [_isCreatingDefaults, _setIsCreatingDefaults] = useState(false)
 
   const {
     products,
@@ -68,7 +67,7 @@ export default function InventoryPage() {
     createCategory,
     updateCategory,
     deleteCategory,
-    refetch: refetchCategories,
+    refetch: _refetchCategories,
   } = useCategories()
 
   const {
@@ -148,24 +147,24 @@ export default function InventoryPage() {
     deleteExpiredProduct.mutate(productId)
   }
 
-  const handleCreateDefaultCategories = async () => {
-    if (!companyId) {
-      toast.error('Errore: ID azienda non trovato')
-      return
-    }
+  // const handleCreateDefaultCategories = async () => {
+  //   if (!companyId) {
+  //     toast.error('Errore: ID azienda non trovato')
+  //     return
+  //   }
 
-    setIsCreatingDefaults(true)
-    try {
-      await createDefaultCategories(companyId)
-      await refetchCategories()
-      toast.success('Categorie predefinite create con successo!')
-    } catch (error) {
-      console.error('Error creating default categories:', error)
-      toast.error('Errore nella creazione delle categorie predefinite')
-    } finally {
-      setIsCreatingDefaults(false)
-    }
-  }
+  //   setIsCreatingDefaults(true)
+  //   try {
+  //     await createDefaultCategories(companyId)
+  //     await refetchCategories()
+  //     toast.success('Categorie predefinite create con successo!')
+  //   } catch (error) {
+  //     console.error('Error creating default categories:', error)
+  //     toast.error('Errore nella creazione delle categorie predefinite')
+  //   } finally {
+  //     setIsCreatingDefaults(false)
+  //   }
+  // }
 
   const isLoading = isLoadingProducts || isLoadingCategories || isLoadingExpiry
 
@@ -365,7 +364,7 @@ export default function InventoryPage() {
         icon={FileText}
         counter={categories.length}
         defaultExpanded={false}
-        isLoading={isLoadingCategories || isCreatingDefaults}
+        isLoading={isLoadingCategories || _isCreatingDefaults}
         contentClassName="px-4 py-6 sm:px-6"
       >
         {!isLoadingCategories && (

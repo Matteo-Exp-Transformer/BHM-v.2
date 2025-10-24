@@ -135,7 +135,7 @@ export const validateClosureDates = (dates: string[], fiscalStart: string, fisca
   const startDate = new Date(fiscalStart)
   const endDate = new Date(fiscalEnd)
 
-  dates.forEach((dateStr, index) => {
+  dates.forEach((dateStr, /* index */) => {
     const date = new Date(dateStr)
 
     if (isNaN(date.getTime())) {

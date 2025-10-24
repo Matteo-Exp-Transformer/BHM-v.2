@@ -55,7 +55,7 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
         throw error
       }
 
-      return (data || []).map(product => {
+      return (data || []).map((product: any) => {
         const expiryDate = new Date(product.expiry_date)
         const daysUntilExpiry = Math.ceil(
           (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
@@ -112,7 +112,7 @@ export const useExpiryTracking = (daysAhead: number = 7) => {
         throw error
       }
 
-      return (data || []).map(product => ({
+      return (data || []).map((product: any) => ({
         id: product.id,
         company_id: product.company_id,
         name: product.name,

@@ -287,8 +287,6 @@ export default function ConservationPage() {
               title="Frigoriferi"
               subtitle={`${stats.by_type.fridge ?? 0} punti configurati`}
               defaultExpanded={true}
-              customHeaderClasses="bg-sky-50 border-sky-200"
-              customTitleClasses="text-sky-700"
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {conservationPoints
@@ -313,8 +311,6 @@ export default function ConservationPage() {
               title="Freezer"
               subtitle={`${stats.by_type.freezer ?? 0} punti configurati`}
               defaultExpanded={true}
-              customHeaderClasses="bg-indigo-50 border-indigo-200"
-              customTitleClasses="text-indigo-700"
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {conservationPoints
@@ -339,8 +335,6 @@ export default function ConservationPage() {
               title="Abbattitori"
               subtitle={`${stats.by_type.blast ?? 0} punti configurati`}
               defaultExpanded={true}
-              customHeaderClasses="bg-purple-50 border-purple-200"
-              customTitleClasses="text-purple-700"
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {conservationPoints
@@ -365,8 +359,6 @@ export default function ConservationPage() {
               title="Ambiente / Dispensa"
               subtitle={`${stats.by_type.ambient ?? 0} punti configurati`}
               defaultExpanded={true}
-              customHeaderClasses="bg-emerald-50 border-emerald-200"
-              customTitleClasses="text-emerald-700"
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {conservationPoints

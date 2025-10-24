@@ -52,7 +52,7 @@ const transformNoteRecord = (record: any): Note => {
 
 // Hook for notes management
 export const useNotes = (filters?: NoteFilters) => {
-  const { user, companyId } = useAuth()
+  const { companyId } = useAuth()
   const queryClient = useQueryClient()
 
   // Fetch notes
@@ -210,13 +210,13 @@ export const useNotes = (filters?: NoteFilters) => {
   // Stats
   const stats = {
     total: notes?.length || 0,
-    thisWeek: notes?.filter(note => {
+    thisWeek: notes?.filter((note: any) => {
       const noteDate = note.created_at
       const now = new Date()
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
       return noteDate >= weekAgo
     }).length || 0,
-    thisMonth: notes?.filter(note => {
+    thisMonth: notes?.filter((note: any) => {
       const noteDate = note.created_at
       const now = new Date()
       return noteDate.getMonth() === now.getMonth() &&

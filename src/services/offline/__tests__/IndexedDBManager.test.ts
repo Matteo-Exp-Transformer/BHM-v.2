@@ -78,7 +78,7 @@ beforeAll(() => {
       objectStores[name] = store
       return store
     }),
-    transaction: vi.fn((names: string[]) => ({
+    transaction: vi.fn((/* names: string[] */) => ({
       objectStore: (name: string) => objectStores[name],
       //@ts-ignore
       commit: vi.fn(),

@@ -13,9 +13,10 @@
 // Combinazioni testate: nomi validi/invalidi, email valide/invalide, password valide/invalide, caratteri speciali, Unicode
 // NON MODIFICARE SENZA PERMESSO ESPLICITO
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { csrfService } from '@/services/security/CSRFService'
 import { toast } from 'react-toastify'
 
 const RegisterPage: React.FC = () => {
@@ -31,6 +32,13 @@ const RegisterPage: React.FC = () => {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [csrfToken, setCsrfToken] = useState('')
+
+  // Initialize CSRF token on component mount (DECISIONE #1)
+  useEffect(() => {
+    const token = csrfService.getToken()
+    setCsrfToken(token)
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -43,6 +51,13 @@ const RegisterPage: React.FC = () => {
     e.preventDefault()
     setIsSubmitting(true)
 
+    // CSRF Protection: Validate token (DECISIONE #1)
+    if (!csrfService.validateToken(csrfToken)) {
+      toast.error('Token di sicurezza non valido. Ricarica la pagina.')
+      setIsSubmitting(false)
+      return
+    }
+
     // Validazione password
     if (formData.password !== formData.confirmPassword) {
       toast.error('Le password non coincidono')
@@ -50,7 +65,7 @@ const RegisterPage: React.FC = () => {
       return
     }
 
-    // Password Policy: 12 caratteri, lettere + numeri
+    // Password Policy: 12 caratteri, lettere + numeri (DECISIONE #12)
     if (formData.password.length < 12) {
       toast.error('La password deve essere almeno 12 caratteri')
       setIsSubmitting(false)
@@ -199,7 +214,7 @@ const RegisterPage: React.FC = () => {
                   value={formData.password}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all pr-12"
-                  placeholder="Minimo 8 caratteri"
+                  placeholder="Minimo 12 caratteri"
                 />
                 <button
                   type="button"
@@ -210,7 +225,7 @@ const RegisterPage: React.FC = () => {
                 </button>
               </div>
               <p className="mt-1 text-xs text-gray-500">
-                Almeno 8 caratteri con lettere e numeri
+                Almeno 12 caratteri con lettere e numeri
               </p>
             </div>
 
@@ -234,6 +249,9 @@ const RegisterPage: React.FC = () => {
                 placeholder="Ripeti password"
               />
             </div>
+
+            {/* CSRF Token */}
+            <input type="hidden" name="csrf_token" value={csrfToken} />
 
             {/* Submit Button */}
             <button

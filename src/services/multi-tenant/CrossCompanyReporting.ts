@@ -247,7 +247,7 @@ class CrossCompanyReportingManager {
     }
 
     // Validate export permissions
-    await this.validateExportPermissions(userId, report, options)
+    await this.validateExportPermissions()
 
     // Generate export based on format
     let exportData: Blob
@@ -297,23 +297,23 @@ class CrossCompanyReportingManager {
     }
 
     // Validate sharing permissions
-    await this.validateSharingPermissions(sharedBy, report, targetCompanyId)
+    await this.validateSharingPermissions()
 
     // Check if sharing is allowed by data agreements
-    await this.validateSharingAgreements(report, targetCompanyId)
+    await this.validateSharingAgreements()
 
     // Create sharing record
-    const sharingRecord = {
-      report_id: reportId,
-      shared_with: targetCompanyId,
-      shared_by: sharedBy,
-      shared_at: new Date(),
-      restrictions: restrictions || report.sharing_restrictions,
-      access_granted: true,
-    }
+    // const _sharingRecord = {
+    //   report_id: reportId,
+    //   shared_with: targetCompanyId,
+    //   shared_by: sharedBy,
+    //   shared_at: new Date(),
+    //   restrictions: restrictions || report.sharing_restrictions,
+    //   access_granted: true,
+    // }
 
     // Notify target company
-    await this.notifyReportSharing(sharingRecord)
+    await this.notifyReportSharing()
 
     // Create audit trail
     await this.createAuditTrail(report, 'shared', sharedBy, {
@@ -337,7 +337,7 @@ class CrossCompanyReportingManager {
 
     return {
       generation_stats: {
-        data_points_processed: await this.countDataPoints(report),
+        data_points_processed: await this.countDataPoints(),
         companies_involved: report.companies_included.length,
         processing_time_ms: report.metadata.generation_duration_ms || 0,
         data_quality_score: report.metadata.data_quality_score || 0,
@@ -621,33 +621,33 @@ class CrossCompanyReportingManager {
 
   // Additional helper methods
   private async validateExportPermissions(
-    userId: string,
-    report: CrossCompanyReport,
-    options: ReportExportOptions
+    // userId: string,
+    // report: CrossCompanyReport,
+    // options: ReportExportOptions
   ): Promise<void> {
     // Validate export permissions
   }
 
   private async validateSharingPermissions(
-    userId: string,
-    report: CrossCompanyReport,
-    targetCompanyId: string
+    // userId: string,
+    // report: CrossCompanyReport,
+    // targetCompanyId: string
   ): Promise<void> {
     // Validate sharing permissions
   }
 
   private async validateSharingAgreements(
-    report: CrossCompanyReport,
-    targetCompanyId: string
+    // report: CrossCompanyReport,
+    // targetCompanyId: string
   ): Promise<void> {
     // Validate sharing agreements
   }
 
-  private async notifyReportSharing(sharingRecord: any): Promise<void> {
+  private async notifyReportSharing(/* sharingRecord: any */): Promise<void> {
     console.log('📧 Notifying report sharing')
   }
 
-  private async countDataPoints(report: CrossCompanyReport): Promise<number> {
+  private async countDataPoints(/* report: CrossCompanyReport */): Promise<number> {
     return 1000 // Mock count
   }
 
@@ -657,7 +657,7 @@ class CrossCompanyReportingManager {
   }
 
   private async generateReportInsights(
-    report: CrossCompanyReport
+    _report: CrossCompanyReport
   ): Promise<string[]> {
     return [
       'Cross-company temperature compliance improved by 15%',

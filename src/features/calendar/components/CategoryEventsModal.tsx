@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Wrench, ClipboardList, Package, ChevronRight, Calendar, User, Clock, AlertCircle, Check, RotateCcw, AlertTriangle } from 'lucide-react'
+import { X, Wrench, ClipboardList, Package, ChevronRight, Calendar, User, Clock, AlertCircle, Check, RotateCcw } from 'lucide-react'
 import type { MacroCategory, MacroCategoryItem } from '../hooks/useMacroCategoryEvents'
 import { useGenericTasks } from '../hooks/useGenericTasks'
 import { useQueryClient } from '@tanstack/react-query'
@@ -438,7 +438,7 @@ export const CategoryEventsModal: React.FC<CategoryEventsModalProps> = ({
                                         
                                         completeTask({ 
                                           taskId: taskId,
-                                          eventDate: new Date(item.dueDate)
+                                          notes: `Completato il ${new Date().toLocaleDateString('it-IT')}`
                                         })
                                         
                                         // Forza invalidazione immediata per aggiornare il modal

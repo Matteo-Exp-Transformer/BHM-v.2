@@ -19,8 +19,6 @@ import {
 } from '@/components/ui/Select'
 import {
   CONSERVATION_POINT_TYPES,
-  CONSERVATION_CATEGORIES,
-  getCompatibleCategories,
   validateTemperatureForType,
 } from '@/utils/onboarding/conservationUtils'
 import { STAFF_ROLES, STAFF_CATEGORIES } from '@/utils/haccpRules'
@@ -119,7 +117,7 @@ function MaintenanceTaskForm({
   task,
   index,
   staff,
-  staffCategories,
+  staffCategories: _staffCategories,
   onUpdate,
 }: {
   task: MandatoryMaintenanceTask
@@ -141,8 +139,8 @@ function MaintenanceTaskForm({
   }
 
   const info = MAINTENANCE_TYPES[task.manutenzione]
-  const showCategoryField = task.assegnatoARuolo === 'dipendente'
-  const showSpecificStaffField = task.assegnatoARuolo === 'specifico'
+  // const showCategoryField = task.assegnatoARuolo === 'dipendente'
+  // const showSpecificStaffField = task.assegnatoARuolo === 'specifico'
   const showCustomDaysField = task.frequenza === 'custom'
 
   return (
@@ -840,7 +838,7 @@ export function AddPointModal({
                   task={task}
                   index={index}
                   staff={staff}
-                  staffCategories={STAFF_CATEGORIES}
+                  staffCategories={STAFF_CATEGORIES.map(cat => cat.value)}
                   onUpdate={updateMaintenanceTask}
                 />
               ))}

@@ -57,5 +57,16 @@ Regola salvataggio Brief:
 - Genera `Brief_to_Agente3.md` in: `Production/Sessione_di_lavoro/Agente_3/{DATA_CORRENTE_SESSIONE}/`
 - **IMPORTANTE**: Usa la **data corrente di sessione di lavoro** ottenuta con `date` per sostituire {DATA_CORRENTE_SESSIONE}
 
+## 📁 HANDOFF E FILE CONDIVISI
+**OBBLIGATORIO**: Tutti i file di handoff e coordinamento vanno posizionati in:
+- **Handoff ad altri agenti**: `Production/Sessione_di_lavoro/Agente_X/{DATA_CORRENTE}/Brief_to_AgenteY.md`
+- **File condivisi con Neo**: `Production/Sessione_di_lavoro/Neo/{DATA_CORRENTE}/`
+- **File propri**: `Production/Sessione_di_lavoro/Agente_X/{DATA_CORRENTE}/`
+
+**PRIMA DI INIZIARE**: Leggi SEMPRE i file condivisi in Neo:
+- `Production/Sessione_di_lavoro/Neo/{DATA_CORRENTE}/README_SESSIONE_CORRENTE.md`
+- `Production/Sessione_di_lavoro/Neo/{DATA_CORRENTE}/PRIORITA_CONDIVISE.md`
+- `Production/Sessione_di_lavoro/Neo/{DATA_CORRENTE}/HANDOFF_ACTIVE.md`
+
 Prerequisito obbligatorio:
 - Leggi la Panoramica e conferma: "Panoramica letta: SÌ" prima di procedere.

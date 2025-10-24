@@ -1,15 +1,15 @@
 import { z } from 'zod'
 
 import type {
-  GeneralTask,
+  // GenericTask,
   TaskFrequency,
   TaskPriority,
-  HaccpTaskCategory,
+  // HaccpTaskCategory,
 } from '@/types/onboarding'
 
 // Constants allineati con il main app
 export const HACCP_TASK_CATEGORIES: {
-  value: HaccpTaskCategory
+  value: string
   label: string
   icon: string
 }[] = [
@@ -26,8 +26,7 @@ export const TASK_FREQUENCIES: { value: TaskFrequency; label: string }[] = [
   { value: 'weekly', label: 'Settimanale' },
   { value: 'monthly', label: 'Mensile' },
   { value: 'quarterly', label: 'Trimestrale' },
-  { value: 'annual', label: 'Annuale' },
-  { value: 'custom', label: 'Personalizzata' },
+  { value: 'annually', label: 'Annuale' },
   { value: 'as_needed', label: 'Al bisogno' },
 ]
 
@@ -76,7 +75,7 @@ const generateId = (): string =>
   `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
 // Funzione per creare un task bozza
-export const createDraftTask = (existing?: GeneralTask): GeneralTask => {
+export const createDraftTask = (existing?: any): any => {
   if (existing) {
     return {
       ...existing,
@@ -98,7 +97,7 @@ export const createDraftTask = (existing?: GeneralTask): GeneralTask => {
 }
 
 // Funzione per normalizzare un task
-export const normalizeGeneralTask = (task: GeneralTask): GeneralTask => {
+export const normalizeGeneralTask = (task: any): any => {
   return {
     id: task.id || generateId(),
     name: task.name.trim(),
@@ -119,7 +118,7 @@ export const normalizeGeneralTask = (task: GeneralTask): GeneralTask => {
 
 // Funzione per validare un task
 export const validateGeneralTask = (
-  task: GeneralTask
+  task: any
 ): { success: boolean; errors?: Record<string, string> } => {
   const result = taskSchema.safeParse(task)
 
@@ -155,7 +154,7 @@ export const validateGeneralTask = (
 }
 
 // Funzione per ottenere il label di una categoria HACCP
-export const getHaccpCategoryLabel = (category: HaccpTaskCategory): string => {
+export const getHaccpCategoryLabel = (category: string): string => {
   const found = HACCP_TASK_CATEGORIES.find(c => c.value === category)
   return found?.label || category
 }
@@ -174,7 +173,7 @@ export const getPriorityLabel = (priority: TaskPriority): string => {
 
 // Funzione per stimare la durata basata sulla categoria
 export const getEstimatedDurationByCategory = (
-  category: HaccpTaskCategory
+  category: string
 ): number => {
   switch (category) {
     case 'temperature':
@@ -195,8 +194,8 @@ export const getEstimatedDurationByCategory = (
 
 // Task predefiniti comuni
 export const getCommonTasksByCategory = (
-  category: HaccpTaskCategory
-): Partial<GeneralTask>[] => {
+  category: string
+): Partial<any>[] => {
   switch (category) {
     case 'temperature':
       return [

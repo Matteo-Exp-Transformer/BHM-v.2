@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'react-toastify'
 import {
-  updateEventStatus,
+  // updateEventStatus,
   filterEvents,
   calculateEventStats,
   getEventColors,
@@ -183,7 +183,7 @@ export function useCalendarEvents() {
           title: input.title,
           instructions: input.description,
           next_due: input.start.toISOString(),
-          estimated_duration: Math.ceil((input.end.getTime() - input.start.getTime()) / (1000 * 60)), // minutes
+          estimated_duration: Math.ceil(((input.end || input.start).getTime() - input.start.getTime()) / (1000 * 60)), // minutes
           frequency: input.recurring ? 'daily' : 'once',
           priority: input.priority,
           assigned_to: input.assigned_to?.[0],
@@ -236,7 +236,7 @@ export function useCalendarEvents() {
           extendedProps: {},
           created_at: new Date(data.created_at),
           updated_at: new Date(data.updated_at),
-          created_by: data.created_by || user.id,
+          created_by: data.created_by || '',
           company_id: data.company_id,
         }
 

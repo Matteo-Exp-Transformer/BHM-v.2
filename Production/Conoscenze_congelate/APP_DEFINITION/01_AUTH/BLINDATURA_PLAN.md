@@ -205,3 +205,5 @@ Valida sicurezza di Login e Onboarding:
 
 **STATUS**: 🟡 PIANIFICAZIONE COMPLETA - Pronto per esecuzione blindatura
 
+
+

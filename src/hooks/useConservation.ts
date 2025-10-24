@@ -274,7 +274,7 @@ export function useConservation(options: UseConservationOptions = {}) {
       {} as Record<ConservationPoint['status'], number>
     )
 
-    const totalReadings = temperatureReadings.length
+    // const totalReadings = temperatureReadings.length
     // TODO: Compute compliance based on conservation point setpoint_temp when needed
     const temperature_compliance_rate = 0 // Disabled until status calculation is implemented
 
@@ -501,7 +501,7 @@ export function useConservation(options: UseConservationOptions = {}) {
           assigned_to: data.assigned_to,
           priority: data.priority,
           checklist: data.instructions,
-          company_id: companyId,
+          // company_id: companyId,
           status: 'scheduled',
         })
         .select()
@@ -536,7 +536,7 @@ export function useConservation(options: UseConservationOptions = {}) {
           notes: data.notes,
           photos: data.photos,
           next_due: data.next_due?.toISOString(),
-          company_id: companyId,
+          // company_id: companyId,
           completed_at: new Date().toISOString(),
         })
         .select()

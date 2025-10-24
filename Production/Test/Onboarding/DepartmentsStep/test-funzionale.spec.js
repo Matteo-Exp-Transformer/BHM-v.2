@@ -35,16 +35,16 @@ test.describe('DepartmentsStep - Test Funzionali', () => {
     console.log('📝 Completando BusinessInfoStep...')
     
     // Compila i campi obbligatori del primo step
-    await page.fill('input[placeholder*="nome azienda"], input[placeholder*="Nome azienda"]', 'Test Azienda')
+    await page.fill('input[placeholder="Inserisci il nome della tua azienda"]', 'Test Azienda')
     await page.waitForTimeout(1000)
     
-    await page.fill('input[placeholder*="indirizzo"], input[placeholder*="Indirizzo"]', 'Via Test 123')
+    await page.fill('textarea[placeholder="Inserisci l\'indirizzo completo dell\'azienda"]', 'Via Test 123')
     await page.waitForTimeout(1000)
     
-    await page.fill('input[placeholder*="email"], input[placeholder*="Email"]', 'test@azienda.com')
+    await page.fill('input[placeholder="info@azienda.it"]', 'test@azienda.com')
     await page.waitForTimeout(1000)
     
-    await page.fill('input[placeholder*="telefono"], input[placeholder*="Telefono"]', '1234567890')
+    await page.fill('input[placeholder="+39 051 1234567"]', '1234567890')
     await page.waitForTimeout(1000)
     
     // Clicca Avanti per completare il primo step
@@ -84,10 +84,10 @@ test.describe('DepartmentsStep - Test Funzionali', () => {
     await expect(page.locator('text=Reparti Configurati (7)')).toBeVisible();
     
     // Verifica che alcuni reparti specifici siano presenti
-    await expect(page.locator('text=Cucina')).toBeVisible();
-    await expect(page.locator('text=Bancone')).toBeVisible();
-    await expect(page.locator('text=Sala')).toBeVisible();
-    await expect(page.locator('text=Magazzino')).toBeVisible();
+    await expect(page.locator('h4:has-text("Cucina")')).toBeVisible();
+    await expect(page.locator('h4:has-text("Bancone")')).toBeVisible();
+    await expect(page.locator('h4:has-text("Sala")')).toBeVisible();
+    await expect(page.locator('h4:has-text("Magazzino")')).toBeVisible();
     
     // Verifica che il form di aggiunta sia nascosto
     await expect(page.locator('h3:has-text("Aggiungi Nuovo Reparto")')).not.toBeVisible();
@@ -132,8 +132,8 @@ test.describe('DepartmentsStep - Test Funzionali', () => {
     await page.click('button:has-text("Aggiungi")');
     
     // Verifica che il reparto sia stato aggiunto come inattivo
-    await expect(page.locator('text=Reparto Inattivo')).toBeVisible();
-    await expect(page.locator('text=Inattivo')).toBeVisible();
+    await expect(page.locator('h4:has-text("Reparto Inattivo")')).toBeVisible();
+    await expect(page.locator('span:has-text("Inattivo"):has([class*="bg-gray"])')).toBeVisible();
   });
 
   test('Dovrebbe modificare un reparto esistente', async ({ page }) => {

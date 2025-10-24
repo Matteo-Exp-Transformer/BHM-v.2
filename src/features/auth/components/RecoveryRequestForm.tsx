@@ -115,7 +115,13 @@ export const RecoveryRequestForm: React.FC<RecoveryRequestFormProps> = ({
       // Registra la richiesta per rate limiting
       recordRequest()
       
-      const response = await authClient.requestRecovery(formData)
+      const csrfResponse = await authClient.getCsrfToken()
+      const csrfToken = csrfResponse.success ? csrfResponse.data?.csrf_token || '' : ''
+      
+      const response = await authClient.requestRecovery({
+        email: formData.email,
+        csrf_token: csrfToken
+      })
       
       if (response.success) {
         setIsSuccess(true)

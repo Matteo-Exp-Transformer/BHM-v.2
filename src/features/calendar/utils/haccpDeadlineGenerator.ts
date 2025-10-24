@@ -1,6 +1,6 @@
 import type { StaffMember } from '@/features/management/hooks/useStaff'
 import type { CalendarEvent } from '@/types/calendar'
-import { addDays, differenceInDays, parseISO } from 'date-fns'
+import { differenceInDays, parseISO } from 'date-fns'
 
 export interface HaccpDeadlineConfig {
   warningDays: number[]

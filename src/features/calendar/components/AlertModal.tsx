@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Wrench, ClipboardList, Package, ChevronRight, Calendar, User, Clock, AlertCircle, Thermometer } from 'lucide-react'
+import { X, Wrench, ClipboardList, Package, Calendar, User, Clock, AlertCircle, Thermometer } from 'lucide-react'
 import type { CalendarAlert } from '../hooks/useCalendarAlerts'
 
 interface AlertModalProps {
@@ -64,8 +64,10 @@ const severityConfig = {
 
 const statusConfig = {
   pending: { label: 'In Attesa', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
+  in_progress: { label: 'In Corso', color: 'bg-blue-100 text-blue-800', icon: '🔄' },
   completed: { label: 'Completato', color: 'bg-green-100 text-green-800', icon: '✅' },
   overdue: { label: 'In Ritardo', color: 'bg-red-100 text-red-800', icon: '⚠️' },
+  cancelled: { label: 'Annullato', color: 'bg-gray-100 text-gray-800', icon: '❌' },
 }
 
 function getEventCategory(event: CalendarAlert['event']): keyof typeof categoryConfig {
@@ -110,7 +112,7 @@ export const AlertModal: React.FC<AlertModalProps> = ({
 
   const categories = Object.keys(groupedAlerts) as Array<keyof typeof categoryConfig>
   const selectedAlerts = selectedCategory ? groupedAlerts[selectedCategory] : []
-  const config = selectedCategory ? categoryConfig[selectedCategory] : null
+  const config = selectedCategory ? categoryConfig[selectedCategory as keyof typeof categoryConfig] : null
   const Icon = config?.icon
 
   return (

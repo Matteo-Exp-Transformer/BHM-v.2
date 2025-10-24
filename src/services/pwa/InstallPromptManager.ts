@@ -276,7 +276,7 @@ export class InstallPromptManager {
     })
 
     // Listen for appinstalled event
-    window.addEventListener('appinstalled', event => {
+    window.addEventListener('appinstalled', (/* _event */) => {
       console.log('📱 PWA was installed')
 
       this.promptData.isInstalled = true

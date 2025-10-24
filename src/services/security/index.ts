@@ -4,62 +4,62 @@
  */
 
 import securityManager, {
-  type SecurityConfig,
-  type SecurityEvent,
-  type ThreatLevel,
-  type SecurityAudit,
+  // type SecurityConfig,
+  // type SecurityEvent,
+  // type ThreatLevel,
+  // type SecurityAudit,
 } from './SecurityManager'
 
 import auditLogger, {
-  type AuditLog,
-  type AuditEvent,
-  type AuditFilter,
-  type ComplianceReport,
+  // type AuditLog,
+  // type AuditEvent,
+  // type AuditFilter,
+  // type ComplianceReport,
 } from './AuditLogger'
 
 import complianceMonitor, {
-  type ComplianceStandard,
-  type ComplianceCheck,
-  type ComplianceResult,
-  type ComplianceSchedule,
+  // type ComplianceStandard,
+  // type ComplianceCheck,
+  // type ComplianceResult,
+  // type ComplianceSchedule,
 } from './ComplianceMonitor'
 
 import securityDashboard, {
-  type SecurityMetric,
-  type SecurityAlert,
-  type SecurityDashboardData,
+  // type SecurityMetric,
+  // type SecurityAlert,
+  // type SecurityDashboardData,
 } from './SecurityDashboard'
 
-export {
-  securityManager,
-  type SecurityConfig,
-  type SecurityEvent,
-  type ThreatLevel,
-  type SecurityAudit,
-}
+// export {
+//   securityManager,
+//   type SecurityConfig,
+//   type SecurityEvent,
+//   type ThreatLevel,
+//   type SecurityAudit,
+// }
 
-export {
-  auditLogger,
-  type AuditLog,
-  type AuditEvent,
-  type AuditFilter,
-  type ComplianceReport,
-}
+// export {
+//   auditLogger,
+//   type AuditLog,
+//   type AuditEvent,
+//   type AuditFilter,
+//   type ComplianceReport,
+// }
 
-export {
-  complianceMonitor,
-  type ComplianceStandard,
-  type ComplianceCheck,
-  type ComplianceResult,
-  type ComplianceSchedule,
-}
+// export {
+//   complianceMonitor,
+//   type ComplianceStandard,
+//   type ComplianceCheck,
+//   type ComplianceResult,
+//   type ComplianceSchedule,
+// }
 
-export {
-  securityDashboard,
-  type SecurityMetric,
-  type SecurityAlert,
-  type SecurityDashboardData,
-}
+// export {
+//   securityDashboard,
+//   type SecurityMetric,
+//   type SecurityAlert,
+//   type SecurityDashboardData,
+// }
 
 /**
  * B.9.1 Enterprise Security Services Manager
@@ -112,7 +112,8 @@ class EnterpriseSecurityManager {
 
       // Log security initialization
       await auditLogger.logEvent({
-        type: 'SECURITY_INIT',
+        type: 'SECURITY_INIT' as any,
+        event: 'SECURITY_INIT' as any,
         severity: 'INFO',
         description: `Enterprise security initialized at level: ${this.securityLevel}`,
         userId: config.userId,
@@ -121,7 +122,8 @@ class EnterpriseSecurityManager {
     } catch (error) {
       console.error('❌ Failed to initialize enterprise security:', error)
       await auditLogger.logEvent({
-        type: 'SECURITY_ERROR',
+        type: 'SECURITY_ERROR' as any,
+        event: 'SECURITY_ERROR' as any,
         severity: 'CRITICAL',
         description: `Security initialization failed: ${error}`,
         userId: config.userId,
@@ -278,7 +280,7 @@ class EnterpriseSecurityManager {
 export const enterpriseSecurityManager = new EnterpriseSecurityManager()
 
 // Export individual services for direct access
-export { securityManager, auditLogger, complianceMonitor, securityDashboard }
+// export { securityManager, auditLogger, complianceMonitor, securityDashboard }
 
 // Auto-initialize in production mode with security focus
 if (import.meta.env?.PROD) {

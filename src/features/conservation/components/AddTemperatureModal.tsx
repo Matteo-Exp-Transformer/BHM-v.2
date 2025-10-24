@@ -17,7 +17,7 @@ import {
   AlertTriangle,
   CheckCircle,
 } from 'lucide-react'
-import { useAuth } from '@/hooks/useAuth'
+// import { useAuth } from '@/hooks/useAuth'
 
 interface AddTemperatureModalProps {
   isOpen: boolean
@@ -42,7 +42,7 @@ export function AddTemperatureModal({
   conservationPoint,
   isLoading,
 }: AddTemperatureModalProps) {
-  const { companyId } = useAuth()
+  // const { companyId } = useAuth()
   const [formData, setFormData] = useState({
     temperature: conservationPoint.setpoint_temp,
     method: 'digital_thermometer' as const,
@@ -123,10 +123,10 @@ export function AddTemperatureModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!user?.id) {
-      console.error('No user ID available')
-      return
-    }
+    // if (!user?.id) {
+    //   console.error('No user ID available')
+    //   return
+    // }
 
     // ✅ FIXED: Only send fields that exist in temperature_readings table
     // Schema has only: id, company_id, conservation_point_id, temperature, recorded_at, created_at

@@ -102,10 +102,9 @@ const taskFrequencyValues: [TaskFrequency, ...TaskFrequency[]] = [
   'weekly',
   'monthly',
   'quarterly',
-  'annual',
-  'custom',
+  'annually',
   'as_needed',
-]
+] as [TaskFrequency, ...TaskFrequency[]]
 
 const maintenanceTaskSchema = z.object({
   id: z.string(),
@@ -256,7 +255,7 @@ export const createDraftConservationPoint = (
       maintenanceTasks: point.maintenanceTasks
         ? point.maintenanceTasks.map(task => ({
             ...task,
-            assignedStaffIds: [...task.assignedStaffIds],
+            assignedStaffIds: [...(task.assignedStaffIds ?? [])],
             instructions: [...(task.instructions ?? [])],
             status: task.status ?? 'scheduled',
           }))
@@ -312,11 +311,11 @@ export const normalizeMaintenanceTask = (
   id: task.id,
   conservationPointId: task.conservationPointId,
   conservationPointName: task.conservationPointName,
-  title: task.title.trim(),
+  title: (task.title ?? '').trim(),
   type: task.type,
   frequency: task.frequency,
   assignedRole: task.assignedRole,
-  assignedStaffIds: [...task.assignedStaffIds],
+  assignedStaffIds: [...(task.assignedStaffIds ?? [])],
   notes: task.notes,
   estimatedDuration: task.estimatedDuration,
   priority: task.priority,

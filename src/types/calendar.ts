@@ -24,6 +24,7 @@ export type CalendarEventType =
   | 'custom'
 export type CalendarEventStatus =
   | 'pending'
+  | 'in_progress'
   | 'completed'
   | 'overdue'
   | 'cancelled'
@@ -130,6 +131,11 @@ export const EVENT_COLORS = {
     borderColor: '#10B981', // green-500
     textColor: '#065F46', // green-800
   },
+  product_expiry: {
+    backgroundColor: '#FEE2E2', // red-100
+    borderColor: '#EF4444', // red-500
+    textColor: '#991B1B', // red-800
+  },
   custom: {
     backgroundColor: '#F3E8FF', // purple-100
     borderColor: '#8B5CF6', // purple-500
@@ -143,6 +149,11 @@ export const STATUS_COLORS = {
     backgroundColor: '#F3F4F6', // gray-100
     borderColor: '#6B7280', // gray-500
     textColor: '#374151', // gray-700
+  },
+  in_progress: {
+    backgroundColor: '#DBEAFE', // blue-100
+    borderColor: '#3B82F6', // blue-500
+    textColor: '#1E40AF', // blue-800
   },
   completed: {
     backgroundColor: '#DCFCE7', // green-100

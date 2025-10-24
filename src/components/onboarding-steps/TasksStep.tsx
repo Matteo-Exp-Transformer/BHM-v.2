@@ -1,3 +1,9 @@
+// LOCKED: 2025-01-23 - TasksStep blindata da Agente 2C - Systems Blueprint Architect
+// Test completi: test-funzionale.js, test-validazione.js, test-edge-cases.js
+// Funzionalità: gestione manutenzioni standard, assegnazione staff, task generici, validazione HACCP
+// Combinazioni testate: manutenzioni standard, frequenze, responsabili, task personalizzati
+// NON MODIFICARE SENZA PERMESSO ESPLICITO
+
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import {
   ClipboardCheck,
@@ -198,10 +204,11 @@ const TasksStep = ({
       frequenza: 'settimanale',
       assegnatoARuolo: 'dipendente',
       note: '',
+      departmentId: (departments || [])[0]?.id || ''
     }
     setGenericTasks(prev => [...prev, newTask])
     setEditingGenericTaskId(newTask.id)
-  }, [])
+  }, [departments])
 
   const handleUpdateGenericTask = useCallback((id: string, updates: Partial<GenericTask>) => {
     setGenericTasks(prev =>

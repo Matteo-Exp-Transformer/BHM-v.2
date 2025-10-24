@@ -5,7 +5,7 @@
 
 import type {
   RealtimeChannel,
-  RealtimeClient,
+  // RealtimeClient,
   RealtimePostgresChangesPayload,
 } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
@@ -54,15 +54,15 @@ class RealtimeConnectionManager {
   }
   private statusCallbacks: ((status: ConnectionStatus) => void)[] = []
   private presenceCallbacks: ((presence: PresenceState[]) => void)[] = []
-  private client: RealtimeClient
+  // private _client: any
 
   // Connection configuration
-  private readonly maxReconnectAttempts = 5
+  // private readonly maxReconnectAttempts = 5
   private readonly reconnectInterval = 3000
-  private readonly heartbeatInterval = 30000
+  // private readonly heartbeatInterval = 30000
 
   constructor() {
-    this.client = supabase.realtime
+    // this._client = supabase.realtime
     this.setupConnectionListeners()
   }
 
@@ -115,7 +115,7 @@ class RealtimeConnectionManager {
           table: subscription.table,
           filter: subscription.filter,
         },
-        payload => {
+        (payload: any) => {
           try {
             subscription.callback(payload)
           } catch (error) {
@@ -126,7 +126,7 @@ class RealtimeConnectionManager {
           }
         }
       )
-      .subscribe(status => {
+      .subscribe((status: any) => {
         if (status === 'SUBSCRIBED') {
           console.log(`📡 Subscribed to ${subscription.table} changes`)
         } else if (status === 'CHANNEL_ERROR') {
@@ -193,17 +193,17 @@ class RealtimeConnectionManager {
         const users = this.transformPresenceState(presenceState)
         this.notifyPresenceCallbacks(users)
       })
-      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+      .on('presence', { event: 'join' }, ({ key, newPresences }: any) => {
         console.log('👤 User joined:', key, newPresences)
       })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+      .on('presence', { event: 'leave' }, ({ key, leftPresences }: any) => {
         console.log('👋 User left:', key, leftPresences)
       })
 
-    await this.presenceChannel.subscribe(async status => {
+    await this.presenceChannel?.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
         // Track user presence
-        await this.presenceChannel!.track({
+        await this.presenceChannel?.track({
           userId,
           userEmail,
           online_at: new Date().toISOString(),
@@ -249,7 +249,7 @@ class RealtimeConnectionManager {
       this.attemptReconnection()
     })
 
-    supabase.realtime.onError(error => {
+    supabase.realtime.onError((error: any) => {
       console.error('Real-time connection error:', error)
       this.handleConnectionError(error)
     })
@@ -262,7 +262,7 @@ class RealtimeConnectionManager {
     console.error('Real-time connection error:', error)
     this.connectionStatus.connectionAttempts++
 
-    if (this.connectionStatus.connectionAttempts <= this.maxReconnectAttempts) {
+    if (this.connectionStatus.connectionAttempts <= 5) {
       setTimeout(
         () => {
           this.attemptReconnection().catch(err => {
@@ -302,7 +302,7 @@ class RealtimeConnectionManager {
         })
       })
     } catch (error) {
-      this.handleConnectionError(error)
+      this.handleConnectionError(error as Error)
     }
   }
 
@@ -334,9 +334,7 @@ class RealtimeConnectionManager {
 
     Object.entries(presenceState).forEach(([key, presences]) => {
       presences.forEach(presence => {
-        const typedPresence = presence as PresenceState & {
-          last_activity?: string
-        }
+        const typedPresence = presence as any
 
         users.push({
           userId: String(typedPresence.userId ?? ''),
@@ -356,7 +354,7 @@ class RealtimeConnectionManager {
    * Utility methods
    */
   private generateSubscriptionId(): string {
-    return `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    return `sub_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
   }
 
   private updateConnectionStatus(update: Partial<ConnectionStatus>): void {
