@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Modal } from '../../../components/ui/Modal'
 import { useCreateShoppingList } from '../hooks/useShoppingList'
 import { useDepartments } from '../../management/hooks/useDepartments'

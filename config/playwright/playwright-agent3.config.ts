@@ -30,7 +30,7 @@ function detectAppPort(): string {
           console.log(`✅ Agente 3 usa porta ${port}`);
           return port;
         }
-      } catch (error) {
+      } catch {
         // Porta non disponibile, prova la successiva
         continue;
       }
@@ -122,5 +122,4 @@ export default defineConfig({
   
   // Configurazione locale
   forbidOnly: !!process.env.CI,
-  reporter: process.env.CI ? 'github' : 'list',
 });

@@ -130,7 +130,7 @@ function isUserAuthorizedForEvent(
 }
 
 export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarFilters, refreshKey?: number): MacroCategoryResult {
-  const { user: _user, companyId, userRole } = useAuth()
+  const { companyId, userRole } = useAuth()
   const { maintenanceTasks, isLoading: maintenanceLoading } = useMaintenanceTasks()
   const { products, isLoading: productsLoading } = useProducts()
   const { tasks: genericTasks, isLoading: genericTasksLoading } = useGenericTasks()
@@ -508,7 +508,7 @@ function convertGenericTaskToItem(
       // _period_start = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 0, 0, 0)
       // _period_end = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 59)
       break
-    case 'weekly':
+    case 'weekly': {
       const dayOfWeek = dueDate.getDay() || 7
       const monday = new Date(dueDate)
       monday.setDate(dueDate.getDate() - (dayOfWeek - 1))
@@ -517,6 +517,7 @@ function convertGenericTaskToItem(
       sunday.setDate(monday.getDate() + 6)
       // _period_end = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate(), 23, 59, 59)
       break
+    }
     case 'monthly':
       // _period_start = new Date(dueDate.getFullYear(), dueDate.getMonth(), 1, 0, 0, 0)
       // _period_end = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, 0, 23, 59, 59)

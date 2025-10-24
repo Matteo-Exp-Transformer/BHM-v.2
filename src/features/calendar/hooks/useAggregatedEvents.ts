@@ -579,7 +579,7 @@ function convertGenericTaskToEvent(
       period_start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0)
       period_end = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 23, 59, 59)
       break
-    case 'weekly':
+    case 'weekly': {
       const dayOfWeek = startDate.getDay() || 7
       const monday = new Date(startDate)
       monday.setDate(startDate.getDate() - (dayOfWeek - 1))
@@ -588,6 +588,8 @@ function convertGenericTaskToEvent(
       sunday.setDate(monday.getDate() + 6)
       period_end = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate(), 23, 59, 59)
       break
+    }
+
     case 'monthly':
       period_start = new Date(startDate.getFullYear(), startDate.getMonth(), 1, 0, 0, 0)
       period_end = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0, 23, 59, 59)

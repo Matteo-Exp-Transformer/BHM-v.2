@@ -192,7 +192,7 @@ export const CalendarPage = () => {
           return eventDate.getMonth() === now.getMonth() && 
                  eventDate.getFullYear() === now.getFullYear()
         })
-      case 'week':
+      case 'week': {
         // Logica settimana corrente
         const weekStart = new Date(now)
         weekStart.setDate(now.getDate() - now.getDay() + 1) // Lunedì

@@ -14,7 +14,7 @@ import { execSync } from 'child_process';
  */
 
 // Auto-detect porta app con priorità per Agente 2
-function detectAppPort(): string {
+function _detectAppPort(): string {
   try {
     // Prima prova porta preferita per Agente 2
     const preferredPorts = ['3001', '3000', '3002'];
@@ -30,7 +30,7 @@ function detectAppPort(): string {
           console.log(`✅ Agente 2 usa porta ${port}`);
           return port;
         }
-      } catch (error) {
+      } catch {
         // Porta non disponibile, prova la successiva
         continue;
       }
@@ -136,5 +136,4 @@ export default defineConfig({
   
   // Configurazione locale
   forbidOnly: !!process.env.CI,
-  reporter: process.env.CI ? 'github' : 'list',
 });

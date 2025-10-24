@@ -310,7 +310,7 @@ export const useGenericTasks = () => {
           period_start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 0, 0, 0)
           period_end = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 23, 59, 59)
           break
-        case 'weekly':
+        case 'weekly': {
           // Periodo: settimana di riferimento (lunedì-domenica)
           const dayOfWeek = referenceDate.getDay() || 7 // 0=domenica -> 7
           const monday = new Date(referenceDate)
@@ -320,6 +320,8 @@ export const useGenericTasks = () => {
           sunday.setDate(monday.getDate() + 6)
           period_end = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate(), 23, 59, 59)
           break
+        }
+
         case 'monthly':
           // Periodo: mese di riferimento
           period_start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1, 0, 0, 0)

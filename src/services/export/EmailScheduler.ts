@@ -288,7 +288,7 @@ Sistema HACCP Business Manager
     const dateStr = new Date().toISOString().split('T')[0]
 
     switch (schedule.reportType) {
-      case 'haccp_pdf':
+      case 'haccp_pdf': {
         const pdfBlob = await haccpReportGenerator.generateMonthlyReport(
           schedule.companyId,
           new Date().getMonth() + 1,
@@ -298,8 +298,9 @@ Sistema HACCP Business Manager
           blob: pdfBlob,
           fileName: `Rapporto_HACCP_${dateStr}.pdf`,
         }
+      }
 
-      case 'excel_full':
+      case 'excel_full': {
         const excelBlob = await excelExporter.exportAllData(
           schedule.companyId,
           dateRange
@@ -308,8 +309,9 @@ Sistema HACCP Business Manager
           blob: excelBlob,
           fileName: `Export_HACCP_Completo_${dateStr}.xlsx`,
         }
+      }
 
-      case 'excel_temperature':
+      case 'excel_temperature': {
         const tempBlob = await excelExporter.exportTemperatureReadings(
           schedule.companyId,
           dateRange
@@ -318,8 +320,9 @@ Sistema HACCP Business Manager
           blob: tempBlob,
           fileName: `Controlli_Temperatura_${dateStr}.xlsx`,
         }
+      }
 
-      case 'custom':
+      case 'custom': {
         // Handle custom report configuration
         if (schedule.customConfig) {
           const customBlob = await excelExporter.exportData(
@@ -340,6 +343,7 @@ Sistema HACCP Business Manager
           blob: fallbackBlob,
           fileName: `Rapporto_HACCP_${dateStr}.pdf`,
         }
+      }
 
       default:
         throw new Error(`Unknown report type: ${schedule.reportType}`)
@@ -356,21 +360,25 @@ Sistema HACCP Business Manager
     let start: Date
 
     switch (frequency) {
-      case 'daily':
+      case 'daily': {
         start = new Date(now.getTime() - 24 * 60 * 60 * 1000)
         break
-      case 'weekly':
+      }
+      case 'weekly': {
         start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
         break
-      case 'monthly':
+      }
+      case 'monthly': {
         start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
         end.setDate(0) // Last day of previous month
         break
-      case 'quarterly':
+      }
+      case 'quarterly': {
         const currentQuarter = Math.floor(now.getMonth() / 3)
         start = new Date(now.getFullYear(), (currentQuarter - 1) * 3, 1)
         end.setMonth(currentQuarter * 3, 0) // Last day of previous quarter
         break
+      }
       default:
         start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) // Default 30 days
     }
@@ -495,7 +503,7 @@ Sistema HACCP Business Manager
         }
         break
 
-      case 'monthly':
+      case 'monthly': {
         if (dayOfMonth !== undefined) {
           nextSend.setDate(dayOfMonth)
           if (nextSend <= now) {
@@ -504,12 +512,14 @@ Sistema HACCP Business Manager
           }
         }
         break
+      }
 
-      case 'quarterly':
+      case 'quarterly': {
         const currentQuarter = Math.floor(now.getMonth() / 3)
         const nextQuarterMonth = (currentQuarter + 1) * 3
         nextSend.setMonth(nextQuarterMonth, dayOfMonth || 1)
         break
+      }
     }
 
     return nextSend

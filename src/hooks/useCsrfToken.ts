@@ -8,6 +8,8 @@
  * @author Agente 5 - Frontend Developer
  */
 
+/// <reference types="node" />
+
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 // import { authClient } from '@/features/auth/api/authClient'

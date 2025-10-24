@@ -8,6 +8,8 @@
  * @author Agente 5 - Frontend Developer
  */
 
+/// <reference types="node" />
+
 import { useState, useEffect, useCallback, useRef } from 'react'
 // import { authClient } from '@/features/auth/api/authClient'
 import type { UseRateLimitReturn, UseRateLimitOptions, RateLimitInfo } from '@/types/auth'

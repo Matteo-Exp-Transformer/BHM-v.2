@@ -224,7 +224,7 @@ export function useCalendar(options: UseCalendarOptions = {}) {
       if (!user) throw new Error('Not authenticated')
 
       switch (eventData.source) {
-        case 'maintenance':
+        case 'maintenance': {
           const { data: maintenanceData, error: maintenanceError } =
             await supabase
               .from('maintenance_tasks')
@@ -240,6 +240,7 @@ export function useCalendar(options: UseCalendarOptions = {}) {
 
           if (maintenanceError) throw maintenanceError
           return maintenanceData
+        }
 
         default:
           throw new Error(`Event source ${eventData.source} not implemented`)
@@ -261,7 +262,7 @@ export function useCalendar(options: UseCalendarOptions = {}) {
       const [source, id] = eventId.split('-')
 
       switch (source) {
-        case 'maintenance':
+        case 'maintenance': {
           const { data, error } = await supabase
             .from('maintenance_tasks')
             .update({
@@ -275,6 +276,7 @@ export function useCalendar(options: UseCalendarOptions = {}) {
 
           if (error) throw error
           return data
+        }
 
         default:
           throw new Error(`Event source ${source} not implemented`)
@@ -290,7 +292,7 @@ export function useCalendar(options: UseCalendarOptions = {}) {
       const [source, id] = eventId.split('-')
 
       switch (source) {
-        case 'maintenance':
+        case 'maintenance': {
           const { error } = await supabase
             .from('maintenance_tasks')
             .delete()
@@ -298,6 +300,7 @@ export function useCalendar(options: UseCalendarOptions = {}) {
 
           if (error) throw error
           break
+        }
 
         default:
           throw new Error(`Event source ${source} not implemented`)

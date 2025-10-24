@@ -13,7 +13,10 @@ export default [
       'Production/Sessione_di_lavoro/**',
       'Production/Test/**',
       'test-provisori/**',
-      'supabase/functions/**'
+      'supabase/functions/**',
+      'config/playwright/**',
+      'playwright*.config.ts',
+      'playwright.config.unified.ts'
     ] 
   },
   // Configuration for Playwright test files
