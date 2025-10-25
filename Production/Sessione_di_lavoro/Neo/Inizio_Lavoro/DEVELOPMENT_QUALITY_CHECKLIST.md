@@ -200,6 +200,142 @@ RememberMeService.ts: 95.2% coverage
 
 ---
 
+### ❌ ERRORE #6: Mock data lasciati nel codice finale
+
+**Problema**: Completare task con mock data invece di dati reali.
+
+**Esempio Sbagliato**:
+```javascript
+// File: src/components/Dashboard.tsx
+const mockUsers = [
+  { id: 1, name: 'Test User', role: 'admin' },
+  { id: 2, name: 'Mock Staff', role: 'staff' }
+]
+
+export function Dashboard() {
+  const users = mockUsers // ❌ MOCK DATA IN PRODUZIONE
+  return <UserList users={users} />
+}
+```
+
+**Perché è sbagliato**:
+- Mock data sono SOLO per testing/sviluppo temporaneo
+- Codice production deve usare dati reali (DB, API)
+- Mock data creano falsi positivi nei test
+- App non funziona con dati reali utente
+- Debito tecnico nascosto
+
+**Quando usare Mock Data** (SOLO temporaneamente):
+```javascript
+// ✅ OK durante sviluppo/test
+const mockUsers = [...]
+const users = import.meta.env.DEV ? mockUsers : await fetchRealUsers()
+```
+
+**Come Fare Correttamente**:
+
+**STEP 1: Identificare Mock Data**
+```bash
+# Cerca mock data nel codice
+grep -r "mock" src/ --include="*.tsx" --include="*.ts"
+grep -r "Mock" src/ --include="*.tsx" --include="*.ts"
+grep -r "MOCK" src/ --include="*.tsx" --include="*.ts"
+grep -r "fake" src/ --include="*.tsx" --include="*.ts"
+grep -r "dummy" src/ --include="*.tsx" --include="*.ts"
+```
+
+**STEP 2: Sostituire con Dati Reali**
+```javascript
+// ❌ PRIMA (mock data)
+const mockUsers = [
+  { id: 1, name: 'Test User', role: 'admin' }
+]
+const users = mockUsers
+
+// ✅ DOPO (dati reali)
+const { data: users, error } = await supabase
+  .from('users')
+  .select('id, name, role')
+
+if (error) throw error
+```
+
+**STEP 3: Se Dati Reali Non Disponibili**
+```markdown
+⚠️ IMPOSSIBILE COMPLETARE - DATI REALI MANCANTI
+
+**Mock Data Identificati**:
+- src/components/Dashboard.tsx: mockUsers (line 12)
+- src/features/staff/StaffList.tsx: mockStaff (line 45)
+
+**Dati Reali Richiesti**:
+1. **users table** - Schema:
+   - id: UUID
+   - name: string
+   - role: 'admin' | 'responsabile' | 'dipendente'
+   - Query: SELECT id, name, role FROM users
+
+2. **staff table** - Schema:
+   - id: UUID
+   - user_id: UUID (FK)
+   - department: string
+   - Query: SELECT * FROM staff WHERE company_id = ?
+
+**Richiesta all'utente**:
+- Fornire schema tabelle o dati reali
+- Oppure: Confermare uso mock data temporaneo con flag DEV
+- Oppure: Approvare creazione tabelle/seed data
+
+**Blocco Task**: Non posso dichiarare completato senza dati reali
+```
+
+**STEP 4: Cleanup Pre-Completamento**
+```markdown
+✅ CHECKLIST MOCK DATA CLEANUP
+
+**Prima di dichiarare task COMPLETATO**:
+- [ ] Cercato tutti mock data nel codice (grep -r "mock|Mock|MOCK|fake|dummy")
+- [ ] Sostituiti con dati reali (DB query, API calls)
+- [ ] Se dati reali non disponibili: SEGNALATO e BLOCCATO task
+- [ ] Test funzionano con dati reali (non solo mock)
+- [ ] Nessun mock data in codice production (solo in test files)
+- [ ] Flag DEV usato se mock necessari per sviluppo locale
+
+**Se mock data DEVONO rimanere** (eccezioni rare):
+- [ ] Documentato PERCHÉ (es: demo mode, fallback offline)
+- [ ] Isolati con flag environment (import.meta.env.DEV)
+- [ ] Commentati chiaramente: // MOCK DATA - SOLO DEV
+- [ ] Avvisato nel report finale: "Mock data presenti con flag DEV"
+```
+
+**Template Report con Mock Data**:
+```markdown
+## ⚠️ MOCK DATA CLEANUP
+
+**Mock Data Identificati**: 3 occorrenze
+**Mock Data Sostituiti**: 3/3 (100%) ✅
+
+**Dettaglio**:
+1. src/components/Dashboard.tsx:12
+   - ❌ Prima: mockUsers array
+   - ✅ Dopo: supabase.from('users').select()
+   - Verified: Query returns real data ✅
+
+2. src/features/staff/StaffList.tsx:45
+   - ❌ Prima: mockStaff array
+   - ✅ Dopo: supabase.from('staff').select()
+   - Verified: Query returns real data ✅
+
+3. src/lib/constants.tsx:8
+   - ❌ Prima: MOCK_DEPARTMENTS array
+   - ✅ Dopo: supabase.from('departments').select()
+   - Verified: Query returns real data ✅
+
+**Status**: ✅ Nessun mock data in production code
+```
+
+---
+
 ## ✅ CHECKLIST OBBLIGATORIA PRE-REPORT
 
 ### Prima di dichiarare "COMPLETATO":
@@ -228,6 +364,13 @@ RememberMeService.ts: 95.2% coverage
 - [ ] Dettagli completi per ogni problema
 - [ ] Impatto e priorità chiari
 - [ ] Prossimi step actionable
+
+**Mock Data Check** (OBBLIGATORIO):
+- [ ] Cercato tutti mock data nel codice (grep -r "mock|Mock|MOCK|fake|dummy")
+- [ ] Nessun mock data in production code (solo in test files o con flag DEV)
+- [ ] Se mock data presenti: DOCUMENTATO perché + avvisato nel report
+- [ ] Se dati reali mancanti: BLOCCATO task + richiesto all'utente
+- [ ] Test verificati con dati reali (non solo mock)
 
 ---
 
@@ -355,6 +498,12 @@ RememberMeService.ts: 95.2% coverage
 8. **"Non sono sicuro"**
    - Usa: Verifica fino a essere sicuro, poi riporta
 
+9. **"Useremo mock data per ora"** (senza piano sostituzione)
+   - Usa: Sostituisci con dati reali O blocca task + richiedi dati
+
+10. **"Mock data temporanei"** (senza flag DEV o cleanup plan)
+   - Usa: Implementa flag DEV + documenta cleanup plan
+
 ---
 
 ## ✅ FRASI DA USARE
@@ -375,6 +524,15 @@ RememberMeService.ts: 95.2% coverage
 
 5. **"Test fallito: test_sync_retry (timeout 5000ms, line 145)"**
    - Dettaglio completo, actionable
+
+6. **"Mock data sostituiti con dati reali (3/3 occorrenze, 100%)"**
+   - Cleanup completo documentato
+
+7. **"Mock data necessari: isolati con flag DEV e documentati"**
+   - Eccezione giustificata, controllata
+
+8. **"Task bloccato: dati reali mancanti (richiesto schema users table)"**
+   - Onesto, blocca invece di usare mock
 
 ---
 
@@ -452,6 +610,11 @@ Numeri ESATTI
 8. **Mai approvazione condizionale senza follow-up**
 9. **Sempre status onesto (completato/parziale/in corso)**
 10. **Sempre azioni next step chiare**
+11. **Mai lasciare mock data in production code**
+12. **Sempre sostituire mock con dati reali O bloccare task**
+13. **Se mock necessari: flag DEV + documentazione chiara**
+14. **Sempre grep mock data prima di dichiarare completato**
+15. **Sempre testare con dati reali, non solo mock**
 
 ---
 
