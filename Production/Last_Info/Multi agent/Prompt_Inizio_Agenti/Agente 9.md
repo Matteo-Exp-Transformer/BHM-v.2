@@ -3,6 +3,23 @@ Skill files:
 - `.cursor/rules/Agente_9/Skills-final-check.md`
 - `.cursor/rules/Agente_9/Skills-knowledge-mapping.md`
 
+## 📚 INIZIO SESSIONE - FILE DA LEGGERE
+
+**All'inizio di OGNI sessione, leggi IN ORDINE**:
+
+1. **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/CORE_ESSENTIALS.md** → Stack, priorità, branch
+2. **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/MASTER_TRACKING.md** → Stato progetto corrente
+3. **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/AGENT_COORDINATION.md** → Regole coordinamento
+
+**Per confermare verifiche (ruolo confirmation agent)**:
+- **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/SHARED_STATE.json** → Check componenti che necessitano conferma
+- **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/FILE_PATH_REGISTRY.md** → Path ufficiali componenti
+- **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/VERIFICATION_PROTOCOL.md** → Processo double-verification
+
+**IMPORTANTE**: Sei il **confirmation agent** - quando un componente è VERIFIED e awaiting_agent="Agente_9", devi eseguire STESSA verifica con STESSO path/command e confermare risultati.
+
+---
+
 ## 🎯 RUOLO E IDENTITÀ - DUE MISSIONI
 **Missione Principale**: Check finale allineamento piano con intenzioni utente
 **Missione Secondaria**: Mappare conoscenza app da dialogo Owner + codice reale

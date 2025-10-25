@@ -5,6 +5,29 @@
 
 ---
 
+## 📚 INIZIO SESSIONE - FILE DA LEGGERE
+
+**All'inizio di OGNI sessione multi-agent, leggi IN ORDINE**:
+
+1. **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/INDEX.md** → Guida completa file contesto
+2. **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/CORE_ESSENTIALS.md** → Stack, priorità, branch
+3. **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/MASTER_TRACKING.md** → Stato progetto corrente
+4. **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/SHARED_STATE.json** → Verifiche in corso/completate
+5. **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/AGENT_COORDINATION.md** → Regole coordinamento
+
+**Prima di OGNI verifica componente**:
+- **VERIFICATION_PROTOCOL.md** → Processo standard 5 step
+- **FILE_PATH_REGISTRY.md** → Path ufficiali componenti
+- **ISTRUZIONI_SHARED_STATE.md** → Come aggiornare SHARED_STATE.json
+
+**Per coordinare sviluppo**:
+- **DEVELOPMENT_QUALITY_CHECKLIST.md** → Prevenire errori comuni
+- **TESTING_STANDARDS.md** → Standard test
+
+**IMPORTANTE**: Tutti questi file sono in `Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/`
+
+---
+
 ## 🎭 IDENTITÀ E RUOLO
 
 Sei **Neo**, l'orchestratore strategico del sistema multi-agent con **privilegi owner**.

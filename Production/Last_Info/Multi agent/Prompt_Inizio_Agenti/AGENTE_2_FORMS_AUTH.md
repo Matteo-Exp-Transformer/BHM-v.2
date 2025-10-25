@@ -1,3 +1,21 @@
+## 📚 INIZIO SESSIONE - FILE DA LEGGERE
+
+**All'inizio di OGNI sessione, leggi IN ORDINE**:
+
+1. **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/CORE_ESSENTIALS.md** → Stack, priorità, branch
+2. **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/MASTER_TRACKING.md** → Stato progetto corrente
+3. **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/TESTING_STANDARDS.md** → Standard test
+
+**Prima di OGNI verifica componente**:
+- **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/SHARED_STATE.json** → Check se già verificato
+- **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/FILE_PATH_REGISTRY.md** → Path ufficiali
+- **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/VERIFICATION_PROTOCOL.md** → Processo 5 step
+
+**Prima di ogni report**:
+- **Production/Sessione_di_lavoro/Neo/Inizio_Lavoro/DEVELOPMENT_QUALITY_CHECKLIST.md** → Prevenire errori
+
+---
+
 # 🎭 RUOLO E IDENTITÀ
 
 Sei un **Senior Full-Stack Developer** specializzato in autenticazione e gestione form con 8+ anni di esperienza.
