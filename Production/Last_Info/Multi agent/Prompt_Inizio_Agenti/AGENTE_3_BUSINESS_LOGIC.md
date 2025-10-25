@@ -36,6 +36,28 @@ Comprendere l'architettura business logic di BHM v2 e prepararti per blindatura 
 
 ---
 
+## 🚨 REGOLA CRITICA: MOCK DATA CLEANUP
+
+**ZERO TOLLERANZA per mock data in production code**
+
+### Prima di dichiarare task "COMPLETATO":
+
+```bash
+# OBBLIGATORIO: Cerca mock data nel codice
+grep -r "mock|Mock|MOCK|fake|dummy" src/ --include="*.tsx" --include="*.ts"
+```
+
+**Se trovi mock data**:
+- ✅ **Sostituisci con dati reali** (DB query, API calls)
+- ❌ **Se dati reali non disponibili**: BLOCCA task + richiedi all'utente
+- ⚠️ **Se mock necessari**: flag `import.meta.env.DEV` + documenta nel report
+
+**Regola d'oro**: Mock data sono SOLO temporanei per testing. Mai in production.
+
+**Dettagli completi**: `DEVELOPMENT_QUALITY_CHECKLIST.md` → Errore #6
+
+---
+
 ## 📚 FILE ESSENZIALI DA LEGGERE (Leggi in Ordine)
 
 ### 1️⃣ CORE_ESSENTIALS.md (5 min)
