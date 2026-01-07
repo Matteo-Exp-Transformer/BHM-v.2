@@ -12,9 +12,7 @@
 
 | ID | Severity | Area | Descrizione | File:Riga | Data |
 |----|----------|------|-------------|-----------|------|
-| BUG-001 | HIGH | calendar | window.location.reload() invece di invalidazione query | CalendarPage.tsx:381 | 2026-01-06 |
-| BUG-002 | MEDIUM | supabase | Type any nel client Supabase bypassa type-safety | lib/supabase/client.ts:17 | 2026-01-06 |
-| BUG-003 | MEDIUM | calendar | Import diretto invece di lazy per CalendarPage | App.tsx:54-56 | 2026-01-06 |
+| BUG-004 | MEDIUM | types | Type mismatches tra custom types e database.types.ts generati | Multiple files | 2026-01-07 |
 
 ## TODO da Codice (35 totali)
 
@@ -88,10 +86,36 @@
 | utils/onboardingHelpers.ts | 2043 | DEBUG end marker |
 | utils/onboardingHelpers.ts | 2070 | DEBUG localStorage check |
 
+## Tech Debt da Risolvere
+
+### TYPE-001: Migrazione a database.types.ts (MEDIUM)
+**Descrizione**: Dopo generazione types da Supabase, ci sono ~50 incompatibilità tra custom types e types generati.
+
+**Aree coinvolte**:
+- `useStaff.ts`: role field (string vs union type)
+- `useProducts.ts`: company_id nullability, allergen types
+- `useCategories.ts`: allergen_info missing
+- `useShoppingLists.ts`: shopping_list_id field mismatch
+- `CompanyConfiguration.tsx`: Company type mismatch
+- `HACCPSettings.tsx`: HACCPConfig structure mismatch
+- `NotificationPreferences.tsx`: notification_preferences table missing in generated types
+
+**Soluzione**:
+1. Allineare custom types in `src/types/*.ts` con `database.types.ts`
+2. Aggiungere helper types per compatibilità transitoria
+3. Migrare gradualmente ogni hook per usare types generati
+4. Considerare aggiunta tabella `notification_preferences` al DB
+
+**Priorità**: MEDIUM - L'app funziona, ma type-safety non è completa
+
+---
+
 ## Bug Risolti
 | ID | Descrizione | Risolto da | Data |
 |----|-------------|------------|------|
-| - | - | - | - |
+| BUG-001 | window.location.reload() invece di invalidazione query | Refactoring v2 | 2026-01-07 |
+| BUG-002 | Type any nel client Supabase bypassa type-safety | Refactoring v2 | 2026-01-07 |
+| BUG-003 | Import diretto invece di lazy per CalendarPage | Refactoring v2 | 2026-01-07 |
 
 
 
