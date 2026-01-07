@@ -1,10 +1,3 @@
-// LOCKED: 2025-01-16 - PermissionLogic (useAuth) completamente testato e blindato
-// Test eseguiti: 26 test completi, tutti passati (100%)
-// Test completi: test-funzionale.js
-// Funzionalità testate: UserRole enum, UserPermissions interface, getPermissionsFromRole, hasPermission, hasRole, hasAnyRole, hasManagementRole, isAuthorized
-// Combinazioni testate: tutti i ruoli (admin/responsabile/dipendente/collaboratore/guest), tutte le permissioni, validazioni input, edge cases
-// NON MODIFICARE SENZA PERMESSO ESPLICITO
-
 /**
  * 🔐 useAuth Hook - Supabase Auth + Multi-Company
  * 

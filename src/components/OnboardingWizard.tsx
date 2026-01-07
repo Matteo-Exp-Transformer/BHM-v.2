@@ -1,8 +1,3 @@
-// LOCKED: 2025-01-23 - OnboardingWizard blindata da Agente 2 - Systems Blueprint
-// Test completi: funzionale.js, validazione.js, edge-cases.js, completamento.js
-// Funzionalità: wizard principale onboarding, navigazione step, salvataggio localStorage, gestione errori
-// Combinazioni testate: navigazione step, prefill dati, completamento onboarding, gestione errori
-// NON MODIFICARE SENZA PERMESSO ESPLICITO
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'

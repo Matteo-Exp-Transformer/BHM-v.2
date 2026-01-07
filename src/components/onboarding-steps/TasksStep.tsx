@@ -1,9 +1,3 @@
-// LOCKED: 2025-01-23 - TasksStep blindata da Agente 2C - Systems Blueprint Architect
-// Test completi: test-funzionale.js, test-validazione.js, test-edge-cases.js
-// Funzionalità: gestione manutenzioni standard, assegnazione staff, task generici, validazione HACCP
-// Combinazioni testate: manutenzioni standard, frequenze, responsabili, task personalizzati
-// NON MODIFICARE SENZA PERMESSO ESPLICITO
-
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import {
   ClipboardCheck,

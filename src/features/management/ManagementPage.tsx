@@ -1,9 +1,3 @@
-// LOCKED: 2025-01-16 - PermissionLogic (ManagementPage) completamente testato e blindato
-// Test eseguiti: 26 test completi, tutti passati (100%)
-// Funzionalità testate: controllo ruoli admin/responsabile, gestione staff e reparti, autorizzazione accesso
-// Combinazioni testate: hasRole(['admin', 'responsabile']), controllo permissioni, UI conditional rendering
-// NON MODIFICARE SENZA PERMESSO ESPLICITO
-
 import { Users, Building2, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import DepartmentManagement from './components/DepartmentManagement'

@@ -1,5 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 
+// TODO: Generate proper types from database schema
+// Run: npx supabase gen types typescript --project-id [PROJECT_ID] > src/types/database.types.ts
+// Then import: import type { Database } from '@/types/database.types'
+// And type the client: SupabaseClient<Database>
+
 // Supabase configuration
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -14,6 +19,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Create Supabase client (singleton pattern)
+// TODO: Replace 'any' with proper type after generating database.types.ts
+// Should be: SupabaseClient<Database> | null
 let supabaseInstance: any = null
 // let supabaseAdminInstance: any = null
 

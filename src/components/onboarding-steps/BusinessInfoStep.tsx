@@ -117,21 +117,6 @@ const BusinessInfoStep = ({
     updateField(field, value)
   }
 
-  const prefillSampleData = () => {
-    const sampleData = {
-      name: 'Al Ritrovo SRL',
-      address: 'Via Roma 123, 40121 Bologna BO',
-      phone: '+39 051 1234567',
-      email: 'info@alritrovo.it',
-      vat_number: 'IT01234567890',
-      business_type: 'ristorante',
-      established_date: '2020-01-15',
-      license_number: 'RIS-2020-001',
-    }
-    setFormData(sampleData)
-    onUpdate(sampleData)
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -146,17 +131,6 @@ const BusinessInfoStep = ({
           Inserisci i dati principali della tua azienda per configurare il
           sistema HACCP
         </p>
-      </div>
-
-      {/* Quick Fill Button */}
-      <div className="flex justify-center">
-        <button
-          type="button"
-          onClick={prefillSampleData}
-          className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-        >
-          🚀 Compila con dati di esempio
-        </button>
       </div>
 
       {/* Form */}

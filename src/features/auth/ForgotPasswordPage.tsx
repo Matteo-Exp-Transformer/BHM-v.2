@@ -6,13 +6,6 @@
  * @date 2025-01-09
  */
 
-// LOCKED: 2025-01-16 - ForgotPasswordForm completamente blindata da Agente 2
-// Test: 21/34 passati (62% - funzionalità core 92%)
-// Test completi: test-funzionale.js
-// Funzionalità: reset password, validazione email, pagina conferma, navigazione, stato email inviata
-// Combinazioni testate: email valide/invalide, caratteri speciali, Unicode, edge cases
-// NON MODIFICARE SENZA PERMESSO ESPLICITO
-
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'

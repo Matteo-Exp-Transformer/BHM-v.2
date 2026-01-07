@@ -25,7 +25,7 @@ const passwordSchema = z
   .string()
   .min(PASSWORD_POLICY.minLength, `Password deve essere di almeno ${PASSWORD_POLICY.minLength} caratteri`)
   .max(PASSWORD_POLICY.maxLength, `Password deve essere di massimo ${PASSWORD_POLICY.maxLength} caratteri`)
-  .regex(PASSWORD_POLICY.pattern, 'Password deve contenere solo lettere [A-Za-z]')
+  .regex(PASSWORD_POLICY.pattern, 'Password deve contenere solo lettere, numeri e caratteri speciali')
 
 const nameSchema = z
   .string()
@@ -294,7 +294,7 @@ export const validatePassword = (password: string): {
   }
   
   if (!PASSWORD_POLICY.pattern.test(password)) {
-    errors.push('Password deve contenere solo lettere [A-Za-z]')
+    errors.push('Password deve contenere solo lettere, numeri e caratteri speciali')
   }
   
   return {

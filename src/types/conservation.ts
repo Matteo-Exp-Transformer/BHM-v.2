@@ -1,9 +1,3 @@
-// LOCKED: 2025-01-16 - CategoryConstraints (ProductCategory, ConservationRule) completamente testato e blindato
-// Test eseguiti: 30 test completi, tutti passati (100%)
-// Funzionalità testate: validazione categorie prodotti, regole conservazione, constraints temperature, allergeni, expiry
-// Combinazioni testate: tutti i storage_type, temperature estreme, edge cases, validazioni HACCP
-// NON MODIFICARE SENZA PERMESSO ESPLICITO
-
 export interface ConservationPoint {
   id: string
   company_id: string

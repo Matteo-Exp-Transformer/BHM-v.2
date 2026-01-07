@@ -1,7 +1,3 @@
-// LOCKED: 2025-01-17 - StaffStep blindata da Agente 2 - Forms/Auth
-// Test completi: funzionale.js, validazione.js, edge-cases.js
-// Funzionalità: gestione staff, primo membro admin, validazione HACCP, categorie/ruoli
-// Combinazioni testate: primo membro precompilato, aggiunta membri, validazione email/telefono/HACCP, caratteri speciali, Unicode, edge cases
 import React, { useEffect, useMemo, useState } from 'react'
 import { Plus, Trash2, Edit2, ShieldAlert, ShieldCheck, Lock } from 'lucide-react'
 

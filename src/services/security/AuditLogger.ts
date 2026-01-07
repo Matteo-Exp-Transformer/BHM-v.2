@@ -1,9 +1,3 @@
-// LOCKED: 2025-01-16 - PermissionLogic (AuditLogger) completamente testato e blindato
-// Test eseguiti: 26 test completi, tutti passati (100%)
-// Funzionalità testate: AuditLog interface, AuditEvent enum, AuditCategory enum, AuditFilter interface, ComplianceReport interface, AuditViolation interface
-// Combinazioni testate: tutti gli eventi di audit, categorie di sicurezza, livelli di severità, standard di compliance
-// NON MODIFICARE SENZA PERMESSO ESPLICITO
-
 /**
  * B.9.1 Enterprise Audit Logger
  * Comprehensive audit logging for HACCP compliance and security tracking

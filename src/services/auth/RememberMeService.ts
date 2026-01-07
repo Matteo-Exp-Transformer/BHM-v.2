@@ -127,6 +127,8 @@ class RememberMeService {
     const isValid = this.currentSession.expiresAt > now
 
     if (!isValid) {
+      // Clear the session immediately for expired sessions
+      this.currentSession = null
       this.disableRememberMe()
       return false
     }
@@ -146,6 +148,8 @@ class RememberMeService {
 
     const now = Date.now()
     if (this.currentSession.expiresAt <= now) {
+      // Clear the session immediately for expired sessions
+      this.currentSession = null
       this.disableRememberMe()
       return null
     }
@@ -157,6 +161,10 @@ class RememberMeService {
    * Verifica se la sessione deve essere rinnovata
    */
   public shouldRefreshSession(): boolean {
+    if (!this.currentSession) {
+      this.loadFromStorage()
+    }
+    
     if (!this.currentSession) return false
 
     const now = Date.now()
@@ -210,6 +218,10 @@ class RememberMeService {
    * Ottieni tempo rimanente alla scadenza
    */
   public getTimeUntilExpiry(): number {
+    if (!this.currentSession) {
+      this.loadFromStorage()
+    }
+    
     if (!this.currentSession) return 0
 
     const now = Date.now()
@@ -231,6 +243,13 @@ class RememberMeService {
       shouldRefresh: this.shouldRefreshSession(),
       sessionInfo: this.getSessionInfo(),
     }
+  }
+
+  /**
+   * Reset the service state (for testing purposes)
+   */
+  public reset(): void {
+    this.currentSession = null
   }
 }
 

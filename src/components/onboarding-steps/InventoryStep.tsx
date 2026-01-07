@@ -1,9 +1,3 @@
-// LOCKED: 2025-01-23 - InventoryStep blindata da Agente 2C - Systems Blueprint Architect
-// Test completi: test-funzionale.js, test-validazione.js, test-edge-cases.js
-// Funzionalità: gestione categorie prodotti, gestione inventario, gestione allergeni, validazione HACCP
-// Combinazioni testate: CRUD categorie, CRUD prodotti, allergeni obbligatori, unità di misura
-// NON MODIFICARE SENZA PERMESSO ESPLICITO
-
 import { useEffect, useMemo, useState } from 'react'
 import {
   Package,

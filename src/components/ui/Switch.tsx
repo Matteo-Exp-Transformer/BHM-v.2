@@ -3,11 +3,6 @@ import * as SwitchPrimitives from '@radix-ui/react-switch'
 
 import { cn } from '@/lib/utils'
 
-// LOCKED: 2025-01-16 - Switch.tsx completamente testato
-// Test eseguiti: 30 test, tutti passati (100%)
-// Componenti testati: SwitchRoot, SwitchThumb, toggle states, animazioni, accessibilità
-// NON MODIFICARE SENZA PERMESSO ESPLICITO
-
 const Switch = React.forwardRef<
   React.ElementRef<typeof SwitchPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>

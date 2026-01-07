@@ -318,11 +318,11 @@ describe('BackgroundSyncService', () => {
     })
 
     it('should queue items for sync', async () => {
-      // const result = await backgroundSyncService!.queueForSync(
-      //   'temperature_readings',
-      //   'create',
-      //   { temperature: 4.5 }
-      // )
+      await backgroundSyncService!.queueForSync(
+        'temperature_readings',
+        'create',
+        { temperature: 4.5 }
+      )
 
       expect(indexedDBManager.addToSyncQueue).toHaveBeenCalledWith(
         expect.objectContaining({

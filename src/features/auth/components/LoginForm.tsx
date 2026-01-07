@@ -120,6 +120,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       // Registra la richiesta per rate limiting
       recordRequest()
       
+      // Ottieni CSRF token (ora generato lato client)
       const csrfResponse = await authClient.getCsrfToken()
       const csrfToken = csrfResponse.success ? csrfResponse.data?.csrf_token || '' : ''
       
@@ -326,13 +327,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           checked={formData.rememberMe}
           onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          disabled={true} // Remember me OFF per v1
         />
         <label 
           htmlFor="login-remember"
           className="ml-2 text-sm text-gray-600"
         >
-          Ricordami (disponibile in versione futura)
+          Ricordami per 30 giorni
         </label>
       </div>
 

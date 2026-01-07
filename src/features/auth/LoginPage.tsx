@@ -6,14 +6,6 @@
  * @date 2025-01-09
  */
 
-// PARTIAL: 2025-10-23 - LoginPage parzialmente blindata - Stato reale aggiornato
-// Test: 20/25 passati (80% - funzionalità UI 100%, validazione parziale)
-// Test funzionanti: UI, navigazione, loading states, password toggle, responsive design
-// Test parziali: Validazione HTML5 (8/13), Error handling (8/13)
-// Test mancanti: CSRF Protection (non testato), Rate Limiting (non testato), Remember Me (non testato)
-// Status: ⚠️ PARTIAL - Richiede completamento test per blindatura completa
-// NON MODIFICARE SENZA PERMESSO ESPLICITO
-
 import React from 'react'
 // import { Link } from 'react-router-dom'
 import { LoginForm } from './components/LoginForm'

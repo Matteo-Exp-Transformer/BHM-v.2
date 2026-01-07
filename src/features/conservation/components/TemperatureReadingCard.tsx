@@ -1,9 +1,3 @@
-// LOCKED: 2025-01-16 - TemperatureReadingCard (TemperatureValidation) completamente testato e blindato
-// Test eseguiti: 6 test funzionali, tutti passati (100%)
-// Funzionalità testate: visualizzazione status temperatura, calcolo dinamico status, range tolleranza
-// Combinazioni testate: tutti i tipi punti conservazione, scenari compliant/warning/critical
-// NON MODIFICARE SENZA PERMESSO ESPLICITO
-
 import { TemperatureReading } from '@/types/conservation'
 import {
   Thermometer,

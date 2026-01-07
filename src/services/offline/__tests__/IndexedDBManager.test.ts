@@ -45,10 +45,30 @@ const mockOpenDBRequest = () => {
   request.onsuccess = null
   request.onerror = null
   request.onupgradeneeded = null
+  
   setTimeout(() => {
+    // Set the result to mockDB before calling onupgradeneeded
+    //@ts-expect-error
+    request.result = mockDB
+    
     if (request.onupgradeneeded) {
-      request.onupgradeneeded({ target: request } as unknown as IDBVersionChangeEvent)
+      const event = {
+        target: request,
+        currentTarget: request,
+        type: 'upgradeneeded',
+        bubbles: false,
+        cancelable: false,
+        defaultPrevented: false,
+        eventPhase: 2,
+        isTrusted: true,
+        timeStamp: Date.now(),
+        oldVersion: 0,
+        newVersion: 1
+      } as unknown as IDBVersionChangeEvent
+      
+      request.onupgradeneeded(event)
     }
+    
     if (request.onsuccess) {
       request.onsuccess(new Event('success'))
     }
@@ -61,10 +81,21 @@ let objectStores: Record<string, IDBObjectStore>
 
 beforeAll(() => {
   objectStores = {}
+  
+  // Create a proper DOMStringList mock
+  const objectStoreNamesList = {
+    length: 0,
+    contains: (name: string) => Boolean(objectStores[name]),
+    item: (index: number) => Object.keys(objectStores)[index] || null,
+    [Symbol.iterator]: function* () {
+      for (const name of Object.keys(objectStores)) {
+        yield name
+      }
+    }
+  }
+  
   mockDB = {
-    objectStoreNames: {
-      contains: (name: string) => Boolean(objectStores[name]),
-    },
+    objectStoreNames: objectStoreNamesList as unknown as DOMStringList,
     createObjectStore: vi.fn((name: string) => {
       const store = {
         createIndex: vi.fn(),
@@ -76,6 +107,8 @@ beforeAll(() => {
         index: vi.fn(() => ({ getAll: vi.fn(() => createMockRequest([])) })),
       } as unknown as IDBObjectStore
       objectStores[name] = store
+      // Update the length of objectStoreNames
+      objectStoreNamesList.length = Object.keys(objectStores).length
       return store
     }),
     transaction: vi.fn((/* names: string[] */) => ({
@@ -105,20 +138,7 @@ describe('IndexedDBManager', () => {
 
   it('initializes database and creates stores on upgrade', async () => {
     const openSpy = vi.spyOn(indexedDB, 'open')
-    openSpy.mockImplementation(() => {
-      const request = mockOpenDBRequest()
-      setTimeout(() => {
-        if (request.onupgradeneeded) {
-          //@ts-expect-error
-          request.result = mockDB
-          request.onupgradeneeded({ target: request } as unknown as IDBVersionChangeEvent)
-        }
-        if (request.onsuccess) {
-          request.onsuccess(new Event('success'))
-        }
-      }, 0)
-      return request
-    })
+    openSpy.mockImplementation(() => mockOpenDBRequest())
 
     await expect(indexedDBManager.init()).resolves.toBeUndefined()
     expect(mockDB.createObjectStore).toHaveBeenCalled()

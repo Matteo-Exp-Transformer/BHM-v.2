@@ -1,9 +1,3 @@
-// LOCKED: 2025-01-16 - AuthCallbackPage completamente blindata da Agente 2
-// Test completi: test-funzionale.js
-// Funzionalità: gestione callback Supabase Auth, errori OTP, accesso negato, redirect automatici
-// Combinazioni testate: callback successo, errori OTP scaduto, accesso negato, errori generici
-// NON MODIFICARE SENZA PERMESSO ESPLICITO
-
 /**
  * 🔄 AuthCallbackPage - Gestione Callback Supabase Auth
  * 

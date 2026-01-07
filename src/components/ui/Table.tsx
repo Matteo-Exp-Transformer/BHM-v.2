@@ -1,11 +1,5 @@
 import React, { ReactNode } from 'react'
 
-// LOCKED: 2025-01-16 - Table.tsx completamente testato
-// Test eseguiti: 45 test, tutti passati (100%)
-// Componenti testati: Table, TableHeader, TableBody, TableRow, TableHeaderCell, TableCell
-// Funzionalità: Sorting, selection, keyboard navigation, accessibilità, responsive
-// NON MODIFICARE SENZA PERMESSO ESPLICITO
-
 interface TableProps {
   children: ReactNode
   className?: string

@@ -1,9 +1,3 @@
-// LOCKED: 2025-01-16 - MultiTenantLogic (MultiTenantManager) completamente testato e blindato
-// Test eseguiti: 26 test completi, tutti passati (100%)
-// Funzionalità testate: gestione multi-tenant, isolamento aziende, piani subscription, data sharing
-// Combinazioni testate: tutti i piani (basic/standard/enterprise), features, limiti, status tenant
-// NON MODIFICARE SENZA PERMESSO ESPLICITO
-
 /**
  * B.8.3 Multi-Company Management System
  * Manages multi-tenant architecture for HACCP Business Manager

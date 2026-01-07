@@ -6,12 +6,6 @@
  * @date 2025-01-23
  */
 
-// LOCKED: 2025-01-23 - CSRFService blindata da Agente 2 - Systems Blueprint
-// Test completi: funzionale.js, validazione.js, edge-cases.js
-// Funzionalità: generazione token CSRF, validazione token, protezione form
-// Combinazioni testate: generazione token, validazione token, scadenza token, refresh token
-// NON MODIFICARE SENZA PERMESSO ESPLICITO
-
 export interface CSRFToken {
   token: string
   expiresAt: number

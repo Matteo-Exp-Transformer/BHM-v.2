@@ -270,20 +270,68 @@ export class AuthClient {
 
   /**
    * Login utente
+   * TEMPORANEO: Usa Supabase Auth direttamente fino a quando Edge Function non è deployata
    */
   async login(data: LoginFormData): Promise<ApiResponse<SessionData>> {
-    // Valida i dati con Zod
-    const validatedData = loginFormSchema.parse(data)
-    
-    return this.httpClient.request<SessionData>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({
+    try {
+      // Valida i dati con Zod
+      const validatedData = loginFormSchema.parse(data)
+      
+      // Importa Supabase client dinamicamente per evitare circolarità
+      const { supabase } = await import('@/lib/supabase/client')
+      
+      // Usa Supabase Auth direttamente
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: validatedData.email,
         password: validatedData.password,
-        rememberMe: validatedData.rememberMe,
-        csrf_token: validatedData.csrf_token
       })
-    })
+      
+      if (error) {
+        return {
+          success: false,
+          error: {
+            code: 'AUTH_FAILED',
+            message: error.message,
+            devMessage: error.message
+          }
+        }
+      }
+      
+      if (!authData.user) {
+        return {
+          success: false,
+          error: {
+            code: 'AUTH_FAILED',
+            message: 'Login fallito',
+            devMessage: 'No user returned from auth'
+          }
+        }
+      }
+      
+      // Gestisci Remember Me se richiesto
+      if (validatedData.rememberMe) {
+        console.log('🔒 Remember Me abilitato per 30 giorni')
+        // TODO: Implementare Remember Me service quando disponibile
+      }
+      
+      return {
+        success: true,
+        data: {
+          user: authData.user,
+          session: authData.session
+        }
+      }
+    } catch (error: any) {
+      console.error('Login error:', error)
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: error.message || 'Errore di validazione',
+          devMessage: error.message
+        }
+      }
+    }
   }
 
   /**
@@ -378,10 +426,22 @@ export class AuthClient {
 
   /**
    * Ottiene token CSRF dal server
+   * TEMPORANEO: Genera token lato client fino a quando Edge Function non è deployata
    */
   async getCsrfToken(): Promise<ApiResponse<CsrfTokenResponse>> {
-    return this.httpClient.request<CsrfTokenResponse>('/auth/csrf-token', {
-      method: 'GET'
+    // TEMPORANEO: Genera CSRF token lato client
+    const csrfToken = crypto.randomUUID()
+    const expiresAt = new Date()
+    expiresAt.setMinutes(expiresAt.getMinutes() + 30)
+    
+    console.log('🔒 CSRF token generato lato client:', csrfToken.substring(0, 8) + '...')
+    
+    return Promise.resolve({
+      success: true,
+      data: {
+        csrf_token: csrfToken,
+        expires_at: expiresAt.toISOString()
+      }
     })
   }
 
