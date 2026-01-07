@@ -39,6 +39,17 @@ export const supabase = (() => {
         },
       },
     })
+
+    // ✅ Gestione globale errori refresh token
+    if (typeof window !== 'undefined') {
+      supabaseInstance.auth.onAuthStateChange((event, session) => {
+        // Se il refresh token fallisce, la sessione diventa null
+        // Questo viene gestito automaticamente da Supabase, ma possiamo loggare per debug
+        if (event === 'TOKEN_REFRESHED' && !session) {
+          console.warn('⚠️ Token refresh fallito - sessione scaduta')
+        }
+      })
+    }
   }
   return supabaseInstance
 })()

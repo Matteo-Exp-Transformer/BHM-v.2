@@ -91,8 +91,8 @@ export default defineConfig({
   projects: [
     {
       name: 'Onboarding',
-      testMatch: '**/onboarding*.{ts,js}',
-      use: { 
+      testMatch: '**/*onboarding*.{spec,test}.{ts,js}',
+      use: {
         baseURL: BASE_URL
       }
     },

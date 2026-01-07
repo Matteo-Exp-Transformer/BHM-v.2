@@ -115,16 +115,62 @@ export const useAuth = () => {
   // =============================================
 
   useEffect(() => {
+    let isMounted = true
+    
+    // Timeout di sicurezza per evitare loading infinito
+    const loadingTimeout = setTimeout(() => {
+      if (isMounted) {
+        console.warn('⚠️ Timeout caricamento autenticazione (10s) - forzando stato finale')
+        setIsLoading(false)
+      }
+    }, 10000) // 10 secondi max
+
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }: any) => {
+    supabase.auth.getSession().then(({ data: { session }, error }: any) => {
+      if (!isMounted) return
+      clearTimeout(loadingTimeout)
+      
+      if (error) {
+        console.error('❌ Errore recupero sessione iniziale:', error)
+        // Se il refresh token è invalido, pulisci la sessione
+        if (error.message?.includes('refresh_token') || error.message?.includes('Invalid Refresh Token')) {
+          console.log('🔄 Refresh token invalido - pulizia sessione')
+          supabase.auth.signOut().catch(console.error)
+        }
+        setUser(null)
+        setIsLoading(false)
+        return
+      }
       setUser(session?.user ?? null)
       setIsLoading(false)
+    }).catch((error) => {
+      if (!isMounted) return
+      clearTimeout(loadingTimeout)
+      console.error('❌ Errore critico recupero sessione:', error)
+      setUser(null)
+      setIsLoading(false)
     })
+
+    return () => {
+      isMounted = false
+      clearTimeout(loadingTimeout)
+    }
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
+      console.log('🔐 Auth state change:', event, session ? 'session exists' : 'no session')
+      
+      // Gestisci errori di refresh token
+      if (event === 'TOKEN_REFRESHED' && !session) {
+        console.warn('⚠️ Token refresh fallito - sessione persa')
+        // Il refresh è fallito, la sessione è scaduta
+        setUser(null)
+        setIsLoading(false)
+        return
+      }
+
       setUser(session?.user ?? null)
       setIsLoading(false)
 
@@ -164,7 +210,6 @@ export const useAuth = () => {
     queryFn: async () => {
       if (!user?.id) return null
 
-
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -173,8 +218,17 @@ export const useAuth = () => {
 
       if (error) {
         if (error.code === 'PGRST116') {
+          // Nessun profilo trovato - non è un errore critico
           return null
         }
+        
+        // Errore 406 (Not Acceptable) o altri errori di autenticazione
+        if (error.code === 'PGRST301' || error.message?.includes('406') || error.message?.includes('JWT')) {
+          console.warn('⚠️ Errore autenticazione durante fetch user profile - sessione potrebbe essere scaduta')
+          // Non fare signOut qui - sarà gestito dall'auth state listener
+          return null
+        }
+        
         console.error('❌ Supabase: Errore caricamento user profile:', error)
         console.error('❌ Error details:', { code: error.code, message: error.message, details: error.details })
         return null
@@ -185,6 +239,13 @@ export const useAuth = () => {
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000, // 5 minuti
+    retry: (failureCount, error: any) => {
+      // Non riprovare se è un errore di autenticazione (406, JWT, ecc.)
+      if (error?.code === 'PGRST301' || error?.message?.includes('406') || error?.message?.includes('JWT')) {
+        return false
+      }
+      return failureCount < 2
+    },
   })
 
   // =============================================

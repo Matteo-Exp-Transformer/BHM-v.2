@@ -1952,16 +1952,7 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
     console.log('✅ Products inserted successfully:', products.length)
   }
 
-  // 🔍 DEBUG: Verifica se ci sono dati del calendario
-  console.log('🔍 Calendar data check:', {
-    hasCalendar: !!formData.calendar,
-    calendarData: formData.calendar
-  })
-
   if (formData.calendar && Object.keys(formData.calendar).length > 0) {
-    console.log('📤 Inserting calendar settings...')
-    console.log('📅 Calendar data keys:', Object.keys(formData.calendar))
-    console.log('📅 Calendar data:', formData.calendar)
 
     const calendarSettings = {
       company_id: companyId,
@@ -1977,23 +1968,19 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
 
     const { error } = await supabase
       .from('company_calendar_settings')
-      .insert(calendarSettings)
+      .upsert(calendarSettings, {
+        onConflict: 'company_id',
+        ignoreDuplicates: false
+      })
 
     if (error) {
-      console.error('❌ Error inserting calendar settings:', error)
+      console.error('❌ Error upserting calendar settings:', error)
       throw error
     }
 
-    console.log('✅ Calendar settings inserted successfully')
-  } else {
-    console.log('⚠️ No calendar data provided - calendar will remain unconfigured')
-    console.log('ℹ️ Calendar data:', formData.calendar)
-    console.log('ℹ️ Calendar data keys:', formData.calendar ? Object.keys(formData.calendar) : 'NULL')
-    console.log('ℹ️ User must configure calendar manually after onboarding')
+    console.log('✅ Calendar settings upserted successfully')
   }
 
-    // ✅ RITORNA IL COMPANY ID
-    console.log('🎯 Ritorno company_id da saveAllDataToSupabase:', companyId)
     return companyId
   } catch (error) {
     console.error('❌ [saveAllDataToSupabase] ERRORE:', error)
@@ -2001,46 +1988,6 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
     console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack')
     throw error
   }
-}
-
-/**
- * DEBUG: Verifica stato autenticazione
- */
-export const debugAuthState = async (): Promise<void> => {
-  console.log('🔍 ===== DEBUG AUTH STATE =====')
-
-  // 1. Verifica localStorage
-  console.log('1️⃣ localStorage keys:')
-  const allKeys = Object.keys(localStorage)
-  allKeys.forEach(key => {
-    if (key.includes('auth') || key.includes('supabase') || key.includes('bhm')) {
-      const value = localStorage.getItem(key)
-      console.log(`  ✓ ${key}:`, value ? `PRESENTE (${value.length} chars)` : 'VUOTO')
-    }
-  })
-
-  // 2. Verifica sessione Supabase
-  console.log('2️⃣ Supabase getSession():')
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-  console.log('  Session:', sessionData.session ? '✅ PRESENTE' : '❌ ASSENTE')
-  console.log('  Error:', sessionError)
-  if (sessionData.session) {
-    console.log('  User ID:', sessionData.session.user?.id)
-    console.log('  Email:', sessionData.session.user?.email)
-    console.log('  Expires at:', sessionData.session.expires_at)
-  }
-
-  // 3. Verifica getUser
-  console.log('3️⃣ Supabase getUser():')
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-  console.log('  User:', userData.user ? '✅ PRESENTE' : '❌ ASSENTE')
-  console.log('  Error:', userError)
-  if (userData.user) {
-    console.log('  User ID:', userData.user.id)
-    console.log('  Email:', userData.user.email)
-  }
-
-  console.log('🔍 ===== END DEBUG =====')
 }
 
 /**
@@ -2055,29 +2002,6 @@ export const completeOnboarding = async (
   companyIdParam?: string,
   formDataParam?: OnboardingData
 ): Promise<string | null> => {
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('🔵 [completeOnboarding] FUNZIONE PRINCIPALE AVVIATA')
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('📥 Parametri ricevuti:')
-  console.log('  - companyIdParam:', companyIdParam || 'NON FORNITO')
-  console.log('  - formDataParam:', formDataParam ? 'FORNITO' : 'NON FORNITO')
-  if (formDataParam) {
-    console.log('  - formDataParam keys:', Object.keys(formDataParam))
-  }
-  console.log('⏰ Timestamp inizio:', new Date().toISOString())
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-
-  // DEBUG: Verifica SUBITO localStorage all'inizio
-  console.log('🔍 [completeOnboarding] Verifica localStorage all\'inizio:')
-  const allKeys = Object.keys(localStorage)
-  console.log('📦 Tutte le chiavi localStorage:', allKeys)
-  allKeys.forEach(key => {
-    if (key.includes('auth') || key.includes('supabase') || key.includes('bhm')) {
-      const value = localStorage.getItem(key)
-      console.log(`  - ${key}:`, value ? 'PRESENTE (length: ' + value.length + ')' : 'VUOTO')
-    }
-  })
-
   try {
     let formData: OnboardingData
 
@@ -2588,6 +2512,30 @@ const resetOperationalDataOnly = async (companyId: string): Promise<void> => {
   } catch (error) {
     console.error('❌ Errore durante cancellazione dati operativi:', error)
     throw error
+  }
+}
+
+/**
+ * Debug: Mostra lo stato corrente dell'autenticazione in console
+ * Utile per debugging durante lo sviluppo
+ */
+export const debugAuthState = async (): Promise<void> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { session } } = await supabase.auth.getSession()
+        
+    console.group('🔐 Debug Auth State')
+    console.log('👤 User:', user ? { id: user.id, email: user.email } : 'Non autenticato')
+    console.log('🔑 Session:', session ? 'Attiva' : 'Nessuna sessione')
+    console.log('📦 LocalStorage keys:', Object.keys(localStorage).filter(k => k.includes('supabase') || k.includes('auth')))
+        
+    if (user) {
+      const companyId = await getCurrentCompanyId()
+      console.log('🏢 Company ID attivo:', companyId || 'Nessuno')
+    }
+    console.groupEnd()
+  } catch (error) {
+    console.error('❌ Errore debug auth:', error)
   }
 }
 
