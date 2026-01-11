@@ -17,11 +17,15 @@ import {
   SelectContent,
   SelectOption,
 } from '@/components/ui/Select'
+import { MiniCalendar } from '@/components/ui/MiniCalendar'
 import {
   CONSERVATION_POINT_TYPES,
   validateTemperatureForType,
 } from '@/utils/onboarding/conservationUtils'
 import { STAFF_ROLES, STAFF_CATEGORIES } from '@/utils/haccpRules'
+import { calculateNextDue, useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
+import type { MaintenanceFrequency as EnglishMaintenanceFrequency, MaintenanceTask as DBMaintenanceTask } from '@/types/conservation'
+import { cn } from '@/lib/utils'
 
 type StandardMaintenanceType =
   | 'rilevamento_temperatura'
@@ -34,7 +38,6 @@ type MaintenanceFrequency =
   | 'settimanale'
   | 'mensile'
   | 'annuale'
-  | 'custom'
 
 type StaffRole = 'admin' | 'responsabile' | 'dipendente' | 'collaboratore'
 
@@ -47,6 +50,8 @@ type CustomFrequencyDays =
   | 'sabato'
   | 'domenica'
 
+type Weekday = 'lunedi' | 'martedi' | 'mercoledi' | 'giovedi' | 'venerdi' | 'sabato' | 'domenica'
+
 interface MandatoryMaintenanceTask {
   manutenzione: StandardMaintenanceType
   frequenza: MaintenanceFrequency
@@ -54,6 +59,9 @@ interface MandatoryMaintenanceTask {
   assegnatoACategoria?: string
   assegnatoADipendenteSpecifico?: string
   giorniCustom?: CustomFrequencyDays[]
+  giorniSettimana?: Weekday[] // Nuovo campo per configurazione giorni (giornaliera/settimanale)
+  giornoMese?: number // Giorno del mese (1-31) per frequenza mensile
+  giornoAnno?: number // Giorno dell'anno (1-365) per frequenza annuale
   note?: string
 }
 
@@ -70,7 +78,7 @@ interface AddPointModalProps {
       | 'status'
       | 'last_temperature_reading'
     >,
-    maintenanceTasks: MandatoryMaintenanceTask[]
+    maintenanceTasks: any[] // Trasformati nel formato atteso da useConservationPoints
   ) => void
   point?: ConservationPoint | null
   isLoading?: boolean
@@ -102,16 +110,52 @@ const MAINTENANCE_TYPES: Record<
   },
 }
 
-const WEEKDAYS: Record<CustomFrequencyDays, string> = {
-  lunedi: 'Lunedì',
-  martedi: 'Martedì',
-  mercoledi: 'Mercoledì',
-  giovedi: 'Giovedì',
-  venerdi: 'Venerdì',
-  sabato: 'Sabato',
-  domenica: 'Domenica',
+const WEEKDAYS_ARRAY: Array<{ value: Weekday; label: string }> = [
+  { value: 'lunedi', label: 'Lunedì' },
+  { value: 'martedi', label: 'Martedì' },
+  { value: 'mercoledi', label: 'Mercoledì' },
+  { value: 'giovedi', label: 'Giovedì' },
+  { value: 'venerdi', label: 'Venerdì' },
+  { value: 'sabato', label: 'Sabato' },
+  { value: 'domenica', label: 'Domenica' },
+]
+
+const ALL_WEEKDAYS: Weekday[] = ['lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato', 'domenica']
+
+// Mapping tipo manutenzione da italiano a inglese
+const MAINTENANCE_TYPE_MAPPING: Record<StandardMaintenanceType, string> = {
+  'rilevamento_temperatura': 'temperature',
+  'sanificazione': 'sanitization',
+  'sbrinamento': 'defrosting',
+  'controllo_scadenze': 'temperature', // Fallback a temperature per controllo scadenze
 }
 
+// Mapping frequenza da italiano a inglese
+const FREQUENCY_MAPPING: Record<MaintenanceFrequency, EnglishMaintenanceFrequency> = {
+  'giornaliera': 'daily',
+  'settimanale': 'weekly',
+  'mensile': 'monthly',
+  'annuale': 'annually',
+}
+
+// Mapping inverso tipo manutenzione da inglese a italiano (per caricamento da DB)
+const REVERSE_MAINTENANCE_TYPE_MAPPING: Record<string, StandardMaintenanceType> = {
+  'temperature': 'rilevamento_temperatura',
+  'sanitization': 'sanificazione',
+  'defrosting': 'sbrinamento',
+  'expiry_check': 'controllo_scadenze',
+}
+
+// Mapping inverso frequenza da inglese a italiano (per caricamento da DB)
+const REVERSE_FREQUENCY_MAPPING: Record<string, MaintenanceFrequency> = {
+  'daily': 'giornaliera',
+  'weekly': 'settimanale',
+  'monthly': 'mensile',
+  'annually': 'annuale',
+  // Mappiamo anche altre frequenze possibili
+  'quarterly': 'mensile', // Fallback a mensile
+  'biannually': 'annuale', // Fallback a annuale
+}
 
 function MaintenanceTaskForm({
   task,
@@ -119,32 +163,44 @@ function MaintenanceTaskForm({
   staff,
   staffCategories: _staffCategories,
   onUpdate,
+  hasError = false,
 }: {
   task: MandatoryMaintenanceTask
   index: number
   staff: any[]
   staffCategories: string[]
   onUpdate: (index: number, task: MandatoryMaintenanceTask) => void
+  hasError?: boolean
 }) {
   const updateTask = (field: keyof MandatoryMaintenanceTask, value: any) => {
     onUpdate(index, { ...task, [field]: value })
   }
 
-  const toggleWeekday = (day: CustomFrequencyDays) => {
-    const current = task.giorniCustom || []
-    const updated = current.includes(day)
-      ? current.filter(d => d !== day)
-      : [...current, day]
-    updateTask('giorniCustom', updated)
-  }
-
   const info = MAINTENANCE_TYPES[task.manutenzione]
   // const showCategoryField = task.assegnatoARuolo === 'dipendente'
   // const showSpecificStaffField = task.assegnatoARuolo === 'specifico'
-  const showCustomDaysField = task.frequenza === 'custom'
+  const showWeekdaysField = task.frequenza === 'giornaliera' || task.frequenza === 'settimanale'
+
+  // Imposta default giorni settimana quando cambia frequenza
+  useEffect(() => {
+    if (task.frequenza === 'giornaliera' && (!task.giorniSettimana || task.giorniSettimana.length === 0)) {
+      // Default: tutte selezionate
+      updateTask('giorniSettimana', ALL_WEEKDAYS)
+    } else if (task.frequenza === 'settimanale' && (!task.giorniSettimana || task.giorniSettimana.length === 0)) {
+      // Default: solo lunedì
+      updateTask('giorniSettimana', ['lunedi'])
+    } else if (task.frequenza !== 'giornaliera' && task.frequenza !== 'settimanale' && task.giorniSettimana) {
+      // Reset quando cambia a frequenza diversa
+      updateTask('giorniSettimana', undefined)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task.frequenza])
 
   return (
-    <div className="border border-gray-300 rounded-lg p-4 bg-white space-y-4">
+    <div className={cn(
+      'border rounded-lg p-4 bg-white space-y-4',
+      hasError && 'border-red-500 border-2'
+    )}>
       <div className="flex items-center justify-between border-b pb-3">
         <div className="flex items-center gap-3">
           <span className="text-2xl">{info.icon}</span>
@@ -175,128 +231,159 @@ function MaintenanceTaskForm({
             <option value="giornaliera">Giornaliera</option>
             <option value="settimanale">Settimanale</option>
             <option value="mensile">Mensile</option>
-            <option value="annuale">Annuale</option>
-            <option value="custom">Personalizzata</option>
+            <option value="annuale" disabled={task.manutenzione !== 'sbrinamento'}>
+              Annuale {task.manutenzione !== 'sbrinamento' && '(solo sbrinamento)'}
+            </option>
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <Label htmlFor={`role-select-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
             Assegnato a Ruolo *
-          </label>
-          <select
-            value={task.assegnatoARuolo}
-            onChange={e => {
-              updateTask('assegnatoARuolo', e.target.value as StaffRole)
+          </Label>
+          <Select
+            value={task.assegnatoARuolo || ''}
+            onValueChange={(value) => {
+              updateTask('assegnatoARuolo', value as StaffRole)
               updateTask('assegnatoACategoria', undefined)
               updateTask('assegnatoADipendenteSpecifico', undefined)
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
           >
-            <option value="">Seleziona ruolo...</option>
-            {STAFF_ROLES.map(role => (
-              <option key={role.value} value={role.value}>
-                {role.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger id={`role-select-${index}`} className="w-full">
+              <SelectValue placeholder="Seleziona ruolo..." />
+            </SelectTrigger>
+            <SelectContent>
+              {STAFF_ROLES.map(role => (
+                <SelectOption key={role.value} value={role.value}>
+                  {role.label}
+                </SelectOption>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       {task.assegnatoARuolo && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <Label htmlFor={`category-select-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
             Categoria Staff
-          </label>
-          <select
+          </Label>
+          <Select
             value={task.assegnatoACategoria || 'all'}
-            onChange={e => {
-              updateTask('assegnatoACategoria', e.target.value)
+            onValueChange={(value) => {
+              updateTask('assegnatoACategoria', value)
               updateTask('assegnatoADipendenteSpecifico', undefined)
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="all">Tutte le categorie</option>
-            {STAFF_CATEGORIES.map(cat => (
-              <option key={cat.value} value={cat.value}>
-                {cat.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger id={`category-select-${index}`} className="w-full">
+              <SelectValue placeholder="Seleziona categoria..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectOption value="all">Tutte le categorie</SelectOption>
+              {STAFF_CATEGORIES.map(cat => (
+                <SelectOption key={cat.value} value={cat.value}>
+                  {cat.label}
+                </SelectOption>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       )}
 
       {task.assegnatoARuolo && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <Label htmlFor={`staff-select-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
             Dipendente Specifico (opzionale)
-          </label>
-          <select
+          </Label>
+          <Select
             value={task.assegnatoADipendenteSpecifico || 'none'}
-            onChange={e =>
+            onValueChange={(value) =>
               updateTask(
                 'assegnatoADipendenteSpecifico',
-                e.target.value === 'none' ? undefined : e.target.value
+                value === 'none' ? undefined : value
               )
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="none">Nessun dipendente specifico</option>
-            {staff
-              .filter(person => {
-                if (person.role !== task.assegnatoARuolo) return false
-                if (
-                  task.assegnatoACategoria &&
-                  task.assegnatoACategoria !== 'all' &&
-                  person.categories
-                ) {
-                  return person.categories.includes(task.assegnatoACategoria)
-                }
-                return true
-              })
-              .map(person => (
-                <option key={person.id} value={person.id}>
-                  {person.name} - {person.categories?.join(', ') || 'Nessuna categoria'}
-                </option>
-              ))}
-          </select>
+            <SelectTrigger id={`staff-select-${index}`} className="w-full">
+              <SelectValue placeholder="Seleziona dipendente..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectOption value="none">Nessun dipendente specifico</SelectOption>
+              {staff
+                .filter(person => {
+                  if (person.role !== task.assegnatoARuolo) return false
+                  if (
+                    task.assegnatoACategoria &&
+                    task.assegnatoACategoria !== 'all' &&
+                    person.categories
+                  ) {
+                    return person.categories.includes(task.assegnatoACategoria)
+                  }
+                  return true
+                })
+                .map(person => (
+                  <SelectOption key={person.id} value={person.id}>
+                    {person.name} - {person.categories?.join(', ') || 'Nessuna categoria'}
+                  </SelectOption>
+                ))}
+            </SelectContent>
+          </Select>
         </div>
       )}
 
-      {showCustomDaysField && (
+      {showWeekdaysField && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Giorni Personalizzati *
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(WEEKDAYS).map(([value, label]) => {
-              const isSelected = task.giorniCustom?.includes(
-                value as CustomFrequencyDays
-              )
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => toggleWeekday(value as CustomFrequencyDays)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                    isSelected
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {label}
-                </button>
-              )
-            })}
+          <Label className="block text-sm font-medium text-gray-700 mb-2">
+            Giorni settimana *
+          </Label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+            {WEEKDAYS_ARRAY.map(weekday => (
+              <label key={weekday.value} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={task.giorniSettimana?.includes(weekday.value) || false}
+                  onChange={(e) => {
+                    const current = task.giorniSettimana || []
+                    const updated = e.target.checked
+                      ? [...current, weekday.value]
+                      : current.filter(d => d !== weekday.value)
+                    updateTask('giorniSettimana', updated)
+                  }}
+                  className="rounded border-gray-300"
+                  aria-label={weekday.label}
+                />
+                <span className="text-sm">{weekday.label}</span>
+              </label>
+            ))}
           </div>
-          {showCustomDaysField &&
-            (!task.giorniCustom || task.giorniCustom.length === 0) && (
-              <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4" />
-                Seleziona almeno un giorno
-              </p>
-            )}
+        </div>
+      )}
+
+      {task.frequenza === 'mensile' && (
+        <div>
+          <Label className="block text-sm font-medium text-gray-700 mb-2">
+            Giorno del mese *
+          </Label>
+          <MiniCalendar
+            mode="month"
+            selectedDay={task.giornoMese}
+            onSelect={(day) => updateTask('giornoMese', day)}
+            className="mt-2"
+          />
+        </div>
+      )}
+
+      {task.frequenza === 'annuale' && task.manutenzione === 'sbrinamento' && (
+        <div>
+          <Label className="block text-sm font-medium text-gray-700 mb-2">
+            Giorno dell'anno *
+          </Label>
+          <MiniCalendar
+            mode="year"
+            selectedDay={task.giornoAnno}
+            onSelect={(day) => updateTask('giornoAnno', day)}
+            className="mt-2"
+          />
         </div>
       )}
 
@@ -312,6 +399,13 @@ function MaintenanceTaskForm({
           placeholder="Note aggiuntive..."
         />
       </div>
+
+      {hasError && (
+        <div className="text-sm text-red-600 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" />
+          <span>Completa tutti i campi obbligatori</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -326,6 +420,9 @@ export function AddPointModal({
   const { departments } = useDepartments()
   const { staff } = useStaff()
   const { categories: productCategories } = useCategories()
+  
+  // Carica manutenzioni esistenti quando point è presente (modalità edit)
+  const { maintenanceTasks: existingMaintenances } = useMaintenanceTasks(point?.id)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -335,6 +432,8 @@ export function AddPointModal({
     isBlastChiller: false,
     productCategories: [] as string[],
   })
+
+  const [isManuallyEdited, setIsManuallyEdited] = useState(false)
 
   // Genera manutenzioni obbligatorie basate sul tipo di punto
   const getRequiredMaintenanceTasks = (pointType: ConservationPointType): MandatoryMaintenanceTask[] => {
@@ -389,14 +488,54 @@ export function AddPointModal({
     MandatoryMaintenanceTask[]
   >(getRequiredMaintenanceTasks(formData.pointType))
 
-  // Aggiorna le manutenzioni quando cambia il tipo di punto
+  // Funzione per trasformare MaintenanceTask (DB) a MandatoryMaintenanceTask (form)
+  const transformMaintenanceTaskToForm = (task: DBMaintenanceTask): MandatoryMaintenanceTask => {
+    const standardType = REVERSE_MAINTENANCE_TYPE_MAPPING[task.type] || 'rilevamento_temperatura'
+    const frequency = REVERSE_FREQUENCY_MAPPING[task.frequency] || 'giornaliera' as MaintenanceFrequency
+    
+    return {
+      manutenzione: standardType,
+      frequenza: frequency,
+      assegnatoARuolo: (task.assigned_to_role as StaffRole) || '' as StaffRole,
+      assegnatoACategoria: task.assigned_to_category || undefined,
+      assegnatoADipendenteSpecifico: task.assigned_to_staff_id || undefined,
+      giorniSettimana: undefined, // Non salvato nel DB, lasciato undefined
+      giornoMese: undefined, // Non salvato nel DB, lasciato undefined
+      giornoAnno: undefined, // Non salvato nel DB, lasciato undefined
+      note: task.description || undefined,
+    }
+  }
+
+  // Aggiorna le manutenzioni quando cambia il tipo di punto (solo in modalità creazione)
   useEffect(() => {
-    setMaintenanceTasks(getRequiredMaintenanceTasks(formData.pointType))
-  }, [formData.pointType])
+    if (!point) {
+      // Solo in modalità creazione: aggiorna quando cambia tipo punto
+      setMaintenanceTasks(getRequiredMaintenanceTasks(formData.pointType))
+    }
+  }, [formData.pointType, point])
+
+  // Aggiorna temperatura target automaticamente quando cambia il tipo di punto
+  // Solo se l'utente non ha modificato manualmente la temperatura
+  useEffect(() => {
+    if (isManuallyEdited) return // Non sovrascrivere se modificata manualmente
+    
+    if (formData.pointType === 'ambient') {
+      // Per ambiente, temperatura non impostabile
+      setFormData(prev => ({ ...prev, targetTemperature: '' }))
+    } else {
+      // Calcola temperatura ottimale: (min + max) / 2
+      const typeInfo = CONSERVATION_POINT_TYPES[formData.pointType]
+      if (typeInfo.temperatureRange.min !== null && typeInfo.temperatureRange.max !== null) {
+        const optimal = ((typeInfo.temperatureRange.min + typeInfo.temperatureRange.max) / 2).toFixed(1)
+        setFormData(prev => ({ ...prev, targetTemperature: optimal }))
+      }
+    }
+  }, [formData.pointType, isManuallyEdited])
 
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({})
+  const [maintenanceErrors, setMaintenanceErrors] = useState<Record<number, string[]>>({})
   const [temperatureError, setTemperatureError] = useState<string | null>(null)
 
   const departmentOptions = useMemo(
@@ -462,6 +601,8 @@ export function AddPointModal({
         isBlastChiller: point.is_blast_chiller,
         productCategories: point.product_categories || [],
       })
+      setIsManuallyEdited(true) // Quando si modifica un punto esistente, considera la temperatura come già modificata
+      // Manutenzioni caricate da useMaintenanceTasks (vedi useEffect sotto)
     } else {
       setFormData({
         name: '',
@@ -497,10 +638,34 @@ export function AddPointModal({
           assegnatoACategoria: undefined,
         },
       ])
+      setIsManuallyEdited(false) // Reset quando si crea un nuovo punto
     }
     setValidationErrors({})
+    setMaintenanceErrors({})
     setTemperatureError(null)
   }, [point, isOpen])
+
+  // Carica e trasforma manutenzioni esistenti quando point è presente (modalità edit)
+  useEffect(() => {
+    if (point && existingMaintenances && existingMaintenances.length > 0) {
+      // Trasforma manutenzioni esistenti nel formato MandatoryMaintenanceTask
+      const transformed = existingMaintenances
+        .filter(task => Object.keys(REVERSE_MAINTENANCE_TYPE_MAPPING).includes(task.type))
+        .map(task => transformMaintenanceTaskToForm(task))
+      
+      // Se ci sono manutenzioni trasformate, usale, altrimenti usa quelle obbligatorie
+      if (transformed.length > 0) {
+        setMaintenanceTasks(transformed)
+      }
+    }
+  }, [point, existingMaintenances])
+
+  // Reset del flag quando si chiude il modal
+  useEffect(() => {
+    if (!isOpen) {
+      setIsManuallyEdited(false)
+    }
+  }, [isOpen])
 
   const validateForm = () => {
     const errors: Record<string, string> = {}
@@ -525,27 +690,72 @@ export function AddPointModal({
       errors.targetTemperature = temperatureError
     }
 
-    for (const task of maintenanceTasks) {
+    // Validazione manutenzioni con errori specifici
+    const maintenanceErrorsMap: Record<number, string[]> = {}
+    maintenanceTasks.forEach((task, index) => {
+      const taskErrors: string[] = []
+      const taskName = MAINTENANCE_TYPES[task.manutenzione]?.label || `Manutenzione ${index + 1}`
+
       if (!task.frequenza) {
-        errors.maintenanceTasks = 'Completa tutte le manutenzioni obbligatorie'
-        break
+        taskErrors.push('seleziona frequenza')
       }
       if (!task.assegnatoARuolo) {
-        errors.maintenanceTasks = 'Completa tutte le manutenzioni obbligatorie'
-        break
+        taskErrors.push('seleziona ruolo')
       }
-      if (
-        task.frequenza === 'custom' &&
-        (!task.giorniCustom || task.giorniCustom.length === 0)
-      ) {
-        errors.maintenanceTasks =
-          'Seleziona almeno un giorno per le frequenze personalizzate'
-        break
+      if (task.frequenza === 'mensile' && !task.giornoMese) {
+        taskErrors.push('seleziona giorno del mese')
       }
+      if (task.frequenza === 'annuale' && !task.giornoAnno) {
+        taskErrors.push('seleziona giorno dell\'anno')
+      }
+      if ((task.frequenza === 'giornaliera' || task.frequenza === 'settimanale') && 
+          (!task.giorniSettimana || task.giorniSettimana.length === 0)) {
+        taskErrors.push('seleziona almeno un giorno settimana')
+      }
+
+      if (taskErrors.length > 0) {
+        maintenanceErrorsMap[index] = taskErrors
+        errors[`maintenance_${index}`] = `${taskName}: ${taskErrors.join(', ')}`
+      }
+    })
+
+    if (Object.keys(maintenanceErrorsMap).length > 0) {
+      errors.maintenanceTasks = 'Completa tutte le manutenzioni obbligatorie'
     }
 
     setValidationErrors(errors)
+    setMaintenanceErrors(maintenanceErrorsMap)
     return Object.keys(errors).length === 0
+  }
+
+  // Transforma MandatoryMaintenanceTask[] nel formato atteso da useConservationPoints
+  const transformMaintenanceTasks = (tasks: MandatoryMaintenanceTask[]) => {
+    return tasks.map(task => {
+      const maintenanceType = MAINTENANCE_TYPE_MAPPING[task.manutenzione]
+      const frequency = FREQUENCY_MAPPING[task.frequenza]
+      const title = MAINTENANCE_TYPES[task.manutenzione].label
+      
+      // Calcola next_due basandosi sulla frequenza
+      const nextDueDate = new Date(calculateNextDue(frequency as EnglishMaintenanceFrequency))
+      
+      // Calcola assignment_type: 'staff' se assegnatoADipendenteSpecifico è presente, altrimenti 'role'
+      const assignment_type = task.assegnatoADipendenteSpecifico ? 'staff' : 'role'
+      
+      return {
+        type: maintenanceType,
+        frequency: frequency,
+        title: title,
+        assigned_to: task.assegnatoARuolo || 'role', // Fallback
+        assignment_type: assignment_type,
+        assigned_to_role: task.assegnatoARuolo || null,
+        assigned_to_category: task.assegnatoACategoria === 'all' ? null : (task.assegnatoACategoria || null),
+        assigned_to_staff_id: task.assegnatoADipendenteSpecifico || null,
+        next_due: nextDueDate,
+        priority: 'medium' as const,
+        estimated_duration: 60, // Default duration
+        instructions: [],
+      }
+    })
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -560,6 +770,9 @@ export function AddPointModal({
         ? 20
         : Number(formData.targetTemperature)
 
+    // Trasforma i maintenanceTasks nel formato atteso da useConservationPoints
+    const transformedMaintenanceTasks = transformMaintenanceTasks(maintenanceTasks)
+
     onSave(
       {
         name: formData.name,
@@ -569,7 +782,7 @@ export function AddPointModal({
         is_blast_chiller: formData.isBlastChiller,
         product_categories: formData.productCategories,
       },
-      maintenanceTasks
+      transformedMaintenanceTasks
     )
   }
 
@@ -585,8 +798,8 @@ export function AddPointModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[95vh] overflow-y-auto my-8">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999] overflow-y-auto">
+      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[calc(100vh-100px)] overflow-y-auto my-8">
         <div className="sticky top-0 bg-white border-b z-10 flex items-center justify-between p-6">
           <h2 className="text-xl font-semibold">
             {point
@@ -602,6 +815,27 @@ export function AddPointModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Error Summary - TASK 1.3: Show all validation errors at top */}
+          {Object.keys(validationErrors).length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+              <p className="text-sm font-medium text-red-800 mb-2">
+                Correggi i seguenti errori:
+              </p>
+              <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+                {Object.entries(validationErrors)
+                  .filter(([key]) => key.startsWith('maintenance_'))
+                  .map(([, error], idx) => (
+                    <li key={idx}>{error}</li>
+                  ))}
+                {Object.entries(validationErrors)
+                  .filter(([key]) => !key.startsWith('maintenance_'))
+                  .map(([, error], idx) => (
+                    <li key={idx}>{error}</li>
+                  ))}
+              </ul>
+            </div>
+          )}
+          
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <Label htmlFor="point-name">Nome *</Label>
@@ -677,12 +911,13 @@ export function AddPointModal({
                 min="-99"
                 max="30"
                 value={formData.targetTemperature}
-                onChange={e =>
+                onChange={e => {
+                  setIsManuallyEdited(true)
                   setFormData(prev => ({
                     ...prev,
                     targetTemperature: e.target.value,
                   }))
-                }
+                }}
                 placeholder={
                   formData.pointType === 'ambient'
                     ? 'Non impostabile'
@@ -840,6 +1075,7 @@ export function AddPointModal({
                   staff={staff}
                   staffCategories={STAFF_CATEGORIES.map(cat => cat.value)}
                   onUpdate={updateMaintenanceTask}
+                  hasError={!!maintenanceErrors[index]}
                 />
               ))}
             </div>

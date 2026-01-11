@@ -73,16 +73,24 @@ export function useConservationPoints() {
         conservationPoint.is_blast_chiller
       )
 
+      // Prepare conservation point data for insert
+      // Remove readonly/relation fields that shouldn't be inserted
+      const { maintenance_tasks, department, maintenance_due, ...pointData } = conservationPoint
+      
+      const pointInsertData = {
+        ...pointData,
+        company_id: companyId,
+        type: typeClassification,
+        // Convert Date to ISO string if present
+        maintenance_due: maintenance_due ? maintenance_due.toISOString() : null,
+        // Ensure department_id is string or null (not undefined)
+        department_id: conservationPoint.department_id || null,
+      }
+
       // Create conservation point
       const { data: pointResult, error: pointError } = await supabase
         .from('conservation_points')
-        .insert([
-          {
-            ...conservationPoint,
-            company_id: companyId,
-            type: typeClassification,
-          },
-        ])
+        .insert(pointInsertData)
         .select()
         .single()
 
@@ -93,24 +101,43 @@ export function useConservationPoints() {
         const tasksToInsert = maintenanceTasks.map(task => ({
           company_id: companyId,
           conservation_point_id: pointResult.id,
-          title: task.title,
+          title: task.title || null,
           type: task.type,
           frequency: task.frequency,
-          estimated_duration: task.estimated_duration,
-          assigned_to: task.assigned_to,
-          priority: task.priority,
-          next_due: task.next_due.toISOString(),
-          status: 'scheduled',
-          instructions: task.instructions,
+          estimated_duration: task.estimated_duration || 60,
+          assigned_to: task.assigned_to || 'role', // Default assignment
+          assignment_type: task.assignment_type || (task.assigned_to_role ? 'role' : task.assigned_to_staff_id ? 'staff' : 'role'), // Use passed value or calculate
+          assigned_to_role: task.assigned_to_role || null,
+          assigned_to_staff_id: task.assigned_to_staff_id || null,
+          assigned_to_category: task.assigned_to_category || null,
+          priority: task.priority || 'medium',
+          next_due: task.next_due ? (task.next_due instanceof Date ? task.next_due.toISOString() : task.next_due) : null,
+          status: 'scheduled' as const,
+          instructions: task.instructions || [],
         }))
 
         const { error: tasksError } = await supabase
           .from('maintenance_tasks')
           .insert(tasksToInsert)
 
+        // CRITICAL: Rollback if maintenance tasks creation fails
         if (tasksError) {
           console.error('Error creating maintenance tasks:', tasksError)
-          // Don't throw here - the point was created successfully
+          
+          // ROLLBACK: Delete the conservation point that was just created
+          const { error: deleteError } = await supabase
+            .from('conservation_points')
+            .delete()
+            .eq('id', pointResult.id)
+          
+          if (deleteError) {
+            console.error('CRITICAL: Failed to rollback conservation point:', deleteError)
+            // Even if rollback fails, we still throw the original error
+          }
+          
+          throw new Error(
+            `Failed to create maintenance tasks: ${tasksError.message}. Conservation point was rolled back.`
+          )
         }
       }
 
@@ -135,7 +162,10 @@ export function useConservationPoints() {
       id: string
       data: Partial<ConservationPoint>
     }) => {
-      const updateData = { ...data }
+      // Prepare update data - remove readonly/relation fields
+      const { id: _, maintenance_tasks, department, last_temperature_reading, created_at, updated_at, ...updateFields } = data
+      
+      const updateData: Record<string, unknown> = { ...updateFields }
 
       // Auto-classify if temperature changed
       if (data.setpoint_temp !== undefined) {
@@ -143,6 +173,18 @@ export function useConservationPoints() {
           data.setpoint_temp,
           data.is_blast_chiller ?? false
         )
+      }
+
+      // Convert Date to ISO string if maintenance_due is present
+      if (data.maintenance_due !== undefined) {
+        updateData.maintenance_due = data.maintenance_due instanceof Date 
+          ? data.maintenance_due.toISOString() 
+          : data.maintenance_due
+      }
+
+      // Ensure department_id is string or null (not undefined)
+      if ('department_id' in updateData && updateData.department_id === undefined) {
+        updateData.department_id = null
       }
 
       const { data: result, error } = await supabase
@@ -184,7 +226,14 @@ export function useConservationPoints() {
     },
   })
 
-  const points = (conservationPoints ?? []) as ConservationPoint[]
+  // Transform DB data to ConservationPoint format
+  const points: ConservationPoint[] = (conservationPoints ?? []).map((point: any) => ({
+    ...point,
+    maintenance_due: point.maintenance_due ? new Date(point.maintenance_due) : undefined,
+    created_at: point.created_at ? new Date(point.created_at) : new Date(),
+    updated_at: point.updated_at ? new Date(point.updated_at) : new Date(),
+    product_categories: point.product_categories || [],
+  }))
 
   const initialStatusCount: ConservationStats['by_status'] = {
     normal: 0,
