@@ -64,10 +64,22 @@ export function useTemperatureReadings(conservationPointId?: string) {
     ) => {
       if (!companyId) throw new Error('No company ID available')
 
+      // Convert recorded_at to ISO string if it's a Date object
+      const recordedAtString = data.recorded_at 
+        ? (typeof data.recorded_at === 'string' ? data.recorded_at : data.recorded_at.toISOString())
+        : new Date().toISOString()
+
+      // Build payload with only database fields (exclude computed/join fields like conservation_point)
       const payload = {
-        ...data,
+        conservation_point_id: data.conservation_point_id,
+        temperature: data.temperature,
+        recorded_at: recordedAtString,
+        method: data.method,
+        notes: data.notes,
+        photo_evidence: data.photo_evidence,
+        recorded_by: data.recorded_by,
         company_id: companyId,
-        recorded_at: data.recorded_at || new Date().toISOString(),
+        // ✅ NOT including conservation_point (join/virtual field - doesn't exist in DB table)
       }
 
       const { data: result, error } = await supabase
@@ -102,9 +114,19 @@ export function useTemperatureReadings(conservationPointId?: string) {
       id: string
       data: Partial<TemperatureReading>
     }) => {
+      // Convert recorded_at to ISO string if it's a Date object
+      const updateData: any = { ...data }
+      if (updateData.recorded_at && typeof updateData.recorded_at !== 'string') {
+        updateData.recorded_at = updateData.recorded_at.toISOString()
+      }
+      // Exclude computed/join fields that don't exist in DB
+      if ('conservation_point' in updateData) {
+        delete updateData.conservation_point
+      }
+
       const { data: result, error } = await supabase
         .from('temperature_readings')
-        .update(data)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single()
@@ -176,7 +198,7 @@ export function useTemperatureReadings(conservationPointId?: string) {
   }
 
   return {
-    temperatureReadings: temperatureReadings || [],
+    temperatureReadings: (temperatureReadings || []) as TemperatureReading[],
     isLoading,
     error,
     stats,

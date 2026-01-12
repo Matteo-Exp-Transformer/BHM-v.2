@@ -75,7 +75,8 @@ export function useConservationPoints() {
 
       // Prepare conservation point data for insert
       // Remove readonly/relation fields that shouldn't be inserted
-      const { maintenance_tasks, department, maintenance_due, ...pointData } = conservationPoint
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { maintenance_tasks: _maintenance_tasks, department: _department, maintenance_due, ...pointData } = conservationPoint
       
       const pointInsertData = {
         ...pointData,
@@ -163,7 +164,8 @@ export function useConservationPoints() {
       data: Partial<ConservationPoint>
     }) => {
       // Prepare update data - remove readonly/relation fields
-      const { id: _, maintenance_tasks, department, last_temperature_reading, created_at, updated_at, ...updateFields } = data
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id: _id, maintenance_tasks: _maintenance_tasks, department: _department, last_temperature_reading: _last_temperature_reading, created_at: _created_at, updated_at: _updated_at, ...updateFields } = data
       
       const updateData: Record<string, unknown> = { ...updateFields }
 
