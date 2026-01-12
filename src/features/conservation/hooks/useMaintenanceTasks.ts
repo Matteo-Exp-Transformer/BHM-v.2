@@ -101,6 +101,10 @@ export function useMaintenanceTasks(conservationPointId?: string) {
         .from('maintenance_tasks')
         .select(`
           *,
+          assignment_type,
+          assigned_to_role,
+          assigned_to_category,
+          assigned_to_staff_id,
           conservation_point:conservation_points(
             id,
             name,
@@ -291,25 +295,25 @@ export function useMaintenanceTasks(conservationPointId?: string) {
       )
 
       // 3. Crea il record di completamento
-      // Nota: maintenance_completions non è ancora nei types del DB (migration da applicare)
-      // Usiamo cast temporaneo fino a quando la migration sarà applicata e i types rigenerati
-      const completionPayload = {
+      // Nota: La tabella usa completion_notes invece di notes, photos è jsonb, e next_due è stata aggiunta dalla migration 016
+      // @ts-expect-error - maintenance_completions table type not yet generated after migration
+      const completionPayload: any = {
         maintenance_task_id: completion.maintenance_task_id,
         company_id: companyId,
-        next_due: nextDue,
+        next_due: nextDue, // Colonna aggiunta dalla migration 016
         completed_by: completion.completed_by || user.id,
         completed_at: completedAt.toISOString(),
-        notes: completion.notes || null,
-        photos: completion.photos || [],
-        created_at: new Date().toISOString(),
+        completion_notes: completion.notes || null, // La tabella usa completion_notes invece di notes
+        photos: Array.isArray(completion.photos) 
+          ? completion.photos 
+          : (completion.photos ? [completion.photos] : []), // photos è jsonb nella tabella
       }
 
-      // @ts-ignore - maintenance_completions non è ancora nei database types (migration 016 da applicare)
-      // Dopo l'applicazione della migration, rigenerare i types e rimuovere questo commento
+      // @ts-expect-error - maintenance_completions table type not yet generated after migration
       const { data: completionResult, error: completionError } = await supabase
-        // @ts-ignore
+        // @ts-expect-error - maintenance_completions table type not yet generated after migration
         .from('maintenance_completions')
-        // @ts-ignore
+        // @ts-expect-error - maintenance_completions table type not yet generated after migration
         .insert([completionPayload])
         .select()
         .single()
