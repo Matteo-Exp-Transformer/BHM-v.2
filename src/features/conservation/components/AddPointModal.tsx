@@ -26,6 +26,7 @@ import { STAFF_ROLES, STAFF_CATEGORIES } from '@/utils/haccpRules'
 import { calculateNextDue, useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
 import type { MaintenanceFrequency as EnglishMaintenanceFrequency, MaintenanceTask as DBMaintenanceTask } from '@/types/conservation'
 import { cn } from '@/lib/utils'
+import { useCalendarSettings } from '@/hooks/useCalendarSettings'
 
 type StandardMaintenanceType =
   | 'rilevamento_temperatura'
@@ -41,15 +42,6 @@ type MaintenanceFrequency =
 
 type StaffRole = 'admin' | 'responsabile' | 'dipendente' | 'collaboratore'
 
-type CustomFrequencyDays =
-  | 'lunedi'
-  | 'martedi'
-  | 'mercoledi'
-  | 'giovedi'
-  | 'venerdi'
-  | 'sabato'
-  | 'domenica'
-
 type Weekday = 'lunedi' | 'martedi' | 'mercoledi' | 'giovedi' | 'venerdi' | 'sabato' | 'domenica'
 
 interface MandatoryMaintenanceTask {
@@ -58,8 +50,7 @@ interface MandatoryMaintenanceTask {
   assegnatoARuolo: StaffRole
   assegnatoACategoria?: string
   assegnatoADipendenteSpecifico?: string
-  giorniCustom?: CustomFrequencyDays[]
-  giorniSettimana?: Weekday[] // Nuovo campo per configurazione giorni (giornaliera/settimanale)
+  giorniSettimana?: Weekday[] // Configurazione giorni (giornaliera/settimanale)
   giornoMese?: number // Giorno del mese (1-31) per frequenza mensile
   giornoAnno?: number // Giorno dell'anno (1-365) per frequenza annuale
   note?: string
@@ -172,29 +163,59 @@ function MaintenanceTaskForm({
   onUpdate: (index: number, task: MandatoryMaintenanceTask) => void
   hasError?: boolean
 }) {
+  const { settings: calendarSettings, isLoading: isLoadingCalendarSettings } = useCalendarSettings()
+  
   const updateTask = (field: keyof MandatoryMaintenanceTask, value: any) => {
     onUpdate(index, { ...task, [field]: value })
   }
 
   const info = MAINTENANCE_TYPES[task.manutenzione]
-  // const showCategoryField = task.assegnatoARuolo === 'dipendente'
-  // const showSpecificStaffField = task.assegnatoARuolo === 'specifico'
-  const showWeekdaysField = task.frequenza === 'giornaliera' || task.frequenza === 'settimanale'
+
+  // Mappa giorni numerici (0-6, dove 0=domenica) a nomi Weekday
+  // open_weekdays nel DB: 0=domenica, 1=lunedì, 2=martedì, 3=mercoledì, 4=giovedì, 5=venerdì, 6=sabato
+  // ALL_WEEKDAYS: [lunedi, martedi, mercoledi, giovedi, venerdi, sabato, domenica] (ordine settimanale)
+  const availableWeekdays = useMemo(() => {
+    if (!calendarSettings?.open_weekdays || calendarSettings.open_weekdays.length === 0) {
+      // Fallback: tutti i giorni (compatibilità retroattiva)
+      return ALL_WEEKDAYS
+    }
+    
+    // Mappa: DB 0 (domenica) -> 'domenica', DB 1 (lunedì) -> 'lunedi', ecc.
+    const numericToWeekday: Weekday[] = ['domenica', 'lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato']
+    
+    // Mappa i numeri ai weekday e ordina secondo ordine settimanale (lunedì-domenica)
+    const mapped = calendarSettings.open_weekdays
+      .map(dayNum => numericToWeekday[dayNum])
+      .filter((day): day is Weekday => day !== undefined)
+    
+    // Ordina secondo ALL_WEEKDAYS per mantenere ordine settimanale
+    return ALL_WEEKDAYS.filter(day => mapped.includes(day))
+  }, [calendarSettings])
+
+  // Default giorni per frequenza giornaliera: tutti i giorni di apertura
+  const defaultDailyWeekdays = useMemo(() => {
+    return availableWeekdays
+  }, [availableWeekdays])
+
+  // Default giorno per frequenza settimanale: primo giorno di apertura
+  const defaultWeeklyWeekday = useMemo(() => {
+    return availableWeekdays[0] || 'lunedi'
+  }, [availableWeekdays])
 
   // Imposta default giorni settimana quando cambia frequenza
   useEffect(() => {
     if (task.frequenza === 'giornaliera' && (!task.giorniSettimana || task.giorniSettimana.length === 0)) {
-      // Default: tutte selezionate
-      updateTask('giorniSettimana', ALL_WEEKDAYS)
+      // Default: tutti i giorni di apertura selezionati
+      updateTask('giorniSettimana', defaultDailyWeekdays)
     } else if (task.frequenza === 'settimanale' && (!task.giorniSettimana || task.giorniSettimana.length === 0)) {
-      // Default: solo lunedì
-      updateTask('giorniSettimana', ['lunedi'])
+      // Default: primo giorno di apertura (array con un solo elemento)
+      updateTask('giorniSettimana', [defaultWeeklyWeekday])
     } else if (task.frequenza !== 'giornaliera' && task.frequenza !== 'settimanale' && task.giorniSettimana) {
       // Reset quando cambia a frequenza diversa
       updateTask('giorniSettimana', undefined)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task.frequenza])
+  }, [task.frequenza, defaultDailyWeekdays, defaultWeeklyWeekday])
 
   return (
     <div className={cn(
@@ -252,7 +273,7 @@ function MaintenanceTaskForm({
             <SelectTrigger id={`role-select-${index}`} className="w-full">
               <SelectValue placeholder="Seleziona ruolo..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[10000]">
               {STAFF_ROLES.map(role => (
                 <SelectOption key={role.value} value={role.value}>
                   {role.label}
@@ -278,7 +299,7 @@ function MaintenanceTaskForm({
             <SelectTrigger id={`category-select-${index}`} className="w-full">
               <SelectValue placeholder="Seleziona categoria..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[10000]">
               <SelectOption value="all">Tutte le categorie</SelectOption>
               {STAFF_CATEGORIES.map(cat => (
                 <SelectOption key={cat.value} value={cat.value}>
@@ -307,7 +328,7 @@ function MaintenanceTaskForm({
             <SelectTrigger id={`staff-select-${index}`} className="w-full">
               <SelectValue placeholder="Seleziona dipendente..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[10000]">
               <SelectOption value="none">Nessun dipendente specifico</SelectOption>
               {staff
                 .filter(person => {
@@ -331,31 +352,73 @@ function MaintenanceTaskForm({
         </div>
       )}
 
-      {showWeekdaysField && (
-        <div>
+      {task.frequenza === 'giornaliera' && (
+        <div className="space-y-2">
           <Label className="block text-sm font-medium text-gray-700 mb-2">
-            Giorni settimana *
+            Giorni della settimana *
           </Label>
+          <p className="text-xs text-gray-500">
+            Disponibili solo i giorni di apertura dall'onboarding.
+          </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-            {WEEKDAYS_ARRAY.map(weekday => (
-              <label key={weekday.value} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={task.giorniSettimana?.includes(weekday.value) || false}
-                  onChange={(e) => {
-                    const current = task.giorniSettimana || []
-                    const updated = e.target.checked
-                      ? [...current, weekday.value]
-                      : current.filter(d => d !== weekday.value)
-                    updateTask('giorniSettimana', updated)
-                  }}
-                  className="rounded border-gray-300"
-                  aria-label={weekday.label}
-                />
-                <span className="text-sm">{weekday.label}</span>
-              </label>
-            ))}
+            {availableWeekdays.map(weekdayValue => {
+              const weekday = WEEKDAYS_ARRAY.find(w => w.value === weekdayValue)
+              if (!weekday) return null
+              return (
+                <label key={weekday.value} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={task.giorniSettimana?.includes(weekday.value) || false}
+                    onChange={(e) => {
+                      const current = task.giorniSettimana || []
+                      const updated = e.target.checked
+                        ? [...current, weekday.value]
+                        : current.filter(d => d !== weekday.value)
+                      updateTask('giorniSettimana', updated)
+                    }}
+                    className="rounded border-gray-300 text-primary"
+                    aria-label={weekday.label}
+                  />
+                  <span className="text-sm">{weekday.label}</span>
+                </label>
+              )
+            })}
           </div>
+          {isLoadingCalendarSettings && (
+            <p className="text-xs text-gray-400">Caricamento giorni...</p>
+          )}
+        </div>
+      )}
+
+      {task.frequenza === 'settimanale' && (
+        <div className="space-y-2">
+          <Label htmlFor={`weekday-select-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+            Giorno della settimana *
+          </Label>
+          <select
+            id={`weekday-select-${index}`}
+            value={task.giorniSettimana?.[0] || defaultWeeklyWeekday}
+            onChange={(e) => {
+              updateTask('giorniSettimana', [e.target.value as Weekday])
+            }}
+            className="w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+          >
+            {availableWeekdays.map(weekdayValue => {
+              const weekday = WEEKDAYS_ARRAY.find(w => w.value === weekdayValue)
+              if (!weekday) return null
+              return (
+                <option key={weekday.value} value={weekday.value}>
+                  {weekday.label}
+                </option>
+              )
+            })}
+          </select>
+          <p className="text-xs text-gray-500">
+            Disponibili solo i giorni di apertura dall'onboarding.
+          </p>
+          {isLoadingCalendarSettings && (
+            <p className="text-xs text-gray-400">Caricamento giorni...</p>
+          )}
         </div>
       )}
 
@@ -667,6 +730,43 @@ export function AddPointModal({
     }
   }, [isOpen])
 
+  // Validazione specifica per manutenzioni (Task 1.3)
+  const validateMaintenanceTasks = (tasks: MandatoryMaintenanceTask[]): string[] => {
+    const errors: string[] = []
+    tasks.forEach((task, index) => {
+      // 1. Frequenza obbligatoria
+      if (!task.frequenza) {
+        errors.push(`Task ${index + 1}: Frequenza obbligatoria`)
+      }
+      
+      // 2. Assegnazione obbligatoria (ruolo, categoria o dipendente)
+      if (!task.assegnatoARuolo && !task.assegnatoACategoria && !task.assegnatoADipendenteSpecifico) {
+        errors.push(`Task ${index + 1}: Assegnazione obbligatoria (ruolo, categoria o dipendente)`)
+      }
+      
+      // 3. Giorni settimana per giornaliera
+      if (task.frequenza === 'giornaliera' && (!task.giorniSettimana || task.giorniSettimana.length === 0)) {
+        errors.push(`Task ${index + 1}: Seleziona almeno un giorno per frequenza giornaliera`)
+      }
+      
+      // 4. Giorno settimana per settimanale
+      if (task.frequenza === 'settimanale' && (!task.giorniSettimana || task.giorniSettimana.length === 0)) {
+        errors.push(`Task ${index + 1}: Seleziona giorno per frequenza settimanale`)
+      }
+      
+      // 5. Giorno mese per mensile
+      if (task.frequenza === 'mensile' && !task.giornoMese) {
+        errors.push(`Task ${index + 1}: Seleziona giorno del mese per frequenza mensile`)
+      }
+      
+      // 6. Giorno anno per annuale
+      if (task.frequenza === 'annuale' && !task.giornoAnno) {
+        errors.push(`Task ${index + 1}: Seleziona giorno dell'anno per frequenza annuale`)
+      }
+    })
+    return errors
+  }
+
   const validateForm = () => {
     const errors: Record<string, string> = {}
 
@@ -691,35 +791,36 @@ export function AddPointModal({
     }
 
     // Validazione manutenzioni con errori specifici
+    const maintenanceErrors = validateMaintenanceTasks(maintenanceTasks)
     const maintenanceErrorsMap: Record<number, string[]> = {}
-    maintenanceTasks.forEach((task, index) => {
-      const taskErrors: string[] = []
-      const taskName = MAINTENANCE_TYPES[task.manutenzione]?.label || `Manutenzione ${index + 1}`
-
-      if (!task.frequenza) {
-        taskErrors.push('seleziona frequenza')
-      }
-      if (!task.assegnatoARuolo) {
-        taskErrors.push('seleziona ruolo')
-      }
-      if (task.frequenza === 'mensile' && !task.giornoMese) {
-        taskErrors.push('seleziona giorno del mese')
-      }
-      if (task.frequenza === 'annuale' && !task.giornoAnno) {
-        taskErrors.push('seleziona giorno dell\'anno')
-      }
-      if ((task.frequenza === 'giornaliera' || task.frequenza === 'settimanale') && 
-          (!task.giorniSettimana || task.giorniSettimana.length === 0)) {
-        taskErrors.push('seleziona almeno un giorno settimana')
-      }
-
-      if (taskErrors.length > 0) {
-        maintenanceErrorsMap[index] = taskErrors
-        errors[`maintenance_${index}`] = `${taskName}: ${taskErrors.join(', ')}`
-      }
-    })
-
-    if (Object.keys(maintenanceErrorsMap).length > 0) {
+    
+    if (maintenanceErrors.length > 0) {
+      errors.maintenances = maintenanceErrors.join(', ')
+      
+      // Crea mappa per evidenziare errori per task specifico
+      maintenanceTasks.forEach((task, index) => {
+        const taskErrors: string[] = []
+        if (!task.frequenza) {
+          taskErrors.push('seleziona frequenza')
+        }
+        if (!task.assegnatoARuolo && !task.assegnatoACategoria && !task.assegnatoADipendenteSpecifico) {
+          taskErrors.push('seleziona assegnazione')
+        }
+        if (task.frequenza === 'mensile' && !task.giornoMese) {
+          taskErrors.push('seleziona giorno del mese')
+        }
+        if (task.frequenza === 'annuale' && !task.giornoAnno) {
+          taskErrors.push('seleziona giorno dell\'anno')
+        }
+        if ((task.frequenza === 'giornaliera' || task.frequenza === 'settimanale') && 
+            (!task.giorniSettimana || task.giorniSettimana.length === 0)) {
+          taskErrors.push('seleziona giorni settimana')
+        }
+        if (taskErrors.length > 0) {
+          maintenanceErrorsMap[index] = taskErrors
+        }
+      })
+      
       errors.maintenanceTasks = 'Completa tutte le manutenzioni obbligatorie'
     }
 
@@ -876,7 +977,7 @@ export function AddPointModal({
                 <SelectTrigger>
                   <SelectValue placeholder="Seleziona un reparto" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[10000]">
                   {departmentOptions.length === 0 ? (
                     <div className="p-2 text-sm text-gray-500 text-center">
                       Nessun reparto disponibile
