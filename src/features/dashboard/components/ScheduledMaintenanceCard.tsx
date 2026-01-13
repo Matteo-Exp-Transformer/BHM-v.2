@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react'
 import { Wrench, ChevronRight, Clock, User, CheckCircle2, AlertCircle } from 'lucide-react'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
+import { Button } from '@/components/ui/Button'
 import { useConservationPoints } from '@/features/conservation/hooks/useConservationPoints'
 import { useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
 import type { MaintenanceTask } from '@/types/conservation'
+import { STAFF_ROLES, STAFF_CATEGORIES } from '@/utils/haccpRules'
 
 // Tipi per il calcolo dello stato settimanale
 type WeeklyStatus = 'green' | 'yellow' | 'red'
@@ -117,8 +119,9 @@ function StatusIndicator({ status }: { status: WeeklyStatus }) {
  */
 export function ScheduledMaintenanceCard() {
   const { conservationPoints, isLoading: loadingPoints } = useConservationPoints()
-  const { maintenanceTasks, isLoading: loadingTasks } = useMaintenanceTasks()
+  const { maintenanceTasks, isLoading: loadingTasks, completeTask, isCompleting } = useMaintenanceTasks()
   const [expandedPointId, setExpandedPointId] = useState<string | null>(null)
+  const [expandedMaintenanceTypes, setExpandedMaintenanceTypes] = useState<Set<string>>(new Set())
   
   // Raggruppa le manutenzioni per punto di conservazione con calcolo stato
   const pointsWithStatus = useMemo<ConservationPointWithStatus[]>(() => {
@@ -126,10 +129,19 @@ export function ScheduledMaintenanceCard() {
     
     return conservationPoints.map(point => {
       // Filtra solo le manutenzioni obbligatorie per questo punto
-      const pointMaintenances = maintenanceTasks.filter(
-        task => task.conservation_point_id === point.id &&
-                Object.keys(MANDATORY_MAINTENANCE_TYPES).includes(task.type)
-      )
+      // Task 3.2 MODIFICATO: Filtra anche le manutenzioni completate
+      const pointMaintenances = maintenanceTasks
+        .filter(
+          task => task.conservation_point_id === point.id &&
+                  Object.keys(MANDATORY_MAINTENANCE_TYPES).includes(task.type) &&
+                  task.status !== 'completed' // ✅ Filtro completate
+        )
+        .sort((a, b) => {
+          // Ordina per next_due ascendente (più prossime prima)
+          const dateA = new Date(a.next_due).getTime()
+          const dateB = new Date(b.next_due).getTime()
+          return dateA - dateB
+        })
       
       return {
         id: point.id,
@@ -157,6 +169,144 @@ export function ScheduledMaintenanceCard() {
   // Formatta il nome del tipo di manutenzione
   const getMaintenanceName = (type: string): string => {
     return MANDATORY_MAINTENANCE_TYPES[type as keyof typeof MANDATORY_MAINTENANCE_TYPES] || type
+  }
+
+  // Formatta i dettagli assegnazione (ruolo + categoria + reparto + dipendente)
+  const formatAssignmentDetails = (task: MaintenanceTask): string => {
+    const parts: string[] = []
+
+    // Ruolo
+    if (task.assigned_to_role) {
+      const roleLabel = STAFF_ROLES.find(r => r.value === task.assigned_to_role)?.label || task.assigned_to_role
+      parts.push(roleLabel)
+    }
+
+    // Reparto (da conservation_point.department)
+    if (task.conservation_point?.department?.name) {
+      parts.push(task.conservation_point.department.name)
+    }
+
+    // Categoria
+    if (task.assigned_to_category) {
+      const categoryLabel = STAFF_CATEGORIES.find(c => c.value === task.assigned_to_category)?.label || task.assigned_to_category
+      parts.push(categoryLabel)
+    }
+
+    // Dipendente specifico
+    if (task.assigned_user?.name) {
+      parts.push(task.assigned_user.name)
+    }
+
+    return parts.length > 0 ? parts.join(' • ') : 'Non assegnato'
+  }
+
+  // Raggruppa manutenzioni per tipo e ordina per next_due
+  const groupMaintenancesByType = (tasks: MaintenanceTask[]): Record<string, MaintenanceTask[]> => {
+    const grouped: Record<string, MaintenanceTask[]> = {}
+    
+    tasks.forEach(task => {
+      if (!grouped[task.type]) {
+        grouped[task.type] = []
+      }
+      grouped[task.type].push(task)
+    })
+
+    // Ordina ogni gruppo per next_due (già ordinato dal useMemo, ma assicuriamoci)
+    Object.keys(grouped).forEach(type => {
+      grouped[type].sort((a, b) => {
+        const dateA = new Date(a.next_due).getTime()
+        const dateB = new Date(b.next_due).getTime()
+        return dateA - dateB
+      })
+    })
+
+    return grouped
+  }
+
+  // Rendering manutenzione singola (riutilizzabile)
+  const renderMaintenanceTask = (task: MaintenanceTask) => {
+    const isCompleted = task.status === 'completed'
+    const isOverdue = new Date(task.next_due) < new Date() && !isCompleted
+
+    return (
+      <div
+        key={task.id}
+        className="flex items-start justify-between rounded-lg border border-gray-200 bg-white p-3 text-sm"
+      >
+        <div className="flex-1 space-y-1">
+          {/* Tipo manutenzione */}
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-gray-900">
+              {getMaintenanceName(task.type)}
+            </span>
+            {isCompleted && (
+              <CheckCircle2
+                className="h-4 w-4 text-green-600"
+                aria-label="Completata"
+              />
+            )}
+            {isOverdue && (
+              <AlertCircle
+                className="h-4 w-4 text-red-600"
+                aria-label="In ritardo"
+              />
+            )}
+          </div>
+          
+          {/* Prossima scadenza */}
+          <div className="flex items-center gap-1.5 text-gray-600">
+            <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>
+              Scadenza: {formatDate(task.next_due)}
+            </span>
+            {isOverdue && (
+              <span className="ml-1 text-red-600 font-medium">
+                (In ritardo)
+              </span>
+            )}
+          </div>
+          
+          {/* Assegnato a */}
+          <div className="flex items-center gap-1.5 text-gray-600">
+            <User className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="text-sm">
+              Assegnato a: {formatAssignmentDetails(task)}
+            </span>
+          </div>
+          
+          {/* Data completamento (se completata) */}
+          {isCompleted && task.last_completed && (
+            <div className="text-xs text-green-700">
+              Completata il: {formatDate(task.last_completed)}
+            </div>
+          )}
+        </div>
+        
+        {/* Pulsante Completa (solo se non completata) */}
+        {!isCompleted && (
+          <div className="ml-4 flex-shrink-0">
+            <Button
+              size="sm"
+              variant="default"
+              onClick={(e) => {
+                e.stopPropagation() // Previene l'espansione/chiusura della card
+                completeTask({
+                  maintenance_task_id: task.id,
+                  completed_at: new Date(),
+                  completed_by: '', // user.id verrà usato dal hook se vuoto
+                  notes: undefined,
+                  photos: undefined,
+                })
+              }}
+              disabled={isCompleting}
+              className="whitespace-nowrap"
+            >
+              {isCompleting ? 'Completamento...' : 'Completa'}
+            </Button>
+          </div>
+        )}
+      </div>
+    )
   }
   
   const isLoading = loadingPoints || loadingTasks
@@ -217,66 +367,57 @@ export function ScheduledMaintenanceCard() {
                   </p>
                 ) : (
                   <div className="space-y-3">
-                    {point.maintenances.map(task => {
-                      const isCompleted = task.status === 'completed'
-                      const isOverdue = new Date(task.next_due) < new Date() && !isCompleted
+                    {(() => {
+                      const grouped = groupMaintenancesByType(point.maintenances)
                       
-                      return (
-                        <div
-                          key={task.id}
-                          className="flex items-start justify-between rounded-lg border border-gray-200 bg-white p-3 text-sm"
-                        >
-                          <div className="flex-1 space-y-1">
-                            {/* Tipo manutenzione */}
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-900">
-                                {getMaintenanceName(task.type)}
-                              </span>
-                              {isCompleted && (
-                                <CheckCircle2
-                                  className="h-4 w-4 text-green-600"
-                                  aria-label="Completata"
-                                />
-                              )}
-                              {isOverdue && (
-                                <AlertCircle
-                                  className="h-4 w-4 text-red-600"
-                                  aria-label="In ritardo"
-                                />
-                              )}
-                            </div>
-                            
-                            {/* Prossima scadenza */}
-                            <div className="flex items-center gap-1.5 text-gray-600">
-                              <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                              <span>
-                                Scadenza: {formatDate(task.next_due)}
-                              </span>
-                              {isOverdue && (
-                                <span className="ml-1 text-red-600 font-medium">
-                                  (In ritardo)
-                                </span>
-                              )}
-                            </div>
-                            
-                            {/* Assegnato a */}
-                            <div className="flex items-center gap-1.5 text-gray-600">
-                              <User className="h-3.5 w-3.5" aria-hidden="true" />
-                              <span>
-                                Assegnato a: {task.assigned_to || 'Non assegnato'}
-                              </span>
-                            </div>
-                            
-                            {/* Data completamento (se completata) */}
-                            {isCompleted && task.last_completed && (
-                              <div className="text-xs text-green-700">
-                                Completata il: {formatDate(task.last_completed)}
-                              </div>
+                      return Object.entries(grouped).map(([type, tasks]) => {
+                        const firstTask = tasks[0]
+                        const nextTasks = tasks.slice(1, 3) // Prossime 2
+                        const expandKey = `${point.id}-${type}`
+                        const isExpanded = expandedMaintenanceTypes.has(expandKey)
+                        const typeName = getMaintenanceName(type)
+
+                        return (
+                          <div key={type} className="space-y-2">
+                            {/* Prima manutenzione (sempre visibile) */}
+                            {renderMaintenanceTask(firstTask)}
+
+                            {/* Prossime 2 manutenzioni (espandibile) */}
+                            {nextTasks.length > 0 && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation() // Previene l'espansione/chiusura della card punto
+                                    setExpandedMaintenanceTypes(prev => {
+                                      const next = new Set(prev)
+                                      if (next.has(expandKey)) {
+                                        next.delete(expandKey)
+                                      } else {
+                                        next.add(expandKey)
+                                      }
+                                      return next
+                                    })
+                                  }}
+                                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                >
+                                  {isExpanded 
+                                    ? `Nascondi altre manutenzioni ${typeName}` 
+                                    : `Mostra altre ${nextTasks.length} manutenzioni ${typeName}`
+                                  }
+                                </button>
+
+                                {isExpanded && (
+                                  <div className="space-y-2 pl-4 border-l-2 border-gray-200">
+                                    {nextTasks.map(task => renderMaintenanceTask(task))}
+                                  </div>
+                                )}
+                              </>
                             )}
                           </div>
-                        </div>
-                      )
-                    })}
+                        )
+                      })
+                    })()}
                   </div>
                 )}
               </div>
