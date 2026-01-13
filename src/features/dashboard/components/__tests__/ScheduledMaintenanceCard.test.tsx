@@ -133,7 +133,8 @@ describe('ScheduledMaintenanceCard - TASK 3.4: Pulsante Completa', () => {
 
     // Aspetta che le manutenzioni vengano renderizzate
     await waitFor(() => {
-      expect(screen.getByText(/Rilevamento Temperature/i)).toBeInTheDocument()
+      // Task 3.3: Ora c'è un header con il nome tipo, quindi ci sono multipli elementi
+      expect(screen.getAllByText(/Rilevamento Temperature/i).length).toBeGreaterThan(0)
     })
 
     // Verifica che il pulsante "Completa" sia presente
@@ -243,7 +244,8 @@ describe('ScheduledMaintenanceCard - TASK 3.4: Pulsante Completa', () => {
     await userEvent.click(pointCard)
 
     await waitFor(() => {
-      expect(screen.getByText(/Rilevamento Temperature/i)).toBeInTheDocument()
+      // Task 3.3: Ora c'è un header con il nome tipo, quindi ci sono multipli elementi
+      expect(screen.getAllByText(/Rilevamento Temperature/i).length).toBeGreaterThan(0)
     })
 
     // Trova e clicca il pulsante "Completa"
@@ -478,7 +480,8 @@ describe('ScheduledMaintenanceCard - TASK 3.4: Pulsante Completa', () => {
     await userEvent.click(pointCard)
 
     await waitFor(() => {
-      expect(screen.getByText(/Rilevamento Temperature/i)).toBeInTheDocument()
+      // Task 3.3: Ora c'è un header con il nome tipo, quindi ci sono multipli elementi
+      expect(screen.getAllByText(/Rilevamento Temperature/i).length).toBeGreaterThan(0)
     })
 
     // Verifica che il pulsante sia disabilitato e mostri "Completamento..."
@@ -618,7 +621,8 @@ describe('ScheduledMaintenanceCard - TASK 3.1: Visualizza Dettagli Assegnazione'
     await userEvent.click(pointCard)
 
     await waitFor(() => {
-      expect(screen.getByText(/Rilevamento Temperature/i)).toBeInTheDocument()
+      // Task 3.3: Ora c'è un header con il nome tipo, quindi ci sono multipli elementi
+      expect(screen.getAllByText(/Rilevamento Temperature/i).length).toBeGreaterThan(0)
     })
 
     // Verifica formato completo: Ruolo | Reparto | Categoria | Dipendente
@@ -742,7 +746,8 @@ describe('ScheduledMaintenanceCard - TASK 3.1: Visualizza Dettagli Assegnazione'
     await userEvent.click(pointCard)
 
     await waitFor(() => {
-      expect(screen.getByText(/Rilevamento Temperature/i)).toBeInTheDocument()
+      // Task 3.3: Ora c'è un header con il nome tipo, quindi ci sono multipli elementi
+      expect(screen.getAllByText(/Rilevamento Temperature/i).length).toBeGreaterThan(0)
     })
 
     // Verifica che venga mostrato "Non assegnato"
@@ -879,14 +884,15 @@ describe('ScheduledMaintenanceCard - TASK 3.2 MODIFICATO: Ordina Manutenzioni + 
     await userEvent.click(pointCard)
 
     await waitFor(() => {
-      expect(screen.getByText(/Sanificazione/i)).toBeInTheDocument()
+      // Task 3.3: Ora c'è un header con il nome tipo, quindi ci sono multipli elementi
+      expect(screen.getAllByText(/Sanificazione/i).length).toBeGreaterThan(0)
     })
 
     // ✅ Verifica che la manutenzione completata NON sia visualizzata
     expect(screen.queryByText(/Manutenzione Completata/i)).not.toBeInTheDocument()
     
     // ✅ Verifica che la manutenzione pendente SIA visualizzata
-    expect(screen.getByText(/Sanificazione/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Sanificazione/i).length).toBeGreaterThan(0)
   })
 
   it('should display maintenances ordered by next_due ascending (earliest first)', async () => {
@@ -1026,7 +1032,8 @@ describe('ScheduledMaintenanceCard - TASK 3.2 MODIFICATO: Ordina Manutenzioni + 
     await userEvent.click(pointCard)
 
     await waitFor(() => {
-      expect(screen.getByText(/Sanificazione/i)).toBeInTheDocument()
+      // Task 3.3: Ora c'è un header con il nome tipo, quindi ci sono multipli elementi
+      expect(screen.getAllByText(/Sanificazione/i).length).toBeGreaterThan(0)
     })
 
     // Verifica che le manutenzioni siano ordinate per scadenza (più prossime prima)

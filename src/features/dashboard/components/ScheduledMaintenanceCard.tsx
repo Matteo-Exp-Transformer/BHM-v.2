@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Wrench, ChevronRight, Clock, User, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Wrench, ChevronRight, ChevronDown, Clock, User, CheckCircle2, AlertCircle } from 'lucide-react'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 import { Button } from '@/components/ui/Button'
 import { useConservationPoints } from '@/features/conservation/hooks/useConservationPoints'
@@ -366,23 +366,32 @@ export function ScheduledMaintenanceCard() {
                     Nessuna manutenzione obbligatoria configurata per questo punto
                   </p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {(() => {
                       const grouped = groupMaintenancesByType(point.maintenances)
                       
                       return Object.entries(grouped).map(([type, tasks]) => {
+                        if (tasks.length === 0) return null
+                        
                         const firstTask = tasks[0]
-                        const nextTasks = tasks.slice(1, 3) // Prossime 2
+                        const nextTasks = tasks.slice(1) // Tutte le altre manutenzioni
                         const expandKey = `${point.id}-${type}`
                         const isExpanded = expandedMaintenanceTypes.has(expandKey)
                         const typeName = getMaintenanceName(type)
 
                         return (
                           <div key={type} className="space-y-2">
+                            {/* Header tipo con conteggio */}
+                            <div className="flex items-center justify-between px-2 py-1">
+                              <h4 className="font-medium text-gray-900 text-sm">
+                                {typeName} ({tasks.length})
+                              </h4>
+                            </div>
+
                             {/* Prima manutenzione (sempre visibile) */}
                             {renderMaintenanceTask(firstTask)}
 
-                            {/* Prossime 2 manutenzioni (espandibile) */}
+                            {/* Altre manutenzioni (espandibile) */}
                             {nextTasks.length > 0 && (
                               <>
                                 <button
@@ -399,12 +408,20 @@ export function ScheduledMaintenanceCard() {
                                       return next
                                     })
                                   }}
-                                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                  className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors px-2"
                                 >
-                                  {isExpanded 
-                                    ? `Nascondi altre manutenzioni ${typeName}` 
-                                    : `Mostra altre ${nextTasks.length} manutenzioni ${typeName}`
-                                  }
+                                  <ChevronDown
+                                    className={`h-4 w-4 transition-transform ${
+                                      isExpanded ? 'rotate-180' : ''
+                                    }`}
+                                    aria-hidden="true"
+                                  />
+                                  <span>
+                                    {isExpanded 
+                                      ? `Nascondi altre ${nextTasks.length} manutenzioni ${typeName}` 
+                                      : `Mostra altre ${nextTasks.length} manutenzioni ${typeName}`
+                                    }
+                                  </span>
                                 </button>
 
                                 {isExpanded && (
