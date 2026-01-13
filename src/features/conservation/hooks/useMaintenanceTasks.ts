@@ -296,7 +296,6 @@ export function useMaintenanceTasks(conservationPointId?: string) {
 
       // 3. Crea il record di completamento
       // Nota: La tabella usa completion_notes invece di notes, photos è jsonb, e next_due è stata aggiunta dalla migration 016
-      // @ts-expect-error - maintenance_completions table type not yet generated after migration
       const completionPayload: any = {
         maintenance_task_id: completion.maintenance_task_id,
         company_id: companyId,
@@ -309,11 +308,8 @@ export function useMaintenanceTasks(conservationPointId?: string) {
           : (completion.photos ? [completion.photos] : []), // photos è jsonb nella tabella
       }
 
-      // @ts-expect-error - maintenance_completions table type not yet generated after migration
       const { data: completionResult, error: completionError } = await supabase
-        // @ts-expect-error - maintenance_completions table type not yet generated after migration
         .from('maintenance_completions')
-        // @ts-expect-error - maintenance_completions table type not yet generated after migration
         .insert([completionPayload])
         .select()
         .single()
