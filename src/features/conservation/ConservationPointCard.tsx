@@ -7,6 +7,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import type { ConservationPoint } from '@/types/conservation'
+import { validateTemperatureForType } from '@/utils/onboarding/conservationUtils'
 
 interface ConservationPointCardProps {
   point: ConservationPoint
@@ -76,6 +77,41 @@ export function ConservationPointCard({
   }
 
   const latestReading = point.last_temperature_reading
+  
+  // Calculate temperature status based on point type and target temperature
+  const getTemperatureStatus = (): 'compliant' | 'warning' | 'critical' => {
+    if (!latestReading || !point.type || point.type === 'ambient') {
+      return 'compliant' // Default for ambient or no reading
+    }
+    
+    const validation = validateTemperatureForType(latestReading.temperature, point.type)
+    if (!validation.valid) {
+      return 'critical' // Out of range = critical
+    }
+    
+    // Check if temperature is close to limits (warning)
+    const typeInfo = {
+      fridge: { min: 1, max: 15 },
+      freezer: { min: -25, max: -1 },
+      blast: { min: -90, max: -15 },
+      ambient: { min: null, max: null },
+    }[point.type]
+    
+    if (typeInfo && typeInfo.min !== null && typeInfo.max !== null) {
+      const temp = latestReading.temperature
+      const range = typeInfo.max - typeInfo.min
+      const margin = range * 0.15 // 15% margin for warning
+      
+      if (temp <= typeInfo.min + margin || temp >= typeInfo.max - margin) {
+        return 'warning' // Close to limits = warning
+      }
+    }
+    
+    return 'compliant' // Within safe range
+  }
+  
+  const temperatureStatus = getTemperatureStatus()
+  
   const pendingMaintenance =
     point.maintenance_tasks?.filter(task => {
       if (!task.next_due) return false
@@ -109,6 +145,8 @@ export function ConservationPointCard({
   return (
     <div
       className={`bg-white rounded-lg border-2 transition-colors hover:shadow-md ${getStatusColor(point.status)}`}
+      role="region"
+      aria-label={`Dettagli punto conservazione ${point.name}`}
     >
       {/* Header */}
       <div className="p-4 border-b border-gray-100">
@@ -142,11 +180,9 @@ export function ConservationPointCard({
               <span className="text-sm text-gray-600">Ultima Lettura</span>
               <span
                 className={`text-lg font-bold ${
-                  // latestReading.status === 'compliant'
-                  true
+                  temperatureStatus === 'compliant'
                     ? 'text-green-600'
-                    : // latestReading.status === 'warning'
-                      false
+                    : temperatureStatus === 'warning'
                       ? 'text-yellow-600'
                       : 'text-red-600'
                 }`}
@@ -159,21 +195,18 @@ export function ConservationPointCard({
               <span>📅 {formatDate(latestReading.recorded_at)}</span>
               <span
                 className={`px-2 py-0.5 rounded-full font-medium ${
-                  // latestReading.status === 'compliant'
-                  true
+                  temperatureStatus === 'compliant'
                     ? 'bg-green-100 text-green-700'
-                    : // latestReading.status === 'warning'
-                      false
+                    : temperatureStatus === 'warning'
                       ? 'bg-yellow-100 text-yellow-700'
                       : 'bg-red-100 text-red-700'
                 }`}
               >
-                {/* latestReading.status === 'compliant'
+                {temperatureStatus === 'compliant'
                   ? 'Conforme'
-                  : latestReading.status === 'warning'
+                  : temperatureStatus === 'warning'
                     ? 'Attenzione'
-                    : 'Critico' */}
-                Conforme
+                    : 'Critico'}
               </span>
             </div>
 
@@ -276,16 +309,18 @@ export function ConservationPointCard({
           <button
             onClick={onAddTemperature}
             className="flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+            aria-label={`Aggiungi temperatura per ${point.name}`}
           >
-            <Thermometer className="w-4 h-4" />
+            <Thermometer className="w-4 h-4" aria-hidden="true" />
             Temp.
           </button>
 
           <button
             onClick={onAddMaintenance}
             className="flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label={`Aggiungi manutenzione per ${point.name}`}
           >
-            <Wrench className="w-4 h-4" />
+            <Wrench className="w-4 h-4" aria-hidden="true" />
             Manuten.
           </button>
         </div>
@@ -295,8 +330,9 @@ export function ConservationPointCard({
           <button
             onClick={onAddMaintenance}
             className="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+            aria-label={`Manutenzione urgente per ${point.name}, ${pendingMaintenance.length} manutenzioni in scadenza`}
           >
-            <Clock className="w-4 h-4" />
+            <Clock className="w-4 h-4" aria-hidden="true" />
             Manutenzione Urgente
           </button>
         )}
