@@ -97,30 +97,44 @@ export default defineConfig({
       }
     },
     {
+      name: 'Calendar',
+      testMatch: '**/calendar/**/*.spec.ts',
+      use: {
+        baseURL: BASE_URL
+      }
+    },
+    {
       name: 'Autenticazione',
       testMatch: '**/Autenticazione/**/*.js',
-      use: { 
+      use: {
         baseURL: BASE_URL
       }
     },
     {
       name: 'UI-Base',
       testMatch: '**/UI-Base/**/*.js',
-      use: { 
+      use: {
         baseURL: BASE_URL
       }
     },
     {
       name: 'Forms',
       testMatch: '**/Forms/**/*.js',
-      use: { 
+      use: {
         baseURL: BASE_URL
       }
     },
     {
       name: 'Business',
       testMatch: '**/Business/**/*.js',
-      use: { 
+      use: {
+        baseURL: BASE_URL
+      }
+    },
+    {
+      name: 'Conservation',
+      testMatch: '**/conservation/**/*.spec.ts',
+      use: {
         baseURL: BASE_URL
       }
     }
