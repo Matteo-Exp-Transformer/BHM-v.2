@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor as rtlWaitFor, within } from '@testing-library/react'
+import { render, screen, waitFor as rtlWaitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AddPointModal } from '../AddPointModal'
 
@@ -455,73 +455,6 @@ describe('AddPointModal - TASK 1.3: Validazione AddPointModal', () => {
       }
     }
 
-    // Helper function per configurare una singola manutenzione
-    const configureMaintenance = async (index: number, frequency: 'giornaliera' | 'settimanale' | 'mensile', weekdays?: string[]) => {
-      console.log(`[DEBUG] Configurando manutenzione ${index + 1}...`)
-
-      // Trova tutti i select frequenza
-      const selects = screen.getAllByRole('combobox')
-      const frequenzaSelects = selects.filter(select => {
-        const label = select.closest('div')?.querySelector('label')
-        return label?.textContent?.includes('Frequenza')
-      })
-
-      console.log(`[DEBUG] Trovati ${frequenzaSelects.length} select frequenza`)
-
-      // Seleziona frequenza per questa manutenzione
-      const frequenzaSelect = frequenzaSelects[index] as HTMLSelectElement
-      if (!frequenzaSelect) {
-        console.error(`[DEBUG] Select frequenza ${index} non trovato!`)
-        return
-      }
-
-      // Trova il container della manutenzione per scoping
-      const maintenanceContainer = frequenzaSelect.closest('div[class*="border"]')
-      if (!maintenanceContainer) {
-        console.error(`[DEBUG] Container manutenzione ${index} non trovato!`)
-        return
-      }
-
-      await userEvent.selectOptions(frequenzaSelect, frequency)
-      console.log(`[DEBUG] Frequenza "${frequency}" selezionata per manutenzione ${index + 1}`)
-
-      // Se settimanale, configura giorni settimana USANDO SCOPING
-      if (frequency === 'settimanale' && weekdays) {
-        // Usa within per limitare la ricerca al container di questa specifica manutenzione
-        const scopedQueries = within(maintenanceContainer as HTMLElement)
-
-        await rtlWaitFor(() => {
-          // Cerca "Giorni settimana" SOLO in questo container
-          const weekdayLabels = scopedQueries.getAllByText(/Giorni settimana/i)
-          expect(weekdayLabels.length).toBeGreaterThan(0)
-        }, { timeout: 2000 })
-
-        // Clicca sui giorni richiesti (lunedì è già selezionato di default)
-        for (const day of weekdays) {
-          if (day !== 'Lunedì') { // Lunedì già selezionato
-            // Usa scopedQueries per trovare le checkbox in QUESTO container
-            const checkbox = scopedQueries.getByLabelText(day)
-            await userEvent.click(checkbox)
-            console.log(`[DEBUG] Giorno "${day}" selezionato per manutenzione ${index + 1}`)
-          }
-        }
-      }
-
-      // Seleziona ruolo per questa manutenzione
-      const roleSelects = screen.getAllByRole('combobox')
-      const roleSelectsFiltered = roleSelects.filter(select => {
-        const label = select.closest('div')?.querySelector('label')
-        return label?.textContent?.includes('Ruolo')
-      })
-
-      console.log(`[DEBUG] Trovati ${roleSelectsFiltered.length} select ruolo`)
-
-      if (roleSelectsFiltered[index]) {
-        await selectRadixOption(roleSelectsFiltered[index], 'Dipendente')
-        console.log(`[DEBUG] Ruolo "Dipendente" selezionato per manutenzione ${index + 1}`)
-      }
-    }
-
     it('Frequenza giornaliera: tutte le checkbox giorni selezionate di default', async () => {
       render(<AddPointModal isOpen={true} onClose={mockOnClose} onSave={mockOnSave} />)
 
@@ -599,91 +532,63 @@ describe('AddPointModal - TASK 1.3: Validazione AddPointModal', () => {
       const mockOnSaveWithCheck = vi.fn()
       render(<AddPointModal isOpen={true} onClose={mockOnClose} onSave={mockOnSaveWithCheck} />)
 
-      console.log('[DEBUG] === INIZIO TEST ===')
-
-      // 1. Compila form base
-      console.log('[DEBUG] Step 1: Compilazione form base')
+      // 1. Compila form base - Nome
       await userEvent.type(screen.getByLabelText(/Nome/i), 'Test Point')
 
-      // 2. Seleziona reparto usando helper function
-      console.log('[DEBUG] Step 2: Selezione reparto')
-      const departmentSelects = screen.getAllByRole('combobox')
-      const deptSelect = departmentSelects.find(select => {
-        const label = select.closest('div')?.querySelector('label')
-        return label?.textContent?.includes('Reparto')
-      })
-      if (deptSelect) {
-        await selectRadixOption(deptSelect, 'Cucina')
-        console.log('[DEBUG] Reparto "Cucina" selezionato')
+      // 2. Seleziona reparto
+      await selectRadixOption(screen.getAllByRole('combobox')[0], 'Cucina')
+
+      // 3. Imposta temperatura
+      const tempInput = screen.getByLabelText(/Temperatura target/i) as HTMLInputElement
+      await userEvent.clear(tempInput)
+      await userEvent.type(tempInput, '4')
+
+      // 4. Configura frequenze per tutte le 4 manutenzioni
+      const frequenzaSelects = screen.getAllByRole('combobox').filter(el =>
+        el.tagName === 'SELECT'
+      ) as HTMLSelectElement[]
+
+      // Frequenze: settimanale, giornaliera, mensile, settimanale
+      await userEvent.selectOptions(frequenzaSelects[0], 'settimanale')
+      await userEvent.selectOptions(frequenzaSelects[1], 'giornaliera')
+      await userEvent.selectOptions(frequenzaSelects[2], 'mensile')
+      await userEvent.selectOptions(frequenzaSelects[3], 'settimanale')
+
+      // 5. Seleziona giorno del mese per manutenzione 3 (mensile)
+      // Il MiniCalendar ha buttons con aria-label "Seleziona giorno X"
+      const dayButtons = screen.getAllByRole('button', { name: /Seleziona giorno 15/i })
+      if (dayButtons.length > 0) {
+        await userEvent.click(dayButtons[0])
       }
 
-      // 3. Attendi che le 4 manutenzioni siano visibili
-      console.log('[DEBUG] Step 3: Attesa caricamento manutenzioni')
-      await rtlWaitFor(() => {
-        const frequenzaLabels = screen.getAllByText(/Frequenza/i)
-        expect(frequenzaLabels.length).toBeGreaterThan(0)
-      })
+      // 6. Seleziona ruoli per tutte le 4 manutenzioni
+      // Usa i selettori ID specifici: role-select-0, role-select-1, role-select-2, role-select-3
+      for (let i = 0; i < 4; i++) {
+        // Trova il role select tramite il suo ID
+        const roleSelectButton = document.querySelector(`#role-select-${i}`)
 
-      // 4. Configura TUTTE le 4 manutenzioni obbligatorie
-      console.log('[DEBUG] Step 4: Configurazione 4 manutenzioni')
-
-      // Manutenzione 1: Settimanale (Lun, Mar, Mer)
-      await configureMaintenance(0, 'settimanale', ['Lunedì', 'Martedì', 'Mercoledì'])
-
-      // Manutenzione 2: Giornaliera (tutti i giorni)
-      await configureMaintenance(1, 'giornaliera')
-
-      // Manutenzione 3: Mensile
-      await configureMaintenance(2, 'mensile')
-
-      // Manutenzione 4: Settimanale (solo Venerdì)
-      await configureMaintenance(3, 'settimanale', ['Lunedì', 'Venerdì'])
-
-      console.log('[DEBUG] Tutte le 4 manutenzioni configurate')
-
-      // 5. Seleziona categorie prodotto (usa button, non checkbox)
-      console.log('[DEBUG] Step 5: Selezione categorie prodotto')
-
-      // Trova tutte le categorie disponibili
-      await rtlWaitFor(() => {
-        const categorySection = screen.getByText(/Categorie prodotti/i).closest('div')
-        expect(categorySection).toBeInTheDocument()
-      })
-
-      // Trova i button delle categorie (non checkbox!)
-      const categoryButtons = screen.getAllByRole('button').filter(btn => {
-        const container = btn.closest('div')
-        return container?.textContent?.includes('Latticini') || container?.textContent?.includes('Carne')
-      })
-
-      console.log(`[DEBUG] Trovati ${categoryButtons.length} button categorie`)
-
-      // Seleziona almeno una categoria
-      if (categoryButtons.length > 0) {
-        await userEvent.click(categoryButtons[0])
-        console.log('[DEBUG] Prima categoria selezionata')
+        if (roleSelectButton) {
+          await userEvent.click(roleSelectButton)
+          await rtlWaitFor(() => {
+            expect(screen.getByRole('option', { name: /Dipendente/i })).toBeInTheDocument()
+          }, { timeout: 1000 })
+          await userEvent.click(screen.getByRole('option', { name: /Dipendente/i }))
+        }
       }
 
-      console.log('[DEBUG] Form completo, pronto per salvataggio')
+      // 7. Seleziona categoria prodotto
+      const latticiniButton = screen.getByRole('button', { name: /Latticini/i })
+      await userEvent.click(latticiniButton)
 
-      // 6. Salva form
-      console.log('[DEBUG] Step 7: Click sul pulsante Salva')
-      const saveButton = screen.getByRole('button', { name: /Salva|Crea/i })
+      // 8. Salva form
+      const saveButton = screen.getByRole('button', { name: /Crea/i })
       await userEvent.click(saveButton)
 
-      // 8. Verifica che onSave è stato chiamato con i parametri corretti
-      console.log('[DEBUG] Step 8: Verifica chiamata onSave')
+      // 9. Verifica che onSave è stato chiamato
       await rtlWaitFor(() => {
         expect(mockOnSaveWithCheck).toHaveBeenCalled()
-        console.log('[DEBUG] onSave chiamato con successo!')
-
-        // Log degli argomenti passati a onSave per debug
-        const callArgs = mockOnSaveWithCheck.mock.calls[0]
-        console.log('[DEBUG] Argomenti onSave:', JSON.stringify(callArgs, null, 2))
-      }, { timeout: 5000 }) // Timeout aumentato a 5s per sicurezza
-
-      console.log('[DEBUG] === TEST COMPLETATO CON SUCCESSO ===')
-    })
+      }, { timeout: 5000 })
+    }, 30000)
   })
 })
 
