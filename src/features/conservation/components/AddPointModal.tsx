@@ -20,13 +20,30 @@ import {
 import { MiniCalendar } from '@/components/ui/MiniCalendar'
 import {
   CONSERVATION_POINT_TYPES,
-  validateTemperatureForType,
+  // BUG M1 FIX: Rimosso validateTemperatureForType - non piu' necessario
 } from '@/utils/onboarding/conservationUtils'
 import { STAFF_ROLES, STAFF_CATEGORIES } from '@/utils/haccpRules'
 import { calculateNextDue, useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
 import type { MaintenanceFrequency as EnglishMaintenanceFrequency, MaintenanceTask as DBMaintenanceTask } from '@/types/conservation'
 import { cn } from '@/lib/utils'
 import { useCalendarSettings } from '@/hooks/useCalendarSettings'
+
+// BUG M1 FIX: Valori default non piu' usati per il campo temperatura
+// Il campo ora mostra solo il range consigliato come placeholder
+const DEFAULT_TEMPERATURES: Record<string, number> = {
+  fridge: 4,
+  freezer: -18,
+  blast: -30,
+  ambient: 20,
+}
+
+// BUG M1 FIX: Range temperatura per placeholder
+const TEMPERATURE_RANGES: Record<string, string> = {
+  fridge: '1°C - 15°C',
+  freezer: '-25°C - -1°C',
+  blast: '-90°C - -15°C',
+  ambient: 'Non impostabile'
+}
 
 type StandardMaintenanceType =
   | 'rilevamento_temperatura'
@@ -194,7 +211,7 @@ function MaintenanceTaskForm({
 
   // Default giorni per frequenza giornaliera: tutti i giorni di apertura
   const defaultDailyWeekdays = useMemo(() => {
-    return availableWeekdays
+    return availableWeekdays || ALL_WEEKDAYS
   }, [availableWeekdays])
 
   // Default giorno per frequenza settimanale: primo giorno di apertura
@@ -241,10 +258,21 @@ function MaintenanceTaskForm({
             Frequenza *
           </label>
           <select
+            data-testid={`frequenza-select-${index}`}
             value={task.frequenza}
-            onChange={e =>
-              updateTask('frequenza', e.target.value as MaintenanceFrequency)
-            }
+            onChange={e => {
+              const newFrequency = e.target.value as MaintenanceFrequency
+              // Quando si seleziona frequenza giornaliera, imposta automaticamente i giorni di apertura
+              if (newFrequency === 'giornaliera') {
+                onUpdate(index, {
+                  ...task,
+                  frequenza: newFrequency,
+                  giorniSettimana: defaultDailyWeekdays,
+                })
+              } else {
+                updateTask('frequenza', newFrequency)
+              }
+            }}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
@@ -265,15 +293,20 @@ function MaintenanceTaskForm({
           <Select
             value={task.assegnatoARuolo || ''}
             onValueChange={(value) => {
-              updateTask('assegnatoARuolo', value as StaffRole)
-              updateTask('assegnatoACategoria', undefined)
-              updateTask('assegnatoADipendenteSpecifico', undefined)
+              // FIX BUG C1: Aggiorna tutti i campi in una singola chiamata
+              // per evitare che le chiamate successive sovrascrivano il valore
+              onUpdate(index, {
+                ...task,
+                assegnatoARuolo: value as StaffRole,
+                assegnatoACategoria: undefined,
+                assegnatoADipendenteSpecifico: undefined,
+              })
             }}
           >
             <SelectTrigger id={`role-select-${index}`} className="w-full">
               <SelectValue placeholder="Seleziona ruolo..." />
             </SelectTrigger>
-            <SelectContent className="z-[10000]">
+            <SelectContent position="popper" sideOffset={5} className="z-[10001]">
               {STAFF_ROLES.map(role => (
                 <SelectOption key={role.value} value={role.value}>
                   {role.label}
@@ -292,14 +325,19 @@ function MaintenanceTaskForm({
           <Select
             value={task.assegnatoACategoria || 'all'}
             onValueChange={(value) => {
-              updateTask('assegnatoACategoria', value)
-              updateTask('assegnatoADipendenteSpecifico', undefined)
+              // FIX BUG C1-bis: Aggiorna tutti i campi in una singola chiamata
+              // per evitare che le chiamate successive sovrascrivano il valore
+              onUpdate(index, {
+                ...task,
+                assegnatoACategoria: value,
+                assegnatoADipendenteSpecifico: undefined,
+              })
             }}
           >
             <SelectTrigger id={`category-select-${index}`} className="w-full">
               <SelectValue placeholder="Seleziona categoria..." />
             </SelectTrigger>
-            <SelectContent className="z-[10000]">
+            <SelectContent position="popper" sideOffset={5} className="z-[10001]">
               <SelectOption value="all">Tutte le categorie</SelectOption>
               {STAFF_CATEGORIES.map(cat => (
                 <SelectOption key={cat.value} value={cat.value}>
@@ -328,7 +366,7 @@ function MaintenanceTaskForm({
             <SelectTrigger id={`staff-select-${index}`} className="w-full">
               <SelectValue placeholder="Seleziona dipendente..." />
             </SelectTrigger>
-            <SelectContent className="z-[10000]">
+            <SelectContent position="popper" sideOffset={5} className="z-[10001]">
               <SelectOption value="none">Nessun dipendente specifico</SelectOption>
               {staff
                 .filter(person => {
@@ -487,16 +525,14 @@ export function AddPointModal({
   // Carica manutenzioni esistenti quando point è presente (modalità edit)
   const { maintenanceTasks: existingMaintenances } = useMaintenanceTasks(point?.id)
 
+  // BUG M1 FIX: Rimosso targetTemperature e isManuallyEdited - campo temperatura ora informativo
   const [formData, setFormData] = useState({
     name: '',
     departmentId: '',
-    targetTemperature: '',
     pointType: 'fridge' as ConservationPointType,
     isBlastChiller: false,
     productCategories: [] as string[],
   })
-
-  const [isManuallyEdited, setIsManuallyEdited] = useState(false)
 
   // Genera manutenzioni obbligatorie basate sul tipo di punto
   const getRequiredMaintenanceTasks = (pointType: ConservationPointType): MandatoryMaintenanceTask[] => {
@@ -577,55 +613,38 @@ export function AddPointModal({
     }
   }, [formData.pointType, point])
 
-  // Aggiorna temperatura target automaticamente quando cambia il tipo di punto
-  // Solo se l'utente non ha modificato manualmente la temperatura
-  useEffect(() => {
-    if (isManuallyEdited) return // Non sovrascrivere se modificata manualmente
-    
-    if (formData.pointType === 'ambient') {
-      // Per ambiente, temperatura non impostabile
-      setFormData(prev => ({ ...prev, targetTemperature: '' }))
-    } else {
-      // Calcola temperatura ottimale: (min + max) / 2
-      const typeInfo = CONSERVATION_POINT_TYPES[formData.pointType]
-      if (typeInfo.temperatureRange.min !== null && typeInfo.temperatureRange.max !== null) {
-        const optimal = ((typeInfo.temperatureRange.min + typeInfo.temperatureRange.max) / 2).toFixed(1)
-        setFormData(prev => ({ ...prev, targetTemperature: optimal }))
-      }
-    }
-  }, [formData.pointType, isManuallyEdited])
+  // BUG M1 FIX: Rimosso useEffect che impostava temperatura default
+  // Il campo temperatura ora e' sempre disabilitato e mostra solo il range consigliato
+  // La temperatura viene usata solo dal DB (setpoint_temp) quando si modifica un punto esistente
 
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({})
   const [maintenanceErrors, setMaintenanceErrors] = useState<Record<number, string[]>>({})
-  const [temperatureError, setTemperatureError] = useState<string | null>(null)
+  // BUG M1 FIX: Rimosso temperatureError - non piu' necessario
 
   const departmentOptions = useMemo(
     () => departments.filter(department => department.is_active !== false),
     [departments]
   )
 
-  const typeInfo = useMemo(
-    () => CONSERVATION_POINT_TYPES[formData.pointType],
-    [formData.pointType]
-  )
+  // BUG M1 FIX: Rimosso typeInfo - non piu' necessario
 
+  // BUG M1 FIX: Semplificato compatibleCategories - usa temperatura default del tipo
   const compatibleCategories = useMemo(() => {
     if (!productCategories || productCategories.length === 0) return []
 
-    const temperature = formData.targetTemperature
-      ? Number(formData.targetTemperature)
-      : null
+    // Usa temperatura default basata sul tipo di punto per filtrare categorie
+    const defaultTemp = DEFAULT_TEMPERATURES[formData.pointType]
 
     return productCategories
       .filter(cat => {
         if (!cat.temperature_requirements) return true
 
         const tempReq = cat.temperature_requirements
-        if (!temperature) return true
+        if (defaultTemp === undefined) return true
 
-        return temperature >= tempReq.min_temp && temperature <= tempReq.max_temp
+        return defaultTemp >= tempReq.min_temp && defaultTemp <= tempReq.max_temp
       })
       .map(cat => ({
         id: cat.name,
@@ -635,42 +654,25 @@ export function AddPointModal({
           max: cat.temperature_requirements.max_temp
         } : null
       }))
-  }, [formData.targetTemperature, formData.pointType, productCategories])
+  }, [formData.pointType, productCategories])
 
-  useEffect(() => {
-    if (formData.targetTemperature && formData.pointType !== 'ambient') {
-      const temperature = Number(formData.targetTemperature)
-      if (!isNaN(temperature)) {
-        const validation = validateTemperatureForType(
-          temperature,
-          formData.pointType
-        )
-        setTemperatureError(validation.valid ? null : validation.message || null)
-      } else {
-        setTemperatureError(null)
-      }
-    } else {
-      setTemperatureError(null)
-    }
-  }, [formData.targetTemperature, formData.pointType])
+  // BUG M1 FIX: Rimosso useEffect validazione temperatura - non piu' necessario
 
   useEffect(() => {
     if (point) {
+      // BUG M1 FIX: Rimosso targetTemperature e isManuallyEdited
       setFormData({
         name: point.name,
         departmentId: point.department_id || '',
-        targetTemperature: point.setpoint_temp.toString(),
         pointType: point.type,
         isBlastChiller: point.is_blast_chiller,
         productCategories: point.product_categories || [],
       })
-      setIsManuallyEdited(true) // Quando si modifica un punto esistente, considera la temperatura come già modificata
       // Manutenzioni caricate da useMaintenanceTasks (vedi useEffect sotto)
     } else {
       setFormData({
         name: '',
         departmentId: '',
-        targetTemperature: '',
         pointType: 'fridge',
         isBlastChiller: false,
         productCategories: [],
@@ -701,11 +703,11 @@ export function AddPointModal({
           assegnatoACategoria: undefined,
         },
       ])
-      setIsManuallyEdited(false) // Reset quando si crea un nuovo punto
+      // BUG M1 FIX: Rimosso setIsManuallyEdited
     }
     setValidationErrors({})
     setMaintenanceErrors({})
-    setTemperatureError(null)
+    // BUG M1 FIX: Rimosso setTemperatureError
   }, [point, isOpen])
 
   // Carica e trasforma manutenzioni esistenti quando point è presente (modalità edit)
@@ -715,7 +717,7 @@ export function AddPointModal({
       const transformed = existingMaintenances
         .filter(task => Object.keys(REVERSE_MAINTENANCE_TYPE_MAPPING).includes(task.type))
         .map(task => transformMaintenanceTaskToForm(task))
-      
+
       // Se ci sono manutenzioni trasformate, usale, altrimenti usa quelle obbligatorie
       if (transformed.length > 0) {
         setMaintenanceTasks(transformed)
@@ -723,12 +725,7 @@ export function AddPointModal({
     }
   }, [point, existingMaintenances])
 
-  // Reset del flag quando si chiude il modal
-  useEffect(() => {
-    if (!isOpen) {
-      setIsManuallyEdited(false)
-    }
-  }, [isOpen])
+  // BUG M1 FIX: Rimosso useEffect che resettava isManuallyEdited
 
   // Validazione specifica per manutenzioni (Task 1.3)
   const validateMaintenanceTasks = (tasks: MandatoryMaintenanceTask[]): string[] => {
@@ -776,18 +773,9 @@ export function AddPointModal({
     if (!formData.departmentId) {
       errors.departmentId = 'Seleziona un reparto'
     }
-    if (
-      formData.pointType !== 'ambient' &&
-      (!formData.targetTemperature || isNaN(Number(formData.targetTemperature)))
-    ) {
-      errors.targetTemperature = 'Inserisci una temperatura valida'
-    }
+    // BUG M1 FIX: Rimossa validazione temperatura - campo ora informativo
     if (formData.productCategories.length === 0) {
       errors.productCategories = 'Seleziona almeno una categoria'
-    }
-
-    if (temperatureError) {
-      errors.targetTemperature = temperatureError
     }
 
     // Validazione manutenzioni con errori specifici
@@ -866,10 +854,9 @@ export function AddPointModal({
       return
     }
 
-    const temp =
-      formData.pointType === 'ambient'
-        ? 20
-        : Number(formData.targetTemperature)
+    // BUG M1 FIX: Usa temperatura default basata sul tipo di punto
+    // In modalita' edit, usa la temperatura esistente dal punto
+    const temp = point?.setpoint_temp ?? DEFAULT_TEMPERATURES[formData.pointType] ?? 4
 
     // Trasforma i maintenanceTasks nel formato atteso da useConservationPoints
     const transformedMaintenanceTasks = transformMaintenanceTasks(maintenanceTasks)
@@ -977,7 +964,7 @@ export function AddPointModal({
                 <SelectTrigger>
                   <SelectValue placeholder="Seleziona un reparto" />
                 </SelectTrigger>
-                <SelectContent className="z-[10000]">
+                <SelectContent position="popper" sideOffset={5} className="z-[10001]">
                   {departmentOptions.length === 0 ? (
                     <div className="p-2 text-sm text-gray-500 text-center">
                       Nessun reparto disponibile
@@ -1001,57 +988,24 @@ export function AddPointModal({
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
+            {/* BUG M1 FIX: Campo temperatura sempre disabilitato, mostra range come placeholder */}
             <div>
               <Label htmlFor="point-temperature">
-                Temperatura target {formData.pointType === 'ambient' ? '' : '*'}
+                Range temperatura consigliato
               </Label>
               <Input
                 id="point-temperature"
-                type="number"
-                step="0.1"
-                min="-99"
-                max="30"
-                value={formData.targetTemperature}
-                onChange={e => {
-                  setIsManuallyEdited(true)
-                  setFormData(prev => ({
-                    ...prev,
-                    targetTemperature: e.target.value,
-                  }))
-                }}
-                placeholder={
-                  formData.pointType === 'ambient'
-                    ? 'Non impostabile'
-                    : String(typeInfo.temperatureRange.min)
-                }
-                disabled={formData.pointType === 'ambient'}
-                className={
-                  formData.pointType === 'ambient'
-                    ? 'bg-gray-100 cursor-not-allowed'
-                    : ''
-                }
-                aria-invalid={Boolean(
-                  validationErrors.targetTemperature || temperatureError
-                )}
+                type="text"
+                value={TEMPERATURE_RANGES[formData.pointType] || 'Seleziona tipo'}
+                readOnly
+                className="bg-gray-100 cursor-not-allowed text-black"
+                aria-label={`Range temperatura per ${formData.pointType}: ${TEMPERATURE_RANGES[formData.pointType]}`}
               />
-              {formData.pointType !== 'ambient' ? (
-                <p className="mt-1 text-xs text-gray-500">
-                  Range consigliato {typeInfo.temperatureRange.min}°C -{' '}
-                  {typeInfo.temperatureRange.max}°C
-                </p>
-              ) : (
-                <p className="mt-1 text-xs text-gray-500">
-                  La temperatura non è impostabile per i punti di tipo Ambiente
-                </p>
-              )}
-              {validationErrors.targetTemperature && (
-                <p className="mt-1 text-sm text-red-600">
-                  {validationErrors.targetTemperature}
-                </p>
-              )}
-              {temperatureError && (
-                <p className="mt-1 text-sm text-red-600">{temperatureError}</p>
-              )}
+              <p className="mt-1 text-xs text-gray-500">
+                {formData.pointType === 'ambient'
+                  ? 'La temperatura non e\' monitorabile per i punti di tipo Ambiente'
+                  : 'Il range indica le temperature consigliate per questo tipo di punto'}
+              </p>
             </div>
 
             <div>
@@ -1134,10 +1088,10 @@ export function AddPointModal({
                 )
               })}
             </div>
-            {compatibleCategories.length === 0 && formData.targetTemperature && (
+            {/* BUG M1 FIX: Messaggio aggiornato per usare tipo invece di temperatura */}
+            {compatibleCategories.length === 0 && (
               <p className="mt-1 text-sm text-amber-600">
-                Nessuna categoria compatibile con la temperatura{' '}
-                {formData.targetTemperature}°C
+                Nessuna categoria compatibile con il tipo di punto selezionato
               </p>
             )}
             {validationErrors.productCategories && (
