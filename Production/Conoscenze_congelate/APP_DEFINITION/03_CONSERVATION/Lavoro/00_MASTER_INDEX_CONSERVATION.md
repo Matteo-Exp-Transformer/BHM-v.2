@@ -70,7 +70,7 @@
 
 **Implementazione**:
 - ✅ Sezione "Profilo Punto di Conservazione" condizionale (solo per frigoriferi)
-- ✅ 5 profili HACCP predefiniti (Massima Capienza, Carne+Generico, Verdure+Generico, Pesce+Generico, Carne+Pesce+Generico)
+- ✅ 4 profili HACCP predefiniti (Massima Capienza, Carne+Generico, Verdure+Generico, Pesce+Generico)
 - ✅ Auto-configurazione temperatura e categorie prodotti dal profilo
 - ✅ Categorie read-only quando profilo selezionato
 - ✅ Info box con note HACCP e temperatura consigliata
@@ -210,7 +210,7 @@ npm run dev
 | **Profilo HACCP** | ✅ | **Feature 19-01-2026** |
 | **Auto-configurazione profilo** | ✅ | Temperatura e categorie dal profilo |
 | **Categorie read-only con profilo** | ✅ | Categorie auto-configurate |
-| **5 Profili predefiniti** | ✅ | Massima Capienza, Carne+Generico, Verdure+Generico, Pesce+Generico, Carne+Pesce+Generico |
+| **4 Profili predefiniti** | ✅ | Massima Capienza, Carne+Generico, Verdure+Generico, Pesce+Generico |
 | **Visualizzazione profilo in card** | ✅ | ConservationPointCard aggiornata |
 | **Immagine Elettrodomestico** | ✅ | **Feature 20-01-2026** |
 | **Layout Split Categorie + Immagine** | ✅ | 2 colonne responsive |
@@ -250,6 +250,7 @@ npm run dev
 | 19-01-2026 | Feature Profili HACCP | 5 fasi completate, 28 test |
 | **20-01-2026** | **Feature Immagini Elettrodomestici** | **Layout split, modal lightbox, guida agenti** |
 | **20-01-2026** | **Feature Layout Split UX Enhancement** | **Layout split immediato, placeholder informativi, UX migliorata** |
+| **20-01-2026** | **Rimozione Profilo Carne+Pesce+Generico** | **Profilo meat_fish_generic rimosso da codice e database (migration 021)** |
 
 ---
 
@@ -276,7 +277,7 @@ npm run test -- --run
 
 **Fine 00_MASTER_INDEX_CONSERVATION.md**
 **Ultimo aggiornamento**: 2026-01-20
-**Status**: FEATURE COMPLETA + PROFILI HACCP + IMMAGINI ELETTRODOMESTICI + LAYOUT SPLIT UX ENHANCEMENT IMPLEMENTATI
+**Status**: FEATURE COMPLETA + PROFILI HACCP (4 profili) + IMMAGINI ELETTRODOMESTICI + LAYOUT SPLIT UX ENHANCEMENT IMPLEMENTATI
 
 ---
 

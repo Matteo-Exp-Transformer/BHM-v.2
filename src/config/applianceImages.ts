@@ -25,8 +25,10 @@ export const APPLIANCE_IMAGE_PATHS: Record<ApplianceCategory, string> = {
  */
 export const PROFILE_IMAGE_PATHS: Record<string, string> = {
   'vertical_fridge_with_freezer:max_capacity': '/images/conservation/appliances/vertical-fridge-with-freezer/max-capacity-profile.png',
+  'vertical_fridge_with_freezer:vegetables_generic': '/images/conservation/appliances/vertical-fridge-with-freezer/vegetables-generic-profile.png',
+  'vertical_fridge_with_freezer:fish_generic': '/images/conservation/appliances/vertical-fridge-with-freezer/fish-generic-profile.png',
+  'vertical_fridge_with_freezer:meat_generic': '/images/conservation/appliances/vertical-fridge-with-freezer/meat-generic-profile.png',
   // Aggiungi nuove immagini profilo qui:
-  // 'vertical_fridge_with_freezer:meat_generic': '/images/conservation/appliances/vertical-fridge-with-freezer/meat-generic-profile.png',
 }
 
 /**
