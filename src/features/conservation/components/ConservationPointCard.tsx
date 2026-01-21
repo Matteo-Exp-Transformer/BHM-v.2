@@ -13,7 +13,16 @@ import {
   Edit,
   Trash2,
   MapPin,
+  ShieldCheck,
 } from 'lucide-react'
+import {
+  PROFILE_LABELS,
+  type ConservationProfileId,
+} from '@/utils/conservationProfiles'
+import {
+  getConservationTypeLabel,
+  getConservationTypeEmoji,
+} from '@/utils/conservationConstants'
 
 interface ConservationPointCardProps {
   point: ConservationPoint
@@ -31,35 +40,9 @@ export function ConservationPointCard({
   const statusColors = CONSERVATION_COLORS[point.status] || CONSERVATION_COLORS.normal
   const tempRange = TEMPERATURE_RANGES[point.type] || TEMPERATURE_RANGES.ambient
 
-  const getTypeIcon = () => {
-    switch (point.type) {
-      case 'ambient':
-        return '🌡️'
-      case 'fridge':
-        return '❄️'
-      case 'freezer':
-        return '🧊'
-      case 'blast':
-        return '⚡'
-      default:
-        return '📦'
-    }
-  }
-
-  const getTypeName = () => {
-    switch (point.type) {
-      case 'ambient':
-        return 'Ambiente'
-      case 'fridge':
-        return 'Frigorifero'
-      case 'freezer':
-        return 'Freezer'
-      case 'blast':
-        return 'Abbattitore'
-      default:
-        return 'Non definito'
-    }
-  }
+  // Funzioni rimosse - ora importate da conservationConstants.ts
+  // Usare getConservationTypeEmoji(point.type) invece di getTypeIcon()
+  // Usare getConservationTypeLabel(point.type) invece di getTypeName()
 
   const getStatusIcon = () => {
     switch (point.status) {
@@ -90,16 +73,25 @@ export function ConservationPointCard({
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
-          <div className="text-2xl">{getTypeIcon()}</div>
+          <div className="text-2xl">{getConservationTypeEmoji(point.type)}</div>
           <div>
             <h3 className={`font-semibold ${typeColors.text}`}>{point.name}</h3>
             <div className="flex items-center space-x-2 text-sm">
               <MapPin className="w-4 h-4 text-gray-500" />
               <span className="text-gray-600">{point.department?.name || 'Reparto non assegnato'}</span>
               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${typeColors.badge}`}>
-                {getTypeName()}
+                {getConservationTypeLabel(point.type)}
               </span>
             </div>
+            {point.profile_id && (
+              <div className="mt-1 text-xs text-gray-600 flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3" />
+                <span>
+                  Profilo:{' '}
+                  {PROFILE_LABELS[point.profile_id as ConservationProfileId] || point.profile_id}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -108,14 +100,16 @@ export function ConservationPointCard({
           <button
             onClick={() => onEdit(point)}
             className="p-1 text-gray-600 hover:text-blue-600 transition-colors"
+            aria-label={`Modifica punto ${point.name}`}
           >
-            <Edit className="w-4 h-4" />
+            <Edit className="w-4 h-4" aria-hidden="true" />
           </button>
           <button
             onClick={() => onDelete(point.id)}
             className="p-1 text-gray-600 hover:text-red-600 transition-colors"
+            aria-label={`Elimina punto ${point.name}`}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -209,9 +203,11 @@ export function ConservationPointCard({
 
       {showDetails && (
         <div className="mt-3 p-3 bg-white bg-opacity-50 rounded border space-y-2">
-          <div className="text-sm">
-            <strong>Temperatura ottimale:</strong> {tempRange.optimal}°C
-          </div>
+          {tempRange.optimal !== null && (
+            <div className="text-sm">
+              <strong>Temperatura ottimale:</strong> {tempRange.optimal}°C
+            </div>
+          )}
           {point.is_blast_chiller && (
             <div className="text-sm text-blue-600">
               <strong>⚡ Abbattitore attivo</strong>

@@ -14,7 +14,6 @@ import {
 } from '@/utils/conservationProfiles'
 import { useDepartments } from '@/features/management/hooks/useDepartments'
 import { useStaff } from '@/features/management/hooks/useStaff'
-import { useCategories } from '@/features/inventory/hooks/useCategories'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
@@ -28,9 +27,13 @@ import {
 import { MiniCalendar } from '@/components/ui/MiniCalendar'
 import {
   CONSERVATION_POINT_TYPES,
-  getCompatibleCategoriesByPointType,
   // BUG M1 FIX: Rimosso validateTemperatureForType - non piu' necessario
 } from '@/utils/onboarding/conservationUtils'
+import {
+  getConservationTempRangeString,
+  DEFAULT_TEMPERATURES,
+} from '@/utils/conservationConstants'
+import { DEFAULT_CATEGORIES } from '@/utils/defaultCategories'
 import { STAFF_ROLES, STAFF_CATEGORIES } from '@/utils/haccpRules'
 import { calculateNextDue, useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
 import type { MaintenanceFrequency as EnglishMaintenanceFrequency, MaintenanceTask as DBMaintenanceTask } from '@/types/conservation'
@@ -40,22 +43,9 @@ import { Modal } from '@/components/ui/Modal'
 import { OptimizedImage } from '@/components/ui/OptimizedImage'
 import { getApplianceImagePathWithProfile, hasApplianceImageAvailable } from '@/config/applianceImages'
 
-// BUG M1 FIX: Valori default non piu' usati per il campo temperatura
-// Il campo ora mostra solo il range consigliato come placeholder
-const DEFAULT_TEMPERATURES: Record<string, number> = {
-  fridge: 4,
-  freezer: -18,
-  blast: -30,
-  ambient: 20,
-}
-
-// BUG M1 FIX: Range temperatura per placeholder
-const TEMPERATURE_RANGES: Record<string, string> = {
-  fridge: '1°C - 15°C',
-  freezer: '-25°C - -1°C',
-  blast: '-90°C - -15°C',
-  ambient: 'Non impostabile'
-}
+// BUG M1 FIX: Costanti rimosse - ora importate da conservationConstants.ts
+// Usare getConservationTempRangeString(type) per ottenere il range come stringa
+// Usare DEFAULT_TEMPERATURES[type] per ottenere la temperatura default
 
 type StandardMaintenanceType =
   | 'rilevamento_temperatura'
@@ -102,6 +92,9 @@ interface AddPointModalProps {
   ) => void
   point?: ConservationPoint | null
   isLoading?: boolean
+  showMaintenances?: boolean // Se false, nasconde sezione manutenzioni (per onboarding)
+  departmentsOverride?: any[] // Per onboarding: usa questi reparti invece di caricarli dal DB
+  staffOverride?: any[] // Per onboarding: usa questo staff invece di caricarlo dal DB
 }
 
 const MAINTENANCE_TYPES: Record<
@@ -529,10 +522,17 @@ export function AddPointModal({
   onSave,
   point,
   isLoading,
+  showMaintenances = true, // Default: mostra manutenzioni (comportamento normale)
+  departmentsOverride,
+  staffOverride,
 }: AddPointModalProps) {
-  const { departments } = useDepartments()
-  const { staff } = useStaff()
-  const { categories: productCategories } = useCategories()
+  const { departments: dbDepartments } = useDepartments()
+  const { staff: dbStaff } = useStaff()
+  // RIMOSSO: useCategories() - usiamo DEFAULT_CATEGORIES per avere sempre tutte le 15 categorie
+
+  // Usa departmentsOverride se fornito (onboarding), altrimenti usa DB
+  const departments = departmentsOverride || dbDepartments
+  const staff = staffOverride || dbStaff
   
   // Carica manutenzioni esistenti quando point è presente (modalità edit)
   const { maintenanceTasks: existingMaintenances } = useMaintenanceTasks(point?.id)
@@ -648,26 +648,36 @@ export function AddPointModal({
 
   // BUG M1 FIX: Rimosso typeInfo - non piu' necessario
 
-  // FIX: Usa range-based filtering con storage_type check
-  const compatibleCategories = useMemo(() => {
-    if (!productCategories || productCategories.length === 0) return []
-
-    // Filtra categorie compatibili con il tipo di punto selezionato
-    // Verifica sia il range di temperatura che lo storage_type
-    const compatible = getCompatibleCategoriesByPointType(
-      formData.pointType,
-      productCategories
-    )
-
-    return compatible.map(cat => ({
+  // TUTTE le 15 categorie predefinite (sempre disponibili)
+  const allCategories = useMemo(() => {
+    return DEFAULT_CATEGORIES.map(cat => ({
       id: cat.name,
       label: cat.name,
-      range: cat.temperature_requirements ? {
+      storageType: cat.temperature_requirements.storage_type,
+      range: {
         min: cat.temperature_requirements.min_temp,
         max: cat.temperature_requirements.max_temp
-      } : null
+      }
     }))
-  }, [formData.pointType, productCategories])
+  }, [])
+
+  // Categorie compatibili con il tipo di punto (auto-assegnate)
+  const compatibleCategories = useMemo(() => {
+    // Mappa tipo punto -> storage_type
+    const storageTypeMap: Record<ConservationPointType, string> = {
+      fridge: 'fridge',
+      freezer: 'freezer',
+      ambient: 'ambient',
+      blast: '', // Nessuna categoria compatibile per abbattitore
+    }
+
+    const targetStorageType = storageTypeMap[formData.pointType]
+
+    // Filtra categorie con storage_type compatibile
+    return allCategories
+      .filter(cat => cat.storageType === targetStorageType)
+      .map(cat => cat.id)
+  }, [formData.pointType, allCategories])
 
   // State per profilo selezionato (TASK-3.3)
   const selectedProfile = useMemo(() => {
@@ -677,6 +687,15 @@ export function AddPointModal({
       formData.applianceCategory as ApplianceCategory
     )
   }, [formData.applianceCategory, formData.profileId])
+
+  // Auto-assegnazione categorie compatibili quando cambia tipo di punto
+  useEffect(() => {
+    // Assegna automaticamente le categorie compatibili in base al tipo di punto
+    setFormData(prev => ({
+      ...prev,
+      productCategories: compatibleCategories,
+    }))
+  }, [compatibleCategories])
 
   // Auto-configurazione quando profilo selezionato (TASK-3.3)
   useEffect(() => {
@@ -691,24 +710,7 @@ export function AddPointModal({
     }
   }, [selectedProfile])
 
-  // FIX: Auto-deseleziona categorie incompatibili quando cambia il tipo di punto
-  // (solo se non c'è un profilo attivo)
-  useEffect(() => {
-    if (!formData.profileId && formData.productCategories.length > 0) {
-      const compatibleNames = compatibleCategories.map(c => c.id)
-      const stillCompatible = formData.productCategories.filter(catName =>
-        compatibleNames.includes(catName)
-      )
-
-      // Se alcune categorie sono diventate incompatibili, aggiorna la selezione
-      if (stillCompatible.length !== formData.productCategories.length) {
-        setFormData(prev => ({
-          ...prev,
-          productCategories: stillCompatible
-        }))
-      }
-    }
-  }, [formData.pointType, compatibleCategories, formData.profileId])
+  // RIMOSSO: Auto-deseleziona categorie incompatibili - ora gestito da auto-assegnazione
 
   // BUG M1 FIX: Rimosso useEffect validazione temperatura - non piu' necessario
 
@@ -838,10 +840,7 @@ export function AddPointModal({
     if (!formData.departmentId) {
       errors.departmentId = 'Seleziona un reparto'
     }
-    // BUG M1 FIX: Rimossa validazione temperatura - campo ora informativo
-    if (formData.productCategories.length === 0) {
-      errors.productCategories = 'Seleziona almeno una categoria'
-    }
+    // RIMOSSO: Validazione categorie - ora auto-assegnate in base alla temperatura
 
     // Validazione profilo (solo per frigoriferi) - TASK-3.4
     if (formData.pointType === 'fridge') {
@@ -853,42 +852,44 @@ export function AddPointModal({
       }
     }
 
-    // Validazione manutenzioni con errori specifici
-    const maintenanceErrors = validateMaintenanceTasks(maintenanceTasks)
-    const maintenanceErrorsMap: Record<number, string[]> = {}
-    
-    if (maintenanceErrors.length > 0) {
-      errors.maintenances = maintenanceErrors.join(', ')
-      
-      // Crea mappa per evidenziare errori per task specifico
-      maintenanceTasks.forEach((task, index) => {
-        const taskErrors: string[] = []
-        if (!task.frequenza) {
-          taskErrors.push('seleziona frequenza')
-        }
-        if (!task.assegnatoARuolo && !task.assegnatoACategoria && !task.assegnatoADipendenteSpecifico) {
-          taskErrors.push('seleziona assegnazione')
-        }
-        if (task.frequenza === 'mensile' && !task.giornoMese) {
-          taskErrors.push('seleziona giorno del mese')
-        }
-        if (task.frequenza === 'annuale' && !task.giornoAnno) {
-          taskErrors.push('seleziona giorno dell\'anno')
-        }
-        if ((task.frequenza === 'giornaliera' || task.frequenza === 'settimanale') && 
-            (!task.giorniSettimana || task.giorniSettimana.length === 0)) {
-          taskErrors.push('seleziona giorni settimana')
-        }
-        if (taskErrors.length > 0) {
-          maintenanceErrorsMap[index] = taskErrors
-        }
-      })
-      
-      errors.maintenanceTasks = 'Completa tutte le manutenzioni obbligatorie'
+    // Validazione manutenzioni con errori specifici (solo se showMaintenances è true)
+    if (showMaintenances) {
+      const maintenanceErrors = validateMaintenanceTasks(maintenanceTasks)
+      const maintenanceErrorsMap: Record<number, string[]> = {}
+
+      if (maintenanceErrors.length > 0) {
+        errors.maintenances = maintenanceErrors.join(', ')
+
+        // Crea mappa per evidenziare errori per task specifico
+        maintenanceTasks.forEach((task, index) => {
+          const taskErrors: string[] = []
+          if (!task.frequenza) {
+            taskErrors.push('seleziona frequenza')
+          }
+          if (!task.assegnatoARuolo && !task.assegnatoACategoria && !task.assegnatoADipendenteSpecifico) {
+            taskErrors.push('seleziona assegnazione')
+          }
+          if (task.frequenza === 'mensile' && !task.giornoMese) {
+            taskErrors.push('seleziona giorno del mese')
+          }
+          if (task.frequenza === 'annuale' && !task.giornoAnno) {
+            taskErrors.push('seleziona giorno dell\'anno')
+          }
+          if ((task.frequenza === 'giornaliera' || task.frequenza === 'settimanale') &&
+              (!task.giorniSettimana || task.giorniSettimana.length === 0)) {
+            taskErrors.push('seleziona giorni settimana')
+          }
+          if (taskErrors.length > 0) {
+            maintenanceErrorsMap[index] = taskErrors
+          }
+        })
+
+        errors.maintenanceTasks = 'Completa tutte le manutenzioni obbligatorie'
+      }
+      setMaintenanceErrors(maintenanceErrorsMap)
     }
 
     setValidationErrors(errors)
-    setMaintenanceErrors(maintenanceErrorsMap)
     return Object.keys(errors).length === 0
   }
 
@@ -938,7 +939,10 @@ export function AddPointModal({
     }
 
     // Trasforma i maintenanceTasks nel formato atteso da useConservationPoints
-    const transformedMaintenanceTasks = transformMaintenanceTasks(maintenanceTasks)
+    // Se showMaintenances è false (onboarding), passa array vuoto
+    const transformedMaintenanceTasks = showMaintenances
+      ? transformMaintenanceTasks(maintenanceTasks)
+      : []
 
     onSave(
       {
@@ -1079,10 +1083,10 @@ export function AddPointModal({
               <Input
                 id="point-temperature"
                 type="text"
-                value={TEMPERATURE_RANGES[formData.pointType] || 'Seleziona tipo'}
+                value={getConservationTempRangeString(formData.pointType) || 'Seleziona tipo'}
                 readOnly
                 className="bg-gray-100 cursor-not-allowed text-black"
-                aria-label={`Range temperatura per ${formData.pointType}: ${TEMPERATURE_RANGES[formData.pointType]}`}
+                aria-label={`Range temperatura per ${formData.pointType}: ${getConservationTempRangeString(formData.pointType)}`}
               />
               <p className="mt-1 text-xs text-gray-500">
                 {formData.pointType === 'ambient'
@@ -1190,103 +1194,54 @@ export function AddPointModal({
                 </div>
               )}
 
-              {/* Info Box Note HACCP */}
-              {(() => {
-                const selectedProfile = formData.applianceCategory && formData.profileId
-                  ? getProfileById(
-                      formData.profileId as ConservationProfileId,
-                      formData.applianceCategory as ApplianceCategory
-                    )
-                  : null
-
-                return selectedProfile ? (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
-                    <h4 className="font-medium text-blue-800 flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4" />
-                      Note HACCP
-                    </h4>
-                    <ul className="text-sm text-blue-700 space-y-1">
-                      {selectedProfile.haccpNotes.map((note, i) => (
-                        <li key={i}>• {note}</li>
-                      ))}
-                    </ul>
-                    <p className="text-sm text-blue-600 mt-2">
-                      Temperatura consigliata: <strong>{selectedProfile.recommendedSetPointsC.fridge}°C</strong>
-                    </p>
-                  </div>
-                ) : null
-              })()}
             </div>
           )}
 
-          {/* Sezione categorie standard - nascosta per frigoriferi */}
-          {formData.pointType !== 'fridge' && (
+          {/* Sezione categorie standard - nascosta per frigoriferi e abbattitori */}
+          {formData.pointType !== 'fridge' && formData.pointType !== 'blast' && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label>Categorie prodotti {formData.profileId ? '(auto-configurate)' : '*'}</Label>
-                {formData.profileId && (
-                  <span className="text-sm text-blue-600">
-                    Configurate dal profilo selezionato
-                  </span>
-                )}
+                <Label>Categorie prodotti</Label>
               </div>
               <p className="mb-3 text-sm text-gray-600">
-                {formData.profileId
-                  ? 'Le categorie sono state configurate automaticamente dal profilo HACCP selezionato.'
-                  : 'Seleziona le categorie di prodotti che verranno conservate in questo punto di conservazione. Solo le categorie compatibili con la temperatura impostata sono disponibili.'}
+                Le categorie evidenziate sono state assegnate automaticamente in base alla compatibilità
+                con la temperatura del punto di conservazione selezionato.
               </p>
-              <div className={formData.profileId ? 'opacity-75 pointer-events-none' : ''}>
-              <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-                {compatibleCategories.map(category => {
-                  const isSelected = formData.productCategories.includes(
-                    category.id
-                  )
+              {/*
+                Per i punti di tipo Ambiente mostriamo solo le categorie compatibili,
+                per gli altri tipi manteniamo l'elenco completo evidenziando quelle compatibili.
+              */}
+              <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3 opacity-90 pointer-events-none">
+                {(formData.pointType === 'ambient'
+                  ? allCategories.filter(cat => compatibleCategories.includes(cat.id))
+                  : allCategories
+                ).map(category => {
+                  const isCompatible = formData.productCategories.includes(category.id)
                   return (
-                    <button
+                    <div
                       key={category.id}
-                      type="button"
-                      className={`flex items-center justify-between rounded border p-2 text-sm transition-colors ${
-                        isSelected
-                          ? 'border-blue-400 bg-blue-50 text-blue-900'
-                          : 'border-gray-200 bg-white hover:border-blue-200'
+                      className={`flex items-center justify-between rounded border p-2 text-sm ${
+                        isCompatible
+                          ? 'border-green-400 bg-green-50 text-green-900'
+                          : 'border-gray-200 bg-gray-50 text-gray-400'
                       }`}
-                      onClick={() => {
-                        setFormData(prev => ({
-                          ...prev,
-                          productCategories: isSelected
-                            ? prev.productCategories.filter(id => id !== category.id)
-                            : [...prev.productCategories, category.id],
-                        }))
-                      }}
                     >
                       <span>{category.label}</span>
                       {category.range && (
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs">
                           {category.range.min}°C - {category.range.max}°C
                         </span>
                       )}
-                      {isSelected && (
+                      {isCompatible && (
                         <ShieldCheck
-                          className="h-4 w-4 text-blue-600"
+                          className="h-4 w-4 text-green-600"
                           aria-hidden
                         />
                       )}
-                    </button>
+                    </div>
                   )
                 })}
               </div>
-              </div>
-              {/* BUG M1 FIX: Messaggio aggiornato per usare tipo invece di temperatura */}
-              {compatibleCategories.length === 0 && (
-                <p className="mt-1 text-sm text-amber-600">
-                  Nessuna categoria compatibile con il tipo di punto selezionato
-                </p>
-              )}
-              {validationErrors.productCategories && (
-                <p className="mt-1 text-sm text-red-600">
-                  {validationErrors.productCategories}
-                </p>
-              )}
             </div>
           )}
 
@@ -1301,7 +1256,10 @@ export function AddPointModal({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Colonna Sinistra: Categorie Profilo */}
                 <div className="space-y-2">
-                  <Label>Categorie del Profilo</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Categorie prodotti (auto-assegnate)</Label>
+                    <span className="text-xs text-blue-600">Dal profilo HACCP</span>
+                  </div>
                   <div className="border rounded-lg p-4 bg-gray-50 min-h-[200px] flex items-center justify-center">
                     {selectedProfile ? (
                       <div className="w-full max-h-[350px] overflow-y-auto">
@@ -1309,10 +1267,10 @@ export function AddPointModal({
                           {mapCategoryIdsToDbNames(selectedProfile.allowedCategoryIds).map((categoryName, idx) => (
                             <div
                               key={idx}
-                              className="flex items-center gap-2 p-2 bg-white rounded border border-blue-200"
+                              className="flex items-center gap-2 p-2 bg-green-50 rounded border border-green-200"
                             >
-                              <ShieldCheck className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                              <span className="text-sm text-gray-700">{categoryName}</span>
+                              <ShieldCheck className="h-4 w-4 text-green-600 flex-shrink-0" />
+                              <span className="text-sm text-green-900">{categoryName}</span>
                             </div>
                           ))}
                         </div>
@@ -1320,7 +1278,7 @@ export function AddPointModal({
                     ) : (
                       <div className="text-center text-gray-400">
                         <ShieldCheck className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">Seleziona un profilo HACCP per visualizzare le categorie</p>
+                        <p className="text-sm">Seleziona un profilo HACCP per visualizzare le categorie auto-assegnate</p>
                       </div>
                     )}
                   </div>
@@ -1380,43 +1338,64 @@ export function AddPointModal({
                   )}
                 </div>
               </div>
+
+              {/* Info Box Note HACCP */}
+              {selectedProfile && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+                  <h4 className="font-medium text-blue-800 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    Note HACCP
+                  </h4>
+                  <ul className="text-sm text-blue-700 space-y-1">
+                    {selectedProfile.haccpNotes.map((note, i) => (
+                      <li key={i}>• {note}</li>
+                    ))}
+                  </ul>
+                  <p className="text-sm text-blue-600 mt-2">
+                    Temperatura consigliata: <strong>{selectedProfile.recommendedSetPointsC.fridge}°C</strong>
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
-          <div className="border-t pt-6">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                Manutenzioni Obbligatorie
-              </h3>
-              <p className="text-sm text-gray-600">
-                Configura le 4 manutenzioni obbligatorie per questo punto di
-                conservazione (HACCP compliance)
-              </p>
-            </div>
-
-            {validationErrors.maintenanceTasks && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-700 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
-                  {validationErrors.maintenanceTasks}
+          {/* Sezione Manutenzioni - Nascosta in onboarding */}
+          {showMaintenances && (
+            <div className="border-t pt-6">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  Manutenzioni Obbligatorie
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Configura le 4 manutenzioni obbligatorie per questo punto di
+                  conservazione (HACCP compliance)
                 </p>
               </div>
-            )}
 
-            <div className="space-y-4">
-              {maintenanceTasks.map((task, index) => (
-                <MaintenanceTaskForm
-                  key={task.manutenzione}
-                  task={task}
-                  index={index}
-                  staff={staff}
-                  staffCategories={STAFF_CATEGORIES.map(cat => cat.value)}
-                  onUpdate={updateMaintenanceTask}
-                  hasError={!!maintenanceErrors[index]}
-                />
-              ))}
+              {validationErrors.maintenanceTasks && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-700 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    {validationErrors.maintenanceTasks}
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {maintenanceTasks.map((task, index) => (
+                  <MaintenanceTaskForm
+                    key={task.manutenzione}
+                    task={task}
+                    index={index}
+                    staff={staff}
+                    staffCategories={STAFF_CATEGORIES.map(cat => cat.value)}
+                    onUpdate={updateMaintenanceTask}
+                    hasError={!!maintenanceErrors[index]}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex items-center justify-end space-x-3 pt-6 border-t sticky bottom-0 bg-white">
             <button

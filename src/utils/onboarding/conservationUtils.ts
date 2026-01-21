@@ -7,63 +7,41 @@ import type {
   TaskFrequency,
 } from '@/types/onboarding'
 import { MAINTENANCE_TASK_TYPES } from '@/types/conservation'
+import { CONSERVATION_POINT_TYPES_LEGACY } from '@/utils/conservationConstants'
 
-export const CONSERVATION_POINT_TYPES = {
-  ambient: {
-    value: 'ambient' as const,
-    label: 'Ambiente (dispense)',
-    temperatureRange: { min: null, max: null }, // Temperatura non impostabile
-    color: 'text-amber-600',
-  },
-  fridge: {
-    value: 'fridge' as const,
-    label: 'Frigorifero',
-    temperatureRange: { min: 1, max: 15 }, // 1°C - 15°C
-    color: 'text-blue-600',
-  },
-  freezer: {
-    value: 'freezer' as const,
-    label: 'Congelatore',
-    temperatureRange: { min: -25, max: -1 }, // -25°C a -1°C
-    color: 'text-cyan-600',
-  },
-  blast: {
-    value: 'blast' as const,
-    label: 'Abbattitore',
-    temperatureRange: { min: -90, max: -15 }, // -90°C a -15°C
-    color: 'text-emerald-600',
-  },
-}
+// Re-export per compatibilità con codice esistente
+// IMPORTANTE: Usare CONSERVATION_POINT_CONFIGS da conservationConstants.ts per nuovi componenti
+export const CONSERVATION_POINT_TYPES = CONSERVATION_POINT_TYPES_LEGACY
 
 export const CONSERVATION_CATEGORIES = [
   {
     id: 'fresh_meat',
     label: 'Carni fresche',
-    range: { min: 1, max: 4 }, // Compatibile con frigorifero 1-15°C
+    range: { min: 1, max: 4 }, // Compatibile con frigorifero 1-8°C
     incompatible: ['ambient', 'blast'],
   },
   {
     id: 'fresh_fish',
     label: 'Pesce fresco',
-    range: { min: 1, max: 2 }, // Compatibile con frigorifero 1-15°C
+    range: { min: 1, max: 2 }, // Compatibile con frigorifero 1-8°C
     incompatible: ['ambient', 'blast'],
   },
   {
     id: 'fresh_dairy',
     label: 'Latticini',
-    range: { min: 2, max: 6 }, // Compatibile con frigorifero 1-15°C
+    range: { min: 2, max: 6 }, // Compatibile con frigorifero 1-8°C
     incompatible: ['ambient'],
   },
   {
     id: 'fresh_produce',
     label: 'Verdure fresche',
-    range: { min: 2, max: 8 }, // Compatibile con frigorifero 1-15°C
+    range: { min: 2, max: 8 }, // Compatibile con frigorifero 1-8°C
     incompatible: ['ambient'],
   },
   {
     id: 'beverages',
     label: 'Bevande',
-    range: { min: 2, max: 12 }, // Compatibile con frigorifero 1-15°C
+    range: { min: 2, max: 8 }, // Compatibile con frigorifero 1-8°C (aggiornato da 2-12)
     incompatible: [],
   },
   {
@@ -75,19 +53,19 @@ export const CONSERVATION_CATEGORIES = [
   {
     id: 'frozen',
     label: 'Congelati',
-    range: { min: -25, max: -1 }, // Compatibile con congelatore -25 a -1°C
+    range: { min: -25, max: -18 }, // Compatibile con congelatore -25 a -18°C
     compatibleTypes: ['freezer'],
   },
   {
     id: 'deep_frozen',
     label: 'Ultracongelati',
-    range: { min: -25, max: -1 }, // Compatibile con congelatore -25 a -1°C
+    range: { min: -25, max: -18 }, // Compatibile con congelatore -25 a -18°C
     compatibleTypes: ['freezer'],
   },
   {
     id: 'blast_chilling',
     label: 'Abbattimento rapido',
-    range: { min: -90, max: -15 }, // Compatibile con abbattitore -90 a -15°C
+    range: { min: null, max: null }, // Abbattitore senza range definito
     compatibleTypes: ['blast'],
   },
 ]
@@ -138,8 +116,8 @@ const conservationPointSchema = z.object({
   pointType: z.enum(['ambient', 'fridge', 'freezer', 'blast']),
   isBlastChiller: z.boolean(),
   productCategories: z
-    .array(z.string())
-    .min(1, 'Seleziona almeno una categoria'),
+    .array(z.string()),
+  // RIMOSSO: .min(1, ...) - categorie ora auto-assegnate in base alla temperatura
   source: z.enum(['manual', 'prefill', 'import']),
   maintenanceTasks: z.array(maintenanceTaskSchema).optional(),
 })
@@ -445,6 +423,139 @@ export const getCompatibleCategoriesFromDB = (
 
     // Controlla compatibilità con la temperatura
     return temperature >= tempReq.min_temp && temperature <= tempReq.max_temp
+  })
+}
+
+/**
+ * Verifica se due range di temperatura si sovrappongono
+ * @param range1 - Range del tipo di punto di conservazione
+ * @param range2 - Range della categoria di prodotto
+ * @returns true se i range si sovrappongono
+ *
+ * @example
+ * // Ranges overlap
+ * areTemperatureRangesCompatible({ min: 1, max: 8 }, { min: 2, max: 6 }) // true
+ *
+ * // Ranges disjoint
+ * areTemperatureRangesCompatible({ min: 1, max: 8 }, { min: -25, max: -18 }) // false
+ *
+ * // Ambient type (null range)
+ * areTemperatureRangesCompatible({ min: null, max: null }, { min: 2, max: 8 }) // true
+ */
+export const areTemperatureRangesCompatible = (
+  range1: { min: number | null; max: number | null },
+  range2: { min: number; max: number }
+): boolean => {
+  // Se il range del tipo di punto non ha limiti (ambient), permette tutto
+  if (range1.min === null || range1.max === null) {
+    return true
+  }
+
+  // Due range si sovrappongono se hanno una sovrapposizione STRETTA (escludendo i limiti)
+  // range1.min < range2.max && range1.max > range2.min
+  return range1.min < range2.max && range1.max > range2.min
+}
+
+/**
+ * Verifica compatibilità storage_type tra categoria e tipo di punto
+ * @param categoryStorageType - storage_type della categoria
+ * @param pointType - tipo di punto di conservazione selezionato
+ * @returns true se compatibili
+ *
+ * Compatibility rules:
+ * - fridge: accepts 'fridge' and 'ambient' categories
+ * - freezer: accepts only 'freezer' categories
+ * - blast: accepts only 'blast' categories
+ * - ambient: accepts only 'ambient' categories
+ *
+ * @example
+ * isStorageTypeCompatible('fridge', 'fridge') // true
+ * isStorageTypeCompatible('ambient', 'fridge') // true
+ * isStorageTypeCompatible('freezer', 'fridge') // false
+ */
+export const isStorageTypeCompatible = (
+  categoryStorageType: string,
+  pointType: ConservationPoint['pointType']
+): boolean => {
+  const compatibilityMap: Record<string, string[]> = {
+    fridge: ['fridge', 'ambient'],
+    freezer: ['freezer'],
+    blast: ['blast'],
+    ambient: ['ambient'],
+  }
+
+  const compatibleTypes = compatibilityMap[pointType] || []
+  return compatibleTypes.includes(categoryStorageType)
+}
+
+/**
+ * Filtra categorie compatibili con il tipo di punto di conservazione selezionato
+ * Verifica sia storage_type che sovrapposizione range temperatura
+ *
+ * @param pointType - Tipo di punto di conservazione selezionato
+ * @param categories - Array di categorie dal database
+ * @returns Array di categorie compatibili
+ *
+ * Edge cases handled:
+ * - Categories without temperature_requirements: always included
+ * - Categories without storage_type: only range overlap is checked
+ * - Ambient point type: only storage_type is checked (no temperature range)
+ *
+ * @example
+ * const categories = [
+ *   { name: 'Carni Fresche', temperature_requirements: { min_temp: 1, max_temp: 4, storage_type: 'fridge' } },
+ *   { name: 'Congelati', temperature_requirements: { min_temp: -25, max_temp: -18, storage_type: 'freezer' } }
+ * ]
+ *
+ * getCompatibleCategoriesByPointType('fridge', categories)
+ * // Returns: [{ name: 'Carni Fresche', ... }]
+ */
+export const getCompatibleCategoriesByPointType = (
+  pointType: ConservationPoint['pointType'],
+  categories: Array<{
+    name: string
+    temperature_requirements?: {
+      min_temp: number
+      max_temp: number
+      storage_type: string
+    }
+  }>
+): Array<{
+  name: string
+  temperature_requirements?: {
+    min_temp: number
+    max_temp: number
+    storage_type: string
+  }
+}> => {
+  if (!categories || categories.length === 0) return []
+
+  // Ottieni range temperatura del tipo di punto
+  const pointTypeRange = CONSERVATION_POINT_TYPES[pointType].temperatureRange
+
+  return categories.filter(category => {
+    // Categorie senza requisiti di temperatura sono sempre compatibili
+    if (!category.temperature_requirements) return true
+
+    const tempReq = category.temperature_requirements
+    const categoryRange = { min: tempReq.min_temp, max: tempReq.max_temp }
+
+    // 1. Verifica compatibilità storage_type (se presente)
+    if (tempReq.storage_type) {
+      if (!isStorageTypeCompatible(tempReq.storage_type, pointType)) {
+        return false
+      }
+    }
+
+    // 2. Verifica sovrapposizione range temperatura
+    // Solo se il tipo di punto ha un range definito (non ambient)
+    if (pointTypeRange.min !== null && pointTypeRange.max !== null) {
+      if (!areTemperatureRangesCompatible(pointTypeRange, categoryRange)) {
+        return false
+      }
+    }
+
+    return true
   })
 }
 
