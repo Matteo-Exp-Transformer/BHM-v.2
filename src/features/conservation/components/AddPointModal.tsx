@@ -4,6 +4,14 @@ import {
   ConservationPointType,
 } from '@/types/conservation'
 import { X, Thermometer, ShieldCheck, AlertCircle } from 'lucide-react'
+import {
+  getProfileById,
+  getProfilesForAppliance,
+  mapCategoryIdsToDbNames,
+  APPLIANCE_CATEGORY_LABELS,
+  type ApplianceCategory,
+  type ConservationProfileId,
+} from '@/utils/conservationProfiles'
 import { useDepartments } from '@/features/management/hooks/useDepartments'
 import { useStaff } from '@/features/management/hooks/useStaff'
 import { useCategories } from '@/features/inventory/hooks/useCategories'
@@ -20,6 +28,7 @@ import {
 import { MiniCalendar } from '@/components/ui/MiniCalendar'
 import {
   CONSERVATION_POINT_TYPES,
+  getCompatibleCategoriesByPointType,
   // BUG M1 FIX: Rimosso validateTemperatureForType - non piu' necessario
 } from '@/utils/onboarding/conservationUtils'
 import { STAFF_ROLES, STAFF_CATEGORIES } from '@/utils/haccpRules'
@@ -27,6 +36,9 @@ import { calculateNextDue, useMaintenanceTasks } from '@/features/conservation/h
 import type { MaintenanceFrequency as EnglishMaintenanceFrequency, MaintenanceTask as DBMaintenanceTask } from '@/types/conservation'
 import { cn } from '@/lib/utils'
 import { useCalendarSettings } from '@/hooks/useCalendarSettings'
+import { Modal } from '@/components/ui/Modal'
+import { OptimizedImage } from '@/components/ui/OptimizedImage'
+import { getApplianceImagePathWithProfile, hasApplianceImageAvailable } from '@/config/applianceImages'
 
 // BUG M1 FIX: Valori default non piu' usati per il campo temperatura
 // Il campo ora mostra solo il range consigliato come placeholder
@@ -532,7 +544,13 @@ export function AddPointModal({
     pointType: 'fridge' as ConservationPointType,
     isBlastChiller: false,
     productCategories: [] as string[],
+    applianceCategory: '' as ApplianceCategory | '',
+    profileId: '',
+    isCustomProfile: false,
   })
+
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   // Genera manutenzioni obbligatorie basate sul tipo di punto
   const getRequiredMaintenanceTasks = (pointType: ConservationPointType): MandatoryMaintenanceTask[] => {
@@ -630,31 +648,67 @@ export function AddPointModal({
 
   // BUG M1 FIX: Rimosso typeInfo - non piu' necessario
 
-  // BUG M1 FIX: Semplificato compatibleCategories - usa temperatura default del tipo
+  // FIX: Usa range-based filtering con storage_type check
   const compatibleCategories = useMemo(() => {
     if (!productCategories || productCategories.length === 0) return []
 
-    // Usa temperatura default basata sul tipo di punto per filtrare categorie
-    const defaultTemp = DEFAULT_TEMPERATURES[formData.pointType]
+    // Filtra categorie compatibili con il tipo di punto selezionato
+    // Verifica sia il range di temperatura che lo storage_type
+    const compatible = getCompatibleCategoriesByPointType(
+      formData.pointType,
+      productCategories
+    )
 
-    return productCategories
-      .filter(cat => {
-        if (!cat.temperature_requirements) return true
-
-        const tempReq = cat.temperature_requirements
-        if (defaultTemp === undefined) return true
-
-        return defaultTemp >= tempReq.min_temp && defaultTemp <= tempReq.max_temp
-      })
-      .map(cat => ({
-        id: cat.name,
-        label: cat.name,
-        range: cat.temperature_requirements ? {
-          min: cat.temperature_requirements.min_temp,
-          max: cat.temperature_requirements.max_temp
-        } : null
-      }))
+    return compatible.map(cat => ({
+      id: cat.name,
+      label: cat.name,
+      range: cat.temperature_requirements ? {
+        min: cat.temperature_requirements.min_temp,
+        max: cat.temperature_requirements.max_temp
+      } : null
+    }))
   }, [formData.pointType, productCategories])
+
+  // State per profilo selezionato (TASK-3.3)
+  const selectedProfile = useMemo(() => {
+    if (!formData.applianceCategory || !formData.profileId) return null
+    return getProfileById(
+      formData.profileId as ConservationProfileId,
+      formData.applianceCategory as ApplianceCategory
+    )
+  }, [formData.applianceCategory, formData.profileId])
+
+  // Auto-configurazione quando profilo selezionato (TASK-3.3)
+  useEffect(() => {
+    if (selectedProfile) {
+      // 1. Mappa categorie dal profilo
+      const mappedCategories = mapCategoryIdsToDbNames(selectedProfile.allowedCategoryIds)
+
+      setFormData(prev => ({
+        ...prev,
+        productCategories: mappedCategories,
+      }))
+    }
+  }, [selectedProfile])
+
+  // FIX: Auto-deseleziona categorie incompatibili quando cambia il tipo di punto
+  // (solo se non c'è un profilo attivo)
+  useEffect(() => {
+    if (!formData.profileId && formData.productCategories.length > 0) {
+      const compatibleNames = compatibleCategories.map(c => c.id)
+      const stillCompatible = formData.productCategories.filter(catName =>
+        compatibleNames.includes(catName)
+      )
+
+      // Se alcune categorie sono diventate incompatibili, aggiorna la selezione
+      if (stillCompatible.length !== formData.productCategories.length) {
+        setFormData(prev => ({
+          ...prev,
+          productCategories: stillCompatible
+        }))
+      }
+    }
+  }, [formData.pointType, compatibleCategories, formData.profileId])
 
   // BUG M1 FIX: Rimosso useEffect validazione temperatura - non piu' necessario
 
@@ -667,6 +721,9 @@ export function AddPointModal({
         pointType: point.type,
         isBlastChiller: point.is_blast_chiller,
         productCategories: point.product_categories || [],
+        applianceCategory: (point.appliance_category as ApplianceCategory) || '',
+        profileId: point.profile_id || '',
+        isCustomProfile: point.is_custom_profile || false,
       })
       // Manutenzioni caricate da useMaintenanceTasks (vedi useEffect sotto)
     } else {
@@ -676,6 +733,9 @@ export function AddPointModal({
         pointType: 'fridge',
         isBlastChiller: false,
         productCategories: [],
+        applianceCategory: '' as ApplianceCategory | '',
+        profileId: '',
+        isCustomProfile: false,
       })
       setMaintenanceTasks([
         {
@@ -724,6 +784,11 @@ export function AddPointModal({
       }
     }
   }, [point, existingMaintenances])
+
+  // Reset imageError quando cambia categoria elettrodomestico
+  useEffect(() => {
+    setImageError(false)
+  }, [formData.applianceCategory])
 
   // BUG M1 FIX: Rimosso useEffect che resettava isManuallyEdited
 
@@ -776,6 +841,16 @@ export function AddPointModal({
     // BUG M1 FIX: Rimossa validazione temperatura - campo ora informativo
     if (formData.productCategories.length === 0) {
       errors.productCategories = 'Seleziona almeno una categoria'
+    }
+
+    // Validazione profilo (solo per frigoriferi) - TASK-3.4
+    if (formData.pointType === 'fridge') {
+      if (!formData.applianceCategory) {
+        errors.applianceCategory = 'Seleziona una categoria elettrodomestico'
+      }
+      if (!formData.profileId) {
+        errors.profileId = 'Seleziona un profilo HACCP'
+      }
     }
 
     // Validazione manutenzioni con errori specifici
@@ -856,7 +931,11 @@ export function AddPointModal({
 
     // BUG M1 FIX: Usa temperatura default basata sul tipo di punto
     // In modalita' edit, usa la temperatura esistente dal punto
-    const temp = point?.setpoint_temp ?? DEFAULT_TEMPERATURES[formData.pointType] ?? 4
+    // Se c'è un profilo selezionato, usa la temperatura consigliata dal profilo
+    let temp = point?.setpoint_temp ?? DEFAULT_TEMPERATURES[formData.pointType] ?? 4
+    if (selectedProfile) {
+      temp = selectedProfile.recommendedSetPointsC.fridge
+    }
 
     // Trasforma i maintenanceTasks nel formato atteso da useConservationPoints
     const transformedMaintenanceTasks = transformMaintenanceTasks(maintenanceTasks)
@@ -869,6 +948,10 @@ export function AddPointModal({
         type: formData.pointType,
         is_blast_chiller: formData.isBlastChiller,
         product_categories: formData.productCategories,
+        appliance_category: formData.applianceCategory || null,
+        profile_id: formData.profileId || null,
+        is_custom_profile: false, // Sempre false per profili standard
+        profile_config: null, // Sempre null per profili standard
       },
       transformedMaintenanceTasks
     )
@@ -1042,64 +1125,263 @@ export function AddPointModal({
             </div>
           </div>
 
-          <div>
-            <Label>Categorie prodotti *</Label>
-            <p className="mb-3 text-sm text-gray-600">
-              Seleziona le categorie di prodotti che verranno conservate in questo
-              punto di conservazione. Solo le categorie compatibili con la
-              temperatura impostata sono disponibili.
-            </p>
-            <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-              {compatibleCategories.map(category => {
-                const isSelected = formData.productCategories.includes(
-                  category.id
-                )
-                return (
-                  <button
-                    key={category.id}
-                    type="button"
-                    className={`flex items-center justify-between rounded border p-2 text-sm transition-colors ${
-                      isSelected
-                        ? 'border-blue-400 bg-blue-50 text-blue-900'
-                        : 'border-gray-200 bg-white hover:border-blue-200'
-                    }`}
-                    onClick={() => {
-                      setFormData(prev => ({
-                        ...prev,
-                        productCategories: isSelected
-                          ? prev.productCategories.filter(id => id !== category.id)
-                          : [...prev.productCategories, category.id],
-                      }))
-                    }}
+          {/* Sezione Profilo Punto di Conservazione - Solo per frigoriferi */}
+          {formData.pointType === 'fridge' && (
+            <div className="space-y-4 border-t pt-6">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-blue-600" />
+                Profilo Punto di Conservazione
+              </h3>
+
+              {/* Select Categoria Appliance */}
+              <div className="space-y-2">
+                <Label htmlFor="appliance-category">Categoria elettrodomestico *</Label>
+                <Select
+                  value={formData.applianceCategory || ''}
+                  onValueChange={(value) => setFormData(prev => ({
+                    ...prev,
+                    applianceCategory: value as ApplianceCategory,
+                    profileId: '' // Reset profilo quando cambia categoria
+                  }))}
+                >
+                  <SelectTrigger id="appliance-category">
+                    <SelectValue placeholder="Seleziona categoria..." />
+                  </SelectTrigger>
+                  <SelectContent position="popper" sideOffset={5} className="z-[10001]">
+                    {Object.entries(APPLIANCE_CATEGORY_LABELS).map(([value, label]) => (
+                      <SelectOption key={value} value={value}>{label}</SelectOption>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {validationErrors.applianceCategory && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {validationErrors.applianceCategory}
+                  </p>
+                )}
+              </div>
+
+              {/* Select Profilo */}
+              {formData.applianceCategory && (
+                <div className="space-y-2">
+                  <Label htmlFor="profile-select">Profilo HACCP *</Label>
+                  <Select
+                    value={formData.profileId || ''}
+                    onValueChange={(value) => setFormData(prev => ({
+                      ...prev,
+                      profileId: value
+                    }))}
                   >
-                    <span>{category.label}</span>
-                    {category.range && (
-                      <span className="text-xs text-gray-500">
-                        {category.range.min}°C - {category.range.max}°C
-                      </span>
-                    )}
-                    {isSelected && (
-                      <ShieldCheck
-                        className="h-4 w-4 text-blue-600"
-                        aria-hidden
-                      />
-                    )}
-                  </button>
-                )
-              })}
+                    <SelectTrigger id="profile-select">
+                      <SelectValue placeholder="Seleziona profilo..." />
+                    </SelectTrigger>
+                    <SelectContent position="popper" sideOffset={5} className="z-[10001]">
+                      {getProfilesForAppliance(formData.applianceCategory as ApplianceCategory).map(profile => (
+                        <SelectOption key={profile.profileId} value={profile.profileId}>
+                          {profile.name}
+                        </SelectOption>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {validationErrors.profileId && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {validationErrors.profileId}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Info Box Note HACCP */}
+              {(() => {
+                const selectedProfile = formData.applianceCategory && formData.profileId
+                  ? getProfileById(
+                      formData.profileId as ConservationProfileId,
+                      formData.applianceCategory as ApplianceCategory
+                    )
+                  : null
+
+                return selectedProfile ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+                    <h4 className="font-medium text-blue-800 flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      Note HACCP
+                    </h4>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      {selectedProfile.haccpNotes.map((note, i) => (
+                        <li key={i}>• {note}</li>
+                      ))}
+                    </ul>
+                    <p className="text-sm text-blue-600 mt-2">
+                      Temperatura consigliata: <strong>{selectedProfile.recommendedSetPointsC.fridge}°C</strong>
+                    </p>
+                  </div>
+                ) : null
+              })()}
             </div>
-            {/* BUG M1 FIX: Messaggio aggiornato per usare tipo invece di temperatura */}
-            {compatibleCategories.length === 0 && (
-              <p className="mt-1 text-sm text-amber-600">
-                Nessuna categoria compatibile con il tipo di punto selezionato
+          )}
+
+          {/* Sezione categorie standard - nascosta per frigoriferi */}
+          {formData.pointType !== 'fridge' && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label>Categorie prodotti {formData.profileId ? '(auto-configurate)' : '*'}</Label>
+                {formData.profileId && (
+                  <span className="text-sm text-blue-600">
+                    Configurate dal profilo selezionato
+                  </span>
+                )}
+              </div>
+              <p className="mb-3 text-sm text-gray-600">
+                {formData.profileId
+                  ? 'Le categorie sono state configurate automaticamente dal profilo HACCP selezionato.'
+                  : 'Seleziona le categorie di prodotti che verranno conservate in questo punto di conservazione. Solo le categorie compatibili con la temperatura impostata sono disponibili.'}
               </p>
-            )}
-            {validationErrors.productCategories && (
-              <p className="mt-1 text-sm text-red-600">
-                {validationErrors.productCategories}
-              </p>
-            )}
-          </div>
+              <div className={formData.profileId ? 'opacity-75 pointer-events-none' : ''}>
+              <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+                {compatibleCategories.map(category => {
+                  const isSelected = formData.productCategories.includes(
+                    category.id
+                  )
+                  return (
+                    <button
+                      key={category.id}
+                      type="button"
+                      className={`flex items-center justify-between rounded border p-2 text-sm transition-colors ${
+                        isSelected
+                          ? 'border-blue-400 bg-blue-50 text-blue-900'
+                          : 'border-gray-200 bg-white hover:border-blue-200'
+                      }`}
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          productCategories: isSelected
+                            ? prev.productCategories.filter(id => id !== category.id)
+                            : [...prev.productCategories, category.id],
+                        }))
+                      }}
+                    >
+                      <span>{category.label}</span>
+                      {category.range && (
+                        <span className="text-xs text-gray-500">
+                          {category.range.min}°C - {category.range.max}°C
+                        </span>
+                      )}
+                      {isSelected && (
+                        <ShieldCheck
+                          className="h-4 w-4 text-blue-600"
+                          aria-hidden
+                        />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+              </div>
+              {/* BUG M1 FIX: Messaggio aggiornato per usare tipo invece di temperatura */}
+              {compatibleCategories.length === 0 && (
+                <p className="mt-1 text-sm text-amber-600">
+                  Nessuna categoria compatibile con il tipo di punto selezionato
+                </p>
+              )}
+              {validationErrors.productCategories && (
+                <p className="mt-1 text-sm text-red-600">
+                  {validationErrors.productCategories}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Layout Split: Categorie + Immagine Elettrodomestico - visibile per frigoriferi */}
+          {formData.pointType === 'fridge' && (
+            <div className="space-y-4 border-t pt-6">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-blue-600" />
+                Configurazione Punto di Conservazione
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Colonna Sinistra: Categorie Profilo */}
+                <div className="space-y-2">
+                  <Label>Categorie del Profilo</Label>
+                  <div className="border rounded-lg p-4 bg-gray-50 min-h-[200px] flex items-center justify-center">
+                    {selectedProfile ? (
+                      <div className="w-full max-h-[350px] overflow-y-auto">
+                        <div className="space-y-2">
+                          {mapCategoryIdsToDbNames(selectedProfile.allowedCategoryIds).map((categoryName, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center gap-2 p-2 bg-white rounded border border-blue-200"
+                            >
+                              <ShieldCheck className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                              <span className="text-sm text-gray-700">{categoryName}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center text-gray-400">
+                        <ShieldCheck className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">Seleziona un profilo HACCP per visualizzare le categorie</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Colonna Destra: Immagine Elettrodomestico */}
+                <div className="space-y-2">
+                  <Label>Immagine Elettrodomestico</Label>
+                  {formData.applianceCategory && hasApplianceImageAvailable(
+                    formData.applianceCategory as ApplianceCategory,
+                    formData.profileId || null
+                  ) && !imageError ? (
+                    <div
+                      className="border rounded-lg p-4 bg-gray-50 cursor-pointer hover:bg-gray-100
+                                 transition-colors group relative min-h-[200px] flex items-center justify-center"
+                      onClick={() => setIsImageModalOpen(true)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          setIsImageModalOpen(true)
+                        }
+                      }}
+                      aria-label="Clicca per ingrandire l'immagine dell'elettrodomestico"
+                    >
+                      <OptimizedImage
+                        src={getApplianceImagePathWithProfile(
+                          formData.applianceCategory as ApplianceCategory,
+                          formData.profileId || null
+                        )!}
+                        alt={APPLIANCE_CATEGORY_LABELS[formData.applianceCategory as ApplianceCategory]}
+                        className="max-w-full max-h-[280px] object-contain"
+                        onError={() => setImageError(true)}
+                      />
+                      {/* Overlay hover */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10
+                                     transition-colors flex items-center justify-center">
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity
+                                        text-white text-sm font-medium bg-black/50 px-3 py-1 rounded">
+                          Clicca per ingrandire
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border rounded-lg p-4 bg-gray-50 min-h-[200px]
+                                   flex items-center justify-center">
+                      <div className="text-center text-gray-400">
+                        <Thermometer className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">
+                          {formData.applianceCategory 
+                            ? "Immagine non disponibile"
+                            : "Seleziona una categoria elettrodomestico per visualizzare l'immagine"}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="border-t pt-6">
             <div className="mb-4">
@@ -1152,6 +1434,27 @@ export function AddPointModal({
               {isLoading ? 'Salvando...' : point ? 'Aggiorna' : 'Crea'}
             </button>
           </div>
+
+          {/* Modal Lightbox Immagine */}
+          <Modal
+            isOpen={isImageModalOpen}
+            onClose={() => setIsImageModalOpen(false)}
+            title={APPLIANCE_CATEGORY_LABELS[formData.applianceCategory as ApplianceCategory] || 'Elettrodomestico'}
+            size="xl"
+          >
+            <div className="flex items-center justify-center p-4 min-h-[400px]">
+              {/* IMPORTANTE: Usare <img> standard, NON OptimizedImage */}
+              {/* OptimizedImage ha objectFit: 'cover' hardcoded che non può essere sovrascritto */}
+              <img
+                src={getApplianceImagePathWithProfile(
+                  formData.applianceCategory as ApplianceCategory,
+                  formData.profileId || null
+                )!}
+                alt={`${APPLIANCE_CATEGORY_LABELS[formData.applianceCategory as ApplianceCategory]} - Vista ingrandita`}
+                className="max-w-full max-h-[80vh] object-contain"
+              />
+            </div>
+          </Modal>
         </form>
       </div>
     </div>
