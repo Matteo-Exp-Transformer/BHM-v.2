@@ -1,7 +1,11 @@
 // Costanti per profili punto di conservazione HACCP
 
-export type ApplianceCategory = 'vertical_fridge_with_freezer'
-// Future: | 'vertical_fridge_1_door' | 'vertical_fridge_2_doors' | 'display_fridge' | 'glass_door_fridge'
+export type ApplianceCategory =
+  | 'vertical_fridge_with_freezer'
+  | 'vertical_fridge_1_door'
+  | 'vertical_fridge_2_doors'
+  | 'base_refrigerated'
+// Future: | 'display_fridge' | 'glass_door_fridge'
 
 export type ConservationProfileId =
   | 'max_capacity'
@@ -166,13 +170,274 @@ export const CONSERVATION_PROFILES: Record<ApplianceCategory, ConservationProfil
       ],
     },
   ],
+  vertical_fridge_1_door: [
+    {
+      profileId: 'max_capacity',
+      name: 'Profilo Massima Capienza',
+      applianceType: 'Frigorifero Verticale 1 Anta',
+      recommendedSetPointsC: { fridge: 2 },
+      allowedCategoryIds: ['rte', 'dairy', 'eggs', 'cured_meats', 'produce', 'aromatic_herbs', 'raw_meat', 'raw_fish', 'sauces_closed', 'beverages', 'preserves_closed'],
+      compartmentFill: {
+        fr_shelf_1_top: ['rte'],
+        fr_shelf_2: ['dairy', 'eggs'],
+        fr_shelf_3: ['cured_meats', 'sauces_closed'],
+        fr_shelf_4_bottom: ['raw_meat', 'raw_fish'],
+        fr_crisper_drawer: ['produce', 'aromatic_herbs'],
+        fr_door_1_top: ['beverages', 'preserves_closed'],
+        fr_door_2_mid: ['sauces_closed'],
+        fr_door_3_bottom: ['beverages', 'preserves_closed'],
+      },
+      haccpNotes: [
+        'Capienza massima = disciplina massima: contenitori a tenuta e ordine verticale rigoroso.',
+        'Sul ripiano basso: ideale usare BOX separati (carne vs pesce).',
+        'Set point 2°C: compromesso conservativo per includere anche pesce.',
+      ],
+    },
+    {
+      profileId: 'meat_generic',
+      name: 'Profilo Carne + Generico',
+      applianceType: 'Frigorifero Verticale 1 Anta',
+      recommendedSetPointsC: { fridge: 3 },
+      allowedCategoryIds: ['rte', 'dairy', 'cured_meats', 'produce', 'aromatic_herbs', 'raw_meat', 'sauces_closed', 'beverages', 'preserves_closed'],
+      compartmentFill: {
+        fr_shelf_1_top: ['rte'],
+        fr_shelf_2: ['dairy'],
+        fr_shelf_3: ['cured_meats', 'sauces_closed'],
+        fr_shelf_4_bottom: ['raw_meat'],
+        fr_crisper_drawer: ['produce', 'aromatic_herbs'],
+        fr_door_1_top: ['beverages', 'preserves_closed'],
+        fr_door_2_mid: ['sauces_closed'],
+        fr_door_3_bottom: ['beverages', 'preserves_closed'],
+      },
+      haccpNotes: [
+        'Carni crude sempre in basso e a tenuta (anti-gocciolamento).',
+        'Set point 3°C: range operativo tipico 0-4°C con buon margine.',
+      ],
+    },
+    {
+      profileId: 'vegetables_generic',
+      name: 'Profilo Verdure + Generico',
+      applianceType: 'Frigorifero Verticale 1 Anta',
+      recommendedSetPointsC: { fridge: 4 },
+      allowedCategoryIds: ['rte', 'dairy', 'cured_meats', 'produce', 'aromatic_herbs', 'sauces_closed', 'beverages', 'preserves_closed'],
+      compartmentFill: {
+        fr_shelf_1_top: ['rte'],
+        fr_shelf_2: ['dairy'],
+        fr_shelf_3: ['produce', 'cured_meats'],
+        fr_shelf_4_bottom: ['produce'],
+        fr_crisper_drawer: ['produce', 'aromatic_herbs'],
+        fr_door_1_top: ['beverages', 'preserves_closed'],
+        fr_door_2_mid: ['sauces_closed'],
+        fr_door_3_bottom: ['beverages'],
+      },
+      haccpNotes: [
+        'Set point 4°C: più adatto a verdure (riduce danni da freddo).',
+        'Valuta gestione dedicata per ortaggi sensibili al freddo.',
+      ],
+    },
+    {
+      profileId: 'fish_generic',
+      name: 'Profilo Pesce + Generico',
+      applianceType: 'Frigorifero Verticale 1 Anta',
+      recommendedSetPointsC: { fridge: 1 },
+      allowedCategoryIds: ['rte', 'dairy', 'produce', 'aromatic_herbs', 'raw_fish', 'sauces_closed', 'beverages', 'preserves_closed'],
+      compartmentFill: {
+        fr_shelf_1_top: ['rte'],
+        fr_shelf_2: ['dairy', 'sauces_closed'],
+        fr_shelf_3: ['produce'],
+        fr_shelf_4_bottom: ['raw_fish'],
+        fr_crisper_drawer: ['produce', 'aromatic_herbs'],
+        fr_door_1_top: ['beverages'],
+        fr_door_2_mid: ['sauces_closed'],
+        fr_door_3_bottom: ['beverages', 'preserves_closed'],
+      },
+      haccpNotes: [
+        'Set point 1°C: profilo conservativo per pesce fresco.',
+        'Pesce crudo: doppio contenimento + pulizia frequente ripiano basso.',
+      ],
+    },
+  ],
+  vertical_fridge_2_doors: [
+    {
+      profileId: 'max_capacity',
+      name: 'Profilo Massima Capienza',
+      applianceType: 'Frigorifero Verticale 2 Ante',
+      recommendedSetPointsC: { fridge: 2 },
+      allowedCategoryIds: ['rte', 'dairy', 'eggs', 'cured_meats', 'produce', 'aromatic_herbs', 'raw_meat', 'raw_fish', 'sauces_closed', 'beverages', 'preserves_closed'],
+      compartmentFill: {
+        fr_shelf_1_top: ['rte'],
+        fr_shelf_2: ['dairy', 'eggs'],
+        fr_shelf_3: ['cured_meats', 'sauces_closed'],
+        fr_shelf_4_bottom: ['raw_meat', 'raw_fish'],
+        fr_crisper_drawer: ['produce', 'aromatic_herbs'],
+        fr_door_1_top: ['beverages', 'preserves_closed'],
+        fr_door_2_mid: ['sauces_closed'],
+        fr_door_3_bottom: ['beverages', 'preserves_closed'],
+      },
+      haccpNotes: [
+        'Capienza massima = disciplina massima: contenitori a tenuta e ordine verticale rigoroso.',
+        'Sul ripiano basso: ideale usare BOX separati (carne vs pesce).',
+        'Set point 2°C: compromesso conservativo per includere anche pesce.',
+      ],
+    },
+    {
+      profileId: 'meat_generic',
+      name: 'Profilo Carne + Generico',
+      applianceType: 'Frigorifero Verticale 2 Ante',
+      recommendedSetPointsC: { fridge: 3 },
+      allowedCategoryIds: ['rte', 'dairy', 'cured_meats', 'produce', 'aromatic_herbs', 'raw_meat', 'sauces_closed', 'beverages', 'preserves_closed'],
+      compartmentFill: {
+        fr_shelf_1_top: ['rte'],
+        fr_shelf_2: ['dairy'],
+        fr_shelf_3: ['cured_meats', 'sauces_closed'],
+        fr_shelf_4_bottom: ['raw_meat'],
+        fr_crisper_drawer: ['produce', 'aromatic_herbs'],
+        fr_door_1_top: ['beverages', 'preserves_closed'],
+        fr_door_2_mid: ['sauces_closed'],
+        fr_door_3_bottom: ['beverages', 'preserves_closed'],
+      },
+      haccpNotes: [
+        'Carni crude sempre in basso e a tenuta (anti-gocciolamento).',
+        'Set point 3°C: range operativo tipico 0-4°C con buon margine.',
+      ],
+    },
+    {
+      profileId: 'vegetables_generic',
+      name: 'Profilo Verdure + Generico',
+      applianceType: 'Frigorifero Verticale 2 Ante',
+      recommendedSetPointsC: { fridge: 4 },
+      allowedCategoryIds: ['rte', 'dairy', 'cured_meats', 'produce', 'aromatic_herbs', 'sauces_closed', 'beverages', 'preserves_closed'],
+      compartmentFill: {
+        fr_shelf_1_top: ['rte'],
+        fr_shelf_2: ['dairy'],
+        fr_shelf_3: ['produce', 'cured_meats'],
+        fr_shelf_4_bottom: ['produce'],
+        fr_crisper_drawer: ['produce', 'aromatic_herbs'],
+        fr_door_1_top: ['beverages', 'preserves_closed'],
+        fr_door_2_mid: ['sauces_closed'],
+        fr_door_3_bottom: ['beverages'],
+      },
+      haccpNotes: [
+        'Set point 4°C: più adatto a verdure (riduce danni da freddo).',
+        'Valuta gestione dedicata per ortaggi sensibili al freddo.',
+      ],
+    },
+    {
+      profileId: 'fish_generic',
+      name: 'Profilo Pesce + Generico',
+      applianceType: 'Frigorifero Verticale 2 Ante',
+      recommendedSetPointsC: { fridge: 1 },
+      allowedCategoryIds: ['rte', 'dairy', 'produce', 'aromatic_herbs', 'raw_fish', 'sauces_closed', 'beverages', 'preserves_closed'],
+      compartmentFill: {
+        fr_shelf_1_top: ['rte'],
+        fr_shelf_2: ['dairy', 'sauces_closed'],
+        fr_shelf_3: ['produce'],
+        fr_shelf_4_bottom: ['raw_fish'],
+        fr_crisper_drawer: ['produce', 'aromatic_herbs'],
+        fr_door_1_top: ['beverages'],
+        fr_door_2_mid: ['sauces_closed'],
+        fr_door_3_bottom: ['beverages', 'preserves_closed'],
+      },
+      haccpNotes: [
+        'Set point 1°C: profilo conservativo per pesce fresco.',
+        'Pesce crudo: doppio contenimento + pulizia frequente ripiano basso.',
+      ],
+    },
+  ],
+  base_refrigerated: [
+    {
+      profileId: 'max_capacity',
+      name: 'Profilo Massima Capienza',
+      applianceType: 'Base Refrigerata',
+      recommendedSetPointsC: { fridge: 2 },
+      allowedCategoryIds: ['rte', 'dairy', 'eggs', 'cured_meats', 'produce', 'aromatic_herbs', 'raw_meat', 'raw_fish', 'sauces_closed', 'beverages', 'preserves_closed'],
+      compartmentFill: {
+        fr_shelf_1_top: ['rte'],
+        fr_shelf_2: ['dairy', 'eggs'],
+        fr_shelf_3: ['cured_meats', 'sauces_closed'],
+        fr_shelf_4_bottom: ['raw_meat', 'raw_fish'],
+        fr_crisper_drawer: ['produce', 'aromatic_herbs'],
+        fr_door_1_top: ['beverages', 'preserves_closed'],
+        fr_door_2_mid: ['sauces_closed'],
+        fr_door_3_bottom: ['beverages', 'preserves_closed'],
+      },
+      haccpNotes: [
+        'Capienza massima = disciplina massima: contenitori a tenuta e ordine verticale rigoroso.',
+        'Sul ripiano basso: ideale usare BOX separati (carne vs pesce).',
+        'Set point 2°C: compromesso conservativo per includere anche pesce.',
+      ],
+    },
+    {
+      profileId: 'meat_generic',
+      name: 'Profilo Carne + Generico',
+      applianceType: 'Base Refrigerata',
+      recommendedSetPointsC: { fridge: 3 },
+      allowedCategoryIds: ['rte', 'dairy', 'cured_meats', 'produce', 'aromatic_herbs', 'raw_meat', 'sauces_closed', 'beverages', 'preserves_closed'],
+      compartmentFill: {
+        fr_shelf_1_top: ['rte'],
+        fr_shelf_2: ['dairy'],
+        fr_shelf_3: ['cured_meats', 'sauces_closed'],
+        fr_shelf_4_bottom: ['raw_meat'],
+        fr_crisper_drawer: ['produce', 'aromatic_herbs'],
+        fr_door_1_top: ['beverages', 'preserves_closed'],
+        fr_door_2_mid: ['sauces_closed'],
+        fr_door_3_bottom: ['beverages', 'preserves_closed'],
+      },
+      haccpNotes: [
+        'Carni crude sempre in basso e a tenuta (anti-gocciolamento).',
+        'Set point 3°C: range operativo tipico 0-4°C con buon margine.',
+      ],
+    },
+    {
+      profileId: 'vegetables_generic',
+      name: 'Profilo Verdure + Generico',
+      applianceType: 'Base Refrigerata',
+      recommendedSetPointsC: { fridge: 4 },
+      allowedCategoryIds: ['rte', 'dairy', 'cured_meats', 'produce', 'aromatic_herbs', 'sauces_closed', 'beverages', 'preserves_closed'],
+      compartmentFill: {
+        fr_shelf_1_top: ['rte'],
+        fr_shelf_2: ['dairy'],
+        fr_shelf_3: ['produce', 'cured_meats'],
+        fr_shelf_4_bottom: ['produce'],
+        fr_crisper_drawer: ['produce', 'aromatic_herbs'],
+        fr_door_1_top: ['beverages', 'preserves_closed'],
+        fr_door_2_mid: ['sauces_closed'],
+        fr_door_3_bottom: ['beverages'],
+      },
+      haccpNotes: [
+        'Set point 4°C: più adatto a verdure (riduce danni da freddo).',
+        'Valuta gestione dedicata per ortaggi sensibili al freddo.',
+      ],
+    },
+    {
+      profileId: 'fish_generic',
+      name: 'Profilo Pesce + Generico',
+      applianceType: 'Base Refrigerata',
+      recommendedSetPointsC: { fridge: 1 },
+      allowedCategoryIds: ['rte', 'dairy', 'produce', 'aromatic_herbs', 'raw_fish', 'sauces_closed', 'beverages', 'preserves_closed'],
+      compartmentFill: {
+        fr_shelf_1_top: ['rte'],
+        fr_shelf_2: ['dairy', 'sauces_closed'],
+        fr_shelf_3: ['produce'],
+        fr_shelf_4_bottom: ['raw_fish'],
+        fr_crisper_drawer: ['produce', 'aromatic_herbs'],
+        fr_door_1_top: ['beverages'],
+        fr_door_2_mid: ['sauces_closed'],
+        fr_door_3_bottom: ['beverages', 'preserves_closed'],
+      },
+      haccpNotes: [
+        'Set point 1°C: profilo conservativo per pesce fresco.',
+        'Pesce crudo: doppio contenimento + pulizia frequente ripiano basso.',
+      ],
+    },
+  ],
 }
 
 // Mapping category ID → DB name
 export const CATEGORY_ID_TO_DB_NAME: Record<string, string> = {
   rte: 'Preparazioni/Pronti/Cotti (RTE)',
   dairy: 'Latticini',
-  eggs: 'Uova',
+  eggs: 'Uova - Ovoprodotti',
   cured_meats: 'Salumi e affettati',
   produce: 'Verdure e ortofrutta',
   aromatic_herbs: 'Erbe aromatiche fresche',
@@ -214,6 +479,9 @@ export function mapCategoryIdsToDbNames(categoryIds: string[]): string[] {
 // Appliance category labels for UI
 export const APPLIANCE_CATEGORY_LABELS: Record<ApplianceCategory, string> = {
   vertical_fridge_with_freezer: 'Frigorifero Verticale con Freezer',
+  vertical_fridge_1_door: 'Frigorifero Verticale 1 Anta',
+  vertical_fridge_2_doors: 'Frigorifero Verticale 2 Ante',
+  base_refrigerated: 'Base Refrigerata',
 }
 
 // Profile labels for UI

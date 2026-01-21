@@ -11,6 +11,9 @@ import type { ApplianceCategory, ConservationProfileId } from '@/utils/conservat
  */
 export const APPLIANCE_IMAGE_PATHS: Record<ApplianceCategory, string> = {
   vertical_fridge_with_freezer: '/images/conservation/appliances/vertical-fridge-with-freezer/main.png',
+  vertical_fridge_1_door: '/images/conservation/appliances/vertical-fridge-1-door/main.png',
+  vertical_fridge_2_doors: '/images/conservation/appliances/vertical-fridge-2-doors/main.png',
+  base_refrigerated: '/images/conservation/appliances/base-refrigerated/main.png',
   // Aggiungi nuove categorie qui:
   // single_door_fridge: '/images/conservation/appliances/single-door-fridge/main.png',
   // chest_freezer: '/images/conservation/appliances/chest-freezer/main.png',
@@ -28,6 +31,18 @@ export const PROFILE_IMAGE_PATHS: Record<string, string> = {
   'vertical_fridge_with_freezer:vegetables_generic': '/images/conservation/appliances/vertical-fridge-with-freezer/vegetables-generic-profile.png',
   'vertical_fridge_with_freezer:fish_generic': '/images/conservation/appliances/vertical-fridge-with-freezer/fish-generic-profile.png',
   'vertical_fridge_with_freezer:meat_generic': '/images/conservation/appliances/vertical-fridge-with-freezer/meat-generic-profile.png',
+  'vertical_fridge_1_door:max_capacity': '/images/conservation/appliances/vertical-fridge-1-door/max-capacity-profile.png',
+  'vertical_fridge_1_door:vegetables_generic': '/images/conservation/appliances/vertical-fridge-1-door/vegetables-generic-profile.png',
+  'vertical_fridge_1_door:fish_generic': '/images/conservation/appliances/vertical-fridge-1-door/fish-generic-profile.png',
+  'vertical_fridge_1_door:meat_generic': '/images/conservation/appliances/vertical-fridge-1-door/meat-generic-profile.png',
+  'vertical_fridge_2_doors:max_capacity': '/images/conservation/appliances/vertical-fridge-2-doors/max-capacity-profile.png',
+  'vertical_fridge_2_doors:vegetables_generic': '/images/conservation/appliances/vertical-fridge-2-doors/vegetables-generic-profile.png',
+  'vertical_fridge_2_doors:fish_generic': '/images/conservation/appliances/vertical-fridge-2-doors/fish-generic-profile.png',
+  'vertical_fridge_2_doors:meat_generic': '/images/conservation/appliances/vertical-fridge-2-doors/meat-generic-profile.png',
+  'base_refrigerated:max_capacity': '/images/conservation/appliances/base-refrigerated/max-capacity-profile.png',
+  'base_refrigerated:vegetables_generic': '/images/conservation/appliances/base-refrigerated/vegetables-generic-profile.png',
+  'base_refrigerated:fish_generic': '/images/conservation/appliances/base-refrigerated/fish-generic-profile.png',
+  'base_refrigerated:meat_generic': '/images/conservation/appliances/base-refrigerated/meat-generic-profile.png',
   // Aggiungi nuove immagini profilo qui:
 }
 
