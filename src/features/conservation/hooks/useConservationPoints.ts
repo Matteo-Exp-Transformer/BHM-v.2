@@ -7,6 +7,7 @@ import {
   classifyPointStatus,
 } from '@/types/conservation'
 import { toast } from 'react-toastify'
+import { getProfileById, type ApplianceCategory } from '@/utils/conservationProfiles'
 
 export function useConservationPoints() {
   const { companyId } = useAuth()
@@ -76,7 +77,7 @@ export function useConservationPoints() {
       // Prepare conservation point data for insert
       // Remove readonly/relation fields that shouldn't be inserted
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { maintenance_tasks: _maintenance_tasks, department: _department, maintenance_due, ...pointData } = conservationPoint
+      const { maintenance_tasks: _maintenance_tasks, department: _department, maintenance_due, profile_config, ...pointData } = conservationPoint
       
       const pointInsertData = {
         ...pointData,
@@ -86,6 +87,10 @@ export function useConservationPoints() {
         maintenance_due: maintenance_due ? maintenance_due.toISOString() : null,
         // Ensure department_id is string or null (not undefined)
         department_id: conservationPoint.department_id || null,
+        // Handle profile fields: profile_config should be JSONB (null for standard profiles)
+        profile_config: profile_config ? JSON.stringify(profile_config) : null,
+        // Ensure boolean fields are properly set
+        is_custom_profile: conservationPoint.is_custom_profile ?? false,
       }
 
       // Create conservation point
@@ -165,9 +170,14 @@ export function useConservationPoints() {
     }) => {
       // Prepare update data - remove readonly/relation fields
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id: _id, maintenance_tasks: _maintenance_tasks, department: _department, last_temperature_reading: _last_temperature_reading, created_at: _created_at, updated_at: _updated_at, ...updateFields } = data
+      const { id: _id, maintenance_tasks: _maintenance_tasks, department: _department, last_temperature_reading: _last_temperature_reading, created_at: _created_at, updated_at: _updated_at, profile_config, ...updateFields } = data
       
       const updateData: Record<string, unknown> = { ...updateFields }
+      
+      // Handle profile_config: convert to JSON string if present
+      if (profile_config !== undefined) {
+        updateData.profile_config = profile_config ? JSON.stringify(profile_config) : null
+      }
 
       // Auto-classify if temperature changed
       if (data.setpoint_temp !== undefined) {
@@ -229,13 +239,45 @@ export function useConservationPoints() {
   })
 
   // Transform DB data to ConservationPoint format
-  const points: ConservationPoint[] = (conservationPoints ?? []).map((point: any) => ({
-    ...point,
-    maintenance_due: point.maintenance_due ? new Date(point.maintenance_due) : undefined,
-    created_at: point.created_at ? new Date(point.created_at) : new Date(),
-    updated_at: point.updated_at ? new Date(point.updated_at) : new Date(),
-    product_categories: point.product_categories || [],
-  }))
+  const points: ConservationPoint[] = (conservationPoints ?? []).map((point: any) => {
+    // Ricostruisci sempre profile_config per profili standard (non custom)
+    // Questo garantisce che le categorie siano sempre aggiornate
+    let profileConfig = point.profile_config
+    if (point.profile_id && point.appliance_category) {
+      // Se è un profilo standard (non custom), ricostruisci sempre dal codice
+      // per avere le categorie aggiornate
+      if (!point.is_custom_profile) {
+        profileConfig = getProfileById(
+          point.profile_id,
+          point.appliance_category as ApplianceCategory
+        )
+      } else if (!profileConfig) {
+        // Se è custom ma profile_config è null, prova comunque a ricostruirlo
+        profileConfig = getProfileById(
+          point.profile_id,
+          point.appliance_category as ApplianceCategory
+        )
+      }
+    }
+    
+    // Parse profile_config from JSONB if present (solo per profili custom)
+    if (profileConfig && point.is_custom_profile) {
+      profileConfig = typeof profileConfig === 'string' 
+        ? JSON.parse(profileConfig) 
+        : profileConfig
+    }
+    
+    return {
+      ...point,
+      maintenance_due: point.maintenance_due ? new Date(point.maintenance_due) : undefined,
+      created_at: point.created_at ? new Date(point.created_at) : new Date(),
+      updated_at: point.updated_at ? new Date(point.updated_at) : new Date(),
+      product_categories: point.product_categories || [],
+      profile_config: profileConfig || null,
+      // Ensure boolean fields are properly typed
+      is_custom_profile: point.is_custom_profile ?? false,
+    }
+  })
 
   const initialStatusCount: ConservationStats['by_status'] = {
     normal: 0,

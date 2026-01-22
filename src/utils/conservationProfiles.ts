@@ -77,7 +77,7 @@ export const CONSERVATION_PROFILES: Record<ApplianceCategory, ConservationProfil
       name: 'Profilo Massima Capienza',
       applianceType: 'Frigorifero verticale con Freezer',
       recommendedSetPointsC: { fridge: 2, freezer: -18 },
-      allowedCategoryIds: ['rte', 'dairy', 'eggs', 'cured_meats', 'produce', 'aromatic_herbs', 'raw_meat', 'raw_fish', 'sauces_closed', 'beverages', 'preserves_closed', 'frozen_ready', 'frozen_veg', 'frozen_meat_fish'],
+      allowedCategoryIds: ['rte', 'dairy', 'eggs', 'cured_meats', 'produce', 'aromatic_herbs', 'raw_meat', 'raw_fish', 'sauces_closed', 'beverages', 'preserves_closed', 'frozen_ready', 'frozen_veg', 'frozen_meat_fish', 'frozen_desserts'],
       compartmentFill: {
         fr_shelf_1_top: ['rte'],
         fr_shelf_2: ['dairy', 'eggs'],
@@ -102,7 +102,7 @@ export const CONSERVATION_PROFILES: Record<ApplianceCategory, ConservationProfil
       name: 'Profilo Carne + Generico',
       applianceType: 'Frigorifero verticale con Freezer',
       recommendedSetPointsC: { fridge: 3, freezer: -18 },
-      allowedCategoryIds: ['rte', 'dairy', 'cured_meats', 'produce', 'aromatic_herbs', 'raw_meat', 'sauces_closed', 'beverages', 'preserves_closed', 'frozen_ready', 'frozen_veg', 'frozen_meat_fish'],
+      allowedCategoryIds: ['rte', 'dairy', 'cured_meats', 'produce', 'aromatic_herbs', 'raw_meat', 'sauces_closed', 'beverages', 'preserves_closed', 'frozen_ready', 'frozen_veg', 'frozen_meat_fish', 'frozen_desserts'],
       compartmentFill: {
         fr_shelf_1_top: ['rte'],
         fr_shelf_2: ['dairy'],
@@ -126,7 +126,7 @@ export const CONSERVATION_PROFILES: Record<ApplianceCategory, ConservationProfil
       name: 'Profilo Verdure + Generico',
       applianceType: 'Frigorifero verticale con Freezer',
       recommendedSetPointsC: { fridge: 4, freezer: -18 },
-      allowedCategoryIds: ['rte', 'dairy', 'cured_meats', 'produce', 'aromatic_herbs', 'sauces_closed', 'beverages', 'preserves_closed', 'frozen_ready', 'frozen_veg'],
+      allowedCategoryIds: ['rte', 'dairy', 'cured_meats', 'produce', 'aromatic_herbs', 'sauces_closed', 'beverages', 'preserves_closed', 'frozen_ready', 'frozen_veg', 'frozen_desserts'],
       compartmentFill: {
         fr_shelf_1_top: ['rte'],
         fr_shelf_2: ['dairy'],
@@ -150,7 +150,7 @@ export const CONSERVATION_PROFILES: Record<ApplianceCategory, ConservationProfil
       name: 'Profilo Pesce + Generico',
       applianceType: 'Frigorifero verticale con Freezer',
       recommendedSetPointsC: { fridge: 1, freezer: -18 },
-      allowedCategoryIds: ['rte', 'dairy', 'produce', 'aromatic_herbs', 'raw_fish', 'sauces_closed', 'beverages', 'preserves_closed', 'frozen_ready', 'frozen_veg', 'frozen_meat_fish'],
+      allowedCategoryIds: ['rte', 'dairy', 'produce', 'aromatic_herbs', 'raw_fish', 'sauces_closed', 'beverages', 'preserves_closed', 'frozen_ready', 'frozen_veg', 'frozen_meat_fish', 'frozen_desserts'],
       compartmentFill: {
         fr_shelf_1_top: ['rte'],
         fr_shelf_2: ['dairy', 'sauces_closed'],
@@ -449,6 +449,8 @@ export const CATEGORY_ID_TO_DB_NAME: Record<string, string> = {
   frozen_ready: 'Congelati: preparazioni',
   frozen_veg: 'Congelati: vegetali',
   frozen_meat_fish: 'Congelati: carni e pesce',
+  frozen_desserts: 'Congelati: Dolci',
+  blast_chilling: 'Abbattimento rapido',
 }
 
 // Helper functions

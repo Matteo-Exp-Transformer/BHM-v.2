@@ -2,10 +2,10 @@ import { supabase } from '@/lib/supabase/client'
 
 export const DEFAULT_CATEGORIES = [
   {
-    name: 'Carni Fresche',
-    description: 'Carne fresca da conservare a temperatura controllata',
+    name: 'Preparazioni/Pronti/Cotti (RTE)',
+    description: 'Preparazioni pronte, cibi cotti e pronti al consumo',
     temperature_requirements: {
-      min_temp: 1,
+      min_temp: 0,
       max_temp: 4,
       storage_type: 'fridge',
     },
@@ -13,19 +13,8 @@ export const DEFAULT_CATEGORIES = [
     allergen_info: [],
   },
   {
-    name: 'Pesce Fresco',
-    description: 'Pesce fresco che richiede temperatura molto bassa',
-    temperature_requirements: {
-      min_temp: 1,
-      max_temp: 2,
-      storage_type: 'fridge',
-    },
-    default_expiry_days: 2,
-    allergen_info: ['pesce'],
-  },
-  {
     name: 'Latticini',
-    description: 'Prodotti lattiero-caseari',
+    description: 'Latticini (latte, yogurt, formaggi)',
     temperature_requirements: {
       min_temp: 2,
       max_temp: 6,
@@ -35,8 +24,30 @@ export const DEFAULT_CATEGORIES = [
     allergen_info: ['latte'],
   },
   {
-    name: 'Verdure Fresche',
-    description: 'Verdura e ortaggi freschi',
+    name: 'Uova - Ovoprodotti',
+    description: 'Uova in contenitore dedicato',
+    temperature_requirements: {
+      min_temp: 2,
+      max_temp: 6,
+      storage_type: 'fridge',
+    },
+    default_expiry_days: 28,
+    allergen_info: ['uova'],
+  },
+  {
+    name: 'Salumi e affettati',
+    description: 'Salumi e affettati',
+    temperature_requirements: {
+      min_temp: 0,
+      max_temp: 4,
+      storage_type: 'fridge',
+    },
+    default_expiry_days: 5,
+    allergen_info: [],
+  },
+  {
+    name: 'Verdure e ortofrutta',
+    description: 'Verdure e ortofrutta fresche',
     temperature_requirements: {
       min_temp: 2,
       max_temp: 8,
@@ -46,8 +57,52 @@ export const DEFAULT_CATEGORIES = [
     allergen_info: [],
   },
   {
+    name: 'Erbe aromatiche fresche',
+    description: 'Erbe aromatiche fresche',
+    temperature_requirements: {
+      min_temp: 2,
+      max_temp: 8,
+      storage_type: 'fridge',
+    },
+    default_expiry_days: 7,
+    allergen_info: [],
+  },
+  {
+    name: 'Carni crude',
+    description: 'Carni crude',
+    temperature_requirements: {
+      min_temp: 0,
+      max_temp: 4,
+      storage_type: 'fridge',
+    },
+    default_expiry_days: 3,
+    allergen_info: [],
+  },
+  {
+    name: 'Pesce e frutti di mare crudi',
+    description: 'Pesce e frutti di mare crudi',
+    temperature_requirements: {
+      min_temp: 0,
+      max_temp: 2,
+      storage_type: 'fridge',
+    },
+    default_expiry_days: 2,
+    allergen_info: ['pesce'],
+  },
+  {
+    name: 'Salse/condimenti',
+    description: 'Salse e condimenti (solo chiusi o contenitori chiusi)',
+    temperature_requirements: {
+      min_temp: 2,
+      max_temp: 8,
+      storage_type: 'fridge',
+    },
+    default_expiry_days: 30,
+    allergen_info: [],
+  },
+  {
     name: 'Bevande',
-    description: 'Bevande da mantenere fresche',
+    description: 'Bevande (chiuse/tappate)',
     temperature_requirements: {
       min_temp: 2,
       max_temp: 12,
@@ -57,47 +112,69 @@ export const DEFAULT_CATEGORIES = [
     allergen_info: [],
   },
   {
-    name: 'Dispensa Secca',
-    description: 'Prodotti a lunga conservazione',
+    name: 'Conserve/semiconserve',
+    description: 'Conserve e semiconserve (chiuse)',
     temperature_requirements: {
       min_temp: 15,
       max_temp: 25,
       storage_type: 'ambient',
     },
-    default_expiry_days: 180,
+    default_expiry_days: 365,
     allergen_info: [],
   },
   {
-    name: 'Congelati',
-    description: 'Prodotti congelati',
+    name: 'Dispensa (T° Ambiente)',
+    description: 'Pasta, Farine, Spezie, Condimenti, legumi, Frutta secca',
     temperature_requirements: {
-      min_temp: -25,
-      max_temp: -1,
-      storage_type: 'freezer',
-    },
-    default_expiry_days: 180,
-    allergen_info: [],
-  },
-  {
-    name: 'Ultracongelati',
-    description: 'Prodotti ultracongelati a temperatura molto bassa',
-    temperature_requirements: {
-      min_temp: -25,
-      max_temp: -1,
-      storage_type: 'freezer',
+      min_temp: 10,
+      max_temp: 25,
+      storage_type: 'ambient',
     },
     default_expiry_days: 365,
     allergen_info: [],
   },
   {
-    name: 'Abbattimento Rapido',
-    description: 'Prodotti in fase di abbattimento rapido',
+    name: 'Congelati: preparazioni',
+    description: 'Congelati: preparazioni porzionate / basi',
     temperature_requirements: {
-      min_temp: -90,
-      max_temp: -15,
-      storage_type: 'blast',
+      min_temp: -25,
+      max_temp: -18,
+      storage_type: 'freezer',
     },
-    default_expiry_days: 1,
+    default_expiry_days: 180,
+    allergen_info: [],
+  },
+  {
+    name: 'Congelati: vegetali',
+    description: 'Congelati: vegetali',
+    temperature_requirements: {
+      min_temp: -25,
+      max_temp: -18,
+      storage_type: 'freezer',
+    },
+    default_expiry_days: 180,
+    allergen_info: [],
+  },
+  {
+    name: 'Congelati: carni e pesce',
+    description: 'Congelati: carni e pesce (separati)',
+    temperature_requirements: {
+      min_temp: -25,
+      max_temp: -18,
+      storage_type: 'freezer',
+    },
+    default_expiry_days: 365,
+    allergen_info: ['pesce'],
+  },
+  {
+    name: 'Congelati: Dolci',
+    description: 'Congelati: Dolci',
+    temperature_requirements: {
+      min_temp: -25,
+      max_temp: -18,
+      storage_type: 'freezer',
+    },
+    default_expiry_days: 180,
     allergen_info: [],
   },
 ]
