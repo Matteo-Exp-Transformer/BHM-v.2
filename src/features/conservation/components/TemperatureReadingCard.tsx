@@ -6,6 +6,7 @@ import {
   CheckCircle,
   Edit,
   Trash2,
+  User,
 } from 'lucide-react'
 
 interface TemperatureReadingCardProps {
@@ -22,10 +23,16 @@ const calculateTemperatureStatus = (
   type: 'ambient' | 'fridge' | 'freezer' | 'blast'
 ): 'compliant' | 'warning' | 'critical' => {
   const tolerance = type === 'blast' ? 5 : type === 'ambient' ? 3 : 2
-  const diff = Math.abs(temperature - setpoint)
+  const toleranceMin = setpoint - tolerance
+  const toleranceMax = setpoint + tolerance
   
-  if (diff <= tolerance) return 'compliant'
-  if (diff <= tolerance + 2) return 'warning'
+  // Conforme: temperatura esattamente uguale al target
+  if (temperature === setpoint) return 'compliant'
+  
+  // Attenzione: temperatura diversa dal target MA nel range di tolleranza
+  if (temperature >= toleranceMin && temperature <= toleranceMax) return 'warning'
+  
+  // Critico: temperatura fuori dal range di tolleranza
   return 'critical'
 }
 
@@ -88,19 +95,71 @@ export function TemperatureReadingCard({
       <div className="flex items-center justify-between p-4 border-b border-gray-100">
         <div className="flex items-center space-x-3">
           <Thermometer className="w-5 h-5 text-blue-600" />
-          <div>
-            <p className="font-medium text-gray-900">
-              {reading.temperature.toFixed(1)}°C
+          {reading.conservation_point && (
+            <p className="text-base font-medium text-gray-900">
+              {reading.conservation_point.name}
             </p>
-            {reading.conservation_point && (
-              <p className="text-sm text-gray-500">
-                {reading.conservation_point.name}
-              </p>
-            )}
+          )}
+          {/* Timestamp allineato verticalmente */}
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <Clock className="w-4 h-4" />
+            <span>
+              {new Date(reading.recorded_at).toLocaleString('it-IT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
           </div>
         </div>
 
-        {/* Status Badge */}
+        {/* Temperature towards center with target and range */}
+        <div className="flex-1 flex flex-col justify-center items-center px-8">
+          {/* Riga alta: Temperatura Rilevata */}
+          {reading.conservation_point && (() => {
+            const temp = reading.temperature
+            const target = reading.conservation_point.setpoint_temp
+            const isEqual = temp === target
+            const isInRange = temp >= toleranceMin && temp <= toleranceMax
+            
+            let tempColor = 'text-red-700'
+            if (isEqual) {
+              tempColor = 'text-green-700'
+            } else if (isInRange) {
+              tempColor = 'text-yellow-600'
+            }
+            
+            return (
+              <p className="text-base">
+                <span className="text-gray-900 font-medium">Temperatura Rilevata: </span>
+                <span className={`font-bold ${tempColor}`}>
+                  {reading.temperature.toFixed(1)}°C
+                </span>
+              </p>
+            )
+          })()}
+          {/* Riga sotto: Temperatura target e Range tolleranza */}
+          {reading.conservation_point && (
+            <div className="flex items-center gap-4 mt-1">
+              <p className="text-sm">
+                <span className="text-gray-900 font-medium">Temperatura target: </span>
+                <span className="font-bold text-green-700">
+                  {reading.conservation_point.setpoint_temp}°C
+                </span>
+              </p>
+              <p className="text-sm">
+                <span className="text-gray-900 font-medium">Range tolleranza: </span>
+                <span className="font-bold text-yellow-600">
+                  {toleranceMin.toFixed(1)}°C - {toleranceMax.toFixed(1)}°C
+                </span>
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Status Badge - pushed to right with ml-auto */}
         <div
           className={`flex items-center space-x-1 px-3 py-1 rounded-full border ${statusInfo.bg} ${statusInfo.border}`}
         >
@@ -113,78 +172,20 @@ export function TemperatureReadingCard({
 
       {/* Temperature Details */}
       <div className="p-4 space-y-3">
-        {/* Setpoint & Tolerance Range */}
-        {reading.conservation_point && (
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-gray-600">Temperatura target:</span>
-              <span className="ml-2 font-medium text-gray-900">
-                {reading.conservation_point.setpoint_temp}°C
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-600">Range tolleranza:</span>
-              <span className="ml-2 font-medium text-gray-900">
-                {toleranceMin.toFixed(1)}°C - {toleranceMax.toFixed(1)}°C
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Temperature Difference Indicator */}
-        {reading.conservation_point && (
-          <div className="flex items-center space-x-2">
-            <div className="flex-1 bg-gray-200 rounded-full h-2">
-              <div
-                className={`h-2 rounded-full transition-all ${
-                  status === 'compliant'
-                    ? 'bg-green-500'
-                    : status === 'warning'
-                      ? 'bg-yellow-500'
-                      : 'bg-red-500'
-                }`}
-                style={{
-                  width: `${Math.min(
-                    100,
-                    Math.max(
-                      0,
-                      100 -
-                        (Math.abs(
-                          reading.temperature -
-                            reading.conservation_point.setpoint_temp
-                        ) /
-                          tolerance) *
-                          100
-                    )
-                  )}%`,
-                }}
-              />
-            </div>
-            <span className="text-xs text-gray-600 whitespace-nowrap">
-              {reading.temperature > reading.conservation_point.setpoint_temp
-                ? '+'
-                : ''}
-              {(
-                reading.temperature - reading.conservation_point.setpoint_temp
-              ).toFixed(1)}
-              °C
+        {/* User who recorded */}
+        {reading.recorded_by_user && (
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <User className="w-4 h-4" />
+            <span>
+              Rilevato da:{' '}
+              {reading.recorded_by_user.name ||
+                (reading.recorded_by_user.first_name &&
+                  reading.recorded_by_user.last_name
+                  ? `${reading.recorded_by_user.first_name} ${reading.recorded_by_user.last_name}`
+                  : 'Utente sconosciuto')}
             </span>
           </div>
         )}
-
-        {/* Timestamp */}
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
-          <Clock className="w-4 h-4" />
-          <span>
-            {new Date(reading.recorded_at).toLocaleString('it-IT', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </span>
-        </div>
 
         {/* Status Message */}
         <div className={`p-3 rounded-lg ${statusInfo.bg} ${statusInfo.border} border`}>
@@ -215,8 +216,9 @@ export function TemperatureReadingCard({
             <button
               onClick={() => onEdit(reading)}
               className="flex items-center space-x-1 px-3 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              aria-label={`Modifica lettura temperatura ${reading.temperature}°C`}
             >
-              <Edit className="w-4 h-4" />
+              <Edit className="w-4 h-4" aria-hidden="true" />
               <span>Modifica</span>
             </button>
           )}
@@ -224,8 +226,9 @@ export function TemperatureReadingCard({
             <button
               onClick={() => onDelete(reading.id)}
               className="flex items-center space-x-1 px-3 py-1.5 text-sm text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50 transition-colors"
+              aria-label={`Elimina lettura temperatura ${reading.temperature}°C`}
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
               <span>Elimina</span>
             </button>
           )}
@@ -242,3 +245,6 @@ export function TemperatureReadingCard({
     </div>
   )
 }
+
+// Default export for compatibility
+export default TemperatureReadingCard

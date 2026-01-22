@@ -42,17 +42,17 @@ export default function ConservationPage() {
   const [showTemperatureModal, setShowTemperatureModal] = useState(false)
   const [selectedPointForTemperature, setSelectedPointForTemperature] =
     useState<ConservationPoint | null>(null)
-  const [, setEditingReading] = useState<TemperatureReading | null>(null)
+  const [editingReading, setEditingReading] = useState<TemperatureReading | null>(null)
 
   const {
     temperatureReadings,
     stats: tempStats,
     isLoading: isLoadingReadings,
     createReading,
-    // updateReading,
+    updateReading,
     deleteReading,
     isCreating: isCreatingReading,
-    // isUpdating: isUpdatingReading,
+    isUpdating: isUpdatingReading,
     // isDeleting: isDeletingReading,
   } = useTemperatureReadings()
 
@@ -128,15 +128,29 @@ export default function ConservationPage() {
       'id' | 'company_id' | 'created_at'
     >
   ) => {
-    createReading(data)
+    if (editingReading) {
+      // Update existing reading
+      updateReading({
+        id: editingReading.id,
+        data,
+      })
+      setEditingReading(null)
+    } else {
+      // Create new reading
+      createReading(data)
+    }
     setShowTemperatureModal(false)
     setSelectedPointForTemperature(null)
   }
 
   const handleEditReading = (reading: TemperatureReading) => {
     setEditingReading(reading)
-    // For now, just show a simple alert - later we can add an edit modal
-    alert('Modifica lettura temperatura - Funzionalità in arrivo')
+    // Find the conservation point for this reading
+    const point = conservationPoints.find(
+      p => p.id === reading.conservation_point_id
+    ) || null
+    setSelectedPointForTemperature(point)
+    setShowTemperatureModal(true)
   }
 
   const handleDeleteReading = (id: string) => {
@@ -205,44 +219,6 @@ export default function ConservationPage() {
         </div>
       </div>
 
-      {/* Type Distribution */}
-      <div className="bg-white rounded-lg border p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
-          Distribuzione per Tipo
-        </h3>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
-          <div className="text-center">
-            <div className="text-2xl mb-1">🌡️</div>
-            <div className="text-sm text-gray-600">Ambiente</div>
-            <div className="text-lg font-semibold">
-              {stats.by_type.ambient ?? 0}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl mb-1">❄️</div>
-            <div className="text-sm text-gray-600">Frigorifero</div>
-            <div className="text-lg font-semibold">
-              {stats.by_type.fridge ?? 0}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl mb-1">🧊</div>
-            <div className="text-sm text-gray-600">Freezer</div>
-            <div className="text-lg font-semibold">
-              {stats.by_type.freezer ?? 0}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl mb-1">⚡</div>
-            <div className="text-sm text-gray-600">Abbattitore</div>
-            <div className="text-lg font-semibold">
-              {stats.by_type.blast ?? 0}
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Conservation Points List */}
       <CollapsibleCard
         title="Punti di Conservazione"
@@ -306,9 +282,9 @@ export default function ConservationPage() {
               )}
             </CollapsibleCard>
 
-            {/* Freezer */}
+            {/* Congelatori */}
             <CollapsibleCard
-              title="Freezer"
+              title="Congelatori"
               subtitle={`${stats.by_type.freezer ?? 0} punti configurati`}
               defaultExpanded={true}
             >
@@ -326,7 +302,7 @@ export default function ConservationPage() {
                   ))}
               </div>
               {conservationPoints.filter(point => point.type === 'freezer').length === 0 && (
-                <p className="text-center text-gray-500 py-4">Nessun freezer configurato</p>
+                <p className="text-center text-gray-500 py-4">Nessun congelatore configurato</p>
               )}
             </CollapsibleCard>
 
@@ -509,26 +485,121 @@ export default function ConservationPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {temperatureReadings
-              .sort(
-                (a: TemperatureReading, b: TemperatureReading) =>
-                  new Date(b.recorded_at).getTime() -
-                  new Date(a.recorded_at).getTime()
+            {(() => {
+              // Raggruppa le letture per data
+              const groupedByDate = temperatureReadings.reduce(
+                (acc, reading) => {
+                  const date = new Date(reading.recorded_at)
+                  const dateKey = date.toLocaleDateString('it-IT', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                  })
+                  
+                  // Controlla se è oggi
+                  const today = new Date()
+                  const isToday =
+                    date.getDate() === today.getDate() &&
+                    date.getMonth() === today.getMonth() &&
+                    date.getFullYear() === today.getFullYear()
+                  
+                  const displayDate = isToday ? 'Oggi' : dateKey
+                  
+                  if (!acc[displayDate]) {
+                    acc[displayDate] = []
+                  }
+                  acc[displayDate].push(reading)
+                  return acc
+                },
+                {} as Record<string, TemperatureReading[]>
               )
-              .map((reading: TemperatureReading) => (
-                <TemperatureReadingCard
-                  key={reading.id}
-                  reading={reading}
-                  onEdit={handleEditReading}
-                  onDelete={handleDeleteReading}
-                />
-              ))}
+
+              // Ordina le date (oggi prima, poi per data decrescente)
+              const sortedDates = Object.keys(groupedByDate).sort((a, b) => {
+                if (a === 'Oggi') return -1
+                if (b === 'Oggi') return 1
+                const dateA = new Date(
+                  groupedByDate[a][0]?.recorded_at || ''
+                ).getTime()
+                const dateB = new Date(
+                  groupedByDate[b][0]?.recorded_at || ''
+                ).getTime()
+                return dateB - dateA
+              })
+
+              return sortedDates.map(dateKey => {
+                const readings = groupedByDate[dateKey]
+                  .sort(
+                    (a, b) =>
+                      new Date(b.recorded_at).getTime() -
+                      new Date(a.recorded_at).getTime()
+                  )
+
+                return (
+                  <CollapsibleCard
+                    key={dateKey}
+                    title={dateKey}
+                    subtitle={`${readings.length} lettura${readings.length !== 1 ? 'e' : ''}`}
+                    defaultExpanded={dateKey === 'Oggi'}
+                  >
+                    <div className="space-y-4">
+                      {readings.map((reading: TemperatureReading) => (
+                        <TemperatureReadingCard
+                          key={reading.id}
+                          reading={reading}
+                          onEdit={handleEditReading}
+                          onDelete={handleDeleteReading}
+                        />
+                      ))}
+                    </div>
+                  </CollapsibleCard>
+                )
+              })
+            })()}
           </div>
         )}
       </CollapsibleCard>
 
       {/* Maintenance Tasks List - Nuovo formato con indicatori settimanali */}
       <ScheduledMaintenanceCard />
+
+      {/* Type Distribution */}
+      <div className="bg-white rounded-lg border p-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center">
+          <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
+          Distribuzione per Tipo
+        </h3>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+          <div className="text-center">
+            <div className="text-2xl mb-1">🌡️</div>
+            <div className="text-sm text-gray-600">Ambiente</div>
+            <div className="text-lg font-semibold">
+              {stats.by_type.ambient ?? 0}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl mb-1">❄️</div>
+            <div className="text-sm text-gray-600">Frigorifero</div>
+            <div className="text-lg font-semibold">
+              {stats.by_type.fridge ?? 0}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl mb-1">🧊</div>
+            <div className="text-sm text-gray-600">Freezer</div>
+            <div className="text-lg font-semibold">
+              {stats.by_type.freezer ?? 0}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl mb-1">⚡</div>
+            <div className="text-sm text-gray-600">Abbattitore</div>
+            <div className="text-lg font-semibold">
+              {stats.by_type.blast ?? 0}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Add/Edit Point Modal */}
       <AddPointModal
@@ -549,10 +620,12 @@ export default function ConservationPage() {
           onClose={() => {
             setShowTemperatureModal(false)
             setSelectedPointForTemperature(null)
+            setEditingReading(null)
           }}
           onSave={handleSaveTemperature}
           conservationPoint={selectedPointForTemperature}
-          isLoading={isCreatingReading}
+          reading={editingReading || undefined}
+          isLoading={isCreatingReading || isUpdatingReading}
         />
       )}
 

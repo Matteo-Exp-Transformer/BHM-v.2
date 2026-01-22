@@ -1,3 +1,9 @@
+// Import types from conservationProfiles
+import type { ApplianceCategory, ConservationProfileId, ConservationProfile } from '@/utils/conservationProfiles'
+
+// Re-export types for convenience
+export type { ApplianceCategory, ConservationProfileId, ConservationProfile }
+
 export interface ConservationPoint {
   id: string
   company_id: string
@@ -17,6 +23,12 @@ export interface ConservationPoint {
     name: string
   }
   maintenance_tasks?: MaintenanceTask[]
+  // Profile fields (optional for backward compatibility)
+  // Note: These can be null from DB, but undefined when not set
+  appliance_category?: ApplianceCategory | null
+  profile_id?: string | null
+  profile_config?: ConservationProfile | null
+  is_custom_profile?: boolean
 }
 
 export type ConservationPointType = 'ambient' | 'fridge' | 'freezer' | 'blast'
@@ -28,11 +40,23 @@ export interface TemperatureReading {
   company_id: string
   conservation_point_id: string
   temperature: number
-  recorded_at: Date
-  created_at: Date
+  recorded_at: string | Date // Supabase returns ISO string, but we accept Date for compatibility
+  created_at: string | Date // Supabase returns ISO string, but we accept Date for compatibility
+
+  // Additional fields from database
+  method?: 'manual' | 'digital_thermometer' | 'automatic_sensor'
+  notes?: string
+  photo_evidence?: string
+  recorded_by?: string
 
   // Optional computed/join fields
   conservation_point?: ConservationPoint
+  recorded_by_user?: {
+    id: string
+    first_name?: string
+    last_name?: string
+    name?: string
+  }
 }
 
 export interface Product {
@@ -97,6 +121,10 @@ export interface MaintenanceTask {
   last_completed?: Date
   next_due: Date
   assigned_to?: string
+  assignment_type?: string
+  assigned_to_role?: string
+  assigned_to_category?: string
+  assigned_to_staff_id?: string
   priority: 'low' | 'medium' | 'high' | 'critical'
   status: 'scheduled' | 'in_progress' | 'completed' | 'overdue' | 'skipped'
   checklist?: string[]
@@ -129,11 +157,7 @@ export type MaintenanceFrequency =
   | 'daily'
   | 'weekly'
   | 'monthly'
-  | 'quarterly'
-  | 'biannually'
   | 'annually'
-  | 'as_needed'
-  | 'custom'
 
 // Maintenance task types configuration
 export const MAINTENANCE_TASK_TYPES = {
@@ -232,19 +256,22 @@ export const classifyPointStatus = (
     const config = CONSERVATION_POINT_CONFIGS[point.type]
     const { min, max } = config.tempRange
 
-    if (reading.temperature < min - 2 || reading.temperature > max + 2) {
-      return {
-        status: 'critical',
-        message: 'Temperatura fuori controllo',
-        priority: 1,
+    // Skip temperature check if range is not defined (ambient, blast)
+    if (min !== null && max !== null) {
+      if (reading.temperature < min - 2 || reading.temperature > max + 2) {
+        return {
+          status: 'critical',
+          message: 'Temperatura fuori controllo',
+          priority: 1,
+        }
       }
-    }
 
-    if (reading.temperature < min || reading.temperature > max) {
-      return {
-        status: 'warning',
-        message: 'Temperatura al limite',
-        priority: 2,
+      if (reading.temperature < min || reading.temperature > max) {
+        return {
+          status: 'warning',
+          message: 'Temperatura al limite',
+          priority: 2,
+        }
       }
     }
   }
@@ -293,25 +320,25 @@ export const CONSERVATION_STATUS_COLORS = {
 export const CONSERVATION_POINT_CONFIGS = {
   ambient: {
     label: 'Ambiente',
-    tempRange: { min: 15, max: 25, optimal: 20 },
+    tempRange: { min: null, max: null, optimal: null },
     icon: 'thermometer',
     color: 'blue',
   },
   fridge: {
     label: 'Frigorifero',
-    tempRange: { min: 0, max: 8, optimal: 4 },
+    tempRange: { min: 1, max: 8, optimal: 4 },
     icon: 'snowflake',
     color: 'cyan',
   },
   freezer: {
     label: 'Congelatore',
-    tempRange: { min: -25, max: -15, optimal: -20 },
+    tempRange: { min: -25, max: -18, optimal: -20 },
     icon: 'snow',
     color: 'indigo',
   },
   blast: {
     label: 'Abbattitore',
-    tempRange: { min: -40, max: 3, optimal: -18 },
+    tempRange: { min: null, max: null, optimal: null },
     icon: 'wind',
     color: 'purple',
   },
@@ -321,10 +348,10 @@ export const CONSERVATION_POINT_CONFIGS = {
 export const CONSERVATION_COLORS = CONSERVATION_STATUS_COLORS
 
 export const TEMPERATURE_RANGES = {
-  ambient: { min: 15, max: 25, optimal: 20 },
-  fridge: { min: 0, max: 8, optimal: 4 },
-  freezer: { min: -25, max: -15, optimal: -20 },
-  blast: { min: -40, max: 3, optimal: -18 },
+  ambient: { min: null, max: null, optimal: null },
+  fridge: { min: 1, max: 8, optimal: 4 },
+  freezer: { min: -25, max: -18, optimal: -20 },
+  blast: { min: null, max: null, optimal: null },
 } as const
 
 // Conservation point type colors - Distinct color palette

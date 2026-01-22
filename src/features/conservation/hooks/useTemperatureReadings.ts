@@ -49,8 +49,32 @@ export function useTemperatureReadings(conservationPointId?: string) {
         throw error
       }
 
-      console.log('✅ Loaded temperature readings from Supabase:', data?.length || 0)
-      return data || []
+      // ✅ Load user names separately if recorded_by exists
+      const readingsWithUsers = await Promise.all(
+        (data || []).map(async (reading: any) => {
+          if (reading.recorded_by) {
+            try {
+              // Try to get user from user_profiles (if exists)
+              const { data: userData } = await supabase
+                .from('user_profiles')
+                .select('id, first_name, last_name, name')
+                .eq('id', reading.recorded_by)
+                .single()
+              
+              if (userData) {
+                reading.recorded_by_user = userData
+              }
+            } catch (err) {
+              // If user_profiles doesn't exist or join fails, continue without user data
+              console.warn('Could not load user data for reading:', reading.id, err)
+            }
+          }
+          return reading
+        })
+      )
+
+      console.log('✅ Loaded temperature readings from Supabase:', readingsWithUsers?.length || 0)
+      return readingsWithUsers || []
     },
     enabled: !!companyId,
   })
@@ -74,9 +98,9 @@ export function useTemperatureReadings(conservationPointId?: string) {
         conservation_point_id: data.conservation_point_id,
         temperature: data.temperature,
         recorded_at: recordedAtString,
-        method: data.method,
-        notes: data.notes,
-        photo_evidence: data.photo_evidence,
+        method: data.method || 'digital_thermometer', // ✅ DEFAULT
+        notes: data.notes || null, // ✅ OPTIONAL
+        photo_evidence: data.photo_evidence || null, // ✅ OPTIONAL
         recorded_by: data.recorded_by,
         company_id: companyId,
         // ✅ NOT including conservation_point (join/virtual field - doesn't exist in DB table)
@@ -171,27 +195,33 @@ export function useTemperatureReadings(conservationPointId?: string) {
       ? temperatureReadings.reduce((sum: number, r: any) => sum + r.temperature, 0) / temperatureReadings.length
       : 0,
     
-    // ✅ COMPUTED STATS based on conservation point setpoint
+    // ✅ COMPUTED STATS based on conservation point setpoint and tolerance range
     compliant: temperatureReadings?.filter((r: any) => {
       if (!r.conservation_point) return false
-      const tolerance = r.conservation_point.type === 'blast' ? 5 : 
-                       r.conservation_point.type === 'ambient' ? 3 : 2
-      return Math.abs(r.temperature - r.conservation_point.setpoint_temp) <= tolerance
+      // Conformi: temperatura esattamente uguale al target
+      return r.temperature === r.conservation_point.setpoint_temp
     }).length || 0,
     
     warning: temperatureReadings?.filter((r: any) => {
       if (!r.conservation_point) return false
       const tolerance = r.conservation_point.type === 'blast' ? 5 : 
                        r.conservation_point.type === 'ambient' ? 3 : 2
-      const diff = Math.abs(r.temperature - r.conservation_point.setpoint_temp)
-      return diff > tolerance && diff <= tolerance + 2
+      const toleranceMin = r.conservation_point.setpoint_temp - tolerance
+      const toleranceMax = r.conservation_point.setpoint_temp + tolerance
+      // Attenzione: temperatura diversa dal target MA nel range di tolleranza
+      return r.temperature !== r.conservation_point.setpoint_temp &&
+             r.temperature >= toleranceMin &&
+             r.temperature <= toleranceMax
     }).length || 0,
     
     critical: temperatureReadings?.filter((r: any) => {
       if (!r.conservation_point) return false
       const tolerance = r.conservation_point.type === 'blast' ? 5 : 
                        r.conservation_point.type === 'ambient' ? 3 : 2
-      return Math.abs(r.temperature - r.conservation_point.setpoint_temp) > tolerance + 2
+      const toleranceMin = r.conservation_point.setpoint_temp - tolerance
+      const toleranceMax = r.conservation_point.setpoint_temp + tolerance
+      // Critiche: temperatura fuori dal range di tolleranza
+      return r.temperature < toleranceMin || r.temperature > toleranceMax
     }).length || 0,
     
     // TODO: Add method and validation status tracking when DB schema is updated
