@@ -1,10 +1,9 @@
-import { useState } from 'react'
 import {
   ConservationPoint,
   CONSERVATION_COLORS,
   CONSERVATION_TYPE_COLORS,
-  TEMPERATURE_RANGES,
 } from '@/types/conservation'
+import { useState } from 'react'
 import {
   Thermometer,
   Calendar,
@@ -14,10 +13,17 @@ import {
   Trash2,
   MapPin,
   ShieldCheck,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import {
   PROFILE_LABELS,
+  APPLIANCE_CATEGORY_LABELS,
   type ConservationProfileId,
+  getProfileById,
+  mapCategoryIdsToDbNames,
+  CATEGORY_ID_TO_DB_NAME,
+  type ApplianceCategory,
 } from '@/utils/conservationProfiles'
 import {
   getConservationTypeLabel,
@@ -35,10 +41,9 @@ export function ConservationPointCard({
   onEdit,
   onDelete,
 }: ConservationPointCardProps) {
-  const [showDetails, setShowDetails] = useState(false)
+  const [showCategories, setShowCategories] = useState(false)
   const typeColors = CONSERVATION_TYPE_COLORS[point.type] || CONSERVATION_TYPE_COLORS.ambient
   const statusColors = CONSERVATION_COLORS[point.status] || CONSERVATION_COLORS.normal
-  const tempRange = TEMPERATURE_RANGES[point.type] || TEMPERATURE_RANGES.ambient
 
   // Funzioni rimosse - ora importate da conservationConstants.ts
   // Usare getConservationTypeEmoji(point.type) invece di getTypeIcon()
@@ -66,56 +71,113 @@ export function ConservationPointCard({
     }
   }
 
+  // Funzione per ottenere le categorie corrette da mostrare
+  const getDisplayCategories = (point: ConservationPoint): string[] => {
+    // Caso 1: Frigorifero con profilo
+    if (point.type === 'fridge' && point.profile_id && point.appliance_category) {
+      // Ricostruisci profilo se non presente
+      const profile = point.profile_config || 
+        getProfileById(point.profile_id, point.appliance_category as ApplianceCategory)
+      
+      if (profile?.allowedCategoryIds) {
+        return mapCategoryIdsToDbNames(profile.allowedCategoryIds)
+      }
+    }
+    
+    // Caso 2: Altri tipi o frigoriferi senza profilo
+    if (point.product_categories && point.product_categories.length > 0) {
+      // Verifica se sono ID o nomi già corretti
+      return point.product_categories.map(cat => 
+        CATEGORY_ID_TO_DB_NAME[cat] || cat
+      )
+    }
+    
+    return []
+  }
+
   return (
     <div
       className={`rounded-lg border-2 ${typeColors.border} ${typeColors.bg} p-4 transition-all duration-200 hover:shadow-md`}
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center space-x-3">
-          <div className="text-2xl">{getConservationTypeEmoji(point.type)}</div>
-          <div>
-            <h3 className={`font-semibold ${typeColors.text}`}>{point.name}</h3>
-            <div className="flex items-center space-x-2 text-sm">
-              <MapPin className="w-4 h-4 text-gray-500" />
-              <span className="text-gray-600">{point.department?.name || 'Reparto non assegnato'}</span>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${typeColors.badge}`}>
-                {getConservationTypeLabel(point.type)}
-              </span>
-            </div>
-            {point.profile_id && (
-              <div className="mt-1 text-xs text-gray-600 flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" />
-                <span>
-                  Profilo:{' '}
-                  {PROFILE_LABELS[point.profile_id as ConservationProfileId] || point.profile_id}
-                </span>
+      <div className="mb-4">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-start space-x-3 flex-1 min-w-0">
+            <div className="text-3xl flex-shrink-0">{getConservationTypeEmoji(point.type)}</div>
+            <div className="flex-1 min-w-0">
+              {/* Nome e Reparto/Tipo sulla stessa riga */}
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <h3 className={`text-lg font-semibold ${typeColors.text} flex-1 min-w-0`}>{point.name}</h3>
+                
+                {/* Reparto e Tipo - allineato a destra */}
+                <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-1.5 text-base text-gray-600">
+                    <MapPin className="w-5 h-5 flex-shrink-0" />
+                    <span className="truncate font-medium">{point.department?.name || 'Reparto non assegnato'}</span>
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-full text-sm font-medium ${typeColors.badge}`}>
+                    {getConservationTypeLabel(point.type)}
+                  </span>
+                </div>
               </div>
-            )}
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center space-x-2">
-          {getStatusIcon()}
-          <button
-            onClick={() => onEdit(point)}
-            className="p-1 text-gray-600 hover:text-blue-600 transition-colors"
-            aria-label={`Modifica punto ${point.name}`}
-          >
-            <Edit className="w-4 h-4" aria-hidden="true" />
-          </button>
-          <button
-            onClick={() => onDelete(point.id)}
-            className="p-1 text-gray-600 hover:text-red-600 transition-colors"
-            aria-label={`Elimina punto ${point.name}`}
-          >
-            <Trash2 className="w-4 h-4" aria-hidden="true" />
-          </button>
+          {/* Azioni */}
+          <div className="flex items-center space-x-2 flex-shrink-0 ml-3">
+            {getStatusIcon()}
+            <button
+              onClick={() => onEdit(point)}
+              className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+              aria-label={`Modifica punto ${point.name}`}
+            >
+              <Edit className="w-4 h-4" aria-hidden="true" />
+            </button>
+            <button
+              onClick={() => onDelete(point.id)}
+              className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+              aria-label={`Elimina punto ${point.name}`}
+            >
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Temperature Info */}
-      <div className="grid grid-cols-2 gap-4 mb-3">
+      <div className={`grid gap-4 mb-3 ${
+        point.appliance_category && point.profile_id 
+          ? 'grid-cols-4' 
+          : point.appliance_category || point.profile_id 
+            ? 'grid-cols-3' 
+            : 'grid-cols-2'
+      }`}>
+        {/* Categoria Elettrodomestico */}
+        {point.appliance_category && (
+          <div className="flex items-center space-x-2">
+            <ShieldCheck className="w-4 h-4 text-blue-500 flex-shrink-0" />
+            <div>
+              <div className="text-sm text-gray-600">Elettrodomestico</div>
+              <div className="text-base font-semibold text-gray-700">
+                {APPLIANCE_CATEGORY_LABELS[point.appliance_category as ApplianceCategory] || point.appliance_category}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Profilo HACCP */}
+        {point.profile_id && (
+          <div className="flex items-center space-x-2">
+            <ShieldCheck className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <div>
+              <div className="text-sm text-gray-600">Profilo</div>
+              <div className="text-base font-semibold text-gray-700">
+                {PROFILE_LABELS[point.profile_id as ConservationProfileId] || point.profile_id}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center space-x-2">
           <Thermometer className={`w-4 h-4 ${typeColors.text}`} />
           <div>
@@ -177,54 +239,36 @@ export function ConservationPointCard({
       )}
 
       {/* Product Categories */}
-      {point.product_categories && point.product_categories.length > 0 && (
-        <div className="mt-3">
-          <div className="text-sm text-gray-600 mb-2">Categorie prodotti:</div>
-          <div className="flex flex-wrap gap-2">
-            {point.product_categories.map((category, index) => (
-              <span
-                key={index}
-                className="px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full text-xs font-medium text-gray-700 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-              >
-                {category}
-              </span>
-            ))}
+      {(() => {
+        const displayCategories = getDisplayCategories(point)
+        return displayCategories.length > 0 ? (
+          <div className="mt-3">
+            <button
+              onClick={() => setShowCategories(!showCategories)}
+              className="flex items-center justify-between w-full text-left text-sm text-gray-600 hover:text-gray-900 transition-colors mb-2"
+            >
+              <span>Categorie prodotti compatibili</span>
+              {showCategories ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+            {showCategories && (
+              <div className="flex flex-wrap gap-2">
+                {displayCategories.map((category, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full text-sm font-medium text-gray-700 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    {category}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-      )}
-
-      {/* Temperature Range Info */}
-      <button
-        onClick={() => setShowDetails(!showDetails)}
-        className="mt-3 text-sm text-blue-600 hover:text-blue-800 transition-colors"
-      >
-        {showDetails ? 'Nascondi dettagli' : 'Mostra dettagli'}
-      </button>
-
-      {showDetails && (
-        <div className="mt-3 p-3 bg-white bg-opacity-50 rounded border space-y-2">
-          {tempRange.optimal !== null && (
-            <div className="text-sm">
-              <strong>Temperatura ottimale:</strong> {tempRange.optimal}°C
-            </div>
-          )}
-          {point.is_blast_chiller && (
-            <div className="text-sm text-blue-600">
-              <strong>⚡ Abbattitore attivo</strong>
-            </div>
-          )}
-          <div className="text-xs text-gray-500">
-            Creato il{' '}
-            {new Date(point.created_at).toLocaleDateString('it-IT', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </div>
-        </div>
-      )}
+        ) : null
+      })()}
     </div>
   )
 }
