@@ -101,7 +101,7 @@ export function TemperatureReadingCard({
             </p>
           )}
           {/* Timestamp allineato verticalmente */}
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <div className="flex items-center space-x-2 text-sm text-gray-900">
             <Clock className="w-4 h-4" />
             <span>
               {new Date(reading.recorded_at).toLocaleString('it-IT', {
@@ -115,8 +115,23 @@ export function TemperatureReadingCard({
           </div>
         </div>
 
-        {/* Temperature towards center with target and range */}
-        <div className="flex-1 flex flex-col justify-center items-center px-8">
+        {/* Nome utente - posizionato tra timestamp e temperatura */}
+        {(reading.recorded_by_name || reading.recorded_by_user) && (
+          <div className="flex items-center space-x-2 text-base text-gray-900 ml-12">
+            <User className="w-4 h-4" />
+            <span className="font-medium text-gray-900">
+              {reading.recorded_by_name ||
+                (reading.recorded_by_user?.name) ||
+                (reading.recorded_by_user?.first_name &&
+                  reading.recorded_by_user?.last_name
+                  ? `${reading.recorded_by_user.first_name} ${reading.recorded_by_user.last_name}`
+                  : null)}
+            </span>
+          </div>
+        )}
+
+        {/* Temperature towards center */}
+        <div className="flex flex-col justify-center items-center px-2">
           {/* Riga alta: Temperatura Rilevata */}
           {reading.conservation_point && (() => {
             const temp = reading.temperature
@@ -140,23 +155,6 @@ export function TemperatureReadingCard({
               </p>
             )
           })()}
-          {/* Riga sotto: Temperatura target e Range tolleranza */}
-          {reading.conservation_point && (
-            <div className="flex items-center gap-4 mt-1">
-              <p className="text-sm">
-                <span className="text-gray-900 font-medium">Temperatura target: </span>
-                <span className="font-bold text-green-700">
-                  {reading.conservation_point.setpoint_temp}°C
-                </span>
-              </p>
-              <p className="text-sm">
-                <span className="text-gray-900 font-medium">Range tolleranza: </span>
-                <span className="font-bold text-yellow-600">
-                  {toleranceMin.toFixed(1)}°C - {toleranceMax.toFixed(1)}°C
-                </span>
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Status Badge - pushed to right with ml-auto */}
@@ -170,23 +168,26 @@ export function TemperatureReadingCard({
         </div>
       </div>
 
+      {/* Target and Range Info - labels da sinistra a destra */}
+      {reading.conservation_point && (
+        <div className="flex flex-row flex-nowrap items-center justify-start gap-6 px-4 py-3 border-b border-gray-100 bg-gray-50">
+          <p className="text-sm flex items-baseline gap-1.5 shrink-0">
+            <span className="text-gray-900 font-medium">Temperatura target:</span>
+            <span className="font-bold text-green-700">
+              {reading.conservation_point.setpoint_temp}°C
+            </span>
+          </p>
+          <p className="text-sm flex items-baseline gap-1.5 shrink-0">
+            <span className="text-gray-900 font-medium">Range tolleranza:</span>
+            <span className="font-bold text-yellow-600">
+              {toleranceMin.toFixed(1)}°C – {toleranceMax.toFixed(1)}°C
+            </span>
+          </p>
+        </div>
+      )}
+
       {/* Temperature Details */}
       <div className="p-4 space-y-3">
-        {/* User who recorded */}
-        {reading.recorded_by_user && (
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <User className="w-4 h-4" />
-            <span>
-              Rilevato da:{' '}
-              {reading.recorded_by_user.name ||
-                (reading.recorded_by_user.first_name &&
-                  reading.recorded_by_user.last_name
-                  ? `${reading.recorded_by_user.first_name} ${reading.recorded_by_user.last_name}`
-                  : 'Utente sconosciuto')}
-            </span>
-          </div>
-        )}
-
         {/* Status Message */}
         <div className={`p-3 rounded-lg ${statusInfo.bg} ${statusInfo.border} border`}>
           <p className={`text-sm ${statusInfo.color}`}>
