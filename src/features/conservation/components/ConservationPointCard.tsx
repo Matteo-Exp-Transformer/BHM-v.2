@@ -1,9 +1,9 @@
+import { useState } from 'react'
 import {
   ConservationPoint,
   CONSERVATION_COLORS,
   CONSERVATION_TYPE_COLORS,
 } from '@/types/conservation'
-import { useState } from 'react'
 import {
   Thermometer,
   Calendar,
@@ -76,23 +76,66 @@ export function ConservationPointCard({
     // Caso 1: Frigorifero con profilo
     if (point.type === 'fridge' && point.profile_id && point.appliance_category) {
       // Ricostruisci profilo se non presente
-      const profile = point.profile_config || 
+      const profile = point.profile_config ||
         getProfileById(point.profile_id, point.appliance_category as ApplianceCategory)
-      
+
       if (profile?.allowedCategoryIds) {
         return mapCategoryIdsToDbNames(profile.allowedCategoryIds)
       }
     }
-    
+
     // Caso 2: Altri tipi o frigoriferi senza profilo
     if (point.product_categories && point.product_categories.length > 0) {
-      // Verifica se sono ID o nomi già corretti
-      return point.product_categories.map(cat => 
+      return point.product_categories.map(cat =>
         CATEGORY_ID_TO_DB_NAME[cat] || cat
       )
     }
-    
+
     return []
+  }
+
+  // Raggruppamento per tipologia: carni/ovoprodotti | verdure/latticini | altro
+  const CATEGORY_GROUP_LEFT = [
+    'Carni crude',
+    'Salumi e affettati',
+    'Uova - Ovoprodotti',
+    'Pesce e frutti di mare crudi',
+    'Congelati: carni e pesce',
+  ]
+  const CATEGORY_GROUP_CENTER = [
+    'Verdure e ortofrutta',
+    'Erbe aromatiche fresche',
+    'Latticini',
+    'Congelati: vegetali',
+  ]
+  const CATEGORY_GROUP_RIGHT = [
+    'Preparazioni/Pronti/Cotti (RTE)',
+    'Salse/condimenti',
+    'Bevande',
+    'Conserve/semiconserve',
+    'Congelati: preparazioni',
+    'Congelati: Dolci',
+    'Abbattimento rapido',
+  ]
+
+  const groupCategories = (
+    categories: string[]
+  ): { left: string[]; center: string[]; right: string[] } => {
+    const left: string[] = []
+    const center: string[] = []
+    const right: string[] = []
+    for (const c of categories) {
+      if (CATEGORY_GROUP_LEFT.includes(c)) {
+        left.push(c)
+      } else if (CATEGORY_GROUP_CENTER.includes(c)) {
+        center.push(c)
+      } else if (CATEGORY_GROUP_RIGHT.includes(c)) {
+        right.push(c)
+      } else {
+        right.push(c)
+      }
+    }
+    return { left, center, right }
   }
 
   return (
@@ -238,36 +281,54 @@ export function ConservationPointCard({
         </div>
       )}
 
-      {/* Product Categories */}
+      {/* Categorie compatibili - estendibile, 3 colonne per tipologia */}
       {(() => {
         const displayCategories = getDisplayCategories(point)
-        return displayCategories.length > 0 ? (
+        if (displayCategories.length === 0) return null
+        const { left, center, right } = groupCategories(displayCategories)
+        const renderColumn = (items: string[]) => (
+          <ul className="list-disc list-outside pl-5 space-y-1 text-base text-gray-700">
+            {items.map((category, index) => (
+              <li key={index}>{category}</li>
+            ))}
+          </ul>
+        )
+        return (
           <div className="mt-3">
             <button
+              type="button"
               onClick={() => setShowCategories(!showCategories)}
-              className="flex items-center justify-between w-full text-left text-sm text-gray-600 hover:text-gray-900 transition-colors mb-2"
+              className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors mb-2"
+              aria-expanded={showCategories}
             >
-              <span>Categorie prodotti compatibili</span>
+              <span>Categorie compatibili</span>
               {showCategories ? (
-                <ChevronUp className="w-4 h-4" />
+                <ChevronUp className="w-4 h-4 flex-shrink-0" />
               ) : (
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="w-4 h-4 flex-shrink-0" />
               )}
             </button>
             {showCategories && (
-              <div className="flex flex-wrap gap-2">
-                {displayCategories.map((category, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full text-sm font-medium text-gray-700 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-                  >
-                    {category}
-                  </span>
-                ))}
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  {left.length > 0 ? renderColumn(left) : (
+                    <span className="text-base text-gray-400 italic">—</span>
+                  )}
+                </div>
+                <div>
+                  {center.length > 0 ? renderColumn(center) : (
+                    <span className="text-base text-gray-400 italic">—</span>
+                  )}
+                </div>
+                <div>
+                  {right.length > 0 ? renderColumn(right) : (
+                    <span className="text-base text-gray-400 italic">—</span>
+                  )}
+                </div>
               </div>
             )}
           </div>
-        ) : null
+        )
       })()}
     </div>
   )
