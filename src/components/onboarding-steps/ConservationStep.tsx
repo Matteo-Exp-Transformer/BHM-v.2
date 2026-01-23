@@ -36,6 +36,11 @@ import {
   validateTemperatureForType,
   getCompatibleCategories,
 } from '@/utils/onboarding/conservationUtils'
+import {
+  APPLIANCE_CATEGORY_LABELS,
+  getProfilesForAppliance,
+  type ApplianceCategory,
+} from '@/utils/conservationProfiles'
 
 const EMPTY_FORM: ConservationStepFormData = {
   name: '',
@@ -44,6 +49,8 @@ const EMPTY_FORM: ConservationStepFormData = {
   pointType: 'fridge',
   isBlastChiller: false,
   productCategories: [],
+  applianceCategory: undefined,
+  profileId: undefined,
 }
 
 const ConservationStep = ({
@@ -129,6 +136,8 @@ const ConservationStep = ({
       pointType: draft.pointType,
       isBlastChiller: draft.isBlastChiller,
       productCategories: draft.productCategories,
+      applianceCategory: draft.applianceCategory,
+      profileId: draft.profileId,
     })
     setValidationErrors({})
     setTemperatureError(null)
@@ -154,6 +163,8 @@ const ConservationStep = ({
       productCategories: [...new Set(formData.productCategories)],
       source: 'manual' as const, // ✅ FIXED: Campo obbligatorio per validazione
       maintenanceTasks: [],
+      applianceCategory: formData.applianceCategory,
+      profileId: formData.profileId,
     })
 
     const result = validateConservationPoint(normalized)
@@ -562,6 +573,9 @@ const ConservationStep = ({
                           ...prev,
                           pointType: type.value,
                           isBlastChiller: type.value === 'blast',
+                          // Reset appliance category e profile se non è più un frigorifero
+                          applianceCategory: type.value === 'fridge' ? prev.applianceCategory : undefined,
+                          profileId: type.value === 'fridge' ? prev.profileId : undefined,
                         }))
                       }
                     >
@@ -575,6 +589,63 @@ const ConservationStep = ({
               </div>
             </div>
           </div>
+
+          {/* Sezione Profilo Punto di Conservazione - Solo per frigoriferi */}
+          {formData.pointType === 'fridge' && (
+            <div className="space-y-4 border-t pt-6">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-blue-600" />
+                Profilo Punto di Conservazione
+              </h3>
+
+              {/* Select Categoria Appliance */}
+              <div className="space-y-2">
+                <Label htmlFor="appliance-category">Categoria elettrodomestico</Label>
+                <Select
+                  value={formData.applianceCategory || ''}
+                  onValueChange={(value) => setFormData(prev => ({
+                    ...prev,
+                    applianceCategory: value as ApplianceCategory,
+                    profileId: undefined // Reset profilo quando cambia categoria
+                  }))}
+                >
+                  <SelectTrigger id="appliance-category">
+                    <SelectValue placeholder="Seleziona categoria..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(APPLIANCE_CATEGORY_LABELS).map(([value, label]) => (
+                      <SelectOption key={value} value={value}>{label}</SelectOption>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Select Profilo */}
+              {formData.applianceCategory && (
+                <div className="space-y-2">
+                  <Label htmlFor="profile-select">Profilo HACCP</Label>
+                  <Select
+                    value={formData.profileId || ''}
+                    onValueChange={(value) => setFormData(prev => ({
+                      ...prev,
+                      profileId: value
+                    }))}
+                  >
+                    <SelectTrigger id="profile-select">
+                      <SelectValue placeholder="Seleziona profilo..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getProfilesForAppliance(formData.applianceCategory as ApplianceCategory).map(profile => (
+                        <SelectOption key={profile.profileId} value={profile.profileId}>
+                          {profile.name}
+                        </SelectOption>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          )}
 
           <div>
             <Label>Categorie prodotti *</Label>

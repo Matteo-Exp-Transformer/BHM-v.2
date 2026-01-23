@@ -23,7 +23,7 @@ export function useTemperatureReadings(conservationPointId?: string) {
 
       console.log('🔧 Loading temperature readings from Supabase for company:', companyId)
 
-      // ✅ JOIN with conservation_points to enable computed status
+      // ✅ JOIN with conservation_points and user_profiles
       let query = supabase
         .from('temperature_readings')
         .select(`
@@ -50,24 +50,71 @@ export function useTemperatureReadings(conservationPointId?: string) {
       }
 
       // ✅ Load user names separately if recorded_by exists
+      // Note: recorded_by references auth.users.id, which maps to user_profiles.auth_user_id
       const readingsWithUsers = await Promise.all(
         (data || []).map(async (reading: any) => {
           if (reading.recorded_by) {
             try {
-              // Try to get user from user_profiles (if exists)
-              const { data: userData } = await supabase
+              console.log('🔍 Loading user data for reading:', reading.id, 'recorded_by:', reading.recorded_by)
+              // Get user from user_profiles using auth_user_id (which matches auth.users.id)
+              const { data: userData, error: userError } = await supabase
                 .from('user_profiles')
-                .select('id, first_name, last_name, name')
-                .eq('id', reading.recorded_by)
-                .single()
+                .select('id, first_name, last_name')
+                .eq('auth_user_id', reading.recorded_by)
+                .maybeSingle() // Use maybeSingle() instead of single() to avoid error if not found
               
-              if (userData) {
+              if (userError) {
+                console.warn('⚠️ Error loading user data:', userError)
+              } else if (userData) {
+                console.log('✅ User data loaded:', userData)
                 reading.recorded_by_user = userData
+              } else {
+                console.warn('⚠️ No user data found in user_profiles for recorded_by:', reading.recorded_by)
+                // Try fallback: check if user exists via company_members -> staff
+                try {
+                  const { data: companyMember, error: fallbackError } = await supabase
+                    .from('company_members')
+                    .select('staff_id, staff:staff(id, name)')
+                    .eq('user_id', reading.recorded_by)
+                    .eq('company_id', companyId)
+                    .maybeSingle()
+                  
+                  if (fallbackError) {
+                    console.warn('⚠️ Fallback query error:', fallbackError)
+                  } else if (companyMember?.staff) {
+                    console.log('✅ User data found via staff fallback:', companyMember.staff)
+                    // Staff has 'name' field (full name), split it if possible
+                    const fullName = companyMember.staff.name || ''
+                    const nameParts = fullName.trim().split(/\s+/)
+                    const firstName = nameParts[0] || null
+                    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : null
+                    
+                    reading.recorded_by_user = {
+                      id: companyMember.staff.id,
+                      first_name: firstName,
+                      last_name: lastName,
+                      name: fullName, // Keep full name for backward compatibility
+                    }
+                  } else {
+                    console.warn('⚠️ No company_member or staff found for user_id:', reading.recorded_by, 'company_id:', companyId)
+                    // Log additional debug info
+                    const { data: allMembers } = await supabase
+                      .from('company_members')
+                      .select('user_id, staff_id, company_id')
+                      .eq('user_id', reading.recorded_by)
+                      .limit(5)
+                    console.log('🔍 All company_members for this user:', allMembers)
+                  }
+                } catch (fallbackErr) {
+                  console.warn('⚠️ Fallback query exception:', fallbackErr)
+                }
               }
             } catch (err) {
               // If user_profiles doesn't exist or join fails, continue without user data
-              console.warn('Could not load user data for reading:', reading.id, err)
+              console.warn('❌ Could not load user data for reading:', reading.id, err)
             }
+          } else {
+            console.log('ℹ️ Reading has no recorded_by:', reading.id)
           }
           return reading
         })
@@ -106,11 +153,17 @@ export function useTemperatureReadings(conservationPointId?: string) {
         // ✅ NOT including conservation_point (join/virtual field - doesn't exist in DB table)
       }
 
+      console.log('💾 Inserting temperature reading with payload:', { ...payload, recorded_by: payload.recorded_by ? '***' : null })
+
       const { data: result, error } = await supabase
         .from('temperature_readings')
         .insert([payload])
         .select()
         .single()
+
+      if (result) {
+        console.log('✅ Temperature reading created:', result.id, 'recorded_by:', result.recorded_by)
+      }
 
       if (error) {
         console.error('❌ Error creating temperature reading:', error)

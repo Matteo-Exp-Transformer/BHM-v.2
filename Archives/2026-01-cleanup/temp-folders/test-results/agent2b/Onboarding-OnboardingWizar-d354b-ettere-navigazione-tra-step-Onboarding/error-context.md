@@ -1,0 +1,182 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - heading "HACCP Manager" [level=1] [ref=e7]
+        - generic [ref=e8]:
+          - img [ref=e9]
+          - generic [ref=e13]: Al Ritrovo SRL
+      - generic [ref=e14]:
+        - link "Attività" [ref=e15] [cursor=pointer]:
+          - /url: /attivita
+          - img [ref=e16]
+          - generic [ref=e19]: Attività
+        - button "Cancella e Ricomincia" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e24]: Cancella e Ricomincia
+        - button "Onboarding" [ref=e25] [cursor=pointer]:
+          - img [ref=e26]
+          - generic [ref=e31]: Onboarding
+        - button "Debug Auth" [ref=e32] [cursor=pointer]:
+          - img [ref=e33]
+          - generic [ref=e36]: Debug Auth
+        - button "Sync Host" [ref=e37] [cursor=pointer]:
+          - img [ref=e38]
+          - generic [ref=e43]: Sync Host
+        - button "Reset Tot+Users" [ref=e44] [cursor=pointer]:
+          - img [ref=e45]
+          - generic [ref=e50]: Reset Tot+Users
+  - main "Main content" [ref=e51]:
+    - generic [ref=e53]:
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - heading "Configurazione Iniziale HACCP" [level=1] [ref=e57]
+            - paragraph [ref=e58]: Configura la tua azienda per iniziare a utilizzare il sistema HACCP
+          - button "Salta" [ref=e60] [cursor=pointer]:
+            - img [ref=e61]
+            - generic [ref=e64]: Salta
+        - generic [ref=e66]:
+          - button "Precompila" [ref=e67] [cursor=pointer]:
+            - img [ref=e68]
+            - generic [ref=e73]: Precompila
+          - button "Completa Onboarding" [ref=e74] [cursor=pointer]:
+            - img [ref=e75]
+            - generic [ref=e78]: Completa Onboarding
+      - generic [ref=e81]:
+        - button "1 Informazioni Aziendali Dati base della tua azienda" [ref=e82] [cursor=pointer]:
+          - generic [ref=e83]:
+            - img [ref=e85]
+            - generic [ref=e89]: "1"
+          - heading "Informazioni Aziendali" [level=3] [ref=e90]
+          - paragraph [ref=e91]: Dati base della tua azienda
+        - button "2 Reparti Organizzazione aziendale" [disabled] [ref=e92]:
+          - generic [ref=e93]:
+            - img [ref=e95]
+            - generic [ref=e100]: "2"
+          - heading "Reparti" [level=3] [ref=e101]
+          - paragraph [ref=e102]: Organizzazione aziendale
+        - button "3 Personale Staff e responsabilità" [disabled] [ref=e103]:
+          - generic [ref=e104]:
+            - img [ref=e106]
+            - generic [ref=e108]: "3"
+          - heading "Personale" [level=3] [ref=e109]
+          - paragraph [ref=e110]: Staff e responsabilità
+        - button "4 Conservazione Punti di controllo temperatura" [disabled] [ref=e111]:
+          - generic [ref=e112]:
+            - img [ref=e114]
+            - generic [ref=e116]: "4"
+          - heading "Conservazione" [level=3] [ref=e117]
+          - paragraph [ref=e118]: Punti di controllo temperatura
+        - button "5 Attività Task e manutenzioni" [disabled] [ref=e119]:
+          - generic [ref=e120]:
+            - img [ref=e122]
+            - generic [ref=e125]: "5"
+          - heading "Attività" [level=3] [ref=e126]
+          - paragraph [ref=e127]: Task e manutenzioni
+        - button "6 Inventario Prodotti e categorie" [disabled] [ref=e128]:
+          - generic [ref=e129]:
+            - img [ref=e131]
+            - generic [ref=e135]: "6"
+          - heading "Inventario" [level=3] [ref=e136]
+          - paragraph [ref=e137]: Prodotti e categorie
+        - button "7 Calendario Configurazione anno lavorativo" [disabled] [ref=e138]:
+          - generic [ref=e139]:
+            - img [ref=e141]
+            - generic [ref=e143]: "7"
+          - heading "Calendario" [level=3] [ref=e144]
+          - paragraph [ref=e145]: Configurazione anno lavorativo
+      - generic [ref=e147]:
+        - generic [ref=e148]:
+          - img [ref=e150]
+          - heading "Informazioni Aziendali" [level=2] [ref=e154]
+          - paragraph [ref=e155]: Inserisci i dati principali della tua azienda per configurare il sistema HACCP
+        - button "🚀 Compila con dati di esempio" [ref=e157] [cursor=pointer]
+        - generic [ref=e158]:
+          - generic [ref=e159]:
+            - generic [ref=e160]:
+              - img [ref=e161]
+              - text: Nome Azienda *
+            - textbox "Inserisci il nome della tua azienda" [active] [ref=e165]: Test Azienda
+          - generic [ref=e166]:
+            - generic [ref=e167]:
+              - img [ref=e168]
+              - text: Tipo di Attività
+            - combobox [ref=e171]:
+              - option "Seleziona tipo di attività" [selected]
+              - option "Ristorante"
+              - option "Bar"
+              - option "Pizzeria"
+              - option "Trattoria"
+              - option "Osteria"
+              - option "Enoteca"
+              - option "Birreria"
+              - option "Altro"
+          - generic [ref=e172]:
+            - generic [ref=e173]:
+              - img [ref=e174]
+              - text: Data di Apertura
+            - textbox [ref=e176]
+          - generic [ref=e177]:
+            - generic [ref=e178]:
+              - img [ref=e179]
+              - text: Indirizzo *
+            - textbox "Inserisci l'indirizzo completo dell'azienda" [ref=e182]
+            - paragraph [ref=e183]: L'indirizzo è obbligatorio
+          - generic [ref=e184]:
+            - generic [ref=e185]:
+              - img [ref=e186]
+              - text: Telefono
+            - textbox "+39 051 1234567" [ref=e188]
+          - generic [ref=e189]:
+            - generic [ref=e190]:
+              - img [ref=e191]
+              - text: Email
+            - textbox "info@azienda.it" [ref=e194]
+          - generic [ref=e195]:
+            - generic [ref=e196]:
+              - img [ref=e197]
+              - text: Partita IVA
+            - textbox "IT12345678901" [ref=e200]
+          - generic [ref=e201]:
+            - generic [ref=e202]:
+              - img [ref=e203]
+              - text: Numero Licenza
+            - textbox "RIS-2024-001" [ref=e206]
+        - generic [ref=e207]:
+          - heading "ℹ️ Conformità HACCP" [level=3] [ref=e208]
+          - paragraph [ref=e209]: Le informazioni inserite verranno utilizzate per configurare il sistema HACCP in conformità alle normative vigenti. I campi obbligatori sono necessari per garantire la tracciabilità e la compliance.
+      - generic [ref=e210]:
+        - button "Indietro" [disabled] [ref=e211]
+        - button "Avanti" [disabled] [ref=e212]
+      - paragraph [ref=e216]: Step 1 di 7
+  - navigation "Main navigation" [ref=e217]:
+    - generic [ref=e218]:
+      - link "Navigate to Home" [ref=e219] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e220]
+        - generic [ref=e223]: Home
+      - link "Navigate to Conservazione" [ref=e224] [cursor=pointer]:
+        - /url: /conservazione
+        - img [ref=e225]
+        - generic [ref=e238]: Conservazione
+      - link "Navigate to Attività" [ref=e239] [cursor=pointer]:
+        - /url: /attivita
+        - img [ref=e240]
+        - generic [ref=e243]: Attività
+      - link "Navigate to Inventario" [ref=e244] [cursor=pointer]:
+        - /url: /inventario
+        - img [ref=e245]
+        - generic [ref=e249]: Inventario
+      - link "Navigate to Impostazioni" [ref=e250] [cursor=pointer]:
+        - /url: /impostazioni
+        - img [ref=e251]
+        - generic [ref=e254]: Impostazioni
+      - link "Navigate to Gestione" [ref=e255] [cursor=pointer]:
+        - /url: /gestione
+        - img [ref=e256]
+        - generic [ref=e261]: Gestione
+```

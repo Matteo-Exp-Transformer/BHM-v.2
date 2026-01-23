@@ -29,6 +29,7 @@ import {
   getConservationTypeLabel,
   getConservationTypeEmoji,
 } from '@/utils/conservationConstants'
+import { CONSERVATION_CATEGORIES } from '@/utils/onboarding/conservationUtils'
 
 interface ConservationPointCardProps {
   point: ConservationPoint
@@ -71,6 +72,25 @@ export function ConservationPointCard({
     }
   }
 
+  // Funzione unificata per mappare ID categorie a label
+  // Gestisce sia ID onboarding (CONSERVATION_CATEGORIES) che ID conservationProfiles (CATEGORY_ID_TO_DB_NAME)
+  const mapCategoryToLabel = (category: string): string => {
+    // Cerca prima in CONSERVATION_CATEGORIES (ID onboarding: 'fresh_meat', 'fresh_fish', etc.)
+    const onboardingCategory = CONSERVATION_CATEGORIES.find(cat => cat.id === category)
+    if (onboardingCategory) {
+      return onboardingCategory.label
+    }
+
+    // Cerca poi in CATEGORY_ID_TO_DB_NAME (ID conservationProfiles: 'raw_meat', 'dairy', etc.)
+    const profileCategory = CATEGORY_ID_TO_DB_NAME[category]
+    if (profileCategory) {
+      return profileCategory
+    }
+
+    // Fallback: ritorna il valore originale (già un nome o ID non riconosciuto)
+    return category
+  }
+
   // Funzione per ottenere le categorie corrette da mostrare
   const getDisplayCategories = (point: ConservationPoint): string[] => {
     // Caso 1: Frigorifero con profilo
@@ -86,9 +106,7 @@ export function ConservationPointCard({
 
     // Caso 2: Altri tipi o frigoriferi senza profilo
     if (point.product_categories && point.product_categories.length > 0) {
-      return point.product_categories.map(cat =>
-        CATEGORY_ID_TO_DB_NAME[cat] || cat
-      )
+      return point.product_categories.map(cat => mapCategoryToLabel(cat))
     }
 
     return []

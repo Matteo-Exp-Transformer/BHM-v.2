@@ -1,0 +1,16 @@
+comando terminale per eseguire test completamento Onboarding :
+
+npx playwright test tests/onboarding/completamento-onboarding.spec.ts --headed --grep="dovrebbe precompilare e completare"
+
+Comando terminale per eseguire test Calendar (GenericTaskForm Recurrence):
+
+cd "c:\Users\matte.MIO\Documents\GitHub\BHM-v.2" && npx playwright test --project=Calendar --headed --timeout=180000
+
+Comando terminale per eseguire inserimento attivita generica
+
+cd "c:\Users\matte.MIO\Documents\GitHub\BHM-v.2" && npx playwright test tests/calendar/test-weekly-custom-days.spec.ts --project=Calendar --headed --timeout=180000 2>&1 | tail -100
+
+Comando per eseguire tutti i test inserimento attività 
+
+cd "c:\Users\matte.MIO\Documents\GitHub\BHM-v.2" && npx playwright test --project=Calendar --headed --timeout=180000 2>&1 | head -200
+

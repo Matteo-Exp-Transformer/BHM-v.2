@@ -132,6 +132,8 @@ export interface ConservationPoint {
   maintenanceTasks?: ConservationMaintenanceTask[]
   maintenanceDue?: string
   source?: PointSource
+  applianceCategory?: string
+  profileId?: string
 }
 
 export interface ConservationStepFormData {
@@ -141,6 +143,8 @@ export interface ConservationStepFormData {
   pointType: ConservationPointType
   isBlastChiller: boolean
   productCategories: string[]
+  applianceCategory?: string
+  profileId?: string
 }
 
 export interface ConservationStepProps {

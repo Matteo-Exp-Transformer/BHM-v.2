@@ -267,6 +267,8 @@ export const normalizeConservationPoint = (
   maintenanceTasks: point.maintenanceTasks?.map(normalizeMaintenanceTask),
   maintenanceDue: point.maintenanceDue,
   source: point.source,
+  applianceCategory: point.applianceCategory,
+  profileId: point.profileId,
 })
 
 export const createDraftMaintenanceTask = (): MaintenanceTask => ({

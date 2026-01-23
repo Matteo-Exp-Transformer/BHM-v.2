@@ -1744,6 +1744,10 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
       is_blast_chiller: point.isBlastChiller || false,
       status: 'normal',
       maintenance_due: point.maintenanceDue || null,
+      appliance_category: point.applianceCategory || null,
+      profile_id: point.profileId || null,
+      is_custom_profile: false, // Sempre false per profili standard
+      profile_config: null, // Sempre null per profili standard
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }))

@@ -1,0 +1,480 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - heading "HACCP Manager" [level=1] [ref=e7]
+        - generic [ref=e8]:
+          - img [ref=e9]
+          - generic [ref=e13]: Al Ritrovo SRL
+      - generic [ref=e14]:
+        - link "Attività" [ref=e15] [cursor=pointer]:
+          - /url: /attivita
+          - img [ref=e16]
+          - generic [ref=e19]: Attività
+        - button "Cancella e Ricomincia" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e24]: Cancella e Ricomincia
+        - button "Onboarding" [ref=e25] [cursor=pointer]:
+          - img [ref=e26]
+          - generic [ref=e31]: Onboarding
+        - button "Debug Auth" [ref=e32] [cursor=pointer]:
+          - img [ref=e33]
+          - generic [ref=e36]: Debug Auth
+        - button "Sync Host" [ref=e37] [cursor=pointer]:
+          - img [ref=e38]
+          - generic [ref=e43]: Sync Host
+        - button "Reset Tot+Users" [ref=e44] [cursor=pointer]:
+          - img [ref=e45]
+          - generic [ref=e50]: Reset Tot+Users
+  - main "Main content" [ref=e51]:
+    - generic [ref=e52]:
+      - generic [ref=e54]:
+        - heading "Sistema di Conservazione" [level=1] [ref=e55]
+        - paragraph [ref=e56]: Gestisci punti di conservazione e monitoraggio temperature
+      - region "Punti di Conservazione 7 punti configurati Aggiungi Punto Collapse section" [ref=e57]:
+        - button "Punti di Conservazione 7 punti configurati Aggiungi Punto Collapse section" [expanded] [ref=e58] [cursor=pointer]:
+          - generic [ref=e59]:
+            - img [ref=e60]
+            - generic [ref=e62]:
+              - heading "Punti di Conservazione" [level=3] [ref=e65]
+              - paragraph [ref=e66]: 7 punti configurati
+          - generic [ref=e67]:
+            - button "Aggiungi Punto" [ref=e69]:
+              - img [ref=e70]
+              - generic [ref=e71]: Aggiungi Punto
+            - button "Collapse section" [ref=e72]:
+              - img [ref=e73]
+        - region "Punti di Conservazione 7 punti configurati Aggiungi Punto Collapse section" [ref=e75]:
+          - generic [ref=e76]:
+            - region "Frigoriferi 4 punti configurati Collapse section" [ref=e77]:
+              - button "Frigoriferi 4 punti configurati Collapse section" [expanded] [ref=e78] [cursor=pointer]:
+                - generic [ref=e80]:
+                  - heading "Frigoriferi" [level=3] [ref=e83]
+                  - paragraph [ref=e84]: 4 punti configurati
+                - button "Collapse section" [ref=e86]:
+                  - img [ref=e87]
+              - region "Frigoriferi 4 punti configurati Collapse section" [ref=e89]:
+                - generic [ref=e90]:
+                  - generic [ref=e91]:
+                    - generic [ref=e92]:
+                      - generic [ref=e93]:
+                        - generic [ref=e94]: ❄️
+                        - generic [ref=e95]:
+                          - heading "Frigo 1" [level=3] [ref=e96]
+                          - generic [ref=e97]:
+                            - img [ref=e98]
+                            - generic [ref=e101]: Cucina
+                            - generic [ref=e102]: Frigorifero
+                      - generic [ref=e103]:
+                        - img [ref=e104]
+                        - button "Modifica punto Frigo 1" [ref=e107] [cursor=pointer]:
+                          - img [ref=e108]
+                        - button "Elimina punto Frigo 1" [ref=e111] [cursor=pointer]:
+                          - img [ref=e112]
+                    - generic [ref=e115]:
+                      - generic [ref=e116]:
+                        - img [ref=e117]
+                        - generic [ref=e119]:
+                          - generic [ref=e120]: Temperatura target
+                          - generic [ref=e121]: 2°C
+                      - generic [ref=e124]:
+                        - generic [ref=e125]: Stato
+                        - generic [ref=e126]: Regolare
+                    - generic [ref=e127]:
+                      - generic [ref=e128]: "Categorie prodotti:"
+                      - generic [ref=e129]:
+                        - generic [ref=e130]: beverages
+                        - generic [ref=e131]: fresh_produce
+                    - button "Mostra dettagli" [ref=e132] [cursor=pointer]
+                  - generic [ref=e133]:
+                    - generic [ref=e134]:
+                      - generic [ref=e135]:
+                        - generic [ref=e136]: ❄️
+                        - generic [ref=e137]:
+                          - heading "Frigo 2" [level=3] [ref=e138]
+                          - generic [ref=e139]:
+                            - img [ref=e140]
+                            - generic [ref=e143]: Cucina
+                            - generic [ref=e144]: Frigorifero
+                      - generic [ref=e145]:
+                        - img [ref=e146]
+                        - button "Modifica punto Frigo 2" [ref=e149] [cursor=pointer]:
+                          - img [ref=e150]
+                        - button "Elimina punto Frigo 2" [ref=e153] [cursor=pointer]:
+                          - img [ref=e154]
+                    - generic [ref=e157]:
+                      - generic [ref=e158]:
+                        - img [ref=e159]
+                        - generic [ref=e161]:
+                          - generic [ref=e162]: Temperatura target
+                          - generic [ref=e163]: 3°C
+                      - generic [ref=e166]:
+                        - generic [ref=e167]: Stato
+                        - generic [ref=e168]: Regolare
+                    - generic [ref=e169]:
+                      - generic [ref=e170]: "Categorie prodotti:"
+                      - generic [ref=e171]:
+                        - generic [ref=e172]: beverages
+                        - generic [ref=e173]: fresh_produce
+                    - button "Mostra dettagli" [ref=e174] [cursor=pointer]
+                  - generic [ref=e175]:
+                    - generic [ref=e176]:
+                      - generic [ref=e177]:
+                        - generic [ref=e178]: ❄️
+                        - generic [ref=e179]:
+                          - heading "Frigo 3" [level=3] [ref=e180]
+                          - generic [ref=e181]:
+                            - img [ref=e182]
+                            - generic [ref=e185]: Cucina
+                            - generic [ref=e186]: Frigorifero
+                      - generic [ref=e187]:
+                        - img [ref=e188]
+                        - button "Modifica punto Frigo 3" [ref=e191] [cursor=pointer]:
+                          - img [ref=e192]
+                        - button "Elimina punto Frigo 3" [ref=e195] [cursor=pointer]:
+                          - img [ref=e196]
+                    - generic [ref=e199]:
+                      - generic [ref=e200]:
+                        - img [ref=e201]
+                        - generic [ref=e203]:
+                          - generic [ref=e204]: Temperatura target
+                          - generic [ref=e205]: 5°C
+                      - generic [ref=e208]:
+                        - generic [ref=e209]: Stato
+                        - generic [ref=e210]: Regolare
+                    - generic [ref=e211]:
+                      - generic [ref=e212]: "Categorie prodotti:"
+                      - generic [ref=e213]:
+                        - generic [ref=e214]: beverages
+                        - generic [ref=e215]: fresh_produce
+                    - button "Mostra dettagli" [ref=e216] [cursor=pointer]
+                  - generic [ref=e217]:
+                    - generic [ref=e218]:
+                      - generic [ref=e219]:
+                        - generic [ref=e220]: ❄️
+                        - generic [ref=e221]:
+                          - heading "Frigo A" [level=3] [ref=e222]
+                          - generic [ref=e223]:
+                            - img [ref=e224]
+                            - generic [ref=e227]: Cucina
+                            - generic [ref=e228]: Frigorifero
+                      - generic [ref=e229]:
+                        - img [ref=e230]
+                        - button "Modifica punto Frigo A" [ref=e233] [cursor=pointer]:
+                          - img [ref=e234]
+                        - button "Elimina punto Frigo A" [ref=e237] [cursor=pointer]:
+                          - img [ref=e238]
+                    - generic [ref=e241]:
+                      - generic [ref=e242]:
+                        - img [ref=e243]
+                        - generic [ref=e245]:
+                          - generic [ref=e246]: Temperatura target
+                          - generic [ref=e247]: 4°C
+                      - generic [ref=e250]:
+                        - generic [ref=e251]: Stato
+                        - generic [ref=e252]: Regolare
+                    - generic [ref=e253]:
+                      - generic [ref=e254]: "Categorie prodotti:"
+                      - generic [ref=e255]:
+                        - generic [ref=e256]: fresh_meat
+                        - generic [ref=e257]: fresh_dairy
+                    - button "Mostra dettagli" [ref=e258] [cursor=pointer]
+            - region "Freezer 2 punti configurati Collapse section" [ref=e259]:
+              - button "Freezer 2 punti configurati Collapse section" [expanded] [ref=e260] [cursor=pointer]:
+                - generic [ref=e262]:
+                  - heading "Freezer" [level=3] [ref=e265]
+                  - paragraph [ref=e266]: 2 punti configurati
+                - button "Collapse section" [ref=e268]:
+                  - img [ref=e269]
+              - region "Freezer 2 punti configurati Collapse section" [ref=e271]:
+                - generic [ref=e272]:
+                  - generic [ref=e273]:
+                    - generic [ref=e274]:
+                      - generic [ref=e275]:
+                        - generic [ref=e276]: 🧊
+                        - generic [ref=e277]:
+                          - heading "Freezer A" [level=3] [ref=e278]
+                          - generic [ref=e279]:
+                            - img [ref=e280]
+                            - generic [ref=e283]: Cucina
+                            - generic [ref=e284]: Freezer
+                      - generic [ref=e285]:
+                        - img [ref=e286]
+                        - button "Modifica punto Freezer A" [ref=e289] [cursor=pointer]:
+                          - img [ref=e290]
+                        - button "Elimina punto Freezer A" [ref=e293] [cursor=pointer]:
+                          - img [ref=e294]
+                    - generic [ref=e297]:
+                      - generic [ref=e298]:
+                        - img [ref=e299]
+                        - generic [ref=e301]:
+                          - generic [ref=e302]: Temperatura target
+                          - generic [ref=e303]: "-18°C"
+                      - generic [ref=e306]:
+                        - generic [ref=e307]: Stato
+                        - generic [ref=e308]: Regolare
+                    - generic [ref=e309]:
+                      - generic [ref=e310]: "Categorie prodotti:"
+                      - generic [ref=e311]:
+                        - generic [ref=e312]: frozen
+                        - generic [ref=e313]: deep_frozen
+                    - button "Mostra dettagli" [ref=e314] [cursor=pointer]
+                  - generic [ref=e315]:
+                    - generic [ref=e316]:
+                      - generic [ref=e317]:
+                        - generic [ref=e318]: 🧊
+                        - generic [ref=e319]:
+                          - heading "Freezer B" [level=3] [ref=e320]
+                          - generic [ref=e321]:
+                            - img [ref=e322]
+                            - generic [ref=e325]: Cucina
+                            - generic [ref=e326]: Freezer
+                      - generic [ref=e327]:
+                        - img [ref=e328]
+                        - button "Modifica punto Freezer B" [ref=e331] [cursor=pointer]:
+                          - img [ref=e332]
+                        - button "Elimina punto Freezer B" [ref=e335] [cursor=pointer]:
+                          - img [ref=e336]
+                    - generic [ref=e339]:
+                      - generic [ref=e340]:
+                        - img [ref=e341]
+                        - generic [ref=e343]:
+                          - generic [ref=e344]: Temperatura target
+                          - generic [ref=e345]: "-20°C"
+                      - generic [ref=e348]:
+                        - generic [ref=e349]: Stato
+                        - generic [ref=e350]: Regolare
+                    - generic [ref=e351]:
+                      - generic [ref=e352]: "Categorie prodotti:"
+                      - generic [ref=e353]:
+                        - generic [ref=e354]: frozen
+                        - generic [ref=e355]: deep_frozen
+                    - button "Mostra dettagli" [ref=e356] [cursor=pointer]
+            - region "Abbattitori 1 punti configurati Collapse section" [ref=e357]:
+              - button "Abbattitori 1 punti configurati Collapse section" [expanded] [ref=e358] [cursor=pointer]:
+                - generic [ref=e360]:
+                  - heading "Abbattitori" [level=3] [ref=e363]
+                  - paragraph [ref=e364]: 1 punti configurati
+                - button "Collapse section" [ref=e366]:
+                  - img [ref=e367]
+              - region "Abbattitori 1 punti configurati Collapse section" [ref=e369]:
+                - generic [ref=e371]:
+                  - generic [ref=e372]:
+                    - generic [ref=e373]:
+                      - generic [ref=e374]: ⚡
+                      - generic [ref=e375]:
+                        - heading "Abbattitore" [level=3] [ref=e376]
+                        - generic [ref=e377]:
+                          - img [ref=e378]
+                          - generic [ref=e381]: Cucina
+                          - generic [ref=e382]: Abbattitore
+                    - generic [ref=e383]:
+                      - img [ref=e384]
+                      - button "Modifica punto Abbattitore" [ref=e387] [cursor=pointer]:
+                        - img [ref=e388]
+                      - button "Elimina punto Abbattitore" [ref=e391] [cursor=pointer]:
+                        - img [ref=e392]
+                  - generic [ref=e395]:
+                    - generic [ref=e396]:
+                      - img [ref=e397]
+                      - generic [ref=e399]:
+                        - generic [ref=e400]: Temperatura target
+                        - generic [ref=e401]: "-25°C"
+                    - generic [ref=e404]:
+                      - generic [ref=e405]: Stato
+                      - generic [ref=e406]: Regolare
+                  - generic [ref=e407]:
+                    - generic [ref=e408]: "Categorie prodotti:"
+                    - generic [ref=e410]: blast_chilling
+                  - button "Mostra dettagli" [ref=e411] [cursor=pointer]
+            - region "Ambiente / Dispensa 0 punti configurati Collapse section" [ref=e412]:
+              - button "Ambiente / Dispensa 0 punti configurati Collapse section" [expanded] [ref=e413] [cursor=pointer]:
+                - generic [ref=e415]:
+                  - heading "Ambiente / Dispensa" [level=3] [ref=e418]
+                  - paragraph [ref=e419]: 0 punti configurati
+                - button "Collapse section" [ref=e421]:
+                  - img [ref=e422]
+              - region "Ambiente / Dispensa 0 punti configurati Collapse section" [ref=e424]:
+                - paragraph [ref=e425]: Nessun punto ambiente configurato
+      - region "Letture Temperature 0 letture registrate Registra temperatura... Collapse section" [ref=e426]:
+        - button "Letture Temperature 0 letture registrate Registra temperatura... Collapse section" [expanded] [ref=e427] [cursor=pointer]:
+          - generic [ref=e428]:
+            - img [ref=e429]
+            - generic [ref=e432]:
+              - heading "Letture Temperature" [level=3] [ref=e435]
+              - paragraph [ref=e436]: 0 letture registrate
+          - generic [ref=e437]:
+            - combobox [ref=e440]:
+              - option "Registra temperatura..." [selected]
+              - option "Frigo A"
+              - option "Freezer A"
+              - option "Freezer B"
+              - option "Abbattitore"
+              - option "Frigo 1"
+              - option "Frigo 2"
+              - option "Frigo 3"
+            - button "Collapse section" [ref=e441]:
+              - img [ref=e442]
+        - region "Letture Temperature 0 letture registrate Registra temperatura... Collapse section" [ref=e444]:
+          - generic [ref=e445]:
+            - generic [ref=e447]:
+              - generic [ref=e448]:
+                - paragraph [ref=e449]: Totale
+                - paragraph [ref=e450]: "0"
+              - img [ref=e451]
+            - generic [ref=e455]:
+              - generic [ref=e456]:
+                - paragraph [ref=e457]: Conformi
+                - paragraph [ref=e458]: "0"
+              - img [ref=e459]
+            - generic [ref=e463]:
+              - generic [ref=e464]:
+                - paragraph [ref=e465]: Attenzione
+                - paragraph [ref=e466]: "0"
+              - img [ref=e467]
+            - generic [ref=e470]:
+              - generic [ref=e471]:
+                - paragraph [ref=e472]: Critiche
+                - paragraph [ref=e473]: "0"
+              - img [ref=e474]
+          - generic [ref=e476]:
+            - img [ref=e477]
+            - heading "Nessuna lettura di temperatura" [level=3] [ref=e480]
+            - paragraph [ref=e481]: Inizia registrando la prima lettura di temperatura per un punto di conservazione.
+            - generic [ref=e482]:
+              - paragraph [ref=e483]: "Seleziona un punto di conservazione:"
+              - generic [ref=e484]:
+                - button "Frigo A" [ref=e485] [cursor=pointer]:
+                  - img [ref=e486]
+                  - generic [ref=e488]: Frigo A
+                - button "Freezer A" [ref=e489] [cursor=pointer]:
+                  - img [ref=e490]
+                  - generic [ref=e492]: Freezer A
+                - button "Freezer B" [ref=e493] [cursor=pointer]:
+                  - img [ref=e494]
+                  - generic [ref=e496]: Freezer B
+                - button "Abbattitore" [ref=e497] [cursor=pointer]:
+                  - img [ref=e498]
+                  - generic [ref=e500]: Abbattitore
+                - button "Frigo 1" [ref=e501] [cursor=pointer]:
+                  - img [ref=e502]
+                  - generic [ref=e504]: Frigo 1
+                - button "Frigo 2" [ref=e505] [cursor=pointer]:
+                  - img [ref=e506]
+                  - generic [ref=e508]: Frigo 2
+                - button "Frigo 3" [ref=e509] [cursor=pointer]:
+                  - img [ref=e510]
+                  - generic [ref=e512]: Frigo 3
+      - region "Manutenzioni Programmate 7 items Situazione settimanale per punto di conservazione Collapse section" [ref=e513]:
+        - button "Manutenzioni Programmate 7 items Situazione settimanale per punto di conservazione Collapse section" [expanded] [ref=e514] [cursor=pointer]:
+          - generic [ref=e515]:
+            - img [ref=e516]
+            - generic [ref=e518]:
+              - generic [ref=e519]:
+                - heading "Manutenzioni Programmate" [level=3] [ref=e521]
+                - generic "7 items" [ref=e522]: "7"
+              - paragraph [ref=e523]: Situazione settimanale per punto di conservazione
+          - button "Collapse section" [ref=e525]:
+            - img [ref=e526]
+        - region "Manutenzioni Programmate 7 items Situazione settimanale per punto di conservazione Collapse section" [ref=e528]:
+          - generic [ref=e529]:
+            - button "Tutto regolare Frigo A 4 manutenzioni" [ref=e531] [cursor=pointer]:
+              - generic [ref=e532]:
+                - generic "Tutto regolare" [ref=e534]
+                - generic [ref=e535]:
+                  - heading "Frigo A" [level=4] [ref=e536]
+                  - paragraph [ref=e537]: 4 manutenzioni
+              - img [ref=e538]
+            - button "Manutenzione in scadenza Freezer A 4 manutenzioni" [ref=e541] [cursor=pointer]:
+              - generic [ref=e542]:
+                - generic "Manutenzione in scadenza" [ref=e544]
+                - generic [ref=e545]:
+                  - heading "Freezer A" [level=4] [ref=e546]
+                  - paragraph [ref=e547]: 4 manutenzioni
+              - img [ref=e548]
+            - button "Manutenzione in scadenza Freezer B 4 manutenzioni" [ref=e551] [cursor=pointer]:
+              - generic [ref=e552]:
+                - generic "Manutenzione in scadenza" [ref=e554]
+                - generic [ref=e555]:
+                  - heading "Freezer B" [level=4] [ref=e556]
+                  - paragraph [ref=e557]: 4 manutenzioni
+              - img [ref=e558]
+            - button "Manutenzione in ritardo Abbattitore 4 manutenzioni" [ref=e561] [cursor=pointer]:
+              - generic [ref=e562]:
+                - generic "Manutenzione in ritardo" [ref=e564]
+                - generic [ref=e565]:
+                  - heading "Abbattitore" [level=4] [ref=e566]
+                  - paragraph [ref=e567]: 4 manutenzioni
+              - img [ref=e568]
+            - button "Manutenzione in ritardo Frigo 1 4 manutenzioni" [ref=e571] [cursor=pointer]:
+              - generic [ref=e572]:
+                - generic "Manutenzione in ritardo" [ref=e574]
+                - generic [ref=e575]:
+                  - heading "Frigo 1" [level=4] [ref=e576]
+                  - paragraph [ref=e577]: 4 manutenzioni
+              - img [ref=e578]
+            - button "Manutenzione in ritardo Frigo 2 4 manutenzioni" [ref=e581] [cursor=pointer]:
+              - generic [ref=e582]:
+                - generic "Manutenzione in ritardo" [ref=e584]
+                - generic [ref=e585]:
+                  - heading "Frigo 2" [level=4] [ref=e586]
+                  - paragraph [ref=e587]: 4 manutenzioni
+              - img [ref=e588]
+            - button "Manutenzione in ritardo Frigo 3 4 manutenzioni" [ref=e591] [cursor=pointer]:
+              - generic [ref=e592]:
+                - generic "Manutenzione in ritardo" [ref=e594]
+                - generic [ref=e595]:
+                  - heading "Frigo 3" [level=4] [ref=e596]
+                  - paragraph [ref=e597]: 4 manutenzioni
+              - img [ref=e598]
+      - generic [ref=e600]:
+        - heading "Distribuzione per Tipo" [level=3] [ref=e601]:
+          - img [ref=e602]
+          - text: Distribuzione per Tipo
+        - generic [ref=e605]:
+          - generic [ref=e606]:
+            - generic [ref=e607]: 🌡️
+            - generic [ref=e608]: Ambiente
+            - generic [ref=e609]: "0"
+          - generic [ref=e610]:
+            - generic [ref=e611]: ❄️
+            - generic [ref=e612]: Frigorifero
+            - generic [ref=e613]: "4"
+          - generic [ref=e614]:
+            - generic [ref=e615]: 🧊
+            - generic [ref=e616]: Freezer
+            - generic [ref=e617]: "2"
+          - generic [ref=e618]:
+            - generic [ref=e619]: ⚡
+            - generic [ref=e620]: Abbattitore
+            - generic [ref=e621]: "1"
+  - navigation "Main navigation" [ref=e622]:
+    - generic [ref=e623]:
+      - link "Navigate to Home" [ref=e624] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e625]
+        - generic [ref=e628]: Home
+      - link "Navigate to Conservazione" [ref=e629] [cursor=pointer]:
+        - /url: /conservazione
+        - img [ref=e630]
+        - generic [ref=e643]: Conservazione
+      - link "Navigate to Attività" [ref=e644] [cursor=pointer]:
+        - /url: /attivita
+        - img [ref=e645]
+        - generic [ref=e648]: Attività
+      - link "Navigate to Inventario" [ref=e649] [cursor=pointer]:
+        - /url: /inventario
+        - img [ref=e650]
+        - generic [ref=e654]: Inventario
+      - link "Navigate to Impostazioni" [ref=e655] [cursor=pointer]:
+        - /url: /impostazioni
+        - img [ref=e656]
+        - generic [ref=e659]: Impostazioni
+      - link "Navigate to Gestione" [ref=e660] [cursor=pointer]:
+        - /url: /gestione
+        - img [ref=e661]
+        - generic [ref=e666]: Gestione
+```

@@ -1,0 +1,62 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - heading "HACCP Manager" [level=1] [ref=e7]
+        - generic [ref=e8]:
+          - img [ref=e9]
+          - generic [ref=e13]: Al Ritrovo SRL
+      - generic [ref=e14]:
+        - link "Attività" [ref=e15] [cursor=pointer]:
+          - /url: /attivita
+          - img [ref=e16]
+          - generic [ref=e19]: Attività
+        - button "Cancella e Ricomincia" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e24]: Cancella e Ricomincia
+        - button "Onboarding" [ref=e25] [cursor=pointer]:
+          - img [ref=e26]
+          - generic [ref=e31]: Onboarding
+        - button "Debug Auth" [ref=e32] [cursor=pointer]:
+          - img [ref=e33]
+          - generic [ref=e36]: Debug Auth
+        - button "Sync Host" [ref=e37] [cursor=pointer]:
+          - img [ref=e38]
+          - generic [ref=e43]: Sync Host
+        - button "Reset Tot+Users" [ref=e44] [cursor=pointer]:
+          - img [ref=e45]
+          - generic [ref=e50]: Reset Tot+Users
+  - main "Main content" [ref=e51]:
+    - generic [ref=e52]:
+      - img [ref=e53]
+      - paragraph [ref=e55]: Caricamento...
+  - navigation "Main navigation" [ref=e56]:
+    - generic [ref=e57]:
+      - link "Navigate to Home" [ref=e58] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e59]
+        - generic [ref=e62]: Home
+      - link "Navigate to Conservazione" [ref=e63] [cursor=pointer]:
+        - /url: /conservazione
+        - img [ref=e64]
+        - generic [ref=e77]: Conservazione
+      - link "Navigate to Attività" [ref=e78] [cursor=pointer]:
+        - /url: /attivita
+        - img [ref=e79]
+        - generic [ref=e82]: Attività
+      - link "Navigate to Inventario" [ref=e83] [cursor=pointer]:
+        - /url: /inventario
+        - img [ref=e84]
+        - generic [ref=e88]: Inventario
+      - link "Navigate to Impostazioni" [ref=e89] [cursor=pointer]:
+        - /url: /impostazioni
+        - img [ref=e90]
+        - generic [ref=e93]: Impostazioni
+      - link "Navigate to Gestione" [ref=e94] [cursor=pointer]:
+        - /url: /gestione
+        - img [ref=e95]
+        - generic [ref=e100]: Gestione
+```

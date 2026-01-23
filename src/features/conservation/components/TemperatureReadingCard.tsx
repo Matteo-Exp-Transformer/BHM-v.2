@@ -36,6 +36,20 @@ const calculateTemperatureStatus = (
   return 'critical'
 }
 
+// Helper function to format user display name
+const getUserDisplayName = (
+  user?: { first_name?: string | null; last_name?: string | null; name?: string }
+): string => {
+  if (!user) return 'Utente sconosciuto'
+  if (user.first_name && user.last_name) {
+    return `${user.first_name} ${user.last_name}`
+  }
+  if (user.first_name) return user.first_name
+  if (user.last_name) return user.last_name
+  if (user.name) return user.name // Fallback per backward compatibility
+  return 'Utente sconosciuto'
+}
+
 export function TemperatureReadingCard({
   reading,
   onEdit,
@@ -116,17 +130,19 @@ export function TemperatureReadingCard({
         </div>
 
         {/* Nome utente - posizionato tra timestamp e temperatura */}
-        {(reading.recorded_by_name || reading.recorded_by_user) && (
+        {reading.recorded_by_user && (
           <div className="flex items-center space-x-2 text-base text-gray-900 ml-12">
             <User className="w-4 h-4" />
             <span className="font-medium text-gray-900">
-              {reading.recorded_by_name ||
-                (reading.recorded_by_user?.name) ||
-                (reading.recorded_by_user?.first_name &&
-                  reading.recorded_by_user?.last_name
-                  ? `${reading.recorded_by_user.first_name} ${reading.recorded_by_user.last_name}`
-                  : null)}
+              {getUserDisplayName(reading.recorded_by_user)}
             </span>
+          </div>
+        )}
+        {/* Debug: mostra se recorded_by esiste ma recorded_by_user no */}
+        {reading.recorded_by && !reading.recorded_by_user && (
+          <div className="flex items-center space-x-2 text-xs text-gray-500 ml-12">
+            <User className="w-3 h-3" />
+            <span>Utente non trovato (ID: {reading.recorded_by.substring(0, 8)}...)</span>
           </div>
         )}
 
