@@ -110,7 +110,7 @@ export function useMaintenanceTasks(conservationPointId?: string) {
             name,
             department:departments(id, name)
           ),
-          assigned_user:staff(id, name)
+          assigned_user:staff!assigned_to_staff_id(id, name)
         `)
         .eq('company_id', companyId)
 
@@ -411,10 +411,16 @@ export function useMaintenanceTasks(conservationPointId?: string) {
     average_completion_time: 0,
     tasks_by_type: tasks.reduce<MaintenanceStats['tasks_by_type']>(
       (acc, task) => {
-        acc[task.type] = (acc[task.type] ?? 0) + 1
+        const k = task.type as keyof MaintenanceStats['tasks_by_type']
+        if (k in acc) acc[k] += 1
         return acc
       },
-      {} as MaintenanceStats['tasks_by_type']
+      {
+        temperature: 0,
+        sanitization: 0,
+        defrosting: 0,
+        expiry_check: 0,
+      }
     ),
     upcoming_tasks: tasks
       .filter(task => getTaskStatusInternal(task) !== 'overdue')

@@ -152,6 +152,7 @@ export type MaintenanceType =
   | 'temperature'      // Rilevamento temperatura
   | 'sanitization'     // Sanificazione
   | 'defrosting'       // Sbrinamento
+  | 'expiry_check'     // Controllo scadenze
 
 export type MaintenanceFrequency =
   | 'daily'
@@ -200,6 +201,18 @@ export const MAINTENANCE_TASK_TYPES = {
       "Pulire l'acqua di scongelamento",
       'Asciugare completamente',
       'Riaccendere e verificare funzionamento',
+    ],
+  },
+  expiry_check: {
+    label: 'Controllo Scadenze',
+    icon: 'calendar',
+    color: 'amber',
+    defaultDuration: 30,
+    defaultChecklist: [
+      'Verificare etichette e date di scadenza',
+      'Rimuovere prodotti scaduti',
+      'Registrare scadenze imminenti',
+      'Aggiornare inventario',
     ],
   },
 } as const

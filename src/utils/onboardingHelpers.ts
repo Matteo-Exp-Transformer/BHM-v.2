@@ -1399,13 +1399,13 @@ export const resetApp = async (): Promise<void> => {
  * Helper functions for data mapping
  */
 const mapManutenzioneTipo = (tipo: string): string => {
-  // Mapping ai valori enum effettivi di maintenance_task_kind
-  // Valori disponibili: 'temperature', 'sanitization', 'defrosting'
+  // Mapping ai valori enum effettivi di maintenance_tasks.type
+  // Valori disponibili: 'temperature', 'sanitization', 'defrosting', 'expiry_check'
   const map: Record<string, string> = {
     'rilevamento_temperatura': 'temperature',
     'sanificazione': 'sanitization',
     'sbrinamento': 'defrosting',
-    'controllo_scadenze': 'temperature', // Fallback a temperature per controllo scadenze
+    'controllo_scadenze': 'expiry_check',
   }
   return map[tipo] || 'sanitization' // Default fallback
 }
@@ -1628,6 +1628,8 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
     console.log('✅ Departments ID mapping:', Object.fromEntries(departmentsIdMap))
   }
 
+  const staffIdMap = new Map<string, string>()
+
   // Salva staff
   // Riferimento: SUPABASE_SCHEMA_MAPPING.md - Section 3: staff
   if (formData.staff?.length) {
@@ -1707,6 +1709,18 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
     const insertedStaff = allStaff || []
 
     console.log('✅ Staff totali per company:', insertedStaff.length)
+
+    // Mappa frontend staff id → DB staff id (per assigned_to_staff_id in maintenance_tasks / generic tasks)
+    for (const person of formData.staff) {
+      const dbStaff = insertedStaff.find(
+        (s: any) =>
+          (s.email || '').toLowerCase() === (person.email || '').toLowerCase()
+      )
+      if (dbStaff?.id && person.id) {
+        staffIdMap.set(person.id, dbStaff.id)
+      }
+    }
+    console.log('✅ Staff ID mapping (frontend → DB):', Object.fromEntries(staffIdMap))
 
     // ⚠️ IMPORTANTE: Collega il primo staff member (admin) al company_member dell'utente corrente
     if (insertedStaff && insertedStaff.length > 0) {
@@ -1796,6 +1810,17 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
           return null
         }
 
+        const hasSpecificStaff =
+          plan.assegnatoADipendenteSpecifico &&
+          plan.assegnatoADipendenteSpecifico !== 'none'
+        const realStaffId = hasSpecificStaff
+          ? staffIdMap.get(plan.assegnatoADipendenteSpecifico) ?? null
+          : null
+        if (hasSpecificStaff && !realStaffId) {
+          console.warn(
+            `⚠️ Dipendente specifico non mappato (frontend id: ${plan.assegnatoADipendenteSpecifico}), uso assegnazione per ruolo`
+          )
+        }
         return {
           company_id: companyId,
           conservation_point_id: realConservationPointId, // ✅ Usa ID reale
@@ -1808,17 +1833,14 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
           next_due: calculateNextDue(plan.frequenza),
           estimated_duration: 60,
           instructions: [],
-          assigned_to_staff_id:
-            plan.assegnatoARuolo === 'specifico'
-              ? plan.assegnatoADipendenteSpecifico
-              : null,
+          assigned_to_staff_id: realStaffId,
           assigned_to_role:
-            plan.assegnatoARuolo !== 'specifico' ? plan.assegnatoARuolo : null,
+            plan.assegnatoARuolo && plan.assegnatoARuolo !== 'specifico'
+              ? plan.assegnatoARuolo
+              : null,
           assigned_to_category: plan.assegnatoACategoria || null,
-          assigned_to:
-            plan.assegnatoADipendenteSpecifico || plan.assegnatoARuolo || '',
-          assignment_type:
-            plan.assegnatoARuolo === 'specifico' ? 'staff' : 'role',
+          assigned_to: realStaffId || plan.assegnatoARuolo || '',
+          assignment_type: realStaffId ? 'staff' : 'role',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }
@@ -1853,31 +1875,39 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
     const genericTasks = formData.tasks.genericTasks.map((task: any) => {
       const mappedDepartmentId = task.departmentId ? departmentsIdMap.get(task.departmentId) || null : null
       console.log(`📤 Task "${task.name}": frontend dept ID ${task.departmentId} → mapped dept ID ${mappedDepartmentId}`)
-      
+      const hasSpecificStaff =
+        task.assegnatoADipendenteSpecifico &&
+        task.assegnatoADipendenteSpecifico !== 'none'
+      const realStaffId = hasSpecificStaff
+        ? staffIdMap.get(task.assegnatoADipendenteSpecifico) ?? null
+        : null
+      if (hasSpecificStaff && !realStaffId) {
+        console.warn(
+          `⚠️ Generic task "${task.name}": dipendente specifico non mappato, uso ruolo`
+        )
+      }
       return {
         company_id: companyId,
         name: task.name,
         frequency: mapFrequenza(task.frequenza),
         description: task.note || '',
         department_id: mappedDepartmentId,
-      conservation_point_id: null,
-      priority: 'medium',
-      estimated_duration: 60,
-      checklist: [],
-      required_tools: [],
-      haccp_category: null,
-      next_due: calculateNextDue(task.frequenza),
-      status: 'pending',
-      assigned_to_staff_id:
-        task.assegnatoARuolo === 'specifico'
-          ? task.assegnatoADipendenteSpecifico
-          : null,
-      assigned_to_role:
-        task.assegnatoARuolo !== 'specifico' ? task.assegnatoARuolo : null,
-      assigned_to_category: task.assegnatoACategoria || null,
-      assigned_to:
-        task.assegnatoADipendenteSpecifico || task.assegnatoARuolo || '',
-      assignment_type: task.assegnatoARuolo === 'specifico' ? 'staff' : 'role',
+        conservation_point_id: null,
+        priority: 'medium',
+        estimated_duration: 60,
+        checklist: [],
+        required_tools: [],
+        haccp_category: null,
+        next_due: calculateNextDue(task.frequenza),
+        status: 'pending',
+        assigned_to_staff_id: realStaffId,
+        assigned_to_role:
+          task.assegnatoARuolo && task.assegnatoARuolo !== 'specifico'
+            ? task.assegnatoARuolo
+            : null,
+        assigned_to_category: task.assegnatoACategoria || null,
+        assigned_to: realStaffId || task.assegnatoARuolo || '',
+        assignment_type: realStaffId ? 'staff' : 'role',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }

@@ -140,7 +140,7 @@ const MAINTENANCE_TYPE_MAPPING: Record<StandardMaintenanceType, string> = {
   'rilevamento_temperatura': 'temperature',
   'sanificazione': 'sanitization',
   'sbrinamento': 'defrosting',
-  'controllo_scadenze': 'temperature', // Fallback a temperature per controllo scadenze
+  'controllo_scadenze': 'expiry_check',
 }
 
 // Mapping frequenza da italiano a inglese

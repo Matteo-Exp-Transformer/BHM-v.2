@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Wrench, ChevronRight, ChevronDown, Clock, User, CheckCircle2, AlertCircle } from 'lucide-react'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
-import { Button } from '@/components/ui/Button'
 import { useConservationPoints } from '@/features/conservation/hooks/useConservationPoints'
 import { useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
 import type { MaintenanceTask } from '@/types/conservation'
@@ -119,7 +118,7 @@ function StatusIndicator({ status }: { status: WeeklyStatus }) {
  */
 export function ScheduledMaintenanceCard() {
   const { conservationPoints, isLoading: loadingPoints } = useConservationPoints()
-  const { maintenanceTasks, isLoading: loadingTasks, completeTask, isCompleting } = useMaintenanceTasks()
+  const { maintenanceTasks, isLoading: loadingTasks } = useMaintenanceTasks()
   const [expandedPointId, setExpandedPointId] = useState<string | null>(null)
   const [expandedMaintenanceTypes, setExpandedMaintenanceTypes] = useState<Set<string>>(new Set())
   
@@ -281,30 +280,6 @@ export function ScheduledMaintenanceCard() {
             </div>
           )}
         </div>
-        
-        {/* Pulsante Completa (solo se non completata) */}
-        {!isCompleted && (
-          <div className="ml-4 flex-shrink-0">
-            <Button
-              size="sm"
-              variant="default"
-              onClick={(e) => {
-                e.stopPropagation() // Previene l'espansione/chiusura della card
-                completeTask({
-                  maintenance_task_id: task.id,
-                  completed_at: new Date(),
-                  completed_by: '', // user.id verrà usato dal hook se vuoto
-                  notes: undefined,
-                  photos: undefined,
-                })
-              }}
-              disabled={isCompleting}
-              className="whitespace-nowrap"
-            >
-              {isCompleting ? 'Completamento...' : 'Completa'}
-            </Button>
-          </div>
-        )}
       </div>
     )
   }

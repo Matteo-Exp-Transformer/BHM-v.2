@@ -444,13 +444,64 @@ Rimozione di `incompatibleCategories` e `outOfRangeCategories` da `validateConse
 
 ---
 
+### 6. Controllo Scadenze, Dipendente specifico, FK `assigned_to_staff_id` (24-01-2026)
+
+**Obiettivo:** Risolvere tre issue emersi in dashboard/conservazione: manutenzione “Controllo Scadenze” non mostrata in `ScheduledMaintenanceCard`; nome del dipendente specifico assegnato non visualizzato in “Assegnato a”; violazione FK su `maintenance_tasks.assigned_to_staff_id` al completamento onboarding.
+
+#### 6.1 Controllo Scadenze (expiry_check)
+
+**Problema:** Le manutenzioni “Controllo Scadenze” non comparivano nella card manutenzioni.
+
+**Cause:**
+- Mappatura UI→DB: `controllo_scadenze` veniva salvata come `temperature` invece di `expiry_check`.
+- DB: `maintenance_tasks.type` non ammetteva `expiry_check`.
+- `useMaintenanceTasks`: `tasks_by_type` non inizializzava `expiry_check`.
+
+**Modifiche:**
+- **Migration:** `supabase/migrations/20260124120000_add_expiry_check_maintenance_tasks_type.sql` — aggiunto `expiry_check` al `CHECK` su `type`.
+- **Tipi:** `src/types/conservation.ts` — `MaintenanceType` e `MAINTENANCE_TASK_TYPES` estesi con `expiry_check` (label “Controllo Scadenze”, icona calendar, colore amber).
+- **Mapping:** In `onboardingHelpers.ts` (`mapManutenzioneTipo`) e `AddPointModal.tsx` (`MAINTENANCE_TYPE_MAPPING`): `controllo_scadenze` → `expiry_check`.
+- **Hook:** `useMaintenanceTasks` — `tasks_by_type` inizializza tutti i tipi incluso `expiry_check`; filtraggio coerente.
+- **Test:** Mock `tasks_by_type` in `AddPointModal.test.tsx` e `ScheduledMaintenanceCard.test.tsx` aggiornati con `expiry_check: 0`.
+
+#### 6.2 Dipendente specifico in “Assegnato a”
+
+**Problema:** Assegnando un dipendente specifico alle manutenzioni in onboarding, in `ScheduledMaintenanceCard` compariva solo ruolo/reparto/categoria (es. “Dipendente • Cucina • Cuochi”), non il nome (es. “Mario Rossi”).
+
+**Cause:**
+- **Persistenza:** `onboardingHelpers` salvava `assigned_to_staff_id` solo se `assegnatoARuolo === 'specifico'`. In TasksStep invece si usa un ruolo normale (es. `dipendente`) più il campo “Dipendente specifico”; tale condizione non era mai vera.
+- **Join Supabase:** La query `maintenance_tasks` usava `assigned_user:staff(id, name)` senza specificare la FK; con più relazioni verso `staff` il join poteva essere ambiguo.
+
+**Modifiche:**
+- **Persistenza:** In `completeOnboarding` (manutenzioni conservazione e generic tasks) si usa `hasSpecificStaff = plan.assegnatoADipendenteSpecifico && plan.assegnatoADipendenteSpecifico !== 'none'`. Si impostano `assigned_to_staff_id`, `assignment_type: 'staff'` e `assigned_to` in base a `hasSpecificStaff`, indipendentemente da `assegnatoARuolo`.
+- **Join:** In `useMaintenanceTasks`, `.select()` usa `assigned_user:staff!assigned_to_staff_id(id, name)` per legare esplicitamente a `assigned_to_staff_id`.
+
+#### 6.3 Violazione FK `maintenance_tasks_assigned_to_staff_id_fkey`
+
+**Problema:** Al completamento onboarding con “Precompila” e assegnazione di dipendenti specifici alle manutenzioni, l’insert su `maintenance_tasks` falliva per violazione della foreign key su `assigned_to_staff_id`.
+
+**Causa:** Si usava l’**ID frontend** del dipendente (da prefill/form). Gli staff vengono inseriti in DB **senza** `id`; Supabase genera nuovi UUID. L’id frontend non esiste in `staff` → violazione FK.
+
+**Modifiche (solo `onboardingHelpers.ts`):**
+- **`staffIdMap`:** Dopo l’insert degli staff e la query `allStaff`, si costruisce una mappa `frontend id → DB id` accoppiando `formData.staff` e `allStaff` per **email** (case-insensitive). Log: `Staff ID mapping (frontend → DB): {...}`.
+- **Manutenzioni conservazione:** Per ogni piano con “Dipendente specifico” si calcola `realStaffId = staffIdMap.get(plan.assegnatoADipendenteSpecifico) ?? null`. Se `hasSpecificStaff` ma `!realStaffId`, si logga un warning e si usa assegnazione per ruolo. Si inviano `assigned_to_staff_id: realStaffId`, `assigned_to: realStaffId || plan.assegnatoARuolo || ''`, `assignment_type: realStaffId ? 'staff' : 'role'`. **Mai** usare l’id frontend per FK o per `assigned_to`.
+- **Generic tasks:** Stessa logica con `staffIdMap.get(task.assegnatoADipendenteSpecifico)` e fallback a ruolo se assente mappatura.
+
+**Verifica:** Precompila → assegna dipendenti specifici alle manutenzioni → completa onboarding. Nessun errore FK; in dashboard il nome del dipendente compare in “Assegnato a” quando applicabile.
+
+---
+
 ## 📊 Riepilogo Modifiche
 
 | File | Tipo | Descrizione |
 |------|------|-------------|
 | `src/utils/onboarding/conservationUtils.ts` | Fix + Simplify | Validazione **solo schema** in `validateConservationPoint()`; rimosse validazioni categorie |
 | `src/components/onboarding-steps/ConservationStep.tsx` | Refactor | Campo temp read-only, temp calcolata, `source: 'prefill'`, profili HACCP, **sezione profilo** (layout split, immagine, lightbox) |
-| `src/utils/onboardingHelpers.ts` | Enhancement | Aggiunto `applianceCategory` e `profileId` ai frigoriferi precompilati |
+| `src/utils/onboardingHelpers.ts` | Enhancement + Fix | `applianceCategory`/`profileId` frigoriferi; `mapManutenzioneTipo` `controllo_scadenze`→`expiry_check`; **`staffIdMap`** (frontend→DB) e uso per `assigned_to_staff_id`; persistenza dipendente specifico |
+| `src/types/conservation.ts` | Enhancement | `expiry_check` in `MaintenanceType` e `MAINTENANCE_TASK_TYPES` |
+| `src/features/conservation/components/AddPointModal.tsx` | Fix | `MAINTENANCE_TYPE_MAPPING`: `controllo_scadenze`→`expiry_check` |
+| `src/features/conservation/hooks/useMaintenanceTasks.ts` | Fix | `tasks_by_type` con `expiry_check`; join `assigned_user:staff!assigned_to_staff_id` |
+| `supabase/migrations/20260124120000_add_expiry_check_maintenance_tasks_type.sql` | Migration | `expiry_check` ammesso in `maintenance_tasks.type` |
 
 ### Dettaglio Modifiche ConservationStep.tsx
 
@@ -474,6 +525,9 @@ Rimozione di `incompatibleCategories` e `outOfRangeCategories` da `validateConse
 
 - ✅ Aggiunto `applianceCategory` e `profileId` ai 4 frigoriferi in `getPrefillData()`
 - ✅ Modificata temperatura Frigo 3 da 5°C a 1°C per allinearsi al profilo `fish_generic`
+- ✅ **§6:** `mapManutenzioneTipo`: `controllo_scadenze` → `expiry_check`
+- ✅ **§6:** Persistenza dipendente specifico (`hasSpecificStaff` da `assegnatoADipendenteSpecifico`)
+- ✅ **§6:** `staffIdMap` (frontend→DB per email); `realStaffId` per manutenzioni e generic tasks; `assigned_to_staff_id`/`assigned_to` mai con id frontend; fallback a ruolo se manca mappatura
 
 ---
 
@@ -586,6 +640,19 @@ export const DEFAULT_TEMPERATURES: Record<ConservationPointType, number> = {
 
 3. **src/utils/onboardingHelpers.ts**
    - `applianceCategory` e `profileId` ai 4 frigoriferi in `getPrefillData()`; Frigo 3 → 1°C
+   - **§6:** `mapManutenzioneTipo` `controllo_scadenze` → `expiry_check`; `staffIdMap` (frontend→DB); persistenza dipendente specifico; `realStaffId` per manutenzioni e generic tasks
+
+4. **src/types/conservation.ts**
+   - `MaintenanceType` e `MAINTENANCE_TASK_TYPES`: aggiunto `expiry_check` (“Controllo Scadenze”)
+
+5. **src/features/conservation/components/AddPointModal.tsx**
+   - `MAINTENANCE_TYPE_MAPPING`: `controllo_scadenze` → `expiry_check`
+
+6. **src/features/conservation/hooks/useMaintenanceTasks.ts**
+   - `tasks_by_type` inizializza `expiry_check`; join `assigned_user:staff!assigned_to_staff_id(id, name)`
+
+7. **supabase/migrations/20260124120000_add_expiry_check_maintenance_tasks_type.sql**
+   - `CHECK` su `maintenance_tasks.type`: ammesso `expiry_check`
 
 ---
 
@@ -599,7 +666,7 @@ export const DEFAULT_TEMPERATURES: Record<ConservationPointType, number> = {
 
 ## ✨ Conclusione
 
-Il lavoro è stato completato in tre fasi:
+Il lavoro è stato completato in più fasi:
 
 ### Fase 1: Allineamento Validazione Temperatura
 - Temperatura read-only e calcolata automaticamente; fix gestione range null (poi sostituito da semplificazione in Fase 3).
@@ -612,6 +679,11 @@ Il lavoro è stato completato in tre fasi:
 - **Validazione:** `validateConservationPoint()` usa solo lo schema Zod; rimosse validazioni su categorie (incompatibili / fuori range).
 - **UI:** Sezione “Configurazione Punto di Conservazione” (solo frigoriferi) allineata ad AddPointModal: layout split (categorie auto-assegnate | immagine), info box Note HACCP, Modal lightbox, stato immagine e reset.
 
+### Fase 4: Controllo Scadenze, Dipendente specifico, FK assigned_to_staff_id (24-01-2026)
+- **Controllo Scadenze:** Migration `expiry_check`, tipi, mappatura `controllo_scadenze`→`expiry_check`, `tasks_by_type` e test aggiornati.
+- **Dipendente specifico:** Persistenza corretta (`hasSpecificStaff`); join esplicito `staff!assigned_to_staff_id`; nome mostrato in “Assegnato a”.
+- **FK violation:** `staffIdMap` (frontend→DB per email); `assigned_to_staff_id` e `assigned_to` usano solo ID DB; fallback a ruolo se manca mappatura.
+
 ---
 
 ## 👥 Contributi
@@ -619,3 +691,4 @@ Il lavoro è stato completato in tre fasi:
 - **Fase 1 (Allineamento Validazione):** Sessione iniziale
 - **Fase 2 (Profili HACCP):** Stessa giornata
 - **Fase 3 (Validazione schema + Sezione profilo):** 24-01-2026
+- **Fase 4 (Controllo Scadenze, Dipendente specifico, FK staffIdMap):** 24-01-2026
