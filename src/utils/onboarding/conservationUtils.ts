@@ -141,56 +141,6 @@ export const validateConservationPoint = (
     return { success: false, errors }
   }
 
-  const incompatibleCategories = point.productCategories.filter(categoryId => {
-    const category = getCategoryById(categoryId)
-    if (!category) return false
-
-    if (
-      category.compatibleTypes &&
-      !category.compatibleTypes.includes(point.pointType)
-    ) {
-      return true
-    }
-
-    return category.incompatible?.includes(point.pointType)
-  })
-
-  if (incompatibleCategories.length > 0) {
-    return {
-      success: false,
-      errors: {
-        productCategories:
-          'Alcune categorie non sono compatibili con la tipologia selezionata',
-        global: `Rimuovi le categorie incompatibili: ${incompatibleCategories
-          .map(id => getCategoryById(id)?.label || id)
-          .join(', ')}`,
-      },
-    }
-  }
-
-  const outOfRangeCategories = point.productCategories.filter(categoryId => {
-    const category = getCategoryById(categoryId)
-    if (!category) return false
-
-    const range = category.range
-    const temperature = point.targetTemperature
-
-    return temperature < range.min || temperature > range.max
-  })
-
-  if (outOfRangeCategories.length > 0) {
-    return {
-      success: false,
-      errors: {
-        targetTemperature:
-          'La temperatura non rientra nei range HACCP delle categorie selezionate',
-        global: `Verifica i range per: ${outOfRangeCategories
-          .map(id => getCategoryById(id)?.label || id)
-          .join(', ')}`,
-      },
-    }
-  }
-
   return { success: true, point }
 }
 
@@ -377,9 +327,15 @@ export const getCompatibleCategories = (
 
     // Controlla compatibilità con la temperatura
     if (category.range) {
-      return (
-        temperature >= category.range.min && temperature <= category.range.max
-      )
+      const range = category.range
+      // Se il range non è definito (min e max sono null), la categoria è compatibile
+      if (range.min === null && range.max === null) {
+        return true
+      }
+      // Gestisci min/max null singolarmente
+      if (range.min !== null && temperature < range.min) return false
+      if (range.max !== null && temperature > range.max) return false
+      return true
     }
 
     return true

@@ -1,5 +1,5 @@
 # MASTER INDEX - Conservation Feature
-## Aggiornato: 2026-01-20
+## Aggiornato: 2026-01-24
 
 ---
 
@@ -18,7 +18,27 @@
 
 ---
 
-## SESSIONE CORRENTE (20-01-2026)
+## SESSIONE CORRENTE (24-01-2026)
+
+### Allineamento ConservationStep ↔ AddPointModal ✅ COMPLETATA
+
+**Obiettivo**: Allineare validazione temperatura e UI del form punti di conservazione in `ConservationStep` (onboarding) con `AddPointModal`.
+
+**Implementazione**:
+- ✅ **Validazione solo schema**: `validateConservationPoint()` usa solo Zod; rimosse validazioni categorie (incompatibili / fuori range)
+- ✅ **Sezione profilo** (solo frigoriferi): layout split come AddPointModal — categorie auto-assegnate dal profilo, immagine elettrodomestico, Modal lightbox, info box Note HACCP
+- ✅ Campo temperatura read-only, temperatura calcolata; profili HACCP nei prefill; Abbattitore -25°C validato correttamente
+
+**File chiave**:
+- `src/utils/onboarding/conservationUtils.ts` — validazione semplificata
+- `src/components/onboarding-steps/ConservationStep.tsx` — sezione profilo, layout split, lightbox
+- [REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md](./24-01-2026/REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md) — report completo (Fasi 1–3)
+
+**Status**: ✅ COMPLETATA — type-check/lint/test conservationUtils OK.
+
+---
+
+## SESSIONE PRECEDENTE (20-01-2026)
 
 ### Feature: Layout Split UX Enhancement ✅ COMPLETATA
 
@@ -112,7 +132,8 @@
 
 | File | Descrizione | Status |
 |------|-------------|--------|
-| ⭐ [AGENT_GUIDE_APPLIANCE_IMAGES.md](./20-01-2026/AGENT_GUIDE_APPLIANCE_IMAGES.md) | **Guida completa debug & implementazione nuove categorie** | **ATTUALE** |
+| ⭐ [REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md](./24-01-2026/REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md) | **Report allineamento ConservationStep ↔ AddPointModal (validazione, sezione profilo)** | **ATTUALE** |
+| [AGENT_GUIDE_APPLIANCE_IMAGES.md](./20-01-2026/AGENT_GUIDE_APPLIANCE_IMAGES.md) | Guida debug & implementazione nuove categorie | **ARCHIVIATO** |
 | [Plan_Foto_PuntiConservazione.md](./20-01-2026/Plan_Foto_PuntiConservazione.md) | Piano implementazione immagini elettrodomestici | **COMPLETATA** |
 | [PLAN.md](./19-01-2026/PLAN.md) | Piano implementazione profili HACCP v2.0.0 | **ARCHIVIATO** |
 | [TASKS.md](./19-01-2026/TASKS.md) | Breakdown task sistema multi-agent | **ARCHIVIATO** |
@@ -127,7 +148,7 @@
 
 ```
 Lavoro/
-├── 00_MASTER_INDEX_CONSERVATION.md  ← QUESTO FILE (aggiornato 20-01-2026)
+├── 00_MASTER_INDEX_CONSERVATION.md  ← QUESTO FILE (aggiornato 24-01-2026)
 ├── 10-01-2026/                      ← Archivio storico
 ├── 11-01-2026/                      ← Archivio storico
 ├── 12-01-2026/                      ← Archivio storico
@@ -154,9 +175,11 @@ Lavoro/
 │       ├── AddPointModal.profile-tests.tsx
 │       ├── profile-selection.spec.ts
 │       └── README.md
-└── 20-01-2026/                      ← SESSIONE CORRENTE - Immagini Elettrodomestici
-    ├── AGENT_GUIDE_APPLIANCE_IMAGES.md  ⭐ GUIDA DEBUG & NUOVE CATEGORIE
-    └── Plan_Foto_PuntiConservazione.md  ★ Piano implementazione
+├── 20-01-2026/                      ← Immagini Elettrodomestici, Layout Split UX
+│   ├── AGENT_GUIDE_APPLIANCE_IMAGES.md
+│   └── Plan_Foto_PuntiConservazione.md
+└── 24-01-2026/                      ← SESSIONE CORRENTE - Allineamento ConservationStep
+    └── REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md  ⭐ REPORT Fasi 1–3
 ```
 
 ---
@@ -250,7 +273,8 @@ npm run dev
 | 19-01-2026 | Feature Profili HACCP | 5 fasi completate, 28 test |
 | **20-01-2026** | **Feature Immagini Elettrodomestici** | **Layout split, modal lightbox, guida agenti** |
 | **20-01-2026** | **Feature Layout Split UX Enhancement** | **Layout split immediato, placeholder informativi, UX migliorata** |
-| **20-01-2026** | **Rimozione Profilo Carne+Pesce+Generico** | **Profilo meat_fish_generic rimosso da codice e database (migration 021)** |
+| **20-01-2026** | **Rimozione Profilo Carne+Pesce+Generico** | **Profilo meat_fish_generic rimosso (migration 021)** |
+| **24-01-2026** | **Allineamento ConservationStep ↔ AddPointModal** | **Validazione solo schema, sezione profilo (layout split, immagine, lightbox)** |
 
 ---
 
@@ -276,15 +300,16 @@ npm run test -- --run
 ---
 
 **Fine 00_MASTER_INDEX_CONSERVATION.md**
-**Ultimo aggiornamento**: 2026-01-20
-**Status**: FEATURE COMPLETA + PROFILI HACCP (4 profili) + IMMAGINI ELETTRODOMESTICI + LAYOUT SPLIT UX ENHANCEMENT IMPLEMENTATI
+**Ultimo aggiornamento**: 2026-01-24
+**Status**: FEATURE COMPLETA + PROFILI HACCP + IMMAGINI ELETTRODOMESTICI + LAYOUT SPLIT UX + ALLINEAMENTO CONSERVATIONSTEP (validazione schema, sezione profilo)
 
 ---
 
 ## RISORSE AGENTI
 
 Per implementare o fare debug:
-- 📖 [Guida Completa Debug & Nuove Categorie](./20-01-2026/AGENT_GUIDE_APPLIANCE_IMAGES.md)
+- 📖 [Report Allineamento ConservationStep ↔ AddPointModal](./24-01-2026/REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md) (Fasi 1–3, 24-01-2026)
+- 📖 [Guida Debug & Nuove Categorie](./20-01-2026/AGENT_GUIDE_APPLIANCE_IMAGES.md)
 - 📋 [Piano Implementazione Immagini](./20-01-2026/Plan_Foto_PuntiConservazione.md)
 - 🏗️ File sorgenti:
   - `src/config/applianceImages.ts`

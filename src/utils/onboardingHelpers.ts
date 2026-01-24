@@ -372,6 +372,8 @@ export const getPrefillData = (): OnboardingData => {
       isBlastChiller: false,
       productCategories: ['fresh_meat', 'fresh_dairy'],
       source: 'prefill' as const,
+      applianceCategory: 'vertical_fridge_with_freezer',
+      profileId: 'vegetables_generic', // Raccomanda 4°C
     },
     {
       id: generateId(),
@@ -412,6 +414,8 @@ export const getPrefillData = (): OnboardingData => {
       isBlastChiller: false,
       productCategories: ['beverages', 'fresh_produce'],
       source: 'prefill' as const,
+      applianceCategory: 'vertical_fridge_1_door',
+      profileId: 'max_capacity', // Raccomanda 2°C
     },
     {
       id: generateId(),
@@ -422,16 +426,20 @@ export const getPrefillData = (): OnboardingData => {
       isBlastChiller: false,
       productCategories: ['beverages', 'fresh_produce'],
       source: 'prefill' as const,
+      applianceCategory: 'vertical_fridge_2_doors',
+      profileId: 'meat_generic', // Raccomanda 3°C
     },
     {
       id: generateId(),
       name: 'Frigo 3',
       departmentId: getDepartmentId('Bancone'),
-      targetTemperature: 5,
+      targetTemperature: 1,
       pointType: 'fridge' as const,
       isBlastChiller: false,
       productCategories: ['beverages', 'fresh_produce'],
       source: 'prefill' as const,
+      applianceCategory: 'base_refrigerated',
+      profileId: 'fish_generic', // Raccomanda 1°C
     },
   ]
 
