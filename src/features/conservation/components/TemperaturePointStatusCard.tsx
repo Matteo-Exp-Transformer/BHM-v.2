@@ -71,10 +71,15 @@ export function TemperaturePointStatusCard({
       `}
       onClick={handleCardClick}
     >
-      {/* Point Name */}
+      {/* Point Name & Department */}
       <div className="mb-2 flex items-start justify-between">
-        <h3 className="font-semibold text-gray-900">{point.name}</h3>
-        <Thermometer className="h-5 w-5 text-gray-400" />
+        <div>
+          <h3 className="font-semibold text-gray-900">{point.name}</h3>
+          {point.department?.name && (
+            <p className="text-xs text-gray-500 mt-0.5">{point.department.name}</p>
+          )}
+        </div>
+        <Thermometer className="h-5 w-5 text-gray-400 shrink-0" />
       </div>
 
       {/* Temperature Display */}
@@ -147,6 +152,11 @@ export function TemperaturePointStatusCard({
             hour: '2-digit',
             minute: '2-digit',
           })}
+          {latestReading.recorded_by_user && (() => {
+            const u = latestReading.recorded_by_user!
+            const name = u.name || `${u.first_name || ''} ${u.last_name || ''}`.trim()
+            return name ? <> da {name}</> : null
+          })()}
         </div>
       )}
     </div>

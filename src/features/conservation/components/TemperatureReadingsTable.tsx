@@ -29,6 +29,7 @@ export function TemperatureReadingsTable({
           <tr className="border-b border-gray-200 bg-gray-50">
             <th className="px-3 py-2 text-left font-medium text-gray-700">Ora</th>
             <th className="px-3 py-2 text-left font-medium text-gray-700">Punto</th>
+            <th className="px-3 py-2 text-left font-medium text-gray-700">Reparto</th>
             <th className="px-3 py-2 text-left font-medium text-gray-700">Temperatura</th>
             <th className="px-3 py-2 text-center font-medium text-gray-700">Esito</th>
             <th className="px-3 py-2 text-left font-medium text-gray-700">Operatore</th>
@@ -58,6 +59,9 @@ export function TemperatureReadingsTable({
                   <span className="font-medium text-gray-900">
                     {point?.name || 'Punto sconosciuto'}
                   </span>
+                </td>
+                <td className="px-3 py-2 text-gray-600">
+                  {point?.department?.name || '-'}
                 </td>
                 <td className="px-3 py-2">
                   <span className={`font-semibold ${isCompliant ? 'text-gray-900' : 'text-red-600'}`}>

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import {
   Plus,
   Thermometer,
@@ -20,7 +20,6 @@ import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 import { ScheduledMaintenanceCard } from '@/features/dashboard/components/ScheduledMaintenanceCard'
 import { TemperaturePointStatusCard } from './components/TemperaturePointStatusCard'
 import { CorrectiveActionPopover } from './components/CorrectiveActionPopover'
-import { TemperatureAlertsPanel } from './components/TemperatureAlertsPanel'
 import { TemperatureHistorySection } from './components/TemperatureHistorySection'
 import { TemperatureAnalysisTab } from './components/TemperatureAnalysisTab'
 import type {
@@ -58,6 +57,8 @@ export default function ConservationPage() {
     point: ConservationPoint | null
     reading: TemperatureReading | null
   }>({ open: false, point: null, reading: null })
+  const [showPointSelectorForTemperature, setShowPointSelectorForTemperature] = useState(false)
+  const pointSelectorRef = useRef<HTMLDivElement>(null)
 
   const {
     temperatureReadings,
@@ -78,6 +79,18 @@ export default function ConservationPage() {
       last_temperature_reading: getLatestReadingByPoint(temperatureReadings ?? [], point.id),
     }))
   }, [conservationPoints, temperatureReadings])
+
+  // Chiudi il dropdown selezione punto al click fuori
+  useEffect(() => {
+    if (!showPointSelectorForTemperature) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (pointSelectorRef.current && !pointSelectorRef.current.contains(e.target as Node)) {
+        setShowPointSelectorForTemperature(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showPointSelectorForTemperature])
 
   // Maintenance tasks ora gestiti dal nuovo ScheduledMaintenanceCard
   // const {
@@ -413,6 +426,60 @@ export default function ConservationPage() {
         subtitle={`${tempStats.total} letture registrate`}
         defaultExpanded={true}
         icon={Clock}
+        actions={
+          <div ref={pointSelectorRef} className="relative">
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation()
+                setShowPointSelectorForTemperature(prev => !prev)
+              }}
+              disabled={conservationPoints.length === 0}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100"
+            >
+              <Thermometer className="w-5 h-5" />
+              <span>Rileva Temperatura</span>
+            </button>
+            {showPointSelectorForTemperature && conservationPoints.length > 0 && (
+              <div
+                className="absolute right-0 top-full z-20 mt-1 min-w-[220px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+                role="listbox"
+              >
+                <p className="px-4 py-2 text-xs font-medium text-gray-500">
+                  Scegli punto di conservazione
+                </p>
+                {[...conservationPoints]
+                  .sort((a, b) => {
+                    const typeOrder: Record<string, number> = {
+                      fridge: 0,
+                      freezer: 1,
+                      blast: 2,
+                      ambient: 3,
+                    }
+                    return (typeOrder[a.type] ?? 4) - (typeOrder[b.type] ?? 4)
+                  })
+                  .map(point => (
+                    <button
+                      key={point.id}
+                      type="button"
+                      role="option"
+                      onClick={() => {
+                        handleAddTemperature(point)
+                        setShowPointSelectorForTemperature(false)
+                      }}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-50"
+                    >
+                      <Thermometer className="h-4 w-4 shrink-0 text-gray-400" />
+                      <span>{point.name}</span>
+                      {point.department?.name && (
+                        <span className="text-xs text-gray-500">({point.department.name})</span>
+                      )}
+                    </button>
+                  ))}
+              </div>
+            )}
+          </div>
+        }
       >
         {/* Tab Navigation */}
         <div className="mb-6 border-b border-gray-200">
@@ -476,45 +543,18 @@ export default function ConservationPage() {
                 </p>
               </div>
             ) : (
-              <>
-                {/* Alerts Panel */}
-                <TemperatureAlertsPanel
-                  anomalies={conservationPoints
-                    .map(point => {
-                      const latestReading = getLatestReadingByPoint(temperatureReadings, point.id)
-                      if (!latestReading) return null
-                      const action = getCorrectiveAction(latestReading, point)
-                      return action ? { point, reading: latestReading } : null
-                    })
-                    .filter((item): item is { point: ConservationPoint; reading: TemperatureReading } => item !== null)
-                  }
-                  missingReadings={conservationPoints.filter(point => {
-                    const latestReading = getLatestReadingByPoint(temperatureReadings, point.id)
-                    if (!latestReading) return true
-
-                    // Check if reading is from today
-                    const readingDate = new Date(latestReading.recorded_at)
-                    const today = new Date()
-                    const isToday =
-                      readingDate.getDate() === today.getDate() &&
-                      readingDate.getMonth() === today.getMonth() &&
-                      readingDate.getFullYear() === today.getFullYear()
-
-                    return !isToday
-                  })}
-                  onGoToPoint={(pointId) => {
-                    // Scroll to point card (could enhance this later)
-                    const point = conservationPoints.find(p => p.id === pointId)
-                    if (point) {
-                      handleAddTemperature(point)
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {[...conservationPoints]
+                  .sort((a, b) => {
+                    const typeOrder: Record<string, number> = {
+                      fridge: 0,
+                      freezer: 1,
+                      blast: 2,
+                      ambient: 3,
                     }
-                  }}
-                  onAddReading={(point) => handleAddTemperature(point)}
-                />
-
-                {/* Points Status Grid */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {conservationPoints.map(point => {
+                    return (typeOrder[a.type] ?? 4) - (typeOrder[b.type] ?? 4)
+                  })
+                  .map(point => {
                     const latestReading = getLatestReadingByPoint(temperatureReadings, point.id)
                     const status = getPointStatus(point, latestReading, pointsInRichiestaLettura)
 
@@ -533,8 +573,7 @@ export default function ConservationPage() {
                       />
                     )
                   })}
-                </div>
-              </>
+              </div>
             )}
           </div>
         )}
