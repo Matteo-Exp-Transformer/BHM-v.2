@@ -63,17 +63,18 @@ export function getCorrectiveAction(
  * @returns Instructions in Italian for the UI
  */
 function getHighTempInstructions(pointType: ConservationPointType): string {
+  const suffix = ' Se il problema persiste contatta assistenza tecnica.'
   switch (pointType) {
     case 'fridge':
-      return 'Abbassa il termostato del frigorifero e verifica che la porta sia chiusa correttamente.'
+      return 'Abbassa il termostato del frigorifero e verifica che la porta sia chiusa correttamente.' + suffix
     case 'freezer':
-      return 'Abbassa il termostato del congelatore. Verifica che la guarnizione sia integra e la porta chiusa.'
+      return 'Abbassa il termostato del congelatore. Verifica che la guarnizione sia integra e la porta chiusa.' + suffix
     case 'blast':
-      return 'Verifica il funzionamento dell\'abbattitore e che non sia sovraccarico.'
+      return 'Verifica il funzionamento dell\'abbattitore e che non sia sovraccarico.' + suffix
     case 'ambient':
-      return 'Regola il termostato per abbassare la temperatura.'
+      return 'Regola il termostato per abbassare la temperatura.' + suffix
     default:
-      return 'Regola il termostato per abbassare la temperatura.'
+      return 'Regola il termostato per abbassare la temperatura.' + suffix
   }
 }
 
@@ -83,17 +84,18 @@ function getHighTempInstructions(pointType: ConservationPointType): string {
  * @returns Instructions in Italian for the UI
  */
 function getLowTempInstructions(pointType: ConservationPointType): string {
+  const suffix = ' Se il problema persiste contatta assistenza tecnica.'
   switch (pointType) {
     case 'fridge':
-      return 'Alza il termostato del frigorifero. Se la temperatura rimane troppo bassa, verifica il corretto funzionamento.'
+      return 'Alza il termostato del frigorifero. Se la temperatura rimane troppo bassa, contatta assistenza tecnica.'
     case 'freezer':
-      return 'La temperatura è inferiore al necessario. Alza leggermente il termostato se il prodotto rischia di danneggiarsi.'
+      return 'La temperatura è più bassa del necessario. Alza il termostato per evitare consumi eccessivi.' + suffix
     case 'blast':
-      return 'Verifica il corretto funzionamento dell\'abbattitore e regola il termostato se necessario.'
+      return 'Verifica il corretto funzionamento dell\'abbattitore e regola il termostato se necessario.' + suffix
     case 'ambient':
-      return 'Regola il termostato per alzare la temperatura.'
+      return 'Regola il termostato per alzare la temperatura.' + suffix
     default:
-      return 'Regola il termostato per alzare la temperatura.'
+      return 'Regola il termostato per alzare la temperatura.' + suffix
   }
 }
 

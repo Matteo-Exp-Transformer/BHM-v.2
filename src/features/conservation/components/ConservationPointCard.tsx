@@ -3,6 +3,7 @@ import {
   ConservationPoint,
   CONSERVATION_COLORS,
   CONSERVATION_TYPE_COLORS,
+  classifyPointStatus,
 } from '@/types/conservation'
 import {
   Thermometer,
@@ -44,14 +45,16 @@ export function ConservationPointCard({
 }: ConservationPointCardProps) {
   const [showCategories, setShowCategories] = useState(false)
   const typeColors = CONSERVATION_TYPE_COLORS[point.type] || CONSERVATION_TYPE_COLORS.ambient
-  const statusColors = CONSERVATION_COLORS[point.status] || CONSERVATION_COLORS.normal
+  // Stato derivato dall'ultima lettura (e manutenzione): badge rosso/giallo/verde in base a conformità
+  const displayedStatus = classifyPointStatus(point).status
+  const statusColors = CONSERVATION_COLORS[displayedStatus] || CONSERVATION_COLORS.normal
 
   // Funzioni rimosse - ora importate da conservationConstants.ts
   // Usare getConservationTypeEmoji(point.type) invece di getTypeIcon()
   // Usare getConservationTypeLabel(point.type) invece di getTypeName()
 
   const getStatusIcon = () => {
-    switch (point.status) {
+    switch (displayedStatus) {
       case 'normal':
         return <CheckCircle className="w-5 h-5 text-green-600" />
       case 'warning':
@@ -62,7 +65,7 @@ export function ConservationPointCard({
   }
 
   const getStatusText = () => {
-    switch (point.status) {
+    switch (displayedStatus) {
       case 'normal':
         return 'Regolare'
       case 'warning':
@@ -251,7 +254,7 @@ export function ConservationPointCard({
 
         <div className="flex items-center space-x-2">
           <div
-            className={`w-3 h-3 rounded-full ${point.status === 'normal' ? 'bg-green-400' : point.status === 'warning' ? 'bg-yellow-400' : 'bg-red-400'}`}
+            className={`w-3 h-3 rounded-full ${displayedStatus === 'normal' ? 'bg-green-400' : displayedStatus === 'warning' ? 'bg-yellow-400' : 'bg-red-400'}`}
           />
           <div>
             <div className="text-sm text-gray-600">Stato</div>

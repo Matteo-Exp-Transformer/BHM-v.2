@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Plus,
   Thermometer,
@@ -70,6 +70,14 @@ export default function ConservationPage() {
     isUpdating: isUpdatingReading,
     // isDeleting: isDeletingReading,
   } = useTemperatureReadings()
+
+  // Punti arricchiti con ultima lettura: i bollini stato (verde/giallo/rosso) usano classifyPointStatus che legge last_temperature_reading
+  const pointsWithLastReading = useMemo(() => {
+    return conservationPoints.map(point => ({
+      ...point,
+      last_temperature_reading: getLatestReadingByPoint(temperatureReadings ?? [], point.id),
+    }))
+  }, [conservationPoints, temperatureReadings])
 
   // Maintenance tasks ora gestiti dal nuovo ScheduledMaintenanceCard
   // const {
@@ -307,7 +315,7 @@ export default function ConservationPage() {
               defaultExpanded={true}
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {conservationPoints
+                {pointsWithLastReading
                   .filter(point => point.type === 'fridge')
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map(point => (
@@ -319,7 +327,7 @@ export default function ConservationPage() {
                     />
                   ))}
               </div>
-              {conservationPoints.filter(point => point.type === 'fridge').length === 0 && (
+              {pointsWithLastReading.filter(point => point.type === 'fridge').length === 0 && (
                 <p className="text-center text-gray-500 py-4">Nessun frigorifero configurato</p>
               )}
             </CollapsibleCard>
@@ -331,7 +339,7 @@ export default function ConservationPage() {
               defaultExpanded={true}
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {conservationPoints
+                {pointsWithLastReading
                   .filter(point => point.type === 'freezer')
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map(point => (
@@ -343,7 +351,7 @@ export default function ConservationPage() {
                     />
                   ))}
               </div>
-              {conservationPoints.filter(point => point.type === 'freezer').length === 0 && (
+              {pointsWithLastReading.filter(point => point.type === 'freezer').length === 0 && (
                 <p className="text-center text-gray-500 py-4">Nessun congelatore configurato</p>
               )}
             </CollapsibleCard>
@@ -355,7 +363,7 @@ export default function ConservationPage() {
               defaultExpanded={true}
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {conservationPoints
+                {pointsWithLastReading
                   .filter(point => point.type === 'blast')
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map(point => (
@@ -367,7 +375,7 @@ export default function ConservationPage() {
                     />
                   ))}
               </div>
-              {conservationPoints.filter(point => point.type === 'blast').length === 0 && (
+              {pointsWithLastReading.filter(point => point.type === 'blast').length === 0 && (
                 <p className="text-center text-gray-500 py-4">Nessun abbattitore configurato</p>
               )}
             </CollapsibleCard>
@@ -379,7 +387,7 @@ export default function ConservationPage() {
               defaultExpanded={true}
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {conservationPoints
+                {pointsWithLastReading
                   .filter(point => point.type === 'ambient')
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map(point => (
@@ -391,7 +399,7 @@ export default function ConservationPage() {
                     />
                   ))}
               </div>
-              {conservationPoints.filter(point => point.type === 'ambient').length === 0 && (
+              {pointsWithLastReading.filter(point => point.type === 'ambient').length === 0 && (
                 <p className="text-center text-gray-500 py-4">Nessun punto ambiente configurato</p>
               )}
             </CollapsibleCard>

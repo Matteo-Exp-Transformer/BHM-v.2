@@ -329,7 +329,11 @@ export function groupReadingsByDate(
 
   readings.forEach(reading => {
     const date = new Date(reading.recorded_at)
-    const dateKey = date.toISOString().split('T')[0] // YYYY-MM-DD
+    // Usa data locale invece di UTC per raggruppare correttamente per giorno
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const dateKey = `${year}-${month}-${day}` // YYYY-MM-DD in timezone locale
 
     if (!grouped.has(dateKey)) {
       grouped.set(dateKey, [])
