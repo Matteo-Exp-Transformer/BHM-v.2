@@ -9,7 +9,8 @@ import {
   // Camera,
 } from 'lucide-react'
 import { useConservationPoints } from './hooks/useConservationPoints'
-import { useTemperatureReadings } from './hooks/useTemperatureReadings'
+import { useTemperatureReadings, getLatestReadingByPoint, getPointStatus } from './hooks/useTemperatureReadings'
+import { getCorrectiveAction } from './utils/correctiveActions'
 // import { useMaintenanceTasks } from './hooks/useMaintenanceTasks'
 import { ConservationPointCard } from './components/ConservationPointCard'
 import { AddPointModal } from './components/AddPointModal'
@@ -17,6 +18,11 @@ import { AddTemperatureModal } from './components/AddTemperatureModal'
 import { TemperatureReadingCard } from './components/TemperatureReadingCard'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 import { ScheduledMaintenanceCard } from '@/features/dashboard/components/ScheduledMaintenanceCard'
+import { TemperaturePointStatusCard } from './components/TemperaturePointStatusCard'
+import { CorrectiveActionPopover } from './components/CorrectiveActionPopover'
+import { TemperatureAlertsPanel } from './components/TemperatureAlertsPanel'
+import { TemperatureHistorySection } from './components/TemperatureHistorySection'
+import { TemperatureAnalysisTab } from './components/TemperatureAnalysisTab'
 import type {
   ConservationPoint,
   TemperatureReading,
@@ -43,6 +49,15 @@ export default function ConservationPage() {
   const [selectedPointForTemperature, setSelectedPointForTemperature] =
     useState<ConservationPoint | null>(null)
   const [editingReading, setEditingReading] = useState<TemperatureReading | null>(null)
+
+  // New state for temperature tabs system
+  const [activeTemperatureTab, setActiveTemperatureTab] = useState<'status' | 'history' | 'analysis'>('status')
+  const [pointsInRichiestaLettura, setPointsInRichiestaLettura] = useState<Set<string>>(new Set())
+  const [correctiveActionPopover, setCorrectiveActionPopover] = useState<{
+    open: boolean
+    point: ConservationPoint | null
+    reading: TemperatureReading | null
+  }>({ open: false, point: null, reading: null })
 
   const {
     temperatureReadings,
@@ -138,9 +153,36 @@ export default function ConservationPage() {
     } else {
       // Create new reading
       createReading(data)
+
+      // Remove point from "richiesta lettura" state if it was there
+      if (data.conservation_point_id) {
+        setPointsInRichiestaLettura(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(data.conservation_point_id)
+          return newSet
+        })
+      }
     }
     setShowTemperatureModal(false)
     setSelectedPointForTemperature(null)
+  }
+
+  const handleCorrectiveAction = (point: ConservationPoint, reading: TemperatureReading) => {
+    setCorrectiveActionPopover({
+      open: true,
+      point,
+      reading,
+    })
+  }
+
+  const handleConfirmCorrectiveAction = () => {
+    if (correctiveActionPopover.point) {
+      // Add point to "richiesta lettura" state
+      setPointsInRichiestaLettura(prev => new Set(prev).add(correctiveActionPopover.point!.id))
+    }
+
+    // Close popover
+    setCorrectiveActionPopover({ open: false, point: null, reading: null })
   }
 
   const handleEditReading = (reading: TemperatureReading) => {
@@ -357,208 +399,163 @@ export default function ConservationPage() {
         )}
       </CollapsibleCard>
 
-      {/* Temperature Readings List */}
+      {/* Temperature Readings List - New 3-Tab System */}
       <CollapsibleCard
         title="Letture Temperature"
         subtitle={`${tempStats.total} letture registrate`}
         defaultExpanded={true}
         icon={Clock}
-        actions={
-          <div className="flex items-center space-x-2">
-            {conservationPoints.length > 0 && (
-              <select
-                onChange={e => {
-                  const point = conservationPoints.find(
-                    p => p.id === e.target.value
-                  )
-                  if (point) {
-                    handleAddTemperature(point)
-                    // Reset select to placeholder
-                    e.target.value = ''
-                  }
-                }}
-                onClick={e => {
-                  e.stopPropagation()
-                }}
-                onMouseDown={e => {
-                  e.stopPropagation()
-                }}
-                value=""
-                className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              >
-                <option value="">Registra temperatura...</option>
-                {conservationPoints.map(point => (
-                  <option key={point.id} value={point.id}>
-                    {point.name}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-        }
       >
-        {/* Mini Statistics - Letture Temperature */}
-        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
-          <div className="bg-blue-50 rounded-lg border border-blue-200 p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-blue-700">Totale</p>
-                <p className="text-lg font-bold text-blue-900">
-                  {tempStats.total}
-                </p>
-              </div>
-              <Clock className="w-5 h-5 text-blue-600" />
-            </div>
-          </div>
-
-          <div className="bg-green-50 rounded-lg border border-green-200 p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-green-700">Conformi</p>
-                <p className="text-lg font-bold text-green-900">
-                  {tempStats.compliant}
-                </p>
-              </div>
-              <CheckCircle className="w-5 h-5 text-green-600" />
-            </div>
-          </div>
-
-          <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-yellow-700">Attenzione</p>
-                <p className="text-lg font-bold text-yellow-900">
-                  {tempStats.warning}
-                </p>
-              </div>
-              <AlertTriangle className="w-5 h-5 text-yellow-600" />
-            </div>
-          </div>
-
-          <div className="bg-red-50 rounded-lg border border-red-200 p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-red-700">Critiche</p>
-                <p className="text-lg font-bold text-red-900">
-                  {tempStats.critical}
-                </p>
-              </div>
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-            </div>
-          </div>
+        {/* Tab Navigation */}
+        <div className="mb-6 border-b border-gray-200">
+          <nav className="flex space-x-4" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTemperatureTab('status')}
+              className={`
+                pb-3 px-1 text-sm font-medium border-b-2 transition-colors
+                ${activeTemperatureTab === 'status'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }
+              `}
+            >
+              Stato Corrente
+            </button>
+            <button
+              onClick={() => setActiveTemperatureTab('history')}
+              className={`
+                pb-3 px-1 text-sm font-medium border-b-2 transition-colors
+                ${activeTemperatureTab === 'history'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }
+              `}
+            >
+              Storico
+            </button>
+            <button
+              onClick={() => setActiveTemperatureTab('analysis')}
+              className={`
+                pb-3 px-1 text-sm font-medium border-b-2 transition-colors
+                ${activeTemperatureTab === 'analysis'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }
+              `}
+            >
+              Analisi
+            </button>
+          </nav>
         </div>
-        {isLoadingReadings ? (
-          <div className="animate-pulse space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        ) : temperatureReadings.length === 0 ? (
-          <div className="text-center py-8">
-            <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Nessuna lettura di temperatura
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Inizia registrando la prima lettura di temperatura per un punto di
-              conservazione.
-            </p>
-            {conservationPoints.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">
-                  Seleziona un punto di conservazione:
-                </p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {conservationPoints.map(point => (
-                    <button
-                      key={point.id}
-                      onClick={() => handleAddTemperature(point)}
-                      className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      <Thermometer className="w-4 h-4" />
-                      <span>{point.name}</span>
-                    </button>
-                  ))}
-                </div>
+
+        {/* Tab Content */}
+        {activeTemperatureTab === 'status' && (
+          <div>
+            {isLoadingReadings ? (
+              <div className="animate-pulse space-y-4">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-32 bg-gray-200 rounded"></div>
+                ))}
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {(() => {
-              // Raggruppa le letture per data
-              const groupedByDate = temperatureReadings.reduce(
-                (acc, reading) => {
-                  const date = new Date(reading.recorded_at)
-                  const dateKey = date.toLocaleDateString('it-IT', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                  })
-                  
-                  // Controlla se è oggi
-                  const today = new Date()
-                  const isToday =
-                    date.getDate() === today.getDate() &&
-                    date.getMonth() === today.getMonth() &&
-                    date.getFullYear() === today.getFullYear()
-                  
-                  const displayDate = isToday ? 'Oggi' : dateKey
-                  
-                  if (!acc[displayDate]) {
-                    acc[displayDate] = []
+            ) : conservationPoints.length === 0 ? (
+              <div className="text-center py-8">
+                <Thermometer className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Nessun punto di conservazione
+                </h3>
+                <p className="text-gray-600">
+                  Crea prima dei punti di conservazione per iniziare a monitorare le temperature.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Alerts Panel */}
+                <TemperatureAlertsPanel
+                  anomalies={conservationPoints
+                    .map(point => {
+                      const latestReading = getLatestReadingByPoint(temperatureReadings, point.id)
+                      if (!latestReading) return null
+                      const action = getCorrectiveAction(latestReading, point)
+                      return action ? { point, reading: latestReading } : null
+                    })
+                    .filter((item): item is { point: ConservationPoint; reading: TemperatureReading } => item !== null)
                   }
-                  acc[displayDate].push(reading)
-                  return acc
-                },
-                {} as Record<string, TemperatureReading[]>
-              )
+                  missingReadings={conservationPoints.filter(point => {
+                    const latestReading = getLatestReadingByPoint(temperatureReadings, point.id)
+                    if (!latestReading) return true
 
-              // Ordina le date (oggi prima, poi per data decrescente)
-              const sortedDates = Object.keys(groupedByDate).sort((a, b) => {
-                if (a === 'Oggi') return -1
-                if (b === 'Oggi') return 1
-                const dateA = new Date(
-                  groupedByDate[a][0]?.recorded_at || ''
-                ).getTime()
-                const dateB = new Date(
-                  groupedByDate[b][0]?.recorded_at || ''
-                ).getTime()
-                return dateB - dateA
-              })
+                    // Check if reading is from today
+                    const readingDate = new Date(latestReading.recorded_at)
+                    const today = new Date()
+                    const isToday =
+                      readingDate.getDate() === today.getDate() &&
+                      readingDate.getMonth() === today.getMonth() &&
+                      readingDate.getFullYear() === today.getFullYear()
 
-              return sortedDates.map(dateKey => {
-                const readings = groupedByDate[dateKey]
-                  .sort(
-                    (a, b) =>
-                      new Date(b.recorded_at).getTime() -
-                      new Date(a.recorded_at).getTime()
-                  )
+                    return !isToday
+                  })}
+                  onGoToPoint={(pointId) => {
+                    // Scroll to point card (could enhance this later)
+                    const point = conservationPoints.find(p => p.id === pointId)
+                    if (point) {
+                      handleAddTemperature(point)
+                    }
+                  }}
+                  onAddReading={(point) => handleAddTemperature(point)}
+                />
 
-                return (
-                  <CollapsibleCard
-                    key={dateKey}
-                    title={dateKey}
-                    subtitle={`${readings.length} lettura${readings.length !== 1 ? 'e' : ''}`}
-                    defaultExpanded={dateKey === 'Oggi'}
-                  >
-                    <div className="space-y-4">
-                      {readings.map((reading: TemperatureReading) => (
-                        <TemperatureReadingCard
-                          key={reading.id}
-                          reading={reading}
-                          onEdit={handleEditReading}
-                          onDelete={handleDeleteReading}
-                        />
-                      ))}
-                    </div>
-                  </CollapsibleCard>
-                )
-              })
-            })()}
+                {/* Points Status Grid */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {conservationPoints.map(point => {
+                    const latestReading = getLatestReadingByPoint(temperatureReadings, point.id)
+                    const status = getPointStatus(point, latestReading, pointsInRichiestaLettura)
+
+                    return (
+                      <TemperaturePointStatusCard
+                        key={point.id}
+                        point={point}
+                        latestReading={latestReading}
+                        status={status}
+                        onAddReading={() => handleAddTemperature(point)}
+                        onCorrectiveAction={
+                          status === 'critico' && latestReading
+                            ? () => handleCorrectiveAction(point, latestReading)
+                            : undefined
+                        }
+                      />
+                    )
+                  })}
+                </div>
+              </>
+            )}
           </div>
         )}
+
+        {activeTemperatureTab === 'history' && (
+          <TemperatureHistorySection
+            readings={temperatureReadings}
+            points={conservationPoints}
+          />
+        )}
+
+        {activeTemperatureTab === 'analysis' && (
+          <TemperatureAnalysisTab
+            points={conservationPoints}
+            readings={temperatureReadings}
+          />
+        )}
       </CollapsibleCard>
+
+      {/* Corrective Action Popover */}
+      {correctiveActionPopover.point && correctiveActionPopover.reading && (
+        <CorrectiveActionPopover
+          action={getCorrectiveAction(correctiveActionPopover.reading, correctiveActionPopover.point)!}
+          pointName={correctiveActionPopover.point.name}
+          open={correctiveActionPopover.open}
+          onOpenChange={(open) => setCorrectiveActionPopover(prev => ({ ...prev, open }))}
+          onConfirm={handleConfirmCorrectiveAction}
+        />
+      )}
 
       {/* Maintenance Tasks List - Nuovo formato con indicatori settimanali */}
       <ScheduledMaintenanceCard />

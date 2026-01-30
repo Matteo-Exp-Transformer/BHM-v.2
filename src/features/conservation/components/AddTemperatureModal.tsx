@@ -38,7 +38,7 @@ export function AddTemperatureModal({
 }: AddTemperatureModalProps) {
   const { user } = useAuth()
   const [formData, setFormData] = useState({
-    temperature: conservationPoint.setpoint_temp,
+    temperatureInput: String(conservationPoint.setpoint_temp),
     method: 'digital_thermometer' as const,
     notes: '',
     photo_evidence: '',
@@ -91,14 +91,16 @@ export function AddTemperatureModal({
         tolerance = 3
         break
     }
+    const num = parseFloat(formData.temperatureInput)
+    const temperature = Number.isFinite(num) ? num : 0
     const status = getTemperatureStatus(
-      formData.temperature,
+      temperature,
       conservationPoint.setpoint_temp,
       tolerance
     )
     setPredictedStatus(status === 'normal' ? 'compliant' : status)
   }, [
-    formData.temperature,
+    formData.temperatureInput,
     conservationPoint.setpoint_temp,
     conservationPoint.type,
   ])
@@ -106,7 +108,7 @@ export function AddTemperatureModal({
   useEffect(() => {
     if (isOpen) {
       setFormData({
-        temperature: conservationPoint.setpoint_temp,
+        temperatureInput: String(conservationPoint.setpoint_temp),
         method: '' as any,
         notes: '',
         photo_evidence: '',
@@ -116,11 +118,14 @@ export function AddTemperatureModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-
+    const num = parseFloat(formData.temperatureInput)
+    if (!Number.isFinite(num)) {
+      return
+    }
     console.log('💾 Saving temperature reading with user:', user?.id)
     onSave({
       conservation_point_id: conservationPoint.id,
-      temperature: formData.temperature,
+      temperature: num,
       recorded_at: new Date(),
       method: formData.method,
       notes: formData.notes || null,
@@ -237,15 +242,16 @@ export function AddTemperatureModal({
               type="number"
               required
               step="0.1"
-              value={formData.temperature}
+              inputMode="decimal"
+              value={formData.temperatureInput}
               onChange={e =>
                 setFormData(prev => ({
                   ...prev,
-                  temperature: parseFloat(e.target.value) || 0,
+                  temperatureInput: e.target.value,
                 }))
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="es. 4.2"
+              placeholder="es. 4.2 o -18"
             />
           </div>
 

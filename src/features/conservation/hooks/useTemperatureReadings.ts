@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import { TemperatureReading } from '@/types/conservation'
+import { TemperatureReading, ConservationPoint } from '@/types/conservation'
 import { toast } from 'react-toastify'
+import { getCorrectiveAction, TOLERANCE_C } from '@/features/conservation/utils/correctiveActions'
 
 export function useTemperatureReadings(conservationPointId?: string) {
   const { companyId } = useAuth()
@@ -292,4 +293,89 @@ export function useTemperatureReadings(conservationPointId?: string) {
     isUpdating: updateReadingMutation.isPending,
     isDeleting: deleteReadingMutation.isPending,
   }
+}
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Temperature point status types
+ */
+export type TemperaturePointStatus = 'conforme' | 'critico' | 'richiesta_lettura' | 'nessuna_lettura'
+
+/**
+ * Get the latest temperature reading for a specific conservation point
+ * @param readings - Array of temperature readings (should be sorted by recorded_at desc)
+ * @param pointId - Conservation point ID to filter by
+ * @returns The latest reading for the point, or undefined if none found
+ */
+export function getLatestReadingByPoint(
+  readings: TemperatureReading[],
+  pointId: string
+): TemperatureReading | undefined {
+  return readings.find(r => r.conservation_point_id === pointId)
+}
+
+/**
+ * Group temperature readings by date
+ * @param readings - Array of temperature readings
+ * @returns Map of date string (YYYY-MM-DD) to array of readings for that date
+ */
+export function groupReadingsByDate(
+  readings: TemperatureReading[]
+): Map<string, TemperatureReading[]> {
+  const grouped = new Map<string, TemperatureReading[]>()
+
+  readings.forEach(reading => {
+    const date = new Date(reading.recorded_at)
+    const dateKey = date.toISOString().split('T')[0] // YYYY-MM-DD
+
+    if (!grouped.has(dateKey)) {
+      grouped.set(dateKey, [])
+    }
+    grouped.get(dateKey)!.push(reading)
+  })
+
+  return grouped
+}
+
+/**
+ * Determine the status of a conservation point based on its latest reading
+ * and the "richiesta lettura" frontend state
+ *
+ * Status logic:
+ * - nessuna_lettura: No readings exist for this point
+ * - richiesta_lettura: Point is in the "richiesta lettura" set (after corrective action confirmed)
+ * - critico: Latest reading is outside setpoint ± TOLERANCE_C
+ * - conforme: Latest reading is within setpoint ± TOLERANCE_C
+ *
+ * @param point - Conservation point
+ * @param latestReading - Latest temperature reading for this point (optional)
+ * @param pointIdsInRichiestaLettura - Set of point IDs in "richiesta lettura" state
+ * @returns Status type for the point
+ */
+export function getPointStatus(
+  point: ConservationPoint,
+  latestReading: TemperatureReading | undefined,
+  pointIdsInRichiestaLettura: Set<string>
+): TemperaturePointStatus {
+  // Check if point is in "richiesta lettura" state (frontend only)
+  if (pointIdsInRichiestaLettura.has(point.id)) {
+    return 'richiesta_lettura'
+  }
+
+  // No readings yet
+  if (!latestReading) {
+    return 'nessuna_lettura'
+  }
+
+  // Check if reading requires corrective action (outside setpoint ± TOLERANCE_C)
+  const correctiveAction = getCorrectiveAction(latestReading, point)
+  if (correctiveAction) {
+    return 'critico'
+  }
+
+  // Temperature is within acceptable range
+  return 'conforme'
 }
