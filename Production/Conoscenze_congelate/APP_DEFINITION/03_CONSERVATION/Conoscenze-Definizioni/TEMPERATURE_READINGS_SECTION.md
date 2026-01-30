@@ -1,10 +1,16 @@
 # TEMPERATURE_READINGS_SECTION - DOCUMENTAZIONE COMPLETA
 
-**Data Creazione**: 2026-01-16  
-**Ultima Modifica**: 2026-01-16  
-**Versione**: 1.0.0  
-**File Componente**: `src/features/conservation/ConservationPage.tsx` (sezione "Letture Temperature")  
+**Data Creazione**: 2026-01-16
+**Ultima Modifica**: 2026-01-30
+**Versione**: 2.0.0
+**File Componente**: `src/features/conservation/ConservationPage.tsx` (sezione "Letture Temperature")
 **Tipo**: Sezione Pagina
+
+**Nuove Features (v2.0.0)**:
+- ✅ **Nome Utente visibile**: Ogni lettura mostra chi ha registrato la temperatura
+- ✅ **Campo `recorded_by`**: Salvato in DB e risolto via `user_profiles.auth_user_id`
+- ✅ **Fallback query**: Se utente non in `user_profiles`, cerca in `company_members` → `staff`
+- ✅ **Metodo registrazione**: Manuale / Termometro digitale / Sensore automatico
 
 ---
 
@@ -17,6 +23,7 @@ Questa sezione risolve il bisogno di:
 - **Monitorare** tutte le letture di temperatura registrate
 - **Consultare** rapidamente lo stato di conformità (Conforme, Attenzione, Critico)
 - **Registrare** nuove letture di temperatura in modo semplice e veloce
+- **Visualizzare chi ha registrato** ogni lettura (nome e cognome dell'utente)
 - **Ricercare** le ultime letture per sapere rapidamente chi ha fatto la lettura e se è tutto ok
 - **Organizzare** migliaia di letture (considerando 1 anno intero di attività) in una struttura scalabile
 
@@ -27,6 +34,7 @@ La sezione è implementata all'interno di una `CollapsibleCard` e include:
 - **Dropdown registrazione**: Selettore punto di conservazione per aprire il modal di registrazione
 - **Lista letture**: Elenco scalabile di `TemperatureReadingCard` ordinate per data più recente
 - **Gestione stato**: Calcolo automatico dello stato (compliant/warning/critical) in base a temperatura e setpoint
+- **Nome utente** (v2.0.0): Risoluzione `recorded_by` → `user_profiles` → nome completo
 
 ---
 
@@ -79,8 +87,14 @@ La sezione viene mostrata quando:
 3. Utente vede la sezione "Letture Temperature" (di default espansa)
 4. Nella parte superiore, vede 4 mini-card statistiche: Totale, Conformi, Attenzione, Critiche
 5. Sotto le statistiche, vede la lista delle letture ordinate per data più recente
-6. Ogni lettura mostra: temperatura, nome punto, stato (badge colorato), range tolleranza, differenza temperatura, timestamp, messaggio HACCP
+6. Ogni lettura mostra: temperatura, nome punto, stato (badge colorato), **nome utente che ha registrato** (v2.0.0), range tolleranza, differenza temperatura, timestamp, messaggio HACCP
 7. Cliccando su una card, può modificare/eliminare (se ha permessi)
+
+**Dettaglio nome utente (v2.0.0):**
+- Il sistema cerca il nome in `user_profiles` usando `auth_user_id` = `recorded_by`
+- Se trovato, mostra "Registrata da: Mario Rossi"
+- **Fallback**: Se non trovato in `user_profiles`, cerca in `company_members` → `staff`
+- Query eseguita da `useTemperatureReadings` hook
 
 **Flusso registrazione nuova temperatura:**
 1. Utente usa il dropdown "Registra temperatura..." nell'header della CollapsibleCard
@@ -723,13 +737,27 @@ interface TemperatureReading {
   temperature: number
   recorded_at: Date
   created_at: Date
-  
+
+  // Campi v2.0.0
+  recorded_by?: string               // User ID (auth.users.id)
+  method?: 'manual' | 'digital_thermometer' | 'automatic_sensor'
+  notes?: string
+  photo_evidence?: string            // URL o base64
+
   // Relations (JOIN)
   conservation_point?: {
     id: string
     name: string
     type: 'ambient' | 'fridge' | 'freezer' | 'blast'
     setpoint_temp: number
+  }
+
+  // v2.0.0: Nome utente risolto
+  recorded_by_user?: {
+    id: string
+    first_name?: string
+    last_name?: string
+    name?: string                    // Fallback se first_name/last_name non disponibili
   }
 }
 
@@ -1016,5 +1044,30 @@ interface CreateTemperatureReadingInput {
 
 ---
 
-**Ultimo Aggiornamento**: 2026-01-16  
-**Versione**: 1.0.0
+## 🆕 CHANGELOG v2.0.0 (2026-01-30)
+
+### Features Aggiunte
+- **Nome Utente**: Ogni lettura mostra chi ha registrato la temperatura
+- **Campo `recorded_by`**: Salvato in DB (user.id) e risolto via `user_profiles.auth_user_id`
+- **Fallback query**: Se non trovato in `user_profiles`, cerca in `company_members` → `staff`
+- **Metodo registrazione**: Manuale / Termometro digitale / Sensore automatico
+
+### Risoluzione Nome Utente
+```
+recorded_by (user.id)
+    ↓
+user_profiles.auth_user_id
+    ↓
+first_name + last_name
+    ↓ (fallback se non trovato)
+company_members → staff → name
+```
+
+### Riferimenti Sessioni di Lavoro
+- [22-01-2026](../Lavoro/22-01-2026%20Nome%20associato%20ad%20evento/) - Implementazione nome utente
+- [23-01-2026](../Lavoro/23-01-2026/) - Fix query useTemperatureReadings
+
+---
+
+**Ultimo Aggiornamento**: 2026-01-30
+**Versione**: 2.0.0

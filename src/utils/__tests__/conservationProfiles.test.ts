@@ -62,18 +62,35 @@ describe('conservationProfiles', () => {
       expect(profile?.recommendedSetPointsC.fridge).toBe(1)
     })
 
+    it('returns correct profile for beverages_alcoholic', () => {
+      const profile = getProfileById('beverages_alcoholic', 'vertical_fridge_with_freezer')
+      
+      expect(profile).not.toBeNull()
+      expect(profile?.profileId).toBe('beverages_alcoholic')
+      expect(profile?.name).toBe('Bibite e Bevande alcoliche')
+      expect(profile?.recommendedSetPointsC.fridge).toBe(4)
+      expect(profile?.allowedCategoryIds).toEqual([
+        'beverages_fruit_veg',
+        'beverages_water',
+        'beverages_juice',
+        'beverages_carbonated',
+        'beverages_alcoholic',
+      ])
+    })
+
   })
 
   describe('getProfilesForAppliance', () => {
-    it('returns 4 profiles for vertical_fridge_with_freezer', () => {
+    it('returns 5 profiles for vertical_fridge_with_freezer', () => {
       const profiles = getProfilesForAppliance('vertical_fridge_with_freezer')
       
-      expect(profiles).toHaveLength(4)
+      expect(profiles).toHaveLength(5)
       expect(profiles.map(p => p.profileId)).toEqual([
         'max_capacity',
         'meat_generic',
         'vegetables_generic',
         'fish_generic',
+        'beverages_alcoholic',
       ])
     })
 
@@ -109,7 +126,7 @@ describe('conservationProfiles', () => {
       expect(dbNames).toEqual([
         'Preparazioni/Pronti/Cotti (RTE)',
         'Latticini',
-        'Uova',
+        'Uova - Ovoprodotti',
         'Carni crude',
         'Pesce e frutti di mare crudi',
       ])

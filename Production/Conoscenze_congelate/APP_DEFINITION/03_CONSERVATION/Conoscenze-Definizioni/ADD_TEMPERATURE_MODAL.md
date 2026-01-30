@@ -1,10 +1,15 @@
 # ADD_TEMPERATURE_MODAL - DOCUMENTAZIONE COMPLETA
 
-**Data Creazione**: 2026-01-16  
-**Ultima Modifica**: 2026-01-16  
-**Versione**: 1.1.0  
-**File Componente**: `src/features/conservation/components/AddTemperatureModal.tsx`  
+**Data Creazione**: 2026-01-16
+**Ultima Modifica**: 2026-01-30
+**Versione**: 2.0.0
+**File Componente**: `src/features/conservation/components/AddTemperatureModal.tsx`
 **Tipo**: Modale / Form
+
+**Nuove Features (v2.0.0)**:
+- ✅ **`recorded_by` salvato**: Il campo user.id viene salvato in DB per ogni lettura
+- ✅ **Metodo registrazione salvato**: 'manual' | 'digital_thermometer' | 'automatic_sensor'
+- ✅ **Nome utente visibile**: Letture mostrano chi ha registrato (risolto in lista)
 
 ---
 
@@ -20,6 +25,7 @@ Questo modal risolve il bisogno di:
 - **Specificare** metodo di rilevazione (manuale, termometro digitale, sensore automatico)
 - **Aggiungere** note aggiuntive e foto evidenza per audit HACCP
 - **Garantire** che tutti i campi obbligatori siano compilati correttamente
+- **Salvare chi registra** (v2.0.0): `recorded_by` = user.id viene salvato automaticamente
 
 ### Scopo Tecnico
 Il modal è un componente React che:
@@ -29,7 +35,7 @@ Il modal è un componente React che:
 - **Mostra** in anteprima lo stato calcolato prima del salvataggio
 - **Valida** input utente lato client prima del salvataggio
 - **Resetta** il form quando viene aperto con un nuovo punto
-- **Gestisce** campi opzionali (note, foto evidenza) che attualmente non vengono salvati nel DB
+- **Salva** `recorded_by` (user.id) e `method` (metodo registrazione) nel DB (v2.0.0)
 
 ---
 

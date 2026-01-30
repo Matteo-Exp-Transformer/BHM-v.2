@@ -43,6 +43,7 @@ import {
 } from '@/utils/conservationConstants'
 import {
   APPLIANCE_CATEGORY_LABELS,
+  BEVERAGES_PROFILE_CATEGORY_IDS,
   getProfileById,
   getProfilesForAppliance,
   mapCategoryIdsToDbNames,
@@ -120,8 +121,15 @@ const ConservationStep = ({
   }, [editingId, points, formData.pointType])
 
   const compatibleCategories = useMemo(() => {
-    return getCompatibleCategories(calculatedTemperature, formData.pointType)
-  }, [calculatedTemperature, formData.pointType])
+    const base = getCompatibleCategories(calculatedTemperature, formData.pointType)
+    if (formData.pointType === 'fridge' && formData.profileId === 'beverages_alcoholic') {
+      return base.filter(c => (BEVERAGES_PROFILE_CATEGORY_IDS as readonly string[]).includes(c.id))
+    }
+    if (formData.pointType === 'fridge' && formData.profileId) {
+      return base.filter(c => !(BEVERAGES_PROFILE_CATEGORY_IDS as readonly string[]).includes(c.id))
+    }
+    return base
+  }, [calculatedTemperature, formData.pointType, formData.profileId])
 
   const selectedProfile = useMemo(() => {
     if (!formData.applianceCategory || !formData.profileId) return null
@@ -130,6 +138,13 @@ const ConservationStep = ({
       formData.applianceCategory as ApplianceCategory
     )
   }, [formData.applianceCategory, formData.profileId])
+
+  // Per profilo "Bibite e Bevande alcoliche": pre-compila le 5 categorie auto-assegnate (solo box, no multi-select)
+  useEffect(() => {
+    if (selectedProfile && formData.profileId === 'beverages_alcoholic') {
+      setFormData(prev => ({ ...prev, productCategories: [...selectedProfile.allowedCategoryIds] }))
+    }
+  }, [formData.profileId, selectedProfile])
 
   const resetForm = () => {
     setFormData(EMPTY_FORM)

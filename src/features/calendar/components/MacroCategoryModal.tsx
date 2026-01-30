@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { X, Wrench, ClipboardList, Package, ChevronRight, Calendar, User, Clock, AlertCircle, Check, RotateCcw, AlertTriangle, Filter } from 'lucide-react'
 import type { MacroCategory, MacroCategoryItem } from '../hooks/useMacroCategoryEvents'
 import { useMacroCategoryEvents } from '../hooks/useMacroCategoryEvents'
 import { useGenericTasks } from '../hooks/useGenericTasks'
+import { useConservationPoints } from '@/features/conservation/hooks/useConservationPoints'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -23,6 +24,7 @@ interface MacroCategoryModalProps {
   date: Date
   events?: any[] // ✅ NUOVO: Eventi passati dal Calendar
   onDataUpdated?: () => void // Callback per notificare aggiornamento dati
+  highlightMaintenanceTaskId?: string
 }
 
 const categoryConfig = {
@@ -68,6 +70,41 @@ const priorityConfig = {
   critical: { label: 'Critica', color: 'bg-red-100 text-red-800', icon: '🔴' },
 }
 
+/** Detect if payload is already MacroCategoryItem (has dueDate), not CalendarEvent (has start). */
+function isMacroCategoryItem(obj: any): obj is MacroCategoryItem {
+  return obj != null && typeof obj === 'object' && 'dueDate' in obj && obj.metadata != null
+}
+
+/** Normalize dueDate to Date (handles string from FullCalendar serialization); invalid → start of today. */
+function normalizeDueDate(d: Date | string | null | undefined): Date {
+  if (d == null) return new Date(new Date().setHours(0, 0, 0, 0))
+  const date = typeof d === 'string' ? new Date(d) : d
+  return Number.isNaN(date.getTime()) ? new Date(new Date().setHours(0, 0, 0, 0)) : date
+}
+
+/** Format dueDate for display; invalid/missing → "—". */
+function formatDueDate(
+  d: Date | string | null | undefined,
+  format: 'full' | 'short' | 'medium' = 'full'
+): string {
+  if (d == null) return '—'
+  const date = typeof d === 'string' ? new Date(d) : d
+  if (Number.isNaN(date.getTime())) return '—'
+  if (format === 'short') {
+    return date.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })
+  }
+  if (format === 'medium') {
+    return date.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })
+  }
+  return date.toLocaleDateString('it-IT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   isOpen,
   onClose,
@@ -75,15 +112,47 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   date,
   events: passedEvents,
   onDataUpdated,
+  highlightMaintenanceTaskId,
 }) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [selectedItems, setSelectedItems] = useState<string[]>([]) // Array di ID per toggle indipendente
   const [filters, setFilters] = useState<CalendarFilters>(DEFAULT_CALENDAR_FILTERS)
   const [showFilters, setShowFilters] = useState(false)
+  const [highlightDismissed, setHighlightDismissed] = useState(false) // ✅ Disattiva pulse dopo click
   const { completeTask, uncompleteTask, isCompleting, isUncompleting } = useGenericTasks()
   const queryClient = useQueryClient()
   const { companyId, user } = useAuth()
   const [isCompletingMaintenance, setIsCompletingMaintenance] = useState(false)
-  
+  const [maintenanceCompletedIds, setMaintenanceCompletedIds] = useState<Set<string>>(() => new Set())
+  const { conservationPoints = [] } = useConservationPoints()
+
+  useEffect(() => {
+    if (!isOpen) setMaintenanceCompletedIds(new Set())
+  }, [isOpen])
+
+  const conservationPointNameById = React.useMemo(() => {
+    const map = new Map<string, string>()
+    conservationPoints.forEach((p) => map.set(p.id, p.name))
+    return map
+  }, [conservationPoints])
+
+  const conservationPointDepartmentById = React.useMemo(() => {
+    const map = new Map<string, string>()
+    conservationPoints.forEach((p) => {
+      const name = (p as { department?: { id: string; name: string } }).department?.name
+      if (name) map.set(p.id, name)
+    })
+    return map
+  }, [conservationPoints])
+
+  /** Titolo per manutenzioni: include nome punto di conservazione se assegnato. */
+  const getMaintenanceDisplayTitle = (item: MacroCategoryItem): string => {
+    // ✅ Supporta sia camelCase (conservationPointId) che snake_case (conservation_point_id)
+    const pointId = (item.metadata?.conservationPointId || item.metadata?.conservation_point_id) as string | undefined
+    const pointName = pointId ? conservationPointNameById.get(pointId) : undefined
+    return pointName ? `${item.title} – ${pointName}` : item.title
+  }
+
   // ✅ Forza il refetch dei dati quando viene chiamato onDataUpdated
   const [refreshKey, setRefreshKey] = useState(0)
   
@@ -118,12 +187,25 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
     }
   }
 
-  // ✅ Usa eventi passati se disponibili, altrimenti carica dal database
   const { getCategoryForDate } = useMacroCategoryEvents(undefined, undefined, refreshKey)
-  const categoryEvent = passedEvents ? 
-    { items: passedEvents.map(event => convertEventToItem(event)) } : 
-    getCategoryForDate(date, category)
-  const rawItems = categoryEvent?.items || []
+  const categoryEvent = passedEvents
+    ? {
+        items: passedEvents.length > 0 && isMacroCategoryItem(passedEvents[0])
+          ? passedEvents.map((item) => ({
+              ...item,
+              dueDate: normalizeDueDate(item.dueDate),
+            }))
+          : passedEvents.map((event) => convertEventToItem(event)),
+      }
+    : getCategoryForDate(date, category)
+  const baseItems = categoryEvent?.items || []
+  const rawItems = category === 'maintenance' && maintenanceCompletedIds.size > 0
+    ? baseItems.map((item) => {
+        const mid = item.metadata?.maintenance_id ?? item.id
+        if (!maintenanceCompletedIds.has(mid)) return item
+        return { ...item, status: 'completed' as const }
+      })
+    : baseItems
 
   // ✅ Applica filtri agli items
   const items = rawItems.filter(item => {
@@ -155,7 +237,46 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   
   // Helper per verificare se un item è selezionato
   const isItemSelected = (itemId: string) => selectedItems.includes(itemId)
-  
+
+  const shouldHighlight = (item: MacroCategoryItem): boolean => {
+    return (
+      !highlightDismissed && // ✅ Non evidenziare se l'utente ha già cliccato
+      category === 'maintenance' &&
+      !!highlightMaintenanceTaskId &&
+      item.metadata?.maintenance_id === highlightMaintenanceTaskId
+    )
+  }
+
+  // ✅ Auto-scroll alla manutenzione evidenziata (solo all'apertura, non dopo completamento)
+  const scrolledRef = useRef(false)
+
+  useEffect(() => {
+    // Reset del flag quando cambia l'ID da evidenziare o il modal si chiude
+    if (!isOpen || !highlightMaintenanceTaskId) {
+      scrolledRef.current = false
+      return
+    }
+  }, [highlightMaintenanceTaskId, isOpen])
+
+  useEffect(() => {
+    // Scroll automatico SOLO se:
+    // 1. Modal è aperto
+    // 2. C'è un ID da evidenziare
+    // 3. Non abbiamo già scrollato per questo ID
+    if (!isOpen || !highlightMaintenanceTaskId || scrolledRef.current) return
+
+    const timer = setTimeout(() => {
+      const element = document.getElementById(`maintenance-item-${highlightMaintenanceTaskId}`)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        scrolledRef.current = true
+        console.log('🎯 Auto-scroll alla manutenzione:', highlightMaintenanceTaskId)
+      }
+    }, 300) // Attesa per rendering completo
+
+    return () => clearTimeout(timer)
+  }, [isOpen, highlightMaintenanceTaskId, items.length]) // items.length per aspettare che siano caricati
+
   // ✅ Funzione per forzare il refresh dei dati
   const forceDataRefresh = () => {
     setRefreshKey(prev => prev + 1)
@@ -188,34 +309,17 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
 
       if (error) throw error
 
-      // ✅ Invalida TUTTE le query maintenance (senza conservationPointId specifico)
-      await queryClient.invalidateQueries({ 
-        queryKey: ['maintenance-tasks'],
-        refetchType: 'all'
-      })
-      await queryClient.invalidateQueries({ 
-        queryKey: ['calendar-events'],
-        refetchType: 'all'
-      })
-      await queryClient.invalidateQueries({ 
-        queryKey: ['macro-category-events'],
-        refetchType: 'all'
-      })
-      await queryClient.invalidateQueries({ 
-        queryKey: ['maintenance-completions'],
-        refetchType: 'all'
-      })
+      setMaintenanceCompletedIds((prev) => new Set(prev).add(maintenanceId))
+      setSelectedItems([])
+
+      await queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'], refetchType: 'all' })
+      await queryClient.invalidateQueries({ queryKey: ['calendar-events'], refetchType: 'all' })
+      await queryClient.invalidateQueries({ queryKey: ['macro-category-events'], refetchType: 'all' })
+      await queryClient.invalidateQueries({ queryKey: ['maintenance-completions'], refetchType: 'all' })
 
       toast.success('✅ Manutenzione completata - Calendario aggiornato')
-      setSelectedItems([]) // Chiudi tutti gli item aperti
-      
-      // ✅ Forza aggiornamento UI
       window.dispatchEvent(new Event('calendar-refresh'))
-      
-      // ✅ Forza il refresh dei dati nel modal
       forceDataRefresh()
-      
-      // ✅ Notifica al componente padre di aggiornare i dati
       onDataUpdated?.()
     } catch (error) {
       console.error('Error completing maintenance:', error)
@@ -230,9 +334,14 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   if (!isOpen) return null
 
   const handleItemClick = (item: MacroCategoryItem) => {
+    // ✅ Disattiva l'evidenziazione pulse quando l'utente clicca sulla card
+    if (shouldHighlight(item)) {
+      setHighlightDismissed(true)
+    }
+
     // Toggle indipendente: se è già aperto lo chiude, altrimenti lo apre
-    setSelectedItems(prev => 
-      prev.includes(item.id) 
+    setSelectedItems(prev =>
+      prev.includes(item.id)
         ? prev.filter(id => id !== item.id) // Rimuovi se già presente
         : [...prev, item.id] // Aggiungi se non presente
     )
@@ -404,7 +513,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-6">
           {items.length === 0 ? (
             <div className="text-center py-12">
               <Icon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -421,7 +530,15 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                   </h3>
                   <div className="space-y-4">
                     {activeItems.map((item) => (
-                <div key={item.id} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                <div
+                  key={item.id}
+                  id={category === 'maintenance' ? `maintenance-item-${item.metadata?.maintenance_id}` : undefined}
+                  className={`bg-white border rounded-lg shadow-sm overflow-hidden transition-all duration-300 ${
+                    shouldHighlight(item)
+                      ? 'border-blue-500 ring-2 ring-blue-500 ring-offset-2 animate-pulse'
+                      : 'border-gray-200'
+                  }`}
+                >
                   <div
                     className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
                     onClick={() => handleItemClick(item)}
@@ -430,7 +547,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2 mb-2">
                           <h3 className="text-lg font-semibold text-gray-900 truncate">
-                            {item.title}
+                            {category === 'maintenance' ? getMaintenanceDisplayTitle(item) : item.title}
                           </h3>
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusConfig[item.status].color}`}>
                             {statusConfig[item.status].icon} {statusConfig[item.status].label}
@@ -468,18 +585,22 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                             </div>
                           )}
 
+                          {/* ✅ Supporta sia camelCase che snake_case per conservationPointId */}
+                          {category === 'maintenance' && (() => {
+                            const pointId = (item.metadata?.conservationPointId || item.metadata?.conservation_point_id) as string | undefined
+                            const deptName = pointId ? conservationPointDepartmentById.get(pointId) : undefined
+                            return deptName ? (
+                              <div className="flex items-center space-x-1">
+                                <span className="font-medium">Reparto:</span>
+                                <span>{deptName}</span>
+                              </div>
+                            ) : null
+                          })()}
+
                           <div className="flex items-center space-x-1">
                             <Calendar className="h-4 w-4" />
                             <span className="font-medium">Scadenza:</span>
-                            <span>
-                              {item.dueDate.toLocaleDateString('it-IT', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
+                            <span>{formatDueDate(item.dueDate, 'full')}</span>
                           </div>
                         </div>
                       </div>
@@ -518,14 +639,19 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                           </div>
                         )}
 
-                        {category === 'maintenance' && item.metadata.conservationPointId && (
-                          <div>
-                            <span className="font-medium text-gray-700">Punto di Conservazione:</span>
-                            <p className="text-gray-600 mt-1">
-                              ID: {item.metadata.conservationPointId}
-                            </p>
-                          </div>
-                        )}
+                        {/* ✅ Supporta sia camelCase che snake_case per conservationPointId */}
+                        {category === 'maintenance' && (() => {
+                          const pointId = (item.metadata?.conservationPointId || item.metadata?.conservation_point_id) as string | undefined
+                          const pointName = pointId ? conservationPointNameById.get(pointId) : undefined
+                          return pointId ? (
+                            <div>
+                              <span className="font-medium text-gray-700">Punto di Conservazione:</span>
+                              <p className="text-gray-600 mt-1">
+                                {pointName || `ID: ${pointId}`}
+                              </p>
+                            </div>
+                          ) : null
+                        })()}
 
                         {category === 'maintenance' && item.metadata.instructions && Array.isArray(item.metadata.instructions) && (
                           <div>
@@ -594,7 +720,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                 e.stopPropagation()
 
                                 if (category === 'maintenance') {
-                                  handleCompleteMaintenance(item.id)
+                                  handleCompleteMaintenance(item.metadata?.maintenance_id ?? item.id)
                                 } else {
                                   // Permetti completamento solo per eventi passati e presenti, NON futuri
                                   const today = new Date()
@@ -614,7 +740,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
 
                                   // Blocca SOLO se la mansione è nel futuro
                                   if (taskDate > today) {
-                                    const taskDateStr = taskDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })
+                                    const taskDateStr = formatDueDate(taskDate, 'medium')
                                     toast.warning(`⚠️ Non puoi completare eventi futuri!\nQuesta mansione è del ${taskDateStr}.`, {
                                       autoClose: 5000
                                     })
@@ -680,7 +806,15 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                   </h3>
                   <div className="space-y-4">
                     {overdueItems.map((item) => (
-                      <div key={item.id} className="bg-red-50 border-2 border-red-300 rounded-lg shadow-md overflow-hidden">
+                      <div
+                        key={item.id}
+                        id={category === 'maintenance' ? `maintenance-item-${item.metadata?.maintenance_id}` : undefined}
+                        className={`bg-red-50 rounded-lg shadow-md overflow-hidden transition-all duration-300 ${
+                          shouldHighlight(item)
+                            ? 'border-blue-500 ring-2 ring-blue-500 ring-offset-2 animate-pulse border-2'
+                            : 'border-2 border-red-300'
+                        }`}
+                      >
                         <div
                           className="p-4 hover:bg-red-100 cursor-pointer transition-colors"
                           onClick={() => handleItemClick(item)}
@@ -689,7 +823,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center space-x-2 mb-2">
                                 <h3 className="text-lg font-semibold text-gray-900 truncate">
-                                  ⚠️ {item.title}
+                                  ⚠️ {category === 'maintenance' ? getMaintenanceDisplayTitle(item) : item.title}
                                 </h3>
                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-200 text-red-800">
                                   IN RITARDO
@@ -727,11 +861,23 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                   </div>
                                 )}
 
+                                {/* ✅ Supporta sia camelCase che snake_case per conservationPointId */}
+                                {category === 'maintenance' && (() => {
+                                  const pointId = (item.metadata?.conservationPointId || item.metadata?.conservation_point_id) as string | undefined
+                                  const deptName = pointId ? conservationPointDepartmentById.get(pointId) : undefined
+                                  return deptName ? (
+                                    <div className="flex items-center space-x-1">
+                                      <span className="font-medium">Reparto:</span>
+                                      <span>{deptName}</span>
+                                    </div>
+                                  ) : null
+                                })()}
+
                                 <div className="flex items-center space-x-1">
                                   <Calendar className="h-4 w-4" />
                                   <span className="font-medium">Scadenza:</span>
                                   <span className="text-red-700 font-semibold">
-                                    {item.dueDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}
+                                    {formatDueDate(item.dueDate, 'short')}
                                   </span>
                                 </div>
                               </div>
@@ -773,7 +919,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                     e.stopPropagation()
 
                                     if (category === 'maintenance') {
-                                      handleCompleteMaintenance(item.id)
+                                      handleCompleteMaintenance(item.metadata?.maintenance_id ?? item.id)
                                     } else {
                                       // Permetti completamento solo per eventi passati e presenti, NON futuri
                                       const today = new Date()
@@ -784,7 +930,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
 
                                       // Blocca SOLO se la mansione è nel futuro
                                       if (taskDate > today) {
-                                        const taskDateStr = taskDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })
+                                        const taskDateStr = formatDueDate(taskDate, 'medium')
                                         toast.warning(`⚠️ Non puoi completare eventi futuri!\nQuesta mansione è del ${taskDateStr}.`, {
                                           autoClose: 5000
                                         })
@@ -846,7 +992,15 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                   </h3>
                   <div className="space-y-4">
                     {completedItems.map((item) => (
-                      <div key={item.id} className="bg-green-50 border border-green-200 rounded-lg shadow-sm overflow-hidden opacity-75">
+                      <div
+                        key={item.id}
+                        id={category === 'maintenance' ? `maintenance-item-${item.metadata?.maintenance_id}` : undefined}
+                        className={`bg-green-50 rounded-lg shadow-sm overflow-hidden opacity-75 transition-all duration-300 ${
+                          shouldHighlight(item)
+                            ? 'border-blue-500 ring-2 ring-blue-500 ring-offset-2 animate-pulse border'
+                            : 'border border-green-200'
+                        }`}
+                      >
                         <div
                           className="p-4 hover:bg-green-100 cursor-pointer transition-colors"
                           onClick={() => handleItemClick(item)}
@@ -854,8 +1008,18 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
                               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                ✅ {item.title}
+                                ✅ {category === 'maintenance' ? getMaintenanceDisplayTitle(item) : item.title}
                               </h3>
+                              {/* ✅ Supporta sia camelCase che snake_case per conservationPointId */}
+                              {category === 'maintenance' && (() => {
+                                const pointId = (item.metadata?.conservationPointId || item.metadata?.conservation_point_id) as string | undefined
+                                const deptName = pointId ? conservationPointDepartmentById.get(pointId) : undefined
+                                return deptName ? (
+                                  <p className="text-sm text-gray-600">
+                                    Reparto: {deptName}
+                                  </p>
+                                ) : null
+                              })()}
                             </div>
                           </div>
                         </div>

@@ -25,14 +25,24 @@ export function useFilteredEvents(
 
   const isLoading = authLoading || staffLoading
 
+  // Dipendenze solo primitive (evita "Cannot convert object to primitive value" in dev)
+  const staffId = userProfile?.staff_id ?? null
+  const staffLength = staff?.length ?? 0
+  const staffIdsKey = staff?.map(s => s.id).join(',') ?? ''
+
   const userStaffMember = useMemo(() => {
     if (!userProfile?.staff_id || !staff) return null
     return staff.find(s => s.id === userProfile.staff_id) || null
-  }, [userProfile?.staff_id, staff])
+  }, [staffId, staffIdsKey, staffLength])
 
   const canViewAllEvents = useMemo(() => {
     return userRole === 'admin' || userRole === 'responsabile'
   }, [userRole])
+
+  const userProfileId = userProfile?.id ?? null
+  const userStaffMemberId = userStaffMember?.id ?? null
+  const eventsLength = events?.length ?? 0
+  const eventsKey = events?.length ? `${eventsLength}-${events[0]?.id ?? ''}-${events[events.length - 1]?.id ?? ''}` : '0'
 
   const filteredEvents = useMemo(() => {
     // console.log('🔐 useFilteredEvents debug:', {
@@ -101,7 +111,7 @@ export function useFilteredEvents(
     
     // console.log(`✅ Filtered events: ${filtered.length}/${events.length} passed`)
     return filtered
-  }, [events, userProfile, canViewAllEvents, userStaffMember])
+  }, [eventsKey, userProfileId, canViewAllEvents, userStaffMemberId])
 
   return {
     filteredEvents,

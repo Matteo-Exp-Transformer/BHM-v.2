@@ -412,6 +412,7 @@ function convertMaintenanceToItem(task: MaintenanceTask): MacroCategoryItem {
     metadata: {
       category: 'maintenance',
       sourceId: task.id,
+      maintenance_id: task.id,
       notes: task.description,
       conservationPointId: task.conservation_point_id,
       departmentId: (task as any).department_id,

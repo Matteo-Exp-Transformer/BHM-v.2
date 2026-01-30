@@ -68,6 +68,12 @@ export const CONSERVATION_CATEGORIES = [
     range: { min: null, max: null }, // Abbattitore senza range definito
     compatibleTypes: ['blast'],
   },
+  // Categorie solo per profilo "Bibite e Bevande alcoliche" (nessun range temperatura)
+  { id: 'beverages_fruit_veg', label: 'Frutta / Verdure', range: { min: null, max: null }, compatibleTypes: ['fridge'] },
+  { id: 'beverages_water', label: 'Acqua', range: { min: null, max: null }, compatibleTypes: ['fridge'] },
+  { id: 'beverages_juice', label: 'Succhi', range: { min: null, max: null }, compatibleTypes: ['fridge'] },
+  { id: 'beverages_carbonated', label: 'Bibite gassate', range: { min: null, max: null }, compatibleTypes: ['fridge'] },
+  { id: 'beverages_alcoholic', label: 'Bevande Alcoliche', range: { min: null, max: null }, compatibleTypes: ['fridge'] },
 ]
 
 const maintenanceTaskTypeValues = Object.keys(MAINTENANCE_TASK_TYPES) as [

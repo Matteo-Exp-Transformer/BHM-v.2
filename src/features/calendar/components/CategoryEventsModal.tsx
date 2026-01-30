@@ -413,7 +413,7 @@ export const CategoryEventsModal: React.FC<CategoryEventsModalProps> = ({
                                       e.stopPropagation()
 
                                       if (category === 'maintenance') {
-                                        handleCompleteMaintenance(item.id)
+                                        handleCompleteMaintenance(item.metadata?.maintenance_id ?? item.id)
                                       } else {
                                         const today = new Date()
                                         today.setHours(0, 0, 0, 0)

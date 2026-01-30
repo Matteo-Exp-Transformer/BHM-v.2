@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Activity,
   ClipboardCheck,
@@ -67,7 +68,10 @@ export const CalendarPage = () => {
     category: string
     date: Date
     events?: any[]
+    highlightMaintenanceTaskId?: string
   } | null>(null)
+  const location = useLocation()
+  const navigate = useNavigate()
 
   // ✅ Nuovi filtri calendario
   const [calendarFilters, setCalendarFilters] = useState<NewCalendarFiltersType>(DEFAULT_CALENDAR_FILTERS)
@@ -159,6 +163,75 @@ export const CalendarPage = () => {
     }
   }, [displayEvents, view])
 
+  // ✅ Chiave primitiva da location.state per dipendenze (evita "Cannot convert object to primitive value")
+  const navState = location.state as { openMacroCategory?: string; date?: string; highlightMaintenanceTaskId?: string } | null
+  const maintenanceNavKey =
+    navState?.openMacroCategory && navState?.date
+      ? `${navState.openMacroCategory}-${navState.date}-${navState.highlightMaintenanceTaskId ?? ''}`
+      : null
+
+  // ✅ Gestione navigazione da ScheduledMaintenanceCard
+  // Aspetta che eventsForFiltering sia popolato prima di aprire il modal (altrimenti dayEvents = []).
+  const eventsForFilteringLength = eventsForFiltering.length
+  useEffect(() => {
+    if (maintenanceNavKey === null) return
+    if (isLoading) return
+    // Ritarda apertura finché gli eventi non sono caricati (eventsForFiltering era 0 al primo run)
+    if (eventsForFilteringLength === 0) return
+
+    const state = location.state as {
+      openMacroCategory: string
+      date: string
+      highlightMaintenanceTaskId?: string
+    }
+
+    const targetDate = new Date(state.date)
+    // Normalizza a mezzanotte locale per confronto corretto
+    targetDate.setHours(0, 0, 0, 0)
+
+    // Debug: log per diagnosticare modal vuoto
+    console.log('🔍 CalendarPage nav effect:', {
+      targetDate: targetDate.toISOString(),
+      targetDateString: targetDate.toDateString(),
+      totalEvents: eventsForFiltering.length,
+      maintenanceEvents: eventsForFiltering.filter(e => e.source === 'maintenance').length,
+      highlightId: state.highlightMaintenanceTaskId
+    })
+
+    const dayEvents = eventsForFiltering.filter(e => {
+      if (!e || !e.start) return false
+      const eventDate = new Date(e.start)
+      eventDate.setHours(0, 0, 0, 0) // Normalizza a mezzanotte
+
+      const isMatch = eventDate.toDateString() === targetDate.toDateString() &&
+                      e.source === 'maintenance'
+
+      // Debug: log ogni evento manutenzione trovato
+      if (e.source === 'maintenance') {
+        console.log('🔍 Maintenance event:', {
+          id: e.id,
+          start: e.start,
+          eventDateStr: eventDate.toDateString(),
+          targetDateStr: targetDate.toDateString(),
+          isMatch,
+          metadata: e.metadata
+        })
+      }
+
+      return isMatch
+    })
+
+    console.log('🔍 Day events found:', dayEvents.length)
+
+    setSelectedMacroCategory({
+      category: state.openMacroCategory,
+      date: targetDate,
+      events: dayEvents,
+      highlightMaintenanceTaskId: state.highlightMaintenanceTaskId
+    })
+
+    navigate('/attivita', { replace: true, state: {} })
+  }, [maintenanceNavKey, isLoading, eventsForFilteringLength, navigate])
 
   // ✅ Calcola alert dopo viewBasedEvents
   const { alertCount, criticalCount, alerts } = useCalendarAlerts(viewBasedEvents)

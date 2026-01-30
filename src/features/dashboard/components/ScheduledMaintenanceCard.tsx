@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
-import { Wrench, ChevronRight, ChevronDown, Clock, User, CheckCircle2, AlertCircle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Wrench, ChevronRight, ChevronDown, Clock, User, CheckCircle2, AlertCircle, Calendar } from 'lucide-react'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 import { useConservationPoints } from '@/features/conservation/hooks/useConservationPoints'
 import { useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
@@ -117,6 +118,7 @@ function StatusIndicator({ status }: { status: WeeklyStatus }) {
  * Card con elenco punti di conservazione e relative manutenzioni
  */
 export function ScheduledMaintenanceCard() {
+  const navigate = useNavigate()
   const { conservationPoints, isLoading: loadingPoints } = useConservationPoints()
   const { maintenanceTasks, isLoading: loadingTasks } = useMaintenanceTasks()
   const [expandedPointId, setExpandedPointId] = useState<string | null>(null)
@@ -280,6 +282,24 @@ export function ScheduledMaintenanceCard() {
             </div>
           )}
         </div>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            navigate('/attivita', {
+              state: {
+                openMacroCategory: 'maintenance',
+                date: new Date(task.next_due).toISOString(),
+                highlightMaintenanceTaskId: task.id
+              }
+            })
+          }}
+          className="ml-3 flex-shrink-0 p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title="Visualizza nel Calendario"
+          aria-label="Visualizza nel Calendario"
+        >
+          <Calendar className="h-4 w-4" />
+        </button>
       </div>
     )
   }

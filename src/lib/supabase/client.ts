@@ -30,7 +30,7 @@ export const supabase = (() => {
         storageKey: 'bhm-supabase-auth',
         // ✅ REMEMBER ME: Configurazione per sessioni estese
         flowType: 'pkce',
-        debug: import.meta.env.DEV,
+        debug: import.meta.env.VITE_SUPABASE_DEBUG === 'true',
       },
       global: {
         headers: {

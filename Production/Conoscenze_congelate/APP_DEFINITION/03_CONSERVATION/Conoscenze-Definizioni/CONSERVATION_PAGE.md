@@ -1,10 +1,19 @@
 # CONSERVATION_PAGE - DOCUMENTAZIONE COMPLETA
 
-**Data Creazione**: 2026-01-16  
-**Ultima Modifica**: 2026-01-16  
-**Versione**: 1.0.0  
-**File Componente**: `src/features/conservation/ConservationPage.tsx`  
+**Data Creazione**: 2026-01-16
+**Ultima Modifica**: 2026-01-30
+**Versione**: 2.0.0
+**File Componente**: `src/features/conservation/ConservationPage.tsx`
 **Tipo**: Pagina
+
+**Nuove Features (v2.0.0)**:
+- ✅ **Profili HACCP** (5 profili × 4 categorie elettrodomestico) per frigoriferi
+- ✅ **Immagine Elettrodomestico** con modal lightbox fullscreen
+- ✅ **Layout Split** categorie (sx) + immagine (dx) per frigoriferi
+- ✅ **Nome Utente** nelle registrazioni temperature (`recorded_by` → `user_profiles`)
+- ✅ **Pulsante "Visualizza nel Calendario"** nelle card manutenzioni
+- ✅ **Costanti Centralizzate** in `conservationConstants.ts`
+- ✅ **Recurrence Config** per manutenzioni (rispetta giorni configurati)
 
 ---
 
@@ -15,9 +24,11 @@ La pagina Conservazione permette agli utenti di avere sott'occhio lo **stato gen
 
 - **Monitorare** tutti i punti di conservazione (frigoriferi, freezer, abbattitori, ambienti/dispense)
 - **Consultare** le informazioni dettagliate di ogni punto (temperatura target, stato, categorie prodotti, manutenzioni)
-- **Registrare** nuove letture di temperatura
+- **Registrare** nuove letture di temperatura (con **nome utente visibile**)
 - **Gestire** i punti di conservazione (creare, modificare, eliminare)
 - **Visualizzare** statistiche e distribuzione per tipo
+- **Utilizzare profili HACCP pre-configurati** per frigoriferi con auto-configurazione
+- **Navigare al calendario** direttamente dalle card manutenzioni
 
 Questa pagina risolve il bisogno di avere una vista centralizzata per la conformità HACCP e il monitoraggio delle temperature nei punti di conservazione dell'azienda.
 
@@ -29,6 +40,8 @@ La pagina `ConservationPage` è un componente React che:
 - **Organizza** la visualizzazione per tipo usando componenti `CollapsibleCard` annidati
 - **Gestisce** i modal per creare/modificare punti e registrare temperature
 - **Integra** il componente `ScheduledMaintenanceCard` per visualizzare le manutenzioni programmate
+- **Supporta profili HACCP** (5 profili per 4 categorie elettrodomestico)
+- **Mostra nome utente** nelle letture temperatura (via `useTemperatureReadings`)
 
 ---
 
@@ -72,6 +85,21 @@ La pagina viene mostrata quando:
    - **Azione**: Visualizza la sezione "Manutenzioni Programmivate" che mostra le manutenzioni con stato, oppure controlla lo stato di ogni punto (giallo = in scadenza, rosso = scaduto)
    - **Risultato**: Identifica rapidamente i punti che richiedono intervento
 
+5. **Creare frigorifero con profilo HACCP** (v2.0.0)
+   - **Scenario**: Manager vuole aggiungere un frigorifero usando un profilo HACCP standard
+   - **Azione**: Clicca "Aggiungi Punto", seleziona tipologia "Frigorifero", sceglie categoria elettrodomestico (es. "Frigorifero Verticale con Freezer"), seleziona profilo HACCP (es. "Bibite e Bevande Alcoliche")
+   - **Risultato**: Temperatura e categorie prodotti vengono auto-configurate dal profilo. Immagine elettrodomestico visibile con click-to-enlarge. Punto salvato con `profile_id` e `appliance_category`
+
+6. **Visualizzare chi ha registrato temperatura** (v2.0.0)
+   - **Scenario**: Responsabile HACCP vuole verificare chi ha effettuato le registrazioni temperature
+   - **Azione**: Espande la sezione "Letture Temperature", visualizza le card delle letture
+   - **Risultato**: Ogni card mostra **nome e cognome** dell'utente che ha registrato la temperatura (campo `recorded_by` → `user_profiles`)
+
+7. **Navigare al calendario dalle manutenzioni** (v2.0.0)
+   - **Scenario**: Manager vuole vedere le manutenzioni nel contesto del calendario
+   - **Azione**: Sulla card di una manutenzione in scadenza, clicca "Visualizza nel Calendario"
+   - **Risultato**: Si apre la pagina "Attività" con il modal Manutenzioni aperto sulla data di scadenza e la manutenzione evidenziata con bordo animato
+
 ### Flusso Utente
 
 **Flusso principale - Consultazione:**
@@ -87,17 +115,40 @@ La pagina viene mostrata quando:
 1. Utente clicca "Aggiungi Punto" nell'header della CollapsibleCard
 2. Si apre il modal `AddPointModal`
 3. Utente compila nome, seleziona reparto, sceglie tipologia (che auto-imposta il range temperatura)
-4. Utente inserisce temperatura target (validata in base alla tipologia)
-5. Utente seleziona almeno 1 categoria prodotto (filtrata in base alla temperatura e tipo di punto - logica di compatibilità temperatura-categoria). **NOTA**: Le categorie prodotti attualmente implementate sono placeholder e devono essere approfondite e rese definitive.
+4. **Se tipologia = "Frigorifero"** (v2.0.0):
+   - Appare sezione "Profilo Punto di Conservazione" con layout split
+   - Utente seleziona **Categoria Elettrodomestico** (es. "Frigorifero Verticale con Freezer")
+   - Utente seleziona **Profilo HACCP** (es. "Massima Capienza", "Carne + Generico", "Bibite e Bevande Alcoliche")
+   - Temperatura e categorie vengono **auto-configurate** dal profilo (read-only)
+   - Immagine elettrodomestico appare nella colonna destra (click per lightbox)
+5. **Se altra tipologia**: Utente inserisce temperatura target e seleziona categorie manualmente
 6. Utente configura le 4 manutenzioni obbligatorie (o 2 per tipo ambiente)
 7. Utente salva, il punto viene creato e la lista si aggiorna
+
+**Flusso creazione frigorifero con profilo HACCP (v2.0.0):**
+1. Utente clicca "Aggiungi Punto"
+2. Compila nome (es. "Frigo Bar")
+3. Seleziona reparto (es. "Bar")
+4. Sceglie tipologia "Frigorifero" → **layout split appare immediatamente**
+5. Colonna sinistra: Placeholder "Seleziona un profilo HACCP"
+6. Colonna destra: Placeholder "Seleziona una categoria elettrodomestico"
+7. Utente seleziona "Frigorifero Verticale con Freezer" → **immagine appare**
+8. Utente seleziona "Bibite e Bevande Alcoliche" → **categorie auto-configurate** (Frutta/Verdure, Acqua, Succhi, Bibite gassate, Bevande Alcoliche)
+9. Note HACCP: "Categorie senza range di temperatura obbligatorio; adatto a cella bevande / bar. Temperatura consigliata: 4°C."
+10. Utente configura manutenzioni e salva
 
 **Flusso registrazione temperatura:**
 1. Utente usa il dropdown "Registra temperatura..." nella sezione "Letture Temperature"
 2. Seleziona un punto di conservazione
 3. Si apre il modal `AddTemperatureModal`
-4. Utente inserisce la temperatura rilevata e la data/ora
-5. Utente salva, la lettura viene registrata e la lista si aggiorna
+4. Utente inserisce la temperatura rilevata, seleziona metodo (manuale/termometro digitale/sensore automatico)
+5. Utente salva → la lettura viene registrata con `recorded_by` = user.id
+6. La lista si aggiorna mostrando **nome utente** (es. "Registrata da: Mario Rossi")
+
+**Dettaglio nome utente (v2.0.0):**
+- `recorded_by` → `user_profiles.auth_user_id` → `first_name`, `last_name`
+- **Fallback**: Se non trovato in `user_profiles`, cerca in `company_members` → `staff`
+- **Query**: `useTemperatureReadings` esegue join per risolvere nome utente
 
 ---
 
@@ -930,12 +981,17 @@ interface CreateTemperatureReadingInput {
 - **Modal Temperatura**: `src/features/conservation/components/AddTemperatureModal.tsx`
 - **Componente UI**: `src/components/ui/CollapsibleCard.tsx`
 - **Tipi**: `src/types/conservation.ts`
+- **Profili HACCP** (v2.0.0): `src/utils/conservationProfiles.ts`
+- **Costanti Centralizzate** (v2.0.0): `src/utils/conservationConstants.ts`
+- **Config Immagini** (v2.0.0): `src/config/applianceImages.ts`
 
 ### Documentazione Correlata
 - Template standard: `00_TEMPLATE_STANDARD.md`
-- Master Index: `00_MASTER_INDEX.md`
-- Documentazione ConservationPointCard: `CONSERVATION_POINT_CARD.md` (da creare)
-- Documentazione AddPointModal: `ADD_POINT_MODAL.md` (da creare)
+- Master Index: `00_MASTER_INDEX_CONSERVATION.md`
+- Documentazione ConservationPointCard: `CONSERVATION_POINT_CARD.md` ✅
+- Documentazione AddPointModal: `ADD_POINT_MODAL.md` ✅
+- Documentazione TemperatureReadings: `TEMPERATURE_READINGS_SECTION.md` ✅
+- Documentazione ScheduledMaintenance: `SCHEDULED_MAINTENANCE_SECTION.md` ✅
 
 ---
 
@@ -1019,5 +1075,28 @@ interface CreateTemperatureReadingInput {
 
 ---
 
-**Ultimo Aggiornamento**: 2026-01-16  
-**Versione**: 1.0.0
+## 🆕 CHANGELOG v2.0.0 (2026-01-30)
+
+### Features Aggiunte
+- **Profili HACCP**: 5 profili (max_capacity, meat_generic, vegetables_generic, fish_generic, beverages_alcoholic) × 4 categorie elettrodomestico
+- **Layout Split**: Categorie (sx) + Immagine elettrodomestico (dx) per frigoriferi
+- **Nome Utente**: Visualizzazione nome utente nelle letture temperatura (`recorded_by` → `user_profiles`)
+- **Pulsante Calendario**: Navigazione a pagina Attività dalle card manutenzioni
+- **Costanti Centralizzate**: `conservationConstants.ts` come single source of truth
+
+### File Correlati Aggiunti
+- `src/utils/conservationProfiles.ts` - Profili HACCP
+- `src/utils/conservationConstants.ts` - Costanti centralizzate
+- `src/config/applianceImages.ts` - Config immagini elettrodomestici
+
+### Riferimenti Sessioni di Lavoro
+- [19-01-2026](../Lavoro/19-01-2026/) - Profili HACCP v2.0.0
+- [20-01-2026](../Lavoro/20-01-2026/) - Immagini Elettrodomestici + Layout Split
+- [21-01-2026](../Lavoro/21-01-2026/) - Centralizzazione Costanti
+- [22-01-2026](../Lavoro/22-01-2026%20Nome%20associato%20ad%20evento/) - Nome Utente + Recurrence Config
+- [29-01-2026](../Lavoro/29-01-2026/) - Profilo Bibite + Pulsante Calendario
+
+---
+
+**Ultimo Aggiornamento**: 2026-01-30
+**Versione**: 2.0.0

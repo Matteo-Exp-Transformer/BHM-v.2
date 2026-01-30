@@ -47,6 +47,7 @@ interface CalendarProps {
     category: string
     date: Date
     events?: any[]
+    highlightMaintenanceTaskId?: string
   } | null
   onMacroCategoryClose?: () => void
   onMacroCategorySelect?: (category: string, date: Date, events?: any[]) => void
@@ -583,7 +584,8 @@ export const Calendar: React.FC<CalendarProps> = ({
           category={selectedMacroCategory.category as any}
           date={selectedMacroCategory.date}
           events={selectedMacroCategory.events}
-          onDataUpdated={handleMacroDataUpdated} // ✅ Passa il callback per aggiornare i dati
+          onDataUpdated={handleMacroDataUpdated}
+          highlightMaintenanceTaskId={selectedMacroCategory.highlightMaintenanceTaskId}
         />
       )}
 

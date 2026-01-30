@@ -42,6 +42,13 @@ function saveDismissedAlerts(alertIds: string[]): void {
 export function useCalendarAlerts(events: CalendarEvent[]): CalendarAlertsResult {
   const dismissedAlerts = useMemo(() => getDismissedAlerts(), [])
 
+  // ✅ Dipendenze primitive (evita "Cannot convert object to primitive value" in dev)
+  const eventsLength = events?.length ?? 0
+  const eventsKey = eventsLength > 0
+    ? `${eventsLength}-${events[0]?.id ?? ''}-${events[eventsLength - 1]?.id ?? ''}`
+    : '0'
+  const dismissedAlertsKey = dismissedAlerts.join(',')
+
   const alerts = useMemo(() => {
     const now = new Date()
     const alertsList: CalendarAlert[] = []
@@ -76,7 +83,7 @@ export function useCalendarAlerts(events: CalendarEvent[]): CalendarAlertsResult
         severity = 'critical'
         const daysPast = Math.abs(Math.floor(hoursUntilEvent / 24))
         message = `⚠️ SCADUTO da ${daysPast} ${daysPast === 1 ? 'giorno' : 'giorni'}: ${event.title}`
-      } 
+      }
       // ✅ CASO 2: Evento ENTRO 3 GIORNI (72 ore)
       else if (hoursUntilEvent <= ALERT_THRESHOLD_HOURS) {
         // Severity basata su priorità e tempo rimanente
@@ -114,7 +121,7 @@ export function useCalendarAlerts(events: CalendarEvent[]): CalendarAlertsResult
       }
       return new Date(a.event.start).getTime() - new Date(b.event.start).getTime()
     })
-  }, [events, dismissedAlerts])
+  }, [eventsKey, dismissedAlertsKey])
 
   const activeAlerts = useMemo(
     () => alerts.filter(alert => !alert.isDismissed),

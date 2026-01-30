@@ -1,17 +1,29 @@
 # ADD_POINT_MODAL - DOCUMENTAZIONE COMPLETA
 
-**Data Creazione**: 2026-01-16  
-**Ultima Modifica**: 2026-01-20  
-**Versione**: 2.0.0  
-**File Componente**: `src/features/conservation/components/AddPointModal.tsx`  
+**Data Creazione**: 2026-01-16
+**Ultima Modifica**: 2026-01-30
+**Versione**: 2.1.0
+**File Componente**: `src/features/conservation/components/AddPointModal.tsx`
 **Tipo**: Modale / Form
 
-**Nuove Features (v2.0.0)**:
+**Nuove Features (v2.1.0)**:
 - ✅ Sezione "Profilo Punto di Conservazione" per frigoriferi
 - ✅ Auto-configurazione temperatura e categorie da profilo HACCP
 - ✅ Categorie prodotti read-only quando profilo selezionato
-- ✅ 4 profili HACCP predefiniti
+- ✅ **5 profili HACCP** (aggiunto `beverages_alcoholic` il 29-01-2026)
 - ✅ Info box con note HACCP e temperatura consigliata
+- ✅ **Layout Split**: Categorie (sx) + Immagine elettrodomestico (dx)
+- ✅ **Modal Lightbox** click-to-enlarge per immagine
+- ✅ **Costanti centralizzate** in `conservationConstants.ts`
+
+**Profili HACCP disponibili (5):**
+| ID | Nome | Temperatura | Categorie |
+|----|------|-------------|-----------|
+| `max_capacity` | Massima Capienza | 2°C | Disciplina e organizzazione |
+| `meat_generic` | Carne + Generico | 3°C | Carni crude/cotte, prodotti generici |
+| `vegetables_generic` | Verdure + Generico | 4°C | Verdure, prodotti generici |
+| `fish_generic` | Pesce + Generico | 1°C | Pesce crudo, prodotti ittici |
+| `beverages_alcoholic` | Bibite e Bevande Alcoliche | 4°C | Frutta/Verdure, Acqua, Succhi, Bibite gassate, Bevande Alcoliche |
 
 ---
 
@@ -24,8 +36,8 @@ Questo modal risolve il bisogno di:
 - **Creare** nuovi punti di conservazione con tutti i parametri necessari
 - **Modificare** punti esistenti per aggiornare configurazioni
 - **Configurare** manutenzioni obbligatorie HACCP per ogni punto
-- **Selezionare** categorie prodotti compatibili con la temperatura del punto (sistema manuale)
-- **Selezionare profili HACCP pre-configurati** per frigoriferi con auto-configurazione temperatura e categorie (nuova feature v2.0.0)
+- **Visualizzare** categorie prodotti compatibili con la temperatura del punto (sistema manuale)
+- **Selezionare profili HACCP pre-configurati** per frigoriferi con auto-configurazione temperatura e categorie (nuova feature v2.0.0) (Da Definire meglio cosa è stato implementato. )
 - **Garantire** che tutti i campi obbligatori siano compilati correttamente
 
 ### Scopo Tecnico
@@ -110,7 +122,7 @@ Il modal viene mostrato quando:
 6. Utente sceglie tipologia (es. "Frigorifero")
 7. Utente inserisce temperatura target (es. 4°C) - viene validata in base alla tipologia
 8. Categorie prodotti vengono filtrate automaticamente in base alla temperatura
-9. Utente seleziona almeno 1 categoria prodotto compatibile
+9. Utente visualizza le categorie prodotto compatibile
 10. Utente configura le 4 manutenzioni obbligatorie (per ogni manutenzione: frequenza, ruolo, categoria opzionale, dipendente opzionale, note)
 11. Utente clicca "Crea" o "Salva"
 12. Form viene validato (nome, reparto, temperatura, categorie, manutenzioni complete)
@@ -119,7 +131,7 @@ Il modal viene mostrato quando:
 
 **Flusso creazione nuovo punto con profilo HACCP (nuova feature v2.0.0 - solo per frigoriferi):**
 1-6. Come sopra, ma dopo selezione tipologia "Frigorifero":
-7. **Appare sezione "Profilo Punto di Conservazione"** (visibile solo per frigoriferi)
+7. **Appare sezione "Profilo Punto di Conservazione"** (visibile solo per frigoriferi) Da definire meglio in seguito a completamento features.
 8. Utente seleziona categoria appliance "Frigorifero Verticale con Freezer"
 9. Utente seleziona profilo HACCP (es. "Profilo Carne + Generico")
 10. **Auto-configurazione automatica**: 
@@ -170,28 +182,9 @@ Il modal viene mostrato quando:
 
 ### Conflitti Possibili
 
-#### Conflitto 1: Temperatura target vs categorie prodotti selezionate
-- **Quando si verifica**: Utente modifica temperatura target dopo aver selezionato categorie prodotti, e la nuova temperatura non è compatibile con alcune categorie selezionate
-- **Cosa succede**: **ATTUALMENTE NON GESTITO** - Le categorie rimangono selezionate anche se incompatibili
-- **Come viene gestito**: Il filtro `compatibleCategories` si aggiorna quando temperatura cambia, ma le categorie già selezionate non vengono rimosse automaticamente
-- **Esempio**: Utente seleziona "Carni fresche" (range 1-4°C) con temperatura 3°C, poi modifica temperatura a 10°C. "Carni fresche" rimane selezionata anche se non compatibile.
 
-**Soluzione proposta**: Quando temperatura cambia e categorie selezionate non sono più compatibili:
-- Mostrare warning con lista categorie incompatibili
-- Offrire opzione "Rimuovi categorie incompatibili" o "Modifica temperatura"
-- Permettere utente di scegliere come procedere
 
-#### Conflitto 2: Modifica tipo punto con categorie prodotti incompatibili
-- **Quando si verifica**: Utente cambia tipologia punto (es. da "Frigorifero" a "Ambiente") dopo aver selezionato categorie prodotti, e le categorie non sono compatibili con il nuovo tipo
-- **Cosa succede**: **ATTUALMENTE NON GESTITO** - Le categorie rimangono selezionate anche se incompatibili
-- **Come viene gestito**: Il filtro `compatibleCategories` considera solo temperatura, non tipo punto
-- **Esempio**: Utente seleziona "Carni fresche" per frigorifero, poi cambia tipo a "Ambiente". "Carni fresche" rimane selezionata anche se non compatibile con ambiente.
-
-**Soluzione proposta**: Quando tipo punto cambia, validare categorie selezionate contro compatibilità tipo:
-- Se categorie non compatibili, rimuoverle automaticamente o mostrare warning
-- Aggiornare filtro categorie per considerare anche tipo punto
-
-#### Conflitto 3: Manutenzioni obbligatorie incomplete
+#### Conflitto 1: Manutenzioni obbligatorie incomplete
 - **Quando si verifica**: Utente salva form senza completare tutte le manutenzioni obbligatorie (frequenza o ruolo mancanti)
 - **Cosa succede**: Validazione fallisce e mostra errore generico "Completa tutte le manutenzioni obbligatorie"
 - **Come viene gestito**: Validazione blocca salvataggio, ma non indica quale manutenzione è incompleta

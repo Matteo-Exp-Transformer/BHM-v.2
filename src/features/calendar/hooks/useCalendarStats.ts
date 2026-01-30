@@ -10,26 +10,32 @@ export function useCalendarStats(
   view: 'year' | 'month' | 'week' | 'day',
   refreshKey: number
 ) {
+  // ✅ Dipendenze primitive (evita "Cannot convert object to primitive value" in dev)
+  const eventsLength = viewBasedEvents?.length ?? 0
+  const eventsKey = eventsLength > 0
+    ? `${eventsLength}-${viewBasedEvents[0]?.id ?? ''}-${viewBasedEvents[eventsLength - 1]?.id ?? ''}`
+    : '0'
+
   // Eventi di oggi
   const todayEvents = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
-    
+
     return viewBasedEvents.filter(event => {
       if (!event || !event.start || !event.status) return false
       const eventDate = new Date(event.start)
-      
+
       // Per view "giorno", mostra solo eventi di oggi
       if (view === 'day') {
         return eventDate.getTime() === today.getTime() && event.status !== 'completed'
       }
-      
+
       // Per altre view, mostra eventi di oggi nel range della view
       return eventDate >= today && eventDate < tomorrow && event.status !== 'completed'
     })
-  }, [viewBasedEvents, view, refreshKey])
+  }, [eventsKey, view, refreshKey])
 
   // Eventi in attesa (oggi non completati)
   const eventsInWaiting = useMemo(() => {
@@ -37,13 +43,13 @@ export function useCalendarStats(
     today.setHours(0, 0, 0, 0)
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
-    
+
     return viewBasedEvents.filter(event => {
       if (!event || !event.start || !event.status) return false
       const eventDate = new Date(event.start)
       return eventDate >= today && eventDate < tomorrow && event.status !== 'completed'
     })
-  }, [viewBasedEvents, refreshKey])
+  }, [eventsKey, refreshKey])
 
   // Eventi di domani
   const tomorrowEvents = useMemo(() => {
@@ -56,11 +62,11 @@ export function useCalendarStats(
       if (!event || !event.start) return false
       const eventDate = new Date(event.start)
       eventDate.setHours(0, 0, 0, 0)
-      
+
       // Eventi di domani: data evento = domani
       return eventDate.getTime() === tomorrow.getTime()
     })
-  }, [viewBasedEvents, refreshKey])
+  }, [eventsKey, refreshKey])
 
   // Eventi in ritardo
   const overdueEvents = useMemo(() => {
@@ -77,7 +83,7 @@ export function useCalendarStats(
       // Eventi in ritardo: data evento < oggi
       return eventDate < now
     })
-  }, [viewBasedEvents, refreshKey])
+  }, [eventsKey, refreshKey])
 
   return {
     todayEvents,

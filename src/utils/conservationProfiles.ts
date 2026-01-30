@@ -12,6 +12,7 @@ export type ConservationProfileId =
   | 'meat_generic'
   | 'vegetables_generic'
   | 'fish_generic'
+  | 'beverages_alcoholic'
 
 export interface CompartmentDefinition {
   id: string
@@ -169,6 +170,30 @@ export const CONSERVATION_PROFILES: Record<ApplianceCategory, ConservationProfil
         'Pesce crudo: doppio contenimento + pulizia frequente ripiano basso.',
       ],
     },
+    {
+      profileId: 'beverages_alcoholic',
+      name: 'Bibite e Bevande alcoliche',
+      applianceType: 'Frigorifero verticale con Freezer',
+      recommendedSetPointsC: { fridge: 4, freezer: -18 },
+      allowedCategoryIds: ['beverages_fruit_veg', 'beverages_water', 'beverages_juice', 'beverages_carbonated', 'beverages_alcoholic'],
+      compartmentFill: {
+        fr_shelf_1_top: ['beverages_water', 'beverages_juice'],
+        fr_shelf_2: ['beverages_carbonated'],
+        fr_shelf_3: ['beverages_fruit_veg'],
+        fr_shelf_4_bottom: ['beverages_alcoholic'],
+        fr_crisper_drawer: ['beverages_fruit_veg'],
+        fr_door_1_top: ['beverages_water', 'beverages_juice'],
+        fr_door_2_mid: ['beverages_carbonated'],
+        fr_door_3_bottom: ['beverages_alcoholic'],
+        fz_drawer_1_top: [],
+        fz_drawer_2_mid: [],
+        fz_drawer_3_bottom: [],
+      },
+      haccpNotes: [
+        'Categorie senza range di temperatura obbligatorio; adatto a cella bevande / bar.',
+        'Temperatura consigliata: 4°C.',
+      ],
+    },
   ],
   vertical_fridge_1_door: [
     {
@@ -254,6 +279,27 @@ export const CONSERVATION_PROFILES: Record<ApplianceCategory, ConservationProfil
       haccpNotes: [
         'Set point 1°C: profilo conservativo per pesce fresco.',
         'Pesce crudo: doppio contenimento + pulizia frequente ripiano basso.',
+      ],
+    },
+    {
+      profileId: 'beverages_alcoholic',
+      name: 'Bibite e Bevande alcoliche',
+      applianceType: 'Frigorifero Verticale 1 Anta',
+      recommendedSetPointsC: { fridge: 4 },
+      allowedCategoryIds: ['beverages_fruit_veg', 'beverages_water', 'beverages_juice', 'beverages_carbonated', 'beverages_alcoholic'],
+      compartmentFill: {
+        fr_shelf_1_top: ['beverages_water', 'beverages_juice'],
+        fr_shelf_2: ['beverages_carbonated'],
+        fr_shelf_3: ['beverages_fruit_veg'],
+        fr_shelf_4_bottom: ['beverages_alcoholic'],
+        fr_crisper_drawer: ['beverages_fruit_veg'],
+        fr_door_1_top: ['beverages_water', 'beverages_juice'],
+        fr_door_2_mid: ['beverages_carbonated'],
+        fr_door_3_bottom: ['beverages_alcoholic'],
+      },
+      haccpNotes: [
+        'Categorie senza range di temperatura obbligatorio; adatto a cella bevande / bar.',
+        'Temperatura consigliata: 4°C.',
       ],
     },
   ],
@@ -343,6 +389,27 @@ export const CONSERVATION_PROFILES: Record<ApplianceCategory, ConservationProfil
         'Pesce crudo: doppio contenimento + pulizia frequente ripiano basso.',
       ],
     },
+    {
+      profileId: 'beverages_alcoholic',
+      name: 'Bibite e Bevande alcoliche',
+      applianceType: 'Frigorifero Verticale 2 Ante',
+      recommendedSetPointsC: { fridge: 4 },
+      allowedCategoryIds: ['beverages_fruit_veg', 'beverages_water', 'beverages_juice', 'beverages_carbonated', 'beverages_alcoholic'],
+      compartmentFill: {
+        fr_shelf_1_top: ['beverages_water', 'beverages_juice'],
+        fr_shelf_2: ['beverages_carbonated'],
+        fr_shelf_3: ['beverages_fruit_veg'],
+        fr_shelf_4_bottom: ['beverages_alcoholic'],
+        fr_crisper_drawer: ['beverages_fruit_veg'],
+        fr_door_1_top: ['beverages_water', 'beverages_juice'],
+        fr_door_2_mid: ['beverages_carbonated'],
+        fr_door_3_bottom: ['beverages_alcoholic'],
+      },
+      haccpNotes: [
+        'Categorie senza range di temperatura obbligatorio; adatto a cella bevande / bar.',
+        'Temperatura consigliata: 4°C.',
+      ],
+    },
   ],
   base_refrigerated: [
     {
@@ -430,8 +497,38 @@ export const CONSERVATION_PROFILES: Record<ApplianceCategory, ConservationProfil
         'Pesce crudo: doppio contenimento + pulizia frequente ripiano basso.',
       ],
     },
+    {
+      profileId: 'beverages_alcoholic',
+      name: 'Bibite e Bevande alcoliche',
+      applianceType: 'Base Refrigerata',
+      recommendedSetPointsC: { fridge: 4 },
+      allowedCategoryIds: ['beverages_fruit_veg', 'beverages_water', 'beverages_juice', 'beverages_carbonated', 'beverages_alcoholic'],
+      compartmentFill: {
+        fr_shelf_1_top: ['beverages_water', 'beverages_juice'],
+        fr_shelf_2: ['beverages_carbonated'],
+        fr_shelf_3: ['beverages_fruit_veg'],
+        fr_shelf_4_bottom: ['beverages_alcoholic'],
+        fr_crisper_drawer: ['beverages_fruit_veg'],
+        fr_door_1_top: ['beverages_water', 'beverages_juice'],
+        fr_door_2_mid: ['beverages_carbonated'],
+        fr_door_3_bottom: ['beverages_alcoholic'],
+      },
+      haccpNotes: [
+        'Categorie senza range di temperatura obbligatorio; adatto a cella bevande / bar.',
+        'Temperatura consigliata: 4°C.',
+      ],
+    },
   ],
 }
+
+/** Categorie disponibili solo per il profilo "Bibite e Bevande alcoliche" */
+export const BEVERAGES_PROFILE_CATEGORY_IDS = [
+  'beverages_fruit_veg',
+  'beverages_water',
+  'beverages_juice',
+  'beverages_carbonated',
+  'beverages_alcoholic',
+] as const
 
 // Mapping category ID → DB name
 export const CATEGORY_ID_TO_DB_NAME: Record<string, string> = {
@@ -451,6 +548,11 @@ export const CATEGORY_ID_TO_DB_NAME: Record<string, string> = {
   frozen_meat_fish: 'Congelati: carni e pesce',
   frozen_desserts: 'Congelati: Dolci',
   blast_chilling: 'Abbattimento rapido',
+  beverages_fruit_veg: 'Frutta / Verdure',
+  beverages_water: 'Acqua',
+  beverages_juice: 'Succhi',
+  beverages_carbonated: 'Bibite gassate',
+  beverages_alcoholic: 'Bevande Alcoliche',
 }
 
 // Helper functions
@@ -492,4 +594,5 @@ export const PROFILE_LABELS: Record<ConservationProfileId, string> = {
   meat_generic: 'Profilo Carne + Generico',
   vegetables_generic: 'Profilo Verdure + Generico',
   fish_generic: 'Profilo Pesce + Generico',
+  beverages_alcoholic: 'Bibite e Bevande alcoliche',
 }

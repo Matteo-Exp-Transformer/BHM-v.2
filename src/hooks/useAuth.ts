@@ -214,27 +214,23 @@ export const useAuth = () => {
         .from('user_profiles')
         .select('*')
         .eq('auth_user_id', user.id)
-        .single()
+        .maybeSingle()
 
       if (error) {
         if (error.code === 'PGRST116') {
-          // Nessun profilo trovato - non è un errore critico
           return null
         }
-        
-        // Errore 406 (Not Acceptable) o altri errori di autenticazione
         if (error.code === 'PGRST301' || error.message?.includes('406') || error.message?.includes('JWT')) {
           console.warn('⚠️ Errore autenticazione durante fetch user profile - sessione potrebbe essere scaduta')
-          // Non fare signOut qui - sarà gestito dall'auth state listener
           return null
         }
-        
         console.error('❌ Supabase: Errore caricamento user profile:', error)
-        console.error('❌ Error details:', { code: error.code, message: error.message, details: error.details })
         return null
       }
 
-      console.log(`✅ Supabase: User profile caricato:`, data)
+      if (data) {
+        console.log(`✅ Supabase: User profile caricato:`, data)
+      }
       return data
     },
     enabled: !!user?.id,

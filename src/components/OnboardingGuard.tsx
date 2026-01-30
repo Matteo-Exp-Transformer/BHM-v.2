@@ -22,6 +22,11 @@ const OnboardingGuard: React.FC<OnboardingGuardProps> = ({ children }) => {
   const location = useLocation()
   const { isLoading, user, companies, isSignedIn } = useAuth()
 
+  // Dipendenze solo primitive (evita "Cannot convert object to primitive value" in dev)
+  const pathname = location.pathname
+  const userId = user?.id ?? null
+  const companiesCount = companies?.length ?? 0
+
   useEffect(() => {
     // Skip se ancora in loading
     if (isLoading) return
@@ -30,10 +35,10 @@ const OnboardingGuard: React.FC<OnboardingGuardProps> = ({ children }) => {
     if (!isSignedIn || !user) return
 
     // Skip se siamo già in onboarding
-    if (location.pathname === '/onboarding') return
+    if (pathname === '/onboarding') return
 
     // Se utente autenticato ma SENZA company → redirect a onboarding
-    if (companies.length === 0) {
+    if (companiesCount === 0) {
       console.log('🔄 Utente senza company - redirect a onboarding')
       
       // Check se ha già completato l'onboarding in passato
@@ -48,7 +53,7 @@ const OnboardingGuard: React.FC<OnboardingGuardProps> = ({ children }) => {
       
       navigate('/onboarding', { replace: true })
     }
-  }, [isLoading, isSignedIn, user, companies, location.pathname, navigate])
+  }, [isLoading, isSignedIn, userId, companiesCount, pathname, navigate])
 
   // Loading state
   if (isLoading) {

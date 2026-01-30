@@ -1,146 +1,154 @@
 # MASTER INDEX - Conservation Feature
-## Aggiornato: 2026-01-24
+## Aggiornato: 2026-01-30
 
 ---
 
-## STATO ATTUALE (Verificato 2026-01-20)
+## STATO ATTUALE (Verificato 2026-01-30)
 
 ### VERDETTO: **PRONTO PER PRODUZIONE + NUOVE FEATURES**
 
 | Metrica | Valore |
 |---------|--------|
 | Funzionalità Implementate | **100%** |
-| Bug Risolti | **7/7** |
+| Bug Risolti | **10/10** |
 | Blockers per Merge | **0** |
-| Migration DB | **Applicata (018, 019, 020)** |
+| Migration DB | **Applicata (018, 019, 020, 021)** |
 | Test Manuale | **PASS** |
-| Nuove Features | **Profilo HACCP** ✅ + **Immagini Elettrodomestici** ✅ + **Layout Split UX** ✅ |
+| Profili HACCP | **5 profili × 4 categorie elettrodomestico** |
+| Nuove Features | Profili HACCP ✅ + Immagini ✅ + Layout Split ✅ + Nome Utente ✅ + Pulsante Calendario ✅ |
 
 ---
 
-## SESSIONE CORRENTE (24-01-2026)
+## SESSIONE CORRENTE (29-01-2026)
 
-### Allineamento ConservationStep ↔ AddPointModal ✅ COMPLETATA
+### Profilo HACCP "Bibite e Bevande alcoliche" + Pulsante Calendario ✅ COMPLETATA
 
-**Obiettivo**: Allineare validazione temperatura e UI del form punti di conservazione in `ConservationStep` (onboarding) con `AddPointModal`.
+**Obiettivo**: Aggiungere 5° profilo HACCP per bibite/bevande e pulsante per navigare al calendario dalle manutenzioni.
 
 **Implementazione**:
-- ✅ **Validazione solo schema**: `validateConservationPoint()` usa solo Zod; rimosse validazioni categorie (incompatibili / fuori range)
-- ✅ **Sezione profilo** (solo frigoriferi): layout split come AddPointModal — categorie auto-assegnate dal profilo, immagine elettrodomestico, Modal lightbox, info box Note HACCP
-- ✅ Campo temperatura read-only, temperatura calcolata; profili HACCP nei prefill; Abbattitore -25°C validato correttamente
+- ✅ **Profilo `beverages_alcoholic`**: 5 categorie (Frutta/Verdure, Acqua, Succhi, Bibite gassate, Bevande Alcoliche)
+- ✅ **Categorie senza range temperatura**: `range: { min: null, max: null }`
+- ✅ **Temperatura consigliata**: 4°C per tutte
+- ✅ **Pulsante "Visualizza nel Calendario"**: Naviga a pagina Attività con modal aperto e manutenzione evidenziata
+- ✅ **Fix completamento manutenzione**: Uso UUID da `metadata.maintenance_id` invece di ID composito
+- ✅ **Fix modal manutenzioni**: Aggiornamento ottimistico senza cambiare fonte dati
 
 **File chiave**:
-- `src/utils/onboarding/conservationUtils.ts` — validazione semplificata
-- `src/components/onboarding-steps/ConservationStep.tsx` — sezione profilo, layout split, lightbox
-- [REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md](./24-01-2026/REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md) — report completo (Fasi 1–3)
+- `src/utils/conservationProfiles.ts` — Profilo `beverages_alcoholic` aggiunto
+- `src/utils/onboarding/conservationUtils.ts` — 5 categorie con `range: null`
+- `src/components/onboarding-steps/ConservationStep.tsx` — Filtro categorie per profilo
+- [REPORT_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md](./29-01-2026/REPORT_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md)
+- [REPORT_PULSANTE_VISUALIZZA_CALENDARIO_E_FIX.md](./29-01-2026/REPORT_PULSANTE_VISUALIZZA_CALENDARIO_E_FIX.md)
 
-**Status**: ✅ COMPLETATA — type-check/lint/test conservationUtils OK.
+**Status**: ✅ COMPLETATA — 5 profili HACCP totali, pulsante calendario funzionante.
 
 ---
 
-## SESSIONE PRECEDENTE (20-01-2026)
+## SESSIONI PRECEDENTI
 
-### Feature: Layout Split UX Enhancement ✅ COMPLETATA
+### 24-01-2026: Allineamento ConservationStep ↔ AddPointModal ✅
 
-**Obiettivo**: Migliorare UX del layout split per mostrarlo immediatamente alla selezione tipo "Frigorifero" con placeholder informativi.
+**Obiettivo**: Allineare validazione temperatura e UI del form punti di conservazione.
 
 **Implementazione**:
-- ✅ Layout split appare IMMEDIATAMENTE quando `pointType === 'fridge'` (non più solo quando categoria + profilo selezionati)
-- ✅ Sezione "Categorie prodotti" standard nascosta quando `pointType === 'fridge'` (anche prima di selezionare categoria)
-- ✅ Colonna sinistra: Placeholder "Seleziona un profilo HACCP" quando profilo non selezionato
-- ✅ Colonna destra: Placeholder "Seleziona una categoria elettrodomestico" quando categoria non selezionata
-- ✅ Transizioni fluide: Categorie e immagine appaiono progressivamente man mano che utente completa i campi
-- ✅ UX migliorata: Utente vede immediatamente la struttura finale del form
+- ✅ **Validazione solo schema**: `validateConservationPoint()` usa solo Zod
+- ✅ **Sezione profilo** (solo frigoriferi): layout split, immagine, Modal lightbox, Note HACCP
+- ✅ Campo temperatura read-only, profili HACCP nei prefill
 
 **File chiave**:
-- `src/features/conservation/components/AddPointModal.tsx` - Condizioni visibilità layout split ✅ MODIFICATO
-
-**Status**: ✅ COMPLETATA AL 100% - Build verificata, TypeScript OK, UX migliorata.
+- `src/utils/onboarding/conservationUtils.ts`
+- `src/components/onboarding-steps/ConservationStep.tsx`
+- [REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md](./24-01-2026/REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md)
 
 ---
 
-### Feature: Immagine Elettrodomestico nel Form ✅ COMPLETATA
+### 23-01-2026: Fix Conservation Point Card + Nome Utente ✅
 
-**Obiettivo**: Mostrare immagine elettrodomestico quando viene selezionato un profilo HACCP per frigoriferi.
+**Obiettivo**: Fixare visualizzazione categorie e ripristinare nome utente nelle temperature readings.
 
 **Implementazione**:
-- ✅ Configurazione centralizzata paths immagini (`src/config/applianceImages.ts`)
-- ✅ Layout split: Categorie profilo (sinistra) + Immagine elettrodomestico (destra)
-- ✅ Click-to-enlarge: Modal lightbox fullscreen con `object-contain`
-- ✅ Accessibilità: Keyboard navigation (Tab/Enter/Space), ARIA labels
-- ✅ Error handling: Fallback UI quando immagine non disponibile
-- ✅ Responsive: Layout stack su mobile, affiancato su desktop
-- ✅ Immagine frigorifero verticale copiata (445KB PNG)
+- ✅ **Mapping categorie unificato**: Funzione `mapCategoryToLabel()` cerca in entrambi i formati
+- ✅ **Fix query useTemperatureReadings**: `auth_user_id` invece di `id`
+- ✅ **Fallback nome utente**: `company_members` → `staff`
+- ✅ **Salvataggio appliance_category e profile_id** durante onboarding
 
 **File chiave**:
-- `src/config/applianceImages.ts` - Config centralizzata paths ✅ CREATO
-- `src/features/conservation/components/AddPointModal.tsx` - Layout split + modal ✅ MODIFICATO
-- `public/images/conservation/appliances/vertical-fridge-with-freezer/main.png` - Immagine ✅ CREATO
-- [AGENT_GUIDE_APPLIANCE_IMAGES.md](./20-01-2026/AGENT_GUIDE_APPLIANCE_IMAGES.md) - Guida debug & nuove categorie ✅ CREATO
-
-**Status**: ✅ COMPLETATA AL 100% - Build verificata, TypeScript OK, feature testabile.
+- `src/features/conservation/components/ConservationPointCard.tsx`
+- `src/features/conservation/hooks/useTemperatureReadings.ts`
+- [REPORT_FIX_CONSERVATION_POINT_CARD_DISPLAY.md](./23-01-2026/REPORT_FIX_CONSERVATION_POINT_CARD_DISPLAY.md)
 
 ---
 
-## SESSIONE PRECEDENTE (19-01-2026)
+### 22-01-2026: Nome Utente + Recurrence Config ✅
 
-### Feature: Profilo Punto di Conservazione HACCP ✅ COMPLETATA
-
-**Obiettivo**: Sostituire selezione categorie manuale con profili HACCP pre-configurati per frigoriferi.
+**Obiettivo**: Associazione nome utente a registrazioni temperature e implementazione recurrence_config.
 
 **Implementazione**:
-- ✅ Sezione "Profilo Punto di Conservazione" condizionale (solo per frigoriferi)
-- ✅ 4 profili HACCP predefiniti (Massima Capienza, Carne+Generico, Verdure+Generico, Pesce+Generico)
-- ✅ Auto-configurazione temperatura e categorie prodotti dal profilo
-- ✅ Categorie read-only quando profilo selezionato
-- ✅ Info box con note HACCP e temperatura consigliata
+- ✅ **Sistema associazione nome utente**: onboarding → user_profiles → temperature readings
+- ✅ **Migration 019**: `recurrence_config JSONB` per manutenzioni
+- ✅ **Funzione `calculateNextDueWithRecurrence`**: Rispetta giorni configurati
+- ✅ **Fix bug validazione ConservationStep**
+
+**Formato recurrence_config**:
+```json
+{
+  "weekdays": ["lunedi", "mercoledi", "venerdi"],
+  "day_of_month": 15,
+  "day_of_year": "2026-03-15"
+}
+```
+
+**File chiave**:
+- `database/migrations/019_add_recurrence_config_to_maintenance_tasks.sql`
+- `src/features/conservation/hooks/useMaintenanceTasks.ts`
+- [ASSOCIAZIONE_NOME_UTENTE_TEMPERATURE.md](./22-01-2026%20Nome%20associato%20ad%20evento/ASSOCIAZIONE_NOME_UTENTE_TEMPERATURE.md)
+
+---
+
+### 21-01-2026: Centralizzazione Costanti + Layout Split UX ✅
+
+**Obiettivo**: Eliminare duplicazioni costanti e migliorare UX layout split.
+
+**Implementazione**:
+- ✅ **Nuovo file `conservationConstants.ts`**: Singola fonte di verità
+- ✅ **Helper functions**: `getConservationTypeLabel()`, `getConservationTempRange()`, ecc.
+- ✅ **Rimozione profilo `meat_fish_generic`**: Migration 021
+- ✅ **Layout split immediato** per frigoriferi con placeholder informativi
+
+**Metriche**:
+- Codice duplicato eliminato: ~120 linee
+- File con definizioni ridotti: da 4 a 1
+- Funzioni helper aggiunte: 5
+
+**File chiave**:
+- `src/utils/conservationConstants.ts` — NUOVO
+- [RIEPILOGO_SESSIONE_21_01_2026.md](./21-01-2026/RIEPILOGO_SESSIONE_21_01_2026.md)
+
+---
+
+### 20-01-2026: Immagini Elettrodomestici + Layout Split ✅
+
+- ✅ Layout split: Categorie (sinistra) + Immagine (destra)
+- ✅ Modal lightbox fullscreen
+- ✅ Config centralizzata paths (`applianceImages.ts`)
+
+---
+
+### 19-01-2026: Profili HACCP v2.0.0 ✅
+
+- ✅ 4 profili iniziali (max_capacity, meat_generic, vegetables_generic, fish_generic)
+- ✅ Auto-configurazione temperatura e categorie
 - ✅ Database schema aggiornato (migration 018, 019, 020)
-- ✅ Test unitari e E2E completati (28 test totali)
-
-**File chiave**:
-- `src/utils/conservationProfiles.ts` - Costanti profili HACCP
-- `src/features/conservation/components/AddPointModal.tsx` - Sezione profilo UI
-- `database/migrations/018_*`, `019_*`, `020_*` - Schema DB
-
-**Status**: ✅ COMPLETATA AL 100% - Tutte le fasi implementate e testate.
 
 ---
 
-## SESSIONE PRECEDENTE (16-01-2026)
+### 16-01-2026: Bug Fix Session ✅
 
-### Bug Fix Completati
-
-| Bug ID | Descrizione | Status | Fix |
-|--------|-------------|--------|-----|
-| **C1** | Select Ruolo non salvava valore | ✅ RISOLTO | Stale closure → `onUpdate()` atomico |
-| **C1-bis** | Select Categoria non salvava valore | ✅ RISOLTO | Stesso fix di C1 |
-| **M1** | Temperatura mostra valore fisso | ✅ RISOLTO | Campo disabilitato + range placeholder |
-| **A1** | Manutenzione completata visibile | ✅ GIA' OK | Funzionava correttamente |
-| **A2** | Visualizzazione assegnazione | ✅ GIA' OK | Funzionava correttamente |
-| **M2** | Giorni default errati | ✅ GIA' OK | Funzionava correttamente |
-| **M3** | Modifica lettura alert | ✅ GIA' OK | Funzionava correttamente |
-
-### File Modificati
-
-| File | Modifiche |
-|------|-----------|
-| `src/features/conservation/components/AddPointModal.tsx` | Fix C1, C1-bis, M1 |
-
----
-
-## FILE ATTUALI
-
-| File | Descrizione | Status |
-|------|-------------|--------|
-| ⭐ [REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md](./24-01-2026/REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md) | **Report allineamento ConservationStep ↔ AddPointModal (validazione, sezione profilo)** | **ATTUALE** |
-| [AGENT_GUIDE_APPLIANCE_IMAGES.md](./20-01-2026/AGENT_GUIDE_APPLIANCE_IMAGES.md) | Guida debug & implementazione nuove categorie | **ARCHIVIATO** |
-| [Plan_Foto_PuntiConservazione.md](./20-01-2026/Plan_Foto_PuntiConservazione.md) | Piano implementazione immagini elettrodomestici | **COMPLETATA** |
-| [PLAN.md](./19-01-2026/PLAN.md) | Piano implementazione profili HACCP v2.0.0 | **ARCHIVIATO** |
-| [TASKS.md](./19-01-2026/TASKS.md) | Breakdown task sistema multi-agent | **ARCHIVIATO** |
-| [AGENT_ASSIGNMENTS.md](./19-01-2026/AGENT_ASSIGNMENTS.md) | Assegnazioni agenti | **ARCHIVIATO** |
-| [README.md](./19-01-2026/README.md) | Quick start per agenti | **ARCHIVIATO** |
-| [SUPERVISOR_FINAL_REPORT_COMPLETAMENTO.md](./16-01-2026/SUPERVISOR_FINAL_REPORT_COMPLETAMENTO.md) | Report finale bug fix | **ARCHIVIATO** |
-| [EXECUTION_LOG.md](./15-01-2026/EXECUTION_LOG.md) | Log esecuzione completo | **ARCHIVIATO** |
+| Bug ID | Descrizione | Status |
+|--------|-------------|--------|
+| **C1** | Select Ruolo non salvava valore | ✅ RISOLTO |
+| **C1-bis** | Select Categoria non salvava valore | ✅ RISOLTO |
+| **M1** | Temperatura mostra valore fisso | ✅ RISOLTO |
 
 ---
 
@@ -148,114 +156,83 @@
 
 ```
 Lavoro/
-├── 00_MASTER_INDEX_CONSERVATION.md  ← QUESTO FILE (aggiornato 24-01-2026)
+├── 00_MASTER_INDEX_CONSERVATION.md  ← QUESTO FILE (aggiornato 30-01-2026)
 ├── 10-01-2026/                      ← Archivio storico
-├── 11-01-2026/                      ← Archivio storico
-├── 12-01-2026/                      ← Archivio storico
-├── 13-01-2026/                      ← Report obsoleti
-├── 14-01-2026/                      ← Analisi pre-fix
-│   ├── STATO_REALE_CODICE.md
-│   ├── CONFRONTO_REQUISITI_VS_IMPLEMENTAZIONE.md
-│   └── VERIFICA_DB_COMPLETATA.md
-├── 15-01-2026/                      ← Pianificazione fix
-│   ├── TASK.md                      ★ Task list
-│   ├── PLAN.md                      ★ Piano tecnico
-│   ├── WORKER_PROMPT.md             ★ Prompt agenti
-│   └── EXECUTION_LOG.md             ★ Log completato
-├── 16-01-2026/                      ← Bug fix completamento
-│   └── SUPERVISOR_FINAL_REPORT_COMPLETAMENTO.md  ★ REPORT FINALE
-├── 19-01-2026/                      ← Profili HACCP
-│   ├── PLAN.md                      ★ Piano implementazione v2.0.0
-│   ├── TASKS.md                     ★ Breakdown task multi-agent
-│   ├── AGENT_ASSIGNMENTS.md         ★ Assegnazioni agenti
-│   ├── README.md                    ★ Quick start
-│   ├── TEMPLATE_JSON.json           ★ Template profili (riferimento)
-│   └── Test/                        ★ Test feature
-│       ├── conservationProfiles.test.ts
-│       ├── AddPointModal.profile-tests.tsx
-│       ├── profile-selection.spec.ts
-│       └── README.md
-├── 20-01-2026/                      ← Immagini Elettrodomestici, Layout Split UX
-│   ├── AGENT_GUIDE_APPLIANCE_IMAGES.md
-│   └── Plan_Foto_PuntiConservazione.md
-└── 24-01-2026/                      ← SESSIONE CORRENTE - Allineamento ConservationStep
-    └── REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md  ⭐ REPORT Fasi 1–3
+├── ...
+├── 21-01-2026/                      ← Centralizzazione costanti
+│   └── RIEPILOGO_SESSIONE_21_01_2026.md
+├── 22-01-2026 Nome associato.../    ← Nome utente + recurrence_config
+│   ├── ASSOCIAZIONE_NOME_UTENTE_TEMPERATURE.md
+│   └── REPORT_RECURRENCE_CONFIG_IMPLEMENTATION.md
+├── 23-01-2026/                      ← Fix Conservation Point Card
+│   └── REPORT_FIX_CONSERVATION_POINT_CARD_DISPLAY.md
+├── 24-01-2026/                      ← Allineamento ConservationStep
+│   ├── REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md
+│   └── MAPPATURA_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md
+└── 29-01-2026/                      ← ⭐ SESSIONE CORRENTE
+    ├── README.md
+    ├── REPORT_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md
+    ├── REPORT_PULSANTE_VISUALIZZA_CALENDARIO_E_FIX.md
+    └── MAPPATURA_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md
 ```
+
+---
+
+## FUNZIONALITÀ IMPLEMENTATE (100%)
+
+| Funzionalità | Status | Data |
+|--------------|--------|------|
+| CRUD Punti Conservazione | ✅ | 16-01 |
+| Manutenzioni Obbligatorie (4 tipi) | ✅ | 16-01 |
+| Select Ruolo/Categoria/Dipendente | ✅ | 16-01 |
+| **Profili HACCP (5 profili)** | ✅ | 19-01 → 29-01 |
+| **Immagine Elettrodomestico** | ✅ | 20-01 |
+| **Layout Split Categorie + Immagine** | ✅ | 20-01 |
+| **Costanti Centralizzate** | ✅ | 21-01 |
+| **Nome Utente Temperature Readings** | ✅ | 22-01 |
+| **Recurrence Config Manutenzioni** | ✅ | 22-01 |
+| **Fix Mapping Categorie** | ✅ | 23-01 |
+| **Allineamento ConservationStep** | ✅ | 24-01 |
+| **Profilo Bibite/Bevande** | ✅ | 29-01 |
+| **Pulsante Calendario** | ✅ | 29-01 |
+
+---
+
+## 5 PROFILI HACCP
+
+| ID | Nome | Temperatura | Note |
+|----|------|-------------|------|
+| `max_capacity` | Massima Capienza | 2°C | Per disciplina e organizzazione |
+| `meat_generic` | Carne + Generico | 3°C | Specializzato carne |
+| `vegetables_generic` | Verdure + Generico | 4°C | Specializzato verdure |
+| `fish_generic` | Pesce + Generico | 1°C | Specializzato pesce |
+| `beverages_alcoholic` | Bibite e Bevande Alcoliche | 4°C | Nessun range temperatura |
+
+Ogni profilo è disponibile per tutte e 4 le categorie elettrodomestico:
+- `vertical_fridge_with_freezer`
+- `vertical_fridge_1_door`
+- `vertical_fridge_2_doors`
+- `base_refrigerated`
 
 ---
 
 ## QUICK START
 
-### Se sei un Worker/Agent:
+### Per debug o implementazione:
 
-**La feature Conservation e' COMPLETA.** Non ci sono task pendenti.
+1. **Profili HACCP**: Leggi `src/utils/conservationProfiles.ts`
+2. **Costanti**: Leggi `src/utils/conservationConstants.ts`
+3. **Immagini**: Leggi `src/config/applianceImages.ts`
+4. **Guida agenti**: [AGENT_GUIDE_APPLIANCE_IMAGES.md](./20-01-2026/AGENT_GUIDE_APPLIANCE_IMAGES.md)
 
-**Per debug o implementare nuove categorie elettrodomestici**:
-👉 Leggi la guida completa: [AGENT_GUIDE_APPLIANCE_IMAGES.md](./20-01-2026/AGENT_GUIDE_APPLIANCE_IMAGES.md)
-
-### Per Verifica:
+### Comandi verifica:
 
 ```bash
-# Dev server
-npm run dev
-
-# Test manuale feature completa
-# 1. Apri Conservation Page
-# 2. Clicca "Aggiungi Punto"
-# 3. Seleziona "Frigorifero" in Tipologia
-#    → VERIFICA: Layout split appare IMMEDIATAMENTE (entrambe colonne vuote con placeholder)
-#    → VERIFICA: Sezione "Categorie prodotti" standard NON è visibile
-# 4. Seleziona "Frigorifero Verticale con Freezer"
-#    → VERIFICA: Immagine appare nella colonna destra
-#    → VERIFICA: Colonna sinistra ancora mostra placeholder profilo
-# 5. Seleziona un profilo HACCP (es. "Profilo Massima Capienza")
-#    → VERIFICA: Categorie appaiono nella colonna sinistra
-#    → VERIFICA: Immagine rimane visibile nella colonna destra
-# 6. Click immagine → verifica modal lightbox
+npm run dev          # Dev server
+npm run build        # Build
+npm run type-check   # TypeScript check
+npm run test -- --run  # Test
 ```
-
----
-
-## FUNZIONALITA' IMPLEMENTATE (100%)
-
-| Funzionalità | Status | Note |
-|--------------|--------|------|
-| CRUD Punti Conservazione | ✅ | AddPointModal completo |
-| Manutenzioni Obbligatorie (4 tipi) | ✅ | Temperatura, Sanificazione, Sbrinamento, Scadenze |
-| Frequenze (4 tipi) | ✅ | Giornaliera, Settimanale, Mensile, Annuale |
-| MiniCalendar selezione giorni | ✅ | Mode month/year |
-| Giorni da Calendar Settings | ✅ | Carica open_weekdays |
-| Select Ruolo/Categoria/Dipendente | ✅ | Fix stale closure applicato |
-| Campo Temperatura con Range | ✅ | Placeholder informativo |
-| Completamento Manutenzioni | ✅ | Cache invalidation OK |
-| Modifica Letture Temperatura | ✅ | Modal edit funzionante |
-| Raggruppamento per tipo | ✅ | Expansion cards |
-| **Profilo HACCP** | ✅ | **Feature 19-01-2026** |
-| **Auto-configurazione profilo** | ✅ | Temperatura e categorie dal profilo |
-| **Categorie read-only con profilo** | ✅ | Categorie auto-configurate |
-| **4 Profili predefiniti** | ✅ | Massima Capienza, Carne+Generico, Verdure+Generico, Pesce+Generico |
-| **Visualizzazione profilo in card** | ✅ | ConservationPointCard aggiornata |
-| **Immagine Elettrodomestico** | ✅ | **Feature 20-01-2026** |
-| **Layout Split Categorie + Immagine** | ✅ | 2 colonne responsive |
-| **Layout Split UX Enhancement** | ✅ | **Feature 20-01-2026** - Appare immediatamente per frigoriferi |
-| **Placeholder Informativi Layout Split** | ✅ | Messaggi chiari quando colonne vuote |
-| **Sezione Categorie Standard Condizionale** | ✅ | Nascosta per frigoriferi (sempre) |
-| **Modal Lightbox Click-to-Enlarge** | ✅ | Fullscreen con object-contain |
-| **Keyboard Navigation Immagini** | ✅ | Tab/Enter/Space accessibili |
-| **Config Centralizzata Paths** | ✅ | applianceImages.ts |
-| **Error Handling Immagini** | ✅ | Fallback UI quando non disponibile |
-
----
-
-## PROBLEMI RESIDUI
-
-**NESSUNO** - Tutti i bug sono stati risolti.
-
-### Note Tecniche
-
-- Errori TypeScript in `type-check` sono in file **non correlati** (inventory, calendar hooks)
-- La build compila correttamente
-- Dev server funziona senza errori
 
 ---
 
@@ -264,54 +241,31 @@ npm run dev
 | Data | Attività | Risultato |
 |------|----------|-----------|
 | 10-01-2026 | Piano iniziale | Base feature |
-| 11-01-2026 | Completamento feature v3.0 | Implementazione core |
-| 12-01-2026 | Worker prompts | Setup multi-agent |
-| 13-01-2026 | Report supervisor | Analisi (poi corretta) |
-| 14-01-2026 | Verifica codice reale | ~90% implementato |
-| 15-01-2026 | Pianificazione bug fix | 7 task identificate |
 | 16-01-2026 | Bug fix session | 7/7 completate |
-| 19-01-2026 | Feature Profili HACCP | 5 fasi completate, 28 test |
-| **20-01-2026** | **Feature Immagini Elettrodomestici** | **Layout split, modal lightbox, guida agenti** |
-| **20-01-2026** | **Feature Layout Split UX Enhancement** | **Layout split immediato, placeholder informativi, UX migliorata** |
-| **20-01-2026** | **Rimozione Profilo Carne+Pesce+Generico** | **Profilo meat_fish_generic rimosso (migration 021)** |
-| **24-01-2026** | **Allineamento ConservationStep ↔ AddPointModal** | **Validazione solo schema, sezione profilo (layout split, immagine, lightbox)** |
-
----
-
-## COMANDI VERIFICA
-
-```bash
-# Dev server
-npm run dev
-
-# Build
-npm run build
-
-# Type check (errori pre-esistenti in altri moduli)
-npm run type-check
-
-# Lint
-npm run lint
-
-# Test
-npm run test -- --run
-```
-
----
-
-**Fine 00_MASTER_INDEX_CONSERVATION.md**
-**Ultimo aggiornamento**: 2026-01-24
-**Status**: FEATURE COMPLETA + PROFILI HACCP + IMMAGINI ELETTRODOMESTICI + LAYOUT SPLIT UX + ALLINEAMENTO CONSERVATIONSTEP (validazione schema, sezione profilo)
+| 19-01-2026 | Feature Profili HACCP | 4 profili implementati |
+| 20-01-2026 | Feature Immagini Elettrodomestici | Layout split + modal |
+| **21-01-2026** | **Centralizzazione Costanti** | **Eliminazione ~120 linee duplicate** |
+| **22-01-2026** | **Nome Utente + Recurrence Config** | **Migration 019, fallback query** |
+| **23-01-2026** | **Fix Conservation Point Card** | **Mapping unificato categorie** |
+| **24-01-2026** | **Allineamento ConservationStep** | **Validazione schema, sezione profilo** |
+| **29-01-2026** | **Profilo Bibite + Pulsante Calendario** | **5° profilo HACCP, navigazione calendario** |
 
 ---
 
 ## RISORSE AGENTI
 
 Per implementare o fare debug:
+- 📖 [Report Profilo Bibite e Pulsante Calendario](./29-01-2026/REPORT_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md) (29-01-2026)
 - 📖 [Report Allineamento ConservationStep ↔ AddPointModal](./24-01-2026/REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md) (Fasi 1–3, 24-01-2026)
 - 📖 [Guida Debug & Nuove Categorie](./20-01-2026/AGENT_GUIDE_APPLIANCE_IMAGES.md)
-- 📋 [Piano Implementazione Immagini](./20-01-2026/Plan_Foto_PuntiConservazione.md)
 - 🏗️ File sorgenti:
   - `src/config/applianceImages.ts`
   - `src/features/conservation/components/AddPointModal.tsx`
   - `src/utils/conservationProfiles.ts`
+  - `src/utils/conservationConstants.ts`
+
+---
+
+**Fine 00_MASTER_INDEX_CONSERVATION.md**
+**Ultimo aggiornamento**: 2026-01-30
+**Status**: FEATURE COMPLETA — 5 profili HACCP × 4 categorie elettrodomestico

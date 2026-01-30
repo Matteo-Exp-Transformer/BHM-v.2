@@ -1,14 +1,36 @@
 # SCHEDULED_MAINTENANCE_SECTION - DOCUMENTAZIONE COMPLETA
 
-**Data Creazione**: 2026-01-16  
-**Ultima Modifica**: 2026-01-16  
-**Versione**: 1.1.0
+**Data Creazione**: 2026-01-16
+**Ultima Modifica**: 2026-01-30
+**Versione**: 2.0.0
+
+---
+
+## 📝 NOTE AGGIORNAMENTO VERSIONE 2.0.0
+
+**Data Aggiornamento**: 2026-01-30
+**Motivo**: Aggiunta pulsante "Visualizza nel Calendario" e recurrence_config
+
+**Nuove Features (v2.0.0)**:
+- ✅ **Pulsante "Visualizza nel Calendario"**: Naviga a pagina Attività con modal aperto e manutenzione evidenziata
+- ✅ **recurrence_config JSONB**: Persistenza giorni settimana/mese/anno per ricalcolo next_due
+- ✅ **Aggiornamento ottimistico**: Refresh modal dopo completamento senza cambiare fonte dati
+- ✅ **Fix completamento manutenzione**: Uso UUID da `metadata.maintenance_id`
+
+**Formato recurrence_config**:
+```json
+{
+  "weekdays": ["lunedi", "mercoledi", "venerdi"],  // Daily/Weekly
+  "day_of_month": 15,                               // Monthly
+  "day_of_year": "2026-03-15"                       // Annually
+}
+```
 
 ---
 
 ## 📝 NOTE AGGIORNAMENTO VERSIONE 1.1.0
 
-**Data Aggiornamento**: 2026-01-16  
+**Data Aggiornamento**: 2026-01-16
 **Motivo**: Allineamento documentazione con requisiti utente definiti
 
 **Modifiche principali**:
@@ -91,6 +113,24 @@ La sezione viene mostrata quando:
    - **Scenario**: Un responsabile vuole verificare se tutte le manutenzioni previste per questa settimana sono state completate
    - **Azione**: Visualizza la sezione "Manutenzioni Programmate", vede pallino verde su punti con tutte manutenzioni completate
    - **Risultato**: Identifica rapidamente punti con manutenzioni ancora in sospeso
+
+5. **Visualizzare manutenzione nel calendario** (v2.0.0)
+   - **Scenario**: Un manager vuole vedere una manutenzione specifica nel contesto del calendario
+   - **Azione**: Sulla card di una manutenzione, clicca **"Visualizza nel Calendario"**
+   - **Risultato**: Si apre la pagina "Attività" con:
+     - **Modal Manutenzioni** aperto sulla data di scadenza della manutenzione
+     - **Manutenzione evidenziata** con bordo animato (highlight)
+   - **File coinvolti**: `ScheduledMaintenanceCard.tsx`, `CalendarPage.tsx`, `MacroCategoryModal.tsx`
+
+6. **Completare manutenzione con recurrence_config** (v2.0.0)
+   - **Scenario**: Un dipendente completa una manutenzione settimanale assegnata per Lunedì, Mercoledì, Venerdì
+   - **Azione**: Clicca "Completa Manutenzione" sulla card
+   - **Risultato**:
+     - `completed_at` = timestamp corrente
+     - `completed_by` = user.id
+     - `next_due` = prossimo giorno configurato in `recurrence_config.weekdays` (es. se oggi è Lunedì → Mercoledì)
+     - Record creato in `maintenance_completions`
+     - Manutenzione non più visibile tra le pendenti
 
 ### Flusso Utente
 
