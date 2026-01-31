@@ -27,3 +27,4 @@
 - **Calendario**: nessun evento rilevamento temperatura per punti blast
 - **Validazioni**: Ambiente e Abbattitore = 2 manutenzioni obbligatorie; testo dinamico 2/4
 - **TemperaturePointStatusCard**: altezza uniforme (min-h 246px, area azioni min-h 40px)
+- **Dettagli rilevamento**: tabella Storico con riga espandibile (metodo, note, foto evidenza; titoli distinti da contenuti); card Stato con sola riga "Metodo"

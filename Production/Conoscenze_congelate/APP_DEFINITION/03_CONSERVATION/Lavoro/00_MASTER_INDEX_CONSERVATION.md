@@ -96,14 +96,16 @@
 - ✅ **TasksStep + onboardingHelpers**: requiredMaintenances e insert maintenance per blast come ambient (2 tipi); validazioni validateAllMaintenanceAssigned e lista punti
 - ✅ **temperatureCheckGenerator**: nessun evento rilevamento temperatura per punti blast
 - ✅ **ConservationPage**: filter blast dalla griglia TemperaturePointStatusCard (sezione Rilevamento temperature)
-- ✅ **TemperaturePointStatusCard**: min-h-[246px], area azioni min-h-[40px] per altezza uniforme (Conforme = Critico)
+- ✅ **TemperaturePointStatusCard**: min-h-[246px], area azioni min-h-[40px] per altezza uniforme; riga "Metodo" sotto Ultima lettura (solo metodo, no note/foto)
+- ✅ **TemperatureReadingsTable**: riga cliccabile → sezione espandibile con Metodo, Note, Foto evidenza; titoli distinti da contenuti (uppercase grigio vs text-base scuro)
 
 **File chiave**:
 - `src/types/conservation.ts` — typesRequiringTemp, classifyPointStatus
 - `src/features/conservation/components/ConservationPointCard.tsx` — Nascita temperatura/badge/ultima lettura per blast
 - `src/features/conservation/components/AddPointModal.tsx` — Manutenzioni blast, validazioni, testo 2/4
 - `src/features/conservation/ConservationPage.tsx` — Filter blast da griglia temperatura
-- `src/features/conservation/components/TemperaturePointStatusCard.tsx` — Altezza uniforme
+- `src/features/conservation/components/TemperaturePointStatusCard.tsx` — Altezza uniforme, metodo rilevamento
+- `src/features/conservation/components/TemperatureReadingsTable.tsx` — Riga espandibile, dettagli metodo/note/foto
 - [REPORT_ABBATTITORE_E_UI_31-01-2026.md](./31-01-2026/REPORT_ABBATTITORE_E_UI_31-01-2026.md)
 
 ---
@@ -291,6 +293,8 @@ Lavoro/
 | **Validazioni 2/4 manutenzioni (Ambiente/Abbattitore)** | ✅ | 31-01 |
 | **Sezione Rilevamento temperature senza Abbattitore** | ✅ | 31-01 |
 | **Altezza uniforme card temperatura (TemperaturePointStatusCard)** | ✅ | 31-01 |
+| **Dettagli rilevamento in tabella** (riga espandibile: metodo, note, foto; titoli distinti) | ✅ | 31-01 |
+| **Metodo rilevamento in card** (TemperaturePointStatusCard, riga sotto Ultima lettura) | ✅ | 31-01 |
 
 ---
 

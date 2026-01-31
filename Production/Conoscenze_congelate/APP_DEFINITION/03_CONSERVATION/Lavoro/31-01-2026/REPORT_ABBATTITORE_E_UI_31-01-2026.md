@@ -162,5 +162,30 @@ if (point.type !== 'blast' && point.last_temperature_reading) {
 
 ---
 
+## 6. DETTAGLI RILEVAMENTO (TABELLA E CARD)
+
+**Obiettivo**: Mostrare metodo di rilevazione, note e foto evidenza dove servono; differenziare titoli da contenuti utente.
+
+### 6.1 TemperatureReadingsTable (tab Storico)
+
+- **Riga cliccabile**: clic sulla riga apre/chiude una sezione espandibile sotto la riga.
+- **Colonna espandi**: icona ChevronRight/ChevronDown (solo se la lettura ha metodo, note o foto).
+- **Sezione "Dettagli rilevamento"** (solo quando espansa):
+  - **Metodo di rilevazione**: Manuale, Termometro Digitale, Sensore Automatico (o —).
+  - **Note aggiuntive**: testo note (o —).
+  - **Foto evidenza**: link URL che apre in nuova scheda (o —).
+- **Distinzione titoli/contenuti**: titoli in `text-xs uppercase tracking-wider text-gray-500`, contenuti in `text-base text-gray-900` per separare visivamente etichette da dati inseriti dall’utente.
+
+**File**: `src/features/conservation/components/TemperatureReadingsTable.tsx`
+
+### 6.2 TemperaturePointStatusCard (tab Stato Corrente)
+
+- **Solo metodo di rilevazione**: sotto "Ultima lettura" una riga fissa "Metodo: Termometro Digitale" (o Manuale / Sensore Automatico / —).
+- Nessuna sezione espandibile, nessuna nota, nessuna foto evidenza in card.
+
+**File**: `src/features/conservation/components/TemperaturePointStatusCard.tsx`
+
+---
+
 **Fine report**  
 **Ultimo aggiornamento**: 31-01-2026

@@ -1,6 +1,13 @@
+import React, { useState } from 'react'
 import { TemperatureReading, ConservationPoint } from '@/types/conservation'
 import { isTemperatureCompliant } from '@/features/conservation/utils/correctiveActions'
-import { CheckCircle, AlertTriangle } from 'lucide-react'
+import { CheckCircle, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react'
+
+const METHOD_LABELS: Record<string, string> = {
+  manual: 'Manuale',
+  digital_thermometer: 'Termometro Digitale',
+  automatic_sensor: 'Sensore Automatico',
+}
 
 interface TemperatureReadingsTableProps {
   readings: TemperatureReading[]
@@ -11,8 +18,12 @@ export function TemperatureReadingsTable({
   readings,
   points,
 }: TemperatureReadingsTableProps) {
-  // Create a map of point IDs to points for quick lookup
+  const [expandedReadingId, setExpandedReadingId] = useState<string | null>(null)
   const pointsMap = new Map(points.map((p) => [p.id, p]))
+
+  const toggleExpanded = (readingId: string) => {
+    setExpandedReadingId((prev) => (prev === readingId ? null : readingId))
+  }
 
   if (readings.length === 0) {
     return (
@@ -27,6 +38,7 @@ export function TemperatureReadingsTable({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-200 bg-gray-50">
+            <th className="w-8 px-1 py-2" aria-label="Espandi" />
             <th className="px-3 py-2 text-left font-medium text-gray-700">Ora</th>
             <th className="px-3 py-2 text-left font-medium text-gray-700">Punto</th>
             <th className="px-3 py-2 text-left font-medium text-gray-700">Reparto</th>
@@ -41,6 +53,9 @@ export function TemperatureReadingsTable({
             const isCompliant = point
               ? isTemperatureCompliant(reading.temperature, point.setpoint_temp)
               : false
+            const isExpanded = expandedReadingId === reading.id
+            const hasDetails =
+              reading.method || reading.notes || (reading.photo_evidence && reading.photo_evidence.trim())
 
             const recordedDate = new Date(reading.recorded_at)
             const timeString = recordedDate.toLocaleTimeString('it-IT', {
@@ -53,30 +68,98 @@ export function TemperatureReadingsTable({
               : '-'
 
             return (
-              <tr key={reading.id} className="hover:bg-gray-50">
-                <td className="px-3 py-2 text-gray-900">{timeString}</td>
-                <td className="px-3 py-2">
-                  <span className="font-medium text-gray-900">
-                    {point?.name || 'Punto sconosciuto'}
-                  </span>
-                </td>
-                <td className="px-3 py-2 text-gray-600">
-                  {point?.department?.name || '-'}
-                </td>
-                <td className="px-3 py-2">
-                  <span className={`font-semibold ${isCompliant ? 'text-gray-900' : 'text-red-600'}`}>
-                    {reading.temperature.toFixed(1)}°C
-                  </span>
-                </td>
-                <td className="px-3 py-2 text-center">
-                  {isCompliant ? (
-                    <CheckCircle className="inline h-5 w-5 text-green-500" />
-                  ) : (
-                    <AlertTriangle className="inline h-5 w-5 text-red-500" />
-                  )}
-                </td>
-                <td className="px-3 py-2 text-gray-600">{operatorName}</td>
-              </tr>
+              <React.Fragment key={reading.id}>
+                <tr
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggleExpanded(reading.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      toggleExpanded(reading.id)
+                    }
+                  }}
+                  className="hover:bg-gray-50 cursor-pointer select-none"
+                  aria-expanded={isExpanded}
+                  aria-label={`Riga lettura ${point?.name || ''} ${timeString}, clicca per ${isExpanded ? 'chiudere' : 'aprire'} dettagli`}
+                >
+                  <td className="px-1 py-2 text-gray-400">
+                    {hasDetails ? (
+                      isExpanded ? (
+                        <ChevronDown className="h-4 w-4" aria-hidden />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" aria-hidden />
+                      )
+                    ) : (
+                      <span className="w-4 inline-block" aria-hidden />
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-gray-900">{timeString}</td>
+                  <td className="px-3 py-2">
+                    <span className="font-medium text-gray-900">
+                      {point?.name || 'Punto sconosciuto'}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-gray-600">
+                    {point?.department?.name || '-'}
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className={`font-semibold ${isCompliant ? 'text-gray-900' : 'text-red-600'}`}>
+                      {reading.temperature.toFixed(1)}°C
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    {isCompliant ? (
+                      <CheckCircle className="inline h-5 w-5 text-green-500" />
+                    ) : (
+                      <AlertTriangle className="inline h-5 w-5 text-red-500" />
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-gray-600">{operatorName}</td>
+                </tr>
+                {isExpanded && (
+                  <tr className="bg-gray-50/80">
+                    <td colSpan={7} className="px-4 py-3">
+                      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
+                          Dettagli rilevamento
+                        </h4>
+                        <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3 text-sm">
+                          <div>
+                            <dt className="text-xs font-medium uppercase tracking-wider text-gray-500">Metodo di rilevazione</dt>
+                            <dd className="mt-1 text-base text-gray-900">
+                              {reading.method ? METHOD_LABELS[reading.method] || reading.method : '—'}
+                            </dd>
+                          </div>
+                          <div className="sm:col-span-2">
+                            <dt className="text-xs font-medium uppercase tracking-wider text-gray-500">Note aggiuntive</dt>
+                            <dd className="mt-1 text-base text-gray-900 whitespace-pre-wrap">
+                              {reading.notes && reading.notes.trim() ? reading.notes : '—'}
+                            </dd>
+                          </div>
+                          <div className="sm:col-span-3">
+                            <dt className="text-xs font-medium uppercase tracking-wider text-gray-500">Foto evidenza</dt>
+                            <dd className="mt-1 text-base text-gray-900">
+                              {reading.photo_evidence && reading.photo_evidence.trim() ? (
+                                <a
+                                  href={reading.photo_evidence}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:underline break-all"
+                                >
+                                  {reading.photo_evidence}
+                                </a>
+                              ) : (
+                                <span className="text-gray-500">—</span>
+                              )}
+                            </dd>
+                          </div>
+                        </dl>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             )
           })}
         </tbody>

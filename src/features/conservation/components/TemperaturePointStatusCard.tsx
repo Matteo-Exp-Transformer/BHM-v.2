@@ -2,6 +2,12 @@ import { ConservationPoint, TemperatureReading } from '@/types/conservation'
 import { TemperaturePointStatus } from '@/features/conservation/hooks/useTemperatureReadings'
 import { CheckCircle, AlertTriangle, RefreshCw, Circle, Thermometer } from 'lucide-react'
 
+const METHOD_LABELS: Record<string, string> = {
+  manual: 'Manuale',
+  digital_thermometer: 'Termometro Digitale',
+  automatic_sensor: 'Sensore Automatico',
+}
+
 interface TemperaturePointStatusCardProps {
   point: ConservationPoint
   latestReading?: TemperatureReading
@@ -158,20 +164,25 @@ export function TemperaturePointStatusCard({
         )}
       </div>
 
-      {/* Last Reading Time (if available) */}
+      {/* Last Reading Time + Metodo (if available) */}
       {latestReading && (
-        <div className="mt-2 text-xs text-gray-500">
-          Ultima lettura: {new Date(latestReading.recorded_at).toLocaleString('it-IT', {
-            day: '2-digit',
-            month: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-          {latestReading.recorded_by_user && (() => {
-            const u = latestReading.recorded_by_user!
-            const name = u.name || `${u.first_name || ''} ${u.last_name || ''}`.trim()
-            return name ? <> da {name}</> : null
-          })()}
+        <div className="mt-2 text-xs text-gray-500 space-y-0.5">
+          <div>
+            Ultima lettura: {new Date(latestReading.recorded_at).toLocaleString('it-IT', {
+              day: '2-digit',
+              month: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+            {latestReading.recorded_by_user && (() => {
+              const u = latestReading.recorded_by_user!
+              const name = u.name || `${u.first_name || ''} ${u.last_name || ''}`.trim()
+              return name ? <> da {name}</> : null
+            })()}
+          </div>
+          <div>
+            Metodo: <span className="text-gray-700">{latestReading.method ? METHOD_LABELS[latestReading.method] || latestReading.method : '—'}</span>
+          </div>
         </div>
       )}
     </div>
