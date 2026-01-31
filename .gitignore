@@ -65,6 +65,9 @@ ehthumbs.db
 *.swo
 *~
 
+# Cursor MCP config (può contenere token)
+.cursor/mcp.json
+
 # Package managers
 .npm
 .yarn
