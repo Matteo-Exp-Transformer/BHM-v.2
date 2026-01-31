@@ -1,5 +1,5 @@
 # MASTER INDEX - Conservation Feature
-## Aggiornato: 2026-01-31 (fix bug UI temperatura)
+## Aggiornato: 2026-01-31 (centralizzazione tolleranza, badge cliccabile, report 31-01)
 
 ---
 
@@ -59,6 +59,29 @@
 - [REPORT_FIX_BUG_UI_TEMPERATURE_31-01-2026.md](./30-01-2026/REPORT_FIX_BUG_UI_TEMPERATURE_31-01-2026.md) — Fix bug input, badge, date, popover, testi
 
 **Status**: ⚠️ IMPLEMENTATO — Fix bug completati (timezone date risolto; eventuali residui: performance, pointsInRichiestaLettura persistenza)
+
+---
+
+### 31-01-2026: Centralizzazione Tolleranza ±1°C + Badge Cliccabile + UX Critico ✅
+
+**Obiettivo**: Unificare tolleranza temperatura, migliorare UX stati Attenzione/Critico, correggere sicurezza git.
+
+**Implementazione**:
+- ✅ **Tolleranza centralizzata**: TOLERANCE_C = 1.0 in correctiveActions; tutti i file allineati
+- ✅ **Stato da ultimo rilevamento**: getLatestReadingByPoint seleziona il più recente per data/ora
+- ✅ **Nessuna lettura**: stato Attenzione (giallo) invece di Regolare
+- ✅ **Messaggi di azione**: per ogni stato (nessuna lettura, temp fuori range, temp al limite, manutenzione)
+- ✅ **Badge cliccabile**: scroll alla TemperaturePointStatusCard con highlight fino al click
+- ✅ **Nome utente** nella sezione Ultima lettura (allineato a timestamp)
+- ✅ **classifyPointStatus**: allineato a ±1°C, colori critico più rossi (border-red-500)
+- ✅ **Sicurezza**: .cursor/mcp.json rimosso da history (git-filter-repo), aggiunto a .gitignore
+
+**File chiave**:
+- `src/features/conservation/utils/correctiveActions.ts` — Fonte tolleranza
+- `src/utils/temperatureStatus.ts` — Centralizzazione
+- `src/types/conservation.ts` — classifyPointStatus, CONSERVATION_STATUS_COLORS
+- `src/features/conservation/components/ConservationPointCard.tsx` — Badge, nome utente
+- [REPORT_SESSIONE_COMPLETA_31-01-2026.md](./31-01-2026/REPORT_SESSIONE_COMPLETA_31-01-2026.md)
 
 ---
 
@@ -202,11 +225,14 @@ Lavoro/
 │   ├── README.md
 │   ├── REPORT_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md
 │   └── REPORT_PULSANTE_VISUALIZZA_CALENDARIO_E_FIX.md
-└── 30-01-2026/                      ← ⭐ SESSIONE CORRENTE (Riorg. Temperature + UI)
+├── 30-01-2026/                      ← Riorg. Temperature + UI (30-31 gen)
+│   ├── README.md
+│   ├── riorganizzazione_temperature_card_v2_implementazione.md
+│   ├── miglioramenti_ui_temperature_31-01-2026.md
+│   └── REPORT_FIX_BUG_UI_TEMPERATURE_31-01-2026.md
+└── 31-01-2026/                      ← ⭐ Centralizzazione tolleranza + Badge cliccabile
     ├── README.md
-    ├── riorganizzazione_temperature_card_v2_implementazione.md
-    ├── miglioramenti_ui_temperature_31-01-2026.md
-    └── REPORT_FIX_BUG_UI_TEMPERATURE_31-01-2026.md   ← Fix bug 31-01
+    └── REPORT_SESSIONE_COMPLETA_31-01-2026.md
 ```
 
 ---
@@ -233,6 +259,10 @@ Lavoro/
 | **Grafico andamento temperature** | ✅ | 30-01 |
 | **Pulsante Rileva Temperatura** | ✅ | 31-01 |
 | **Fix bug UI temperatura** (input, badge, date, popover, testi) | ✅ | 31-01 |
+| **Tolleranza centralizzata ±1°C** | ✅ | 31-01 |
+| **Badge Attenzione/Critico cliccabile** (scroll + highlight) | ✅ | 31-01 |
+| **Nome utente in Ultima lettura** | ✅ | 31-01 |
+| **Colori critico intensificati** | ✅ | 31-01 |
 
 ---
 
@@ -288,6 +318,7 @@ npm run test -- --run  # Test
 | **24-01-2026** | **Allineamento ConservationStep** | **Validazione schema, sezione profilo** |
 | **29-01-2026** | **Profilo Bibite + Pulsante Calendario** | **5° profilo HACCP, navigazione calendario** |
 | **30-31-01-2026** | **Riorg. Temperature + Miglioramenti UI** | **3 tab, azioni correttive, grafico, pulsante Rileva** |
+| **31-01-2026** | **Centralizzazione tolleranza + Badge cliccabile** | **±1°C unificato, badge scroll/highlight, nome utente, colori critico** |
 
 ---
 
@@ -296,6 +327,7 @@ npm run test -- --run  # Test
 Per implementare o fare debug:
 - 📖 [README 30-01-2026 - Guida fix Letture Temperature](./30-01-2026/README.md) — Punto di ingresso per fix sistema 3 tab
 - 📖 [Report Fix Bug UI Temperatura 31-01-2026](./30-01-2026/REPORT_FIX_BUG_UI_TEMPERATURE_31-01-2026.md) — Fix input, badge, date, popover, testi
+- 📖 [Report Sessione Completa 31-01-2026](./31-01-2026/REPORT_SESSIONE_COMPLETA_31-01-2026.md) — Centralizzazione tolleranza ±1°C, badge cliccabile, nome utente, colori critico, sicurezza git
 - 📖 [Report Profilo Bibite e Pulsante Calendario](./29-01-2026/REPORT_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md) (29-01-2026)
 - 📖 [Report Allineamento ConservationStep ↔ AddPointModal](./24-01-2026/REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md) (Fasi 1–3, 24-01-2026)
 - 📖 [Guida Debug & Nuove Categorie](./20-01-2026/AGENT_GUIDE_APPLIANCE_IMAGES.md)

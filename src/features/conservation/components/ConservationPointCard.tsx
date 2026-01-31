@@ -281,12 +281,12 @@ export function ConservationPointCard({
         </div>
       </div>
 
-      {/* Messaggio di azione quando stato è Attenzione: badge cliccabile → scroll alla card temperatura */}
-      {displayedStatus === 'warning' && statusResult.message && (
+      {/* Messaggio di azione quando stato è Attenzione o Critico: badge cliccabile → scroll alla card temperatura */}
+      {(displayedStatus === 'warning' || displayedStatus === 'critical') && statusResult.message && (
         <button
           type="button"
           onClick={() => onFocusTemperatureCard?.(point.id)}
-          className={`w-full text-left rounded-md ${statusColors.bg} border-2 ${statusColors.border} p-3 mb-3 transition-all hover:shadow-md hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1 cursor-pointer`}
+          className={`w-full text-left rounded-md ${statusColors.bg} border-2 ${statusColors.border} p-3 mb-3 transition-all hover:shadow-md hover:scale-[1.01] focus:outline-none focus:ring-2 ${displayedStatus === 'critical' ? 'focus:ring-red-500' : 'focus:ring-amber-400'} focus:ring-offset-1 cursor-pointer`}
           aria-label={`${statusResult.message} Clicca per andare alla card di rilevamento temperatura.`}
         >
           <p className={`text-sm font-medium ${statusColors.text} flex items-start gap-2`}>
@@ -294,7 +294,7 @@ export function ConservationPointCard({
             {statusResult.message}
           </p>
           {onFocusTemperatureCard && (
-            <span className="text-xs text-amber-600 mt-1 block font-medium">
+            <span className={`text-xs mt-1 block font-medium ${displayedStatus === 'critical' ? 'text-red-600' : 'text-amber-600'}`}>
               Clicca per andare alla card di rilevamento →
             </span>
           )}

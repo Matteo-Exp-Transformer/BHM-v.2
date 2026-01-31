@@ -273,28 +273,31 @@ export const classifyPointStatus = (
     }
   }
 
-  // Check temperature status if available
+  // Check temperature status: tolleranza centralizzata ±1.0°C (allineato a TemperaturePointStatusCard)
   if (point.last_temperature_reading) {
     const reading = point.last_temperature_reading
-    const config = CONSERVATION_POINT_CONFIGS[point.type]
-    const { min, max } = config.tempRange
+    const setpoint = point.setpoint_temp
+    const TOLERANCE_C = 1.0
+    const min = setpoint - TOLERANCE_C
+    const max = setpoint + TOLERANCE_C
 
-    // Skip temperature check if range is not defined (ambient, blast)
-    if (min !== null && max !== null) {
-      if (reading.temperature < min - 2 || reading.temperature > max + 2) {
-        return {
-          status: 'critical',
-          message: 'Temperatura fuori controllo',
-          priority: 1,
-        }
+    // Critico: fuori da setpoint ± 1°C
+    if (reading.temperature < min || reading.temperature > max) {
+      return {
+        status: 'critical',
+        message: reading.temperature > max
+          ? 'Temperatura troppo alta. Regola il termostato e rileva nuovamente per ripristinare lo stato conforme.'
+          : 'Temperatura troppo bassa. Regola il termostato e rileva nuovamente per ripristinare lo stato conforme.',
+        priority: 1,
       }
+    }
 
-      if (reading.temperature < min || reading.temperature > max) {
-        return {
-          status: 'warning',
-          message: 'Regola il termostato e rileva nuovamente la temperatura per ripristinare lo stato conforme.',
-          priority: 2,
-        }
+    // Warning: entro ±1°C ma non esattamente al target
+    if (reading.temperature !== setpoint) {
+      return {
+        status: 'warning',
+        message: 'Regola il termostato e rileva nuovamente la temperatura per ripristinare lo stato conforme.',
+        priority: 2,
       }
     }
   }
@@ -333,9 +336,9 @@ export const CONSERVATION_STATUS_COLORS = {
     border: 'border-yellow-200',
   },
   critical: {
-    bg: 'bg-red-100',
-    text: 'text-red-800',
-    border: 'border-red-200',
+    bg: 'bg-red-50',
+    text: 'text-red-700',
+    border: 'border-red-500',
   },
 } as const
 
