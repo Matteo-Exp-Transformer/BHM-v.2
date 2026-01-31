@@ -9,15 +9,20 @@
 **Risultati Chiave**:
 - ✅ Sistema a 3 tab implementato
 - ✅ 4 stati badge punto (conforme/critico/richiesta_lettura/nessuna_lettura)
-- ✅ Azioni correttive con popover guidato
+- ✅ Azioni correttive con popover guidato (ora Dialog centrato)
 - ✅ Grafico andamento (recharts) e tab Analisi
 - ✅ Storico raggruppato per data con tabella
 - ✅ **v31**: Rimozione pannello anomalie, solo griglia card
 - ✅ **v31**: Card ordinate per tipo, reparto e operatore mostrati
 - ✅ **v31**: Pulsante "Rileva Temperatura" con dropdown
 - ✅ **v31**: Click card solo per stati richiedenti lettura
+- ✅ **v31 fix**: Input temperatura numeri negativi + cancellazione 0
+- ✅ **v31 fix**: Badge stato punti basato su last_temperature_reading (verde/giallo/rosso)
+- ✅ **v31 fix**: Raggruppamento date con timezone locale (31 gen non in 30 gen)
+- ✅ **v31 fix**: Popover azioni correttive convertito in Dialog visibile
+- ✅ **v31 fix**: Testi azioni correttive aggiornati (frigorifero/freezer, assistenza tecnica)
 
-**Status**: ⚠️ Implementato - Da debuggare (vedi Known Issues)
+**Status**: ⚠️ Implementato - Fix bug completati (vedi Known Issues per eventuali residui)
 
 ---
 
@@ -27,6 +32,7 @@
 |------|-------------|-------------------|
 | **riorganizzazione_temperature_card_v2_implementazione.md** | Report implementazione completa v2: utility, hook helpers, tutti i componenti UI (TemperaturePointStatusCard, CorrectiveActionPopover, TemperatureAlertsPanel, TemperatureChart, TemperatureAnalysisTab, TemperatureHistorySection, TemperatureReadingsTable), flussi, mappatura gerarchie, dipendenze (recharts, radix), convenzioni | Debug di componenti base, capire architettura, fix logica stati/azioni correttive |
 | **miglioramenti_ui_temperature_31-01-2026.md** | Report raffinamenti UI 31-01: rimozione TemperatureAlertsPanel, ordinamento card, reparto/operatore, colonna Reparto tabella, pulsante Rileva Temperatura, click condizionale card, prop centerTitle CollapsibleCard | Fix UI, comportamento click, layout, dati mostrati nelle card/tabella |
+| **REPORT_FIX_BUG_UI_TEMPERATURE_31-01-2026.md** | Report fix bug 31-01: input temperatura (numeri negativi, cancellazione 0), badge stato punti (last_temperature_reading), raggruppamento date (timezone locale), popover→dialog azioni correttive, testi istruzioni HACCP | Fix bug input, badge verdi errati, date sbagliate, popover non visibile, testi azioni correttive |
 | **README.md** (questo file) | Guida rapida per agenti al fix | Punto di ingresso, orientamento, conflitti tra report |
 
 ---
@@ -44,6 +50,8 @@
 | Analisi | `src/features/conservation/components/TemperatureAnalysisTab.tsx` | Grafico, statistiche |
 | Azioni correttive | `src/features/conservation/utils/correctiveActions.ts` | Logica tolleranza ±1°C, range, istruzioni |
 | Hook | `src/features/conservation/hooks/useTemperatureReadings.ts` | getPointStatus, getLatestReadingByPoint, groupReadingsByDate |
+| Modal temperatura | `src/features/conservation/components/AddTemperatureModal.tsx` | Input temperatureInput (stringa), numeri negativi |
+| Popover/Dialog correttiva | `src/features/conservation/components/CorrectiveActionPopover.tsx` | Dialog centrato (non più Radix Popover) |
 
 ### Differenze tra i due Report (Importante)
 

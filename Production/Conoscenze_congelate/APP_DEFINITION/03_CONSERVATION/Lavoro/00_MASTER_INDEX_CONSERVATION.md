@@ -1,5 +1,5 @@
 # MASTER INDEX - Conservation Feature
-## Aggiornato: 2026-01-31
+## Aggiornato: 2026-01-31 (fix bug UI temperatura)
 
 ---
 
@@ -41,6 +41,13 @@
 - ✅ **Click card condizionale**: apre modal solo per nessuna_lettura e richiesta_lettura
 - ✅ **Prop centerTitle**: aggiunta a CollapsibleCard (riutilizzabile)
 
+**Fix bug (31-01)**:
+- ✅ **Input temperatura**: stringa in state, permette cancellazione 0 e numeri negativi
+- ✅ **Badge stato punti**: usa classifyPointStatus con last_temperature_reading (verde/giallo/rosso)
+- ✅ **Raggruppamento date**: timezone locale invece di UTC (31 gen non in 30 gen)
+- ✅ **Popover azioni correttive**: convertito in Dialog centrato (era invisibile)
+- ✅ **Testi azioni correttive**: messaggi aggiornati frigorifero/freezer, assistenza tecnica
+
 **File chiave**:
 - `src/features/conservation/ConservationPage.tsx` — Tab, pulsante Rileva Temperatura, ordinamento
 - `src/features/conservation/components/TemperaturePointStatusCard.tsx` — Card stato, reparto, operatore, click
@@ -49,8 +56,9 @@
 - [README.md](./30-01-2026/README.md) — Guida agenti per fix
 - [riorganizzazione_temperature_card_v2_implementazione.md](./30-01-2026/riorganizzazione_temperature_card_v2_implementazione.md)
 - [miglioramenti_ui_temperature_31-01-2026.md](./30-01-2026/miglioramenti_ui_temperature_31-01-2026.md)
+- [REPORT_FIX_BUG_UI_TEMPERATURE_31-01-2026.md](./30-01-2026/REPORT_FIX_BUG_UI_TEMPERATURE_31-01-2026.md) — Fix bug input, badge, date, popover, testi
 
-**Status**: ⚠️ IMPLEMENTATO — Da debuggare (timezone isToday, performance, pointsInRichiestaLettura persistenza)
+**Status**: ⚠️ IMPLEMENTATO — Fix bug completati (timezone date risolto; eventuali residui: performance, pointsInRichiestaLettura persistenza)
 
 ---
 
@@ -197,7 +205,8 @@ Lavoro/
 └── 30-01-2026/                      ← ⭐ SESSIONE CORRENTE (Riorg. Temperature + UI)
     ├── README.md
     ├── riorganizzazione_temperature_card_v2_implementazione.md
-    └── miglioramenti_ui_temperature_31-01-2026.md
+    ├── miglioramenti_ui_temperature_31-01-2026.md
+    └── REPORT_FIX_BUG_UI_TEMPERATURE_31-01-2026.md   ← Fix bug 31-01
 ```
 
 ---
@@ -223,6 +232,7 @@ Lavoro/
 | **Azioni correttive HACCP** | ✅ | 30-01 |
 | **Grafico andamento temperature** | ✅ | 30-01 |
 | **Pulsante Rileva Temperatura** | ✅ | 31-01 |
+| **Fix bug UI temperatura** (input, badge, date, popover, testi) | ✅ | 31-01 |
 
 ---
 
@@ -285,6 +295,7 @@ npm run test -- --run  # Test
 
 Per implementare o fare debug:
 - 📖 [README 30-01-2026 - Guida fix Letture Temperature](./30-01-2026/README.md) — Punto di ingresso per fix sistema 3 tab
+- 📖 [Report Fix Bug UI Temperatura 31-01-2026](./30-01-2026/REPORT_FIX_BUG_UI_TEMPERATURE_31-01-2026.md) — Fix input, badge, date, popover, testi
 - 📖 [Report Profilo Bibite e Pulsante Calendario](./29-01-2026/REPORT_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md) (29-01-2026)
 - 📖 [Report Allineamento ConservationStep ↔ AddPointModal](./24-01-2026/REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md) (Fasi 1–3, 24-01-2026)
 - 📖 [Guida Debug & Nuove Categorie](./20-01-2026/AGENT_GUIDE_APPLIANCE_IMAGES.md)
