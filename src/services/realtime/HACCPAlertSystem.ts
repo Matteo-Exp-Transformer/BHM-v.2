@@ -509,7 +509,7 @@ class HACCPAlertSystem {
         },
       },
       compliance_thresholds: {
-        temperature_tolerance: 2,
+        temperature_tolerance: 1,
         maintenance_grace_period: 24,
         expiry_warning_days: 3,
         certification_warning_days: 30,

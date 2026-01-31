@@ -12,16 +12,15 @@ export type TemperatureStatus = 'compliant' | 'warning' | 'critical'
 export type TemperatureMethod = 'manual' | 'automatic' | 'sensor'
 
 /**
- * Calcola lo status di una lettura di temperatura basandosi sul setpoint
+ * Calcola lo status di una lettura di temperatura (tolleranza centralizzata ±1.0°C)
  * @param reading - Temperatura rilevata
  * @param setpoint - Temperatura target del punto di conservazione
- * @param tolerance - Tolleranza in gradi (default: 2)
- * @returns Status: compliant, warning, o critical
+ * @param tolerance - Tolleranza in gradi (default: 1)
  */
 export function computeTemperatureStatus(
   reading: number,
   setpoint: number,
-  tolerance = 2
+  tolerance = 1
 ): TemperatureStatus {
   const deviation = Math.abs(reading - setpoint)
   if (deviation <= tolerance) return 'compliant'
@@ -30,14 +29,14 @@ export function computeTemperatureStatus(
 }
 
 /**
- * Calcola il compliance rate per un set di letture di temperatura
+ * Calcola il compliance rate per un set di letture (tolleranza ±1.0°C)
  * @param readings - Array di letture con temperatura e setpoint
- * @param tolerance - Tolleranza in gradi (default: 2)
+ * @param tolerance - Tolleranza in gradi (default: 1)
  * @returns Percentuale di compliance (0-100)
  */
 export function computeComplianceRate(
   readings: Array<{ temperature: number; setpoint: number }>,
-  tolerance = 2
+  tolerance = 1
 ): number {
   if (readings.length === 0) return 100
 
@@ -50,14 +49,14 @@ export function computeComplianceRate(
 }
 
 /**
- * Conta gli alert di temperatura per status
+ * Conta gli alert di temperatura per status (tolleranza ±1.0°C)
  * @param readings - Array di letture con temperatura e setpoint
- * @param tolerance - Tolleranza in gradi (default: 2)
+ * @param tolerance - Tolleranza in gradi (default: 1)
  * @returns Conteggio alert per tipo
  */
 export function computeTemperatureAlerts(
   readings: Array<{ temperature: number; setpoint: number }>,
-  tolerance = 2
+  tolerance = 1
 ): { warning: number; critical: number; total: number } {
   const alerts = readings.reduce(
     (acc, { temperature, setpoint }) => {

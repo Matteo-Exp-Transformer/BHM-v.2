@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import {
-  TemperatureReading,
-  ConservationPoint,
-  getTemperatureStatus,
-} from '@/types/conservation'
+import { TemperatureReading, ConservationPoint } from '@/types/conservation'
+import { getAllowedRange } from '@/features/conservation/utils/correctiveActions'
+import { calculateTemperatureStatus } from '@/utils/temperatureStatus'
 import {
   X,
   Thermometer,
@@ -48,57 +46,18 @@ export function AddTemperatureModal({
     'compliant' | 'warning' | 'critical'
   >('compliant')
 
-  // Calculate tolerance ranges based on conservation point type
-  const getToleranceRange = () => {
-    switch (conservationPoint.type) {
-      case 'fridge':
-        return {
-          min: conservationPoint.setpoint_temp - 2,
-          max: conservationPoint.setpoint_temp + 2,
-        }
-      case 'freezer':
-        return {
-          min: conservationPoint.setpoint_temp - 2,
-          max: conservationPoint.setpoint_temp + 2,
-        }
-      case 'blast':
-        return {
-          min: conservationPoint.setpoint_temp - 5,
-          max: conservationPoint.setpoint_temp + 5,
-        }
-      case 'ambient':
-        return {
-          min: conservationPoint.setpoint_temp - 3,
-          max: conservationPoint.setpoint_temp + 3,
-        }
-      default:
-        return {
-          min: conservationPoint.setpoint_temp - 2,
-          max: conservationPoint.setpoint_temp + 2,
-        }
-    }
-  }
-
-  const toleranceRange = getToleranceRange()
+  // Range tolleranza centralizzato (±1.0°C)
+  const toleranceRange = getAllowedRange(conservationPoint.setpoint_temp)
 
   useEffect(() => {
-    let tolerance = 2
-    switch (conservationPoint.type) {
-      case 'blast':
-        tolerance = 5
-        break
-      case 'ambient':
-        tolerance = 3
-        break
-    }
     const num = parseFloat(formData.temperatureInput)
     const temperature = Number.isFinite(num) ? num : 0
-    const status = getTemperatureStatus(
+    const status = calculateTemperatureStatus(
       temperature,
       conservationPoint.setpoint_temp,
-      tolerance
+      conservationPoint.type
     )
-    setPredictedStatus(status === 'normal' ? 'compliant' : status)
+    setPredictedStatus(status)
   }, [
     formData.temperatureInput,
     conservationPoint.setpoint_temp,

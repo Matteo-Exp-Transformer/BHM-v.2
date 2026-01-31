@@ -60,6 +60,10 @@ export default function ConservationPage() {
   const [showPointSelectorForTemperature, setShowPointSelectorForTemperature] = useState(false)
   const pointSelectorRef = useRef<HTMLDivElement>(null)
 
+  // Evidenziazione card temperatura: quando si clicca il badge "Attenzione" nella ConservationPointCard
+  const [highlightedTemperaturePointId, setHighlightedTemperaturePointId] = useState<string | null>(null)
+  const [temperatureSectionExpanded, setTemperatureSectionExpanded] = useState(true)
+
   const {
     temperatureReadings,
     stats: tempStats,
@@ -91,6 +95,18 @@ export default function ConservationPage() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showPointSelectorForTemperature])
+
+  // Scroll alla TemperaturePointStatusCard quando si clicca il badge Attenzione
+  useEffect(() => {
+    if (!highlightedTemperaturePointId) return
+    const timer = setTimeout(() => {
+      const el = document.querySelector(
+        `[data-temperature-point-id="${highlightedTemperaturePointId}"]`
+      )
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 350) // Attesa per tab switch + eventuale espansione collapse
+    return () => clearTimeout(timer)
+  }, [highlightedTemperaturePointId, activeTemperatureTab, temperatureSectionExpanded])
 
   // Maintenance tasks ora gestiti dal nuovo ScheduledMaintenanceCard
   // const {
@@ -194,6 +210,16 @@ export default function ConservationPage() {
       point,
       reading,
     })
+  }
+
+  const handleFocusTemperatureCard = (pointId: string) => {
+    setHighlightedTemperaturePointId(pointId)
+    setActiveTemperatureTab('status')
+    setTemperatureSectionExpanded(true)
+  }
+
+  const handleHighlightTemperatureCardDismiss = () => {
+    setHighlightedTemperaturePointId(null)
   }
 
   const handleConfirmCorrectiveAction = () => {
@@ -337,6 +363,7 @@ export default function ConservationPage() {
                       point={point}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
+                      onFocusTemperatureCard={handleFocusTemperatureCard}
                     />
                   ))}
               </div>
@@ -361,6 +388,7 @@ export default function ConservationPage() {
                       point={point}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
+                      onFocusTemperatureCard={handleFocusTemperatureCard}
                     />
                   ))}
               </div>
@@ -385,6 +413,7 @@ export default function ConservationPage() {
                       point={point}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
+                      onFocusTemperatureCard={handleFocusTemperatureCard}
                     />
                   ))}
               </div>
@@ -409,6 +438,7 @@ export default function ConservationPage() {
                       point={point}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
+                      onFocusTemperatureCard={handleFocusTemperatureCard}
                     />
                   ))}
               </div>
@@ -423,7 +453,8 @@ export default function ConservationPage() {
       {/* Temperature Readings List - New 3-Tab System */}
       <CollapsibleCard
         title="Letture Temperature"
-        defaultExpanded={true}
+        expanded={temperatureSectionExpanded}
+        onExpandedChange={setTemperatureSectionExpanded}
         icon={Clock}
         headerClassName="[&>div:first-child]:mt-2"
         actions={
@@ -559,18 +590,25 @@ export default function ConservationPage() {
                     const status = getPointStatus(point, latestReading, pointsInRichiestaLettura)
 
                     return (
-                      <TemperaturePointStatusCard
+                      <div
                         key={point.id}
-                        point={point}
-                        latestReading={latestReading}
-                        status={status}
-                        onAddReading={() => handleAddTemperature(point)}
-                        onCorrectiveAction={
-                          status === 'critico' && latestReading
-                            ? () => handleCorrectiveAction(point, latestReading)
-                            : undefined
-                        }
-                      />
+                        data-temperature-point-id={point.id}
+                        className="relative"
+                      >
+                        <TemperaturePointStatusCard
+                          point={point}
+                          latestReading={latestReading}
+                          status={status}
+                          onAddReading={() => handleAddTemperature(point)}
+                          onCorrectiveAction={
+                            status === 'critico' && latestReading
+                              ? () => handleCorrectiveAction(point, latestReading)
+                              : undefined
+                          }
+                          highlighted={highlightedTemperaturePointId === point.id}
+                          onHighlightDismiss={handleHighlightTemperatureCardDismiss}
+                        />
+                      </div>
                     )
                   })}
               </div>

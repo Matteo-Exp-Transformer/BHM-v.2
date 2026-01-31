@@ -217,11 +217,11 @@ export const MAINTENANCE_TASK_TYPES = {
   },
 } as const
 
-// Temperature monitoring utilities
+// Temperature monitoring utilities (tolleranza centralizzata ±1.0°C)
 export const getTemperatureStatus = (
   current: number,
   target: number,
-  tolerance: number = 2
+  tolerance: number = 1
 ): ConservationStatus => {
   const diff = Math.abs(current - target)
   if (diff <= tolerance) return 'normal'
@@ -263,6 +263,16 @@ export const classifyPointStatus = (
     }
   }
 
+  // Punti che richiedono temperatura: se non c'è lettura, non mostrare verde
+  const typesRequiringTemp: ConservationPoint['type'][] = ['fridge', 'freezer', 'blast']
+  if (typesRequiringTemp.includes(point.type) && !point.last_temperature_reading) {
+    return {
+      status: 'warning',
+      message: 'Rileva la temperatura del punto di conservazione per ripristinare lo stato conforme.',
+      priority: 2,
+    }
+  }
+
   // Check temperature status if available
   if (point.last_temperature_reading) {
     const reading = point.last_temperature_reading
@@ -282,7 +292,7 @@ export const classifyPointStatus = (
       if (reading.temperature < min || reading.temperature > max) {
         return {
           status: 'warning',
-          message: 'Temperatura al limite',
+          message: 'Regola il termostato e rileva nuovamente la temperatura per ripristinare lo stato conforme.',
           priority: 2,
         }
       }
@@ -297,7 +307,7 @@ export const classifyPointStatus = (
     if (daysUntilMaintenance <= 7) {
       return {
         status: 'warning',
-        message: `Manutenzione tra ${daysUntilMaintenance} giorni`,
+        message: `Pianifica la manutenzione (scadenza tra ${daysUntilMaintenance} giorni) per evitare lo stato critico.`,
         priority: 2,
       }
     }

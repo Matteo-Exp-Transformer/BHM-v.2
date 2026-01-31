@@ -4,6 +4,8 @@ import type {
   ConservationPoint,
   CreateTemperatureReadingRequest,
 } from '@/types/conservation'
+import { TOLERANCE_C } from '@/features/conservation/utils/correctiveActions'
+import { calculateTemperatureStatus } from '@/utils/temperatureStatus'
 
 interface TemperatureReadingModalProps {
   conservationPoint: ConservationPoint
@@ -55,29 +57,11 @@ export function TemperatureReadingModal({
   }
 
   const tempDifference = formData.temperature - conservationPoint.setpoint_temp
-  const getTemperatureStatus = () => {
-    const tolerance = getToleranceRange(conservationPoint.type)
-    if (Math.abs(tempDifference) <= tolerance) return 'compliant'
-    if (Math.abs(tempDifference) <= tolerance + 2) return 'warning'
-    return 'critical'
-  }
-
-  const getToleranceRange = (type: ConservationPoint['type']): number => {
-    switch (type) {
-      case 'freezer':
-        return 3
-      case 'fridge':
-        return 2
-      case 'blast':
-        return 1
-      case 'ambient':
-        return 5
-      default:
-        return 2
-    }
-  }
-
-  const status = getTemperatureStatus()
+  const status = calculateTemperatureStatus(
+    formData.temperature,
+    conservationPoint.setpoint_temp,
+    conservationPoint.type
+  )
   const statusColors = {
     compliant: 'text-green-600 bg-green-50 border-green-200',
     warning: 'text-yellow-600 bg-yellow-50 border-yellow-200',
@@ -128,7 +112,7 @@ export function TemperatureReadingModal({
                 <div>
                   <span className="text-gray-600">Tolleranza:</span>
                   <span className="ml-2 font-medium">
-                    ±{getToleranceRange(conservationPoint.type)}°C
+                    ±{TOLERANCE_C}°C
                   </span>
                 </div>
               </div>

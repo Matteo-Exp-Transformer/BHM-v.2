@@ -8,32 +8,14 @@ import {
   Trash2,
   User,
 } from 'lucide-react'
+import { calculateTemperatureStatus } from '@/utils/temperatureStatus'
+import { getAllowedRange } from '@/features/conservation/utils/correctiveActions'
 
 interface TemperatureReadingCardProps {
   reading: TemperatureReading
   onEdit?: (reading: TemperatureReading) => void
   onDelete?: (id: string) => void
   showActions?: boolean
-}
-
-// ✅ HELPER: Calculate dynamic status based on temperature and setpoint
-const calculateTemperatureStatus = (
-  temperature: number,
-  setpoint: number,
-  type: 'ambient' | 'fridge' | 'freezer' | 'blast'
-): 'compliant' | 'warning' | 'critical' => {
-  const tolerance = type === 'blast' ? 5 : type === 'ambient' ? 3 : 2
-  const toleranceMin = setpoint - tolerance
-  const toleranceMax = setpoint + tolerance
-  
-  // Conforme: temperatura esattamente uguale al target
-  if (temperature === setpoint) return 'compliant'
-  
-  // Attenzione: temperatura diversa dal target MA nel range di tolleranza
-  if (temperature >= toleranceMin && temperature <= toleranceMax) return 'warning'
-  
-  // Critico: temperatura fuori dal range di tolleranza
-  return 'critical'
 }
 
 // Helper function to format user display name
@@ -56,21 +38,14 @@ export function TemperatureReadingCard({
   onDelete,
   showActions = true,
 }: TemperatureReadingCardProps) {
-  // ✅ COMPUTED: Calculate status dynamically
-  const status = reading.conservation_point 
-    ? calculateTemperatureStatus(
-        reading.temperature,
-        reading.conservation_point.setpoint_temp,
-        reading.conservation_point.type
-      )
+  // ✅ COMPUTED: Status via centralized ±1.0°C tolerance
+  const setpoint = reading.conservation_point?.setpoint_temp ?? 0
+  const status = reading.conservation_point
+    ? calculateTemperatureStatus(reading.temperature, setpoint, reading.conservation_point.type)
     : 'compliant'
 
-  // ✅ COMPUTED: Calculate tolerance range
-  const tolerance = reading.conservation_point?.type === 'blast' ? 5 :
-                   reading.conservation_point?.type === 'ambient' ? 3 : 2
-
-  const toleranceMin = (reading.conservation_point?.setpoint_temp || 0) - tolerance
-  const toleranceMax = (reading.conservation_point?.setpoint_temp || 0) + tolerance
+  // ✅ COMPUTED: Range tolleranza centralizzato (±1.0°C)
+  const { min: toleranceMin, max: toleranceMax } = getAllowedRange(setpoint)
 
   const getStatusInfo = () => {
     switch (status) {

@@ -1,64 +1,41 @@
 /**
  * Temperature Status Utilities
- * 
- * Since temperature_readings table only stores basic data (temperature, recorded_at),
- * we calculate status dynamically based on conservation point setpoint and type.
+ *
+ * Uses centralized tolerance from correctiveActions (TOLERANCE_C = 1.0°C).
+ * Point status is compliant if temperature is within setpoint ± 1.0°C.
  */
 
 import type { TemperatureReading, ConservationPoint } from '@/types/conservation'
+import { TOLERANCE_C, getAllowedRange, isTemperatureCompliant } from '@/features/conservation/utils/correctiveActions'
 
 export type TemperatureStatus = 'compliant' | 'warning' | 'critical'
 
-/**
- * Get tolerance range based on conservation point type
- */
-export function getToleranceForType(type: ConservationPoint['type']): number {
-  switch (type) {
-    case 'blast':
-      return 5
-    case 'ambient':
-      return 3
-    case 'fridge':
-    case 'freezer':
-    default:
-      return 2
-  }
-}
+/** Re-export for consumers that need the numeric tolerance */
+export const getToleranceForType = (_type: ConservationPoint['type']): number => TOLERANCE_C
 
 /**
- * Calculate temperature status dynamically
- * 
+ * Calculate temperature status dynamically (centralized ±1.0°C)
+ *
  * @param temperature - Current temperature reading
  * @param setpoint - Target temperature from conservation point
- * @param type - Conservation point type (affects tolerance)
- * @returns Status: 'compliant', 'warning', or 'critical'
+ * @returns Status: 'compliant' (at target), 'warning' (within ±1°C but not exact), 'critical' (outside ±1°C)
  */
 export function calculateTemperatureStatus(
   temperature: number,
   setpoint: number,
-  type: ConservationPoint['type']
+  _type?: ConservationPoint['type']
 ): TemperatureStatus {
-  const tolerance = getToleranceForType(type)
-  const diff = Math.abs(temperature - setpoint)
-  
-  if (diff <= tolerance) return 'compliant'
-  if (diff <= tolerance + 2) return 'warning'
-  return 'critical'
+  if (!isTemperatureCompliant(temperature, setpoint)) return 'critical'
+  return temperature === setpoint ? 'compliant' : 'warning'
 }
 
 /**
  * Get temperature status for a reading with conservation point data
- * 
- * @param reading - Temperature reading (must include conservation_point)
- * @returns Status or 'compliant' if no conservation_point data
  */
 export function getReadingStatus(
   reading: TemperatureReading & { conservation_point?: ConservationPoint }
 ): TemperatureStatus {
-  if (!reading.conservation_point) {
-    return 'compliant' // Default if no conservation point data
-  }
-  
+  if (!reading.conservation_point) return 'compliant'
   return calculateTemperatureStatus(
     reading.temperature,
     reading.conservation_point.setpoint_temp,
@@ -68,10 +45,6 @@ export function getReadingStatus(
 
 /**
  * Filter readings by status
- * 
- * @param readings - Array of readings with conservation_point data
- * @param status - Target status to filter
- * @returns Filtered array
  */
 export function filterReadingsByStatus(
   readings: (TemperatureReading & { conservation_point?: ConservationPoint })[],
@@ -81,30 +54,22 @@ export function filterReadingsByStatus(
 }
 
 /**
- * Calculate compliance rate for readings
- * 
- * @param readings - Array of readings with conservation_point data
- * @returns Compliance rate as percentage (0-100)
+ * Calculate compliance rate for readings (within setpoint ± 1.0°C)
  */
 export function calculateComplianceRate(
   readings: (TemperatureReading & { conservation_point?: ConservationPoint })[]
 ): number {
   if (readings.length === 0) return 100
-  
   const compliantCount = filterReadingsByStatus(readings, 'compliant').length
   return Math.round((compliantCount / readings.length) * 100)
 }
 
 /**
- * Get tolerance range for a conservation point
+ * Get tolerance range for a conservation point (centralized ±1.0°C)
  */
 export function getToleranceRange(
   setpoint: number,
-  type: ConservationPoint['type']
+  _type?: ConservationPoint['type']
 ): { min: number; max: number } {
-  const tolerance = getToleranceForType(type)
-  return {
-    min: setpoint - tolerance,
-    max: setpoint + tolerance,
-  }
+  return getAllowedRange(setpoint)
 }

@@ -3,7 +3,8 @@ import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { TemperatureReading, ConservationPoint } from '@/types/conservation'
 import { toast } from 'react-toastify'
-import { getCorrectiveAction, TOLERANCE_C } from '@/features/conservation/utils/correctiveActions'
+import { getCorrectiveAction } from '@/features/conservation/utils/correctiveActions'
+import { calculateTemperatureStatus } from '@/utils/temperatureStatus'
 
 export function useTemperatureReadings(conservationPointId?: string) {
   const { companyId } = useAuth()
@@ -249,33 +250,23 @@ export function useTemperatureReadings(conservationPointId?: string) {
       ? temperatureReadings.reduce((sum: number, r: any) => sum + r.temperature, 0) / temperatureReadings.length
       : 0,
     
-    // ✅ COMPUTED STATS based on conservation point setpoint and tolerance range
+    // ✅ COMPUTED STATS: tolleranza centralizzata ±1.0°C
     compliant: temperatureReadings?.filter((r: any) => {
       if (!r.conservation_point) return false
-      // Conformi: temperatura esattamente uguale al target
-      return r.temperature === r.conservation_point.setpoint_temp
+      const status = calculateTemperatureStatus(r.temperature, r.conservation_point.setpoint_temp, r.conservation_point.type)
+      return status === 'compliant'
     }).length || 0,
     
     warning: temperatureReadings?.filter((r: any) => {
       if (!r.conservation_point) return false
-      const tolerance = r.conservation_point.type === 'blast' ? 5 : 
-                       r.conservation_point.type === 'ambient' ? 3 : 2
-      const toleranceMin = r.conservation_point.setpoint_temp - tolerance
-      const toleranceMax = r.conservation_point.setpoint_temp + tolerance
-      // Attenzione: temperatura diversa dal target MA nel range di tolleranza
-      return r.temperature !== r.conservation_point.setpoint_temp &&
-             r.temperature >= toleranceMin &&
-             r.temperature <= toleranceMax
+      const status = calculateTemperatureStatus(r.temperature, r.conservation_point.setpoint_temp, r.conservation_point.type)
+      return status === 'warning'
     }).length || 0,
     
     critical: temperatureReadings?.filter((r: any) => {
       if (!r.conservation_point) return false
-      const tolerance = r.conservation_point.type === 'blast' ? 5 : 
-                       r.conservation_point.type === 'ambient' ? 3 : 2
-      const toleranceMin = r.conservation_point.setpoint_temp - tolerance
-      const toleranceMax = r.conservation_point.setpoint_temp + tolerance
-      // Critiche: temperatura fuori dal range di tolleranza
-      return r.temperature < toleranceMin || r.temperature > toleranceMax
+      const status = calculateTemperatureStatus(r.temperature, r.conservation_point.setpoint_temp, r.conservation_point.type)
+      return status === 'critical'
     }).length || 0,
     
     // TODO: Add method and validation status tracking when DB schema is updated
@@ -305,16 +296,24 @@ export function useTemperatureReadings(conservationPointId?: string) {
 export type TemperaturePointStatus = 'conforme' | 'critico' | 'richiesta_lettura' | 'nessuna_lettura'
 
 /**
- * Get the latest temperature reading for a specific conservation point
- * @param readings - Array of temperature readings (should be sorted by recorded_at desc)
- * @param pointId - Conservation point ID to filter by
- * @returns The latest reading for the point, or undefined if none found
+ * Ottiene l'ultimo rilevamento di temperatura per data e ora per un punto di conservazione.
+ * Lo stato del punto si basa su questa lettura (la più recente cronologicamente).
+ *
+ * @param readings - Array di letture (ordine non garantito)
+ * @param pointId - ID del punto di conservazione
+ * @returns La lettura più recente per data/ora, o undefined
  */
 export function getLatestReadingByPoint(
   readings: TemperatureReading[],
   pointId: string
 ): TemperatureReading | undefined {
-  return readings.find(r => r.conservation_point_id === pointId)
+  const forPoint = readings.filter(r => r.conservation_point_id === pointId)
+  if (forPoint.length === 0) return undefined
+  return forPoint.reduce((latest, r) => {
+    const tLatest = new Date(latest.recorded_at).getTime()
+    const tR = new Date(r.recorded_at).getTime()
+    return tR > tLatest ? r : latest
+  })
 }
 
 /**

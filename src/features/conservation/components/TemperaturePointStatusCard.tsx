@@ -8,6 +8,10 @@ interface TemperaturePointStatusCardProps {
   status: TemperaturePointStatus
   onAddReading: () => void
   onCorrectiveAction?: () => void
+  /** Evidenzia la card (es. dopo click sul badge Attenzione) */
+  highlighted?: boolean
+  /** Chiamato al click sulla card quando era evidenziata */
+  onHighlightDismiss?: () => void
 }
 
 const STATUS_CONFIG = {
@@ -51,13 +55,19 @@ export function TemperaturePointStatusCard({
   status,
   onAddReading,
   onCorrectiveAction,
+  highlighted = false,
+  onHighlightDismiss,
 }: TemperaturePointStatusCardProps) {
   const config = STATUS_CONFIG[status]
   const Icon = config.icon
 
   const isClickable = status === 'nessuna_lettura' || status === 'richiesta_lettura'
+  const canClick = isClickable || (highlighted && onHighlightDismiss)
 
   const handleCardClick = () => {
+    if (highlighted && onHighlightDismiss) {
+      onHighlightDismiss()
+    }
     if (isClickable) {
       onAddReading()
     }
@@ -68,7 +78,8 @@ export function TemperaturePointStatusCard({
       className={`
         relative rounded-lg border-2 p-4 transition-all
         ${config.borderColor} ${config.bgColor}
-        ${isClickable ? 'cursor-pointer hover:shadow-md' : 'cursor-default'}
+        ${canClick ? 'cursor-pointer hover:shadow-md' : 'cursor-default'}
+        ${highlighted ? 'ring-4 ring-amber-400 ring-offset-2 animate-pulse shadow-lg' : ''}
       `}
       onClick={handleCardClick}
     >
@@ -111,6 +122,7 @@ export function TemperaturePointStatusCard({
           <button
             onClick={(e) => {
               e.stopPropagation()
+              onHighlightDismiss?.()
               onCorrectiveAction()
             }}
             className="flex-1 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors"
@@ -123,6 +135,7 @@ export function TemperaturePointStatusCard({
           <button
             onClick={(e) => {
               e.stopPropagation()
+              onHighlightDismiss?.()
               onAddReading()
             }}
             className="flex-1 rounded-md bg-orange-600 px-3 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors"
@@ -135,6 +148,7 @@ export function TemperaturePointStatusCard({
           <button
             onClick={(e) => {
               e.stopPropagation()
+              onHighlightDismiss?.()
               onAddReading()
             }}
             className="flex-1 rounded-md bg-gray-600 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"

@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   ChevronDown,
   ChevronUp,
+  User,
 } from 'lucide-react'
 import {
   PROFILE_LABELS,
@@ -36,17 +37,21 @@ interface ConservationPointCardProps {
   point: ConservationPoint
   onEdit: (point: ConservationPoint) => void
   onDelete: (id: string) => void
+  /** Cliccando il badge Attenzione, porta alla card temperatura nella sezione Letture */
+  onFocusTemperatureCard?: (pointId: string) => void
 }
 
 export function ConservationPointCard({
   point,
   onEdit,
   onDelete,
+  onFocusTemperatureCard,
 }: ConservationPointCardProps) {
   const [showCategories, setShowCategories] = useState(false)
   const typeColors = CONSERVATION_TYPE_COLORS[point.type] || CONSERVATION_TYPE_COLORS.ambient
   // Stato derivato dall'ultima lettura (e manutenzione): badge rosso/giallo/verde in base a conformità
-  const displayedStatus = classifyPointStatus(point).status
+  const statusResult = classifyPointStatus(point)
+  const displayedStatus = statusResult.status
   const statusColors = CONSERVATION_COLORS[displayedStatus] || CONSERVATION_COLORS.normal
 
   // Funzioni rimosse - ora importate da conservationConstants.ts
@@ -62,6 +67,17 @@ export function ConservationPointCard({
       case 'critical':
         return <AlertTriangle className="w-5 h-5 text-red-600" />
     }
+  }
+
+  const getRecordedByDisplayName = (
+    user?: { first_name?: string | null; last_name?: string | null; name?: string } | null
+  ): string => {
+    if (!user) return ''
+    if (user.first_name && user.last_name) return `${user.first_name} ${user.last_name}`
+    if (user.first_name) return user.first_name
+    if (user.last_name) return user.last_name
+    if (user.name) return user.name
+    return ''
   }
 
   const getStatusText = () => {
@@ -265,6 +281,26 @@ export function ConservationPointCard({
         </div>
       </div>
 
+      {/* Messaggio di azione quando stato è Attenzione: badge cliccabile → scroll alla card temperatura */}
+      {displayedStatus === 'warning' && statusResult.message && (
+        <button
+          type="button"
+          onClick={() => onFocusTemperatureCard?.(point.id)}
+          className={`w-full text-left rounded-md ${statusColors.bg} border-2 ${statusColors.border} p-3 mb-3 transition-all hover:shadow-md hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1 cursor-pointer`}
+          aria-label={`${statusResult.message} Clicca per andare alla card di rilevamento temperatura.`}
+        >
+          <p className={`text-sm font-medium ${statusColors.text} flex items-start gap-2`}>
+            <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden />
+            {statusResult.message}
+          </p>
+          {onFocusTemperatureCard && (
+            <span className="text-xs text-amber-600 mt-1 block font-medium">
+              Clicca per andare alla card di rilevamento →
+            </span>
+          )}
+        </button>
+      )}
+
       {/* Last Temperature Reading */}
       {point.last_temperature_reading && (
         <div
@@ -277,15 +313,27 @@ export function ConservationPointCard({
                 {point.last_temperature_reading.temperature}°C
               </div>
             </div>
-            <div className="text-xs text-gray-500">
-              {new Date(
-                point.last_temperature_reading.recorded_at
-              ).toLocaleDateString('it-IT', {
-                day: '2-digit',
-                month: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
+            <div className="flex flex-col items-end text-xs text-gray-500 gap-0.5">
+              <span>
+                {new Date(
+                  point.last_temperature_reading.recorded_at
+                ).toLocaleDateString('it-IT', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+              {point.last_temperature_reading.recorded_by_user && (() => {
+                const name = getRecordedByDisplayName(point.last_temperature_reading.recorded_by_user)
+                if (!name) return null
+                return (
+                  <span className="flex items-center gap-1.5 text-gray-600">
+                    <User className="w-3.5 h-3.5 flex-shrink-0" aria-hidden />
+                    {name}
+                  </span>
+                )
+              })()}
             </div>
           </div>
         </div>

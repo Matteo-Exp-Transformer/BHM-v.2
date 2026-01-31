@@ -19,6 +19,7 @@ import type {
   MaintenanceTasksFilter,
   ConservationStats,
 } from '@/types/conservation'
+import { getAllowedRange } from '@/features/conservation/utils/correctiveActions'
 
 interface UseConservationOptions {
   autoRefresh?: boolean
@@ -422,17 +423,14 @@ export function useConservation(options: UseConservationOptions = {}) {
         }
       }
 
-      const tolerance = getToleranceRange(conservationPoint?.type || 'fridge')
+      const setpoint = conservationPoint?.setpoint_temp ?? data.temperature
+      const { min, max } = getAllowedRange(setpoint)
 
       const reading_data = {
         ...data,
         id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         company_id: 'temp-company',
-        status: determineTemperatureStatus(
-          data.temperature,
-          (conservationPoint?.setpoint_temp ?? data.temperature) - tolerance,
-          (conservationPoint?.setpoint_temp ?? data.temperature) + tolerance
-        ),
+        status: determineTemperatureStatus(data.temperature, min, max),
         recorded_by: 'temp-user',
         validation_status: 'pending' as const,
         recorded_at: new Date(),
@@ -555,22 +553,6 @@ export function useConservation(options: UseConservationOptions = {}) {
       queryClient.invalidateQueries({ queryKey: ['conservation-points'] })
     },
   })
-
-  // Helper functions
-  const getToleranceRange = (type: ConservationPoint['type']): number => {
-    switch (type) {
-      case 'freezer':
-        return 3
-      case 'fridge':
-        return 2
-      case 'blast':
-        return 1
-      case 'ambient':
-        return 5
-      default:
-        return 2
-    }
-  }
 
   const determineTemperatureStatus = (
     temperature: number,

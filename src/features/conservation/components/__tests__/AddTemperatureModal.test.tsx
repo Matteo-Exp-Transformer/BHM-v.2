@@ -156,7 +156,7 @@ describe('AddTemperatureModal - TASK 1.2: Preview Stato Temperatura', () => {
     // Find temperature input
     const tempInput = screen.getByLabelText(/temperatura rilevata/i) as HTMLInputElement
     
-    // Type compliant temperature (4°C, setpoint is 4°C, tolerance is ±2°C)
+    // Type compliant temperature (4°C, setpoint is 4°C, tolerance ±1°C)
     await user.clear(tempInput)
     await user.type(tempInput, '4')
 
@@ -177,9 +177,8 @@ describe('AddTemperatureModal - TASK 1.2: Preview Stato Temperatura', () => {
     expect(compliantBadge).toBeDefined()
   })
 
-  it('should show yellow badge when temperature is in warning range (tolerance + 2)', async () => {
-    // RED: Write test that fails
-    // When user types temperature in warning range, should see yellow badge
+  it('should show yellow badge when temperature is in warning range (within ±1°C but not exact)', async () => {
+    // Warning = in range ±1°C but not exactly at setpoint (4°C)
     const user = userEvent.setup()
     
     render(
@@ -194,9 +193,9 @@ describe('AddTemperatureModal - TASK 1.2: Preview Stato Temperatura', () => {
     // Find temperature input
     const tempInput = screen.getByLabelText(/temperatura rilevata/i) as HTMLInputElement
     
-    // Type warning temperature (7°C, setpoint is 4°C, diff is 3°C which is > tolerance (2) but <= tolerance+2 (4))
+    // Type warning temperature (4.5°C, setpoint 4°C: in ±1 range but not exact)
     await user.clear(tempInput)
-    await user.type(tempInput, '7')
+    await user.type(tempInput, '4.5')
 
     // Should show yellow badge with "Warning" or "Attenzione"
     const badges = screen.queryAllByText(/warning|attenzione|⚠ warning/i)
@@ -225,7 +224,7 @@ describe('AddTemperatureModal - TASK 1.2: Preview Stato Temperatura', () => {
     // Find temperature input
     const tempInput = screen.getByLabelText(/temperatura rilevata/i) as HTMLInputElement
     
-    // Type critical temperature (12°C, setpoint is 4°C, diff is 8°C which is > tolerance+2 (4))
+    // Type critical temperature (12°C, setpoint 4°C: outside ±1°C)
     await user.clear(tempInput)
     await user.type(tempInput, '12')
 
@@ -259,12 +258,11 @@ describe('AddTemperatureModal - TASK 1.2: Preview Stato Temperatura', () => {
 
     const tempInput = screen.getByLabelText(/temperatura rilevata/i) as HTMLInputElement
     
-    // Type a temperature
+    // Type a temperature (4°C = setpoint, so compliant)
     await user.clear(tempInput)
-    await user.type(tempInput, '5')
+    await user.type(tempInput, '4')
     
     // Should show status badges (both compact badge and large section have role="status")
-    // Find all status elements
     const statusElements = screen.getAllByRole('status')
     expect(statusElements.length).toBeGreaterThan(0)
     
@@ -277,7 +275,7 @@ describe('AddTemperatureModal - TASK 1.2: Preview Stato Temperatura', () => {
     
     expect(compactBadge).toBeDefined()
     
-    // For 5°C (setpoint 4°C, diff 1°C, tolerance 2°C): should be compliant
+    // For 4°C (setpoint 4°C): compliant (exact match)
     const compliantText = screen.queryAllByText(/conforme/i)
     expect(compliantText.length).toBeGreaterThan(0)
   })
