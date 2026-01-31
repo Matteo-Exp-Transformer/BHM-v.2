@@ -31,6 +31,7 @@ export interface CollapsibleCardProps {
   onEmptyAction?: () => void
   collapseDisabled?: boolean
   id?: string
+  centerTitle?: boolean
 }
 
 export const CollapsibleCard = ({
@@ -63,6 +64,7 @@ export const CollapsibleCard = ({
   onEmptyAction,
   collapseDisabled = false,
   id,
+  centerTitle = false,
 }: CollapsibleCardProps) => {
   // LOCKED: 2025-01-16 - CollapsibleCard.tsx completamente testato
   // Test eseguiti: 57 test, tutti passati (100%)
@@ -232,7 +234,7 @@ export const CollapsibleCard = ({
     >
       {/* Header */}
       <div
-        className={`flex cursor-pointer items-start justify-between gap-4 rounded-t-lg px-4 py-4 transition-colors hover:bg-gray-50 sm:px-6 ${headerClassName}`}
+        className={`cursor-pointer rounded-t-lg px-4 py-4 transition-colors hover:bg-gray-50 sm:px-6 ${centerTitle ? 'grid grid-cols-[1fr_auto_1fr] items-center gap-4' : 'flex items-start justify-between gap-4'} ${headerClassName}`}
         onClick={toggleExpanded}
         role="button"
         tabIndex={0}
@@ -242,7 +244,7 @@ export const CollapsibleCard = ({
         id={headerId}
         data-collapsible-disabled={collapseDisabled}
       >
-        <div className="flex flex-1 items-start gap-3">
+        <div className={`flex items-start gap-3 ${centerTitle ? 'justify-center col-start-2' : 'flex-1'}`}>
           {Icon && (
             <Icon className="mt-1 h-5 w-5 text-gray-500" aria-hidden="true" />
           )}
@@ -267,7 +269,7 @@ export const CollapsibleCard = ({
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className={`flex items-center space-x-2 ${centerTitle ? 'justify-end col-start-3' : ''}`}>
           {actions && (
             <div className="flex items-center space-x-2">{actions}</div>
           )}

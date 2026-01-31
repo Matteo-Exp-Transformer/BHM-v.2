@@ -423,9 +423,9 @@ export default function ConservationPage() {
       {/* Temperature Readings List - New 3-Tab System */}
       <CollapsibleCard
         title="Letture Temperature"
-        subtitle={`${tempStats.total} letture registrate`}
         defaultExpanded={true}
         icon={Clock}
+        headerClassName="[&>div:first-child]:mt-2"
         actions={
           <div ref={pointSelectorRef} className="relative">
             <button
