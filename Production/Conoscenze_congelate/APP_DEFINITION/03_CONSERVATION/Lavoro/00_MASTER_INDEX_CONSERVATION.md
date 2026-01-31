@@ -1,9 +1,9 @@
 # MASTER INDEX - Conservation Feature
-## Aggiornato: 2026-01-30
+## Aggiornato: 2026-01-31
 
 ---
 
-## STATO ATTUALE (Verificato 2026-01-30)
+## STATO ATTUALE (Verificato 2026-01-31)
 
 ### VERDETTO: **PRONTO PER PRODUZIONE + NUOVE FEATURES**
 
@@ -15,36 +15,57 @@
 | Migration DB | **Applicata (018, 019, 020, 021)** |
 | Test Manuale | **PASS** |
 | Profili HACCP | **5 profili × 4 categorie elettrodomestico** |
-| Nuove Features | Profili HACCP ✅ + Immagini ✅ + Layout Split ✅ + Nome Utente ✅ + Pulsante Calendario ✅ |
+| Nuove Features | Profili HACCP ✅ + Immagini ✅ + Layout Split ✅ + Nome Utente ✅ + Pulsante Calendario ✅ + **Sistema 3 Tab Temperature** ✅ |
 
 ---
 
-## SESSIONE CORRENTE (29-01-2026)
+## SESSIONE CORRENTE (30-31-01-2026)
 
-### Profilo HACCP "Bibite e Bevande alcoliche" + Pulsante Calendario ✅ COMPLETATA
+### Riorganizzazione Letture Temperature + Miglioramenti UI ⚠️ IMPLEMENTATO (da debuggare)
 
-**Obiettivo**: Aggiungere 5° profilo HACCP per bibite/bevande e pulsante per navigare al calendario dalle manutenzioni.
+**Obiettivo**: Sistema a 3 tab per Letture Temperature (Stato Corrente / Storico / Analisi) con workflow azioni correttive HACCP, grafici, e raffinamenti UI.
 
-**Implementazione**:
-- ✅ **Profilo `beverages_alcoholic`**: 5 categorie (Frutta/Verdure, Acqua, Succhi, Bibite gassate, Bevande Alcoliche)
-- ✅ **Categorie senza range temperatura**: `range: { min: null, max: null }`
-- ✅ **Temperatura consigliata**: 4°C per tutte
-- ✅ **Pulsante "Visualizza nel Calendario"**: Naviga a pagina Attività con modal aperto e manutenzione evidenziata
-- ✅ **Fix completamento manutenzione**: Uso UUID da `metadata.maintenance_id` invece di ID composito
-- ✅ **Fix modal manutenzioni**: Aggiornamento ottimistico senza cambiare fonte dati
+**Implementazione v2 (30-01)**:
+- ✅ **Sistema a 3 tab**: Stato Corrente, Storico, Analisi
+- ✅ **4 stati badge punto**: conforme, critico, richiesta_lettura, nessuna_lettura (tolleranza ±1°C)
+- ✅ **Azioni correttive**: Popover guidato con istruzioni HACCP per tipo punto
+- ✅ **Grafico andamento**: recharts con banda range, tooltip, pallini conformi/fuori range
+- ✅ **Storico**: raggruppamento per data, filtri periodo/punto/anomalie
+- ✅ **Dipendenze**: recharts, @radix-ui/react-popover
+
+**Miglioramenti UI (31-01)**:
+- ✅ **Layout semplificato**: rimosso TemperatureAlertsPanel, solo griglia card
+- ✅ **Card ordinate per tipo**: fridge → freezer → blast → ambient
+- ✅ **Reparto e operatore**: mostrati nelle card e nella tabella storico
+- ✅ **Pulsante "Rileva Temperatura"**: dropdown selezione punto nell'header
+- ✅ **Click card condizionale**: apre modal solo per nessuna_lettura e richiesta_lettura
+- ✅ **Prop centerTitle**: aggiunta a CollapsibleCard (riutilizzabile)
 
 **File chiave**:
-- `src/utils/conservationProfiles.ts` — Profilo `beverages_alcoholic` aggiunto
-- `src/utils/onboarding/conservationUtils.ts` — 5 categorie con `range: null`
-- `src/components/onboarding-steps/ConservationStep.tsx` — Filtro categorie per profilo
-- [REPORT_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md](./29-01-2026/REPORT_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md)
-- [REPORT_PULSANTE_VISUALIZZA_CALENDARIO_E_FIX.md](./29-01-2026/REPORT_PULSANTE_VISUALIZZA_CALENDARIO_E_FIX.md)
+- `src/features/conservation/ConservationPage.tsx` — Tab, pulsante Rileva Temperatura, ordinamento
+- `src/features/conservation/components/TemperaturePointStatusCard.tsx` — Card stato, reparto, operatore, click
+- `src/features/conservation/components/TemperatureReadingsTable.tsx` — Colonna Reparto
+- `src/features/conservation/utils/correctiveActions.ts` — Logica tolleranza ±1°C
+- [README.md](./30-01-2026/README.md) — Guida agenti per fix
+- [riorganizzazione_temperature_card_v2_implementazione.md](./30-01-2026/riorganizzazione_temperature_card_v2_implementazione.md)
+- [miglioramenti_ui_temperature_31-01-2026.md](./30-01-2026/miglioramenti_ui_temperature_31-01-2026.md)
 
-**Status**: ✅ COMPLETATA — 5 profili HACCP totali, pulsante calendario funzionante.
+**Status**: ⚠️ IMPLEMENTATO — Da debuggare (timezone isToday, performance, pointsInRichiestaLettura persistenza)
 
 ---
 
 ## SESSIONI PRECEDENTI
+
+### 29-01-2026: Profilo Bibite + Pulsante Calendario ✅
+
+**Obiettivo**: 5° profilo HACCP e pulsante per navigare al calendario dalle manutenzioni.
+
+**Implementazione**:
+- ✅ Profilo `beverages_alcoholic`, pulsante "Visualizza nel Calendario", fix completamento manutenzione
+
+**File**: [README.md](./29-01-2026/README.md)
+
+---
 
 ### 24-01-2026: Allineamento ConservationStep ↔ AddPointModal ✅
 
@@ -156,7 +177,7 @@
 
 ```
 Lavoro/
-├── 00_MASTER_INDEX_CONSERVATION.md  ← QUESTO FILE (aggiornato 30-01-2026)
+├── 00_MASTER_INDEX_CONSERVATION.md  ← QUESTO FILE (aggiornato 31-01-2026)
 ├── 10-01-2026/                      ← Archivio storico
 ├── ...
 ├── 21-01-2026/                      ← Centralizzazione costanti
@@ -169,11 +190,14 @@ Lavoro/
 ├── 24-01-2026/                      ← Allineamento ConservationStep
 │   ├── REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md
 │   └── MAPPATURA_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md
-└── 29-01-2026/                      ← ⭐ SESSIONE CORRENTE
+├── 29-01-2026/                      ← Profilo Bibite + Pulsante Calendario
+│   ├── README.md
+│   ├── REPORT_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md
+│   └── REPORT_PULSANTE_VISUALIZZA_CALENDARIO_E_FIX.md
+└── 30-01-2026/                      ← ⭐ SESSIONE CORRENTE (Riorg. Temperature + UI)
     ├── README.md
-    ├── REPORT_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md
-    ├── REPORT_PULSANTE_VISUALIZZA_CALENDARIO_E_FIX.md
-    └── MAPPATURA_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md
+    ├── riorganizzazione_temperature_card_v2_implementazione.md
+    └── miglioramenti_ui_temperature_31-01-2026.md
 ```
 
 ---
@@ -195,6 +219,10 @@ Lavoro/
 | **Allineamento ConservationStep** | ✅ | 24-01 |
 | **Profilo Bibite/Bevande** | ✅ | 29-01 |
 | **Pulsante Calendario** | ✅ | 29-01 |
+| **Sistema 3 Tab Temperature** | ✅ | 30-01 |
+| **Azioni correttive HACCP** | ✅ | 30-01 |
+| **Grafico andamento temperature** | ✅ | 30-01 |
+| **Pulsante Rileva Temperatura** | ✅ | 31-01 |
 
 ---
 
@@ -249,12 +277,14 @@ npm run test -- --run  # Test
 | **23-01-2026** | **Fix Conservation Point Card** | **Mapping unificato categorie** |
 | **24-01-2026** | **Allineamento ConservationStep** | **Validazione schema, sezione profilo** |
 | **29-01-2026** | **Profilo Bibite + Pulsante Calendario** | **5° profilo HACCP, navigazione calendario** |
+| **30-31-01-2026** | **Riorg. Temperature + Miglioramenti UI** | **3 tab, azioni correttive, grafico, pulsante Rileva** |
 
 ---
 
 ## RISORSE AGENTI
 
 Per implementare o fare debug:
+- 📖 [README 30-01-2026 - Guida fix Letture Temperature](./30-01-2026/README.md) — Punto di ingresso per fix sistema 3 tab
 - 📖 [Report Profilo Bibite e Pulsante Calendario](./29-01-2026/REPORT_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md) (29-01-2026)
 - 📖 [Report Allineamento ConservationStep ↔ AddPointModal](./24-01-2026/REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md) (Fasi 1–3, 24-01-2026)
 - 📖 [Guida Debug & Nuove Categorie](./20-01-2026/AGENT_GUIDE_APPLIANCE_IMAGES.md)
@@ -267,5 +297,5 @@ Per implementare o fare debug:
 ---
 
 **Fine 00_MASTER_INDEX_CONSERVATION.md**
-**Ultimo aggiornamento**: 2026-01-30
-**Status**: FEATURE COMPLETA — 5 profili HACCP × 4 categorie elettrodomestico
+**Ultimo aggiornamento**: 2026-01-31
+**Status**: FEATURE COMPLETA — 5 profili HACCP × 4 categorie elettrodomestico + Sistema 3 Tab Temperature

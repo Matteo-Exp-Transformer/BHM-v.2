@@ -55,9 +55,10 @@ export function TemperaturePointStatusCard({
   const config = STATUS_CONFIG[status]
   const Icon = config.icon
 
+  const isClickable = status === 'nessuna_lettura' || status === 'richiesta_lettura'
+
   const handleCardClick = () => {
-    // For non-critical states, clicking the card opens the add reading modal
-    if (status !== 'critico') {
+    if (isClickable) {
       onAddReading()
     }
   }
@@ -65,9 +66,9 @@ export function TemperaturePointStatusCard({
   return (
     <div
       className={`
-        relative rounded-lg border-2 p-4 transition-all cursor-pointer
+        relative rounded-lg border-2 p-4 transition-all
         ${config.borderColor} ${config.bgColor}
-        hover:shadow-md
+        ${isClickable ? 'cursor-pointer hover:shadow-md' : 'cursor-default'}
       `}
       onClick={handleCardClick}
     >
