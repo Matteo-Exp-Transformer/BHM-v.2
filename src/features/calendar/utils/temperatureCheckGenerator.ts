@@ -36,6 +36,9 @@ export function generateTemperatureCheckEvents(
   const maxEvents = options.maxEventsPerPoint || 100
 
   conservationPoints.forEach(point => {
+    // Abbattitore: non richiede manutenzione rilevamento temperatura, nessun evento in calendario
+    if (point.type === 'blast') return
+
     const frequency = inferFrequencyFromPoint(point)
     const schedule: TemperatureCheckSchedule = {
       conservationPointId: point.id,

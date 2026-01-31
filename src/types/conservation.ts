@@ -263,8 +263,8 @@ export const classifyPointStatus = (
     }
   }
 
-  // Punti che richiedono temperatura: se non c'è lettura, non mostrare verde
-  const typesRequiringTemp: ConservationPoint['type'][] = ['fridge', 'freezer', 'blast']
+  // Punti che richiedono temperatura: se non c'è lettura, non mostrare verde (Abbattitore non richiede rilevamento temperatura)
+  const typesRequiringTemp: ConservationPoint['type'][] = ['fridge', 'freezer']
   if (typesRequiringTemp.includes(point.type) && !point.last_temperature_reading) {
     return {
       status: 'warning',
@@ -273,8 +273,8 @@ export const classifyPointStatus = (
     }
   }
 
-  // Check temperature status: tolleranza centralizzata ±1.0°C (allineato a TemperaturePointStatusCard)
-  if (point.last_temperature_reading) {
+  // Check temperature status: tolleranza centralizzata ±1.0°C (Abbattitore non usa stato basato su temperatura)
+  if (point.type !== 'blast' && point.last_temperature_reading) {
     const reading = point.last_temperature_reading
     const setpoint = point.setpoint_temp
     const TOLERANCE_C = 1.0

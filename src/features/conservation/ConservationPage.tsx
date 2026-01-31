@@ -576,14 +576,14 @@ export default function ConservationPage() {
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {[...conservationPoints]
+                  .filter(point => point.type !== 'blast') /* Abbattitore: non richiede rilevamento temperatura */
                   .sort((a, b) => {
                     const typeOrder: Record<string, number> = {
                       fridge: 0,
                       freezer: 1,
-                      blast: 2,
-                      ambient: 3,
+                      ambient: 2,
                     }
-                    return (typeOrder[a.type] ?? 4) - (typeOrder[b.type] ?? 4)
+                    return (typeOrder[a.type] ?? 3) - (typeOrder[b.type] ?? 3)
                   })
                   .map(point => {
                     const latestReading = getLatestReadingByPoint(temperatureReadings, point.id)

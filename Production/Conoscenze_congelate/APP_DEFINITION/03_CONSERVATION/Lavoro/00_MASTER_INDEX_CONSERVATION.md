@@ -85,6 +85,29 @@
 
 ---
 
+### 31-01-2026: Abbattitore (no rilevamento temperatura) + Validazioni + UI card ✅
+
+**Obiettivo**: Per tipologia Abbattitore: non richiedere/assegnare manutenzione "Rilevamento temperatura"; nascondere temperatura/badge/ultime letture in card; escludere dalla sezione Rilevamento temperature; uniformare altezza card temperatura.
+
+**Implementazione**:
+- ✅ **Abbattitore senza rilevamento temperatura**: typesRequiringTemp senza blast; classifyPointStatus non calcola stato da temperatura per blast
+- ✅ **Card ConservationPointCard**: per blast nascosti temperatura target, badge regolazione termostato, ultima lettura
+- ✅ **AddPointModal**: getRequiredMaintenanceTasks(blast)=2 tipi (sanificazione, controllo scadenze); filter load/save temperature; testo dinamico 2/4 manutenzioni
+- ✅ **TasksStep + onboardingHelpers**: requiredMaintenances e insert maintenance per blast come ambient (2 tipi); validazioni validateAllMaintenanceAssigned e lista punti
+- ✅ **temperatureCheckGenerator**: nessun evento rilevamento temperatura per punti blast
+- ✅ **ConservationPage**: filter blast dalla griglia TemperaturePointStatusCard (sezione Rilevamento temperature)
+- ✅ **TemperaturePointStatusCard**: min-h-[246px], area azioni min-h-[40px] per altezza uniforme (Conforme = Critico)
+
+**File chiave**:
+- `src/types/conservation.ts` — typesRequiringTemp, classifyPointStatus
+- `src/features/conservation/components/ConservationPointCard.tsx` — Nascita temperatura/badge/ultima lettura per blast
+- `src/features/conservation/components/AddPointModal.tsx` — Manutenzioni blast, validazioni, testo 2/4
+- `src/features/conservation/ConservationPage.tsx` — Filter blast da griglia temperatura
+- `src/features/conservation/components/TemperaturePointStatusCard.tsx` — Altezza uniforme
+- [REPORT_ABBATTITORE_E_UI_31-01-2026.md](./31-01-2026/REPORT_ABBATTITORE_E_UI_31-01-2026.md)
+
+---
+
 ## SESSIONI PRECEDENTI
 
 ### 29-01-2026: Profilo Bibite + Pulsante Calendario ✅
@@ -230,9 +253,10 @@ Lavoro/
 │   ├── riorganizzazione_temperature_card_v2_implementazione.md
 │   ├── miglioramenti_ui_temperature_31-01-2026.md
 │   └── REPORT_FIX_BUG_UI_TEMPERATURE_31-01-2026.md
-└── 31-01-2026/                      ← ⭐ Centralizzazione tolleranza + Badge cliccabile
+└── 31-01-2026/                      ← ⭐ Centralizzazione tolleranza + Badge cliccabile + Abbattitore no temp + UI card
     ├── README.md
-    └── REPORT_SESSIONE_COMPLETA_31-01-2026.md
+    ├── REPORT_SESSIONE_COMPLETA_31-01-2026.md
+    └── REPORT_ABBATTITORE_E_UI_31-01-2026.md
 ```
 
 ---
@@ -263,6 +287,10 @@ Lavoro/
 | **Badge Attenzione/Critico cliccabile** (scroll + highlight) | ✅ | 31-01 |
 | **Nome utente in Ultima lettura** | ✅ | 31-01 |
 | **Colori critico intensificati** | ✅ | 31-01 |
+| **Abbattitore: no rilevamento temperatura** | ✅ | 31-01 |
+| **Validazioni 2/4 manutenzioni (Ambiente/Abbattitore)** | ✅ | 31-01 |
+| **Sezione Rilevamento temperature senza Abbattitore** | ✅ | 31-01 |
+| **Altezza uniforme card temperatura (TemperaturePointStatusCard)** | ✅ | 31-01 |
 
 ---
 
@@ -319,6 +347,7 @@ npm run test -- --run  # Test
 | **29-01-2026** | **Profilo Bibite + Pulsante Calendario** | **5° profilo HACCP, navigazione calendario** |
 | **30-31-01-2026** | **Riorg. Temperature + Miglioramenti UI** | **3 tab, azioni correttive, grafico, pulsante Rileva** |
 | **31-01-2026** | **Centralizzazione tolleranza + Badge cliccabile** | **±1°C unificato, badge scroll/highlight, nome utente, colori critico** |
+| **31-01-2026** | **Abbattitore no rilevamento temperatura + UI card** | **Manutenzioni 2 tipi per blast, validazioni, sezione temp senza Abbattitore, card altezza uniforme** |
 
 ---
 
@@ -328,6 +357,7 @@ Per implementare o fare debug:
 - 📖 [README 30-01-2026 - Guida fix Letture Temperature](./30-01-2026/README.md) — Punto di ingresso per fix sistema 3 tab
 - 📖 [Report Fix Bug UI Temperatura 31-01-2026](./30-01-2026/REPORT_FIX_BUG_UI_TEMPERATURE_31-01-2026.md) — Fix input, badge, date, popover, testi
 - 📖 [Report Sessione Completa 31-01-2026](./31-01-2026/REPORT_SESSIONE_COMPLETA_31-01-2026.md) — Centralizzazione tolleranza ±1°C, badge cliccabile, nome utente, colori critico, sicurezza git
+- 📖 [Report Abbattitore e UI 31-01-2026](./31-01-2026/REPORT_ABBATTITORE_E_UI_31-01-2026.md) — Abbattitore senza rilevamento temperatura, validazioni 2/4, sezione Rilevamento senza Abbattitore, altezza uniforme card
 - 📖 [Report Profilo Bibite e Pulsante Calendario](./29-01-2026/REPORT_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md) (29-01-2026)
 - 📖 [Report Allineamento ConservationStep ↔ AddPointModal](./24-01-2026/REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md) (Fasi 1–3, 24-01-2026)
 - 📖 [Guida Debug & Nuove Categorie](./20-01-2026/AGENT_GUIDE_APPLIANCE_IMAGES.md)
@@ -341,4 +371,4 @@ Per implementare o fare debug:
 
 **Fine 00_MASTER_INDEX_CONSERVATION.md**
 **Ultimo aggiornamento**: 2026-01-31
-**Status**: FEATURE COMPLETA — 5 profili HACCP × 4 categorie elettrodomestico + Sistema 3 Tab Temperature
+**Status**: FEATURE COMPLETA — 5 profili HACCP × 4 categorie elettrodomestico + Sistema 3 Tab Temperature + Abbattitore (no rilevamento temperatura) + UI card uniformi

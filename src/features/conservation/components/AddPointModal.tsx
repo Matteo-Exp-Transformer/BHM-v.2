@@ -554,8 +554,8 @@ export function AddPointModal({
 
   // Genera manutenzioni obbligatorie basate sul tipo di punto
   const getRequiredMaintenanceTasks = (pointType: ConservationPointType): MandatoryMaintenanceTask[] => {
-    if (pointType === 'ambient') {
-      // Per punti di tipo "ambiente", solo sanificazione e controllo scadenze
+    if (pointType === 'ambient' || pointType === 'blast') {
+      // Per "ambiente" e "abbattitore": non richiesta manutenzione rilevamento temperatura
       return [
         {
           manutenzione: 'sanificazione',
@@ -571,7 +571,7 @@ export function AddPointModal({
         },
       ]
     } else {
-      // Per altri tipi (refrigerated, frozen), tutte le manutenzioni
+      // Per frigorifero e congelatore: tutte le manutenzioni incluso rilevamento temperatura
       return [
         {
           manutenzione: 'rilevamento_temperatura',
@@ -776,8 +776,13 @@ export function AddPointModal({
   useEffect(() => {
     if (point && existingMaintenances && existingMaintenances.length > 0) {
       // Trasforma manutenzioni esistenti nel formato MandatoryMaintenanceTask
+      // Per Abbattitore: non mostrare/assegnare rilevamento temperatura
       const transformed = existingMaintenances
-        .filter(task => Object.keys(REVERSE_MAINTENANCE_TYPE_MAPPING).includes(task.type))
+        .filter(task => {
+          if (!Object.keys(REVERSE_MAINTENANCE_TYPE_MAPPING).includes(task.type)) return false
+          if (point.type === 'blast' && task.type === 'temperature') return false
+          return true
+        })
         .map(task => transformMaintenanceTaskToForm(task))
 
       // Se ci sono manutenzioni trasformate, usale, altrimenti usa quelle obbligatorie
@@ -940,8 +945,12 @@ export function AddPointModal({
 
     // Trasforma i maintenanceTasks nel formato atteso da useConservationPoints
     // Se showMaintenances è false (onboarding), passa array vuoto
+    // Per Abbattitore: non salvare mai rilevamento temperatura
+    const tasksToSave = formData.pointType === 'blast'
+      ? maintenanceTasks.filter(t => t.manutenzione !== 'rilevamento_temperatura')
+      : maintenanceTasks
     const transformedMaintenanceTasks = showMaintenances
-      ? transformMaintenanceTasks(maintenanceTasks)
+      ? transformMaintenanceTasks(tasksToSave)
       : []
 
     onSave(
@@ -1367,8 +1376,9 @@ export function AddPointModal({
                   Manutenzioni Obbligatorie
                 </h3>
                 <p className="text-sm text-gray-600">
-                  Configura le 4 manutenzioni obbligatorie per questo punto di
-                  conservazione (HACCP compliance)
+                  {formData.pointType === 'ambient' || formData.pointType === 'blast'
+                    ? 'Configura le 2 manutenzioni obbligatorie per questo punto di conservazione (HACCP compliance).'
+                    : 'Configura le 4 manutenzioni obbligatorie per questo punto di conservazione (HACCP compliance).'}
                 </p>
               </div>
 

@@ -1810,6 +1810,12 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
           return null
         }
 
+        // Abbattitore: non assegnare mai rilevamento temperatura
+        const conservationPoint = formData.conservation?.points?.find((p: any) => p.id === plan.conservationPointId)
+        if (conservationPoint?.pointType === 'blast' && (plan.manutenzione === 'rilevamento_temperatura' || mapManutenzioneTipo(plan.manutenzione) === 'temperature')) {
+          return null
+        }
+
         const hasSpecificStaff =
           plan.assegnatoADipendenteSpecifico &&
           plan.assegnatoADipendenteSpecifico !== 'none'

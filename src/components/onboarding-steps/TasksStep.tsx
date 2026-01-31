@@ -119,8 +119,7 @@ const TasksStep = ({
 
   // Funzione di validazione per manutenzioni
   const validateAllMaintenanceAssigned = useCallback(() => {
-    // Controlla che ogni punto di conservazione non-ambiente abbia le 4 manutenzioni
-    // e che ogni punto ambiente abbia 3 manutenzioni (senza sbrinamento)
+    // Ambiente e Abbattitore: 2 manutenzioni (sanificazione, controllo scadenze). Altri tipi: 4 manutenzioni.
     if (!conservationPoints) return true
     return conservationPoints.every(point => {
       const pointMaintenances = maintenancePlans.filter(
@@ -128,7 +127,7 @@ const TasksStep = ({
       )
 
       const requiredMaintenances =
-        point.pointType === 'ambient'
+        point.pointType === 'ambient' || point.pointType === 'blast'
           ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value === 'sanificazione' || m.value === 'controllo_scadenze')
           : STANDARD_MAINTENANCE_TYPES
 
@@ -389,7 +388,7 @@ const TasksStep = ({
                 )
 
                 const requiredMaintenances =
-                  point.pointType === 'ambient'
+                  point.pointType === 'ambient' || point.pointType === 'blast'
                     ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value === 'sanificazione' || m.value === 'controllo_scadenze')
                     : STANDARD_MAINTENANCE_TYPES
 
@@ -499,8 +498,9 @@ const MaintenanceAssignmentForm = ({
   onSave,
   onCancel,
 }: MaintenanceAssignmentFormProps) => {
+  // Ambiente e Abbattitore: non richiedono rilevamento temperatura
   const requiredMaintenances =
-    conservationPoint.pointType === 'ambient'
+    conservationPoint.pointType === 'ambient' || conservationPoint.pointType === 'blast'
       ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value === 'sanificazione' || m.value === 'controllo_scadenze')
       : STANDARD_MAINTENANCE_TYPES
 

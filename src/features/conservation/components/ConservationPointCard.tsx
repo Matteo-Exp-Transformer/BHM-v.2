@@ -258,15 +258,17 @@ export function ConservationPointCard({
           </div>
         )}
 
-        <div className="flex items-center space-x-2">
-          <Thermometer className={`w-4 h-4 ${typeColors.text}`} />
-          <div>
-            <div className="text-sm text-gray-600">Temperatura target</div>
-            <div className={`font-semibold ${typeColors.text}`}>
-              {point.setpoint_temp}°C
+        {point.type !== 'blast' && (
+          <div className="flex items-center space-x-2">
+            <Thermometer className={`w-4 h-4 ${typeColors.text}`} />
+            <div>
+              <div className="text-sm text-gray-600">Temperatura target</div>
+              <div className={`font-semibold ${typeColors.text}`}>
+                {point.setpoint_temp}°C
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="flex items-center space-x-2">
           <div
@@ -281,8 +283,8 @@ export function ConservationPointCard({
         </div>
       </div>
 
-      {/* Messaggio di azione quando stato è Attenzione o Critico: badge cliccabile → scroll alla card temperatura */}
-      {(displayedStatus === 'warning' || displayedStatus === 'critical') && statusResult.message && (
+      {/* Messaggio di azione quando stato è Attenzione o Critico: badge cliccabile → scroll alla card temperatura (non per Abbattitore) */}
+      {point.type !== 'blast' && (displayedStatus === 'warning' || displayedStatus === 'critical') && statusResult.message && (
         <button
           type="button"
           onClick={() => onFocusTemperatureCard?.(point.id)}
@@ -301,8 +303,8 @@ export function ConservationPointCard({
         </button>
       )}
 
-      {/* Last Temperature Reading */}
-      {point.last_temperature_reading && (
+      {/* Last Temperature Reading (non mostrata per Abbattitore) */}
+      {point.type !== 'blast' && point.last_temperature_reading && (
         <div
           className={`rounded-md ${statusColors.bg} border ${statusColors.border} p-3 mb-3`}
         >

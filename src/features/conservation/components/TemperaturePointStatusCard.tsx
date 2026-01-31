@@ -76,7 +76,7 @@ export function TemperaturePointStatusCard({
   return (
     <div
       className={`
-        relative rounded-lg border-2 p-4 transition-all
+        relative rounded-lg border-2 p-4 transition-all min-h-[246px] flex flex-col
         ${config.borderColor} ${config.bgColor}
         ${canClick ? 'cursor-pointer hover:shadow-md' : 'cursor-default'}
         ${highlighted ? 'ring-4 ring-amber-400 ring-offset-2 animate-pulse shadow-lg' : ''}
@@ -116,8 +116,8 @@ export function TemperaturePointStatusCard({
         </span>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-2">
+      {/* Action Buttons - area a altezza fissa per uniformare le card */}
+      <div className="flex gap-2 min-h-[40px] flex-shrink-0">
         {status === 'critico' && onCorrectiveAction && (
           <button
             onClick={(e) => {
