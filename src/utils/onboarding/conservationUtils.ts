@@ -147,6 +147,19 @@ export const validateConservationPoint = (
     return { success: false, errors }
   }
 
+  // Abbattitore: solo Sanificazione consentita nelle manutenzioni
+  if (point.pointType === 'blast' && point.maintenanceTasks && point.maintenanceTasks.length > 0) {
+    const invalidTasks = point.maintenanceTasks.filter(t => t.type !== 'sanitization')
+    if (invalidTasks.length > 0) {
+      return {
+        success: false,
+        errors: {
+          maintenanceTasks: 'Per l\'abbattitore è consentita solo la manutenzione Sanificazione.',
+        },
+      }
+    }
+  }
+
   return { success: true, point }
 }
 

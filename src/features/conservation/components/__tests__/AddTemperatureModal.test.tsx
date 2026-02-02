@@ -177,8 +177,8 @@ describe('AddTemperatureModal - TASK 1.2: Preview Stato Temperatura', () => {
     expect(compliantBadge).toBeDefined()
   })
 
-  it('should show yellow badge when temperature is in warning range (within ±1°C but not exact)', async () => {
-    // Warning = in range ±1°C but not exactly at setpoint (4°C)
+  it('should show green badge when temperature is within tolerance but not exact setpoint', async () => {
+    // Conforme = in range ±1°C (4.5°C with setpoint 4°C is within 3-5°C)
     const user = userEvent.setup()
     
     render(
@@ -193,18 +193,18 @@ describe('AddTemperatureModal - TASK 1.2: Preview Stato Temperatura', () => {
     // Find temperature input
     const tempInput = screen.getByLabelText(/temperatura rilevata/i) as HTMLInputElement
     
-    // Type warning temperature (4.5°C, setpoint 4°C: in ±1 range but not exact)
+    // Type temperature within tolerance (4.5°C, setpoint 4°C: in ±1 range but not exact)
     await user.clear(tempInput)
     await user.type(tempInput, '4.5')
 
-    // Should show yellow badge with "Warning" or "Attenzione"
-    const badges = screen.queryAllByText(/warning|attenzione|⚠ warning/i)
-    const warningBadge = badges.find(badge => {
+    // Should show green badge (conforme) - within range = compliant
+    const badges = screen.queryAllByText(/conforme|✓ conforme/i)
+    const compliantBadge = badges.find(badge => {
       const classes = badge.className
-      return classes.includes('bg-yellow') || classes.includes('text-yellow-800') || badge.closest('.bg-yellow-100, .bg-yellow-50')
+      return classes.includes('bg-green') || classes.includes('text-green-800') || badge.closest('.bg-green-100, .bg-green-50')
     })
     
-    expect(warningBadge).toBeDefined()
+    expect(compliantBadge).toBeDefined()
   })
 
   it('should show red badge when temperature is critical (beyond tolerance + 2)', async () => {

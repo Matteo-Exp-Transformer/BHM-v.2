@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { TemperatureReading, ConservationPoint } from '@/types/conservation'
 import { isTemperatureCompliant } from '@/features/conservation/utils/correctiveActions'
-import { CheckCircle, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react'
+import { CheckCircle, AlertTriangle, ChevronDown, ChevronRight, Edit, Trash2 } from 'lucide-react'
 
 const METHOD_LABELS: Record<string, string> = {
   manual: 'Manuale',
@@ -12,11 +12,15 @@ const METHOD_LABELS: Record<string, string> = {
 interface TemperatureReadingsTableProps {
   readings: TemperatureReading[]
   points: ConservationPoint[]
+  onEditReading?: (reading: TemperatureReading) => void
+  onDeleteReading?: (id: string) => void
 }
 
 export function TemperatureReadingsTable({
   readings,
   points,
+  onEditReading,
+  onDeleteReading,
 }: TemperatureReadingsTableProps) {
   const [expandedReadingId, setExpandedReadingId] = useState<string | null>(null)
   const pointsMap = new Map(points.map((p) => [p.id, p]))
@@ -155,6 +159,36 @@ export function TemperatureReadingsTable({
                             </dd>
                           </div>
                         </dl>
+                        {(onEditReading || onDeleteReading) && (
+                          <div className="mt-3 flex gap-2 border-t border-gray-200 pt-3">
+                            {onEditReading && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  onEditReading(reading)
+                                }}
+                                className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-50"
+                              >
+                                <Edit className="h-4 w-4" />
+                                Modifica
+                              </button>
+                            )}
+                            {onDeleteReading && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  onDeleteReading(reading.id)
+                                }}
+                                className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Elimina
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </td>
                   </tr>

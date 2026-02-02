@@ -164,7 +164,8 @@ export function useTemperatureReadings(conservationPointId?: string) {
         .single()
 
       if (result) {
-        console.log('✅ Temperature reading created:', result.id, 'recorded_by:', result.recorded_by)
+        const rec = result as { id?: string; recorded_by?: string }
+        console.log('✅ Temperature reading created:', rec.id, 'recorded_by:', rec.recorded_by)
       }
 
       if (error) {

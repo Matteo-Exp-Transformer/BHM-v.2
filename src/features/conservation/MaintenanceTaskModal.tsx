@@ -81,20 +81,39 @@ export function MaintenanceTaskModal({
     assigned_to: string
   }
 
-  const [formData, setFormData] = useState<MaintenanceFormState>({
-    kind: '' as any,
-    type: '' as any,
-    frequency: '' as any,
-    next_due: '',
-    estimated_duration: 30,
-    checklist: [],
-    assigned_to: '',
+  const [formData, setFormData] = useState<MaintenanceFormState>(() => {
+    // Abbattitore: pre-seleziona Sanificazione
+    const defaultKind = conservationPoint.type === 'blast' ? 'sanitization' : ('' as any)
+    const defaultType = conservationPoint.type === 'blast' ? 'sanitization' : ('' as any)
+    return {
+      kind: defaultKind,
+      type: defaultType,
+      frequency: '' as any,
+      next_due: '',
+      estimated_duration: 30,
+      checklist: conservationPoint.type === 'blast' ? (commonChecklists.sanitization || []) : [],
+      assigned_to: '',
+    }
   })
 
   const [newChecklistItem, setNewChecklistItem] = useState('')
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  // Abbattitore: solo Sanificazione consentita
+  const availableKinds = conservationPoint.type === 'blast'
+    ? maintenanceKinds.filter(k => k.value === 'sanitization')
+    : maintenanceKinds
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitError(null)
+
+    // Validazione: per abbattitore solo Sanificazione
+    if (conservationPoint.type === 'blast' && formData.kind !== 'sanitization') {
+      setSubmitError('Per l\'abbattitore è consentita solo la manutenzione Sanificazione.')
+      return
+    }
+
     onCreate({
       conservation_point_id: conservationPoint.id,
       name: formData.checklist[0] || 'Task di manutenzione',
@@ -179,12 +198,17 @@ export function MaintenanceTaskModal({
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Tipo di Manutenzione *
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {maintenanceKinds.map(kind => (
+              {conservationPoint.type === 'blast' && (
+                <p className="text-sm text-amber-700 mb-2">
+                  Per l&apos;abbattitore è consentita solo la manutenzione Sanificazione.
+                </p>
+              )}
+              <div className={`grid gap-3 ${availableKinds.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
+                {availableKinds.map(kind => (
                   <button
                     key={kind.value}
                     type="button"
-                    onClick={() => handleKindChange(kind.value)}
+                    onClick={() => { handleKindChange(kind.value); setSubmitError(null) }}
                     className={`p-4 border-2 rounded-lg text-center transition-all ${
                       formData.kind === kind.value
                         ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -196,6 +220,9 @@ export function MaintenanceTaskModal({
                   </button>
                 ))}
               </div>
+              {submitError && (
+                <p className="mt-2 text-sm text-red-600">{submitError}</p>
+              )}
             </div>
 
             {/* Frequency and Timing */}

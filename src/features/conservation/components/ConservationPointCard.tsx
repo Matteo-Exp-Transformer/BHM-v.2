@@ -3,8 +3,9 @@ import {
   ConservationPoint,
   CONSERVATION_COLORS,
   CONSERVATION_TYPE_COLORS,
-  classifyPointStatus,
+  MAINTENANCE_TASK_TYPES,
 } from '@/types/conservation'
+import { getPointCheckup } from '@/features/conservation/utils/pointCheckup'
 import {
   Thermometer,
   Calendar,
@@ -17,6 +18,7 @@ import {
   ChevronDown,
   ChevronUp,
   User,
+  Clock,
 } from 'lucide-react'
 import {
   PROFILE_LABELS,
@@ -48,10 +50,13 @@ export function ConservationPointCard({
   onFocusTemperatureCard,
 }: ConservationPointCardProps) {
   const [showCategories, setShowCategories] = useState(false)
+  const [showMaintenanceDetails, setShowMaintenanceDetails] = useState(false)
+
   const typeColors = CONSERVATION_TYPE_COLORS[point.type] || CONSERVATION_TYPE_COLORS.ambient
-  // Stato derivato dall'ultima lettura (e manutenzione): badge rosso/giallo/verde in base a conformità
-  const statusResult = classifyPointStatus(point)
-  const displayedStatus = statusResult.status
+
+  // Calcola check-up completo del punto (temperatura + manutenzioni)
+  const checkup = getPointCheckup(point, point.maintenance_tasks ?? [])
+  const displayedStatus = checkup.overallStatus
   const statusColors = CONSERVATION_COLORS[displayedStatus] || CONSERVATION_COLORS.normal
 
   // Funzioni rimosse - ora importate da conservationConstants.ts
@@ -116,7 +121,7 @@ export function ConservationPointCard({
     if (point.type === 'fridge' && point.profile_id && point.appliance_category) {
       // Ricostruisci profilo se non presente
       const profile = point.profile_config ||
-        getProfileById(point.profile_id, point.appliance_category as ApplianceCategory)
+        getProfileById(point.profile_id as ConservationProfileId, point.appliance_category as ApplianceCategory)
 
       if (profile?.allowedCategoryIds) {
         return mapCategoryIdsToDbNames(profile.allowedCategoryIds)
@@ -283,24 +288,176 @@ export function ConservationPointCard({
         </div>
       </div>
 
-      {/* Messaggio di azione quando stato è Attenzione o Critico: badge cliccabile → scroll alla card temperatura (non per Abbattitore) */}
-      {point.type !== 'blast' && (displayedStatus === 'warning' || displayedStatus === 'critical') && statusResult.message && (
-        <button
-          type="button"
-          onClick={() => onFocusTemperatureCard?.(point.id)}
-          className={`w-full text-left rounded-md ${statusColors.bg} border-2 ${statusColors.border} p-3 mb-3 transition-all hover:shadow-md hover:scale-[1.01] focus:outline-none focus:ring-2 ${displayedStatus === 'critical' ? 'focus:ring-red-500' : 'focus:ring-amber-400'} focus:ring-offset-1 cursor-pointer`}
-          aria-label={`${statusResult.message} Clicca per andare alla card di rilevamento temperatura.`}
-        >
-          <p className={`text-sm font-medium ${statusColors.text} flex items-start gap-2`}>
-            <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden />
-            {statusResult.message}
-          </p>
-          {onFocusTemperatureCard && (
-            <span className={`text-xs mt-1 block font-medium ${displayedStatus === 'critical' ? 'text-red-600' : 'text-amber-600'}`}>
-              Clicca per andare alla card di rilevamento →
-            </span>
+      {/* DUE INDICAZIONI SEPARATE quando entrambe hanno problemi */}
+      {checkup.messages.priority === 'both' && (displayedStatus === 'warning' || displayedStatus === 'critical') && (
+        <div className="space-y-2 mb-3">
+          {/* Indicazione 1: Temperatura */}
+          {checkup.messages.temperature && point.type !== 'blast' && (
+            <button
+              type="button"
+              onClick={() => onFocusTemperatureCard?.(point.id)}
+              className={`w-full text-left rounded-md ${statusColors.bg} border-2 ${statusColors.border} p-3 transition-all hover:shadow-md hover:scale-[1.01] focus:outline-none focus:ring-2 ${displayedStatus === 'critical' ? 'focus:ring-red-500' : 'focus:ring-amber-400'} focus:ring-offset-1 cursor-pointer`}
+              aria-label={`${checkup.messages.temperature} Clicca per regolare.`}
+            >
+              <div className="flex items-start gap-2">
+                <Thermometer className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-600" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm text-gray-700">Temperatura</p>
+                  <p className="text-xs text-gray-600 mt-0.5">{checkup.messages.temperature}</p>
+                  {onFocusTemperatureCard && (
+                    <span className="text-xs mt-1 block font-medium text-red-600">
+                      Clicca per regolare →
+                    </span>
+                  )}
+                </div>
+              </div>
+            </button>
           )}
-        </button>
+
+          {/* Indicazione 2: Manutenzioni */}
+          {checkup.messages.maintenance && (
+            <div className={`rounded-md ${statusColors.bg} border-2 ${statusColors.border} p-3`}>
+              <div className="flex items-start gap-2">
+                <Calendar className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm text-gray-700">Manutenzioni</p>
+                  <p className="text-xs text-gray-600 mt-0.5">{checkup.messages.maintenance}</p>
+
+                  {/* Pulsante espandibile per dettagli */}
+                  {(checkup.todayMaintenance.pending.length > 0 || checkup.overdueMaintenance.count > 0) && (
+                    <button
+                      onClick={() => setShowMaintenanceDetails(!showMaintenanceDetails)}
+                      className="text-xs mt-2 font-medium flex items-center gap-1 text-blue-600 hover:text-blue-800 transition-colors"
+                      type="button"
+                    >
+                      {showMaintenanceDetails ? 'Nascondi dettagli' : 'Mostra dettagli'}
+                      {showMaintenanceDetails ? (
+                        <ChevronUp className="w-3 h-3" />
+                      ) : (
+                        <ChevronDown className="w-3 h-3" />
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* SINGOLA INDICAZIONE quando solo uno ha problemi */}
+      {checkup.messages.priority !== 'both' && (displayedStatus === 'warning' || displayedStatus === 'critical') && (
+        <div className="mb-3">
+          {/* Solo temperatura */}
+          {checkup.messages.temperature && point.type !== 'blast' && (
+            <button
+              type="button"
+              onClick={() => onFocusTemperatureCard?.(point.id)}
+              className={`w-full text-left rounded-md ${statusColors.bg} border-2 ${statusColors.border} p-3 transition-all hover:shadow-md hover:scale-[1.01] focus:outline-none focus:ring-2 ${displayedStatus === 'critical' ? 'focus:ring-red-500' : 'focus:ring-amber-400'} focus:ring-offset-1 cursor-pointer`}
+              aria-label={`${checkup.messages.temperature} Clicca per regolare.`}
+            >
+              <p className={`text-sm font-medium ${statusColors.text} flex items-start gap-2`}>
+                <Thermometer className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden />
+                {checkup.messages.temperature}
+              </p>
+              {onFocusTemperatureCard && (
+                <span className={`text-xs mt-1 block font-medium ${displayedStatus === 'critical' ? 'text-red-600' : 'text-amber-600'}`}>
+                  Clicca per andare alla card di rilevamento →
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* Solo manutenzioni */}
+          {checkup.messages.maintenance && (
+            <div className={`rounded-md ${statusColors.bg} border-2 ${statusColors.border} p-3`}>
+              <p className={`text-sm font-medium ${statusColors.text} flex items-start gap-2`}>
+                <Calendar className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden />
+                {checkup.messages.maintenance}
+              </p>
+              {(checkup.todayMaintenance.pending.length > 0 || checkup.overdueMaintenance.count > 0) && (
+                <button
+                  onClick={() => setShowMaintenanceDetails(!showMaintenanceDetails)}
+                  className={`text-xs mt-2 font-medium flex items-center gap-1 ${displayedStatus === 'critical' ? 'text-red-700' : 'text-amber-700'} hover:underline`}
+                  type="button"
+                >
+                  {showMaintenanceDetails ? 'Nascondi dettagli' : 'Mostra dettagli'}
+                  {showMaintenanceDetails ? (
+                    <ChevronUp className="w-3 h-3" />
+                  ) : (
+                    <ChevronDown className="w-3 h-3" />
+                  )}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* DETTAGLI ESPANSI - Arretrati e Oggi */}
+      {showMaintenanceDetails && (checkup.overdueMaintenance.count > 0 || checkup.todayMaintenance.pending.length > 0) && (
+        <div className="mb-3 space-y-2">
+          {/* Arretrati con indicatori gravità */}
+          {checkup.overdueMaintenance.count > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-3">
+              <h4 className="text-sm font-semibold text-red-800 mb-2 flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4" />
+                Manutenzioni Arretrate
+              </h4>
+              <ul className="space-y-1.5">
+                {checkup.overdueMaintenance.tasks.map(task => (
+                  <li key={task.id} className="text-sm flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <span
+                        className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                          task.severity === 'critical'
+                            ? 'bg-red-600'
+                            : task.severity === 'high'
+                            ? 'bg-orange-500'
+                            : task.severity === 'medium'
+                            ? 'bg-yellow-500'
+                            : 'bg-gray-400'
+                        }`}
+                        aria-label={`Gravità: ${task.severity}`}
+                      />
+                      <span className="text-gray-700">
+                        {task.title || MAINTENANCE_TASK_TYPES[task.type].label}
+                      </span>
+                    </span>
+                    <span
+                      className={`text-xs font-medium flex-shrink-0 ${
+                        task.severity === 'critical'
+                          ? 'text-red-700'
+                          : task.severity === 'high'
+                          ? 'text-orange-700'
+                          : 'text-yellow-700'
+                      }`}
+                    >
+                      {task.daysOverdue} {task.daysOverdue === 1 ? 'giorno' : 'giorni'} fa
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Task di oggi */}
+          {checkup.todayMaintenance.pending.length > 0 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+              <h4 className="text-sm font-semibold text-yellow-800 mb-2 flex items-center gap-1.5">
+                <Clock className="w-4 h-4" />
+                Da Completare Oggi
+              </h4>
+              <ul className="space-y-1">
+                {checkup.todayMaintenance.pending.map(task => (
+                  <li key={task.id} className="text-sm text-gray-700">
+                    • {task.title || MAINTENANCE_TASK_TYPES[task.type].label}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Last Temperature Reading (non mostrata per Abbattitore) */}
@@ -341,13 +498,18 @@ export function ConservationPointCard({
         </div>
       )}
 
-      {/* Maintenance Due */}
-      {point.maintenance_due && (
-        <div className="flex items-center space-x-2 text-sm">
-          <Calendar className="w-4 h-4 text-gray-600" />
-          <span className="text-gray-600">
-            Prossima manutenzione:{' '}
-            {new Date(point.maintenance_due).toLocaleDateString('it-IT')}
+      {/* Prossima Manutenzione (quando tutto ok) */}
+      {displayedStatus === 'normal' && checkup.nextMaintenanceDue && (
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+          <Calendar className="w-4 h-4 flex-shrink-0" />
+          <span>
+            Prossima manutenzione: {checkup.nextMaintenanceDue.task.title || MAINTENANCE_TASK_TYPES[checkup.nextMaintenanceDue.task.type].label}
+            {' '}
+            {checkup.nextMaintenanceDue.daysUntil === 0
+              ? 'oggi'
+              : checkup.nextMaintenanceDue.daysUntil === 1
+              ? 'domani'
+              : `tra ${checkup.nextMaintenanceDue.daysUntil} giorni`}
           </span>
         </div>
       )}

@@ -18,7 +18,7 @@ export const getToleranceForType = (_type: ConservationPoint['type']): number =>
  *
  * @param temperature - Current temperature reading
  * @param setpoint - Target temperature from conservation point
- * @returns Status: 'compliant' (at target), 'warning' (within ±1°C but not exact), 'critical' (outside ±1°C)
+ * @returns Status: 'compliant' (within ±1°C), 'critical' (outside ±1°C). No 'warning' for temp in range.
  */
 export function calculateTemperatureStatus(
   temperature: number,
@@ -26,7 +26,7 @@ export function calculateTemperatureStatus(
   _type?: ConservationPoint['type']
 ): TemperatureStatus {
   if (!isTemperatureCompliant(temperature, setpoint)) return 'critical'
-  return temperature === setpoint ? 'compliant' : 'warning'
+  return 'compliant'
 }
 
 /**

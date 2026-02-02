@@ -18,6 +18,8 @@ interface AddTemperatureModalProps {
     data: Omit<TemperatureReading, 'id' | 'company_id' | 'created_at'>
   ) => void
   conservationPoint: ConservationPoint
+  /** Lettura da modificare (per modal in modalità edit) */
+  reading?: TemperatureReading
   isLoading?: boolean
 }
 
@@ -32,12 +34,18 @@ export function AddTemperatureModal({
   onClose,
   onSave,
   conservationPoint,
+  reading,
   isLoading,
 }: AddTemperatureModalProps) {
   const { user } = useAuth()
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    temperatureInput: string
+    method: 'manual' | 'digital_thermometer' | 'automatic_sensor'
+    notes: string
+    photo_evidence: string
+  }>({
     temperatureInput: String(conservationPoint.setpoint_temp),
-    method: 'digital_thermometer' as const,
+    method: 'digital_thermometer',
     notes: '',
     photo_evidence: '',
   })
@@ -66,14 +74,24 @@ export function AddTemperatureModal({
 
   useEffect(() => {
     if (isOpen) {
-      setFormData({
-        temperatureInput: String(conservationPoint.setpoint_temp),
-        method: '' as any,
-        notes: '',
-        photo_evidence: '',
-      })
+      if (reading) {
+        const method = reading.method ?? 'manual'
+        setFormData({
+          temperatureInput: String(reading.temperature),
+          method: method === 'automatic_sensor' ? 'automatic_sensor' : method === 'digital_thermometer' ? 'digital_thermometer' : 'manual',
+          notes: reading.notes ?? '',
+          photo_evidence: reading.photo_evidence ?? '',
+        })
+      } else {
+        setFormData({
+          temperatureInput: String(conservationPoint.setpoint_temp),
+          method: 'digital_thermometer',
+          notes: '',
+          photo_evidence: '',
+        })
+      }
     }
-  }, [isOpen, conservationPoint.setpoint_temp])
+  }, [isOpen, conservationPoint.setpoint_temp, reading])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -86,10 +104,10 @@ export function AddTemperatureModal({
       conservation_point_id: conservationPoint.id,
       temperature: num,
       recorded_at: new Date(),
-      method: formData.method,
-      notes: formData.notes || null,
-      photo_evidence: formData.photo_evidence || null,
-      recorded_by: user?.id || null,
+      method: formData.method || undefined,
+      notes: formData.notes || undefined,
+      photo_evidence: formData.photo_evidence || undefined,
+      recorded_by: user?.id || undefined,
     })
   }
 
@@ -194,10 +212,11 @@ export function AddTemperatureModal({
 
           {/* Temperature Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="temperature-input" className="block text-sm font-medium text-gray-700 mb-1">
               Temperatura rilevata (°C) *
             </label>
             <input
+              id="temperature-input"
               type="number"
               required
               step="0.1"
@@ -224,11 +243,9 @@ export function AddTemperatureModal({
                 Stato: {statusInfo.text}
               </span>
             </div>
-            {predictedStatus !== 'compliant' && (
+            {predictedStatus === 'critical' && (
               <div className={`text-sm mt-1 ${statusInfo.color}`}>
-                {predictedStatus === 'warning'
-                  ? 'Temperatura fuori dal range ottimale'
-                  : 'Temperatura in range critico - Azione richiesta'}
+                Temperatura fuori dal range di tolleranza (±1°C) - Azione richiesta
               </div>
             )}
           </div>

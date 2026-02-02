@@ -132,10 +132,9 @@ const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
   const maintenancePlans: any[] = []
 
   conservationPoints.forEach(point => {
-    // Per punti di tipo "ambient" (ambiente), solo sanificazione e controllo scadenze
+    // Per punti di tipo "ambient" (ambiente), sanificazione e controllo scadenze
     if (point.pointType === 'ambient') {
       standardMaintenances.forEach(maintenance => {
-        // Solo sanificazione e controllo scadenze per ambiente
         if (
           maintenance.manutenzione === 'sanificazione' ||
           maintenance.manutenzione === 'controllo_scadenze'
@@ -153,17 +152,26 @@ const generateConservationMaintenancePlans = (conservationPoints: any[]) => {
           })
         }
       })
-    } else {
-      // Per altri tipi (refrigerated, frozen), tutte le manutenzioni tranne sbrinamento per ambient
+    } else if (point.pointType === 'blast') {
+      // Abbattitore: solo Sanificazione
       standardMaintenances.forEach(maintenance => {
-        // I punti di tipo "ambient" non hanno "sbrinamento" (defrosting)
-        if (
-          point.pointType === 'ambient' &&
-          maintenance.manutenzione === 'sbrinamento'
-        ) {
-          return
+        if (maintenance.manutenzione === 'sanificazione') {
+          maintenancePlans.push({
+            id: generateId(),
+            conservationPointId: point.id,
+            manutenzione: maintenance.manutenzione,
+            frequenza: maintenance.frequenza,
+            assegnatoARuolo: maintenance.assegnatoARuolo,
+            assegnatoACategoria: maintenance.assegnatoACategoria,
+            assegnatoADipendenteSpecifico: maintenance.assegnatoADipendenteSpecifico,
+            giorniCustom: maintenance.giorniCustom,
+            note: maintenance.note,
+          })
         }
-
+      })
+    } else {
+      // Frigorifero e congelatore: tutte le manutenzioni
+      standardMaintenances.forEach(maintenance => {
         maintenancePlans.push({
           id: generateId(),
           conservationPointId: point.id,
@@ -1810,10 +1818,10 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
           return null
         }
 
-        // Abbattitore: non assegnare mai rilevamento temperatura
+        // Abbattitore: solo Sanificazione
         const conservationPoint = formData.conservation?.points?.find((p: any) => p.id === plan.conservationPointId)
-        if (conservationPoint?.pointType === 'blast' && (plan.manutenzione === 'rilevamento_temperatura' || mapManutenzioneTipo(plan.manutenzione) === 'temperature')) {
-          return null
+        if (conservationPoint?.pointType === 'blast') {
+          if (plan.manutenzione !== 'sanificazione') return null
         }
 
         const hasSpecificStaff =

@@ -7,7 +7,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import type { ConservationPoint } from '@/types/conservation'
-import { validateTemperatureForType } from '@/utils/onboarding/conservationUtils'
+import { isTemperatureCompliant } from '@/features/conservation/utils/correctiveActions'
 
 interface ConservationPointCardProps {
   point: ConservationPoint
@@ -78,36 +78,13 @@ export function ConservationPointCard({
 
   const latestReading = point.last_temperature_reading
   
-  // Calculate temperature status based on point type and target temperature
+  // Temperature status: within setpoint ± 1°C = compliant, outside = critical (no warning for temp in range)
   const getTemperatureStatus = (): 'compliant' | 'warning' | 'critical' => {
-    if (!latestReading || !point.type || point.type === 'ambient') {
-      return 'compliant' // Default for ambient or no reading
+    if (!latestReading || !point.type || point.type === 'ambient' || point.type === 'blast') {
+      return 'compliant'
     }
-    
-    const validation = validateTemperatureForType(latestReading.temperature, point.type)
-    if (!validation.valid) {
-      return 'critical' // Out of range = critical
-    }
-    
-    // Check if temperature is close to limits (warning)
-    const typeInfo = {
-      fridge: { min: 1, max: 15 },
-      freezer: { min: -25, max: -1 },
-      blast: { min: -90, max: -15 },
-      ambient: { min: null, max: null },
-    }[point.type]
-    
-    if (typeInfo && typeInfo.min !== null && typeInfo.max !== null) {
-      const temp = latestReading.temperature
-      const range = typeInfo.max - typeInfo.min
-      const margin = range * 0.15 // 15% margin for warning
-      
-      if (temp <= typeInfo.min + margin || temp >= typeInfo.max - margin) {
-        return 'warning' // Close to limits = warning
-      }
-    }
-    
-    return 'compliant' // Within safe range
+    const compliant = isTemperatureCompliant(latestReading.temperature, point.setpoint_temp)
+    return compliant ? 'compliant' : 'critical'
   }
   
   const temperatureStatus = getTemperatureStatus()

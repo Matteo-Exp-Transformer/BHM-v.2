@@ -158,7 +158,11 @@ export type MaintenanceFrequency =
   | 'daily'
   | 'weekly'
   | 'monthly'
+  | 'quarterly'
+  | 'biannually'
   | 'annually'
+  | 'as_needed'
+  | 'custom'
 
 // Maintenance task types configuration
 export const MAINTENANCE_TASK_TYPES = {
@@ -223,9 +227,9 @@ export const getTemperatureStatus = (
   target: number,
   tolerance: number = 1
 ): ConservationStatus => {
-  const diff = Math.abs(current - target)
-  if (diff <= tolerance) return 'normal'
-  if (diff <= tolerance * 2) return 'warning'
+  const min = target - tolerance
+  const max = target + tolerance
+  if (current >= min && current <= max) return 'normal'
   return 'critical'
 }
 
@@ -291,15 +295,7 @@ export const classifyPointStatus = (
         priority: 1,
       }
     }
-
-    // Warning: entro ±1°C ma non esattamente al target
-    if (reading.temperature !== setpoint) {
-      return {
-        status: 'warning',
-        message: 'Regola il termostato e rileva nuovamente la temperatura per ripristinare lo stato conforme.',
-        priority: 2,
-      }
-    }
+    // Temperatura entro ±1°C: conforme (nessun warning, fall-through a normal)
   }
 
   // Check if maintenance is due soon (within 7 days)
@@ -607,3 +603,46 @@ export interface MaintenanceCalendar {
 
 // Add missing TemperatureStatus type for backward compatibility
 export type TemperatureStatus = 'compliant' | 'warning' | 'critical'
+
+// Conservation Point Check-up - Centralizza lo stato del punto in un'unica struttura
+export interface ConservationPointCheckup {
+  // Stato complessivo del punto
+  overallStatus: 'normal' | 'warning' | 'critical'
+
+  // Check temperatura (non applicabile per blast/ambient)
+  temperature: {
+    inRange: boolean
+    message?: string
+    lastReading?: TemperatureReading
+  }
+
+  // Manutenzioni di oggi (considerando orario di next_due)
+  todayMaintenance: {
+    allCompleted: boolean
+    total: number
+    completed: number
+    pending: MaintenanceTask[]
+  }
+
+  // Manutenzioni arretrate con indicatore di gravità
+  overdueMaintenance: {
+    count: number
+    tasks: (MaintenanceTask & {
+      daysOverdue: number
+      severity: 'low' | 'medium' | 'high' | 'critical'
+    })[]
+  }
+
+  // Messaggi separati per temperatura e manutenzioni
+  messages: {
+    temperature?: string
+    maintenance?: string
+    priority: 'temperature' | 'maintenance' | 'both'
+  }
+
+  // Prossima manutenzione in scadenza
+  nextMaintenanceDue?: {
+    task: MaintenanceTask
+    daysUntil: number
+  }
+}

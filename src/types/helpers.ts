@@ -13,6 +13,7 @@ export type TemperatureMethod = 'manual' | 'automatic' | 'sensor'
 
 /**
  * Calcola lo status di una lettura di temperatura (tolleranza centralizzata ±1.0°C)
+ * Dentro setpoint ± tolerance = compliant, fuori = critical.
  * @param reading - Temperatura rilevata
  * @param setpoint - Temperatura target del punto di conservazione
  * @param tolerance - Tolleranza in gradi (default: 1)
@@ -22,9 +23,9 @@ export function computeTemperatureStatus(
   setpoint: number,
   tolerance = 1
 ): TemperatureStatus {
-  const deviation = Math.abs(reading - setpoint)
-  if (deviation <= tolerance) return 'compliant'
-  if (deviation <= tolerance * 2) return 'warning'
+  const min = setpoint - tolerance
+  const max = setpoint + tolerance
+  if (reading >= min && reading <= max) return 'compliant'
   return 'critical'
 }
 

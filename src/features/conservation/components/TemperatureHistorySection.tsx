@@ -8,6 +8,8 @@ import { ChevronDown, ChevronRight, CheckCircle, AlertTriangle } from 'lucide-re
 interface TemperatureHistorySectionProps {
   readings: TemperatureReading[]
   points: ConservationPoint[]
+  onEditReading?: (reading: TemperatureReading) => void
+  onDeleteReading?: (id: string) => void
 }
 
 const PERIOD_OPTIONS = [
@@ -21,6 +23,8 @@ const PERIOD_OPTIONS = [
 export function TemperatureHistorySection({
   readings,
   points,
+  onEditReading,
+  onDeleteReading,
 }: TemperatureHistorySectionProps) {
   const [periodDays, setPeriodDays] = useState(30)
   const [selectedPointId, setSelectedPointId] = useState<string>('all')
@@ -217,6 +221,8 @@ export function TemperatureHistorySection({
                     <TemperatureReadingsTable
                       readings={dayReadings}
                       points={points}
+                      onEditReading={onEditReading}
+                      onDeleteReading={onDeleteReading}
                     />
                   </div>
                 )}

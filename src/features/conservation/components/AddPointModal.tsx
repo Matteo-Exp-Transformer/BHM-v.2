@@ -554,8 +554,19 @@ export function AddPointModal({
 
   // Genera manutenzioni obbligatorie basate sul tipo di punto
   const getRequiredMaintenanceTasks = (pointType: ConservationPointType): MandatoryMaintenanceTask[] => {
-    if (pointType === 'ambient' || pointType === 'blast') {
-      // Per "ambiente" e "abbattitore": non richiesta manutenzione rilevamento temperatura
+    if (pointType === 'blast') {
+      // Abbattitore: solo Sanificazione
+      return [
+        {
+          manutenzione: 'sanificazione',
+          frequenza: '' as MaintenanceFrequency,
+          assegnatoARuolo: '' as StaffRole,
+          assegnatoACategoria: undefined,
+        },
+      ]
+    }
+    if (pointType === 'ambient') {
+      // Ambiente: sanificazione e controllo scadenze
       return [
         {
           manutenzione: 'sanificazione',
@@ -570,9 +581,9 @@ export function AddPointModal({
           assegnatoACategoria: undefined,
         },
       ]
-    } else {
-      // Per frigorifero e congelatore: tutte le manutenzioni incluso rilevamento temperatura
-      return [
+    }
+    // Per frigorifero e congelatore: tutte le manutenzioni incluso rilevamento temperatura
+    return [
         {
           manutenzione: 'rilevamento_temperatura',
           frequenza: '' as MaintenanceFrequency,
@@ -598,7 +609,6 @@ export function AddPointModal({
           assegnatoACategoria: undefined,
         },
       ]
-    }
   }
 
   const [maintenanceTasks, setMaintenanceTasks] = useState<
@@ -776,11 +786,15 @@ export function AddPointModal({
   useEffect(() => {
     if (point && existingMaintenances && existingMaintenances.length > 0) {
       // Trasforma manutenzioni esistenti nel formato MandatoryMaintenanceTask
-      // Per Abbattitore: non mostrare/assegnare rilevamento temperatura
+      // Per Abbattitore: solo Sanificazione (no rilevamento temperatura, no controllo scadenze)
       const transformed = existingMaintenances
         .filter(task => {
           if (!Object.keys(REVERSE_MAINTENANCE_TYPE_MAPPING).includes(task.type)) return false
-          if (point.type === 'blast' && task.type === 'temperature') return false
+          if (point.type === 'blast') {
+            if (task.type === 'temperature') return false
+            if (task.type === 'expiry_check') return false
+            return task.type === 'sanitization'
+          }
           return true
         })
         .map(task => transformMaintenanceTaskToForm(task))
@@ -802,6 +816,20 @@ export function AddPointModal({
   // Validazione specifica per manutenzioni (Task 1.3)
   const validateMaintenanceTasks = (tasks: MandatoryMaintenanceTask[]): string[] => {
     const errors: string[] = []
+    const pointType = formData.pointType
+
+    // Per abbattitore: solo Sanificazione ammessa
+    if (pointType === 'blast') {
+      const invalidTasks = tasks.filter(t => t.manutenzione !== 'sanificazione')
+      if (invalidTasks.length > 0) {
+        errors.push('Per l\'abbattitore è consentita solo la manutenzione Sanificazione.')
+      }
+      const hasSanificazione = tasks.some(t => t.manutenzione === 'sanificazione')
+      if (!hasSanificazione && tasks.length > 0) {
+        errors.push('Per l\'abbattitore è obbligatoria la manutenzione Sanificazione.')
+      }
+    }
+
     tasks.forEach((task, index) => {
       // 1. Frequenza obbligatoria
       if (!task.frequenza) {
@@ -945,9 +973,9 @@ export function AddPointModal({
 
     // Trasforma i maintenanceTasks nel formato atteso da useConservationPoints
     // Se showMaintenances è false (onboarding), passa array vuoto
-    // Per Abbattitore: non salvare mai rilevamento temperatura
+    // Per Abbattitore: salvare solo Sanificazione
     const tasksToSave = formData.pointType === 'blast'
-      ? maintenanceTasks.filter(t => t.manutenzione !== 'rilevamento_temperatura')
+      ? maintenanceTasks.filter(t => t.manutenzione === 'sanificazione')
       : maintenanceTasks
     const transformedMaintenanceTasks = showMaintenances
       ? transformMaintenanceTasks(tasksToSave)
@@ -1376,9 +1404,11 @@ export function AddPointModal({
                   Manutenzioni Obbligatorie
                 </h3>
                 <p className="text-sm text-gray-600">
-                  {formData.pointType === 'ambient' || formData.pointType === 'blast'
-                    ? 'Configura le 2 manutenzioni obbligatorie per questo punto di conservazione (HACCP compliance).'
-                    : 'Configura le 4 manutenzioni obbligatorie per questo punto di conservazione (HACCP compliance).'}
+                  {formData.pointType === 'blast'
+                    ? 'Configura la manutenzione obbligatoria Sanificazione per l\'abbattitore (HACCP compliance).'
+                    : formData.pointType === 'ambient'
+                      ? 'Configura le 2 manutenzioni obbligatorie per questo punto di conservazione (HACCP compliance).'
+                      : 'Configura le 4 manutenzioni obbligatorie per questo punto di conservazione (HACCP compliance).'}
                 </p>
               </div>
 

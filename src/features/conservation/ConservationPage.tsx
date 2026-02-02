@@ -2,8 +2,6 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import {
   Plus,
   Thermometer,
-  AlertTriangle,
-  CheckCircle,
   TrendingUp,
   Clock,
   // Camera,
@@ -11,11 +9,12 @@ import {
 import { useConservationPoints } from './hooks/useConservationPoints'
 import { useTemperatureReadings, getLatestReadingByPoint, getPointStatus } from './hooks/useTemperatureReadings'
 import { getCorrectiveAction } from './utils/correctiveActions'
+import { useMaintenanceTasksCritical } from './hooks/useMaintenanceTasksCritical'
+import { useConservationRealtime } from './hooks/useConservationRealtime'
 // import { useMaintenanceTasks } from './hooks/useMaintenanceTasks'
 import { ConservationPointCard } from './components/ConservationPointCard'
 import { AddPointModal } from './components/AddPointModal'
 import { AddTemperatureModal } from './components/AddTemperatureModal'
-import { TemperatureReadingCard } from './components/TemperatureReadingCard'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 import { ScheduledMaintenanceCard } from '@/features/dashboard/components/ScheduledMaintenanceCard'
 import { TemperaturePointStatusCard } from './components/TemperaturePointStatusCard'
@@ -28,6 +27,9 @@ import type {
 } from '@/types/conservation'
 
 export default function ConservationPage() {
+  // Real-time updates per temperature e maintenance completions
+  useConservationRealtime()
+
   const {
     conservationPoints,
     stats,
@@ -39,6 +41,9 @@ export default function ConservationPage() {
     isUpdating,
     isDeleting,
   } = useConservationPoints()
+
+  // Carica solo i task critici (arretrati + oggi + prossima per tipo)
+  const { data: criticalTasks = [] } = useMaintenanceTasksCritical()
 
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingPoint, setEditingPoint] = useState<ConservationPoint | null>(
@@ -66,7 +71,6 @@ export default function ConservationPage() {
 
   const {
     temperatureReadings,
-    stats: tempStats,
     isLoading: isLoadingReadings,
     createReading,
     updateReading,
@@ -76,13 +80,20 @@ export default function ConservationPage() {
     // isDeleting: isDeletingReading,
   } = useTemperatureReadings()
 
-  // Punti arricchiti con ultima lettura: i bollini stato (verde/giallo/rosso) usano classifyPointStatus che legge last_temperature_reading
+  // Punti arricchiti con ultima lettura E maintenance_tasks critici
+  // I bollini stato (verde/giallo/rosso) ora usano getPointCheckup che legge last_temperature_reading + maintenance_tasks
   const pointsWithLastReading = useMemo(() => {
-    return conservationPoints.map(point => ({
-      ...point,
-      last_temperature_reading: getLatestReadingByPoint(temperatureReadings ?? [], point.id),
-    }))
-  }, [conservationPoints, temperatureReadings])
+    return conservationPoints.map(point => {
+      // Filtra i task critici di questo punto
+      const pointTasks = criticalTasks.filter(task => task.conservation_point_id === point.id)
+
+      return {
+        ...point,
+        last_temperature_reading: getLatestReadingByPoint(temperatureReadings ?? [], point.id),
+        maintenance_tasks: pointTasks, // Aggiungi task critici
+      }
+    })
+  }, [conservationPoints, temperatureReadings, criticalTasks])
 
   // Chiudi il dropdown selezione punto al click fuori
   useEffect(() => {
@@ -620,6 +631,8 @@ export default function ConservationPage() {
           <TemperatureHistorySection
             readings={temperatureReadings}
             points={conservationPoints}
+            onEditReading={handleEditReading}
+            onDeleteReading={handleDeleteReading}
           />
         )}
 

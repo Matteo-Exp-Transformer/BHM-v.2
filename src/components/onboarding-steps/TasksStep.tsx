@@ -119,7 +119,7 @@ const TasksStep = ({
 
   // Funzione di validazione per manutenzioni
   const validateAllMaintenanceAssigned = useCallback(() => {
-    // Ambiente e Abbattitore: 2 manutenzioni (sanificazione, controllo scadenze). Altri tipi: 4 manutenzioni.
+    // Abbattitore: 1 manutenzione (solo sanificazione). Ambiente: 2. Frigorifero/Congelatore: 4.
     if (!conservationPoints) return true
     return conservationPoints.every(point => {
       const pointMaintenances = maintenancePlans.filter(
@@ -127,9 +127,11 @@ const TasksStep = ({
       )
 
       const requiredMaintenances =
-        point.pointType === 'ambient' || point.pointType === 'blast'
-          ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value === 'sanificazione' || m.value === 'controllo_scadenze')
-          : STANDARD_MAINTENANCE_TYPES
+        point.pointType === 'blast'
+          ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value === 'sanificazione')
+          : point.pointType === 'ambient'
+            ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value === 'sanificazione' || m.value === 'controllo_scadenze')
+            : STANDARD_MAINTENANCE_TYPES
 
       // Verifica che abbiano tutte le manutenziioni richieste assegnate
       return requiredMaintenances.every(requiredMaintenance =>
@@ -388,9 +390,11 @@ const TasksStep = ({
                 )
 
                 const requiredMaintenances =
-                  point.pointType === 'ambient' || point.pointType === 'blast'
-                    ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value === 'sanificazione' || m.value === 'controllo_scadenze')
-                    : STANDARD_MAINTENANCE_TYPES
+                  point.pointType === 'blast'
+                    ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value === 'sanificazione')
+                    : point.pointType === 'ambient'
+                      ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value === 'sanificazione' || m.value === 'controllo_scadenze')
+                      : STANDARD_MAINTENANCE_TYPES
 
                 const allAssigned = requiredMaintenances.every(
                   requiredMaintenance =>
@@ -498,11 +502,13 @@ const MaintenanceAssignmentForm = ({
   onSave,
   onCancel,
 }: MaintenanceAssignmentFormProps) => {
-  // Ambiente e Abbattitore: non richiedono rilevamento temperatura
+  // Abbattitore: solo Sanificazione. Ambiente: sanificazione + controllo scadenze. Altri: tutte.
   const requiredMaintenances =
-    conservationPoint.pointType === 'ambient' || conservationPoint.pointType === 'blast'
-      ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value === 'sanificazione' || m.value === 'controllo_scadenze')
-      : STANDARD_MAINTENANCE_TYPES
+    conservationPoint.pointType === 'blast'
+      ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value === 'sanificazione')
+      : conservationPoint.pointType === 'ambient'
+        ? STANDARD_MAINTENANCE_TYPES.filter(m => m.value === 'sanificazione' || m.value === 'controllo_scadenze')
+        : STANDARD_MAINTENANCE_TYPES
 
   // Precompila i dati esistenti se disponibili
   const existingPlans = maintenancePlans.filter(
@@ -544,6 +550,14 @@ const MaintenanceAssignmentForm = ({
   const validatePlans = () => {
     const newErrors: Record<string, string> = {}
 
+    // Abbattitore: solo Sanificazione consentita
+    if (conservationPoint.pointType === 'blast') {
+      const invalidPlans = plans.filter(p => p.manutenzione !== 'sanificazione')
+      if (invalidPlans.length > 0) {
+        newErrors['plans-blast'] = 'Per l\'abbattitore è consentita solo la manutenzione Sanificazione.'
+      }
+    }
+
     plans.forEach((plan, index) => {
       if (!plan.frequenza) {
         newErrors[`plan-${index}-frequenza`] = 'Frequenza obbligatoria'
@@ -568,6 +582,11 @@ const MaintenanceAssignmentForm = ({
 
   return (
     <div className="space-y-6">
+      {errors['plans-blast'] && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-700">{errors['plans-blast']}</p>
+        </div>
+      )}
       {requiredMaintenances.map((maintenanceType, index) => {
         const plan = plans[index]
         return (
