@@ -1,5 +1,5 @@
 # MASTER INDEX - Conservation Feature
-## Aggiornato: 2026-02-01 (conformità range, abbattitore solo Sanificazione, validazioni)
+## Aggiornato: 2026-02-04 (solo funzionalità verificate funzionanti; fix modal temperatura ancora aperto)
 
 ---
 
@@ -121,6 +121,30 @@
 
 **File chiave**:
 - [REPORT_SESSIONE_01-02-2026.md](./01-02-2026/REPORT_SESSIONE_01-02-2026.md)
+
+---
+
+### 04-02-2026: Manutenzioni Programmate + Pallino giornaliero + Completamento automatico task temperatura ✅
+
+**Obiettivo**: Allineare card Manutenzioni programmate alle 4 tipologie (inclusi Controllo Scadenze e Sbrinamento); conteggio per tipologia; considerare il rilevamento temperatura come soddisfacimento del task “Rilevamento Temperature” sulla card.
+
+**Implementazione (funzionante)**:
+- ✅ **Conteggio manutenzioni**: numero di **tipologie** (max 4), non numero di eventi/task (`Set` sui `type`)
+- ✅ **Ordine fisso**: Rilevamento Temperature → Sanificazione → Sbrinamento → Controllo Scadenze; “Mostra altre X manutenzioni [tipo]” per **tutte** le tipologie (prossima per data in ogni tipo)
+- ✅ **Rilevamento temperatura**: in `pointCheckup`, se esiste una lettura temperatura per il punto con data ≥ scadenza del task tipo `temperature`, il task non viene mostrato come arretrato né “di oggi da completare”
+
+**Non risolto (stesso giorno)**:
+- ❌ **Chiusura AddTemperatureModal**: il modal di lettura temperatura non si chiude né dopo salvataggio né con click su X o Annulla. Vedi REPORT_SESSIONE_MODAL_TEMPERATURA_04-02-2026.md in cartella 04-02-2026.
+
+**File chiave**:
+- `src/features/dashboard/components/ScheduledMaintenanceCard.tsx` — `MAINTENANCE_TYPE_ORDER`, conteggio per tipologia, letture temperatura, `calculateWeeklyStatus` a logica giornaliera
+- `src/features/conservation/utils/pointCheckup.ts` — `isTemperatureTaskSatisfiedByReading`, filtri todayPending/overdueTasks per tipo temperature
+- `src/features/conservation/hooks/useTemperatureReadings.ts` — dopo `createReading`: insert in `maintenance_completions` per task temperatura, invalidazioni e `calendar-refresh`
+- `src/features/conservation/components/ConservationPointCard.tsx` — Box "Ultima lettura": colore solo da conformità temperatura (`temperatureBadgeColors` da `checkup.temperature.inRange`)
+- [REPORT_LAVORO_04-02-2026.md](./04-02-2026/REPORT_LAVORO_04-02-2026.md)
+- [REPORT_SESSIONE_MODAL_TEMPERATURA_04-02-2026.md](./04-02-2026/REPORT_SESSIONE_MODAL_TEMPERATURA_04-02-2026.md) — tentativo fix chiusura modal (non risolto)
+- [PIANO_completamento_temperatura_su_lettura.md](./04-02-2026/PIANO_completamento_temperatura_su_lettura.md)
+- [README.md](./04-02-2026/README.md)
 
 ---
 
@@ -247,7 +271,7 @@
 
 ```
 Lavoro/
-├── 00_MASTER_INDEX_CONSERVATION.md  ← QUESTO FILE (aggiornato 31-01-2026)
+├── 00_MASTER_INDEX_CONSERVATION.md  ← QUESTO FILE (aggiornato 04-02-2026)
 ├── 10-01-2026/                      ← Archivio storico
 ├── ...
 ├── 21-01-2026/                      ← Centralizzazione costanti
@@ -273,9 +297,15 @@ Lavoro/
 │   ├── README.md
 │   ├── REPORT_SESSIONE_COMPLETA_31-01-2026.md
 │   └── REPORT_ABBATTITORE_E_UI_31-01-2026.md
-└── 01-02-2026/                      ← ⭐ Conformità range + Abbattitore solo Sanificazione + Validazioni
+├── 01-02-2026/                      ← Conformità range + Abbattitore solo Sanificazione + Validazioni
+│   ├── README.md
+│   ├── REPORT_SESSIONE_01-02-2026.md
+│   └── REPORT_card_checkup_centralizzato.md
+└── 04-02-2026/                      ← ⭐ Manutenzioni programmate + Pallino giornaliero + Completamento automatico task temperatura (+ tentativo fix modal non risolto)
     ├── README.md
-    └── REPORT_SESSIONE_01-02-2026.md
+    ├── REPORT_LAVORO_04-02-2026.md
+    ├── REPORT_SESSIONE_MODAL_TEMPERATURA_04-02-2026.md   ← fix chiusura AddTemperatureModal (non risolto)
+    └── PIANO_completamento_temperatura_su_lettura.md
 ```
 
 ---
@@ -315,6 +345,12 @@ Lavoro/
 | **Conformità in range ±1°C** (dentro = conforme, messaggio solo fuori) | ✅ | 01-02 |
 | **Abbattitore: solo Sanificazione** (1 manutenzione obbligatoria) | ✅ | 01-02 |
 | **Validazioni modali** (AddPointModal, MaintenanceTaskModal, conservationUtils, TasksStep) | ✅ | 01-02 |
+| **Manutenzioni programmate: conteggio per tipologia** (max 4, non per eventi) | ✅ | 04-02 |
+| **Manutenzioni programmate: ordine fisso** (Temperature → Sanificazione → Sbrinamento → Controllo Scadenze) + “Mostra altre” per tutti i tipi | ✅ | 04-02 |
+| **Rilevamento temperatura = completamento task** (card non mostra “Rilevamento Temperature” arretrato se c’è lettura ≥ scadenza) | ✅ | 04-02 |
+| **Pallino Manutenzioni programmate** (verde = nulla da completare oggi; giallo = da completare oggi; rosso = in ritardo) | ✅ | 04-02 |
+| **Completamento automatico task temperatura su "Rileva Temperatura"** (insert in maintenance_completions, visibile in Conservazione e Attività) | ✅ | 04-02 |
+| **Box "Ultima lettura" colore solo da temperatura** (verde = conforme, rosso = critico; non da stato complessivo) | ✅ | 04-02 |
 
 ---
 
@@ -373,6 +409,7 @@ npm run test -- --run  # Test
 | **31-01-2026** | **Centralizzazione tolleranza + Badge cliccabile** | **±1°C unificato, badge scroll/highlight, nome utente, colori critico** |
 | **31-01-2026** | **Abbattitore no rilevamento temperatura + UI card** | **Manutenzioni blast, sezione temp senza Abbattitore, card altezza uniforme** |
 | **01-02-2026** | **Conformità range + Abbattitore solo Sanificazione + Validazioni** | **Temp in ±1°C = conforme; blast 1 solo Sanificazione; validazioni modali** |
+| **04-02-2026** | **Manutenzioni programmate + Pallino giornaliero + Completamento automatico** | **Conteggio per tipologia (max 4); ordine fisso 4 tipi; “Mostra altre” per tutti; lettura temp soddisfa task Rilevamento Temperature** |
 
 ---
 
@@ -384,6 +421,9 @@ Per implementare o fare debug:
 - 📖 [Report Sessione Completa 31-01-2026](./31-01-2026/REPORT_SESSIONE_COMPLETA_31-01-2026.md) — Centralizzazione tolleranza ±1°C, badge cliccabile, nome utente, colori critico, sicurezza git
 - 📖 [Report Abbattitore e UI 31-01-2026](./31-01-2026/REPORT_ABBATTITORE_E_UI_31-01-2026.md) — Abbattitore senza rilevamento temperatura, sezione Rilevamento senza Abbattitore, altezza uniforme card
 - 📖 [Report Sessione 01-02-2026](./01-02-2026/REPORT_SESSIONE_01-02-2026.md) — Conformità range ±1°C, Abbattitore solo Sanificazione, validazioni modali
+- 📖 [Report Lavoro 04-02-2026](./04-02-2026/REPORT_LAVORO_04-02-2026.md) — Manutenzioni programmate, pallino verde/giallo/rosso giornaliero, rilevamento = completamento task, completamento automatico su "Rileva Temperatura"
+- 📖 [Report Sessione Modal Temperatura 04-02-2026](./04-02-2026/REPORT_SESSIONE_MODAL_TEMPERATURA_04-02-2026.md) — Tentativo fix chiusura AddTemperatureModal (X, Annulla, dopo salvataggio) — **non risolto**
+- 📖 [Piano completamento temperatura su lettura](./04-02-2026/PIANO_completamento_temperatura_su_lettura.md) — Completamento automatico task "Rilevamento Temperature" quando si salva una lettura
 - 📖 [Report Profilo Bibite e Pulsante Calendario](./29-01-2026/REPORT_PROFILO_BIBITE_BEVANDE_ALCOLICHE.md) (29-01-2026)
 - 📖 [Report Allineamento ConservationStep ↔ AddPointModal](./24-01-2026/REPORT_ALLINEAMENTO_VALIDAZIONE_TEMPERATURA.md) (Fasi 1–3, 24-01-2026)
 - 📖 [Guida Debug & Nuove Categorie](./20-01-2026/AGENT_GUIDE_APPLIANCE_IMAGES.md)
@@ -396,5 +436,5 @@ Per implementare o fare debug:
 ---
 
 **Fine 00_MASTER_INDEX_CONSERVATION.md**
-**Ultimo aggiornamento**: 2026-02-01
+**Ultimo aggiornamento**: 2026-02-04
 **Status**: FEATURE COMPLETA — 5 profili HACCP × 4 categorie elettrodomestico + Sistema 3 Tab Temperature + Abbattitore (solo Sanificazione) + Conformità range ±1°C

@@ -159,12 +159,21 @@ export function AddTemperatureModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="temperature-modal-title"
+    >
+      <div
+        className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <div>
-            <h2 className="text-xl font-semibold">Registra Temperatura</h2>
+            <h2 id="temperature-modal-title" className="text-xl font-semibold">Registra Temperatura</h2>
             <p className="text-sm text-gray-600">{conservationPoint.name}</p>
           </div>
           <button

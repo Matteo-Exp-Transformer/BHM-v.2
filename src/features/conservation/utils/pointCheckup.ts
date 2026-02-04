@@ -5,6 +5,7 @@ import type {
   ConservationPointCheckup,
   TemperatureReading,
 } from '@/types/conservation'
+import { MAINTENANCE_TASK_TYPES } from '@/types/conservation'
 
 /**
  * Calcola il check-up completo di un punto di conservazione
@@ -24,30 +25,51 @@ export function getPointCheckup(
   // 1. CHECK TEMPERATURA
   const temperatureCheck = checkTemperature(point)
 
-  // 2. MANUTENZIONI OGGI (considerando orario di next_due)
+  // Helper: task tipo "temperature" considerato soddisfatto se c'è una lettura nel giorno di next_due o dopo
+  const isTemperatureTaskSatisfiedByReading = (task: MaintenanceTask): boolean => {
+    if (task.type !== 'temperature') return false
+    const reading = point.last_temperature_reading
+    if (!reading) return false
+    const recordedAt = new Date(reading.recorded_at)
+    const taskDue = new Date(task.next_due)
+    return recordedAt >= startOfDay(taskDue)
+  }
+
+  // Helper: task considerato "completato oggi" (non mostrarlo come da fare oggi)
+  const isCompletedToday = (task: MaintenanceTask): boolean => {
+    const lc = task.last_completed
+    if (!lc) return false
+    const d = lc instanceof Date ? lc : new Date(lc)
+    return d >= todayStart && d <= todayEnd
+  }
+
+  // 2. MANUTENZIONI OGGI (tutta la giornata; escludi task già completati oggi)
   const todayTasks = tasks.filter(task => {
+    if (isCompletedToday(task)) return false
     const taskDate = new Date(task.next_due)
-    // Task è "di oggi" se:
-    // - next_due è tra inizio e fine giornata
-    // - E l'orario è già passato (non mostriamo task futuri dello stesso giorno)
-    return taskDate >= todayStart && taskDate <= todayEnd && taskDate <= now
+    return taskDate >= todayStart && taskDate <= todayEnd
   })
 
   const todayCompleted = todayTasks.filter(t => t.status === 'completed')
-  const todayPending = todayTasks.filter(t => t.status !== 'completed' && t.status !== 'skipped')
+  const todayPending = todayTasks.filter(t => {
+    if (t.status === 'completed' || t.status === 'skipped') return false
+    // Task "Rilevamento Temperature": se c'è una lettura oggi, non mostrarlo come da completare
+    if (t.type === 'temperature' && point.last_temperature_reading) {
+      const readingDate = startOfDay(new Date(point.last_temperature_reading.recorded_at))
+      if (readingDate.getTime() === todayStart.getTime()) return false
+    }
+    return true
+  })
 
-  // 3. ARRETRATI con indicatore di gravità
+  // 3. ARRETRATI con indicatore di gravità (esclusi i task temperatura già “soddisfatti” da una lettura)
   const overdueTasks = tasks
     .filter(task => {
       const taskDate = new Date(task.next_due)
-      // Task è arretrato se:
-      // - next_due è prima di oggi (startOfDay)
-      // - E status non è completed o skipped
-      return (
-        isAfter(todayStart, taskDate) &&
-        task.status !== 'completed' &&
-        task.status !== 'skipped'
-      )
+      const isOverdue = isAfter(todayStart, taskDate) && task.status !== 'completed' && task.status !== 'skipped'
+      if (!isOverdue) return false
+      // Task "Rilevamento Temperature": se c'è una lettura nel giorno di scadenza o dopo, non mostrarlo come arretrato
+      if (isTemperatureTaskSatisfiedByReading(task)) return false
+      return true
     })
     .map(task => {
       const daysOverdue = differenceInDays(now, new Date(task.next_due))
@@ -106,9 +128,12 @@ export function getPointCheckup(
     messages.priority = 'both'
   }
 
-  // 6. PROSSIMA MANUTENZIONE in scadenza
+  // 6. PROSSIMA MANUTENZIONE in scadenza (escludi task completati oggi)
   const futureTasks = tasks
-    .filter(t => new Date(t.next_due) > now && t.status === 'scheduled')
+    .filter(t => {
+      if (isCompletedToday(t)) return false
+      return new Date(t.next_due) > now && (t.status === 'scheduled' || !t.status)
+    })
     .sort((a, b) => new Date(a.next_due).getTime() - new Date(b.next_due).getTime())
 
   const nextMaintenanceDue = futureTasks[0]
@@ -117,6 +142,25 @@ export function getPointCheckup(
         daysUntil: differenceInDays(new Date(futureTasks[0].next_due), now),
       }
     : undefined
+
+  // 7. Prossima per tipologia (ordine fisso; solo tipologie con almeno un task futuro)
+  const MAINTENANCE_TYPE_ORDER: MaintenanceTask['type'][] = ['temperature', 'sanitization', 'defrosting', 'expiry_check']
+  const byType = new Map<MaintenanceTask['type'], { task: MaintenanceTask; daysUntil: number }>()
+  for (const t of futureTasks) {
+    if (!byType.has(t.type)) {
+      byType.set(t.type, { task: t, daysUntil: differenceInDays(new Date(t.next_due), now) })
+    }
+  }
+  const nextMaintenanceByType = MAINTENANCE_TYPE_ORDER.filter(type => byType.has(type)).map(type => {
+    const { task, daysUntil } = byType.get(type)!
+    const label = task.title || (MAINTENANCE_TASK_TYPES[type]?.label ?? type)
+    return {
+      type,
+      label,
+      next_due: new Date(task.next_due),
+      daysUntil,
+    }
+  })
 
   return {
     overallStatus,
@@ -133,6 +177,7 @@ export function getPointCheckup(
     },
     messages,
     nextMaintenanceDue,
+    nextMaintenanceByType: nextMaintenanceByType.length > 0 ? nextMaintenanceByType : undefined,
   }
 }
 

@@ -59,6 +59,10 @@ export function ConservationPointCard({
   const displayedStatus = checkup.overallStatus
   const statusColors = CONSERVATION_COLORS[displayedStatus] || CONSERVATION_COLORS.normal
 
+  // Colori del box "Ultima lettura": solo in base a temperatura conforme / fuori range (verde o critico)
+  const temperatureBadgeColors =
+    checkup.temperature.inRange ? CONSERVATION_COLORS.normal : CONSERVATION_COLORS.critical
+
   // Funzioni rimosse - ora importate da conservationConstants.ts
   // Usare getConservationTypeEmoji(point.type) invece di getTypeIcon()
   // Usare getConservationTypeLabel(point.type) invece di getTypeName()
@@ -460,15 +464,15 @@ export function ConservationPointCard({
         </div>
       )}
 
-      {/* Last Temperature Reading (non mostrata per Abbattitore) */}
+      {/* Last Temperature Reading (non mostrata per Abbattitore) — colore solo da conformità temperatura */}
       {point.type !== 'blast' && point.last_temperature_reading && (
         <div
-          className={`rounded-md ${statusColors.bg} border ${statusColors.border} p-3 mb-3`}
+          className={`rounded-md ${temperatureBadgeColors.bg} border ${temperatureBadgeColors.border} p-3 mb-3`}
         >
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm text-gray-600">Ultima lettura</div>
-              <div className={`font-semibold ${statusColors.text}`}>
+              <div className={`font-semibold ${temperatureBadgeColors.text}`}>
                 {point.last_temperature_reading.temperature}°C
               </div>
             </div>
@@ -498,19 +502,39 @@ export function ConservationPointCard({
         </div>
       )}
 
-      {/* Prossima Manutenzione (quando tutto ok) */}
-      {displayedStatus === 'normal' && checkup.nextMaintenanceDue && (
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-          <Calendar className="w-4 h-4 flex-shrink-0" />
-          <span>
-            Prossima manutenzione: {checkup.nextMaintenanceDue.task.title || MAINTENANCE_TASK_TYPES[checkup.nextMaintenanceDue.task.type].label}
-            {' '}
-            {checkup.nextMaintenanceDue.daysUntil === 0
-              ? 'oggi'
-              : checkup.nextMaintenanceDue.daysUntil === 1
-              ? 'domani'
-              : `tra ${checkup.nextMaintenanceDue.daysUntil} giorni`}
-          </span>
+      {/* Prossima Manutenzione (quando tutto ok) – cliccabile, espande elenco per tipologia */}
+      {displayedStatus === 'normal' && (checkup.nextMaintenanceDue || (checkup.nextMaintenanceByType && checkup.nextMaintenanceByType.length > 0)) && (
+        <div className="mb-3">
+          <button
+            type="button"
+            onClick={() => setShowMaintenanceDetails(!showMaintenanceDetails)}
+            className="flex items-center gap-2 text-sm text-gray-600 w-full text-left hover:bg-gray-100 rounded-md p-1 -m-1 transition-colors"
+            aria-expanded={showMaintenanceDetails}
+          >
+            <Calendar className="w-4 h-4 flex-shrink-0" />
+            <span className="flex-1">
+              Prossima manutenzione: {checkup.nextMaintenanceDue
+                ? `${checkup.nextMaintenanceDue.task.title || MAINTENANCE_TASK_TYPES[checkup.nextMaintenanceDue.task.type].label} ${checkup.nextMaintenanceDue.daysUntil === 0 ? 'oggi' : checkup.nextMaintenanceDue.daysUntil === 1 ? 'domani' : `tra ${checkup.nextMaintenanceDue.daysUntil} giorni`}`
+                : 'clicca per dettagli'}
+            </span>
+            {showMaintenanceDetails ? (
+              <ChevronUp className="w-4 h-4 flex-shrink-0" />
+            ) : (
+              <ChevronDown className="w-4 h-4 flex-shrink-0" />
+            )}
+          </button>
+          {showMaintenanceDetails && checkup.nextMaintenanceByType && checkup.nextMaintenanceByType.length > 0 && (
+            <ul className="mt-2 pl-6 space-y-1.5 text-sm text-gray-700 border-l-2 border-gray-200 ml-2">
+              {checkup.nextMaintenanceByType.map(({ type, label, daysUntil }) => (
+                <li key={type} className="flex items-center justify-between gap-2">
+                  <span>{label}</span>
+                  <span className="text-gray-500 font-medium">
+                    {daysUntil === 0 ? 'oggi' : daysUntil === 1 ? 'domani' : `tra ${daysUntil} giorni`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 

@@ -372,6 +372,7 @@ export function useMaintenanceTasks(conservationPointId?: string) {
     onSuccess: () => {
       // ✅ Invalidazione cache per ricaricare manutenzioni e mostrare prossima non completata
       queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] })
+      queryClient.invalidateQueries({ queryKey: ['maintenance-tasks-critical'], refetchType: 'all' })
       queryClient.invalidateQueries({ queryKey: ['maintenance-completions'] })
       queryClient.invalidateQueries({ queryKey: ['conservation-points'] }) // Aggiorna anche conservation points
       toast.success('Manutenzione completata')

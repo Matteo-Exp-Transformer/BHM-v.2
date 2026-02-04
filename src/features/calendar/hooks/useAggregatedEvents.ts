@@ -386,6 +386,7 @@ function convertMaintenanceTaskToEvent(
     metadata: {
       maintenance_id: task.id,
       conservation_point_id: task.conservation_point_id,
+      type: (task as { type?: string }).type,
       department_id: (task as any).department_id,
       assigned_to_staff_id: (task as any).assigned_to_staff_id,
       assigned_to_role: (task as any).assigned_to_role,

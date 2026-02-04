@@ -1,12 +1,17 @@
 # ADD_TEMPERATURE_MODAL - DOCUMENTAZIONE COMPLETA
 
 **Data Creazione**: 2026-01-16
-**Ultima Modifica**: 2026-01-30
-**Versione**: 2.0.0
+**Ultima Modifica**: 2026-02-04
+**Versione**: 2.1.0
 **File Componente**: `src/features/conservation/components/AddTemperatureModal.tsx`
 **Tipo**: Modale / Form
 
-**Nuove Features (v2.0.0)**:
+**Nuove Features (v2.1.0 - 04-02-2026)**:
+- ✅ **Chiusura modal**: Pulsante X, pulsante "Annulla" e click sull'area scura (overlay) chiamano `onClose`. Il click sul contenuto (pannello bianco) non chiude il modal (`stopPropagation`).
+- ✅ **Accessibilità**: `role="dialog"`, `aria-modal="true"`, `aria-labelledby="temperature-modal-title"` sul contenitore; titolo con `id="temperature-modal-title"`.
+- ⚠️ **Bug noto**: In alcune condizioni il modal potrebbe non chiudersi (X/Annulla/overlay). Tracciato in `Lavoro/04-02-2026/REPORT_SESSIONE_MODAL_TEMPERATURA_04-02-2026.md`.
+
+**Features (v2.0.0)**:
 - ✅ **`recorded_by` salvato**: Il campo user.id viene salvato in DB per ogni lettura
 - ✅ **Metodo registrazione salvato**: 'manual' | 'digital_thermometer' | 'automatic_sensor'
 - ✅ **Nome utente visibile**: Letture mostrano chi ha registrato (risolto in lista)
@@ -108,15 +113,43 @@ Il modal viene mostrato quando:
 12. Utente può inserire URL foto evidenza (opzionale, input URL):
     - Es. URL foto del termometro con temperatura visibile
     - **NOTA**: Attualmente supporta solo URL, non upload diretto file
-13. Utente clicca "Registra" o "Annulla"
+13. Utente clicca "Registra", "Annulla", X in alto a destra, oppure sull'area scura (overlay) fuori dal pannello.
 14. Se "Registra":
     - Form viene validato (temperatura obbligatoria, metodo obbligatorio)
-    - Se valido, `onSave()` viene chiamato con dati lettura
-    - Modal si chiude
-    - Lista letture si aggiorna automaticamente con nuova lettura in cima
-15. Se "Annulla":
-    - Modal si chiude senza salvare
-    - Dati form vengono persi (form viene resettato alla prossima apertura)
+    - Se valido, `onSave()` viene chiamato con dati lettura (il parent avvia la mutation)
+    - **Chiusura solo al successo**: il parent chiude il modal nel callback `onSuccess` della mutation; durante il salvataggio il modal resta aperto (stato loading); in caso di errore il modal resta aperto e l'utente può riprovare
+    - Lista letture si aggiorna dopo successo e il modal si chiude
+15. Se "Annulla", X o click su overlay:
+    - Viene chiamato `onClose()`; il parent esegue chiusura e azzeramento state (incluso `location.state` se presente, per evitare ri-aperture da deep link Attività)
+    - Modal si chiude senza salvare; dati form vengono persi (form viene resettato alla prossima apertura)
+
+---
+
+## Chiusura del modal e accessibilità (v2.1.0 - 04-02-2026)
+
+### Comportamento atteso – Chiusura
+
+| Azione utente | Comportamento atteso |
+|---------------|----------------------|
+| Click su **X** (in alto a destra) | Chiama `onClose()` → parent chiude modal e azzera state. |
+| Click su **Annulla** | Chiama `onClose()` → come sopra. |
+| Click sull'**area scura (overlay)** fuori dal pannello | Chiama `onClose()` → come sopra. Il contenuto del modal (pannello bianco) ha `onClick={e => e.stopPropagation()}` così il click sul form non chiude il modal. |
+| Click su **Registra** (salvataggio) | Il parent non chiude subito: avvia la mutation (create/update). La chiusura avviene **solo in `onSuccess`** della mutation. In caso di errore il modal resta aperto. |
+
+### Ruolo del parent (ConservationPage)
+
+- Il parent passa `onClose={closeTemperatureModal}`. La funzione `closeTemperatureModal`:
+  - Imposta `showTemperatureModal = false`, `selectedPointForTemperature = null`, `editingReading = null`
+  - Chiama `navigate(location.pathname, { replace: true, state: {} })` per azzerare `location.state` (evita che l’effetto "apertura da Attività" riapra il modal dopo la chiusura).
+
+### Accessibilità
+
+- Contenitore principale: `role="dialog"`, `aria-modal="true"`, `aria-labelledby="temperature-modal-title"`.
+- Titolo: `id="temperature-modal-title"` sull’elemento `h2` "Registra Temperatura".
+
+### Bug noto
+
+- In alcune condizioni il modal potrebbe non chiudersi (né con X, né con Annulla, né dopo salvataggio). Lavoro di fix documentato in `Lavoro/04-02-2026/REPORT_SESSIONE_MODAL_TEMPERATURA_04-02-2026.md`.
 
 ---
 
@@ -814,6 +847,9 @@ interface CreateTemperatureReadingInput {
 - [x] L'utente può inserire URL foto evidenza (input URL opzionale)
 - [x] L'utente può salvare la lettura cliccando "Registra"
 - [x] L'utente può annullare cliccando "Annulla" o X
+- [x] Click su overlay (area scura) chiude il modal (v2.1.0)
+- [x] Accessibilità: role dialog, aria-modal, aria-labelledby (v2.1.0)
+- [ ] **DA FIXARE**: Chiusura modal (X/Annulla/overlay/dopo salvataggio) in alcune condizioni non funziona — vedi REPORT_SESSIONE_MODAL_TEMPERATURA_04-02-2026.md
 - [ ] **DA FIXARE**: Modal coperto dalla bottom navigation su mobile/tablet (z-index conflict)
 - [ ] **DA FIXARE**: Modal non completamente visibile su mobile (max-height troppo grande)
 - [ ] **DA FIXARE (2026-01-16)**: Errore registrazione temperatura - query usa campo 'conservation_point' invece di 'conservation_point_id'
@@ -822,7 +858,7 @@ interface CreateTemperatureReadingInput {
 - [ ] **DA IMPLEMENTARE**: Validazione che metodo non sia vuoto prima di salvare
 - [ ] **DA IMPLEMENTARE**: Salvataggio campi method, notes, photo_evidence (quando schema DB viene aggiornato)
 - [ ] **DA MIGLIORARE**: Upload foto diretto invece di solo URL
-- [ ] **DA MIGLIORARE**: Accessibilità (ARIA labels, keyboard navigation, screen reader support)
+- [x] **PARZIALE**: Accessibilità base (role dialog, aria-modal, aria-labelledby); da completare: keyboard navigation, focus trap, Escape key
 - [ ] **DA IMPLEMENTARE**: Gestione Escape key per chiudere modal
 - [ ] **DA IMPLEMENTARE**: Focus trap (focus solo dentro modal quando aperto)
 - [ ] **DA IMPLEMENTARE**: Focus restoration (ripristina focus a elemento che ha aperto modal)
@@ -834,9 +870,11 @@ interface CreateTemperatureReadingInput {
 ### Test da Eseguire
 
 1. **Test apertura/chiusura modal**:
-   - Verificare che il modal si apra quando punto viene selezionato dal dropdown
-   - Verificare che il modal si chiuda cliccando "Annulla" o X
+   - Verificare che il modal si apra quando punto viene selezionato dal dropdown (o da deep link Attività con `openTemperatureForPointId`)
+   - Verificare che il modal si chiuda cliccando "Annulla", X o sull'area scura (overlay)
+   - Verificare che dopo "Registra" il modal si chiuda solo al successo della mutation (resta aperto durante loading e in caso di errore)
    - Verificare che il form venga resettato quando modal si riapre
+   - **Bug noto**: in alcune condizioni la chiusura potrebbe non avvenire (vedi report 04-02-2026)
 
 2. **Test pre-compilazione form**:
    - Verificare che temperatura default sia setpoint del punto

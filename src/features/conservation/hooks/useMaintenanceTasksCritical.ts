@@ -41,7 +41,7 @@ export function useMaintenanceTasksCritical() {
       }
 
       // Query 2: Task di oggi (next_due tra inizio e fine giornata)
-      const { data: todayTasks, error: todayError } = await supabase
+      const { data: todayTasksRaw, error: todayError } = await supabase
         .from('maintenance_tasks')
         .select('*')
         .eq('company_id', companyId)
@@ -52,6 +52,13 @@ export function useMaintenanceTasksCritical() {
         console.error('❌ Error loading today tasks:', todayError)
         throw todayError
       }
+
+      // Escludi da "oggi" i task già completati oggi (last_completed nella giornata corrente)
+      const todayStartDate = new Date(todayStart)
+      const todayTasks = (todayTasksRaw || []).filter(
+        (t: { last_completed?: string | null }) =>
+          !t.last_completed || new Date(t.last_completed) < todayStartDate
+      )
 
       // Query 3: Task futuri (per calcolare "prossima per tipo")
       // Carichiamo tutti i futuri scheduled e poi filtriamo in memoria
@@ -71,7 +78,7 @@ export function useMaintenanceTasksCritical() {
       // Merge tutti i task (cast: Supabase restituisce tipo DB, normalizziamo per MaintenanceTask)
       const allCriticalTasks = [
         ...(overdueTasks || []),
-        ...(todayTasks || []),
+        ...todayTasks,
       ] as unknown as MaintenanceTask[]
 
       // Aggiungi "prossima per tipo" SOLO se quella di oggi è completata

@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { X, Wrench, ClipboardList, Package, ChevronRight, Calendar, User, Clock, AlertCircle, Check, RotateCcw, AlertTriangle, Filter } from 'lucide-react'
 import type { MacroCategory, MacroCategoryItem } from '../hooks/useMacroCategoryEvents'
 import { useMacroCategoryEvents } from '../hooks/useMacroCategoryEvents'
 import { useGenericTasks } from '../hooks/useGenericTasks'
 import { useConservationPoints } from '@/features/conservation/hooks/useConservationPoints'
+import { calculateNextDue } from '@/features/conservation/hooks/useMaintenanceTasks'
+import type { MaintenanceTask } from '@/types/conservation'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -121,6 +124,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   const [highlightDismissed, setHighlightDismissed] = useState(false) // ✅ Disattiva pulse dopo click
   const { completeTask, uncompleteTask, isCompleting, isUncompleting } = useGenericTasks()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const { companyId, user } = useAuth()
   const [isCompletingMaintenance, setIsCompletingMaintenance] = useState(false)
   const [maintenanceCompletedIds, setMaintenanceCompletedIds] = useState<Set<string>>(() => new Set())
@@ -177,7 +181,13 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
       metadata: {
         category: category,
         sourceId: event.id,
-        ...event.metadata
+        ...event.metadata,
+        maintenance_type: event.metadata?.type ?? event.metadata?.maintenance_type,
+        type: event.metadata?.type ?? event.metadata?.maintenance_type,
+        conservationPointId: event.metadata?.conservation_point_id ?? event.conservation_point_id,
+        conservation_point_id: event.metadata?.conservation_point_id ?? event.conservation_point_id,
+        maintenance_id: event.metadata?.maintenance_id ?? event.metadata?.task_id ?? event.sourceId,
+        task_id: event.metadata?.task_id ?? event.sourceId,
       }
     } as MacroCategoryItem & { 
       completedAt?: Date | null
@@ -292,27 +302,72 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
 
     setIsCompletingMaintenance(true)
     try {
-      const now = new Date().toISOString()
-      
-      // Aggiorna lo stato della manutenzione a 'completed' con tutti i campi necessari
-      const { error } = await supabase
+      const completedAt = new Date()
+      const now = completedAt.toISOString()
+      const { data: userData } = await supabase.auth.getUser()
+      const completedByName = userData.user?.user_metadata?.first_name && userData.user?.user_metadata?.last_name
+        ? `${userData.user.user_metadata.first_name} ${userData.user.user_metadata.last_name}`
+        : userData.user?.email || null
+
+      // 1. Recupera il task per calcolare la prossima scadenza
+      const { data: task, error: taskError } = await supabase
         .from('maintenance_tasks')
-        .update({
-          status: 'completed',
+        .select('*')
+        .eq('id', maintenanceId)
+        .single()
+
+      if (taskError || !task) throw taskError || new Error('Task non trovato')
+
+      // 2. Calcola next_due in base alla frequenza (come useMaintenanceTasks)
+      const nextDue = (task.frequency && task.frequency !== 'as_needed' && task.frequency !== 'custom')
+        ? calculateNextDue(task.frequency as MaintenanceTask['frequency'], completedAt)
+        : now
+
+      // 3. Inserisce in maintenance_completions
+      const { error: insertError } = await supabase
+        .from('maintenance_completions')
+        .insert({
+          maintenance_task_id: maintenanceId,
+          company_id: companyId,
           completed_by: user.id,
           completed_at: now,
-          last_completed: now,
-          updated_at: now
+          completed_by_name: completedByName,
+          next_due: nextDue,
         })
-        .eq('id', maintenanceId)
-        .eq('company_id', companyId)
 
-      if (error) throw error
+      if (insertError) throw insertError
+
+      // 4. Aggiorna maintenance_tasks con prossima scadenza e last_completed
+      if (task.frequency && task.frequency !== 'as_needed' && task.frequency !== 'custom') {
+        const { error: updateError } = await supabase
+          .from('maintenance_tasks')
+          .update({
+            next_due: nextDue,
+            last_completed: now,
+            completed_at: now,
+            completed_by: user.id,
+          })
+          .eq('id', maintenanceId)
+        if (updateError) throw updateError
+      } else {
+        const { error: updateError } = await supabase
+          .from('maintenance_tasks')
+          .update({
+            last_completed: now,
+            completed_at: now,
+            completed_by: user.id,
+          })
+          .eq('id', maintenanceId)
+        if (updateError) throw updateError
+      }
 
       setMaintenanceCompletedIds((prev) => new Set(prev).add(maintenanceId))
       setSelectedItems([])
 
       await queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'], refetchType: 'all' })
+      await queryClient.invalidateQueries({ queryKey: ['maintenance-tasks-critical'], refetchType: 'all' })
+      await queryClient.refetchQueries({ queryKey: ['maintenance-tasks'] })
+      await queryClient.refetchQueries({ queryKey: ['maintenance-tasks-critical'] })
       await queryClient.invalidateQueries({ queryKey: ['calendar-events'], refetchType: 'all' })
       await queryClient.invalidateQueries({ queryKey: ['macro-category-events'], refetchType: 'all' })
       await queryClient.invalidateQueries({ queryKey: ['maintenance-completions'], refetchType: 'all' })
@@ -720,7 +775,25 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                 e.stopPropagation()
 
                                 if (category === 'maintenance') {
-                                  handleCompleteMaintenance(item.metadata?.maintenance_id ?? item.id)
+                                  // Rilevamento temperatura: apri modal temperatura con punto già assegnato
+                                  const maintenanceType = item.metadata?.maintenance_type ?? item.metadata?.type
+                                  const pointId = item.metadata?.conservationPointId ?? item.metadata?.conservation_point_id ?? (item as any).conservation_point_id
+                                  console.debug('[MacroCategoryModal] Completa Manutenzione (maintenance):', {
+                                    maintenance_type: maintenanceType,
+                                    pointId,
+                                    itemId: item.id,
+                                    metadata: item.metadata,
+                                  })
+                                  if (maintenanceType === 'temperature') {
+                                    if (pointId) {
+                                      console.debug('[MacroCategoryModal] Apertura modal temperatura, navigazione a /conservazione con pointId:', pointId)
+                                      onClose()
+                                      navigate('/conservazione', { state: { openTemperatureForPointId: pointId } })
+                                      return
+                                    }
+                                    console.warn('[MacroCategoryModal] Rilevamento temperatura ma pointId mancante, metadata:', item.metadata)
+                                  }
+                                  handleCompleteMaintenance(item.metadata?.maintenance_id ?? item.metadata?.task_id ?? item.id)
                                 } else {
                                   // Permetti completamento solo per eventi passati e presenti, NON futuri
                                   const today = new Date()
@@ -919,7 +992,16 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                     e.stopPropagation()
 
                                     if (category === 'maintenance') {
-                                      handleCompleteMaintenance(item.metadata?.maintenance_id ?? item.id)
+                                      const maintenanceType = item.metadata?.maintenance_type ?? item.metadata?.type
+                                      const pointId = item.metadata?.conservationPointId ?? item.metadata?.conservation_point_id ?? (item as any).conservation_point_id
+                                      console.debug('[MacroCategoryModal] Completa Manutenzione in ritardo:', { maintenance_type: maintenanceType, pointId, metadata: item.metadata })
+                                      if (maintenanceType === 'temperature' && pointId) {
+                                        console.debug('[MacroCategoryModal] Apertura modal temperatura (overdue), pointId:', pointId)
+                                        onClose()
+                                        navigate('/conservazione', { state: { openTemperatureForPointId: pointId } })
+                                        return
+                                      }
+                                      handleCompleteMaintenance(item.metadata?.maintenance_id ?? item.metadata?.task_id ?? item.id)
                                     } else {
                                       // Permetti completamento solo per eventi passati e presenti, NON futuri
                                       const today = new Date()

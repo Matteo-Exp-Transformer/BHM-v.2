@@ -1,21 +1,56 @@
 # SCHEDULED_MAINTENANCE_SECTION - DOCUMENTAZIONE COMPLETA
 
 **Data Creazione**: 2026-01-16
-**Ultima Modifica**: 2026-01-30
-**Versione**: 2.0.0
+**Ultima Modifica**: 2026-02-04
+**Versione**: 3.1.0
 
 ---
 
-## 📝 NOTE AGGIORNAMENTO VERSIONE 2.0.0
+## 📝 NOTE AGGIORNAMENTO VERSIONE 3.1.0 (2026-02-04)
 
-**Data Aggiornamento**: 2026-01-30
-**Motivo**: Aggiunta pulsante "Visualizza nel Calendario" e recurrence_config
+**Motivo**: Allineamento pallino alle scadenze giornaliere; conteggio per tipologia; task temperatura nascosti/soddisfatti da lettura; completamento automatico task temperatura su "Rileva Temperatura".
 
-**Nuove Features (v2.0.0)**:
-- ✅ **Pulsante "Visualizza nel Calendario"**: Naviga a pagina Attività con modal aperto e manutenzione evidenziata
-- ✅ **recurrence_config JSONB**: Persistenza giorni settimana/mese/anno per ricalcolo next_due
-- ✅ **Aggiornamento ottimistico**: Refresh modal dopo completamento senza cambiare fonte dati
-- ✅ **Fix completamento manutenzione**: Uso UUID da `metadata.maintenance_id`
+**Nuove funzionalità (v3.1.0)**:
+- ✅ **Pallino stato giornaliero**: **Verde** = nessuna manutenzione da completare oggi (allineato alle scadenze giornaliere); **Giallo** = almeno una da completare **oggi**; **Rosso** = almeno una in ritardo. Le manutenzioni di domani o oltre non fanno andare in giallo.
+- ✅ **Conteggio per tipologia**: Il numero mostrato è il numero di **tipologie** (max 4: Rilevamento Temperature, Sanificazione, Sbrinamento, Controllo Scadenze), non il numero totale di task.
+- ✅ **Ordine fisso tipologie**: Rilevamento Temperature → Sanificazione → Sbrinamento → Controllo Scadenze; "Mostra altre X manutenzioni [tipo]" per **tutte** le tipologie.
+- ✅ **Task "Rilevamento Temperature" nascosti quando soddisfatti**: Se per il punto esiste una lettura temperatura con data ≥ scadenza del task tipo `temperature`, quel task non viene mostrato in elenco (né come arretrato né come da completare). La card usa `useTemperatureReadings` + `getLatestReadingByPoint` e il filtro `isTemperatureTaskSatisfiedByReading`.
+- ✅ **Completamento automatico su lettura**: Quando l'utente salva una lettura tramite il pulsante **"Rileva Temperatura"** (pagina Conservazione), le task "Rilevamento Temperature" per quel punto con scadenza soddisfatta dalla lettura vengono completate automaticamente (insert in `maintenance_completions`). La task risulta completata in Conservazione e in Attività/calendario.
+
+**Flusso utente – Pallino e allineamento giornaliero**:
+1. L'utente apre la pagina Conservazione e vede la sezione "Manutenzioni Programmate".
+2. Per ogni punto, il **pallino** indica: verde se non c'è nulla da completare **oggi** (anche se ci sono manutenzioni domani o in settimana); giallo se c'è almeno una manutenzione con scadenza **oggi** ancora da fare; rosso se c'è almeno una in ritardo (scadenza prima di oggi).
+3. **Atteggiamento atteso**: Se l'utente ha completato tutto ciò che scade oggi (o non ha nulla in scadenza oggi), il pallino è **verde** (allineato alle scadenze giornaliere). Non è più giallo solo perché ci sono manutenzioni "in settimana" non ancora scadute.
+
+**Flusso utente – Rilevamento temperatura e task**:
+1. L'utente clicca "Rileva Temperatura", seleziona un punto (es. "TestFrigo"), inserisce la temperatura e salva.
+2. La lettura viene registrata; in backend, per quel punto vengono cercate le task di tipo `temperature` con `next_due <= recorded_at` e per ognuna viene inserito un record in `maintenance_completions`.
+3. Il trigger PostgreSQL aggiorna `next_due`, `last_completed` e `status` sulla task. La cache viene invalidata (`maintenance-tasks`, `maintenance-tasks-critical`, `calendar-events`, ecc.).
+4. **Atteggiamento atteso**: In Conservazione la card "Manutenzioni Programmate" non mostra più "Rilevamento Temperature" come da completare per quel punto (o il conteggio si aggiorna). In Attività/calendario la stessa task risulta completata. L'utente non deve cliccare "Completa Manutenzione" per la temperatura se ha già usato "Rileva Temperatura".
+
+**File coinvolti (v3.1.0)**:
+- `src/features/dashboard/components/ScheduledMaintenanceCard.tsx` — `calculateWeeklyStatus` a logica giornaliera (startOfDay/endOfDay), `useTemperatureReadings` + `getLatestReadingByPoint`, `isTemperatureTaskSatisfiedByReading`
+- `src/features/conservation/hooks/useTemperatureReadings.ts` — dopo `createReading`: query task temperatura per punto, insert in `maintenance_completions`, invalidazioni e `calendar-refresh`
+
+---
+
+## 📝 NOTE AGGIORNAMENTO VERSIONE 3.0.0
+
+**Data Aggiornamento**: 2026-02-01
+**Motivo**: Integrazione check-up centralizzato, trigger automatici, real-time
+
+**Nuove Features (v3.0.0)**:
+- ✅ **Trigger PostgreSQL Automatico**: `next_due` calcolato automaticamente dopo completamento
+- ✅ **Integration Check-up**: Manutenzioni usate da `getPointCheckup()` in card punti
+- ✅ **Real-time Sync**: Subscriptions su `maintenance_completions` e `maintenance_tasks`
+- ✅ **Caricamento Ottimizzato**: Hook `useMaintenanceTasksCritical()` carica solo task critici
+- ✅ **Gravità Arretrati**: Severity (critical/high/medium/low) calcolata in `pointCheckup.ts`
+
+**Features Precedenti (v2.0.0)**:
+- ✅ **Pulsante "Visualizza nel Calendario"**: Naviga a pagina Attività con modal aperto
+- ✅ **recurrence_config JSONB**: Persistenza giorni per ricalcolo next_due
+- ✅ **Aggiornamento ottimistico**: Refresh modal dopo completamento
+- ✅ **Fix completamento**: Uso UUID da `metadata.maintenance_id`
 
 **Formato recurrence_config**:
 ```json
@@ -24,6 +59,14 @@
   "day_of_month": 15,                               // Monthly
   "day_of_year": "2026-03-15"                       // Annually
 }
+```
+
+**Trigger PostgreSQL** (v3.0.0):
+```sql
+CREATE TRIGGER trigger_update_task_on_completion
+AFTER INSERT ON maintenance_completions
+FOR EACH ROW
+EXECUTE FUNCTION update_maintenance_task_on_completion();
 ```
 
 ---
@@ -94,14 +137,14 @@ La sezione viene mostrata quando:
 
 ### Casi d'Uso Principali
 
-1. **Consultare stato settimanale manutenzioni**
-   - **Scenario**: Un responsabile HACCP vuole verificare rapidamente quali punti hanno manutenzioni in scadenza questa settimana
-   - **Azione**: Apre la pagina Conservazione, visualizza la sezione "Manutenzioni Programmate", vede i pallini colorati (verde = tutto regolare, giallo = in scadenza, rosso = in ritardo)
-   - **Risultato**: Identifica rapidamente i punti che richiedono attenzione
+1. **Consultare stato giornaliero manutenzioni** (v3.1.0: logica giornaliera)
+   - **Scenario**: Un responsabile HACCP vuole verificare rapidamente quali punti hanno manutenzioni da completare **oggi** o in ritardo
+   - **Azione**: Apre la pagina Conservazione, visualizza la sezione "Manutenzioni Programmate", vede i pallini colorati: **verde** = nessuna da completare oggi (allineato alle scadenze giornaliere), **giallo** = almeno una da completare oggi, **rosso** = almeno una in ritardo
+   - **Risultato**: Identifica rapidamente i punti che richiedono attenzione oggi. Se non c'è nulla da fare oggi, il pallino è verde anche se ci sono manutenzioni domani o nel resto della settimana
 
 2. **Visualizzare prossima manutenzione in scadenza**
    - **Scenario**: Un manager vuole sapere quale è la prossima manutenzione in scadenza per "Frigo A"
-   - **Azione**: Clicca sulla sezione espandibile "Frigo A" nella lista, vede le manutenzioni ordinate per scadenza, la prima è la prossima
+   - **Azione**: Clicca sulla sezione espandibile "Frigo A" nella lista, vede le manutenzioni ordinate per scadenza, la prima è la prossima e se ne sono rimaste di arretrate.
    - **Risultato**: Vede tipo manutenzione ("Rilevamento Temperature"), scadenza ("19/01/2026"), assegnato a ("responsabile")
 
 3. **Verificare assegnazione manutenzione**
@@ -139,9 +182,9 @@ La sezione viene mostrata quando:
 2. La pagina carica automaticamente tutti i punti di conservazione e le manutenzioni obbligatorie
 3. Utente vede la sezione "Manutenzioni Programmate" (di default espansa)
 4. Nella lista, vede ogni punto di conservazione con:
-   - Badge stato settimanale (pallino verde/giallo/rosso)
+   - Badge stato **giornaliero** (pallino verde/giallo/rosso): verde = nulla da completare oggi, giallo = almeno una da completare oggi, rosso = almeno una in ritardo (v3.1.0)
    - Nome punto (es. "Frigo A")
-   - Numero manutenzioni (es. "4 manutenzioni")
+   - Numero **tipologie** di manutenzione (es. "2 manutenzioni" = 2 tipi tra le 4 obbligatorie)
    - Chevron icon per indicare espandibile
 5. Utente clicca su un punto (es. "Frigo A")
 6. La sezione si espande mostrando le manutenzioni per quel punto:
@@ -197,13 +240,13 @@ La sezione viene mostrata quando:
    - Mostra sempre reparto (da `conservation_point.department_id` o `task.department_id` se presente)
    - Mostra tutti i dettagli disponibili in formato leggibile (es. "Ruolo: Responsabile | Reparto: Cucina | Categoria: Cucina")
 
-#### Conflitto 2: Calcolo stato settimanale con manutenzioni multiple
-- **Quando si verifica**: Un punto ha 4 manutenzioni con scadenze diverse (alcune completate, alcune in ritardo, alcune in scadenza)
-- **Cosa succede**: Lo stato viene calcolato con priorità: rosso (in ritardo) > giallo (in scadenza) > verde (tutto regolare)
-- **Come viene gestito**: **GESTITO CORRETTAMENTE** - La funzione `calculateWeeklyStatus()` calcola lo stato correttamente:
-  - Se almeno una manutenzione è in ritardo (scadenza < now && status !== 'completed') → rosso
-  - Se almeno una manutenzione è in scadenza questa settimana (scadenza >= now && scadenza <= fine settimana && status !== 'completed') → giallo
-  - Altrimenti → verde (tutto regolare)
+#### Conflitto 2: Calcolo stato con manutenzioni multiple (v3.1.0: logica giornaliera)
+- **Quando si verifica**: Un punto ha 4 manutenzioni con scadenze diverse (alcune completate, alcune in ritardo, alcune oggi, alcune domani)
+- **Cosa succede**: Lo stato del pallino viene calcolato con priorità: rosso (in ritardo) > giallo (da completare oggi) > verde (nessuna da completare oggi)
+- **Come viene gestito**: **GESTITO CORRETTAMENTE** (v3.1.0) - La funzione `calculateWeeklyStatus()` usa logica **giornaliera**:
+  - Se almeno una manutenzione è in ritardo (`next_due < startOfDay(oggi)`) → rosso
+  - Se almeno una manutenzione ha scadenza **oggi** (`next_due` tra inizio e fine giornata) → giallo
+  - Altrimenti → verde (tutto allineato alle scadenze giornaliere; manutenzioni di domani o oltre non fanno andare in giallo)
 
 #### Conflitto 3: Manutenzioni non sincronizzate con calendario
 - **Quando si verifica**: Le manutenzioni vengono create/modificate ma non vengono visualizzate correttamente nel calendario o viceversa
@@ -361,24 +404,19 @@ Questo componente non riceve props dirette. I dati vengono caricati tramite hook
   4. Calcola inizio settimana (lunedì 00:00:00)
   5. Calcola fine settimana (domenica 23:59:59)
 
-#### `calculateWeeklyStatus(maintenances: MaintenanceTask[])`
-- **Scopo**: Calcola stato settimanale per un punto di conservazione basato sulle sue manutenzioni
-- **Parametri**: `maintenances: MaintenanceTask[]` - array manutenzioni per il punto
-- **Ritorna**: `'green' | 'yellow' | 'red'` - stato settimanale
+#### `calculateWeeklyStatus(maintenances: MaintenanceTask[])` (v3.1.0: logica giornaliera)
+- **Scopo**: Calcola stato del pallino per un punto (allineato alle scadenze **giornaliere**)
+- **Parametri**: `maintenances: MaintenanceTask[]` - array manutenzioni per il punto (già filtrate: no completate, no task temperatura soddisfatti da lettura)
+- **Ritorna**: `'green' | 'yellow' | 'red'`
 - **Logica**: 
-  1. Ottiene fine settimana corrente
-  2. Per ogni manutenzione, verifica:
-     - Se scadenza è questa settimana o precedente (`next_due <= weekEnd`)
-     - Se è in ritardo (`next_due < now && status !== 'completed'`)
-     - Se è in scadenza (`next_due >= now && next_due <= weekEnd && status !== 'completed'`)
-  3. Se almeno una manutenzione è in ritardo → `'red'` (priorità massima)
-  4. Se almeno una manutenzione è in scadenza → `'yellow'`
-  5. Altrimenti → `'green'` (tutto regolare)
+  1. `todayStart = startOfDay(now)`, `todayEnd = endOfDay(now)`
+  2. Per ogni manutenzione: `hasOverdue = next_due < todayStart`; `hasDueToday = next_due >= todayStart && next_due <= todayEnd`
+  3. Se `hasOverdue` → `'red'`; se `hasDueToday` → `'yellow'`; altrimenti → `'green'`
 
-**Regole stato:**
-- **Verde**: Tutte le manutenzioni previste per questa settimana sono completate, oppure non ci sono manutenzioni in scadenza questa settimana
-- **Giallo**: Almeno una manutenzione in scadenza questa settimana ma non in ritardo (scadenza >= now && scadenza <= fine settimana && status !== 'completed')
-- **Rosso**: Almeno una manutenzione in ritardo (scadenza < now && status !== 'completed')
+**Regole stato (v3.1.0):**
+- **Verde**: Nessuna manutenzione in ritardo e nessuna da completare **oggi** (allineato alle scadenze giornaliere)
+- **Giallo**: Almeno una manutenzione con scadenza **nella giornata corrente** (da completare oggi)
+- **Rosso**: Almeno una manutenzione in ritardo (scadenza prima di oggi)
 
 #### `togglePoint(pointId: string)`
 - **Scopo**: Espande/collassa la sezione manutenzioni per un punto specifico
@@ -684,6 +722,151 @@ Questo componente non riceve props dirette. I dati vengono caricati tramite hook
 - Indicatore visivo quando dati sono stati aggiornati da altro utente
 - Auto-refresh stato settimanale quando manutenzioni vengono completate
 
+### Integrazione con Check-up Centralizzato (v3.0.0)
+
+**Relazione con `getPointCheckup()`**:
+- I task manutenzione caricati da questa sezione vengono utilizzati anche da `ConservationPointCard`
+- Hook `useMaintenanceTasksCritical()` carica task che vengono mergiati in `point.maintenance_tasks`
+- Funzione `getPointCheckup()` analizza array task per calcolare:
+  - Task oggi (considerando orario: `taskDate <= now`)
+  - Task arretrati con severity (critical/high/medium/low basato su giorni)
+  - Prossima manutenzione futura (solo se oggi completato)
+  - Stato overall: critical (entrambi problemi), warning (uno), normal (nessuno)
+
+**Flusso integrato**:
+1. `useMaintenanceTasksCritical()` carica task critici per azienda
+2. `ConservationPage` merge task in `pointsWithLastReading`
+3. `ConservationPointCard` riceve `point.maintenance_tasks`
+4. `getPointCheckup(point, point.maintenance_tasks)` calcola stato
+5. Card visualizza:
+   - Badge stato overall (verde/giallo/rosso)
+   - Box separati se entrambi problemi (temperatura + manutenzioni)
+   - Lista arretrati espandibile con indicatori gravità
+
+**Calcolo gravità** (eseguito in `pointCheckup.ts`):
+```typescript
+const daysOverdue = differenceInDays(now, new Date(task.next_due))
+const severity =
+  daysOverdue >= 7 ? 'critical' :  // rosso
+  daysOverdue >= 3 ? 'high' :      // arancione
+  daysOverdue >= 1 ? 'medium' :    // giallo
+  'low'                             // grigio
+```
+
+**Vantaggi integrazione**:
+- **Single query**: `useMaintenanceTasksCritical()` unica fonte task
+- **Consistenza**: stesso calcolo gravità ovunque
+- **Performance**: carica solo task critici (~50 vs ~200)
+- **Real-time**: subscriptions aggiornano entrambe visualizzazioni
+
+### Trigger PostgreSQL Automatico (v3.0.0)
+
+**Obiettivo**: Calcolare automaticamente `next_due` dopo completamento manutenzione.
+
+**Implementazione**:
+
+```sql
+-- Funzione helper: calcola prossima scadenza
+CREATE OR REPLACE FUNCTION calculate_next_due_date(
+  p_frequency VARCHAR,
+  p_completed_at TIMESTAMPTZ,
+  p_recurrence_config JSONB
+) RETURNS TIMESTAMPTZ AS $$
+DECLARE
+  v_next_due TIMESTAMPTZ;
+  v_weekdays TEXT[];
+  v_current_weekday TEXT;
+  v_day_of_month INT;
+  v_day_of_year DATE;
+BEGIN
+  CASE p_frequency
+    -- Daily con giorni specifici
+    WHEN 'daily' THEN
+      v_weekdays := ARRAY(SELECT jsonb_array_elements_text(p_recurrence_config->'weekdays'));
+      -- Logica trova prossimo giorno configurato
+
+    -- Weekly con giorni specifici
+    WHEN 'weekly' THEN
+      v_weekdays := ARRAY(SELECT jsonb_array_elements_text(p_recurrence_config->'weekdays'));
+      -- Logica trova prossimo giorno configurato
+
+    -- Monthly con giorno specifico
+    WHEN 'monthly' THEN
+      v_day_of_month := (p_recurrence_config->>'day_of_month')::INT;
+      v_next_due := date_trunc('month', p_completed_at) + INTERVAL '1 month';
+      v_next_due := v_next_due + (v_day_of_month - 1) * INTERVAL '1 day';
+
+    -- Annually con data specifica
+    WHEN 'annually' THEN
+      v_day_of_year := (p_recurrence_config->>'day_of_year')::DATE;
+      -- Logica anno successivo
+
+    ELSE
+      -- Fallback: +1 giorno
+      v_next_due := p_completed_at + INTERVAL '1 day';
+  END CASE;
+
+  RETURN v_next_due;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger function: aggiorna task dopo completamento
+CREATE OR REPLACE FUNCTION update_maintenance_task_on_completion()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_task_frequency VARCHAR;
+  v_recurrence_config JSONB;
+  v_new_next_due TIMESTAMPTZ;
+BEGIN
+  -- Leggi frequency e config del task
+  SELECT frequency, recurrence_config
+  INTO v_task_frequency, v_recurrence_config
+  FROM maintenance_tasks
+  WHERE id = NEW.maintenance_task_id;
+
+  -- Calcola prossimo next_due
+  v_new_next_due := calculate_next_due_date(
+    v_task_frequency,
+    NEW.completed_at,
+    v_recurrence_config
+  );
+
+  -- Aggiorna task
+  UPDATE maintenance_tasks
+  SET
+    last_completed = NEW.completed_at,
+    next_due = v_new_next_due,
+    status = 'scheduled',
+    updated_at = NOW()
+  WHERE id = NEW.maintenance_task_id;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger: esegui AFTER INSERT su maintenance_completions
+CREATE TRIGGER trigger_update_task_on_completion
+AFTER INSERT ON maintenance_completions
+FOR EACH ROW
+EXECUTE FUNCTION update_maintenance_task_on_completion();
+```
+
+**Vantaggi trigger**:
+- ✅ **Automatico**: nessun codice applicativo necessario
+- ✅ **Atomico**: UPDATE task avviene nella stessa transazione
+- ✅ **Consistente**: logica centralizzata in database
+- ✅ **Affidabile**: sempre eseguito, anche se app crasha
+- ✅ **Supporta recurrence_config**: rispetta giorni configurati
+
+**Esempio flusso**:
+1. User completa manutenzione → INSERT `maintenance_completions`
+2. Trigger esegue automaticamente
+3. Calcola `next_due` (es. daily lunedì/mercoledì/venerdì → se oggi lunedì → mercoledì)
+4. UPDATE `maintenance_tasks` con nuovo `next_due`
+5. Supabase Realtime notifica subscription
+6. React Query invalida cache
+7. UI si aggiorna automaticamente
+
 ### Integrazione con Calendario
 
 **Relazione con calendario:**
@@ -692,14 +875,11 @@ Questo componente non riceve props dirette. I dati vengono caricati tramite hook
 - La sezione "Manutenzioni Programmate" legge gli stessi dati (`maintenance_tasks`) per mostrare la prossima scadenza
 - Entrambi usano la stessa tabella `maintenance_tasks` come fonte dati
 
-**Sincronizzazione:**
-- Quando una manutenzione viene completata/modificata, sia il calendario che questa sezione dovrebbero aggiornarsi
-- Attualmente sincronizzati tramite cache React Query (stesso query key)
-- **Rischio**: Se query keys sono diversi o cache non viene invalidata correttamente, potrebbero mostrare dati diversi
-
-**Soluzione proposta**: 
-- Garantire che entrambi usino stesso query key o che cache venga invalidata correttamente
-- Implementare real-time subscriptions per sincronizzazione automatica
+**Sincronizzazione** (v3.0.0 - IMPLEMENTATA):
+- ✅ **Real-time subscriptions**: `useConservationRealtime()` monitora modifiche
+- ✅ **Cache invalidation**: quando task completato/modificato, cache invalidata per entrambi
+- ✅ **Stesso query key**: entrambi leggono da `useMaintenanceTasksCritical()`
+- ✅ **Consistenza**: trigger garantisce `next_due` sempre corretto
 
 ---
 
@@ -1107,5 +1287,71 @@ Assegnato a: responsabile
 
 ---
 
-**Ultimo Aggiornamento**: 2026-01-16  
-**Versione**: 1.0.0
+**Ultimo Aggiornamento**: 2026-02-04
+**Versione**: 3.1.0
+
+---
+
+## 🆕 CHANGELOG v3.1.0 (2026-02-04)
+
+### Modifiche principali
+- **Pallino stato giornaliero**: Verde = nulla da completare oggi; giallo = da completare oggi; rosso = in ritardo. Manutenzioni di domani/settimana non fanno andare in giallo.
+- **Conteggio per tipologia**: Numero di tipologie (max 4), non numero di task.
+- **Task Rilevamento Temperature**: Nascosti in card quando esiste una lettura temperatura che soddisfa la scadenza; completamento automatico quando l'utente salva una lettura con "Rileva Temperatura" (insert in `maintenance_completions` → task completata in Conservazione e Attività).
+
+### Riferimenti
+- `03_CONSERVATION/Lavoro/04-02-2026/REPORT_LAVORO_04-02-2026.md`
+- `03_CONSERVATION/Lavoro/04-02-2026/PIANO_completamento_temperatura_su_lettura.md`
+
+---
+
+## 🆕 CHANGELOG v3.0.0 (2026-02-01)
+
+### Features Aggiunte
+
+**Trigger PostgreSQL Automatico**:
+- ✅ Funzione `update_maintenance_task_on_completion()` AFTER INSERT su `maintenance_completions`
+- ✅ Calcola `next_due` automaticamente basato su `frequency` e `recurrence_config`
+- ✅ Supporta daily/weekly/monthly/annually con giorni specifici
+- ✅ Atomico: UPDATE task nella stessa transazione
+- ✅ File: `supabase/migrations/20260201120000_trigger_maintenance_task_recurrence.sql`
+
+**Integration Check-up Centralizzato**:
+- ✅ Task usati da `getPointCheckup()` in `ConservationPointCard`
+- ✅ Calcolo gravità arretrati: critical (>7gg), high (3-7gg), medium (1-3gg), low (<1gg)
+- ✅ Visualizzazione indicatori colorati nelle card punti
+- ✅ Logica "today" considera orario: task 14:00 non mostrato alle 10:00
+
+**Real-time Sync**:
+- ✅ Subscription `maintenance-completions-realtime` su INSERT
+- ✅ Subscription `maintenance-tasks-realtime` su INSERT/UPDATE/DELETE
+- ✅ Invalidation cache automatica quando eventi ricevuti
+- ✅ Latenza: 1-2 secondi per aggiornamento UI
+
+**Caricamento Ottimizzato**:
+- ✅ Hook `useMaintenanceTasksCritical()` carica solo task critici
+- ✅ Query selettiva: arretrati + oggi + prossimo per tipo (condizionale)
+- ✅ Performance: ~50 task invece di ~200
+- ✅ Logica "next per tipo": mostra solo se oggi completato
+
+### Conflitti Risolti
+
+- ✅ Calcolo `next_due` automatico (no codice applicativo)
+- ✅ Real-time sync tra card punti e sezione manutenzioni
+- ✅ Completamenti multipli supportati (Mario + Luca scenario)
+- ✅ Consistency: trigger garantisce `next_due` sempre corretto
+
+### File Coinvolti
+
+- `src/features/conservation/hooks/useMaintenanceTasksCritical.ts` - Caricamento ottimizzato
+- `src/features/conservation/hooks/useConservationRealtime.ts` - Real-time subscriptions
+- `src/features/conservation/utils/pointCheckup.ts` - Integrazione calcolo gravità
+- `supabase/migrations/20260201120000_trigger_maintenance_task_recurrence.sql` - Trigger
+
+### Riferimenti
+
+- Report dettagliato: `03_CONSERVATION/Lavoro/01-02-2026/REPORT_card_checkup_centralizzato.md`
+- Test guide: `GUIDA_TEST_conservation_checkup.md`
+- Master index: `00_MASTER_INDEX.md` (entry 01-02-2026)
+
+---

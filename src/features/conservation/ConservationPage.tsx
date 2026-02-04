@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Plus,
   Thermometer,
@@ -27,6 +28,8 @@ import type {
 } from '@/types/conservation'
 
 export default function ConservationPage() {
+  const location = useLocation()
+  const navigate = useNavigate()
   // Real-time updates per temperature e maintenance completions
   useConservationRealtime()
 
@@ -64,6 +67,8 @@ export default function ConservationPage() {
   }>({ open: false, point: null, reading: null })
   const [showPointSelectorForTemperature, setShowPointSelectorForTemperature] = useState(false)
   const pointSelectorRef = useRef<HTMLDivElement>(null)
+  // Evita riaprire il modal temperatura dopo la chiusura (navigate con state: {} è asincrono, l'effetto può rieseguire con state ancora con openTemperatureForPointId)
+  const openedTemperatureForPointIdRef = useRef<string | null>(null)
 
   // Evidenziazione card temperatura: quando si clicca il badge "Attenzione" nella ConservationPointCard
   const [highlightedTemperaturePointId, setHighlightedTemperaturePointId] = useState<string | null>(null)
@@ -94,6 +99,33 @@ export default function ConservationPage() {
       }
     })
   }, [conservationPoints, temperatureReadings, criticalTasks])
+
+  // Apri modal temperatura se arriviamo da Attività con "Completa Manutenzione" su Rilevamento temperatura
+  useEffect(() => {
+    const state = location.state as { openTemperatureForPointId?: string } | null
+    const pointId = state?.openTemperatureForPointId
+    console.debug('[ConservationPage] openTemperatureForPointId effect:', {
+      pointId,
+      state,
+      conservationPointsLength: conservationPoints.length,
+      pathname: location.pathname,
+      openedRef: openedTemperatureForPointIdRef.current,
+    })
+    if (!pointId || !conservationPoints.length) {
+      if (!pointId) openedTemperatureForPointIdRef.current = null
+      return
+    }
+    // Non riaprire se abbiamo già aperto (e magari chiuso) per questo pointId – evita sovraimpressione dopo salvataggio
+    if (openedTemperatureForPointIdRef.current === pointId) return
+    const point = conservationPoints.find(p => p.id === pointId)
+    console.debug('[ConservationPage] point found:', !!point, point ? point.name : null)
+    if (point) {
+      openedTemperatureForPointIdRef.current = pointId
+      setSelectedPointForTemperature(point)
+      setShowTemperatureModal(true)
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [conservationPoints, location.state, location.pathname, navigate])
 
   // Chiudi il dropdown selezione punto al click fuori
   useEffect(() => {
@@ -185,6 +217,16 @@ export default function ConservationPage() {
     setShowTemperatureModal(true)
   }
 
+  const closeTemperatureModal = () => {
+    const pointIdJustClosed = selectedPointForTemperature?.id ?? null
+    setShowTemperatureModal(false)
+    setSelectedPointForTemperature(null)
+    setEditingReading(null)
+    // Marca come "già gestito" così l'effetto non riapre il modal se riesegue con state non ancora aggiornato
+    if (pointIdJustClosed) openedTemperatureForPointIdRef.current = pointIdJustClosed
+    navigate(location.pathname, { replace: true, state: {} })
+  }
+
   const handleSaveTemperature = (
     data: Omit<
       TemperatureReading,
@@ -192,27 +234,29 @@ export default function ConservationPage() {
     >
   ) => {
     if (editingReading) {
-      // Update existing reading
-      updateReading({
-        id: editingReading.id,
-        data,
-      })
-      setEditingReading(null)
+      updateReading(
+        { id: editingReading.id, data },
+        {
+          onSuccess: () => {
+            setEditingReading(null)
+            closeTemperatureModal()
+          },
+        }
+      )
     } else {
-      // Create new reading
-      createReading(data)
-
-      // Remove point from "richiesta lettura" state if it was there
-      if (data.conservation_point_id) {
-        setPointsInRichiestaLettura(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(data.conservation_point_id)
-          return newSet
-        })
-      }
+      createReading(data, {
+        onSuccess: () => {
+          if (data.conservation_point_id) {
+            setPointsInRichiestaLettura(prev => {
+              const newSet = new Set(prev)
+              newSet.delete(data.conservation_point_id)
+              return newSet
+            })
+          }
+          closeTemperatureModal()
+        },
+      })
     }
-    setShowTemperatureModal(false)
-    setSelectedPointForTemperature(null)
   }
 
   const handleCorrectiveAction = (point: ConservationPoint, reading: TemperatureReading) => {
@@ -712,11 +756,7 @@ export default function ConservationPage() {
       {selectedPointForTemperature && (
         <AddTemperatureModal
           isOpen={showTemperatureModal}
-          onClose={() => {
-            setShowTemperatureModal(false)
-            setSelectedPointForTemperature(null)
-            setEditingReading(null)
-          }}
+          onClose={closeTemperatureModal}
           onSave={handleSaveTemperature}
           conservationPoint={selectedPointForTemperature}
           reading={editingReading || undefined}

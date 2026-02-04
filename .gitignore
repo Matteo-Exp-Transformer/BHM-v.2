@@ -77,3 +77,6 @@ ehthumbs.db
 supabase/.branches
 supabase/.temp
 .vercel
+
+.vercel
+.env*.local

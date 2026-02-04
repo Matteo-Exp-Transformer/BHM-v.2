@@ -1,12 +1,15 @@
 # TEMPERATURE_READINGS_SECTION - DOCUMENTAZIONE COMPLETA
 
 **Data Creazione**: 2026-01-16
-**Ultima Modifica**: 2026-01-30
-**Versione**: 2.0.0
+**Ultima Modifica**: 2026-02-04
+**Versione**: 3.0.0
 **File Componente**: `src/features/conservation/ConservationPage.tsx` (sezione "Letture Temperature")
 **Tipo**: Sezione Pagina
 
-**Nuove Features (v2.0.0)**:
+**Nuove Features (v3.0.0 - 04-02-2026)**:
+- ✅ **Completamento automatico task "Rilevamento Temperature"**: Al salvataggio di una lettura (pulsante "Rileva Temperatura"), l'hook `useTemperatureReadings.createReading` inserisce in `maintenance_completions` le task di tipo "Rilevamento Temperature" per quel punto con `next_due <= recorded_at`. La task risulta completata in Conservazione (card Manutenzioni Programmate) e in Attività/calendario. Invalidazioni: `maintenance-tasks`, `maintenance-tasks-critical`, `calendar-events`, `macro-category-events`, `maintenance-completions` + evento `calendar-refresh`.
+
+**Features (v2.0.0)**:
 - ✅ **Nome Utente visibile**: Ogni lettura mostra chi ha registrato la temperatura
 - ✅ **Campo `recorded_by`**: Salvato in DB e risolto via `user_profiles.auth_user_id`
 - ✅ **Fallback query**: Se utente non in `user_profiles`, cerca in `company_members` → `staff`
@@ -96,14 +99,15 @@ La sezione viene mostrata quando:
 - **Fallback**: Se non trovato in `user_profiles`, cerca in `company_members` → `staff`
 - Query eseguita da `useTemperatureReadings` hook
 
-**Flusso registrazione nuova temperatura:**
-1. Utente usa il dropdown "Registra temperatura..." nell'header della CollapsibleCard
+**Flusso registrazione nuova temperatura (v3.0.0: con completamento automatico task temperatura):**
+1. Utente usa il pulsante/dropdown **"Rileva Temperatura"** (o "Registra temperatura...") nell'header della CollapsibleCard
 2. Seleziona un punto di conservazione dalla lista (es. "Frigo 2")
 3. Si apre il modal `AddTemperatureModal` con il punto selezionato
 4. Utente inserisce la temperatura rilevata (es. 6.0°C)
 5. Il sistema mostra in anteprima lo stato calcolato (Conforme/Attenzione/Critico)
-6. Utente può aggiungere metodo di rilevazione, note, foto evidenza (attualmente non salvati nel DB)
-7. Utente salva, la lettura viene registrata e la lista si aggiorna automaticamente
+6. Utente può aggiungere metodo di rilevazione, note, foto evidenza
+7. Utente salva → la lettura viene registrata; **in backend** (hook `useTemperatureReadings`): per quel punto vengono cercate le task "Rilevamento Temperature" con scadenza soddisfatta dalla data della lettura (`next_due <= recorded_at`) e per ognuna viene inserito un record in `maintenance_completions`. Il trigger DB aggiorna la task (next_due, last_completed, status). Vengono invalidate le cache manutenzioni e calendario.
+8. **Atteggiamento atteso**: La lista letture si aggiorna; la card "Manutenzioni Programmate" e la pagina Attività mostrano la task "Rilevamento Temperature" come completata per quel punto. L'utente non deve andare in Attività a cliccare "Completa Manutenzione" per la temperatura.
 
 ---
 
@@ -275,22 +279,26 @@ Questa sezione non riceve props dirette. I dati vengono caricati tramite hooks c
 
 ### Funzioni Principali
 
+#### `closeTemperatureModal()` (ConservationPage)
+- **Scopo**: Chiude il modal temperatura, resetta state e azzera `location.state` (per evitare ri-aperture da deep link Attività). Usata come `onClose` del modal e nell'`onSuccess` di create/update lettura.
+- **Logica**: `setShowTemperatureModal(false)`, `setSelectedPointForTemperature(null)`, `setEditingReading(null)`, `navigate(pathname, { replace: true, state: {} })`.
+
 #### `handleAddTemperature(point)`
 - **Scopo**: Apre il modal per registrare una temperatura per un punto specifico
 - **Parametri**: `point: ConservationPoint` - punto per cui registrare temperatura
 - **Ritorna**: void
 - **Logica**: 
   1. Imposta `selectedPointForTemperature` con il punto selezionato
-  2. Apre il modal temperatura (`setShowTemperatureModal(true)`)
+  2. Apre il modal temperatura (`setShowTemperatureModal(true)`). L'apertura può avvenire anche da Attività tramite `location.state.openTemperatureForPointId` (useEffect sulla pagina).
 
 #### `handleSaveTemperature(readingData)`
-- **Scopo**: Salva una nuova lettura di temperatura
+- **Scopo**: Salva una nuova lettura di temperatura (o aggiorna se in modalità edit)
 - **Parametri**: `readingData` - dati lettura (senza id, company_id, timestamp)
 - **Ritorna**: void
 - **Logica**: 
-  1. Chiama `createReading(readingData)` mutation
-  2. Chiude il modal e resetta lo state
-  3. La cache viene invalidata automaticamente dall'hook
+  1. Se edit: `updateReading(..., { onSuccess: () => { setEditingReading(null); closeTemperatureModal() } })`. Se nuova: `createReading(readingData, { onSuccess: () => { ...; closeTemperatureModal() } })`.
+  2. La chiusura del modal avviene **solo in onSuccess**; durante il salvataggio il modal resta aperto; in caso di errore l'utente può riprovare.
+  3. La cache viene invalidata automaticamente dall'hook.
 
 #### `handleEditReading(reading)`
 - **Scopo**: Gestisce la modifica di una lettura (ATTUALMENTE NON IMPLEMENTATO)
@@ -516,13 +524,11 @@ Questa sezione non riceve props dirette. I dati vengono caricati tramite hooks c
    - Le ultime letture sono sempre in cima alla lista
 
 6. **Interazione utente - Registrazione temperatura**:
-   - Utente seleziona punto dal dropdown "Registra temperatura..."
-   - `handleAddTemperature(point)` viene chiamato
-   - Modal `AddTemperatureModal` viene renderizzato con il punto selezionato
-   - Utente inserisce temperatura e salva
-   - `handleSaveTemperature()` chiama `createReading()` mutation
-   - Query cache viene invalidata
-   - Lista si aggiorna automaticamente con nuova lettura in cima
+   - Utente seleziona punto dal dropdown "Registra temperatura..." oppure arriva da Attività con `openTemperatureForPointId` (modal si apre per quel punto)
+   - Modal `AddTemperatureModal` viene renderizzato con `onClose={closeTemperatureModal}` (X, Annulla, click overlay chiudono senza salvare e azzerano `location.state`)
+   - Utente inserisce temperatura e clicca "Registra"
+   - `handleSaveTemperature()` chiama `createReading(data, { onSuccess: () => closeTemperatureModal() })` (o update in edit); la chiusura avviene solo in onSuccess
+   - Query cache invalidata; lista si aggiorna; modal si chiude dopo successo
 
 7. **Interazione utente - Eliminazione lettura**:
    - Utente clicca pulsante "Elimina" su una card
@@ -1044,6 +1050,17 @@ interface CreateTemperatureReadingInput {
 
 ---
 
+## 🆕 CHANGELOG v3.0.0 (2026-02-04)
+
+### Completamento automatico task "Rilevamento Temperature"
+- Al salvataggio di una lettura (createReading), l'hook cerca le task di tipo `temperature` per quel `conservation_point_id` con `next_due <= recorded_at` e inserisce per ognuna un record in `maintenance_completions`. La task risulta completata in Conservazione e Attività.
+- **Flusso utente**: Rileva Temperatura → punto → temperatura → Salva → lettura + task completate → UI aggiornata.
+- **Atteggiamento atteso**: Un solo gesto (registrare la temperatura) completa anche la manutenzione "Rilevamento Temperature" per quel punto.
+- File: `src/features/conservation/hooks/useTemperatureReadings.ts` (mutationFn di createReadingMutation).
+- Riferimenti: `03_CONSERVATION/Lavoro/04-02-2026/PIANO_completamento_temperatura_su_lettura.md`, `REPORT_LAVORO_04-02-2026.md`.
+
+---
+
 ## 🆕 CHANGELOG v2.0.0 (2026-01-30)
 
 ### Features Aggiunte
@@ -1069,5 +1086,5 @@ company_members → staff → name
 
 ---
 
-**Ultimo Aggiornamento**: 2026-01-30
-**Versione**: 2.0.0
+**Ultimo Aggiornamento**: 2026-02-04
+**Versione**: 3.0.0

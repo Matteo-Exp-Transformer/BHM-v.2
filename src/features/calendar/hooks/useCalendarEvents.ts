@@ -122,6 +122,8 @@ export function useCalendarEvents() {
               conservation_point_id: task.conservation_point_id,
               notes: task.instructions,
               task_id: task.id,
+              type: (task as { type?: string }).type,
+              maintenance_id: task.id,
             },
             source: 'maintenance',
             sourceId: task.id,

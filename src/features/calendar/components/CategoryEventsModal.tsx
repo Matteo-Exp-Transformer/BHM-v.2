@@ -1,7 +1,10 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { X, Wrench, ClipboardList, Package, ChevronRight, Calendar, User, Clock, AlertCircle, Check, RotateCcw } from 'lucide-react'
 import type { MacroCategory, MacroCategoryItem } from '../hooks/useMacroCategoryEvents'
 import { useGenericTasks } from '../hooks/useGenericTasks'
+import { calculateNextDue } from '@/features/conservation/hooks/useMaintenanceTasks'
+import type { MaintenanceTask } from '@/types/conservation'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -68,6 +71,7 @@ export const CategoryEventsModal: React.FC<CategoryEventsModalProps> = ({
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const { completeTask, uncompleteTask, isCompleting, isUncompleting } = useGenericTasks()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const { companyId, user } = useAuth()
   const [isCompletingMaintenance, setIsCompletingMaintenance] = useState(false)
   
@@ -81,53 +85,78 @@ export const CategoryEventsModal: React.FC<CategoryEventsModalProps> = ({
 
     setIsCompletingMaintenance(true)
     try {
-      const now = new Date().toISOString()
-      
-      // Aggiorna lo stato della manutenzione a 'completed' con tutti i campi necessari
-      const { error } = await supabase
+      const completedAt = new Date()
+      const now = completedAt.toISOString()
+      const { data: userData } = await supabase.auth.getUser()
+      const completedByName = userData.user?.user_metadata?.first_name && userData.user?.user_metadata?.last_name
+        ? `${userData.user.user_metadata.first_name} ${userData.user.user_metadata.last_name}`
+        : userData.user?.email || null
+
+      const { data: task, error: taskError } = await supabase
         .from('maintenance_tasks')
-        .update({
-          status: 'completed',
+        .select('*')
+        .eq('id', maintenanceId)
+        .single()
+
+      if (taskError || !task) throw taskError || new Error('Task non trovato')
+
+      const nextDue = (task.frequency && task.frequency !== 'as_needed' && task.frequency !== 'custom')
+        ? calculateNextDue(task.frequency as MaintenanceTask['frequency'], completedAt)
+        : now
+
+      const { error: insertError } = await supabase
+        .from('maintenance_completions')
+        .insert({
+          maintenance_task_id: maintenanceId,
+          company_id: companyId,
           completed_by: user.id,
           completed_at: now,
-          last_completed: now,
-          updated_at: now
+          completed_by_name: completedByName,
+          next_due: nextDue,
         })
-        .eq('id', maintenanceId)
-        .eq('company_id', companyId)
 
-      if (error) throw error
+      if (insertError) throw insertError
 
-      // ✅ Invalida TUTTE le query maintenance (senza conservationPointId specifico)
-      await queryClient.invalidateQueries({ 
-        queryKey: ['maintenance-tasks'],
-        refetchType: 'all'
-      })
-      await queryClient.invalidateQueries({ 
-        queryKey: ['calendar-events'],
-        refetchType: 'all'
-      })
-      await queryClient.invalidateQueries({ 
-        queryKey: ['macro-category-events'],
-        refetchType: 'all'
-      })
-      await queryClient.invalidateQueries({ 
-        queryKey: ['maintenance-completions'],
-        refetchType: 'all'
-      })
-      await queryClient.invalidateQueries({ 
-        queryKey: ['task-completions'],
-        refetchType: 'all'
-      })
+      if (task.frequency && task.frequency !== 'as_needed' && task.frequency !== 'custom') {
+        const { error: updateError } = await supabase
+          .from('maintenance_tasks')
+          .update({
+            next_due: nextDue,
+            last_completed: now,
+            completed_at: now,
+            completed_by: user.id,
+          })
+          .eq('id', maintenanceId)
+        if (updateError) throw updateError
+      } else {
+        const { error: updateError } = await supabase
+          .from('maintenance_tasks')
+          .update({
+            last_completed: now,
+            completed_at: now,
+            completed_by: user.id,
+          })
+          .eq('id', maintenanceId)
+        if (updateError) throw updateError
+      }
+
+      setSelectedItems([])
+
+      await queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'], refetchType: 'all' })
+      await queryClient.invalidateQueries({ queryKey: ['maintenance-tasks-critical'], refetchType: 'all' })
+      await queryClient.refetchQueries({ queryKey: ['maintenance-tasks'] })
+      await queryClient.refetchQueries({ queryKey: ['maintenance-tasks-critical'] })
+      await queryClient.invalidateQueries({ queryKey: ['calendar-events'], refetchType: 'all' })
+      await queryClient.invalidateQueries({ queryKey: ['macro-category-events'], refetchType: 'all' })
+      await queryClient.invalidateQueries({ queryKey: ['maintenance-completions'], refetchType: 'all' })
+      await queryClient.invalidateQueries({ queryKey: ['task-completions'], refetchType: 'all' })
 
       toast.success('✅ Manutenzione completata - Calendario aggiornato')
-      setSelectedItems([])
-      
-      // ✅ Forza aggiornamento UI con delay per permettere alla query di completarsi
+      window.dispatchEvent(new Event('calendar-refresh'))
+
       setTimeout(() => {
         onClose()
-        window.dispatchEvent(new Event('calendar-refresh'))
-      }, 800)
+      }, 500)
     } catch (error) {
       console.error('Error completing maintenance:', error)
       toast.error('Errore nel completamento della manutenzione')
@@ -413,6 +442,14 @@ export const CategoryEventsModal: React.FC<CategoryEventsModalProps> = ({
                                       e.stopPropagation()
 
                                       if (category === 'maintenance') {
+                                        if (item.metadata?.maintenance_type === 'temperature') {
+                                          const pointId = item.metadata?.conservationPointId ?? item.metadata?.conservation_point_id
+                                          if (pointId) {
+                                            onClose()
+                                            navigate('/conservazione', { state: { openTemperatureForPointId: pointId } })
+                                            return
+                                          }
+                                        }
                                         handleCompleteMaintenance(item.metadata?.maintenance_id ?? item.id)
                                       } else {
                                         const today = new Date()

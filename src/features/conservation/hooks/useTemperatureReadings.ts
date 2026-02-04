@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { endOfDay } from 'date-fns'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { TemperatureReading, ConservationPoint } from '@/types/conservation'
@@ -7,7 +8,7 @@ import { getCorrectiveAction } from '@/features/conservation/utils/correctiveAct
 import { calculateTemperatureStatus } from '@/utils/temperatureStatus'
 
 export function useTemperatureReadings(conservationPointId?: string) {
-  const { companyId } = useAuth()
+  const { companyId, user } = useAuth()
   const queryClient = useQueryClient()
 
 
@@ -173,11 +174,65 @@ export function useTemperatureReadings(conservationPointId?: string) {
         throw error
       }
 
+      // Completamento automatico task "Rilevamento Temperature" (stesso effetto del pulsante "Completa Manutenzione" in Attività)
+      const pointId = payload.conservation_point_id
+      const recordedDate = new Date(recordedAtString)
+      const endOfRecordedDay = endOfDay(recordedDate).toISOString()
+      const { data: temperatureTasks, error: tasksError } = await supabase
+        .from('maintenance_tasks')
+        .select('id')
+        .eq('conservation_point_id', pointId)
+        .eq('company_id', companyId)
+        .eq('type', 'temperature')
+        .in('status', ['scheduled', 'overdue', 'in_progress'])
+        .lte('next_due', endOfRecordedDay)
+
+      if (tasksError) {
+        console.warn('⚠️ Auto-complete: errore lettura task temperatura:', tasksError)
+      }
+
+      const effectiveUser = user ?? (await supabase.auth.getUser()).data.user
+      if (temperatureTasks && temperatureTasks.length > 0 && effectiveUser) {
+        const { data: userData } = await supabase.auth.getUser()
+        const completedByName = userData.user?.user_metadata?.first_name && userData.user?.user_metadata?.last_name
+          ? `${userData.user.user_metadata.first_name} ${userData.user.user_metadata.last_name}`
+          : userData.user?.email || null
+        const now = new Date().toISOString()
+
+        for (const task of temperatureTasks) {
+          const { error: insertErr } = await supabase
+            .from('maintenance_completions')
+            .insert({
+              maintenance_task_id: task.id,
+              company_id: companyId,
+              completed_by: effectiveUser.id,
+              completed_at: now,
+              completed_by_name: completedByName,
+            })
+          if (insertErr) {
+            console.warn('⚠️ Auto-complete temperature task failed:', task.id, insertErr)
+          }
+        }
+      } else if (temperatureTasks?.length === 0) {
+        console.debug('[useTemperatureReadings] Nessun task temperatura da completare per pointId:', pointId, 'recordedAt:', recordedAtString)
+      } else if (!effectiveUser) {
+        console.warn('⚠️ Auto-complete: utente non disponibile, completamento manutenzione saltato')
+      }
+
       return result
     },
-    onSuccess: () => {
+    onSuccess: async (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['temperature-readings'] })
       queryClient.invalidateQueries({ queryKey: ['conservation-points'] })
+      // Come in MacroCategoryModal: invalidate + refetch esplicito così la card Manutenzioni programmate si aggiorna
+      await queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'], refetchType: 'all' })
+      await queryClient.invalidateQueries({ queryKey: ['maintenance-tasks-critical'], refetchType: 'all' })
+      await queryClient.refetchQueries({ queryKey: ['maintenance-tasks'] })
+      await queryClient.refetchQueries({ queryKey: ['maintenance-tasks-critical'] })
+      queryClient.invalidateQueries({ queryKey: ['calendar-events'], refetchType: 'all' })
+      queryClient.invalidateQueries({ queryKey: ['macro-category-events'], refetchType: 'all' })
+      queryClient.invalidateQueries({ queryKey: ['maintenance-completions'], refetchType: 'all' })
+      window.dispatchEvent(new Event('calendar-refresh'))
       toast.success('Lettura temperatura registrata')
     },
     onError: error => {

@@ -1,12 +1,23 @@
 # CONSERVATION_POINT_CARD - DOCUMENTAZIONE COMPLETA
 
-**Data Creazione**: 2026-01-16  
-**Ultima Modifica**: 2026-01-20  
-**Versione**: 1.1.0  
-**File Componente**: `src/features/conservation/components/ConservationPointCard.tsx`  
+**Data Creazione**: 2026-01-16
+**Ultima Modifica**: 2026-02-04
+**Versione**: 2.1.0
+**File Componente**: `src/features/conservation/components/ConservationPointCard.tsx`
 **Tipo**: Componente
 
-**Nuove Features (v1.1.0)**:
+**Nuove Features (v2.1.0 - 04-02-2026)**:
+- ✅ **Box "Ultima lettura" – colore solo da temperatura**: Il box "Ultima lettura" usa **solo** la conformità della temperatura (setpoint ±1°C) per il colore: **verde** = temperatura conforme (`checkup.temperature.inRange`), **rosso (critico)** = temperatura fuori range. Lo stato complessivo del punto (manutenzioni in attenzione/arretrate) non influenza il colore di questo box. Variabile `temperatureBadgeColors` derivata da `checkup.temperature.inRange`.
+
+**Nuove Features (v2.0.0 - 01-02-2026)**:
+- ✅ **Check-up Centralizzato**: Usa `getPointCheckup()` per calcolo stato basato su temperatura + manutenzioni
+- ✅ **Real-time Updates**: Aggiornamento automatico quando utenti completano manutenzioni (via `useConservationRealtime`)
+- ✅ **UI Due Box**: Quando entrambi problemi (temperatura + manutenzioni), mostrati in box separati con click handlers
+- ✅ **Gravità Arretrati**: Indicatori colorati per task arretrati (rosso >7 giorni, arancione 3-7, giallo 1-3, grigio <1)
+- ✅ **Dettagli Espandibili**: Pulsante "Mostra/Nascondi dettagli" per lista manutenzioni arretrate
+- ✅ **Focus Handlers**: `onFocusTemperatureCard` per navigazione a sezione temperature
+
+**Features Precedenti (v1.1.0)**:
 - ✅ Visualizzazione profilo HACCP quando presente
 - ✅ Icona ShieldCheck per profilo
 - ✅ Label leggibile del profilo selezionato
@@ -24,9 +35,13 @@ Questa card risolve il bisogno di avere una vista rapida e completa di ogni punt
 La card è un componente React riutilizzabile che:
 
 - **Visualizza** informazioni essenziali di un punto di conservazione (nome, reparto, tipo, temperatura target, stato)
+- **Calcola stato centralizzato** tramite `getPointCheckup()` considerando temperatura + manutenzioni
 - **Mostra** l'ultima lettura di temperatura registrata (se disponibile)
 - **Indica** lo stato del punto (Regolare/Attenzione/Critico) con colori distintivi
-- **Mostra profilo HACCP** selezionato quando presente (nuova feature v1.1.0) con icona ShieldCheck e label leggibile
+- **Mostra profilo HACCP** selezionato quando presente (v1.1.0) con icona ShieldCheck e label leggibile
+- **Mostra problemi multipli** in box separati quando presenti sia problemi temperatura che manutenzioni (v2.0.0)
+- **Espande dettagli manutenzioni** arretrate con indicatori gravità colorati (v2.0.0)
+- **Si aggiorna in real-time** quando altri utenti completano manutenzioni (v2.0.0)
 - **Permette** azioni rapide (modifica, eliminazione) tramite pulsanti icona
 - **Espone** dettagli aggiuntivi tramite sezione collassabile "Mostra dettagli"
 
@@ -115,20 +130,19 @@ La card viene utilizzata quando:
 ### Conflitti Possibili
 
 #### Conflitto 1: Stato calcolato vs stato reale
-- **Quando si verifica**: Lo stato visualizzato nella card potrebbe non corrispondere allo stato reale se ci sono state modifiche recenti (es. nuova temperatura registrata)
-- **Cosa succede**: La card mostra uno stato che potrebbe essere obsoleto fino al refresh della pagina
-- **Come viene gestito**: React Query invalida la cache dopo mutazioni, ma non c'è real-time update quando altri utenti registrano temperature
-- **Esempio**: Utente A vede card con stato "Regolare". Utente B registra temperatura fuori range. Utente A continua a vedere "Regolare" fino al refresh.
-
-**Soluzione proposta**: Implementare Supabase Realtime subscriptions per aggiornare automaticamente lo stato quando vengono registrate nuove temperature.
+- **Quando si verifica**: Lo stato visualizzato nella card potrebbe non corrispondere allo stato reale se ci sono state modifiche recenti
+- **Cosa succede**: ✅ **RISOLTO (v2.0.0)** - Con `useConservationRealtime()` la card si aggiorna automaticamente in real-time
+- **Come viene gestito**: Hook `useConservationRealtime` sottoscrive 3 canali Supabase Realtime:
+  - `temperature_readings` - invalida cache quando nuove temperature registrate
+  - `maintenance_completions` - invalida cache quando manutenzioni completate
+  - `maintenance_tasks` - invalida cache quando task modificati/creati
+- **Esempio**: Utente A vede "Regolare". Utente B registra temperatura fuori range. Utente A vede aggiornamento automatico entro 1-2 secondi.
 
 #### Conflitto 2: Ultima lettura non sincronizzata
-- **Quando si verifica**: La `last_temperature_reading` visualizzata potrebbe non essere l'ultima lettura effettiva se altri utenti ne hanno registrate di nuove
-- **Cosa succede**: La card mostra una lettura obsoleta
-- **Come viene gestito**: La cache React Query viene aggiornata dopo mutazioni locali, ma non in real-time per modifiche remote
-- **Esempio**: Utente A vede "Ultima lettura: 4°C alle 10:00". Utente B registra 6°C alle 10:30. Utente A continua a vedere 4°C fino al refresh.
-
-**Soluzione proposta**: Implementare real-time updates per `temperature_readings` table.
+- **Quando si verifica**: ✅ **RISOLTO (v2.0.0)** - Real-time updates mantengono sincronizzazione
+- **Cosa succede**: La card si aggiorna automaticamente quando altri utenti registrano temperature
+- **Come viene gestito**: Supabase Realtime subscription su `temperature_readings` table con filter `company_id`
+- **Esempio**: Utente A vede "4°C alle 10:00". Utente B registra 6°C alle 10:30. Utente A vede "6°C alle 10:30" automaticamente entro 1-2 secondi.
 
 ### Conflitti Multi-Utente
 
@@ -232,11 +246,47 @@ Nessun hook custom utilizzato. Il componente usa solo:
 
 ### Funzioni Principali
 
+#### `getPointCheckup()` (v2.0.0 - CENTRALIZZATO)
+- **Scopo**: Calcola stato completo del punto considerando temperatura + manutenzioni
+- **File**: `src/features/conservation/utils/pointCheckup.ts`
+- **Parametri**:
+  - `point: ConservationPoint` - punto di conservazione con ultima lettura
+  - `tasks: MaintenanceTask[]` - array task manutenzione per il punto
+- **Ritorna**: `ConservationPointCheckup` - oggetto con:
+  - `overallStatus`: 'normal' | 'warning' | 'critical'
+  - `temperature`: { inRange, message?, lastReading? }
+  - `todayMaintenance`: { allCompleted, total, completed, pending[] }
+  - `overdueMaintenance`: { count, tasks[] con daysOverdue e severity }
+  - `messages`: { temperature?, maintenance?, priority: 'temperature' | 'maintenance' | 'both' }
+  - `nextMaintenanceDue`: { task, daysUntil }
+- **Logica**:
+  1. Verifica temperatura fuori range (±1°C tolleranza)
+  2. Filtra task "oggi" considerando orario (`taskDate <= now`)
+  3. Calcola task arretrati con severità (critical >7gg, high 3-7gg, medium 1-3gg, low <1gg)
+  4. Determina `overallStatus`: critical (entrambi problemi), warning (uno dei due), normal (tutto ok)
+  5. Genera messaggi per UI con priorità (temperature/maintenance/both)
+  6. Trova prossima manutenzione futura (solo se oggi completato)
+
+**Esempio output**:
+```typescript
+{
+  overallStatus: 'warning',
+  temperature: { inRange: true },
+  todayMaintenance: { allCompleted: false, total: 2, completed: 1, pending: [task1] },
+  overdueMaintenance: { count: 1, tasks: [{ ...task, daysOverdue: 3, severity: 'high' }] },
+  messages: {
+    maintenance: '1 arretrato (3 giorni fa), 1 pendente oggi',
+    priority: 'maintenance'
+  },
+  nextMaintenanceDue: { task: futureTask, daysUntil: 5 }
+}
+```
+
 #### `getTypeIcon()`
 - **Scopo**: Ritorna l'emoji/icona appropriata per il tipo di punto
 - **Parametri**: nessuno (usa `point.type`)
 - **Ritorna**: `string` - emoji corrispondente al tipo
-- **Logica**: 
+- **Logica**:
   ```typescript
   switch (point.type) {
     case 'ambient': return '🌡️'
@@ -295,7 +345,7 @@ Nessun hook custom utilizzato. Il componente usa solo:
 - Se `point` è null/undefined, il componente potrebbe crashare (dovrebbe essere gestito dal parent)
 
 **Validazioni rendering condizionale:**
-- `point.last_temperature_reading` viene verificato prima di renderizzare la sezione "Ultima lettura"
+- `point.last_temperature_reading` viene verificato prima di renderizzare la sezione "Ultima lettura"; il colore del box (verde/rosso) è dato da `temperatureBadgeColors` (solo conformità temperatura, v2.1.0)
 - `point.maintenance_due` viene verificato prima di renderizzare la sezione "Prossima manutenzione"
 - `point.product_categories` viene verificato e la lunghezza controllata prima di renderizzare i badge
 
@@ -460,7 +510,8 @@ Nessun hook custom utilizzato. Il componente usa solo:
 
 2. **Calcolo colori e testi**:
    - `typeColors` viene calcolato da `CONSERVATION_TYPE_COLORS[point.type]` con fallback a `ambient`
-   - `statusColors` viene calcolato da `CONSERVATION_COLORS[point.status]` con fallback a `normal`
+   - `statusColors` viene calcolato da `CONSERVATION_COLORS[displayedStatus]` (stato complessivo: normal/warning/critical) con fallback a `normal`; usato per header, box stato, box manutenzioni
+   - `temperatureBadgeColors` (v2.1.0): derivato **solo** da `checkup.temperature.inRange` — verde se conforme, rosso se fuori range; usato **solo** per il box "Ultima lettura" (non dalle manutenzioni)
    - `tempRange` viene calcolato da `TEMPERATURE_RANGES[point.type]` con fallback a `ambient`
 
 3. **Rendering condizionale**:
@@ -531,13 +582,30 @@ interface ConservationPoint {
 - Non gestisce mutazioni
 - Tutte le operazioni vengono delegate al parent component tramite callback
 
-### Real-time Updates
+### Real-time Updates (v2.0.0)
 
-**Comportamento attuale**: 
-- **NON implementato** - Il componente non si aggiorna automaticamente quando i dati cambiano
-- Aggiornamenti avvengono solo quando il parent component ricarica i dati e passa nuovi props
+**Comportamento attuale**:
+- ✅ **IMPLEMENTATO** - Il componente si aggiorna automaticamente quando i dati cambiano
+- Aggiornamenti via `useConservationRealtime()` hook attivato in `ConservationPage`
+- 3 subscriptions Supabase Realtime:
+  1. **temperature_readings**: invalida cache `conservation-points` quando nuove letture
+  2. **maintenance_completions**: invalida cache `maintenance-tasks-critical` quando completamenti
+  3. **maintenance_tasks**: invalida cache quando task creati/modificati
 
-**Soluzione proposta**: Se vengono implementati real-time updates a livello di pagina, il componente si aggiornerà automaticamente quando riceve nuovi props dal parent.
+**Flusso real-time**:
+1. Utente B completa manutenzione → INSERT in `maintenance_completions`
+2. Trigger PostgreSQL aggiorna `maintenance_tasks.next_due` automaticamente
+3. Supabase Realtime notifica subscription
+4. Hook `useConservationRealtime` chiama `queryClient.invalidateQueries()`
+5. React Query ricarica dati automaticamente
+6. Componente `ConservationPointCard` riceve nuovi props
+7. `getPointCheckup()` ricalcola stato
+8. UI si aggiorna entro 1-2 secondi
+
+**Trigger PostgreSQL** (v2.0.0):
+- `update_maintenance_task_on_completion`: AFTER INSERT su `maintenance_completions`
+- Calcola `next_due` automaticamente basato su `frequency` e `recurrence_config`
+- Supporta daily/weekly/monthly/annually con giorni specifici configurati
 
 ---
 
@@ -784,8 +852,127 @@ Non applicabile - il componente non accede direttamente al database. I dati veng
 
 ---
 
-**Ultimo Aggiornamento**: 2026-01-20  
-**Versione**: 1.1.0
+**Ultimo Aggiornamento**: 2026-02-01
+**Versione**: 2.0.0
+
+---
+
+## NUOVE FEATURES v2.0.0 (2026-02-01)
+
+### Check-up Centralizzato
+
+**Obiettivo**: Sistema centralizzato per calcolo stato punto considerando sia temperatura che manutenzioni.
+
+**Implementazione**:
+- Funzione `getPointCheckup()` in `src/features/conservation/utils/pointCheckup.ts`
+- Sostituisce `classifyPointStatus()` con logica unificata
+- Calcola stato basato su:
+  - Temperatura ultima lettura (fuori range ±1°C = problema)
+  - Manutenzioni oggi (pendenti = problema)
+  - Manutenzioni arretrate con severità (critical/high/medium/low)
+- Output strutturato con messaggi per UI
+
+**Vantaggi**:
+- **Single source of truth**: logica centralizzata
+- **Consistenza**: stesso calcolo ovunque nel sistema
+- **Flessibilità**: facile aggiungere nuovi criteri
+- **Testabilità**: funzione pura facilmente testabile
+
+### Real-time Updates
+
+**Obiettivo**: Aggiornamento automatico card quando altri utenti completano manutenzioni o registrano temperature.
+
+**Implementazione**:
+- Hook `useConservationRealtime()` in `ConservationPage`
+- 3 subscriptions Supabase Realtime:
+  1. `temperature_readings` → invalida `conservation-points`
+  2. `maintenance_completions` → invalida `maintenance-tasks-critical`
+  3. `maintenance_tasks` → invalida `maintenance-tasks-critical`
+- Trigger PostgreSQL per next_due automatico
+
+**Flusso**:
+1. User B completa manutenzione
+2. Trigger aggiorna `next_due`
+3. Realtime notifica subscription
+4. Query cache invalidata
+5. React Query ricarica dati
+6. Card si aggiorna automaticamente
+
+### UI Due Box
+
+**Obiettivo**: Visualizzare separatamente problemi temperatura e manutenzioni quando presenti entrambi.
+
+**Implementazione**:
+```typescript
+{checkup.messages.priority === 'both' && (
+  <div className="space-y-2 mb-3">
+    {/* Box 1: Temperatura */}
+    {checkup.messages.temperature && (
+      <button onClick={() => onFocusTemperatureCard?.(point.id)}>
+        <Thermometer />
+        <p>Temperatura</p>
+        <p>{checkup.messages.temperature}</p>
+      </button>
+    )}
+
+    {/* Box 2: Manutenzioni */}
+    {checkup.messages.maintenance && (
+      <div>
+        <Calendar />
+        <p>Manutenzioni</p>
+        <p>{checkup.messages.maintenance}</p>
+        <button onClick={() => setShowMaintenanceDetails(!show)}>
+          {show ? 'Nascondi' : 'Mostra'} dettagli
+        </button>
+      </div>
+    )}
+  </div>
+)}
+```
+
+**Vantaggi**:
+- Chiarezza visiva: problemi separati
+- Azioni mirate: click temperatura → focus sezione temperature
+- Espandibile: dettagli manutenzioni on-demand
+
+### Gravità Arretrati
+
+**Obiettivo**: Indicatori visuali per gravità ritardo manutenzioni.
+
+**Implementazione**:
+- **Critical** (>7 giorni): `bg-red-600`
+- **High** (3-7 giorni): `bg-orange-500`
+- **Medium** (1-3 giorni): `bg-yellow-500`
+- **Low** (<1 giorno): `bg-gray-400`
+
+**Visualizzazione**:
+```
+● [Rosso] Sanificazione - 10 giorni fa
+● [Arancione] Sbrinamento - 5 giorni fa
+● [Giallo] Controllo Scadenze - 2 giorni fa
+```
+
+**Calcolo**:
+```typescript
+const severity =
+  daysOverdue >= 7 ? 'critical' :
+  daysOverdue >= 3 ? 'high' :
+  daysOverdue >= 1 ? 'medium' : 'low'
+```
+
+### File Coinvolti
+
+- `src/features/conservation/utils/pointCheckup.ts` - Logica centralizzata
+- `src/features/conservation/hooks/useConservationRealtime.ts` - Real-time subscriptions
+- `src/features/conservation/hooks/useMaintenanceTasksCritical.ts` - Caricamento ottimizzato
+- `src/features/conservation/components/ConservationPointCard.tsx` - UI aggiornata
+- `supabase/migrations/20260201120000_trigger_maintenance_task_recurrence.sql` - Trigger PostgreSQL
+
+### Riferimenti Documentazione
+
+- Report dettagliato: `Production/Conoscenze_congelate/APP_DEFINITION/03_CONSERVATION/Lavoro/01-02-2026/REPORT_card_checkup_centralizzato.md`
+- Test guide: `GUIDA_TEST_conservation_checkup.md`
+- Master index: `00_MASTER_INDEX.md` (entry 01-02-2026)
 
 ---
 

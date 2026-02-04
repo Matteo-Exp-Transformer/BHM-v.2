@@ -645,4 +645,12 @@ export interface ConservationPointCheckup {
     task: MaintenanceTask
     daysUntil: number
   }
+
+  // Prossima manutenzione per ogni tipologia (ordine fisso: temperature, sanitization, defrosting, expiry_check)
+  nextMaintenanceByType?: {
+    type: string
+    label: string
+    next_due: Date
+    daysUntil: number
+  }[]
 }

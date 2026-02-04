@@ -1,12 +1,24 @@
 # CONSERVATION_PAGE - DOCUMENTAZIONE COMPLETA
 
 **Data Creazione**: 2026-01-16
-**Ultima Modifica**: 2026-01-30
-**Versione**: 2.0.0
+**Ultima Modifica**: 2026-02-04
+**Versione**: 3.1.0
 **File Componente**: `src/features/conservation/ConservationPage.tsx`
 **Tipo**: Pagina
 
-**Nuove Features (v2.0.0)**:
+**Nuove Features (v3.1.0 - 04-02-2026)**:
+- ✅ **Completamento automatico task "Rilevamento Temperature" su lettura**: Quando l'utente salva una lettura tramite il pulsante "Rileva Temperatura", le task "Rilevamento Temperature" per quel punto (con scadenza soddisfatta dalla lettura) vengono completate automaticamente (insert in `maintenance_completions`). La task risulta completata in Conservazione e in Attività/calendario. Flusso: click "Rileva Temperatura" → selezione punto → inserimento temperatura → salvataggio → lettura salvata + task temperatura completate in backend → card Manutenzioni Programmate e calendario si aggiornano.
+- ✅ **Apertura modal temperatura da Attività**: Se l'utente arriva dalla pagina Attività dopo aver cliccato "Completa Manutenzione" su un task "Rilevamento temperatura", la navigazione può passare `location.state.openTemperatureForPointId`. Un `useEffect` sulla pagina Conservazione apre il modal per quel punto e poi azzera lo state con `navigate(pathname, { replace: true, state: {} })`. Alla chiusura del modal, `closeTemperatureModal` azzera di nuovo `location.state` per evitare che l'effetto riapra il modal.
+- ✅ **Chiusura modal temperatura**: La chiusura avviene solo in `onSuccess` della mutation (create/update lettura); durante il salvataggio il modal resta aperto; in caso di errore l'utente può riprovare. La funzione `closeTemperatureModal` chiude il modal, resetta `selectedPointForTemperature` e `editingReading`, e chiama `navigate(pathname, { replace: true, state: {} })` per evitare ri-aperture da deep link. Il modal riceve `onClose={closeTemperatureModal}` (stesso handler per X, Annulla e click overlay). ⚠️ Bug noto: in alcune condizioni il modal potrebbe non chiudersi (vedi Lavoro/04-02-2026/REPORT_SESSIONE_MODAL_TEMPERATURA_04-02-2026.md).
+
+**Features (v3.0.0 - 01-02-2026)**:
+- ✅ **Real-time Updates**: Hook `useConservationRealtime()` con 3 subscriptions Supabase
+- ✅ **Check-up Centralizzato**: Integration con `getPointCheckup()` per calcolo stato
+- ✅ **Caricamento Ottimizzato**: Hook `useMaintenanceTasksCritical()` carica solo task critici
+- ✅ **Merge Task**: `criticalTasks` mergiati in `pointsWithLastReading` per card
+- ✅ **Trigger Automatici**: Task ricorrenti gestiti via trigger PostgreSQL
+
+**Features Precedenti (v2.0.0)**:
 - ✅ **Profili HACCP** (5 profili × 4 categorie elettrodomestico) per frigoriferi
 - ✅ **Immagine Elettrodomestico** con modal lightbox fullscreen
 - ✅ **Layout Split** categorie (sx) + immagine (dx) per frigoriferi
@@ -73,7 +85,12 @@ La pagina viene mostrata quando:
 2. **Registrare nuova temperatura**
    - **Scenario**: Un dipendente ha appena controllato la temperatura del frigorifero principale
    - **Azione**: Usa il dropdown "Registra temperatura..." nella sezione "Letture Temperature", seleziona il punto, inserisce la temperatura
-   - **Risultato**: La lettura viene salvata e visualizzata nella lista, aggiornando lo stato del punto se necessario
+   - **Risultato**: La lettura viene salvata e visualizzata nella lista, aggiornando lo stato del punto se necessario. Il modal si chiude solo al successo del salvataggio; X, Annulla o click sullo sfondo chiudono senza salvare (con azzeramento di `location.state`).
+
+2b. **Apertura modal da Attività (Completa Manutenzione su Rilevamento temperatura)** (v3.1.0)
+   - **Scenario**: In Attività/calendario l'utente clicca "Completa Manutenzione" su un task "Rilevamento temperatura" per un punto; l'app reindirizza alla pagina Conservazione con il punto pre-selezionato.
+   - **Azione**: La pagina Conservazione legge `location.state.openTemperatureForPointId` in un `useEffect`; se presente e il punto esiste, imposta `selectedPointForTemperature` e `showTemperatureModal = true`, poi chiama `navigate(pathname, { replace: true, state: {} })` per evitare ri-aperture al refresh. Alla chiusura del modal, `closeTemperatureModal` azzera di nuovo `location.state`.
+   - **Risultato**: L'utente compila e salva la lettura; le task temperatura vengono completate automaticamente; il modal si chiude in `onSuccess`. Se chiude con X/Annulla/overlay, lo state di navigazione viene pulito.
 
 3. **Creare nuovo punto di conservazione**
    - **Scenario**: L'azienda ha acquistato un nuovo frigorifero e deve configurarlo nel sistema
@@ -137,13 +154,15 @@ La pagina viene mostrata quando:
 9. Note HACCP: "Categorie senza range di temperatura obbligatorio; adatto a cella bevande / bar. Temperatura consigliata: 4°C."
 10. Utente configura manutenzioni e salva
 
-**Flusso registrazione temperatura:**
-1. Utente usa il dropdown "Registra temperatura..." nella sezione "Letture Temperature"
+**Flusso registrazione temperatura (v3.1.0: completamento automatico task temperatura):**
+1. Utente usa il pulsante/dropdown **"Rileva Temperatura"** (o "Registra temperatura...") nella sezione Letture Temperature
 2. Seleziona un punto di conservazione
 3. Si apre il modal `AddTemperatureModal`
 4. Utente inserisce la temperatura rilevata, seleziona metodo (manuale/termometro digitale/sensore automatico)
 5. Utente salva → la lettura viene registrata con `recorded_by` = user.id
-6. La lista si aggiorna mostrando **nome utente** (es. "Registrata da: Mario Rossi")
+6. **In backend** (hook `useTemperatureReadings.createReading`): per quel punto vengono cercate le task di tipo "Rilevamento Temperature" con `next_due <= recorded_at`; per ognuna viene inserito un record in `maintenance_completions`. Il trigger PostgreSQL aggiorna `next_due`, `last_completed` e `status` sulla task.
+7. La lista letture si aggiorna; la cache manutenzioni e calendario viene invalidata.
+8. **Atteggiamento atteso**: La card "Manutenzioni Programmate" non mostra più "Rilevamento Temperature" come da completare per quel punto (o il pallino/conteggio si aggiorna). In pagina Attività/calendario la stessa task risulta completata. L'utente non deve andare in Attività a cliccare "Completa Manutenzione" per la temperatura.
 
 **Dettaglio nome utente (v2.0.0):**
 - `recorded_by` → `user_profiles.auth_user_id` → `first_name`, `last_name`
@@ -189,17 +208,29 @@ La pagina viene mostrata quando:
 **Modifica simultanea punto di conservazione:**
 - **Comportamento attuale**: L'ultimo salvataggio vince, senza notificare l'altro utente
 - **Rischio**: Perdita di dati se due utenti modificano campi diversi contemporaneamente
-- **Soluzione proposta**: Implementare optimistic locking con `updated_at` timestamp. Se `updated_at` è cambiato tra il caricamento e il salvataggio, mostrare dialog di conflitto con:
-  - Mostrare valori attuali vs valori modificati
-  - Permettere di scegliere quali modifiche mantenere
-  - Opzione "Aggiorna e ricarica" per ottenere la versione più recente
+- **Mitigazione parziale (v3.0.0)**: Real-time updates notificano User A quando User B salva, ma non previene sovrascrittura
+- **Soluzione proposta**: Implementare optimistic locking con `updated_at` timestamp
 
 **Registrazione temperatura simultanea:**
-- **Comportamento attuale**: Non c'è conflitto - ogni lettura è indipendente, quindi due utenti possono registrare temperature diverse per lo stesso punto contemporaneamente
-- **Comportamento corretto**: Le letture vengono create con timestamp, quindi l'ordine è determinato dalla data/ora. L'ultima lettura diventa la `last_temperature_reading` del punto.
+- ✅ **GESTITO** - Con real-time (v3.0.0):
+  - User A e User B possono registrare temperature contemporaneamente
+  - Ogni lettura è indipendente con timestamp proprio
+  - Subscription `temperature-readings-realtime` notifica entrambi
+  - Entrambi vedono entrambe le letture dopo 1-2 secondi
+  - Ultima per timestamp diventa `last_temperature_reading`
+
+**Completamento manutenzione simultaneo** (v3.0.0):
+- ✅ **GESTITO** - Multiple completions allowed:
+  - Mario e Luca possono cliccare "Completa" contemporaneamente
+  - Entrambi completamenti vengono registrati in `maintenance_completions`
+  - Nessun unique constraint blocca doppio completamento
+  - Trigger aggiorna `next_due` basato su ultimo completamento
+  - Subscription `maintenance-completions-realtime` notifica entrambi
+  - Entrambi vedono task completato e nuovo `next_due`
 
 **Creazione punto simultanea:**
-- **Comportamento attuale**: Non c'è conflitto - ogni punto è indipendente. Due manager possono creare punti contemporaneamente senza problemi.
+- **Comportamento attuale**: Non c'è conflitto - ogni punto è indipendente
+- ✅ **MIGLIORATO (v3.0.0)**: Real-time notifica quando altri creano punti
 
 ### Conflitti di Sincronizzazione
 
@@ -299,16 +330,37 @@ Questo è un componente di pagina (route component), quindi **non riceve props**
 
 ### Hooks Utilizzati
 
-- **`useConservationPoints()`**: 
+- **`useConservationPoints()`**:
   - Carica punti di conservazione dal database
   - Fornisce funzioni CRUD (create, update, delete)
   - Calcola statistiche aggregate
   - Gestisce cache React Query
 
-- **`useTemperatureReadings()`**: 
+- **`useTemperatureReadings()`**:
   - Carica letture temperatura dal database
   - Fornisce funzioni per creare/eliminare letture
   - Calcola statistiche letture (totale, conformi, attenzione, critiche)
+
+- **`useMaintenanceTasksCritical()` (v3.0.0 - NUOVO)**:
+  - Carica **solo task critici** invece di tutti i task (ottimizzazione performance)
+  - Query selettiva: arretrati + oggi + prossimo per tipo (condizionale)
+  - Riduce carico da ~200 task a ~50 task
+  - File: `src/features/conservation/hooks/useMaintenanceTasksCritical.ts`
+  - Logica "next per tipo": mostra prossimo task futuro SOLO se task oggi completato
+  - Filtri applicati:
+    1. Task arretrati (`next_due < startOfDay(now)` && status !== completed/skipped)
+    2. Task oggi (`next_due >= startOfDay && next_due <= endOfDay && next_due <= now`)
+    3. Task prossimi per tipo (se oggi completato o assente)
+
+- **`useConservationRealtime()` (v3.0.0 - NUOVO)**:
+  - Attiva subscriptions Supabase Realtime per aggiornamenti automatici
+  - File: `src/features/conservation/hooks/useConservationRealtime.ts`
+  - 3 canali:
+    1. **temperature-readings-realtime**: monitora INSERT/UPDATE/DELETE su `temperature_readings`
+    2. **maintenance-completions-realtime**: monitora INSERT su `maintenance_completions`
+    3. **maintenance-tasks-realtime**: monitora INSERT/UPDATE/DELETE su `maintenance_tasks`
+  - Quando evento ricevuto → invalida cache React Query → ricarica dati automaticamente
+  - Filter `company_id` su tutti i canali (solo dati azienda corrente)
 
 - **`useAuth()`**: (interno agli hook)
   - Fornisce `company_id` per filtrare i dati per azienda
@@ -352,6 +404,18 @@ Questo è un componente di pagina (route component), quindi **non riceve props**
   1. Resetta `editingPoint` a `null`
   2. Apre il modal (`setShowAddModal(true)`)
 
+#### `closeTemperatureModal()`
+- **Scopo**: Chiude il modal temperatura e azzera tutto lo state correlato (incluso `location.state` per evitare ri-aperture da deep link Attività).
+- **Parametri**: nessuno
+- **Ritorna**: void
+- **Logica**: 
+  1. `setShowTemperatureModal(false)`
+  2. `setSelectedPointForTemperature(null)`
+  3. `setEditingReading(null)`
+  4. `navigate(location.pathname, { replace: true, state: {} })` — azzera `location.state` così l'effetto che apre il modal da `openTemperatureForPointId` non riapre il modal dopo la chiusura.
+
+Usata come `onClose` del modal (X, Annulla, click overlay) e chiamata anche nell'`onSuccess` di create/update lettura.
+
 #### `handleAddTemperature(point)`
 - **Scopo**: Apre il modal per registrare una temperatura per un punto specifico
 - **Parametri**: `point: ConservationPoint` - punto per cui registrare temperatura
@@ -360,13 +424,16 @@ Questo è un componente di pagina (route component), quindi **non riceve props**
   1. Imposta `selectedPointForTemperature` con il punto
   2. Apre il modal temperatura (`setShowTemperatureModal(true)`)
 
+L'apertura può avvenire anche da **Attività**: se `location.state.openTemperatureForPointId` è impostato, un `useEffect` imposta il punto e apre il modal, poi azzera lo state.
+
 #### `handleSaveTemperature(readingData)`
-- **Scopo**: Salva una nuova lettura di temperatura
+- **Scopo**: Salva una nuova lettura di temperatura (o aggiorna se in modalità edit).
 - **Parametri**: `readingData` - dati lettura (senza id, company_id, timestamp)
 - **Ritorna**: void
 - **Logica**: 
-  1. Chiama `createReading(readingData)`
-  2. Chiude il modal e resetta lo state
+  - Se **modalità edit** (`editingReading` presente): chiama `updateReading({ id, data }, { onSuccess: () => { setEditingReading(null); closeTemperatureModal() } })`. La chiusura avviene solo in `onSuccess`.
+  - Se **nuova lettura**: chiama `createReading(readingData, { onSuccess: () => { rimuove punto da pointsInRichiestaLettura se presente; closeTemperatureModal() } })`. La chiusura avviene solo in `onSuccess`.
+  - Il modal **non** viene chiuso subito: resta aperto durante il salvataggio (loading) e in caso di errore (utente può riprovare).
 
 #### `handleEditReading(reading)`
 - **Scopo**: Gestisce la modifica di una lettura (ATTUALMENTE NON IMPLEMENTATO)
@@ -589,13 +656,13 @@ Questo è un componente di pagina (route component), quindi **non riceve props**
    - Lista si aggiorna automaticamente con nuovo punto
 
 6. **Interazione utente - Registrazione temperatura**:
-   - Utente seleziona punto dal dropdown "Registra temperatura..."
-   - `handleAddTemperature(point)` imposta `selectedPointForTemperature` e `showTemperatureModal = true`
-   - Modal `AddTemperatureModal` viene renderizzato
-   - Utente inserisce temperatura e salva
-   - `handleSaveTemperature()` chiama `createReading()` mutation
-   - Query cache viene invalidata
-   - Lista letture si aggiorna, `last_temperature_reading` del punto viene aggiornato
+   - Utente seleziona punto dal dropdown "Registra temperatura..." oppure arriva da Attività con `location.state.openTemperatureForPointId` (effetto apre modal per quel punto e azzera state)
+   - `selectedPointForTemperature` e `showTemperatureModal = true` → Modal `AddTemperatureModal` viene renderizzato con `onClose={closeTemperatureModal}`
+   - Utente inserisce temperatura e clicca "Registra"
+   - `handleSaveTemperature()` chiama `createReading(data, { onSuccess: () => { ...; closeTemperatureModal() } })` (o `updateReading` se in edit)
+   - Durante la mutation il modal resta aperto (loading); in `onSuccess` viene chiamata `closeTemperatureModal()` → modal si chiude, state azzerato, `navigate(..., state: {})` per evitare ri-aperture
+   - Query cache invalidata; lista letture e `last_temperature_reading` si aggiornano
+   - Chiusura senza salvare: X, Annulla o click overlay → `onClose()` (= `closeTemperatureModal`) → modal si chiude e `location.state` azzerato
 
 7. **Aggiornamento automatico**:
    - Dopo ogni mutazione (create/update/delete), `queryClient.invalidateQueries()` viene chiamato
@@ -670,19 +737,116 @@ Questo è un componente di pagina (route component), quindi **non riceve props**
 - Utilizzato `react-toastify` per notifiche successo/errore
 - Messaggi: "Punto creato con successo", "Errore nella creazione", ecc.
 
-### Real-time Updates
+### Real-time Updates (v3.0.0 - IMPLEMENTATO)
 
-**Comportamento attuale**: 
-- **NON implementato** - La pagina non si aggiorna in real-time quando altri utenti modificano dati
-- Aggiornamenti avvengono solo dopo:
-  - Mutazioni locali (invalidation cache)
-  - Refresh manuale pagina
-  - Focus su tab (background refetch di React Query)
+**Comportamento attuale**:
+- ✅ **IMPLEMENTATO** - La pagina si aggiorna automaticamente quando altri utenti modificano dati
+- Aggiornamenti via `useConservationRealtime()` hook
+- Latenza: 1-2 secondi per propagazione eventi
 
-**Soluzione proposta**: Implementare Supabase Realtime subscriptions per:
-- Aggiornamenti automatici quando punti vengono creati/modificati/eliminati da altri utenti
-- Aggiornamenti automatici quando nuove temperature vengono registrate
-- Indicatore visivo quando dati sono stati aggiornati da altro utente
+**Implementazione**:
+
+```typescript
+// ConservationPage.tsx
+export default function ConservationPage() {
+  useConservationRealtime()  // Attiva subscriptions
+
+  const { conservationPoints, ... } = useConservationPoints()
+  const { data: criticalTasks = [] } = useMaintenanceTasksCritical()
+
+  // Merge tasks in points
+  const pointsWithLastReading = useMemo(() => {
+    return conservationPoints.map(point => ({
+      ...point,
+      maintenance_tasks: criticalTasks.filter(
+        task => task.conservation_point_id === point.id
+      )
+    }))
+  }, [conservationPoints, criticalTasks])
+}
+```
+
+**Flusso completo**:
+
+1. **User B completa manutenzione**:
+   - INSERT in `maintenance_completions` con `completed_at`, `completed_by`
+
+2. **Trigger PostgreSQL**:
+   - `update_maintenance_task_on_completion` AFTER INSERT
+   - Calcola `next_due` basato su `frequency` e `recurrence_config`
+   - UPDATE `maintenance_tasks` con nuovo `next_due`, `last_completed`, `status='scheduled'`
+
+3. **Supabase Realtime**:
+   - Notifica subscription `maintenance-completions-realtime` (INSERT)
+   - Notifica subscription `maintenance-tasks-realtime` (UPDATE)
+
+4. **Hook `useConservationRealtime`**:
+   - Riceve eventi da entrambe subscriptions
+   - Chiama `queryClient.invalidateQueries({ queryKey: ['maintenance-tasks-critical'] })`
+
+5. **React Query**:
+   - Ricarica automaticamente query `useMaintenanceTasksCritical()`
+   - Nuovi dati includono task aggiornato con nuovo `next_due`
+
+6. **useMemo ricomputa**:
+   - `pointsWithLastReading` si aggiorna con nuovi `criticalTasks`
+   - Punto di conservazione riceve array task aggiornato
+
+7. **ConservationPointCard**:
+   - Riceve nuovi props `point.maintenance_tasks`
+   - `getPointCheckup()` ricalcola stato con nuovi task
+   - UI si aggiorna automaticamente
+
+**Subscriptions configurate**:
+
+```typescript
+// useConservationRealtime.ts
+const tempChannel = supabase
+  .channel('temperature-readings-realtime')
+  .on('postgres_changes', {
+    event: '*',  // INSERT, UPDATE, DELETE
+    schema: 'public',
+    table: 'temperature_readings',
+    filter: `company_id=eq.${companyId}`
+  }, () => {
+    queryClient.invalidateQueries({ queryKey: ['conservation-points'] })
+  })
+  .subscribe()
+
+const completionsChannel = supabase
+  .channel('maintenance-completions-realtime')
+  .on('postgres_changes', {
+    event: 'INSERT',
+    schema: 'public',
+    table: 'maintenance_completions',
+    filter: `company_id=eq.${companyId}`
+  }, () => {
+    queryClient.invalidateQueries({ queryKey: ['maintenance-tasks-critical'] })
+  })
+  .subscribe()
+
+const tasksChannel = supabase
+  .channel('maintenance-tasks-realtime')
+  .on('postgres_changes', {
+    event: '*',  // INSERT, UPDATE, DELETE
+    schema: 'public',
+    table: 'maintenance_tasks',
+    filter: `company_id=eq.${companyId}`
+  }, () => {
+    queryClient.invalidateQueries({ queryKey: ['maintenance-tasks-critical'] })
+  })
+  .subscribe()
+```
+
+**Cleanup**:
+- Hook usa `useEffect` con cleanup per unsubscribe quando componente unmount
+- Previene memory leaks
+
+**Vantaggi**:
+- Sincronizzazione automatica multi-utente
+- Nessun polling richiesto (push-based)
+- Scalabile (solo azienda corrente via filter)
+- Performance: invalidation cache minimale
 
 ---
 
@@ -1098,5 +1262,77 @@ interface CreateTemperatureReadingInput {
 
 ---
 
-**Ultimo Aggiornamento**: 2026-01-30
-**Versione**: 2.0.0
+**Ultimo Aggiornamento**: 2026-02-04
+**Versione**: 3.1.0
+
+---
+
+## 🆕 CHANGELOG v3.1.0 (2026-02-04)
+
+### Completamento automatico task "Rilevamento Temperature" su lettura
+- Quando l'utente salva una lettura con il pulsante "Rileva Temperatura", le task "Rilevamento Temperature" per quel punto (scadenza soddisfatta dalla data della lettura) vengono completate automaticamente (insert in `maintenance_completions`).
+- **Flusso utente**: Rileva Temperatura → seleziona punto → inserisce temperatura → Salva → lettura registrata + task completate → Conservazione e Attività/calendario aggiornati.
+- **Atteggiamento atteso**: Nessun doppio lavoro: non serve cliccare "Completa Manutenzione" in Attività per la temperatura se si è già usato "Rileva Temperatura".
+- File: `useTemperatureReadings.ts` (dopo `createReading`), `ScheduledMaintenanceCard` (nasconde task temperatura soddisfatti da lettura).
+- Riferimenti: `03_CONSERVATION/Lavoro/04-02-2026/REPORT_LAVORO_04-02-2026.md`, `PIANO_completamento_temperatura_su_lettura.md`.
+
+---
+
+## 🆕 CHANGELOG v3.0.0 (2026-02-01)
+
+### Features Aggiunte
+
+**Real-time Updates**:
+- ✅ Hook `useConservationRealtime()` con 3 subscriptions Supabase
+- ✅ Aggiornamento automatico quando altri utenti:
+  - Registrano temperature
+  - Completano manutenzioni
+  - Creano/modificano task
+- ✅ Latenza: 1-2 secondi per propagazione
+
+**Check-up Centralizzato**:
+- ✅ Integration con `getPointCheckup()` in `ConservationPointCard`
+- ✅ Calcolo stato unificato (temperatura + manutenzioni)
+- ✅ UI "due box" quando entrambi problemi
+
+**Caricamento Ottimizzato**:
+- ✅ Hook `useMaintenanceTasksCritical()` carica solo task critici
+- ✅ Query selettiva: arretrati + oggi + prossimo per tipo
+- ✅ Performance: ~50 task invece di ~200
+
+**Trigger Automatici**:
+- ✅ PostgreSQL trigger `update_maintenance_task_on_completion`
+- ✅ Calcola `next_due` automaticamente dopo completamento
+- ✅ Supporta `recurrence_config` con giorni specifici
+
+**Merge Task in Points**:
+- ✅ `criticalTasks` mergiati in `pointsWithLastReading`
+- ✅ Ogni punto riceve array `maintenance_tasks` filtrato
+- ✅ Card accede direttamente a `point.maintenance_tasks`
+
+### File Aggiunti/Modificati
+
+**Nuovi file**:
+- `src/features/conservation/hooks/useConservationRealtime.ts` - Real-time subscriptions
+- `src/features/conservation/hooks/useMaintenanceTasksCritical.ts` - Caricamento ottimizzato
+- `src/features/conservation/utils/pointCheckup.ts` - Logica check-up centralizzata
+- `supabase/migrations/20260201120000_trigger_maintenance_task_recurrence.sql` - Trigger PostgreSQL
+
+**File modificati**:
+- `src/features/conservation/ConservationPage.tsx` - Attiva real-time + merge tasks
+- `src/features/conservation/components/ConservationPointCard.tsx` - UI due box + dettagli espandibili
+- `src/types/conservation.ts` - Interface `ConservationPointCheckup`
+
+### Conflitti Risolti
+
+- ✅ Real-time sync temperatura readings (Conflitto 1 e 2 risolti)
+- ✅ Multiple completions allowed (Mario + Luca scenario)
+- ✅ Automatic next_due calculation (no manual recalculation)
+
+### Riferimenti
+
+- Report dettagliato: `03_CONSERVATION/Lavoro/01-02-2026/REPORT_card_checkup_centralizzato.md`
+- Test guide: `GUIDA_TEST_conservation_checkup.md`
+- Master index: `00_MASTER_INDEX.md` (entry 01-02-2026)
+
+---

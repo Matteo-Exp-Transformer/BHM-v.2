@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { startOfDay, endOfDay } from 'date-fns'
 import { Wrench, ChevronRight, ChevronDown, Clock, User, CheckCircle2, AlertCircle, Calendar } from 'lucide-react'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 import { useConservationPoints } from '@/features/conservation/hooks/useConservationPoints'
 import { useMaintenanceTasks } from '@/features/conservation/hooks/useMaintenanceTasks'
+import { useTemperatureReadings, getLatestReadingByPoint } from '@/features/conservation/hooks/useTemperatureReadings'
 import type { MaintenanceTask } from '@/types/conservation'
 import { STAFF_ROLES, STAFF_CATEGORIES } from '@/utils/haccpRules'
 
@@ -17,13 +19,21 @@ interface ConservationPointWithStatus {
   maintenances: MaintenanceTask[]
 }
 
-// Mappa dei nomi delle manutenzioni obbligatorie
+// Mappa dei nomi delle manutenzioni obbligatorie (max 4 tipologie)
 const MANDATORY_MAINTENANCE_TYPES = {
   temperature: 'Rilevamento Temperature',
   sanitization: 'Sanificazione',
   defrosting: 'Sbrinamento',
-  expiry_check: 'Controllo Scadenze', // Fallback per controllo scadenze
+  expiry_check: 'Controllo Scadenze',
 } as const
+
+// Ordine fisso per mostrare sempre le 4 tipologie (prossima per data dentro ogni tipo)
+const MAINTENANCE_TYPE_ORDER: (keyof typeof MANDATORY_MAINTENANCE_TYPES)[] = [
+  'temperature',
+  'sanitization',
+  'defrosting',
+  'expiry_check',
+]
 
 /**
  * Ottiene l'inizio e la fine della settimana ISO corrente (lunedì-domenica) in Europe/Rome
@@ -52,38 +62,27 @@ function getCurrentWeekBounds(): { start: Date; end: Date } {
 }
 
 /**
- * Calcola lo stato settimanale per un punto di conservazione
- * Verde: tutte le manutenzioni previste per questa settimana sono completate
- * Giallo: almeno una manutenzione in scadenza questa settimana ma non in ritardo
- * Rosso: almeno una manutenzione in ritardo (scadenza questa settimana o precedente, non completata)
+ * Calcola lo stato del pallino per un punto di conservazione (allineato alle scadenze giornaliere).
+ * Rosso: almeno una manutenzione in ritardo (scadenza prima di oggi).
+ * Giallo: almeno una manutenzione da completare oggi (scadenza nella giornata corrente).
+ * Verde: nessuna in ritardo e nessuna da completare oggi (tutto allineato alle scadenze giornaliere).
  */
 function calculateWeeklyStatus(maintenances: MaintenanceTask[]): WeeklyStatus {
-  const { start: _weekStart, end: weekEnd } = getCurrentWeekBounds()
   const now = new Date()
-  
+  const todayStart = startOfDay(now)
+  const todayEnd = endOfDay(now)
+
   let hasOverdue = false
-  let hasDueSoon = false
-  
+  let hasDueToday = false
+
   for (const task of maintenances) {
     const nextDue = new Date(task.next_due)
-    
-    // Verifica se la scadenza è questa settimana o precedente
-    const isDueThisWeekOrEarlier = nextDue <= weekEnd
-    const isOverdue = nextDue < now && task.status !== 'completed'
-    const isDueSoon = nextDue >= now && nextDue <= weekEnd && task.status !== 'completed'
-    
-    if (isOverdue && isDueThisWeekOrEarlier) {
-      hasOverdue = true
-      break // Rosso ha priorità massima
-    }
-    
-    if (isDueSoon) {
-      hasDueSoon = true
-    }
+    if (nextDue < todayStart) hasOverdue = true
+    if (nextDue >= todayStart && nextDue <= todayEnd) hasDueToday = true
   }
-  
+
   if (hasOverdue) return 'red'
-  if (hasDueSoon) return 'yellow'
+  if (hasDueToday) return 'yellow'
   return 'green'
 }
 
@@ -117,10 +116,23 @@ function StatusIndicator({ status }: { status: WeeklyStatus }) {
 /**
  * Card con elenco punti di conservazione e relative manutenzioni
  */
+/** Task "Rilevamento Temperature" considerato soddisfatto se c'è una lettura nel giorno di next_due o dopo (come in pointCheckup) */
+function isTemperatureTaskSatisfiedByReading(
+  task: MaintenanceTask,
+  lastReading: { recorded_at: string } | undefined
+): boolean {
+  if (task.type !== 'temperature') return false
+  if (!lastReading) return false
+  const recordedAt = new Date(lastReading.recorded_at)
+  const taskDue = new Date(task.next_due)
+  return recordedAt >= startOfDay(taskDue)
+}
+
 export function ScheduledMaintenanceCard() {
   const navigate = useNavigate()
   const { conservationPoints, isLoading: loadingPoints } = useConservationPoints()
   const { maintenanceTasks, isLoading: loadingTasks } = useMaintenanceTasks()
+  const { data: temperatureReadings } = useTemperatureReadings()
   const [expandedPointId, setExpandedPointId] = useState<string | null>(null)
   const [expandedMaintenanceTypes, setExpandedMaintenanceTypes] = useState<Set<string>>(new Set())
   
@@ -129,29 +141,40 @@ export function ScheduledMaintenanceCard() {
     if (!conservationPoints || !maintenanceTasks) return []
     
     return conservationPoints.map(point => {
-      // Filtra solo le manutenzioni obbligatorie per questo punto
-      // Task 3.2 MODIFICATO: Filtra anche le manutenzioni completate
-      const pointMaintenances = maintenanceTasks
+      const lastReading = getLatestReadingByPoint(temperatureReadings ?? [], point.id)
+      // Task completati oggi: non contarli come "da fare oggi" per il pallino
+      const todayStart = startOfDay(new Date())
+      const isCompletedToday = (task: MaintenanceTask) => {
+        const lc = task.last_completed
+        if (!lc) return false
+        const d = lc instanceof Date ? lc : new Date(lc)
+        return d >= todayStart
+      }
+      // Lista per display: tutte le manutenzioni obbligatorie del punto (prossima data per tipo)
+      // così si vedono sempre le 4 tipologie con la prossima scadenza, anche dopo completamento
+      const pointMaintenancesForDisplay = maintenanceTasks
         .filter(
           task => task.conservation_point_id === point.id &&
                   Object.keys(MANDATORY_MAINTENANCE_TYPES).includes(task.type) &&
-                  task.status !== 'completed' // ✅ Filtro completate
+                  task.status !== 'completed' &&
+                  !isTemperatureTaskSatisfiedByReading(task, lastReading)
         )
         .sort((a, b) => {
-          // Ordina per next_due ascendente (più prossime prima)
           const dateA = new Date(a.next_due).getTime()
           const dateB = new Date(b.next_due).getTime()
           return dateA - dateB
         })
+      // Per il pallino: escludi completati oggi così il pallino è verde se tutto fatto oggi
+      const pointMaintenancesForStatus = pointMaintenancesForDisplay.filter(t => !isCompletedToday(t))
       
       return {
         id: point.id,
         name: point.name,
-        status: calculateWeeklyStatus(pointMaintenances),
-        maintenances: pointMaintenances,
+        status: calculateWeeklyStatus(pointMaintenancesForStatus),
+        maintenances: pointMaintenancesForDisplay,
       }
     })
-  }, [conservationPoints, maintenanceTasks])
+  }, [conservationPoints, maintenanceTasks, temperatureReadings])
   
   const togglePoint = (pointId: string) => {
     setExpandedPointId(prev => prev === pointId ? null : pointId)
@@ -340,7 +363,7 @@ export function ScheduledMaintenanceCard() {
                 <div>
                   <h4 className="font-medium text-gray-900">{point.name}</h4>
                   <p className="text-xs text-gray-500">
-                    {point.maintenances.length} manutenzioni
+                    {new Set(point.maintenances.map(m => m.type)).size} manutenzioni
                   </p>
                 </div>
               </div>
@@ -364,29 +387,30 @@ export function ScheduledMaintenanceCard() {
                   <div className="space-y-4">
                     {(() => {
                       const grouped = groupMaintenancesByType(point.maintenances)
-                      
-                      return Object.entries(grouped).map(([type, tasks]) => {
-                        if (tasks.length === 0) return null
-                        
+                      // Ordine fisso: temperature, sanitization, defrosting, expiry_check (prossima per data in ogni tipo)
+                      return MAINTENANCE_TYPE_ORDER.map(type => {
+                        const tasks = grouped[type]
+                        if (!tasks || tasks.length === 0) return null
+
                         const firstTask = tasks[0]
-                        const nextTasks = tasks.slice(1) // Tutte le altre manutenzioni
+                        const nextTasks = tasks.slice(1)
                         const expandKey = `${point.id}-${type}`
                         const isExpanded = expandedMaintenanceTypes.has(expandKey)
                         const typeName = getMaintenanceName(type)
 
                         return (
                           <div key={type} className="space-y-2">
-                            {/* Header tipo con conteggio */}
+                            {/* Header tipo con conteggio eventi */}
                             <div className="flex items-center justify-between px-2 py-1">
                               <h4 className="font-medium text-gray-900 text-sm">
                                 {typeName} ({tasks.length})
                               </h4>
                             </div>
 
-                            {/* Prima manutenzione (sempre visibile) */}
+                            {/* Prima manutenzione (prossima per data per questo tipo) */}
                             {renderMaintenanceTask(firstTask)}
 
-                            {/* Altre manutenzioni (espandibile) */}
+                            {/* Altre manutenzioni dello stesso tipo (espandibile) */}
                             {nextTasks.length > 0 && (
                               <>
                                 <button
