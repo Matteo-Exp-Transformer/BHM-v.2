@@ -143,8 +143,11 @@ export function determineEventType(
   source: string,
   metadata?: { [key: string]: any }
 ): EventType {
-  // Manutenzioni (SOLO se source è maintenance O ha maintenance_id)
+  // Manutenzioni: attività da conservation (manutenzioni programmate + controlli temperatura)
   if (source === 'maintenance' || metadata?.maintenance_id) {
+    return 'maintenance'
+  }
+  if (source === 'temperature_reading') {
     return 'maintenance'
   }
 

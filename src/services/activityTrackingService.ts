@@ -37,14 +37,28 @@ export const activityTrackingService = {
       })
 
       if (error) {
-        console.error('Error logging activity:', error)
+        // RPC non presente in Supabase (es. schema non deployato): non bloccare l'app
+        const isRpcNotFound = error.code === 'PGRST202' || (error.message?.includes('Could not find the function'))
+        if (isRpcNotFound) {
+          if (import.meta.env.DEV) {
+            console.warn('Activity logging skipped: log_user_activity RPC not found in Supabase. Completamento mansione OK.')
+          }
+        } else {
+          console.error('Error logging activity:', error)
+        }
         return { success: false, error: error.message }
       }
 
       return { success: true, activityId: data }
     } catch (err) {
-      console.error('Exception logging activity:', err)
-      return { success: false, error: String(err) }
+      const message = err instanceof Error ? err.message : String(err)
+      const isRpcNotFound = message.includes('404') || message.includes('log_user_activity') || message.includes('PGRST202')
+      if (isRpcNotFound && import.meta.env.DEV) {
+        console.warn('Activity logging skipped: RPC non disponibile. Completamento mansione OK.')
+      } else {
+        console.error('Exception logging activity:', err)
+      }
+      return { success: false, error: message }
     }
   },
 
