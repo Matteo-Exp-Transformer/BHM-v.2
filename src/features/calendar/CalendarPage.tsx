@@ -1,10 +1,6 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import {
-  Activity,
-  ClipboardCheck,
-  Settings,
-} from 'lucide-react'
+import { Activity, ClipboardCheck, Settings } from 'lucide-react'
 import Calendar from './Calendar'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 import {
@@ -46,8 +42,11 @@ export const CalendarPage = () => {
   const { companyId } = useAuth()
   const queryClient = useQueryClient()
   const { settings: calendarSettings, isLoading: settingsLoading, isConfigured } = useCalendarSettings()
+  const { isRefreshing, refreshKey, handleManualRefresh, triggerRefresh } = useCalendarRefresh()
+
   const { events: aggregatedEvents, isLoading } = useAggregatedEvents(
-    calendarSettings?.fiscal_year_end ? new Date(calendarSettings.fiscal_year_end) : undefined
+    calendarSettings?.fiscal_year_end ? new Date(calendarSettings.fiscal_year_end) : undefined,
+    refreshKey
   )
   
   const { filteredEvents } = useFilteredEvents(aggregatedEvents)
@@ -64,6 +63,7 @@ export const CalendarPage = () => {
   const [showConfigModal, setShowConfigModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [showProductExpiryModal, setShowProductExpiryModal] = useState(false)
+  const [statsCardExpanded, setStatsCardExpanded] = useState(true)
   const [selectedMacroCategory, setSelectedMacroCategory] = useState<{
     category: string
     date: Date
@@ -80,8 +80,15 @@ export const CalendarPage = () => {
     setCalendarFilters(newFilters)
   }
 
-  // ✅ Hook per gestione refresh calendario
-  const { isRefreshing, refreshKey, handleManualRefresh, triggerRefresh } = useCalendarRefresh()
+  // ✅ Quando i dati macro si aggiornano (es. completamento nel modal), invalida query e aggiorna stato
+  const handleMacroDataUpdated = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'], refetchType: 'all' })
+    queryClient.invalidateQueries({ queryKey: ['generic-tasks'], refetchType: 'all' })
+    queryClient.invalidateQueries({ queryKey: ['task-completions'], refetchType: 'all' })
+    queryClient.invalidateQueries({ queryKey: ['macro-category-events'], refetchType: 'all' })
+    queryClient.invalidateQueries({ queryKey: ['maintenance-completions'], refetchType: 'all' })
+    triggerRefresh()
+  }, [queryClient, triggerRefresh])
 
   const displayEvents = useMemo(() => {
     if (eventsForFiltering.length === 0) {
@@ -162,6 +169,33 @@ export const CalendarPage = () => {
         return displayEvents
     }
   }, [displayEvents, view])
+
+  // ✅ Sincronizza eventi del modal macro quando i dati sottostanti (viewBasedEvents) cambiano (es. dopo completamento)
+  const categoryToEventType: Record<string, EventType> = {
+    generic_tasks: 'generic_task',
+    maintenance: 'maintenance',
+    product_expiry: 'product_expiry',
+  }
+  useEffect(() => {
+    if (!selectedMacroCategory) return
+    const eventType = categoryToEventType[selectedMacroCategory.category]
+    if (!eventType) return
+    const clickedDate = selectedMacroCategory.date
+    const dayEvents = viewBasedEvents.filter(e => {
+      const eventDate = new Date(e.start)
+      const eEventType = determineEventType(e.source || '', e.metadata || {})
+      return eventDate.toDateString() === new Date(clickedDate).toDateString() &&
+             eEventType === eventType
+    })
+    setSelectedMacroCategory(prev => {
+      if (!prev) return null
+      // Confronta id+status così il modal si aggiorna anche quando cambia solo lo stato (es. completamento)
+      const prevSig = (prev.events ?? []).map((e: { id?: string; status?: string }) => `${e?.id}:${(e as any)?.status ?? ''}`).filter(Boolean).sort().join(',')
+      const nextSig = dayEvents.map(e => `${e?.id}:${e?.status ?? ''}`).filter(Boolean).sort().join(',')
+      if (prevSig === nextSig) return prev
+      return { ...prev, events: dayEvents }
+    })
+  }, [viewBasedEvents, refreshKey, selectedMacroCategory?.category, selectedMacroCategory?.date?.getTime()])
 
   // ✅ Chiave primitiva da location.state per dipendenze (evita "Cannot convert object to primitive value")
   const navState = location.state as { openMacroCategory?: string; date?: string; highlightMaintenanceTaskId?: string } | null
@@ -506,30 +540,28 @@ export const CalendarPage = () => {
         </div>
       </div>
 
-      <div className="px-4 py-6">
-        {/* Assegna nuova attività/mansione */}
-        <div className="mb-6">
-          <CollapsibleCard
-            title="Assegna nuova attività / mansione"
-            icon={ClipboardCheck}
-            defaultExpanded={false}
-            className="mb-4"
-          >
-            <div className="p-4">
-              <GenericTaskForm
-                staffOptions={staffOptions}
-                departmentOptions={departmentOptions}
-                onSubmit={handleCreateGenericTask}
-                onCancel={() => {}}
-                isLoading={isCreating}
-              />
-            </div>
-          </CollapsibleCard>
-        </div>
+      <div className="px-4 py-6 flex flex-col gap-6">
+        {/* Assegna nuova attività - CollapsibleCard apri/chiudi */}
+        <CollapsibleCard
+          title="Assegna nuova attività / mansione"
+          icon={ClipboardCheck}
+          defaultExpanded={false}
+        >
+          <div className="p-4">
+            <GenericTaskForm
+              staffOptions={staffOptions}
+              departmentOptions={departmentOptions}
+              onSubmit={handleCreateGenericTask}
+              onCancel={() => {}}
+              isLoading={isCreating}
+            />
+          </div>
+        </CollapsibleCard>
 
-        {/* Stats Panel */}
+        {/* Statistiche - CollapsibleCard apri/chiudi */}
         <CalendarStatsPanel
           viewBasedEvents={viewBasedEvents}
+          calendarView={view}
           eventsInWaiting={eventsInWaiting}
           overdueEvents={overdueEvents}
           todayEvents={todayEvents}
@@ -537,10 +569,12 @@ export const CalendarPage = () => {
           viewBasedSources={viewBasedSources}
           isRefreshing={isRefreshing}
           onRefresh={handleManualRefresh}
+          expanded={statsCardExpanded}
+          onExpandedChange={setStatsCardExpanded}
         />
 
         {/* Calendario */}
-        <div className="mb-6 relative">
+        <div className="relative min-h-[400px]">
           {!isConfigured() && (
             <>
               {/* Overlay opaco */}
@@ -582,6 +616,7 @@ export const CalendarPage = () => {
               console.log('🔍 CalendarPage.tsx: onMacroCategorySelect called:', { category, date, events })
               setSelectedMacroCategory({ category, date, events })
             }}
+            onMacroDataUpdated={handleMacroDataUpdated}
                    config={{
                      defaultView:
                        view === 'year'

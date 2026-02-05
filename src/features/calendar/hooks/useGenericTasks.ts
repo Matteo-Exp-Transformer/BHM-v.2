@@ -417,17 +417,26 @@ export const useGenericTasks = () => {
     mutationFn: async ({
       taskId,
       completionId,
+      periodDate,
     }: {
       taskId: string
       completionId?: string
+      /** Data della mansione da annullare (per filtrare per period_start/period_end quando non c'è completionId) */
+      periodDate?: Date
     }) => {
       if (!companyId || !user) throw new Error('No company ID or user available')
 
-      // Se è fornito un completionId specifico, elimina quello
-      // Altrimenti elimina tutti i completamenti del task per il giorno corrente
-      const now = new Date()
-      const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
-      const dayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+      const refDate = periodDate || new Date()
+      const dayStart = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate(), 0, 0, 0)
+      const dayEnd = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate(), 23, 59, 59)
+
+      console.log('[useGenericTasks] uncomplete params:', {
+        taskId,
+        completionId,
+        periodDate: periodDate?.toISOString?.(),
+        dayStart: dayStart.toISOString(),
+        dayEnd: dayEnd.toISOString(),
+      })
 
       let query = supabase
         .from('task_completions')
@@ -438,15 +447,21 @@ export const useGenericTasks = () => {
       if (completionId) {
         query = query.eq('id', completionId)
       } else {
-        // Elimina completamenti del giorno corrente
+        // Il completamento può avere period_start/period_end di un giorno (daily), settimana (weekly) o mese (monthly).
+        // Cerca righe il cui periodo contiene almeno un istante di questo giorno: period_end >= dayStart AND period_start <= dayEnd
         query = query
-          .gte('period_start', dayStart.toISOString())
-          .lte('period_end', dayEnd.toISOString())
+          .lte('period_start', dayEnd.toISOString())
+          .gte('period_end', dayStart.toISOString())
       }
 
-      const { error } = await query
+      const { data: deletedRows, error } = await query.select('id')
 
       if (error) throw error
+      const count = deletedRows?.length ?? 0
+      console.log('[useGenericTasks] uncomplete result: deleted rows =', count, deletedRows ?? [])
+      if (count === 0) {
+        console.warn('[useGenericTasks] uncomplete: nessuna riga eliminata - verifica taskId/completionId/periodDate')
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

@@ -37,7 +37,7 @@ function extractEndDate(description?: string): Date | null {
   return match ? new Date(match[1]) : null
 }
 
-export function useAggregatedEvents(fiscalYearEnd?: Date): AggregatedEventsResult {
+export function useAggregatedEvents(fiscalYearEnd?: Date, refreshKey?: number): AggregatedEventsResult {
   const { user, companyId } = useAuth()
   const { maintenanceTasks, isLoading: maintenanceLoading } =
     useMaintenanceTasks()
@@ -96,7 +96,7 @@ export function useAggregatedEvents(fiscalYearEnd?: Date): AggregatedEventsResul
     }
 
     loadCompletions()
-  }, [companyId])
+  }, [companyId, refreshKey])
 
   const isLoading =
     maintenanceLoading || staffLoading || productsLoading || pointsLoading || genericTasksLoading
@@ -148,7 +148,7 @@ export function useAggregatedEvents(fiscalYearEnd?: Date): AggregatedEventsResul
     }
 
     loadProductCompletions()
-  }, [companyId])
+  }, [companyId, refreshKey])
 
   const productExpiryEvents = useMemo(() => {
     if (!products || products.length === 0) return []

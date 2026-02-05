@@ -32,6 +32,8 @@ export interface CollapsibleCardProps {
   collapseDisabled?: boolean
   id?: string
   centerTitle?: boolean
+  /** Se true, l'header (titolo + pulsante collapse) non viene mostrato; il contenuto è sempre visibile */
+  hideHeader?: boolean
 }
 
 export const CollapsibleCard = ({
@@ -65,6 +67,7 @@ export const CollapsibleCard = ({
   collapseDisabled = false,
   id,
   centerTitle = false,
+  hideHeader = false,
 }: CollapsibleCardProps) => {
   // LOCKED: 2025-01-16 - CollapsibleCard.tsx completamente testato
   // Test eseguiti: 57 test, tutti passati (100%)
@@ -225,86 +228,91 @@ export const CollapsibleCard = ({
   const stateContent = renderStateContent()
   const shouldWrapChildren = Boolean(contentClassName)
 
+  const showContent = hideHeader || isExpanded
+
   return (
     <div
       className={`rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow duration-200 focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-1 ${className}`}
       data-expanded={isExpanded}
       role="region"
-      aria-labelledby={headerId}
+      aria-labelledby={hideHeader ? undefined : headerId}
+      aria-label={hideHeader ? title : undefined}
     >
-      {/* Header */}
-      <div
-        className={`cursor-pointer rounded-t-lg px-4 py-4 transition-colors hover:bg-gray-50 sm:px-6 ${centerTitle ? 'grid grid-cols-[1fr_auto_1fr] items-center gap-4' : 'flex items-start justify-between gap-4'} ${headerClassName}`}
-        onClick={toggleExpanded}
-        role="button"
-        tabIndex={0}
-        onKeyDown={handleHeaderKeyDown}
-        aria-expanded={isExpanded}
-        aria-controls={contentId}
-        id={headerId}
-        data-collapsible-disabled={collapseDisabled}
-      >
-        <div className={`flex items-start gap-3 ${centerTitle ? 'justify-center col-start-2' : 'flex-1'}`}>
-          {Icon && (
-            <Icon className="mt-1 h-5 w-5 text-gray-500" aria-hidden="true" />
-          )}
-          <div className="flex flex-col space-y-1">
-            <div className="flex items-center space-x-2">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      {!hideHeader && (
+        /* Header - rimosso dal DOM quando hideHeader=true */
+        <div
+          className={`cursor-pointer rounded-t-lg px-4 py-4 transition-colors hover:bg-gray-50 sm:px-6 ${centerTitle ? 'grid grid-cols-[1fr_auto_1fr] items-center gap-4' : 'flex items-start justify-between gap-4'} ${headerClassName}`}
+          onClick={toggleExpanded}
+          role="button"
+          tabIndex={0}
+          onKeyDown={handleHeaderKeyDown}
+          aria-expanded={isExpanded}
+          aria-controls={contentId}
+          id={headerId}
+          data-collapsible-disabled={collapseDisabled}
+        >
+          <div className={`flex items-start gap-3 ${centerTitle ? 'justify-center col-start-2' : 'flex-1'}`}>
+            {Icon && (
+              <Icon className="mt-1 h-5 w-5 text-gray-500" aria-hidden="true" />
+            )}
+            <div className="flex flex-col space-y-1">
+              <div className="flex items-center space-x-2">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+                </div>
+                {counter !== undefined && (
+                  <span
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                    aria-label={`${counter} items`}
+                  >
+                    {counter}
+                  </span>
+                )}
               </div>
-              {counter !== undefined && (
-                <span
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                  aria-label={`${counter} items`}
-                >
-                  {counter}
-                </span>
+              {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+              {description && (
+                <p className="text-xs text-gray-400 sm:text-sm">{description}</p>
               )}
             </div>
-            {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
-            {description && (
-              <p className="text-xs text-gray-400 sm:text-sm">{description}</p>
+          </div>
+
+          <div className={`flex items-center space-x-2 ${centerTitle ? 'justify-end col-start-3' : ''}`}>
+            {actions && (
+              <div className="flex items-center space-x-2">{actions}</div>
             )}
+            <button
+              type="button"
+              className="p-1 rounded-md hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              onClick={e => {
+                e.stopPropagation()
+                toggleExpanded()
+              }}
+              aria-label={isExpanded ? 'Collapse section' : 'Expand section'}
+              disabled={collapseDisabled}
+            >
+              {isExpanded ? (
+                <ChevronUp
+                  className="h-4 w-4 text-gray-500 transition-transform duration-200"
+                  aria-hidden="true"
+                />
+              ) : (
+                <ChevronDown
+                  className="h-4 w-4 text-gray-500 transition-transform duration-200"
+                  aria-hidden="true"
+                />
+              )}
+            </button>
           </div>
         </div>
+      )}
 
-        <div className={`flex items-center space-x-2 ${centerTitle ? 'justify-end col-start-3' : ''}`}>
-          {actions && (
-            <div className="flex items-center space-x-2">{actions}</div>
-          )}
-          <button
-            type="button"
-            className="p-1 rounded-md hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-            onClick={e => {
-              e.stopPropagation()
-              toggleExpanded()
-            }}
-            aria-label={isExpanded ? 'Collapse section' : 'Expand section'}
-            disabled={collapseDisabled}
-          >
-            {isExpanded ? (
-              <ChevronUp
-                className="h-4 w-4 text-gray-500 transition-transform duration-200"
-                aria-hidden="true"
-              />
-            ) : (
-              <ChevronDown
-                className="h-4 w-4 text-gray-500 transition-transform duration-200"
-                aria-hidden="true"
-              />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Content */}
-      {isExpanded && (
+      {/* Content - sempre visibile se hideHeader, altrimenti quando isExpanded */}
+      {showContent && (
         <div
           id={contentId}
-          className="border-t border-gray-200" // maintain border separation
+          className={hideHeader ? '' : 'border-t border-gray-200'}
           role="region"
-          aria-labelledby={headerId}
+          aria-labelledby={hideHeader ? undefined : headerId}
           data-state={
             resolvedLoading
               ? 'loading'

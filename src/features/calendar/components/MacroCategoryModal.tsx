@@ -125,7 +125,7 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   const { completeTask, uncompleteTask, isCompleting, isUncompleting } = useGenericTasks()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const { companyId, user } = useAuth()
+  const { companyId, user, userRole } = useAuth()
   const [isCompletingMaintenance, setIsCompletingMaintenance] = useState(false)
   const [maintenanceCompletedIds, setMaintenanceCompletedIds] = useState<Set<string>>(() => new Set())
   const { conservationPoints = [] } = useConservationPoints()
@@ -247,6 +247,18 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
   
   // Helper per verificare se un item è selezionato
   const isItemSelected = (itemId: string) => selectedItems.includes(itemId)
+
+  /** Restituisce l'ID reale del task per generic_tasks (metadata usa task_id; l'item.id può essere occurrence id tipo generic-task-uuid-date). */
+  const getGenericTaskId = (item: MacroCategoryItem): string => {
+    const raw = item.metadata?.task_id ?? item.metadata?.taskId ?? item.id
+    if (typeof raw !== 'string') return String(raw)
+    if (raw.startsWith('generic-task-')) {
+      const withoutPrefix = raw.replace(/^generic-task-/, '')
+      const withoutDate = withoutPrefix.replace(/-\d{4}-\d{2}-\d{2}$/, '')
+      return withoutDate || raw
+    }
+    return raw
+  }
 
   const shouldHighlight = (item: MacroCategoryItem): boolean => {
     return (
@@ -820,9 +832,9 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                     return
                                   }
 
-                                  const taskId = item.metadata.taskId || item.id
+                                  const taskId = getGenericTaskId(item)
                                   completeTask(
-                                    { taskId: taskId },
+                                    { taskId },
                                     {
                                       onSuccess: async () => {
                                         await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
@@ -1019,9 +1031,9 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                         return
                                       }
 
-                                      const taskId = item.metadata.taskId || item.id
+                                      const taskId = getGenericTaskId(item)
                                       completeTask(
-                                        { taskId: taskId },
+                                        { taskId },
                                         {
                                           onSuccess: async () => {
                                             await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
@@ -1169,15 +1181,14 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                               )}
                             </div>
 
-                            {/* Pulsante Ripristina per mansioni completate - SOLO per chi ha completato */}
+                            {/* Pulsante "Ancora da Completare" - solo per chi ha completato o admin */}
                             {category === 'generic_tasks' && (() => {
-                              const canUncomplete = item.metadata.completedBy === user?.id
-                              
-                              // Mostra la sezione SOLO se l'utente può ripristinare
-                              if (!canUncomplete) {
-                                return null
-                              }
-                              
+                              const isCompleter = item.metadata.completedBy === user?.id
+                              const isAdmin = userRole === 'admin'
+                              const canUncomplete = isCompleter || isAdmin
+
+                              if (!canUncomplete) return null
+
                               return (
                                 <div className="pt-4 border-t-2 border-yellow-400 mt-4 bg-yellow-50 p-4 rounded-lg">
                                   <button
@@ -1185,25 +1196,32 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                       e.preventDefault()
                                       e.stopPropagation()
 
-                                      const taskId = item.metadata.taskId || item.id
+                                      const taskId = getGenericTaskId(item)
+                                      const dueDate = item.dueDate ? new Date(item.dueDate) : undefined
+                                      const completionId = item.metadata?.completionId
+                                      console.log('[MacroCategoryModal] Uncomplete payload:', {
+                                        taskId,
+                                        completionId,
+                                        periodDate: dueDate?.toISOString?.(),
+                                        itemId: item.id,
+                                        metadataKeys: item.metadata ? Object.keys(item.metadata) : [],
+                                      })
                                       uncompleteTask(
-                                        { taskId: taskId },
+                                        {
+                                          taskId,
+                                          completionId,
+                                          periodDate: dueDate,
+                                        },
                                         {
                                           onSuccess: async () => {
                                             await queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
                                             await queryClient.invalidateQueries({ queryKey: ['generic-tasks'] })
                                             await queryClient.invalidateQueries({ queryKey: ['task-completions', companyId] })
                                             await queryClient.invalidateQueries({ queryKey: ['macro-category-events'] })
-                                            setSelectedItems([]) // Chiudi tutti gli item aperti
-                                            
-                                            // ✅ Forza il refresh dei dati nel modal
+                                            setSelectedItems([])
                                             forceDataRefresh()
-                                            
-                                            // ✅ Notifica al componente padre di aggiornare i dati
                                             onDataUpdated?.()
-                                            
-                                            // Chiudi e riapri il pannello per mostrare le modifiche
-                                            onClose()
+                                            // Non chiudere il modal: così la lista si aggiorna e l'utente vede la mansione tornare in "Da completare"
                                           },
                                           onError: (error) => {
                                             console.error('Error uncompleting task:', error)
@@ -1215,10 +1233,10 @@ export const MacroCategoryModal: React.FC<MacroCategoryModalProps> = ({
                                     className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
                                     <RotateCcw className="w-5 h-5" />
-                                    {isUncompleting ? 'Ripristinando...' : 'Ripristina come "Da Completare"'}
+                                    {isUncompleting ? 'Ripristinando...' : 'Ancora da Completare'}
                                   </button>
                                   <p className="text-xs text-gray-600 mt-2 text-center">
-                                    ⚠️ Questo annullerà il completamento della mansione
+                                    Annulla il completamento: la mansione tornerà in elenco come da completare.
                                   </p>
                                 </div>
                               )

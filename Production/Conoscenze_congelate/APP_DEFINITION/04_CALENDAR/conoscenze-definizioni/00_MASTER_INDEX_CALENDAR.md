@@ -1,5 +1,34 @@
 # MASTER INDEX - Calendar/Attività Feature
-## Aggiornato: 2026-01-30
+## Aggiornato: 2026-02-04
+
+---
+
+## LAVORO SVOLTO (04-02-2026)
+
+### Sessione 1 – MacroCategoryModal, refresh, completamento
+Report: **[REPORT_SESSIONE_CALENDARIO_MACRO_MODAL.md](../Lavoro/04-02-2026/REPORT_SESSIONE_CALENDARIO_MACRO_MODAL.md)**.
+
+| Intervento | Descrizione |
+|------------|-------------|
+| **Statistiche** | Rimossa sezione "Eventi da Completare" (Oggi/Settimana/Mese/Anno) da CalendarStatsPanel. |
+| **Refresh modal** | MacroCategoryModal si aggiorna dopo completamento senza chiudere: callback `onMacroDataUpdated`, `refreshKey` in useAggregatedEvents, sync eventi con firma id+status. |
+| **Completamento mansioni** | Corretto "Task not found": helper `getGenericTaskId` per usare id reale del task (non occurrence id). |
+| **Activity logging** | Gestione 404 su RPC `log_user_activity`: fallback non bloccante, nessun errore in console. |
+| **Classificazione eventi** | Controlli temperatura (`temperature_reading`) → Manutenzioni (non più Mansioni generiche). |
+| **Ancora da Completare** | Pulsante in card espansa mansione completata; visibile solo a chi ha completato o admin; uncomplete con `completionId`/`periodDate` e filtro periodo per overlap (daily/weekly/monthly). |
+
+### Sessione 2 – UI Calendario e pannello Statistiche
+Report: **[REPORT_CALENDARIO_UI_E_STATISTICHE.md](../Lavoro/04-02-2026/REPORT_CALENDARIO_UI_E_STATISTICHE.md)**.
+
+| Intervento | Descrizione |
+|------------|-------------|
+| **Header Calendar** | Rimossa barra "Calendario Aziendale" e pulsante "Nuovo Evento" da `Calendar.tsx`. |
+| **Layout e card** | Spaziatura `gap-6` tra sezioni; CollapsibleCard Statistiche con stato controllato; `stopPropagation` su pulsante Aggiorna. |
+| **CollapsibleCard** | Nuova prop `hideHeader`; ripristinata card "Assegna nuova attività" con header. |
+| **Statistiche temporali** | `eventsForTemporalStats` (anno corrente) per Oggi/Settimana/Mese/Anno; corretto calcolo "Questo Mese" vs "Quest'Anno". |
+| **Sottotitolo vista** | Card Statistiche: sottotitolo "Statistiche annuali/mensili/settimanali/giornaliere" da `calendarView`. |
+| **Testi ed etichette** | Titolo card "Statistiche" (no emoji); sezione "Eventi da Completare"; box "Attività / Mansioni", "Completate", "In Attesa" (emoji rimosse). |
+| **Casella In Attesa** | Conteggio basato su `viewBasedEvents` così cambia con la vista calendario (Anno/Mese/Settimana/Giorno). |
 
 ---
 
@@ -172,6 +201,7 @@ src/features/calendar/
 | **MACRO_CATEGORY_SYSTEM.md** | Sistema MacroCategory |
 | **FILTERS_AND_PERMISSIONS.md** | Sistema filtri 2-layer |
 | **EVENT_AGGREGATION.md** | Aggregazione 6 fonti |
+| **../Lavoro/04-02-2026/REPORT_SESSIONE_CALENDARIO_MACRO_MODAL.md** | Report lavoro 04-02-2026 (statistiche, refresh modal, completamento/uncomplete, temperature_reading) |
 | **../Generic-Task-creation_assignation/** | Documentazione GenericTaskForm |
 
 ---
@@ -185,12 +215,13 @@ src/features/calendar/
 4. Mostra calendario con macro-categorie
 5. Utente clicca su giorno → vede eventi
 
-### 2. Completare una manutenzione
-1. Utente clicca macro-categoria "Manutenzioni"
-2. MacroCategoryModal mostra lista manutenzioni
-3. Utente clicca "Completa" su manutenzione
+### 2. Completare una manutenzione / mansione
+1. Utente clicca macro-categoria (Manutenzioni o Mansioni/Attività)
+2. MacroCategoryModal mostra lista
+3. Utente clicca "Completa" su voce
 4. Sistema aggiorna status → 'completed'
-5. Refresh automatico calendario
+5. Modal si aggiorna senza chiudere (refresh dati in pagina)
+6. Per mansioni completate: utente (o admin) può cliccare "Ancora da Completare" nella card espansa per annullare
 
 ### 3. Creare nuova mansione
 1. Utente espande sezione "Nuova Attività"
@@ -242,5 +273,5 @@ npm run dev
 
 ---
 
-**Ultimo aggiornamento**: 2026-01-30
-**Status**: PRODUCTION-READY - Sistema calendario completo con 6 fonti aggregate
+**Ultimo aggiornamento**: 2026-02-04
+**Status**: PRODUCTION-READY - Sistema calendario completo con 6 fonti aggregate. Refresh modal, uncomplete mansioni, classificazione temperature_reading → Manutenzioni.

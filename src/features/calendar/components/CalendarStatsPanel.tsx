@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard'
 import type { CalendarEvent } from '@/types/calendar'
+import type { CalendarViewType } from './ViewSelector'
 
 interface EventSources {
   maintenance?: number
@@ -16,8 +17,17 @@ interface EventSources {
   genericTasks?: number
 }
 
+const VIEW_LABELS: Record<CalendarViewType, string> = {
+  year: 'Statistiche annuali',
+  month: 'Statistiche mensili',
+  week: 'Statistiche settimanali',
+  day: 'Statistiche giornaliere',
+}
+
 interface CalendarStatsPanelProps {
   viewBasedEvents: CalendarEvent[]
+  /** Vista calendario corrente: usata per il sottotitolo (annuali / mensili / settimanali / giornaliere) */
+  calendarView?: CalendarViewType
   eventsInWaiting: CalendarEvent[]
   overdueEvents: CalendarEvent[]
   todayEvents: CalendarEvent[]
@@ -25,6 +35,8 @@ interface CalendarStatsPanelProps {
   viewBasedSources: EventSources
   isRefreshing: boolean
   onRefresh: () => void
+  expanded?: boolean
+  onExpandedChange?: (expanded: boolean) => void
 }
 
 /**
@@ -33,6 +45,7 @@ interface CalendarStatsPanelProps {
  */
 export function CalendarStatsPanel({
   viewBasedEvents,
+  calendarView = 'month',
   eventsInWaiting,
   overdueEvents,
   todayEvents,
@@ -40,15 +53,25 @@ export function CalendarStatsPanel({
   viewBasedSources,
   isRefreshing,
   onRefresh,
+  expanded,
+  onExpandedChange,
 }: CalendarStatsPanelProps) {
+  const viewSubtitle = VIEW_LABELS[calendarView]
   return (
     <CollapsibleCard
-      title="📊 Statistiche"
+      title="Statistiche"
+      subtitle={viewSubtitle}
       icon={Activity}
       defaultOpen={true}
+      expanded={expanded}
+      onExpandedChange={onExpandedChange}
       actions={
         <button
-          onClick={onRefresh}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onRefresh()
+          }}
           disabled={isRefreshing}
           className={`p-2 rounded-lg transition-all duration-200 ${
             isRefreshing
@@ -70,19 +93,19 @@ export function CalendarStatsPanel({
             <div className="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               {viewBasedEvents.filter(e => e && e.status !== 'completed').length}
             </div>
-            <div className="text-sm font-semibold text-gray-600 mt-1">📊 Eventi da Completare</div>
+            <div className="text-sm font-semibold text-gray-600 mt-1">Attività / Mansioni</div>
           </div>
           <div className="group relative bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 border-2 border-green-200 hover:border-green-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
             <div className="text-3xl font-extrabold text-green-600">
               {viewBasedEvents.filter(e => e && e.status === 'completed').length}
             </div>
-            <div className="text-sm font-semibold text-gray-600 mt-1">✅ Completati</div>
+            <div className="text-sm font-semibold text-gray-600 mt-1">Completate</div>
           </div>
           <div className="group relative bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl p-5 border-2 border-yellow-200 hover:border-yellow-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
             <div className="text-3xl font-extrabold text-yellow-600">
-              {eventsInWaiting.length}
+              {viewBasedEvents.filter(e => e && e.status !== 'completed').length}
             </div>
-            <div className="text-sm font-semibold text-gray-600 mt-1">⏳ In Attesa</div>
+            <div className="text-sm font-semibold text-gray-600 mt-1">In Attesa</div>
           </div>
           <div className="group relative bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-5 border-2 border-red-200 hover:border-red-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
             <div className="text-3xl font-extrabold text-red-600">
@@ -119,72 +142,6 @@ export function CalendarStatsPanel({
               }}
             >
               <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent rounded-full"></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Statistiche Temporali - Design Moderno */}
-        <div className="mb-6 pb-6 border-b-2 border-gray-200">
-          <h4 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="text-xl">📊</span>
-            Statistiche Temporali
-          </h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="group bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 text-center border-2 border-blue-200 hover:border-blue-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
-              <div className="text-2xl font-extrabold text-blue-600 mb-1">
-                {viewBasedEvents.filter(e => {
-                  if (!e || !e.start) return false
-                  const eventDate = new Date(e.start)
-                  const today = new Date()
-                  today.setHours(0, 0, 0, 0)
-                  eventDate.setHours(0, 0, 0, 0)
-                  return eventDate.getTime() === today.getTime()
-                }).length}
-              </div>
-              <div className="text-xs text-blue-700 font-bold">📅 Oggi</div>
-            </div>
-
-            <div className="group bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 text-center border-2 border-green-200 hover:border-green-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
-              <div className="text-2xl font-extrabold text-green-600 mb-1">
-                {viewBasedEvents.filter(e => {
-                  if (!e || !e.start) return false
-                  const eventDate = new Date(e.start)
-                  const now = new Date()
-                  const weekStart = new Date(now)
-                  weekStart.setDate(now.getDate() - now.getDay() + 1)
-                  weekStart.setHours(0, 0, 0, 0)
-                  const weekEnd = new Date(weekStart)
-                  weekEnd.setDate(weekStart.getDate() + 6)
-                  weekEnd.setHours(23, 59, 59, 999)
-                  return eventDate >= weekStart && eventDate <= weekEnd
-                }).length}
-              </div>
-              <div className="text-xs text-green-700 font-bold">🗓️ Questa Settimana</div>
-            </div>
-
-            <div className="group bg-gradient-to-br from-purple-50 to-fuchsia-50 rounded-xl p-4 text-center border-2 border-purple-200 hover:border-purple-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
-              <div className="text-2xl font-extrabold text-purple-600 mb-1">
-                {viewBasedEvents.filter(e => {
-                  if (!e || !e.start) return false
-                  const eventDate = new Date(e.start)
-                  const now = new Date()
-                  return eventDate.getMonth() === now.getMonth() &&
-                         eventDate.getFullYear() === now.getFullYear()
-                }).length}
-              </div>
-              <div className="text-xs text-purple-700 font-bold">📆 Questo Mese</div>
-            </div>
-
-            <div className="group bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-4 text-center border-2 border-orange-200 hover:border-orange-300 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
-              <div className="text-2xl font-extrabold text-orange-600 mb-1">
-                {viewBasedEvents.filter(e => {
-                  if (!e || !e.start) return false
-                  const eventDate = new Date(e.start)
-                  const now = new Date()
-                  return eventDate.getFullYear() === now.getFullYear()
-                }).length}
-              </div>
-              <div className="text-xs text-orange-700 font-bold">🎯 Quest'Anno</div>
             </div>
           </div>
         </div>

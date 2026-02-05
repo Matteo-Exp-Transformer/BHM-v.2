@@ -15,7 +15,7 @@ import { transformToFullCalendarEvents } from './utils/eventTransform'
 import { EventDetailsModal } from './EventDetailsModal'
 import { MacroCategoryModal } from './components/MacroCategoryModal'
 // Import rimosso: CalendarEventLegend era duplicato con i filtri funzionanti
-import { Calendar as CalendarIcon, Plus } from 'lucide-react'
+import { Calendar as CalendarIcon } from 'lucide-react'
 import { useMacroCategoryEvents, type MacroCategory } from './hooks/useMacroCategoryEvents'
 import './calendar-custom.css' // ✅ Import stili personalizzati calendario
 
@@ -51,6 +51,8 @@ interface CalendarProps {
   } | null
   onMacroCategoryClose?: () => void
   onMacroCategorySelect?: (category: string, date: Date, events?: any[]) => void
+  /** Chiamato quando i dati nel modal macro vengono aggiornati (es. completamento) per refresh della pagina */
+  onMacroDataUpdated?: () => void
 }
 
 const defaultConfig: CalendarViewConfig = {
@@ -109,6 +111,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   selectedMacroCategory,
   onMacroCategoryClose,
   onMacroCategorySelect,
+  onMacroDataUpdated,
 }) => {
 
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
@@ -157,8 +160,9 @@ export const Calendar: React.FC<CalendarProps> = ({
   // ✅ Callback per aggiornare i dati macro dopo completamento eventi
   const handleMacroDataUpdated = useCallback(() => {
     setMacroEventsKey(prev => prev + 1)
+    onMacroDataUpdated?.()
     console.log('🔄 Macro data updated - forcing refresh')
-  }, [])
+  }, [onMacroDataUpdated])
 
   const fullCalendarEvents = useMacroCategories
     ? macroCategoryEvents.map(event => {
@@ -350,41 +354,6 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-      {/* Calendar Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <CalendarIcon className="h-5 w-5 text-blue-600" />
-            </div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              Calendario Aziendale
-            </h2>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            {/* Filtri gestiti da CalendarPage tramite HorizontalCalendarFilters */}
-
-            {onEventCreate && (
-              <button
-                onClick={() => {
-                  const now = new Date()
-                  onEventCreate({
-                    start: now,
-                    end: new Date(now.getTime() + 60 * 60 * 1000),
-                    allDay: false,
-                  })
-                }}
-                className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Nuovo Evento
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* Filtri */}
       {filters && (
         <div className="px-4 py-3 border-b border-gray-200">
