@@ -80,3 +80,8 @@ supabase/.temp
 
 .vercel
 .env*.local
+
+# Vercel environment files
+.env.vercel
+.env*.vercel
+.env.production.vercel
