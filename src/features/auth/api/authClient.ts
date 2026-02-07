@@ -31,7 +31,9 @@ import {
 // CONFIGURATION
 // =============================================
 
-const API_BASE_URL = '/functions/v1'
+/** Base URL per Edge Functions: in produzione usa Supabase (Vercel rewrites tutto a index.html) */
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.replace?.(/\/$/, '') ?? ''
+const API_BASE_URL = supabaseUrl ? `${supabaseUrl}/functions/v1` : '/functions/v1'
 const CSRF_COOKIE_NAME = 'bhm_csrf_token'
 const CSRF_HEADER_NAME = 'X-CSRF-Token'
 

@@ -24,16 +24,23 @@ const CSRF_QUERY_KEY = ['csrf-token'] as const
 const CSRF_REFRESH_INTERVAL = 2 * 60 * 60 * 1000 // 2 hours
 // const CSRF_RETRY_DELAY = 30 * 1000 // 30 seconds
 
+/** Base URL per Edge Functions: in produzione deve essere l'URL Supabase (Vercel non serve /functions) */
+const getFunctionsBaseUrl = (): string => {
+  const url = import.meta.env.VITE_SUPABASE_URL
+  return url ? `${url.replace(/\/$/, '')}/functions/v1` : '/functions/v1'
+}
+
 // =============================================
 // API FUNCTIONS
 // =============================================
 
 /**
- * Recupera token CSRF dal server
+ * Recupera token CSRF dal server (Supabase Edge Function)
  */
 async function fetchCsrfToken(): Promise<CsrfTokenResponse> {
   try {
-    const response = await fetch('/functions/v1/auth/csrf-token', {
+    const baseUrl = getFunctionsBaseUrl()
+    const response = await fetch(`${baseUrl}/auth/csrf-token`, {
       method: 'GET',
       credentials: 'include',
       headers: {
