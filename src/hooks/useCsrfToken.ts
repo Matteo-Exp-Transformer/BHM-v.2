@@ -24,10 +24,16 @@ const CSRF_QUERY_KEY = ['csrf-token'] as const
 const CSRF_REFRESH_INTERVAL = 2 * 60 * 60 * 1000 // 2 hours
 // const CSRF_RETRY_DELAY = 30 * 1000 // 30 seconds
 
+/** Normalizza URL env (rimuove trailing slash, spazi, CRLF da export Vercel/file .env) */
+function normalizeSupabaseUrl(raw: string | undefined): string {
+  if (raw == null || typeof raw !== 'string') return ''
+  return raw.replace(/\r\n|\r|\n/g, '').trim().replace(/\/+$/, '')
+}
+
 /** Base URL per Edge Functions: in produzione deve essere l'URL Supabase (Vercel non serve /functions) */
 const getFunctionsBaseUrl = (): string => {
-  const url = import.meta.env.VITE_SUPABASE_URL
-  return url ? `${url.replace(/\/$/, '')}/functions/v1` : '/functions/v1'
+  const url = normalizeSupabaseUrl(import.meta.env.VITE_SUPABASE_URL)
+  return url ? `${url}/functions/v1` : '/functions/v1'
 }
 
 // =============================================
@@ -40,14 +46,9 @@ const getFunctionsBaseUrl = (): string => {
 async function fetchCsrfToken(): Promise<CsrfTokenResponse> {
   try {
     const baseUrl = getFunctionsBaseUrl()
-    const response = await fetch(`${baseUrl}/auth/csrf-token`, {
-      method: 'GET',
-      // Non usare credentials: 'include' in cross-origin (Vercel→Supabase):
-      // con credentials il browser richiede Allow-Origin specifico, non '*', e la fetch fallisce.
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
+    // GET senza header non-standard → richiesta "simple", niente preflight OPTIONS (esclude CORS/preflight come causa).
+    // Path = nome cartella Supabase (auth-csrf-token). auth/csrf-token non è una funzione deployata.
+    const response = await fetch(`${baseUrl}/auth-csrf-token`, { method: 'GET' })
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)

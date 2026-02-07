@@ -31,8 +31,14 @@ import {
 // CONFIGURATION
 // =============================================
 
+/** Normalizza URL env (rimuove CRLF/spazi da export Vercel o .env) */
+function normalizeSupabaseUrl(raw: string | undefined): string {
+  if (raw == null || typeof raw !== 'string') return ''
+  return raw.replace(/\r\n|\r|\n/g, '').trim().replace(/\/+$/, '')
+}
+
 /** Base URL per Edge Functions: in produzione usa Supabase (Vercel rewrites tutto a index.html) */
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.replace?.(/\/$/, '') ?? ''
+const supabaseUrl = normalizeSupabaseUrl(import.meta.env.VITE_SUPABASE_URL)
 const API_BASE_URL = supabaseUrl ? `${supabaseUrl}/functions/v1` : '/functions/v1'
 const CSRF_COOKIE_NAME = 'bhm_csrf_token'
 const CSRF_HEADER_NAME = 'X-CSRF-Token'
