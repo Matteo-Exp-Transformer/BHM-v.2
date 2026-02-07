@@ -40,7 +40,12 @@ const LoginPage: React.FC = () => {
         {/* Form Card */}
         <div className="bg-white shadow-2xl rounded-2xl p-8">
           <LoginForm
-            onSuccess={() => window.location.href = '/dashboard'}
+            onSuccess={() => {
+              // Redirect a pieno caricamento così la nuova pagina legge la sessione da storage
+              // e ProtectedRoute non vede più "non autenticato" (evita tornare a sign-in).
+              const delay = 150
+              setTimeout(() => window.location.replace('/dashboard'), delay)
+            }}
             onError={(error) => console.error('Login error:', error)}
           />
         </div>

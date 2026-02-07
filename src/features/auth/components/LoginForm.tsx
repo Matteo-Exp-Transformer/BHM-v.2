@@ -9,7 +9,6 @@
  */
 
 import React, { useState, useCallback, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { 
   loginFormSchema, 
@@ -33,8 +32,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   onError,
   className = ''
 }) => {
-  const navigate = useNavigate()
-  
   // Hook per CSRF token e rate limiting
   const { token: csrfToken, error: csrfError, isLoading: csrfLoading } = useCsrfToken()
   const { 
@@ -133,8 +130,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       
       if (response.success) {
         toast.success('Login effettuato con successo!')
+        // Usa solo onSuccess (redirect a pieno caricamento) per evitare race con useAuth:
+        // navigate() monta /dashboard prima che la sessione sia letta da ProtectedRoute.
         onSuccess?.()
-        navigate('/dashboard')
       } else {
         const errorMessage = response.error?.message || 'Errore durante il login'
         
@@ -159,7 +157,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     } finally {
       setIsSubmitting(false)
     }
-  }, [formData, navigate, onSuccess, onError, canMakeRequest, csrfToken, secondsUntilReset, recordRequest])
+  }, [formData, onSuccess, onError, canMakeRequest, csrfToken, secondsUntilReset, recordRequest])
 
   // =============================================
   // RATE LIMITING UI
