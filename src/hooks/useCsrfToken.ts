@@ -24,17 +24,20 @@ const CSRF_QUERY_KEY = ['csrf-token'] as const
 const CSRF_REFRESH_INTERVAL = 2 * 60 * 60 * 1000 // 2 hours
 // const CSRF_RETRY_DELAY = 30 * 1000 // 30 seconds
 
-/** Normalizza URL env (rimuove trailing slash, spazi, CRLF da export Vercel/file .env) */
-function normalizeSupabaseUrl(raw: string | undefined): string {
+/** Normalizza stringa env (rimuove CRLF/spazi) */
+function normalizeEnvString(raw: string | undefined): string {
   if (raw == null || typeof raw !== 'string') return ''
-  return raw.replace(/\r\n|\r|\n/g, '').trim().replace(/\/+$/, '')
+  return raw.replace(/\r\n|\r|\n/g, '').trim()
 }
 
 /** Base URL per Edge Functions: in produzione deve essere l'URL Supabase (Vercel non serve /functions) */
 const getFunctionsBaseUrl = (): string => {
-  const url = normalizeSupabaseUrl(import.meta.env.VITE_SUPABASE_URL)
+  const url = normalizeEnvString(import.meta.env.VITE_SUPABASE_URL).replace(/\/+$/, '')
   return url ? `${url}/functions/v1` : '/functions/v1'
 }
+
+/** Anon key per invocare Edge Functions (richiesta da Supabase, altrimenti 401) */
+const getAnonKey = (): string => normalizeEnvString(import.meta.env.VITE_SUPABASE_ANON_KEY)
 
 // =============================================
 // API FUNCTIONS
@@ -46,9 +49,14 @@ const getFunctionsBaseUrl = (): string => {
 async function fetchCsrfToken(): Promise<CsrfTokenResponse> {
   try {
     const baseUrl = getFunctionsBaseUrl()
-    // GET senza header non-standard → richiesta "simple", niente preflight OPTIONS (esclude CORS/preflight come causa).
-    // Path = nome cartella Supabase (auth-csrf-token). auth/csrf-token non è una funzione deployata.
-    const response = await fetch(`${baseUrl}/auth-csrf-token`, { method: 'GET' })
+    const anonKey = getAnonKey()
+    // Supabase Edge Functions richiedono Authorization (anon key) altrimenti rispondono 401.
+    const response = await fetch(`${baseUrl}/auth-csrf-token`, {
+      method: 'GET',
+      headers: anonKey
+        ? { Authorization: `Bearer ${anonKey}`, apikey: anonKey }
+        : undefined
+    })
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
