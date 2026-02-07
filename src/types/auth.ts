@@ -309,11 +309,14 @@ export type InviteFormState =
 // CONSTANTS
 // =============================================
 
+/** Caratteri ammessi in password: lettere, numeri, caratteri speciali comuni (no control chars) */
+const PASSWORD_PATTERN = /^[\x20-\x7E]+$/
+
 export const PASSWORD_POLICY: PasswordPolicy = {
   minLength: 12,
   maxLength: 128,
-  pattern: /^[A-Za-z]+$/,
-  description: 'Minimo 12 caratteri, massimo 128, solo lettere [A-Za-z]'
+  pattern: PASSWORD_PATTERN,
+  description: 'Minimo 12 caratteri, massimo 128, lettere numeri e caratteri speciali'
 }
 
 export const RATE_LIMIT_CONFIG: RateLimitConfig = {
