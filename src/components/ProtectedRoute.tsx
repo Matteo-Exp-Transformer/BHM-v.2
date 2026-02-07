@@ -191,13 +191,11 @@ export const ProtectedRoute = ({
     }
   }, [isLoading, isAuthenticated, navigate])
 
-  // ✅ Redirect a login se non autorizzato (guest senza company)
+  // ✅ Redirect a onboarding se autenticato ma senza company (non a sign-in: utente è loggato)
   useEffect(() => {
     if (!isLoading && isAuthenticated && !isAuthorized) {
-      console.log('🚫 Utente non autorizzato (no company) - redirect a login')
-      setTimeout(() => {
-        navigate('/sign-in', { replace: true })
-      }, 2000) // Mostra messaggio per 2 secondi prima del redirect
+      console.log('🔄 Utente senza company - redirect a onboarding')
+      navigate('/onboarding', { replace: true })
     }
   }, [isLoading, isAuthenticated, isAuthorized, navigate])
 

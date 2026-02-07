@@ -41,9 +41,9 @@ const LoginPage: React.FC = () => {
         <div className="bg-white shadow-2xl rounded-2xl p-8">
           <LoginForm
             onSuccess={() => {
-              // Redirect a pieno caricamento così la nuova pagina legge la sessione da storage
-              // e ProtectedRoute non vede più "non autenticato" (evita tornare a sign-in).
-              const delay = 150
+              // Redirect a pieno caricamento: dare tempo a Supabase di persistere la sessione
+              // prima di caricare /dashboard (evita race con getSession e redirect a sign-in).
+              const delay = 500
               setTimeout(() => window.location.replace('/dashboard'), delay)
             }}
             onError={(error) => console.error('Login error:', error)}
