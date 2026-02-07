@@ -42,7 +42,8 @@ async function fetchCsrfToken(): Promise<CsrfTokenResponse> {
     const baseUrl = getFunctionsBaseUrl()
     const response = await fetch(`${baseUrl}/auth/csrf-token`, {
       method: 'GET',
-      credentials: 'include',
+      // Non usare credentials: 'include' in cross-origin (Vercel→Supabase):
+      // con credentials il browser richiede Allow-Origin specifico, non '*', e la fetch fallisce.
       headers: {
         'Content-Type': 'application/json'
       }
