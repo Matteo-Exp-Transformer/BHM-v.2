@@ -244,4 +244,93 @@ window.location.replace('/auth/callback?post_login=true')
 
 ---
 
-*Report generato il 07-02-2026. Ultimo aggiornamento: fix 1.8 (08-02-2026) - Risoluzione race condition post-login.*
+## 9. Fix 1.9: Causa Reale e Soluzione Definitiva (08-02-2026)
+
+### 9.1 Problema Effettivo Identificato
+
+**Non era una race condition nel frontend, ma un'autorizzazione nel database.**
+
+Dopo aver esaminato il flusso di autenticazione, il vero problema era:
+- `useAuth.ts` caricava le companies da `company_members` tabella
+- Se l'utente non era associato a nessuna company nel database, `companies.length === 0`
+- Questo causava il redirect a `/onboarding` (corretto) oppure il mancato caricamento di permessi
+
+**La sessione non era autorizzata perché l'ID utente non era associato a nessun Company ID nel database.**
+
+### 9.2 Soluzione Implementata
+
+**Associare l'ID utente al Company ID nel database:**
+
+1. **Verificare la tabella `company_members`** che l'utente sia inserito come membro della company
+2. **Controllare che `is_active = true`** per il record utente-company
+3. **Verificare il ruolo** sia valorizzato (admin, responsabile, dipendente, ecc.)
+
+**Query SQL per verificare/aggiungere utente:**
+```sql
+-- Verificare membership esistente
+SELECT * FROM company_members
+WHERE user_id = '<user_id>' AND company_id = '<company_id>';
+
+-- Aggiungere utente a company (se non esiste)
+INSERT INTO company_members (user_id, company_id, role, is_active)
+VALUES ('<user_id>', '<company_id>', 'admin', true)
+ON CONFLICT (user_id, company_id)
+DO UPDATE SET is_active = true;
+```
+
+### 9.3 Flusso Corretto Dopo Fix
+
+```
+[Login] Email + Password
+    ↓
+[Supabase Auth] Verifica credenziali ✅
+    ↓
+[useAuth.getSession()] Sessione Supabase ottenuta ✅
+    ↓
+[useAuth - Fetch Companies] Query company_members
+    ├─ Utente TROVATO in company_members con is_active=true ✅
+    │   └─ isSignedIn = true, companies.length > 0
+    │       └─ /auth/callback → /dashboard ✅
+    └─ Utente NON TROVATO in company_members ❌
+        └─ isSignedIn = true, companies.length = 0
+            └─ /auth/callback → /onboarding (nuovo user)
+```
+
+### 9.4 File Modificati (Effettivi)
+
+| File | Modifica | Status |
+|------|----------|--------|
+| `src/features/auth/LoginPage.tsx` | Redirect a `/auth/callback?post_login=true` | ✅ Necessario |
+| `src/features/auth/AuthCallbackPage.tsx` | Aspetta useAuth prima di redirect | ✅ Supporto aggiunto |
+| **Database (Supabase)** | **Aggiungere utente a company_members** | ✅ **SOLUZIONE REALE** |
+
+### 9.5 Lezioni Apprese
+
+1. **Il frontend era corretto** - La race condition fix (AuthCallbackPage) è una best practice comunque utile
+2. **Il problema era nel database** - L'associazione utente-company era mancante
+3. **useAuth funziona correttamente** - Riflette lo stato del database (se company_members è vuoto, `companies` è vuoto)
+4. **Verifica sempre il database** - Prima di assumere che il frontend abbia errori
+
+### 9.6 Checklist RLS e Permissions
+
+Per evitare problemi simili in futuro, verificare:
+
+- [ ] `company_members` table ha Row Level Security (RLS) abilitato
+- [ ] Politica RLS permette a auth users di leggere propri record: `auth.uid() = user_id`
+- [ ] Nuovo utente è inserito in `company_members` **entro il flusso di onboarding** (importante!)
+- [ ] Campo `is_active` è sempre true per utenti attivi
+- [ ] Campo `role` ha un valore di default (es. 'dipendente')
+
+---
+
+## 10. Stato Finale (post fix 1.9)
+
+- ✅ **Token CSRF:** Funzionante (header Authorization/apikey, path corretto)
+- ✅ **Login:** Credenziali accettate, nessun ZodError password
+- ✅ **Redirect post-login:** Funzionante (pagina intermedia AuthCallbackPage)
+- ✅ **Database:** Utente associato a company_members con ruolo attivo
+- ✅ **TUTTO RISOLTO E TESTATO IN PRODUZIONE (Vercel)**
+
+---
+
+*Report generato il 07-02-2026. Ultimo aggiornamento: fix 1.9 (08-02-2026) - Soluzione definitiva: associazione utente-company nel database.*
