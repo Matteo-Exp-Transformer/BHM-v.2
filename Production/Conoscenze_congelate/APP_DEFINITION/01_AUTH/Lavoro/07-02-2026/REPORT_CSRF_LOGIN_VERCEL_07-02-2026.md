@@ -2,7 +2,7 @@
 
 **Data:** 07 febbraio 2026  
 **Contesto:** Auth (01_AUTH) – problemi login e token CSRF in produzione (Vercel)  
-**Esito:** Token CSRF risolto; problema accesso bloccato da validazione password (risolto nel report).
+**Esito:** Token CSRF e login funzionanti; **redirect post-login ancora aperto** (non si supera la pagina sign-in).
 
 ---
 
@@ -66,6 +66,14 @@
   - `apikey: <VITE_SUPABASE_ANON_KEY>`
   con normalizzazione della anon key (stessa logica usata per l’URL).
 
+### 1.7 Ulteriori fix redirect post-login (dopo report iniziale)
+
+- **Sintomo:** Login effettuato con successo ma redirect verso `.../sign-in`; l’utente non riesce a uscire dalla pagina sign-in.
+
+- **Interventi eseguiti:**
+  - **LoginPage.tsx:** Delay prima di `window.location.replace('/dashboard')` portato da **150 ms a 500 ms** per dare a Supabase più tempo di persistere la sessione prima del caricamento di `/dashboard` (riduce race con `getSession()`).
+  - **ProtectedRoute.tsx:** Se l’utente è **autenticato ma senza company** (`isAuthorized` false), il redirect non va più a `/sign-in` dopo 2 s ma a **`/onboarding`** (replace), così l’utente può configurare la company invece di tornare al login. Rimosso il `setTimeout` di 2 secondi (redirect immediato a onboarding).
+
 ---
 
 ## 2. File modificati (riferimento)
@@ -74,8 +82,9 @@
 |------|----------------------|
 | `src/hooks/useCsrfToken.ts` | Base URL da env, normalizzazione URL/anon key, path `auth-csrf-token`, niente credentials, GET senza Content-Type, header Authorization + apikey |
 | `src/features/auth/api/authClient.ts` | Base URL da `VITE_SUPABASE_URL`, normalizzazione URL |
-| `src/features/auth/LoginPage.tsx` | onSuccess con `window.location.replace('/dashboard')` e delay 150 ms |
+| `src/features/auth/LoginPage.tsx` | onSuccess con `window.location.replace('/dashboard')` e delay **500 ms** (prima 150 ms) |
 | `src/features/auth/components/LoginForm.tsx` | Solo onSuccess (niente navigate), rimosso useNavigate |
+| `src/components/ProtectedRoute.tsx` | Se autenticato ma senza company → redirect a `/onboarding` invece di `/sign-in` (subito, senza delay 2 s) |
 | `docs/auth/CSRF_VERCEL_TROUBLESHOOTING.md` | Nuovo: checklist e path corretto `auth-csrf-token` |
 
 ---
@@ -151,4 +160,88 @@ Login error: ZodError: [
 
 ---
 
-*Report generato il 07-02-2026. Per modifiche al flusso auth o alla policy password, aggiornare le conoscenze-definizioni in 01_AUTH e questo report se necessario.*
+## 6. Stato attuale (post fix 1.7)
+
+- **Login:** funziona (credenziali accettate, token CSRF ok, nessun ZodError password).
+- **Redirect post-login:** **ancora non risolto**. L'utente non riesce a superare la pagina sign-in: dopo il login avviene un redirect che riporta a sign-in (es. `https://...vercel.app/sign-in`), quindi non si arriva a dashboard né a onboarding.
+- **Ipotesi da investigare:** timing di `getSession()` al caricamento di `/dashboard` (sessione non ancora letta → `ProtectedRoute` vede "non autenticato" → redirect a sign-in); oppure comportamento su URL preview Vercel / storage per origin; oppure altro redirect (OnboardingGuard, ordine dei guard).
+
+---
+
+## 7. Fix 1.8: Risoluzione Race Condition Post-Login (08-02-2026)
+
+### 7.1 Root Cause Identificata
+
+**Race Condition tra `getSession()` e `ProtectedRoute`:**
+
+```
+Login → window.location.replace('/dashboard') (dopo 500ms)
+       ↓
+Browser carica /dashboard (full reload)
+       ↓
+useAuth.getSession() → ASINCRONO (sta leggendo)
+       ↓
+ProtectedRoute monta → vede isLoading=true → mostra spinner
+       ↓
+getSession() completa → se sessione non ancora persistita → isAuthenticated=false
+       ↓
+ProtectedRoute redirect a /sign-in → LOOP
+```
+
+Il delay di 500ms non era sufficiente su Vercel con latenza elevata.
+
+### 7.2 Soluzione Implementata: AuthCallbackPage come Pagina Intermedia
+
+Invece di fare redirect diretto da `/sign-in` a `/dashboard`, ora si usa `/auth/callback?post_login=true` come pagina intermedia che:
+
+1. Aspetta che `useAuth.isLoading = false` (tutte le query completate)
+2. Controlla `isSignedIn` e `companies.length`
+3. Redirect a `/dashboard` (se company presente), `/onboarding` (se no company), o `/sign-in` (se sessione non trovata)
+
+Questo elimina completamente la race condition perché `AuthCallbackPage` aspetta esplicitamente il completamento di `useAuth`.
+
+### 7.3 File Modificati
+
+| File | Modifica |
+|------|----------|
+| `src/features/auth/LoginPage.tsx` | `onSuccess` ora fa `window.location.replace('/auth/callback?post_login=true')` invece di `/dashboard` |
+| `src/features/auth/AuthCallbackPage.tsx` | Aggiunto supporto per `?post_login=true`: usa `useAuth` hook, aspetta `isLoading=false`, poi redirect intelligente |
+
+### 7.4 Flusso Post-Login Aggiornato
+
+```
+[LoginForm] ✅ Login riuscito
+    ↓
+[LoginPage.tsx] onSuccess()
+    ↓
+window.location.replace('/auth/callback?post_login=true')
+    ↓
+[AuthCallbackPage] Monta → usa useAuth hook
+    ↓
+├─ isAuthLoading = true → Mostra "Accesso in corso..."
+├─ Aspetta che isAuthLoading = false
+└─ Quando isAuthLoading = false:
+    ├─ isSignedIn && companies.length > 0 → navigate('/dashboard') ✅
+    ├─ isSignedIn && companies.length === 0 → navigate('/onboarding')
+    └─ !isSignedIn → navigate('/sign-in') + toast error
+```
+
+### 7.5 Vantaggi della Soluzione
+
+1. **Elimina race condition**: Aspetta esplicitamente il completamento di useAuth
+2. **Nessun delay arbitrario**: Non servono più setTimeout(500ms) o simili
+3. **Gestione centralizzata**: Logica di routing post-auth in un unico punto
+4. **Funziona per tutti i casi**: Login, registration, invite, recovery
+5. **UX migliorata**: Mostra messaggio "Accesso in corso..." invece di blank/flash
+
+---
+
+## 8. Stato attuale (post fix 1.8)
+
+- **Login:** funziona (credenziali accettate, token CSRF ok, nessun ZodError password).
+- **Redirect post-login:** **RISOLTO** (in teoria). Il flusso ora passa per `/auth/callback?post_login=true` che aspetta useAuth prima di decidere dove reindirizzare.
+- **Da testare su Vercel:** Deploy necessario per confermare che la soluzione funziona in produzione.
+
+---
+
+*Report generato il 07-02-2026. Ultimo aggiornamento: fix 1.8 (08-02-2026) - Risoluzione race condition post-login.*

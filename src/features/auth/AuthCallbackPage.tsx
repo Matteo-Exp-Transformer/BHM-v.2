@@ -1,16 +1,23 @@
 /**
  * 🔄 AuthCallbackPage - Gestione Callback Supabase Auth
- * 
- * Pagina per gestire i callback di autenticazione Supabase
- * URL: /auth/callback
- * 
+ *
+ * Pagina per gestire:
+ * 1. Callback di verifica email Supabase (/auth/callback)
+ * 2. Post-login redirect (/auth/callback?post_login=true)
+ *
+ * Il caso post_login usa useAuth per aspettare che l'autenticazione
+ * sia completamente caricata prima di decidere dove reindirizzare.
+ * Questo risolve la race condition tra getSession() e ProtectedRoute.
+ *
  * @date 2025-01-10
+ * @updated 2026-02-08 - Aggiunto supporto post_login per risolvere race condition
  */
 
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'react-toastify'
+import { useAuth } from '@/hooks/useAuth'
 
 const AuthCallbackPage: React.FC = () => {
   const navigate = useNavigate()
@@ -18,7 +25,40 @@ const AuthCallbackPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // useAuth per gestire post-login redirect
+  const { isLoading: isAuthLoading, isSignedIn, companies } = useAuth()
+  const isPostLogin = searchParams.get('post_login') === 'true'
+
+  // Gestione post-login: aspetta useAuth prima di reindirizzare
   useEffect(() => {
+    if (!isPostLogin) return
+    if (isAuthLoading) return // Aspetta che useAuth completi
+
+    console.log('🔄 Post-login callback:', { isSignedIn, companiesCount: companies.length })
+
+    if (isSignedIn) {
+      if (companies.length > 0) {
+        console.log('✅ Login completato - redirect a dashboard')
+        toast.success('Login effettuato con successo!')
+        navigate('/dashboard', { replace: true })
+      } else {
+        console.log('⚠️ Login completato ma nessuna company - redirect a onboarding')
+        navigate('/onboarding', { replace: true })
+      }
+    } else {
+      // Sessione non trovata dopo login - qualcosa è andato storto
+      console.warn('❌ Post-login ma sessione non trovata')
+      toast.error('Sessione non trovata. Riprova il login.')
+      navigate('/sign-in', { replace: true })
+    }
+
+    setIsProcessing(false)
+  }, [isPostLogin, isAuthLoading, isSignedIn, companies.length, navigate])
+
+  // Gestione callback verifica email (non post_login)
+  useEffect(() => {
+    if (isPostLogin) return // Gestito dall'altro useEffect
+
     const handleAuthCallback = async () => {
       try {
         // Ottieni parametri URL
@@ -31,34 +71,34 @@ const AuthCallbackPage: React.FC = () => {
         // Se c'è un errore nell'URL
         if (errorParam) {
           console.log('❌ Auth error detected:', errorParam, errorCode, errorDescription)
-          
+
           // Gestisci errori specifici
           if (errorCode === 'otp_expired') {
             setError('Il link di conferma è scaduto. La tua email è già stata verificata.')
             toast.warning('Link di conferma scaduto - Account già verificato')
-            
+
             // Redirect a login dopo 3 secondi
             setTimeout(() => {
               navigate('/sign-in')
             }, 3000)
             return
           }
-          
+
           if (errorParam === 'access_denied') {
             setError('Accesso negato. Riprova con il login.')
             toast.error('Accesso negato')
-            
+
             // Redirect a login dopo 3 secondi
             setTimeout(() => {
               navigate('/sign-in')
             }, 3000)
             return
           }
-          
+
           // Errore generico
           setError(`Errore di autenticazione: ${errorDescription || errorParam}`)
           toast.error('Errore durante la verifica email')
-          
+
           setTimeout(() => {
             navigate('/sign-in')
           }, 3000)
@@ -67,12 +107,12 @@ const AuthCallbackPage: React.FC = () => {
 
         // Se non c'è errore, gestisci il callback normale
         const { data, error: authError } = await supabase.auth.getSession()
-        
+
         if (authError) {
           console.error('❌ Auth session error:', authError)
           setError('Errore durante il recupero della sessione')
           toast.error('Errore di autenticazione')
-          
+
           setTimeout(() => {
             navigate('/sign-in')
           }, 3000)
@@ -93,7 +133,7 @@ const AuthCallbackPage: React.FC = () => {
         console.error('❌ Auth callback error:', err)
         setError('Errore imprevisto durante la verifica')
         toast.error('Errore imprevisto')
-        
+
         setTimeout(() => {
           navigate('/sign-in')
         }, 3000)
@@ -103,16 +143,22 @@ const AuthCallbackPage: React.FC = () => {
     }
 
     handleAuthCallback()
-  }, [navigate, searchParams])
+  }, [isPostLogin, navigate, searchParams])
 
   // Loading state
-  if (isProcessing) {
+  if (isProcessing || (isPostLogin && isAuthLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Verifica in corso...</h2>
-          <p className="text-gray-600">Stiamo verificando la tua email...</p>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            {isPostLogin ? 'Accesso in corso...' : 'Verifica in corso...'}
+          </h2>
+          <p className="text-gray-600">
+            {isPostLogin
+              ? 'Stiamo preparando la tua sessione...'
+              : 'Stiamo verificando la tua email...'}
+          </p>
         </div>
       </div>
     )

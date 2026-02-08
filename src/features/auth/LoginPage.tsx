@@ -41,10 +41,10 @@ const LoginPage: React.FC = () => {
         <div className="bg-white shadow-2xl rounded-2xl p-8">
           <LoginForm
             onSuccess={() => {
-              // Redirect a pieno caricamento: dare tempo a Supabase di persistere la sessione
-              // prima di caricare /dashboard (evita race con getSession e redirect a sign-in).
-              const delay = 500
-              setTimeout(() => window.location.replace('/dashboard'), delay)
+              // Redirect a pagina intermedia che aspetta il completamento di useAuth
+              // prima di decidere dove andare (dashboard/onboarding/sign-in).
+              // Questo elimina la race condition tra getSession() e ProtectedRoute.
+              window.location.replace('/auth/callback?post_login=true')
             }}
             onError={(error) => console.error('Login error:', error)}
           />
