@@ -274,15 +274,17 @@
 
 /* ============================================
    GIORNI CHIUSI - Design elegante
+   Separazione visiva tra celle (es. sabato/domenica) per evitare effetto "unito"
    ============================================ */
 .fc-day-closed {
-  background: linear-gradient(135deg, 
-    rgba(224, 242, 254, 0.95) 0%, 
+  background: linear-gradient(135deg,
+    rgba(224, 242, 254, 0.95) 0%,
     rgba(186, 230, 253, 0.95) 50%,
     rgba(224, 242, 254, 0.95) 100%) !important;
   position: relative;
   opacity: 1 !important;
-  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  /* 🔧 FIX: bordi visibili (opachi) per separare celle chiuse adiacenti (es. sabato/domenica) */
+  border: 2px solid #7dd3fc !important;
 }
 
 .fc-day-closed::before {
@@ -297,6 +299,18 @@
     radial-gradient(circle at 80% 20%, rgba(96, 165, 250, 0.12) 0%, transparent 50%),
     radial-gradient(circle at 50% 50%, rgba(147, 197, 253, 0.08) 0%, transparent 70%);
   pointer-events: none;
+  z-index: 0;
+}
+
+/* Numero del giorno sempre visibile sopra il overlay .fc-day-closed::before */
+.fc-day-closed .fc-daygrid-day-number {
+  position: relative;
+  z-index: 1;
+}
+
+/* 🔧 FIX: Giorni chiusi "altro mese" visibili - override opacity 0.3 di fc-day-other */
+.fc .fc-day-other.fc-day-closed .fc-daygrid-day-top {
+  opacity: 1 !important;
 }
 
 /* Icona spiaggia per giorni chiusi - più elegante */
@@ -337,6 +351,14 @@
   letter-spacing: 0.3px;
   box-shadow: 0 1px 3px rgba(99, 102, 241, 0.15);
   border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+/* Variante per giorni chiusi - stessa struttura/dimensioni ma stile diverso */
+.fc-col-header-hours.fc-col-header-closed {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(186, 230, 253, 0.15) 100%);
+  color: #0284c7;
+  font-style: italic;
+  border: 1px solid rgba(56, 189, 248, 0.2);
 }
 
 .fc-col-header-cell {

@@ -14,6 +14,7 @@ import type { CalendarFilters } from '@/types/calendar-filters'
 import { transformToFullCalendarEvents } from './utils/eventTransform'
 import { EventDetailsModal } from './EventDetailsModal'
 import { MacroCategoryModal } from './components/MacroCategoryModal'
+import { CalendarHeaderFilters } from './components/NewCalendarFilters'
 // Import rimosso: CalendarEventLegend era duplicato con i filtri funzionanti
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { useMacroCategoryEvents, type MacroCategory } from './hooks/useMacroCategoryEvents'
@@ -41,8 +42,12 @@ interface CalendarProps {
     haccpDeadlines?: number
     genericTasks?: number
   }
+  /** @deprecated Usare calendarFilters + onFiltersChange; filtri ora in header tramite CalendarHeaderFilters */
   filters?: React.ReactNode
   calendarFilters?: CalendarFilters
+  onFiltersChange?: (filters: CalendarFilters) => void
+  availableDepartments?: { id: string; name: string; event_count: number }[]
+  isAdmin?: boolean
   selectedMacroCategory?: {
     category: string
     date: Date
@@ -53,6 +58,8 @@ interface CalendarProps {
   onMacroCategorySelect?: (category: string, date: Date, events?: any[]) => void
   /** Chiamato quando i dati nel modal macro vengono aggiornati (es. completamento) per refresh della pagina */
   onMacroDataUpdated?: () => void
+  /** Chiamato quando cambia l'intervallo di date visibile (es. navigazione mese/settimana) */
+  onDatesSet?: (start: Date, end: Date) => void
 }
 
 const defaultConfig: CalendarViewConfig = {
@@ -106,12 +113,16 @@ export const Calendar: React.FC<CalendarProps> = ({
   useMacroCategories = false,
   calendarSettings = null,
   eventSources: _eventSources,
-  filters,
+  filters: _legacyFilters,
   calendarFilters,
+  onFiltersChange,
+  availableDepartments,
+  isAdmin,
   selectedMacroCategory,
   onMacroCategoryClose,
   onMacroCategorySelect,
   onMacroDataUpdated,
+  onDatesSet,
 }) => {
 
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
@@ -119,6 +130,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [selectedDate, setSelectedDate] = useState<Date | null>(null) // ✅ Traccia giorno selezionato
   const [calendarKey, setCalendarKey] = useState(0) // ✅ Force re-mount quando events cambiano
   const [macroEventsKey, setMacroEventsKey] = useState(0) // ✅ Force refresh dati macro
+  const [visibleRangeKey, setVisibleRangeKey] = useState(0) // Trigger per ri-applicare fc-day-closed su navigazione
 
   const { events: macroCategoryEvents } = useMacroCategoryEvents(
     calendarSettings?.fiscal_year_end ? new Date(calendarSettings.fiscal_year_end) : undefined,
@@ -128,6 +140,124 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   const calendarRef = useRef<FullCalendar>(null)
   const finalConfig = { ...defaultConfig, ...config }
+
+  // DEBUG: misura larghezze colonne dopo render per diagnosi bug "weekend unito"
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const headerCells = document.querySelectorAll('.fc-col-header-cell')
+      const dayCells = document.querySelectorAll('.fc-daygrid-day')
+
+      if (headerCells.length > 0) {
+        const headerWidths: Record<string, number> = {}
+        headerCells.forEach((cell) => {
+          const dayClass = Array.from(cell.classList).find(c => c.startsWith('fc-day-'))
+          const width = (cell as HTMLElement).offsetWidth
+          headerWidths[dayClass || 'unknown'] = width
+        })
+        console.log('[Calendar DEBUG] Header column widths:', headerWidths)
+
+        // Controlla se c'è disparità di larghezze
+        const widths = Object.values(headerWidths)
+        const min = Math.min(...widths)
+        const max = Math.max(...widths)
+        if (max - min > 10) {
+          console.warn(`[Calendar DEBUG] COLONNE NON UNIFORMI! min=${min}px, max=${max}px, delta=${max - min}px`)
+        } else {
+          console.log(`[Calendar DEBUG] Colonne uniformi: min=${min}px, max=${max}px, delta=${max - min}px`)
+        }
+      }
+
+      // Misura anche le prime 7 celle del body (prima riga)
+      if (dayCells.length >= 7) {
+        const firstRowWidths: { day: string; width: number; classes: string }[] = []
+        for (let i = 0; i < 7; i++) {
+          const cell = dayCells[i] as HTMLElement
+          firstRowWidths.push({
+            day: cell.getAttribute('data-date') || `cell-${i}`,
+            width: cell.offsetWidth,
+            classes: cell.className,
+          })
+        }
+        console.log('[Calendar DEBUG] First row cell widths:', firstRowWidths)
+      }
+
+      // DEBUG CRITICO: verifica se fc-day-closed è applicata a sabato/domenica
+      const closedCells = document.querySelectorAll('.fc-day-closed')
+      const satCells = document.querySelectorAll('.fc-day-sat')
+      const sunCells = document.querySelectorAll('.fc-day-sun')
+      console.log(`[Calendar DEBUG] fc-day-closed cells: ${closedCells.length}`)
+      console.log(`[Calendar DEBUG] fc-day-sat cells: ${satCells.length}, con fc-day-closed: ${document.querySelectorAll('.fc-day-sat.fc-day-closed').length}`)
+      console.log(`[Calendar DEBUG] fc-day-sun cells: ${sunCells.length}, con fc-day-closed: ${document.querySelectorAll('.fc-day-sun.fc-day-closed').length}`)
+      if (closedCells.length === 0 && calendarSettings?.is_configured) {
+        console.error('[Calendar DEBUG] BUG CONFERMATO: calendarSettings configurate ma NESSUNA cella ha fc-day-closed!')
+      }
+
+      // Log configurazione attuale
+      console.log('[Calendar DEBUG] calendarSettings:', {
+        is_configured: calendarSettings?.is_configured,
+        open_weekdays: calendarSettings?.open_weekdays,
+        business_hours_keys: calendarSettings?.business_hours ? Object.keys(calendarSettings.business_hours) : null,
+      })
+    }, 1000) // Aspetta 1s dopo render per misurare larghezze finali
+
+    return () => clearTimeout(timer)
+  }, [calendarSettings, calendarKey, macroEventsKey])
+
+  // FIX CRITICO: applica fc-day-closed via DOM direttamente, senza dipendere da dayCellDidMount
+  // dayCellDidMount viene chiamato SOLO al mount delle celle e se calendarSettings non è
+  // ancora caricato in quel momento, le celle non ricevono MAI la classe fc-day-closed.
+  // Questo useEffect si attiva quando calendarSettings cambia e applica le classi direttamente.
+  useEffect(() => {
+    if (!calendarSettings?.is_configured) return
+
+    // Ritarda leggermente per assicurarsi che FullCalendar abbia finito il render
+    const applyTimer = setTimeout(() => {
+      const cells = document.querySelectorAll('.fc-daygrid-day')
+      let appliedCount = 0
+      let alreadyClosedCount = 0
+      let debugSamples: { dateStr: string; dayOfWeek: number; isClosedWeekday: boolean; hasFcDayClosed: boolean }[] = []
+
+      cells.forEach(cell => {
+        const dateStr = cell.getAttribute('data-date')
+        if (!dateStr) return
+
+        const date = new Date(dateStr + 'T00:00:00')
+        const dayOfWeek = date.getDay()
+        const isClosedWeekday = !calendarSettings.open_weekdays.includes(dayOfWeek)
+        const isSpecificClosure = calendarSettings.closure_dates.includes(dateStr)
+        const hasFcDayClosed = cell.classList.contains('fc-day-closed')
+
+        // Log campione: prime 7 celle + tutte le sat/sun
+        if (debugSamples.length < 7 || dayOfWeek === 0 || dayOfWeek === 6) {
+          debugSamples.push({ dateStr, dayOfWeek, isClosedWeekday, hasFcDayClosed })
+        }
+
+        if (isClosedWeekday || isSpecificClosure) {
+          if (!hasFcDayClosed) {
+            cell.classList.add('fc-day-closed')
+            appliedCount++
+          } else {
+            alreadyClosedCount++
+          }
+
+          // Icona spiaggia solo per chiusure specifiche (non settimanali ricorrenti)
+          if (isSpecificClosure && !cell.querySelector('.fc-day-beach-icon')) {
+            const beachIcon = document.createElement('div')
+            beachIcon.className = 'fc-day-beach-icon'
+            beachIcon.innerHTML = '🏖️'
+            cell.querySelector('.fc-daygrid-day-frame')?.appendChild(beachIcon)
+          }
+        } else {
+          cell.classList.remove('fc-day-closed')
+        }
+      })
+
+      console.log(`[Calendar FIX] Applicato fc-day-closed a ${appliedCount} nuove celle, ${alreadyClosedCount} già chiuse (totale: ${cells.length})`)
+      console.log('[Calendar FIX] Campione celle:', debugSamples)
+    }, 100)
+
+    return () => clearTimeout(applyTimer)
+  }, [calendarSettings, calendarKey, macroEventsKey, visibleRangeKey])
 
   const calendarView = currentView === 'year'
     ? 'multiMonthYear'
@@ -187,7 +317,16 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   useEffect(() => {
     setCalendarKey(prev => prev + 1)
-  }, [events.length])
+  }, [
+    events.length,
+    // FIX: re-mount calendario quando calendarSettings cambia,
+    // altrimenti dayCellDidMount/dayHeaderDidMount non vedono le settings
+    // e fc-day-closed non viene mai applicata alle celle
+    calendarSettings?.is_configured,
+    // Stringify per deep comparison (l'array potrebbe cambiare identità senza cambiare contenuto)
+    JSON.stringify(calendarSettings?.open_weekdays),
+    JSON.stringify(calendarSettings?.closure_dates),
+  ])
 
   const handleEventClick = useCallback(
     (clickInfo: { event: { extendedProps?: { originalEvent?: any; type?: string; category?: MacroCategory; items?: any[] }; start: Date | null } }) => {
@@ -352,19 +491,23 @@ export const Calendar: React.FC<CalendarProps> = ({
     )
   }
 
+  const showHeaderFilters = calendarFilters != null && onFiltersChange != null
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-      {/* Filtri */}
-      {filters && (
-        <div className="px-4 py-3 border-b border-gray-200">
-          {filters}
-        </div>
-      )}
-
-      {/* Legenda rimossa: era duplicata con i filtri funzionanti */}
-
-      {/* Calendar Content */}
+      {/* Calendar Content: header con filtri tipo evento + toolbar FC */}
       <div className="p-4">
+        {/* Filtri compatti nell'header: chips tipo evento (e Reparti per admin) */}
+        {showHeaderFilters && (
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-gray-100 mb-3">
+            <CalendarHeaderFilters
+              filters={calendarFilters}
+              onFiltersChange={onFiltersChange}
+              availableDepartments={availableDepartments}
+              isAdmin={isAdmin}
+            />
+          </div>
+        )}
         <div className="calendar-container">
           <FullCalendar
             ref={calendarRef}
@@ -376,7 +519,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               multiMonthPlugin,
             ]}
             initialView={calendarView}
-            key={`${calendarView}-${calendarKey}`}
+            key={useMacroCategories ? `${calendarView}-${macroEventsKey}` : `${calendarView}-${calendarKey}`}
             headerToolbar={finalConfig.headerToolbar}
             customButtons={customButtons}
             height={finalConfig.height}
@@ -393,22 +536,35 @@ export const Calendar: React.FC<CalendarProps> = ({
             eventClick={handleEventClick}
             select={handleDateSelect}
             dateClick={handleDayClick}
+            datesSet={(arg) => {
+              // Trigger ri-applicazione fc-day-closed su navigazione mese/settimana
+              setVisibleRangeKey(prev => prev + 1)
+              if (onDatesSet) onDatesSet(arg.start, arg.end)
+            }}
             dayCellDidMount={(arg) => {
+              const date = new Date(arg.date)
+              const dayOfWeek = date.getDay()
               if (!calendarSettings?.is_configured) return
 
-              const date = new Date(arg.date)
-              const dateString = date.toISOString().split('T')[0]
-              // const dayOfWeek = date.getDay()
+              // Usa formato locale (non UTC) per evitare shift di giorno
+              const year = date.getFullYear()
+              const month = String(date.getMonth() + 1).padStart(2, '0')
+              const day = String(date.getDate()).padStart(2, '0')
+              const dateString = `${year}-${month}-${day}`
 
-              const isClosureDate = calendarSettings.closure_dates.includes(dateString)
+              const isSpecificClosureDate = calendarSettings.closure_dates.includes(dateString)
+              const isClosedWeekday = !calendarSettings.open_weekdays.includes(dayOfWeek)
 
-              if (isClosureDate) {
+              if (isSpecificClosureDate || isClosedWeekday) {
                 arg.el.classList.add('fc-day-closed')
 
-                const beachIcon = document.createElement('div')
-                beachIcon.className = 'fc-day-beach-icon'
-                beachIcon.innerHTML = '🏖️'
-                arg.el.querySelector('.fc-daygrid-day-frame')?.appendChild(beachIcon)
+                // Icona solo per chiusure specifiche, non per chiusure settimanali ricorrenti
+                if (isSpecificClosureDate) {
+                  const beachIcon = document.createElement('div')
+                  beachIcon.className = 'fc-day-beach-icon'
+                  beachIcon.innerHTML = '🏖️'
+                  arg.el.querySelector('.fc-daygrid-day-frame')?.appendChild(beachIcon)
+                }
               }
             }}
             dayHeaderDidMount={(arg) => {
@@ -416,6 +572,7 @@ export const Calendar: React.FC<CalendarProps> = ({
 
               const dayOfWeek = arg.dow
               const hours = calendarSettings.business_hours[dayOfWeek.toString()]
+              const isClosedWeekday = !calendarSettings.open_weekdays.includes(dayOfWeek)
 
               if (hours && hours.length > 0) {
                 const hoursText = hours.map(h => `${h.open}-${h.close}`).join(' · ')
@@ -423,7 +580,21 @@ export const Calendar: React.FC<CalendarProps> = ({
                 hoursEl.className = 'fc-col-header-hours'
                 hoursEl.textContent = hoursText
                 arg.el.appendChild(hoursEl)
+              } else if (isClosedWeekday) {
+                // FIX: placeholder con stessa struttura per mantenere larghezza colonne uniforme
+                const closedEl = document.createElement('div')
+                closedEl.className = 'fc-col-header-hours fc-col-header-closed'
+                closedEl.textContent = 'Chiuso'
+                arg.el.appendChild(closedEl)
               }
+
+              // DEBUG: log larghezze header per diagnosi bug colonne unite
+              console.log(`[Calendar DEBUG] dayHeaderDidMount dow=${dayOfWeek}`, {
+                isClosedWeekday,
+                hasHours: !!(hours && hours.length > 0),
+                headerWidth: arg.el.offsetWidth,
+                headerText: arg.el.textContent,
+              })
             }}
             // ✅ DRAG AND DROP - DISABILITATO PER ANALISI CODICE
             // eventDrop={handleEventDrop}
@@ -858,27 +1029,8 @@ export const Calendar: React.FC<CalendarProps> = ({
           filter: drop-shadow(0 2px 4px rgba(99, 102, 241, 0.2));
         }
 
-        /* Day closed styling */
-        .fc-day-closed {
-          background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
-          position: relative;
-          opacity: 1 !important;
-        }
-
-        .fc-day-closed::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-image:
-            radial-gradient(circle at 20% 80%, rgba(251, 191, 36, 0.15) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(96, 165, 250, 0.1) 0%, transparent 50%);
-          pointer-events: none;
-        }
-
-        /* Beach icon for closed days */
+        /* 🔧 Stili fc-day-closed spostati in calendar-custom.css per evitare duplicazione
+           Beach icon for closed days */
         .fc-day-beach-icon {
           position: absolute;
           top: 50%;
@@ -888,6 +1040,11 @@ export const Calendar: React.FC<CalendarProps> = ({
           opacity: 0.6;
           pointer-events: none;
           z-index: 1;
+        }
+
+        /* FIX: forza larghezza colonne uguali (100%/7) per evitare compressione colonne chiuse */
+        .fc .fc-col-header-cell {
+          width: 14.285% !important;
         }
 
         /* Business hours in column header */
@@ -905,6 +1062,14 @@ export const Calendar: React.FC<CalendarProps> = ({
           display: block;
           word-break: break-word;
           letter-spacing: 0.3px;
+        }
+
+        /* Variante per giorni chiusi */
+        .fc-col-header-hours.fc-col-header-closed {
+          background-color: rgba(56, 189, 248, 0.1);
+          color: #0284c7;
+          font-style: italic;
+          font-weight: 600;
         }
 
         .fc-col-header-cell {
