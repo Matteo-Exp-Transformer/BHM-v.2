@@ -25,9 +25,9 @@
 |------|-------------|------|
 | **ASSOCIAZIONE_NOME_UTENTE_TEMPERATURE.md** | Report completo implementazione associazione nome utente | Report |
 | **REPORT_RECURRENCE_CONFIG_IMPLEMENTATION.md** | Report implementazione recurrence_config per manutenzioni | Report |
-| **Debug ONboarding step 4/** | Cartella con fix bug validazione ConservationStep | Fix |
+| **Debug-Step4/** | Cartella con fix bug validazione ConservationStep | Fix |
 
-### Debug ONboarding step 4
+### Debug-Step4
 
 | File | Descrizione |
 |------|-------------|

@@ -3,23 +3,59 @@
 
 ---
 
-## STATO ATTUALE (Verificato 2026-01-31)
+## STATO ATTUALE (Verificato 2026-02-05)
 
-### VERDETTO: **PRONTO PER PRODUZIONE + NUOVE FEATURES**
+### VERDETTO: **PRONTO PER PRODUZIONE + DOCUMENTAZIONE ALLINEATA**
 
 | Metrica | Valore |
 |---------|--------|
 | Funzionalità Implementate | **100%** |
 | Bug Risolti | **10/10** |
 | Blockers per Merge | **0** |
-| Migration DB | **Applicata (018, 019, 020, 021)** |
+| Migration DB | **Applicata (015, 018, 019, 020, 021)** |
 | Test Manuale | **PASS** |
 | Profili HACCP | **5 profili × 4 categorie elettrodomestico** |
-| Nuove Features | Profili HACCP ✅ + Immagini ✅ + Layout Split ✅ + Nome Utente ✅ + Pulsante Calendario ✅ + **Sistema 3 Tab Temperature** ✅ |
+| Nuove Features | Profili HACCP ✅ + Immagini ✅ + Layout Split ✅ + Nome Utente ✅ + Pulsante Calendario ✅ + **Sistema 3 Tab Temperature** ✅ + **Tolleranza ±1°C Unica** ✅ + **Campi Temperature Salvati** ✅ |
+| Documentazione | **Allineata al codice (v3.2.0)** ✅ |
 
 ---
 
-## SESSIONE CORRENTE (30-31-01-2026)
+## SESSIONE CORRENTE (05-02-2026)
+
+### Allineamento Documentazione Conservation (v3.2.0) ✅
+
+**Obiettivo**: Allineare tutta la documentazione delle Conoscenze-Definizioni per la funzionalità Conservation allo stato reale del codice e ai report di lavoro precedenti.
+
+**Report di Riferimento**: `REPORT_UNIFICATO_ALLINEAMENTO_CONSERVAZIONE_2026-02-05.md` (workspace qdx) - Sintesi del lavoro di 4 agenti su allineamento documentazione vs codice vs report sessioni precedenti.
+
+**Implementazione**:
+- ✅ **CONSERVATION_PAGE.md**: Aggiornato con v3.2.0 (struttura 3 tab, tolleranza ±1°C, campi salvati); rimossa limitazione "Real-time non implementati"; aggiornato bug modal con comportamento atteso
+- ✅ **TEMPERATURE_READINGS_SECTION.md**: Descrizione 3 tab (Stato Corrente/Storico/Analisi), tolleranza ±1°C unica, campi salvati (method, notes, photo_evidence, recorded_by migration 015), calcolo stato conforme/critico
+- ✅ **ADD_TEMPERATURE_MODAL.md**: Tolleranza ±1°C ovunque (sostituito ±2/±3/±5), campi salvati aggiornati, comportamento chiusura modal, funzioni getToleranceRange e getStatusInfo allineate
+- ✅ **ADD_POINT_MODAL.md**: Aggiunta descrizione blast = 1 manutenzione (solo Sanificazione) in funzione `getRequiredMaintenanceTasks`
+- ✅ **SCHEDULED_MAINTENANCE_SECTION.md**: Sostituito "settimanale"/"questa settimana" con "giornaliero"/"oggi"/"prossima per data" dove applicabile (badge, scopo, descrizioni)
+- ✅ **00_MASTER_INDEX_CONSERVATION.md**: Aggiornato con nuova sessione 05-02-2026 e stato documentazione allineata
+
+**Stato Unificato (controverificato workspace qdx)**:
+- **Tolleranza**: ±1°C unica per tutti i tipi (correctiveActions.ts TOLERANCE_C = 1.0; dentro = conforme, fuori = critico)
+- **Campi salvati**: conservation_point_id, temperature, recorded_at, method, notes, photo_evidence, recorded_by, company_id (migration 015)
+- **3 Tab Temperature**: Stato Corrente (griglia TemperaturePointStatusCard senza blast), Storico (TemperatureHistorySection), Analisi (TemperatureAnalysisTab)
+- **Abbattitore**: blast = 1 manutenzione (solo Sanificazione); escluso da griglia temperatura; no rilevamento temperatura
+- **Real-time**: Implementato (useConservationRealtime v3.0.0)
+- **Chiusura modal**: Comportamento atteso = chiusura con X, Annulla, overlay, dopo salvataggio riuscito
+- **Manutenzioni**: Pallino giornaliero (verde = nulla oggi, giallo = da fare oggi, rosso = in ritardo); dopo completamento oggi mostra prossima per data
+
+**File chiave**:
+- `Production/Conoscenze_congelate/APP_DEFINITION/03_CONSERVATION/Conoscenze-Definizioni/*.md` — File di definizione aggiornati
+- [REPORT_UNIFICATO_ALLINEAMENTO_CONSERVAZIONE_2026-02-05.md](../../.cursor/worktrees/BHM-v.2/qdx/Production/Conoscenze_congelate/APP_DEFINITION/03_CONSERVATION/Lavoro/REPORT_UNIFICATO_ALLINEAMENTO_CONSERVAZIONE_2026-02-05.md) — Report agente unificato (workspace qdx)
+
+**Status**: ✅ DOCUMENTAZIONE ALLINEATA
+
+---
+
+## SESSIONI PRECEDENTI
+
+### 30-31-01-2026
 
 ### Riorganizzazione Letture Temperature + Miglioramenti UI ⚠️ IMPLEMENTATO (da debuggare)
 
@@ -276,9 +312,10 @@ Lavoro/
 ├── ...
 ├── 21-01-2026/                      ← Centralizzazione costanti
 │   └── RIEPILOGO_SESSIONE_21_01_2026.md
-├── 22-01-2026 Nome associato.../    ← Nome utente + recurrence_config
+├── 22-01-2026-evento/               ← Nome utente + recurrence_config (+ Debug-Step4)
 │   ├── ASSOCIAZIONE_NOME_UTENTE_TEMPERATURE.md
-│   └── REPORT_RECURRENCE_CONFIG_IMPLEMENTATION.md
+│   ├── REPORT_RECURRENCE_CONFIG_IMPLEMENTATION.md
+│   └── Debug-Step4/                 ← Fix validazione ConservationStep
 ├── 23-01-2026/                      ← Fix Conservation Point Card
 │   └── REPORT_FIX_CONSERVATION_POINT_CARD_DISPLAY.md
 ├── 24-01-2026/                      ← Allineamento ConservationStep
@@ -351,6 +388,7 @@ Lavoro/
 | **Pallino Manutenzioni programmate** (verde = nulla da completare oggi; giallo = da completare oggi; rosso = in ritardo) | ✅ | 04-02 |
 | **Completamento automatico task temperatura su "Rileva Temperatura"** (insert in maintenance_completions, visibile in Conservazione e Attività) | ✅ | 04-02 |
 | **Box "Ultima lettura" colore solo da temperatura** (verde = conforme, rosso = critico; non da stato complessivo) | ✅ | 04-02 |
+| **Documentazione allineata al codice** (Conoscenze-Definizioni v3.2.0: tolleranza ±1°C, campi salvati, 3 tab, giornaliero) | ✅ | 05-02 |
 
 ---
 
@@ -409,7 +447,8 @@ npm run test -- --run  # Test
 | **31-01-2026** | **Centralizzazione tolleranza + Badge cliccabile** | **±1°C unificato, badge scroll/highlight, nome utente, colori critico** |
 | **31-01-2026** | **Abbattitore no rilevamento temperatura + UI card** | **Manutenzioni blast, sezione temp senza Abbattitore, card altezza uniforme** |
 | **01-02-2026** | **Conformità range + Abbattitore solo Sanificazione + Validazioni** | **Temp in ±1°C = conforme; blast 1 solo Sanificazione; validazioni modali** |
-| **04-02-2026** | **Manutenzioni programmate + Pallino giornaliero + Completamento automatico** | **Conteggio per tipologia (max 4); ordine fisso 4 tipi; “Mostra altre” per tutti; lettura temp soddisfa task Rilevamento Temperature** |
+| **04-02-2026** | **Manutenzioni programmate + Pallino giornaliero + Completamento automatico** | **Conteggio per tipologia (max 4); ordine fisso 4 tipi; "Mostra altre" per tutti; lettura temp soddisfa task Rilevamento Temperature** |
+| **05-02-2026** | **Allineamento Documentazione Conservation (v3.2.0)** | **Conoscenze-Definizioni allineate: tolleranza ±1°C, campi salvati, 3 tab, giornaliero vs settimanale, blast = 1, Real-time implementato** |
 
 ---
 
@@ -436,5 +475,5 @@ Per implementare o fare debug:
 ---
 
 **Fine 00_MASTER_INDEX_CONSERVATION.md**
-**Ultimo aggiornamento**: 2026-02-04
-**Status**: FEATURE COMPLETA — 5 profili HACCP × 4 categorie elettrodomestico + Sistema 3 Tab Temperature + Abbattitore (solo Sanificazione) + Conformità range ±1°C
+**Ultimo aggiornamento**: 2026-02-05
+**Status**: FEATURE COMPLETA + DOCUMENTAZIONE ALLINEATA (v3.2.0) — 5 profili HACCP × 4 categorie elettrodomestico + Sistema 3 Tab Temperature + Abbattitore (solo Sanificazione) + Conformità range ±1°C + Tolleranza unica ±1°C + Campi temperature salvati (migration 015)
