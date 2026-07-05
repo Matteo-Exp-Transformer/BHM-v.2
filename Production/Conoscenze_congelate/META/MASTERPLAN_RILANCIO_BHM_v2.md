@@ -16,6 +16,10 @@ Due sessioni senior lavorano **in parallelo** su questo masterplan. Per non sovr
 **possiede** sezioni disgiunte e lavora primariamente nel proprio handoff. **Fonte di verità unica** resta
 questo file; cambiano solo le *mani* che scrivono dove.
 
+> **Stato al 2026-07-06**: ✅ **Track B (skill-system / processo) è CONCLUSO** — §14 compilato (14.1–14.6) + `DESIGN_SKILL_CONSULENTI.md`.
+> 🟢 **Track A (UI) resta attivo**. Non essendoci più due mani in scrittura contemporanea, le regole anti-collisione
+> qui sotto sono **rilassate**: il Track A può toccare le sezioni condivise quando serve (annotando nel proprio handoff).
+
 | Track | Handoff cold-start | Possiede (scrive qui) | NON tocca |
 |-------|--------------------|-----------------------|-----------|
 | **A · UI** | [`HANDOFF_SESSIONE_SENIOR_UI.md`](./HANDOFF_SESSIONE_SENIOR_UI.md) | **§13** + cartella [`MOCKUP_UI/`](./MOCKUP_UI/) | tutto il resto |
@@ -392,6 +396,7 @@ Temperamento e interazione scelti per tenere insieme la tensione-identità del p
 3. 🔖 **Timbro di fine turno**: un **sigillo si imprime** (scale-down rapido + aptico secco), la lista di oggi si **acquieta/desatura**; *"Il tuo l'hai fatto"* — **dignità, non controllo**.
 
 ### 13.6 Regole di micro-interazione (juice, trasversali)
+- **⏱️ Tempo = pulizia nitida e tranquilla, non fretta** (feedback owner, 2026-07-06) — **regola GLOBALE di sistema**: le animazioni non devono dare sensazione di urgenza/scatto, ma di calma ordinata. Durate più lunghe, easing morbido, le pause fanno parte del gesto. Vale per **tutte** le coreografie (onboarding, cascata, rivelazione passi, micro-feedback). _(Nota: il default va tarato in fase di implementazione; i mockup attuali sono ancora troppo rapidi.)_
 - **UI ottimistica**: l'azione sembra già fatta; la magia è nel **feedback**, mai nell'attesa (§10.1). Nessuna animazione costa tempo in ② (il fare).
 - **Aptico > sonoro** (cucina rumorosa): vibrazione breve sul completato.
 - **Voce umana da cucina**: *"Fatto!"*, non *"Operazione completata"*.
@@ -411,8 +416,12 @@ Mockup HTML self-contained in [`MOCKUP_UI/`](./MOCKUP_UI/00_INDICE_MOCKUP.md) �
 | 2 | **un Reparto** (mappa punti + 🌡️ dallo spazio + 💧 assaggio) — [`02_REPARTO_cucina.html`](./MOCKUP_UI/02_REPARTO_cucina.html) | ✅ approvato owner |
 | 3 | **Form a cascata** (💧 che si scioglie) — [`03_FORM_CASCATA.html`](./MOCKUP_UI/03_FORM_CASCATA.html) | ✅ approvato owner ("molto bello") · ritmo cascata rallentato |
 | 4 | **Regia** overview (🫧 respiro + 📦 "Genera dossier", su tablet) — [`04_REGIA_titolare.html`](./MOCKUP_UI/04_REGIA_titolare.html) | ✅ approvato owner ("bellissimo") |
+| 5 | **Onboarding titolare** v2 (barra cantiere chiudibile/navigabile · 🌡️ temperatura dal profilo read-only · card che si raggruppa e vola nella sidebar) — [`05_ONBOARDING_admin.html`](./MOCKUP_UI/05_ONBOARDING_admin.html) | 🟢 owner: "il resto va bene ottimo" — **polish pendente: rallentare le animazioni** (§13.6) |
 
-**Serie base completa** (4/4 approvati). Nota interazione da applicare in produzione: rivelazione progressiva **più lenta e in dissolvenza**, senza auto-scroll brusco (vedi `MOCKUP_UI/00_INDICE_MOCKUP.md` → Note di interazione).
+**Serie base completa** (4/4 approvati) + **mockup 5 Onboarding v2** (impianto approvato, resta il polish del tempo animazioni).
+Prima del mockup 5 è stata scritta la **mappa dei 7 step onboarding** ([`MOCKUP_UI/MAPPATURA_ONBOARDING_STEP.md`](./MOCKUP_UI/MAPPATURA_ONBOARDING_STEP.md), fonte legacy: cosa chiediamo + scrittura DB).
+Note interazione da applicare in produzione: rivelazione progressiva **più lenta e in dissolvenza** senza auto-scroll brusco **e** il **tempo calmo globale** (§13.6) — vedi `MOCKUP_UI/00_INDICE_MOCKUP.md` → Note di interazione.
+**Residuo Track A**: replicare il «profilo punto di conservazione» anche nel **modal della pagina Conservazione** (mockup a sé).
 
 ---
 
@@ -514,4 +523,4 @@ Fable, all'installazione, **propone un vocabolario base** invece di partire da z
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-05 · §13 direzione UI (Track A) + **§14 compilato** (Track B: installazione `docs/skill-system/`, fonte-regole HACCP + Change-Control, RULE globali, **§14.6 vocabolario base**) + regole sessioni parallele
+**Ultimo aggiornamento**: 2026-07-06 · **Track B concluso** (§14 completo + `DESIGN_SKILL_CONSULENTI.md`) · Track A: §13 direzione UI + **mockup 5 Onboarding v2** + mappa 7 step onboarding + **regola globale tempo animazioni §13.6** (polish rallentamento pendente)

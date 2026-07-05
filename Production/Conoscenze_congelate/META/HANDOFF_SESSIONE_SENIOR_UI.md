@@ -3,13 +3,15 @@
 > **Stato**: 🟢 ATTIVO · **Creato**: 2026-07-05 · **Tipo**: handoff cold-start per agente senior
 > **Fonte di verità**: [`MASTERPLAN_RILANCIO_BHM_v2.md`](./MASTERPLAN_RILANCIO_BHM_v2.md) — questo file
 > orienta, il masterplan **decide**. Se divergono, vince il masterplan (e allinealo).
-> **Dove siamo**: la **direzione UI è decisa e blindata (§13)** e la **serie base di 4 mockup HTML è
-> completata e approvata** dall'owner. Questa sessione **continua** la UI: rifiniture + schermate mancanti
-> → poi la traduzione in componenti.
+> **Dove siamo (2026-07-06)**: direzione UI blindata (§13); **serie base 4/4 approvata**; **mockup 5
+> Onboarding titolare v2** fatto e con impianto approvato dall'owner ("il resto va bene ottimo"). Prima del
+> mockup 5 è stata scritta la **mappa dei 7 step** (`MOCKUP_UI/MAPPATURA_ONBOARDING_STEP.md`). **Polish
+> pendente**: rallentare **tutte** le animazioni (tempo calmo, §13.6) — annotato, non ancora applicato.
 
-> ⚙️ **Sei il Track A (UI).** Gira in **parallelo** al Track B (skill-system, handoff
-> `HANDOFF_SESSIONE_SENIOR_SKILL_SYSTEM.md`). Leggi le regole anti-collisione nel masterplan §0.
-> **Tu possiedi**: masterplan **§13** + cartella **`MOCKUP_UI/`**. **Non toccare**: §14 e i file skill-system.
+> ⚙️ **Sei il Track A (UI).** ✅ **Track B (skill-system) è CONCLUSO** (§14 completo + `DESIGN_SKILL_CONSULENTI.md`,
+> committato). Non ci sono più due mani in scrittura: le regole anti-collisione §0 sono **rilassate** — puoi
+> toccare le sezioni condivise quando serve, annotando qui. **Tu possiedi** comunque **§13** + `MOCKUP_UI/`.
+> **Non riscrivere** l'handoff/§14 del Track B (li mantiene la sua sessione).
 
 ---
 
@@ -73,9 +75,11 @@ In [`MOCKUP_UI/`](./MOCKUP_UI/) — HTML self-contained, **doppio uso**: fonte d
 - Mantenere il **ritmo lento** dello scioglimento (didattico).
 
 ### 4.2 Schermate ancora da mockup-are (ordine consigliato)
-1. **Onboarding / prima-volta del dipendente** — la North-Star §10.2: apre e *vede la sua cucina* (accoglienza, scoperta non-wizard).
+- ✅ **Onboarding titolare** — fatto (mockup 5 v2). Resta: applicare il **tempo calmo** alle animazioni (§13.6).
+- 🔜 **Modal «profilo punto di conservazione»** nella **pagina Conservazione** — replicare il concetto profilo (attrezzatura → profilo → temperatura fissa + categorie) fuori dall'onboarding. _(residuo emerso dal feedback owner sul mockup 5.)_
+1. **Onboarding / prima-volta del dipendente** — la North-Star §10.2: apre e *vede la sua cucina* (accoglienza, scoperta non-wizard). Sarà una versione **più corta** dell'onboarding titolare.
 2. **Scorte** (📦) — inventario → lista spesa (filtri per reparto, checkbox, export).
-3. **① Setup flows** dentro **Regia** — builder reparti/punti (schematico §12.3), staff & ruoli, parametri HACCP; qui vive l'onboarding del titolare.
+3. **① Setup flows** dentro **Regia** — builder reparti/punti (schematico §12.3), staff & ruoli, parametri HACCP.
 4. **Stati di eccezione/alert** — nastro gentile, note-eccezione, come emergono senza urlare.
 5. **Reparti multipli** — switcher + mappa navigabile quando l'utente ha più reparti assegnati.
 
@@ -108,4 +112,4 @@ Da mockup approvati → **componenti React riusabili**, con i token del §13 com
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-05 · serie base 4 mockup completata e approvata; direzione §13 blindata; handoff riscritto per la continuazione del Track A
+**Ultimo aggiornamento**: 2026-07-06 · mockup 5 Onboarding titolare v2 pubblicato (5 feedback risolti) + mappa 7 step onboarding scritta prima della UI · regola globale **tempo animazioni calmo** (§13.6, polish pendente) · **Track B concluso** (anti-collisione rilassata) · prossimo: rallentare animazioni + modal profilo pagina Conservazione
