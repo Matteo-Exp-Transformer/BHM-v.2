@@ -24,6 +24,7 @@ questo file; cambiano solo le *mani* che scrivono dove.
 |-------|--------------------|-----------------------|-----------|
 | **A · UI** | [`HANDOFF_SESSIONE_SENIOR_UI.md`](./HANDOFF_SESSIONE_SENIOR_UI.md) | **§13** + cartella [`MOCKUP_UI/`](./MOCKUP_UI/) | tutto il resto |
 | **B · Skill-system / processo** | [`HANDOFF_SESSIONE_SENIOR_SKILL_SYSTEM.md`](./HANDOFF_SESSIONE_SENIOR_SKILL_SYSTEM.md) | **§14** + file skill-system (staging `_skill-system-v0/`, `IDEE_ESPERIENZA.md`, template report, entry Cursor/Codex) | §13, `MOCKUP_UI/` |
+| **C · Team & delega** | — (kit auto-contenuto) | **§15** + cartella [`COLLABORAZIONE_TEAM/`](./COLLABORAZIONE_TEAM/) | §13, §14, `MOCKUP_UI/` |
 
 **Regole anti-collisione:**
 1. Ognuno modifica **solo le sezioni che possiede**. Le sezioni condivise "di lettura" (§1–§12) si
@@ -191,12 +192,30 @@ Risolte in seduta UI 2026-07-05:
 - [x] Device → **responsive-everywhere**: desktop/tablet come banco sempre-acceso, mobile perfetto ovunque (§13.3)
 - [x] Direzione visiva/interazione → §13 (clinico-caldo · terracotta · card-focus · pattern gesti-firma)
 
+Risolte in workstream **Mappatura area-per-area** (2026-07-06 — 5 mappe + intervista owner):
+- [x] **Mappatura area-per-area** (workstream §6.4) → **fatta**: 5 mappe in [`MAPPATURA_AREE/`](./MAPPATURA_AREE/00_INDICE.md) (Fondamenta · Reparti · Oggi · Regia · Scorte), codice+DB come verità, verdetto riuso per area
+- [x] **Dettaglio "audit-grade"** → deciso via decisioni beta 1 e 8 (immutabilità/append-only da subito, storno invece di cancellazione, lettura temp con metadato obbligatorio + foto/note opzionali); campi in [`MAPPATURA_AREE/MAPPA_Fondamenta_DB-tipi.md`](./MAPPATURA_AREE/MAPPA_Fondamenta_DB-tipi.md)
+
+**Decisioni beta owner** (intervista 2026-07-06 — dettaglio e impatto per-mappa in [`MAPPATURA_AREE/DECISIONI_OWNER_BETA.md`](./MAPPATURA_AREE/DECISIONI_OWNER_BETA.md)):
+1. **Registro immutabile/append-only da subito** — nessuna cancellazione fisica; `uncomplete` = **storno** tracciato (non DELETE).
+2. **Dashboard ricca con dati reali** — no dati fabbricati; `/dashboard` monta la vista vera.
+3. **Liste spesa in beta** — deploy delle 4 RPC shopping + unificazione dual-stack.
+4. **`companies` snella** — solo P.IVA + ragione sociale, **niente** gestione licenza in beta.
+5. **Notifiche = solo alert in-app** — niente tabella `notification_preferences`/canali esterni in beta.
+6. **HACCP in Settings = sola lettura** — le soglie vivono in `src/compliance/haccp-rules.ts` (§14.3), non editabili da UI.
+7. **🆕 Timbro di fine turno = feature dedicata** — schema + UI propri da progettare (già gesto-firma §10.3, ora con casa dati sua). *Vedi nota scope sotto.*
+8. **Lettura temperatura** — temperatura + metodo **obbligatori**; foto e note **opzionali**.
+9. **3 ruoli attivi** — titolare / responsabile / dipendente (risolve il modello ruoli doppio legacy).
+10. **Ciclo scadenze completo** — `expired_at` + reinserimento (`previous_product_id`, `reinsertion_count`, `archived_at`) + storico.
+
+> 🆕 **Nota scope (dec. 7)**: il *timbro di fine turno* passa da semplice "timestamp sessione solo orario" (§5) a **feature con schema e UI dedicati**. È l'unico ampliamento di scope emerso dalla mappatura: resta dentro i 3 gesti-firma (§10.3), non introduce nuove aree.
+
 Ancora aperte:
 - [ ] Editor mappa ristorante: builder strutturato (beta) vs disegno libero (roadmap) — §12.3, confermato decoupling
 - [ ] Definire come opera la skill "Ristoratore" (generazione azienda-X, output = mansioni ricorrenti) e la lista dei procedimenti automatizzabili
 - [ ] Quanto minimo di sincronizzazione multi-utente serve davvero in beta
-- [ ] Dettaglio "audit-grade": quali campi/immutabilità/retention servono per l'export-controllo
-- [ ] Mappatura area-per-area (workstream §6.4) — il grosso del lavoro collaborativo
+- [ ] Mappatura → **marcare** i doc `APP_DEFINITION` contraddittori (non riscriverli) — fase separata
+- [ ] **⚠️ Ripristinare il token MCP** sul progetto BHM `hjteuounjwkadmsbsmdm` e **ri-verificare lo schema live** prima che Fable scriva migration (le mappe usano lo snapshot A0 del 05-07)
 - [ ] Sedute UI: dopo lo scheletro, prima IA poi estetica
 - [ ] Piano verifiche con professionisti HACCP (chi, quando, cosa validare)
 
@@ -523,4 +542,42 @@ Fable, all'installazione, **propone un vocabolario base** invece di partire da z
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-06 · **Track B concluso** (§14 completo + `DESIGN_SKILL_CONSULENTI.md`) · Track A: §13 direzione UI + **mockup 5 Onboarding v2** + mappa 7 step onboarding + **regola globale tempo animazioni §13.6** (polish rallentamento pendente)
+## 15. Team & delega ⭐ (Track C — kit collaborazione)
+
+> **Proprietà**: Track C. Kit auto-contenuto in [`COLLABORAZIONE_TEAM/`](./COLLABORAZIONE_TEAM/).
+> **Scopo**: dare all'owner un metodo professionale per **delegare, supervisionare, controllare e
+> contro-verificare** il lavoro di **max 2 collaboratori** su più branch, senza perdere il controllo di
+> `main`. È materiale **per l'owner umano**, non codice runtime.
+
+### 15.1 ⚠️ Attivazione — on-demand, NON prassi di default (decisione owner)
+Questo kit è una **feature che si attiva solo quando l'owner delega**: contesto caricato **su richiesta**,
+non una RULE always-on. **Owner che lavora da solo → non si carica** (nessun overhead). L'unico aggancio
+always-on ammesso è una voce nel `VOCABOLARIO` («delego»/«modalità team» → carica il kit). Per Fable:
+installarlo tra le skill/aree **caricabili**, non tra le RULE globali della bussola §2 (dettaglio in
+`COLLABORAZIONE_TEAM/01_DESIGN_METODO.md` §6.1).
+
+### 15.2 Impianto (deciso, eredita il DNA del progetto)
+- **Topologia a canale sicuro**: `feature/<task>` (collaboratore pusha) → **`integrazione`** (pre-main,
+  integra l'owner; un merge di troppo atterra qui) → **`main`** (sacro, **solo owner + suoi modelli**
+  promuovono; branch protetto). Invariante non negoziabile.
+- **Due modalità di delega** (scelte **per task**, non per persona): **Ordine di Lavoro** (prescrittivo,
+  «cosa e come» — per il collaboratore-prompt e per ogni task 🔴) · **Mandato** (a obiettivo, «cosa e
+  confini» — per il collaboratore-autonomo su task 🟢/🟠).
+- **3 gate d'accettazione** (ricalcano il Change-Control §14.3): ① macchina (build/type/lint/test) · ②
+  **controverifica visiva** del collaboratore (checklist visiva guidata dal suo agente — sostituisce lo
+  screenshot) · ③ owner (4 controlli della `CONTROVERIFICA.md` sul diff+report).
+- **Chi esegue ≠ chi integra ≠ chi promuove** (§11.5/§14.3 applicato agli umani).
+
+### 15.3 Cosa resta a Fable
+Configurare la topologia sulla repo nuova (`main`+`integrazione` protetti, collaboratori solo su
+`feature/*`); portare il kit in `docs/`; installarlo come contesto **on-demand** (§15.1). **Licenza di
+miglioramento** come §14.5, **tranne** l'invariante «`main` protetto, solo owner promuove».
+
+---
+
+**Ultimo aggiornamento**: 2026-07-06 · **Track C aggiunto** (§15 + `COLLABORAZIONE_TEAM/`: topologia
+canale sicuro, 2 modalità di delega, 3 gate, kit on-demand) · **Track B concluso** (§14 completo +
+`DESIGN_SKILL_CONSULENTI.md`) · Track A: §13 direzione UI + **mockup 5 Onboarding v2** + mappa 7 step
+onboarding + **regola globale tempo animazioni §13.6** (polish rallentamento pendente) · **Mappatura
+aree conclusa** (§8: 5 mappe `MAPPATURA_AREE/` + 10 decisioni beta owner; nuovo scope = timbro fine
+turno feature dedicata)
