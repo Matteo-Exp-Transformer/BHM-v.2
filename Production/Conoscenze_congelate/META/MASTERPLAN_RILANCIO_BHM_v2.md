@@ -463,6 +463,8 @@ Separazione **numeri ↔ senso**, ognuno con una sola casa, nessun dato scritto 
 
 > Scope Track B: definiti **collocazione + formato + procedura**. **NON** i numeri/soglie né il comportamento profondo dell'agente-ufficiale (track compliance). Fable crea il file; noi lasciamo lo stampo e le regole del gioco.
 
+> **Come si costruisce la compliance in beta** (deciso 2026-07-06): la fonte-regole la costruiamo **noi** (owner + agenti) da **materiale ufficiale online aggiornato** — ogni regola col `source_ref` alla fonte. Le regole nascono `pending` ma **usabili** (dati audit-grade); diventano `certified` quando le proponiamo al **gate umano professionale al momento della certificazione**. Dettaglio: [`DESIGN_SKILL_CONSULENTI.md`](./DESIGN_SKILL_CONSULENTI.md) §2.4-bis.
+
 ### 14.4 Primo set di RULE globali (per la bussola §2)
 
 Le 3 generiche del v0 (leggi-intero-prima-di-editare · anti-duplicazione · logger) **+**:
@@ -480,6 +482,8 @@ Le 3 generiche del v0 (leggi-intero-prima-di-editare · anti-duplicazione · log
 4. Scaffolding `aree/UFFICIALE_HACCP_SKILL.md` + `aree/RISTORATORE_SKILL.md` (comportamento profondo = altro track).
 5. Installare le RULE §14.4 nella bussola §2. Didattico: **non** attivare.
 6. **Seed del vocabolario base** (§14.6): popolare `comunicazione/VOCABOLARIO.md` con un lessico-mappa iniziale, così gli agenti non ripetono frasi lunghe («punto di conservazione»…) e chiamano ogni elemento con **un nome solo**.
+
+> **Licenza di reinterpretazione (Fable)**: gli stampi qui definiti (skill, archetipi, formati) non sono gabbie. Fable può **reinterpretare in chiave più intelligente** ciò che legge se trova una lettura migliore, dentro lo scope prodotto (migliorie «di poco» ok, «di molto» chiedi). **Eccezione dura**: numeri/norme con `source_ref` si cambiano solo via Change-Control §14.3.
 
 ### 14.6 Vocabolario base — seed per Fable (decisa) ⭐
 

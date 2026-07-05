@@ -68,13 +68,13 @@ Doppia forma (scelta owner 2026-07-06):
 ```
 docs/skill-system/aree/RISTORATORE_SKILL.md      ← come ragiona (metodo §1.1–1.3)
 docs/skill-system/aree/ARCHETIPI/
-  trattoria.md · pizzeria.md · bar.md · pasticceria.md
+  trattoria.md · pizzeria.md · bar.md · pasticceria.md · pub.md · cocktailbar.md
     → mansioni ricorrenti (chi·dove·quando·perché)
     → candidati automazione
 ```
 
-### 1.5 Archetipi beta (PROPOSTI — da confermare)
-Scelti per **stressare il prodotto in modi diversi**, non 4 uguali:
+### 1.5 Archetipi beta (CONFERMATI — 6)
+Scelti per **stressare il prodotto in modi diversi**, non copie l'uno dell'altro:
 
 | Archetipo | Cosa mette alla prova |
 |-----------|----------------------|
@@ -82,6 +82,8 @@ Scelti per **stressare il prodotto in modi diversi**, non 4 uguali:
 | **Pizzeria** (forno, impasti, lievitati) | un **reparto specializzato** ≠ cucina; conservazione impasti |
 | **Bar/caffetteria** (banco, vetrina, poca cucina) | il caso **senza cucina** — verifica che «la cucina è solo UNO dei reparti» (§12) regga |
 | **Pasticceria/gelateria** (freddo critico, semilavorati) | **compliance stringente** + lavorazioni mattutine/notturne |
+| **Pub/birreria** (spillatura, magazzino fusti/bottiglie, fritti) | **orari serali/notturni** + magazzino bevande + cucina semplice ad alto volume |
+| **Cocktailbar/restaurant** (bar cocktail + cucina ristorante) | **ibrido a doppio reparto forte**: ghiaccio/garnish/distillati × cucina piena insieme |
 
 ---
 
@@ -118,9 +120,21 @@ Legge **sempre** la fonte: `haccp-rules.ts` (numeri) + `COMPLIANCE_CONTEXT.md` (
   «registro ufficiale» la valida il **professionista umano in parallelo** — la skill **non se la arroga**.
 
 ### 2.4 Autonomia — fiducia misurabile (riuso principio v0)
-Ogni verdetto/regola nasce **`pending`**; dopo la firma di un professionista diventa **`consolidata`** e
-i casi **identici** futuri la skill li conferma da sola. Così non blocca tutto sul professionista senza
-arrogarsi la certificazione. L'**autorizzazione esplicita dell'owner** vale come firma umana (§14.3).
+Ogni verdetto/regola nasce **`pending`**; dopo la firma umana diventa **`consolidata`** e i casi
+**identici** futuri la skill li conferma da sola. Così non blocca tutto senza arrogarsi la certificazione.
+L'**autorizzazione esplicita dell'owner** vale come firma (§14.3).
+
+### 2.4-bis Come si costruisce la compliance in beta (deciso 2026-07-06)
+La fonte-regole **la costruiamo noi** (owner + agenti) da **materiale ufficiale online aggiornato**
+(normative/linee guida), non da un professionista a monte. Ogni regola porta il **`source_ref` alla
+fonte ufficiale** da cui è tratta. Il **gate-professionista è spostato al momento della certificazione**:
+- in beta le regole sono `pending` (costruite da fonte ufficiale, **usabili** perché i dati sono
+  audit-grade — coerente col decoupling §3);
+- diventano `certified` quando, cercando la certificazione «registro ufficiale», le proponiamo al
+  **gate umano professionale**.
+
+Questo tiene la beta viva senza aspettare la certificazione, e allinea perfettamente §3 (costruisci
+audit-grade ora, valida la certificazione in parallelo).
 
 ### 2.5 Il gate a due lenti in conflitto ⭐ (il nervo del prodotto)
 Quando Ufficiale dice *«obbligatorio per legge»* e Ristoratore dice *«nessuno lo farà alle 18»*:
@@ -137,6 +151,14 @@ Quando Ufficiale dice *«obbligatorio per legge»* e Ristoratore dice *«nessuno
 
 ---
 
+## 2-ter. Principio trasversale — Fable può reinterpretare (deciso 2026-07-06)
+
+Le due skill (e ogni fonte che leggono: regole, archetipi, norme) **non sono gabbie**. Fable ha licenza
+di **reinterpretare in chiave più intelligente** ciò che legge, se trova una lettura migliore — dentro
+lo scope prodotto (masterplan: migliorie «di poco» ok, «di molto» chiedi). La struttura qui definita è
+lo **stampo**, non un vincolo che spegne il giudizio. Vale per il metodo di ragionamento, non per i
+**numeri/norme** con `source_ref` (quelli si cambiano solo via Change-Control §14.3).
+
 ## 3. Collocazione (rimando a §14.2)
 - `aree/RISTORATORE_SKILL.md` — metodo di ragionamento (§1)
 - `aree/ARCHETIPI/*.md` — catalogo (§1.4–1.5)
@@ -145,4 +167,4 @@ Quando Ufficiale dice *«obbligatorio per legge»* e Ristoratore dice *«nessuno
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-06 · design **completo di entrambe le lenti**: Ristoratore (§1) + Ufficiale-HACCP (§2: mindset ispettivo, fiducia misurabile, conflitto-lenti→owner). Restano da definire i *contenuti* (soglie/norme = track compliance) e i 4 archetipi da confermare.
+**Ultimo aggiornamento**: 2026-07-06 · design **completo di entrambe le lenti** + 6 archetipi confermati + compliance costruita da fonti ufficiali (gate-professionista alla certificazione) + principio «Fable può reinterpretare». Resta il **contenuto** (soglie/norme = track compliance, da fonti ufficiali online).

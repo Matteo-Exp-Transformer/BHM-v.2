@@ -71,9 +71,11 @@ pronto per la repo nuova**, con una sola fonte di verità e tre porte d'ingresso
 ### 3.2-bis Prossimi passi per il Track B (cosa manca ancora)
 - Le decisioni sono **prese**; l'**esecuzione** (creare i file, riempire i `{{segnaposto}}`, scrivere lo scaffolding) è di **Fable** in fase installazione (§14.5) — non serve rifarla qui.
 - ✅ **Skill-consulenti — comportamento profondo DEFINITO per ENTRAMBE** (2026-07-06): [`DESIGN_SKILL_CONSULENTI.md`](./DESIGN_SKILL_CONSULENTI.md).
-  - 👨‍🍳 Ristoratore: output catalogo archetipi + invocabile; 4 archetipi **proposti** (trattoria/pizzeria/bar/pasticceria, da confermare owner).
+  - 👨‍🍳 Ristoratore: output catalogo archetipi + invocabile; **6 archetipi CONFERMATI**: trattoria · pizzeria · bar · pasticceria · pub/birreria · cocktailbar/restaurant.
   - 🛡️ Ufficiale-HACCP: mindset ispettivo (4 passi), verdetti ancorati a `rule-id`/norma, fiducia misurabile (`pending`→`consolidata`), conflitto-lenti → si scala all'owner.
-- ⏳ Ancora aperti: **contenuto/soglie** compliance (track compliance) e conferma dei 4 archetipi.
+  - **Compliance in beta**: la costruiamo noi (owner+agenti) da **fonti ufficiali online**, ogni regola col `source_ref`; gate-professionista **alla certificazione** (`pending`→`certified`).
+  - **Principio**: Fable può **reinterpretare in chiave più intelligente** (dentro scope; eccezione: numeri/norme con `source_ref` solo via Change-Control).
+- ⏳ Ancora aperto: **contenuto/soglie** compliance (track compliance, da fonti ufficiali online).
 
 ### 3.3 Confini (resta "in alto")
 - ❌ Non toccare il codice dell'app né lo schema DB. ❌ Non toccare §13 / `MOCKUP_UI/` (Track A).
