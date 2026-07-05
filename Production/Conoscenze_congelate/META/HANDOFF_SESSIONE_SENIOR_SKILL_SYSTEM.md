@@ -70,7 +70,8 @@ pronto per la repo nuova**, con una sola fonte di verità e tre porte d'ingresso
 
 ### 3.2-bis Prossimi passi per il Track B (cosa manca ancora)
 - Le decisioni sono **prese**; l'**esecuzione** (creare i file, riempire i `{{segnaposto}}`, scrivere lo scaffolding) è di **Fable** in fase installazione (§14.5) — non serve rifarla qui.
-- Se si riapre il Track B a livello *decisionale*, i temi ancora aperti sono: **comportamento profondo** delle due skill-consulenti (altro track ma va assegnato) e il **contenuto** di `COMPLIANCE_CONTEXT.md`/soglie (track compliance).
+- ✅ **Skill Ristoratore — comportamento profondo DEFINITO** (2026-07-06): [`DESIGN_SKILL_CONSULENTI.md`](./DESIGN_SKILL_CONSULENTI.md). Output = catalogo archetipi + invocabile; 4 archetipi **proposti** (trattoria/pizzeria/bar/pasticceria, da confermare owner).
+- ⏳ Ancora aperti a livello decisionale: **ragionamento profondo Ufficiale-HACCP** (§2 del design doc, sessione dedicata) e **contenuto/soglie** compliance (track compliance).
 
 ### 3.3 Confini (resta "in alto")
 - ❌ Non toccare il codice dell'app né lo schema DB. ❌ Non toccare §13 / `MOCKUP_UI/` (Track A).

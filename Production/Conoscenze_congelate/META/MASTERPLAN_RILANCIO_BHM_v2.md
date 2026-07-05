@@ -244,6 +244,7 @@ Due skill gemelle che generano e pressano i requisiti da due lati opposti. Una f
 - 👨‍🍳 **Skill "Ristoratore"** (lente operativa, NUOVA): immagina la **giornata-tipo di un'azienda X** generata con casistica variabile (N clienti, N dipendenti, fatturato, nazione…), fa emergere mansioni/attività ricorrenti, indica **cosa è automatizzabile**. Motore di scoperta dei bisogni operativi reali.
 
 > Le due lenti sono il **motore di requisiti** del prodotto: legale × reale. Fable (e l'owner) le consulta prima di validare una feature.
+> **Comportamento profondo** delle due skill: [`DESIGN_SKILL_CONSULENTI.md`](./DESIGN_SKILL_CONSULENTI.md) (Track B, 2026-07-06).
 
 ---
 
