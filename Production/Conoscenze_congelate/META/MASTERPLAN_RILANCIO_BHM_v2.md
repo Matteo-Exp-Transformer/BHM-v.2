@@ -501,6 +501,7 @@ Le 3 generiche del v0 (leggi-intero-prima-di-editare · anti-duplicazione · log
 - **HACCP-owner-override**: autorizzazione esplicita dell'owner = gate umano soddisfatto → l'agente procede; **gate-2 macchina mai saltato**.
 - **timezone** (BHM-specifica, bug ricorrente): mai `date.toISOString().split('T')[0]` per una data locale (Italia CET) → usa formattazione locale.
 - **audit-grade** (rimando): registri temp/timbri append-only/immutabili → invariante di **schema DB**, proprietà del track DB; qui solo il puntatore.
+- **file-footer** (tracciabilità doc — *owner, 2026-07-06*): ogni file **LOCK**, **skill** o documento importante porta in fondo un footer `**Ultimo aggiornamento**: <data> · <cosa è cambiato> · → <report>` **agganciato al report di lavoro svolto** che documenta quella modifica. Il footer è il capo del filo (leggibile a colpo d'occhio); il **report** tiene il *perché/come*; **git** tiene il *chi/quando*. Nessuna modifica importante resta senza traccia. È l'**audit-grade §3 applicato alla documentazione stessa** — coerente col perché-TS-in-git di §14.3 (registro tamper-evident). L'aggancio è **bidirezionale**: il report elenca i file toccati, il file punta al report.
 
 ### 14.5 Cosa resta per Fable (installazione)
 
@@ -510,6 +511,7 @@ Le 3 generiche del v0 (leggi-intero-prima-di-editare · anti-duplicazione · log
 4. Scaffolding `aree/UFFICIALE_HACCP_SKILL.md` + `aree/RISTORATORE_SKILL.md` (comportamento profondo = altro track).
 5. Installare le RULE §14.4 nella bussola §2. Didattico: **non** attivare.
 6. **Seed del vocabolario base** (§14.6): popolare `comunicazione/VOCABOLARIO.md` con un lessico-mappa iniziale, così gli agenti non ripetono frasi lunghe («punto di conservazione»…) e chiamano ogni elemento con **un nome solo**.
+7. **Convenzione footer-tracciabilità** (RULE `file-footer` §14.4): definire **una volta** il formato del footer «Ultimo aggiornamento · cosa · → report» e stamparlo su tutti i file **LOCK/skill/context**; nel `_TEMPLATE_REPORT.md` aggiungere il **doppio aggancio** report ⇄ file toccati (il report elenca i file, ogni file linka il report). Chiusura sessione (passo di chiusura bussola): l'agente aggiorna i footer dei file che ha toccato prima di consegnare.
 
 > **Licenza di reinterpretazione (Fable)**: gli stampi qui definiti (skill, archetipi, formati) non sono gabbie. Fable può **reinterpretare in chiave più intelligente** ciò che legge se trova una lettura migliore, dentro lo scope prodotto (migliorie «di poco» ok, «di molto» chiedi). **Eccezione dura**: numeri/norme con `source_ref` si cambiano solo via Change-Control §14.3.
 
@@ -580,4 +582,5 @@ canale sicuro, 2 modalità di delega, 3 gate, kit on-demand) · **Track B conclu
 `DESIGN_SKILL_CONSULENTI.md`) · Track A: §13 direzione UI + **mockup 5 Onboarding v2** + mappa 7 step
 onboarding + **regola globale tempo animazioni §13.6** (polish rallentamento pendente) · **Mappatura
 aree conclusa** (§8: 5 mappe `MAPPATURA_AREE/` + 10 decisioni beta owner; nuovo scope = timbro fine
-turno feature dedicata)
+turno feature dedicata) · **RULE `file-footer`** aggiunta a §14.4/§14.5 (cross-cut owner: footer
+«ultimo aggiornamento → report» su file LOCK/skill/importanti — audit-grade applicato ai doc)
