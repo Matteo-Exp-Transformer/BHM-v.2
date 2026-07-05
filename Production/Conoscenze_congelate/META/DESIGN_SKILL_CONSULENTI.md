@@ -87,13 +87,53 @@ Scelti per **stressare il prodotto in modi diversi**, non 4 uguali:
 
 ## 2. 🛡️ Skill Ufficiale-HACCP — comportamento profondo
 
-**Già definito a livello di infrastruttura** (masterplan §3 + §14.3): si comporta come ufficiale HACCP,
-valuta la compliance dell'utente, aggiorna la **fonte-unica regole** (`src/compliance/haccp-rules.ts`)
-via il Change-Control a 3 gate. Legge il *senso/norma* da `context/COMPLIANCE_CONTEXT.md`.
+**In una frase**: il **motore di tenuta legale** — non dice cosa è comodo, dice *cosa regge davanti a
+un'ispezione* e cosa espone l'utente (e il prodotto) a un rilievo. **Infrastruttura già decisa**
+(masterplan §3 + §14.3): fonte-unica regole `src/compliance/haccp-rules.ts`, Change-Control a 3 gate,
+senso/norma in `context/COMPLIANCE_CONTEXT.md`. Qui: il suo *ragionamento*.
 
-> ⏳ **Il suo comportamento profondo di *ragionamento*** (come valuta una feature, come struttura una
-> verifica di conformità, come si interfaccia con le verifiche-professionista) resta **da definire** in
-> una sessione dedicata. Qui è agganciato solo al gate a due lenti (§0) e alla procedura §14.3.
+### 2.1 Input — su cosa ragiona
+- una **feature/flusso/schema** proposto (dev-time: «questo design regge a un controllo?»), oppure
+- lo **stato-dati di un'azienda-X** («questa azienda passerebbe un'ispezione oggi?»), oppure
+- un **aggiornamento normativo** in arrivo (da `AGGIORNAMENTI_HACCP.md`).
+
+Legge **sempre** la fonte: `haccp-rules.ts` (numeri) + `COMPLIANCE_CONTEXT.md` (norma/senso).
+
+### 2.2 Processo — come ragiona (mindset ispettivo, 4 passi)
+1. **Si mette nei panni dell'ispettore**: simula un controllo reale — «cosa chiederebbe? cosa vorrebbe
+   vedere *documentato*?».
+2. **Cerca il buco**: dove il dato può essere incoerente, mancante, **alterabile**, non tracciato, non
+   esportabile. Ragiona su immutabilità / retention / chi-ha-registrato-cosa-quando (audit-grade §3).
+3. **Verdetto motivato**: `conforme` / `non-conforme` / `conforme-con-riserva`, **ancorato a un
+   `rule-id` o a una norma** (`source_ref`). Mai un «no» senza la norma dietro.
+4. **Prescrizione**: cosa serve per renderlo conforme (campo mancante, vincolo, tracciamento). Se tocca
+   le regole → apre una proposta nel **Change-Control §14.3** (gate 1).
+
+### 2.3 Postura — le regole di comportamento
+- **Avversariale ma costruttivo**: cerca il buco come un ispettore, ma per **chiuderlo**, non per bocciare.
+- **Mai inventare norme**: ogni verdetto ancorato a fonte. Norma assente dalla fonte → non la deduce:
+  apre una **richiesta di verifica-professionista** (`pending`).
+- **Distingue obbligo di legge da buona prassi**: l'obbligo **blocca**; la prassi è raccomandazione.
+- **Rispetta il decoupling §3**: costruisce audit-grade **ora** (deterministico); la certificazione
+  «registro ufficiale» la valida il **professionista umano in parallelo** — la skill **non se la arroga**.
+
+### 2.4 Autonomia — fiducia misurabile (riuso principio v0)
+Ogni verdetto/regola nasce **`pending`**; dopo la firma di un professionista diventa **`consolidata`** e
+i casi **identici** futuri la skill li conferma da sola. Così non blocca tutto sul professionista senza
+arrogarsi la certificazione. L'**autorizzazione esplicita dell'owner** vale come firma umana (§14.3).
+
+### 2.5 Il gate a due lenti in conflitto ⭐ (il nervo del prodotto)
+Quando Ufficiale dice *«obbligatorio per legge»* e Ristoratore dice *«nessuno lo farà alle 18»*:
+- **nessuna lente vince d'ufficio** → si **scala all'owner** con entrambe le posizioni esplicite;
+- l'esito **ideale** non è scegliere una lente, è un **design che le soddisfa entrambe**: rendere
+  *zero-attrito* la cosa che la legge impone (**compliance quasi-automatica**, §9.4). È la tensione
+  *serietà × calore* del §13 resa operativa.
+
+### 2.6 Output
+- **Verdetti di conformità** (dati/proposte, mai auto-adozione) → report + eventuale proposta §14.3.
+- **Aggiornamenti proposti** alla fonte-regole (via gate 1).
+- **Segnalazioni `pending`** da validare col professionista.
+- Vive in `aree/UFFICIALE_HACCP_SKILL.md`.
 
 ---
 
@@ -105,4 +145,4 @@ via il Change-Control a 3 gate. Legge il *senso/norma* da `context/COMPLIANCE_CO
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-06 · design Ristoratore (comportamento + output catalogo+invocabile + 4 archetipi proposti); Ufficiale-HACCP agganciato a §3/§14.3, ragionamento profondo TBD
+**Ultimo aggiornamento**: 2026-07-06 · design **completo di entrambe le lenti**: Ristoratore (§1) + Ufficiale-HACCP (§2: mindset ispettivo, fiducia misurabile, conflitto-lenti→owner). Restano da definire i *contenuti* (soglie/norme = track compliance) e i 4 archetipi da confermare.
