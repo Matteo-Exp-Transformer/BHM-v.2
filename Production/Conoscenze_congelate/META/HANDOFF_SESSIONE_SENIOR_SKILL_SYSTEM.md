@@ -58,12 +58,19 @@ pronto per la repo nuova**, con una sola fonte di verità e tre porte d'ingresso
 - **Due skill-consulenti** (§9.5): 🛡️ Ufficiale-HACCP + 👨‍🍳 Ristoratore — qui decidi **dove vivono** e lo scaffolding (il loro *comportamento profondo* è un tema separato, non questo track).
 
 ### 3.2 Da decidere/produrre (il cuore del lavoro)
-1. **Mappa `_skill-system-v0/` → `docs/`**: cosa entra, come si rinomina, cosa si scarta. Struttura cartelle definitiva.
-2. **Le tre porte senza duplicare**: come `CLAUDE.md`, `.cursor/rules`, `AGENTS.md` puntano alla **stessa** fonte (rimando, non copia). Evitare la deriva "tre verità".
-3. **Formato operativo di sessione**: bussola · context · LOCK · chiusura — come si presentano nella repo nuova; cosa legge Fable all'avvio.
-4. **Fonte-unica regole HACCP**: dove sta il file versionato delle regole di compliance (consumato da app runtime + export + agente-ufficiale). Solo *collocazione e formato*, non le soglie (quelle sono compliance, altro track).
-5. **Primo set di RULE globali** in bussola (inclusa quella del canale-idee §11).
-6. **Template**: aggiornare `_TEMPLATE_REPORT.md` (sezione «💡 Idee esperienza») e creare `IDEE_ESPERIENZA.md`.
+> ✅ **CHIUSE nella sessione 2026-07-05** (dettaglio in masterplan **§14.2–14.5**). Sintesi sotto; se riapri, parti da §14.
+1. ✅ **Mappa v0 → docs/**: il v0 va **pari-pari** sotto `docs/skill-system/`, adattabile/scalabile, non blindato (iterativo: installa→testa→correggi).
+2. ✅ **Tre porte**: già risolte nel template (rimando, non copia); puntano a `docs/skill-system/…`.
+3. ✅ **Formato sessione**: formato v0 confermato; da riempire con le aree reali §12 (Oggi/Reparti/Scorte/Regia). Didattico **SPENTO** in beta.
+4. ✅ **Fonte-unica HACCP**: **numeri** = `src/compliance/haccp-rules.ts` (TS tipato, git); **senso** = `context/COMPLIANCE_CONTEXT.md`; **richieste** = `comunicazione/AGGIORNAMENTI_HACCP.md`. Change-Control a **3 gate** (proposta → validazione-macchina mai saltata → firma umana; **owner override** = gate umano). Vedi §14.3.
+5. ✅ **RULE globali** (§14.4): 3 v0 + idee-esperienza + HACCP-lock + HACCP-owner-override + timezone + audit-grade(rimando).
+6. ⏳ **Template idee**: DECISO ma da PRODURRE in fase installazione (Fable, §14.5): `IDEE_ESPERIENZA.md` + sezione «💡 Idee esperienza» in `_TEMPLATE_REPORT.md`.
+7. ✅ **Vocabolario base** (§14.6): Fable propone un lessico-mappa seed. Nomi pagina/tab canonici (Oggi/Reparti/Scorte/Regia); nomi-elemento come proposte (punto/cascata/timbro/registra temp/mappa/dossier/registro).
+- ✅ **Skill-consulenti (§9.5) — dove vivono**: `aree/UFFICIALE_HACCP_SKILL.md` + `aree/RISTORATORE_SKILL.md` (solo scaffolding; comportamento profondo = altro track).
+
+### 3.2-bis Prossimi passi per il Track B (cosa manca ancora)
+- Le decisioni sono **prese**; l'**esecuzione** (creare i file, riempire i `{{segnaposto}}`, scrivere lo scaffolding) è di **Fable** in fase installazione (§14.5) — non serve rifarla qui.
+- Se si riapre il Track B a livello *decisionale*, i temi ancora aperti sono: **comportamento profondo** delle due skill-consulenti (altro track ma va assegnato) e il **contenuto** di `COMPLIANCE_CONTEXT.md`/soglie (track compliance).
 
 ### 3.3 Confini (resta "in alto")
 - ❌ Non toccare il codice dell'app né lo schema DB. ❌ Non toccare §13 / `MOCKUP_UI/` (Track A).
@@ -89,4 +96,4 @@ pronti perché Fable li installi.
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-05 · handoff creato per avviare il Track B (skill-system) in parallelo al Track A (UI)
+**Ultimo aggiornamento**: 2026-07-05 (sessione 2) · **§14.2–14.5 compilato**: installazione `docs/skill-system/`, fonte-regole HACCP + Change-Control 3-gate (con owner-override), RULE globali, collocazione skill-consulenti. Didattico spento. Prossimo: esecuzione è di Fable; a livello decisionale restano comportamento profondo skill-consulenti + contenuto soglie (track compliance).

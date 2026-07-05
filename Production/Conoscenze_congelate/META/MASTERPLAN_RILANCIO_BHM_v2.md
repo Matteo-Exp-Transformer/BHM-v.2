@@ -427,9 +427,86 @@ Mockup HTML self-contained in [`MOCKUP_UI/`](./MOCKUP_UI/00_INDICE_MOCKUP.md) �
 - **Canale idee esperienza** (§11): ledger `IDEE_ESPERIENZA.md`; sezione «💡 Idee esperienza» nel `_TEMPLATE_REPORT.md`; **RULE globale** in bussola ("su ogni componente valuta se esiste una versione più bella/innovativa; se sì annota, non implementare fuori task").
 - **Due skill-consulenti** (§9.5): Ufficiale-HACCP + Ristoratore — qui si definisce **dove vivono** e lo scaffolding; il *comportamento profondo* è tema separato.
 
-### 14.2 Da decidere in questo track
-_(Track B compila: struttura cartelle definitiva, mappatura `_skill-system-v0/` → `docs/`, come si sincronizzano le tre porte senza duplicare, formato bussola/context/LOCK, dove sta la fonte-unica regole HACCP, primo set di RULE globali.)_
+### 14.2 Installazione nella repo nuova (decisa)
+
+- **Casa**: il v0 va **pari-pari** sotto `docs/skill-system/` (niente più `_v0`/`Archive`), ma **adattabile** — si espande/snellisce su misura di BHM, scalabile, **non blindato**. Approccio iterativo: si installa, si testa, si corregge.
+- **Tre porte in root** puntano tutte a `docs/skill-system/…` (rimando, non copia — già nel template):
+  Claude → `CLAUDE.md` · Cursor → `.cursor/rules/comandi-base.mdc` (`alwaysApply: true`) · Codex → `AGENTS.md` (rimanda a `CLAUDE.md`, non duplica).
+- **Sottosistema didattico**: **SPENTO** per la beta (non creare i file vivi privati; ignorare passo 8-bis del `MANUALE_AVVIO.md`). Riattivabile in futuro senza toccare il resto.
+- **Aree/skill da riempire** con la mappa reale del prodotto (§12): Oggi / Reparti / Scorte / Regia + le due skill-consulenti (sotto).
+- **Skill-consulenti (§9.5) — dove vivono**: scaffolding in `aree/` — `aree/UFFICIALE_HACCP_SKILL.md` + `aree/RISTORATORE_SKILL.md`. Qui solo *collocazione + scaffolding*; il **comportamento profondo** è di un altro track.
+
+### 14.3 Fonte-unica regole HACCP + Change-Control (decisa) ⭐
+
+Separazione **numeri ↔ senso**, ognuno con una sola casa, nessun dato scritto due volte:
+
+| Cosa | Dove | Formato |
+|------|------|---------|
+| **NUMERI** (soglie, retention, vincoli) | `src/compliance/haccp-rules.ts` (**codice app**, non skill-system) | modulo **TS tipato**, git-versionato |
+| **SENSO** (fonte normativa, razionale, chi ha validato) | `docs/skill-system/context/COMPLIANCE_CONTEXT.md` | MD; **linka ogni `rule-id`**, non riscrive i numeri |
+| **Richieste di aggiornamento** (input umano/normativo) | `docs/skill-system/comunicazione/AGGIORNAMENTI_HACCP.md` | ledger; l'agente-ufficiale lo traduce in modifica strutturata |
+
+**Perché TS in git e non DB**: git = registro tamper-evident *chi-cosa-quando* (gratis, coerente audit-grade §3); tipi forti = l'agente non inventa struttura; "aggiornabile" = PR con review, **non** una query al volo. Il DB sarebbe la mossa post-beta (norme editabili a runtime da non-dev), rischiosa per l'audit.
+
+**Ogni regola porta la sua identità**: `id · version · effective_from · min/max/unit · source_ref (→ COMPLIANCE_CONTEXT) · validated_by`.
+
+**Procedura Change-Control (3 gate — chi propone ≠ chi valida ≠ chi blinda):**
+
+| Gate | Chi | Cosa |
+|------|-----|------|
+| **1 · Proposta** | agente-ufficiale | traduce `AGGIORNAMENTI_HACCP.md` in modifica: **bumpa `version` + `effective_from`**, mai sovrascrive la storia |
+| **2 · Blindatura macchina** | test/schema | valida il file (id unici, range plausibili, `source_ref` presente, campi obbligatori). Fallisce → **il cambio non entra**. È la rete contro l'errore accidentale — **mai saltata** |
+| **3 · Approvazione umana** | **professionista** *oppure* **owner** (autorizzazione esplicita) | la regola nasce `validated_by: pending`; l'app tratta le `pending` con cautela. L'**autorizzazione diretta dell'owner soddisfa questo gate** (l'owner È l'autorità umana); il gate-2 resta comunque attivo |
+
+`haccp-rules.ts` è **LOCK** in bussola. Nessun agente lo tocca "di passaggio".
+
+> Scope Track B: definiti **collocazione + formato + procedura**. **NON** i numeri/soglie né il comportamento profondo dell'agente-ufficiale (track compliance). Fable crea il file; noi lasciamo lo stampo e le regole del gioco.
+
+### 14.4 Primo set di RULE globali (per la bussola §2)
+
+Le 3 generiche del v0 (leggi-intero-prima-di-editare · anti-duplicazione · logger) **+**:
+- **idee-esperienza** (§11): su ogni componente valuta se esiste una versione più bella/innovativa → se sì **annota** in `IDEE_ESPERIENZA.md`, non implementare fuori task.
+- **HACCP-lock**: `src/compliance/haccp-rules.ts` è LOCK; si cambia solo via Change-Control §14.3. Numeri solo lì, senso solo in `COMPLIANCE_CONTEXT.md` — **mai un numero due volte**.
+- **HACCP-owner-override**: autorizzazione esplicita dell'owner = gate umano soddisfatto → l'agente procede; **gate-2 macchina mai saltato**.
+- **timezone** (BHM-specifica, bug ricorrente): mai `date.toISOString().split('T')[0]` per una data locale (Italia CET) → usa formattazione locale.
+- **audit-grade** (rimando): registri temp/timbri append-only/immutabili → invariante di **schema DB**, proprietà del track DB; qui solo il puntatore.
+
+### 14.5 Cosa resta per Fable (installazione)
+
+1. Copiare `docs/skill-system/` nella repo nuova; rinominare le 3 porte in root; riempire i `{{segnaposto}}` (comandi, stack, id ambienti prod/test).
+2. Compilare bussola/context con le aree reali (§12) + creare `IDEE_ESPERIENZA.md` e la sezione «💡 Idee esperienza» nel `_TEMPLATE_REPORT.md` (§11).
+3. Creare `src/compliance/haccp-rules.ts` (stampo tipato, numeri dal track compliance) + `COMPLIANCE_CONTEXT.md` + `AGGIORNAMENTI_HACCP.md` + il test di validazione (gate-2).
+4. Scaffolding `aree/UFFICIALE_HACCP_SKILL.md` + `aree/RISTORATORE_SKILL.md` (comportamento profondo = altro track).
+5. Installare le RULE §14.4 nella bussola §2. Didattico: **non** attivare.
+6. **Seed del vocabolario base** (§14.6): popolare `comunicazione/VOCABOLARIO.md` con un lessico-mappa iniziale, così gli agenti non ripetono frasi lunghe («punto di conservazione»…) e chiamano ogni elemento con **un nome solo**.
+
+### 14.6 Vocabolario base — seed per Fable (decisa) ⭐
+
+Fable, all'installazione, **propone un vocabolario base** invece di partire da zero. Obiettivo dell'owner: **un linguaggio unico per gli elementi** che l'app crea, per non ripetere ogni volta termini lunghi e per identificare a colpo d'occhio pagine/tab/sezioni.
+
+**Lessico-mappa — nomi di pagine/tab/sezioni (già CANONICI, decisi §12/§13 — non sono proposte):**
+
+| Nome canonico | Cos'è | Lente |
+|---------------|-------|-------|
+| **Oggi** | il diario di bordo (cosa fare ora; timbro fine turno) | Tempo |
+| **Reparti** | tab centrale (nome-reparto se singolo); struttura + punti + registra temp + cascata | Spazio |
+| **Scorte** | inventario + lista spesa | Stock |
+| **Regia** | ingresso gestionale titolare: ① Imposto · ③ Controllo · ④ Dimostro | — |
+
+**Lessico-mappa — nomi corti degli ELEMENTI (Fable li propone in `PROPOSTE.md`, l'owner approva; questi sono il seed suggerito):**
+
+| Termine lungo attuale | Nome corto proposto |
+|-----------------------|---------------------|
+| punto di conservazione | **punto** (dentro un reparto; sigla `PdC` nei doc) |
+| form conservazione a cascata | **cascata** |
+| timbro di fine turno | **timbro** |
+| registrazione temperatura (gesto «che atterra») | **registra temp** |
+| mappa/schematico dei reparti | **mappa** |
+| export audit-grade («Genera dossier») | **dossier** |
+| registro immutabile che alimenta il dossier | **registro** |
+
+> **Regola del seed**: i **nomi di pagina/tab** sono canonici (decisi dall'owner) → entrano diretti. I **nomi-elemento** restano **proposte** finché l'owner non li conferma (chi esegue ≠ chi affina). Il **lessico-comando** (prepara / implementa / revisiona / lavoro ok / ragioniamo…) è già ereditato dal v0 (`comandi-base` + `VOCABOLARIO`), non va reinventato.
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-05 · §13 direzione UI (Track A) + §14 avvio skill-system (Track B) + regole sessioni parallele
+**Ultimo aggiornamento**: 2026-07-05 · §13 direzione UI (Track A) + **§14 compilato** (Track B: installazione `docs/skill-system/`, fonte-regole HACCP + Change-Control, RULE globali, **§14.6 vocabolario base**) + regole sessioni parallele
