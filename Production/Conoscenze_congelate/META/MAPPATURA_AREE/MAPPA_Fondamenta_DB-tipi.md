@@ -88,6 +88,7 @@ lascia passare payload che il DB rifiuta.
 | `companies` estesi (`phone, vat_number, license_number`) | ❌ assenti | decidere se servono (vedi §6) | migration companies |
 | `notification_preferences` | ❌ tabella assente | creare **o** rimuovere la UI | decisione owner |
 | `products` scadenze (`expired_at`, reinsert, `archived`) | ❌ assenti | supporto ciclo scadenza/riordino | migration products |
+| **`shift_seals`** (timbro fine turno, dec. 7 «sigilla la giornata») | ❌ tabella assente | **nuova tabella append-only**: `company_id`, `user_id`, `opened_at`, `closed_at`, `attestation` (tutto-registrato) — immutabile come i registri; firma che chiude il turno | migration nuova (design Track A) |
 | `database.types.ts` | obsoleto | **rigenerato dal live** dopo le migration | `generate_typescript_types` |
 | canale migration | doppio, `list_migrations`=[] | canale **unico e tracciato** | consolidamento `database/` vs `supabase/` (BUG-DB-003) |
 

@@ -213,7 +213,7 @@ Non modificare codice, migrations o DB. Se un dato non è determinabile → "non
 - [ ] Ogni mappa dichiara la **casa nuova** (§4) e usa il **template §7** integralmente
 - [ ] Domande per le due lenti annotate (§6 di ogni mappa) → confluiscono in masterplan §8
 - [ ] Verdetto riuso/riscrivi/butta esplicito per ogni area (input port §6.6)
-- [ ] `APP_DEFINITION` contraddittori marcati (non riscritti)
+- [x] `APP_DEFINITION` contraddittori marcati (non riscritti) → [`STATO_FASE3_INDICE.md`](../APP_DEFINITION/STATO_FASE3_INDICE.md)
 - [ ] Questione §8 «Mappatura area-per-area» pronta da spuntare (con l'owner)
 
 ---
@@ -232,5 +232,5 @@ Non modificare codice, migrations o DB. Se un dato non è determinabile → "non
 Fondamenta, Reparti, Oggi, Regia, Scorte + `00_INDICE.md`). **Intervista owner fatta** → 10 decisioni beta
 in `MAPPATURA_AREE/DECISIONI_OWNER_BETA.md` (propagate nelle §5). ⚠️ Schema live = snapshot A0 del 05-07:
 **token MCP di sessione non raggiunge `hjteuounjwkadmsbsmdm`** (da ripristinare prima che Fable scriva migration).
-Pendenti: marcare doc `APP_DEFINITION` contraddittori (fase separata); riflettere in masterplan §8 le decisioni
+Pendenti: ~~marcare doc `APP_DEFINITION` contraddittori~~ ✅ fatto 2026-07-06 (`APP_DEFINITION/STATO_FASE3_INDICE.md`); riflettere in masterplan §8 le decisioni
 + il **[NUOVO SCOPE] timbro fine turno** (dec.7).

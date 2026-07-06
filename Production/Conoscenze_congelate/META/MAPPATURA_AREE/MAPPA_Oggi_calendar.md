@@ -28,7 +28,7 @@
 | Annulla un completamento | "ripristina" | ⚠️ `uncompleteTask` → **DELETE** su `task_completions` | 🔴 red-flag audit: cancellare una prova è problema di conformità (vedi §6) |
 | Apre dettaglio evento | modal con info + "Modifica" | 🔴 **editing = stub** (`EventDetailsModal.tsx:422` handler vuoto); completamento sì per `general_task` | Implementare editing o rimuovere il pulsante |
 | Weekend/chiusure | i giorni chiusi non mostrano mansioni | ✅ fix weekend multi-layer feb-2026 in codice; `open_weekdays` live OK (BUG-009 **chiuso**) | Runtime da testare in browser; doc interna da riallineare |
-| Timbro fine turno | (visione §4) marca presenza/fine turno | ⚪ non esiste una feature "timbro" dedicata; il primitivo più vicino è l'attribuzione `completed_by_name` sui completamenti | ❓ da definire (vedi §6) |
+| Timbro fine turno | apre/chiude il turno e **sigilla** la giornata | ⚪ non esiste una feature "timbro" dedicata; il primitivo più vicino è l'attribuzione `completed_by_name` sui completamenti | ✅ **DECISO** (dec.7 «sigilla la giornata»): orario + attestazione «tutto registrato» → `shift_seals` append-only; UI = gesto 🔖 in fondo a Oggi (vedi §5) |
 
 ---
 
@@ -99,7 +99,7 @@ ANNULLA: uncompleteTask → DELETE task_completions (per id o per finestra perio
 - ♻️ **Riuso:** `useAggregatedEvents`, `useMacroCategoryEvents`, `useFilteredEvents`, `useGenericTasks`, `useCalendarSettings`, `useCalendarRefresh/Stats`, i generatori `utils/*`, `Calendar.tsx` (FullCalendar + fix weekend), `MacroCategoryModal`. Architettura **solida** (A3: 🟡, per doc/editing, non per l'impianto).
 - ✍️ **Riscrivo:** `EventDetailsModal` editing (stub) · `uncompleteTask` DELETE → storno append-only · metadati `[END_DATE:…]` in description → colonna · valutare decomposizione di `useAggregatedEvents` (770 righe) · ricondurre `tasks` a `recurrence_config` unico.
 - 🗑️ **Butto (dead code):** filtri legacy `CalendarFilter.tsx` / `FilterPanel.tsx` / `HorizontalCalendarFilters.tsx` / `components/CalendarFilters.tsx` · ~19 `console.log` diagnostici weekend in `Calendar.tsx` + 14 in `CalendarPage.tsx` (debito PRE_PRODUCTION).
-- ✅ **DECISO** ([`DECISIONI_OWNER_BETA.md`](./DECISIONI_OWNER_BETA.md)): (dec.7) **timbro fine turno = feature dedicata in beta** [NUOVO SCOPE, schema+UI da progettare] · (dec.1) annullo completamento = **storno tracciato**, mai DELETE · (default) `[END_DATE:]` → **colonna** vera.
+- ✅ **DECISO** ([`DECISIONI_OWNER_BETA.md`](./DECISIONI_OWNER_BETA.md)): (dec.7) **timbro fine turno = «sigilla la giornata»** [NUOVO SCOPE, def. 2026-07-06]: orario apertura/chiusura + attestazione «tutto registrato» → `shift_seals` append-only (firma audit-grade); UI = gesto 🔖 in fondo a Oggi con conferma di chiusura · (dec.1) annullo completamento = **storno tracciato**, mai DELETE · (default) `[END_DATE:]` → **colonna** vera.
 - ❓ **Dipende da owner (residuo):** (a) editing evento — quali eventi modificabili e da chi? (b) sabato aperto/chiuso: la config `[1..6]` tiene domenica chiusa e sabato aperto — default giusto?
 
 ## 6. Le due lenti (§9.5) — domande aperte

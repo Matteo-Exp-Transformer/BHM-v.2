@@ -203,18 +203,18 @@ Risolte in workstream **Mappatura area-per-area** (2026-07-06 — 5 mappe + inte
 4. **`companies` snella** — solo P.IVA + ragione sociale, **niente** gestione licenza in beta.
 5. **Notifiche = solo alert in-app** — niente tabella `notification_preferences`/canali esterni in beta.
 6. **HACCP in Settings = sola lettura** — le soglie vivono in `src/compliance/haccp-rules.ts` (§14.3), non editabili da UI.
-7. **🆕 Timbro di fine turno = feature dedicata** — schema + UI propri da progettare (già gesto-firma §10.3, ora con casa dati sua). *Vedi nota scope sotto.*
+7. **🆕 Timbro di fine turno = feature dedicata «sigilla la giornata»** (definito 2026-07-06) — orario apertura/chiusura turno **+** attestazione «tutto registrato» che **chiude i record del turno** (chi/quando, immutabile). È la **firma audit-grade** che rende il registro difendibile a un controllo. Schema + UI da progettare (Track A + Fondamenta). *Vedi nota scope sotto.*
 8. **Lettura temperatura** — temperatura + metodo **obbligatori**; foto e note **opzionali**.
 9. **3 ruoli attivi** — titolare / responsabile / dipendente (risolve il modello ruoli doppio legacy).
 10. **Ciclo scadenze completo** — `expired_at` + reinserimento (`previous_product_id`, `reinsertion_count`, `archived_at`) + storico.
 
-> 🆕 **Nota scope (dec. 7)**: il *timbro di fine turno* passa da semplice "timestamp sessione solo orario" (§5) a **feature con schema e UI dedicati**. È l'unico ampliamento di scope emerso dalla mappatura: resta dentro i 3 gesti-firma (§10.3), non introduce nuove aree.
+> 🆕 **Nota scope (dec. 7, definita 2026-07-06)**: il *timbro di fine turno* passa da semplice "timestamp sessione solo orario" (§5) a **feature con schema e UI dedicati**: un record **shift-seal append-only** (apertura/chiusura turno + attestazione di completezza) che **sigilla** i registri del turno — la firma che chiude la giornata. Unico ampliamento di scope dalla mappatura; resta dentro i 3 gesti-firma (§10.3), non introduce nuove aree.
 
 Ancora aperte:
 - [ ] Editor mappa ristorante: builder strutturato (beta) vs disegno libero (roadmap) — §12.3, confermato decoupling
 - [ ] Definire come opera la skill "Ristoratore" (generazione azienda-X, output = mansioni ricorrenti) e la lista dei procedimenti automatizzabili
-- [ ] Quanto minimo di sincronizzazione multi-utente serve davvero in beta
-- [ ] Mappatura → **marcare** i doc `APP_DEFINITION` contraddittori (non riscriverli) — fase separata
+- [x] Quanto minimo di sincronizzazione multi-utente serve in beta — **risolto** 2026-07-06: livello **«live-refetch, conflict-free»** (dec. 11 in [`MAPPATURA_AREE/DECISIONI_OWNER_BETA.md`](./MAPPATURA_AREE/DECISIONI_OWNER_BETA.md)). L'append-only (dec. 1) rende la concorrenza conflict-free per costruzione: nessun lock/merge/presence. Si riusa **solo** il pattern `useConservationRealtime` (invalidate-on-change), esteso a Oggi/Scorte; realtime = UX non correttezza (floor: refetch-on-focus). 🗑️ da non portare: `CollaborativeEditing`, presence/`onlineUsers`, `HACCPAlertSystem`/`TemperatureMonitor` legacy (~2.700 righe)
+- [x] Mappatura → **marcare** i doc `APP_DEFINITION` contraddittori (non riscriverli) — fase separata · **fatto** 2026-07-06 → [`APP_DEFINITION/STATO_FASE3_INDICE.md`](../APP_DEFINITION/STATO_FASE3_INDICE.md)
 - [ ] **⚠️ Ripristinare il token MCP** sul progetto BHM `hjteuounjwkadmsbsmdm` e **ri-verificare lo schema live** prima che Fable scriva migration (le mappe usano lo snapshot A0 del 05-07)
 - [ ] Sedute UI: dopo lo scheletro, prima IA poi estetica
 - [ ] Piano verifiche con professionisti HACCP (chi, quando, cosa validare)
@@ -436,6 +436,7 @@ Mockup HTML self-contained in [`MOCKUP_UI/`](./MOCKUP_UI/00_INDICE_MOCKUP.md) �
 | 3 | **Form a cascata** (💧 che si scioglie) — [`03_FORM_CASCATA.html`](./MOCKUP_UI/03_FORM_CASCATA.html) | ✅ approvato owner ("molto bello") · ritmo cascata rallentato |
 | 4 | **Regia** overview (🫧 respiro + 📦 "Genera dossier", su tablet) — [`04_REGIA_titolare.html`](./MOCKUP_UI/04_REGIA_titolare.html) | ✅ approvato owner ("bellissimo") |
 | 5 | **Onboarding titolare** v2 (barra cantiere chiudibile/navigabile · 🌡️ temperatura dal profilo read-only · card che si raggruppa e vola nella sidebar) — [`05_ONBOARDING_admin.html`](./MOCKUP_UI/05_ONBOARDING_admin.html) | 🟢 owner: "il resto va bene ottimo" — **polish pendente: rallentare le animazioni** (§13.6) |
+| 6 | **Scheletro di navigazione** (le 4 case Oggi/Reparti/Scorte/Regia su mobile **e** desktop, sincronizzati; barra che si trasforma col ruolo; tab Reparti dinamica; "stesso item, due lenti") — [`06_NAVIGAZIONE_shell.html`](./MOCKUP_UI/06_NAVIGAZIONE_shell.html) | 🔄 **proposto — attesa ok navigazione**; rende toccabile §12 (nessuna scelta nuova, visualizza il deciso) |
 
 **Serie base completa** (4/4 approvati) + **mockup 5 Onboarding v2** (impianto approvato, resta il polish del tempo animazioni).
 Prima del mockup 5 è stata scritta la **mappa dei 7 step onboarding** ([`MOCKUP_UI/MAPPATURA_ONBOARDING_STEP.md`](./MOCKUP_UI/MAPPATURA_ONBOARDING_STEP.md), fonte legacy: cosa chiediamo + scrittura DB).

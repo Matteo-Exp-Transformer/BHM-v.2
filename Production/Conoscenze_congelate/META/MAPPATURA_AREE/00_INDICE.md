@@ -40,5 +40,5 @@
 - [x] 1 mappa per ciascuna delle altre 4 aree, template §7 integrale
 - [x] Domande due lenti annotate (§6 di ogni mappa) → confluiscono in masterplan §8
 - [x] Verdetto riuso/riscrivi/butta esplicito per ogni area
-- [ ] `APP_DEFINITION` contraddittori marcati (non riscritti) — **pendente** (fase separata)
+- [x] `APP_DEFINITION` contraddittori marcati (non riscritti) — [`STATO_FASE3_INDICE.md`](../APP_DEFINITION/STATO_FASE3_INDICE.md) (2026-07-06)
 - [x] Questione masterplan §8 pronta da spuntare con l'owner — **intervista fatta**: 10 decisioni in [`DECISIONI_OWNER_BETA.md`](./DECISIONI_OWNER_BETA.md)

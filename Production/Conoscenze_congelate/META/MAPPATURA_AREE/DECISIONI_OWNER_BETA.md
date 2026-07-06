@@ -16,7 +16,7 @@
 | 4 | **Dati azienda** | **Solo P.IVA + ragione sociale**; **rimuovere** numero licenza e campi non necessari (telefono/tipo/data da valutare come opzionali) | Regia (companies) · Fondamenta (schema companies) |
 | 5 | **Notifiche** | **Solo alert in-app, nessun pannello preferenze**: **non** creare `notification_preferences`; rimuovere la sezione Settings | Regia (Settings) · Fondamenta (tabella tagliata) |
 | 6 | **HACCP Settings UI** | **Niente editing libero**: le soglie vivono in `src/compliance/haccp-rules.ts` (Track B); la UI al massimo le **mostra in sola lettura** | Regia (Settings HACCP) · coerente con [[rilancio-bhm-skill-system]] |
-| 7 | **Timbro fine turno** | **[NUOVO SCOPE]** feature **dedicata in beta**: vero timbro presenza/chiusura turno → schema + UI **da progettare** (Track A) | Oggi (§4/§6) · masterplan §8/§11 |
+| 7 | **Timbro fine turno** | **[NUOVO SCOPE]** **«sigilla la giornata»** (def. 2026-07-06): orario apertura/chiusura **+** attestazione «tutto registrato» → record **shift-seal append-only** che chiude i registri del turno (chi/quando). **Firma audit-grade**. Schema + UI da progettare | Oggi (§4/§6) · Fondamenta (nuova tabella) · masterplan §8/§11 |
 | 8 | **Lettura temperatura** | **Temperatura + metodo obbligatori**; **note e foto entrambe opzionali** | Reparti (§4 temperature_readings, §6) |
 | 9 | **Multi-utente** | **Tutti e 3 i ruoli** (titolare/responsabile/dipendente) + inviti staff attivi in beta | Regia (ruoli/RLS) · trasversale |
 | 10 | **Ciclo scadenze** | **Completo**: scadenza + `expired_at` + reinserimento (`previous_product_id`, `reinsertion_count`, `archived_at`, status `archived`) + storico | Scorte (§4 products) · Fondamenta (schema products) |
@@ -34,7 +34,7 @@ Migration/DDL che le decisioni **confermano necessari** (ordine indicativo):
 5. **products**: aggiungi `expired_at`, `previous_product_id`, `reinsertion_count`, `archived_at`; estendi CHECK status con `archived` (dec. 10).
 6. **notification_preferences**: **NON** creare; rimuovere la sezione Settings (dec. 5).
 7. **haccp_configurations**: la UI diventa sola-lettura; nessun payload flat di scrittura (dec. 6).
-8. **timbro fine turno**: schema nuovo da progettare (dec. 7) — **non** ancora definito.
+8. **timbro fine turno** (dec. 7, «sigilla la giornata»): nuova tabella **`shift_seals`** (o `work_shifts`) **append-only** — `company_id`, `user_id`, `opened_at`, `closed_at`, `attestation` (tutto-registrato), immutabile come i registri (dec. 1). Campi/comportamento esatti = design Track A + Fondamenta.
 9. **onboarding_completed** su `companies` (da mappa Regia, indipendente dall'intervista ma coerente): stato completamento server-side.
 10. **companies.onboarding** + ruoli: RLS per 3 ruoli già in gran parte live; verificare `responsabile` (dec. 9).
 
@@ -53,7 +53,34 @@ Non chieste in intervista; assunte per non bloccare, allineate ai vincoli del ri
 
 ---
 
+## Decisione 11 — Sincronizzazione multi-utente (seduta 2026-07-06, post-intervista)
+
+> Scioglie la questione §8 «quanto minimo di sincronizzazione multi-utente serve in beta».
+> Alimenta **port §6.6** (cosa riusare/buttare del layer realtime) e **Fondamenta** (publication realtime).
+
+**Decisione owner: livello «live-refetch, conflict-free».**
+
+- **Concorrenza = conflict-free per costruzione** grazie alla dec. 1 (append-only, annullo = storno, mai UPDATE/DELETE distruttivo): ogni azione è un INSERT, due utenti non possono sovrascriversi. → **nessun lock, merge, last-write-wins, CRDT**.
+- **Sync = invalidate-on-change**: si riusa **solo** il pattern `useConservationRealtime.ts` (subscribe `postgres_changes` → `queryClient.invalidateQueries`), esteso alle superfici condivise **Oggi** (task/completamenti) e **Scorte** (liste spesa); **Reparti** già coperto.
+- **Realtime = UX, non correttezza**: la verità è il DB append-only, quindi se un canale cade la beta regge → **floor = refetch-on-focus**. Sgancia la beta dalla fragilità dei canali.
+- **Niente** presence / awareness / "chi è online" in beta.
+
+**Verdetto riuso layer realtime legacy** (verità = codice, luglio 2026):
+
+| File | Righe | Stato | Verdetto |
+|------|-------|-------|----------|
+| `hooks/useConservationRealtime.ts` | 115 | cablato in `ConservationPage` | ♻️ **riuso — pattern di riferimento** |
+| `hooks/useRealtime.ts` + `services/realtime/RealtimeConnectionManager.ts` | 822 | presence/`onlineUsers`, non cablato | 🗑️ butto |
+| `services/realtime/CollaborativeEditing.ts` | 772 | dead code, zero import esterni | 🗑️ butto |
+| `services/realtime/HACCPAlertSystem.ts` + `TemperatureMonitor.ts` | 1.095 | orfani; ridondanti con `haccp-rules.ts` (Track B) + dec. 5 | 🗑️ butto |
+
+→ **~2.700 righe da NON portare**; ~115 da riusare + estendere a 2 superfici.
+
+**Conseguenza schema/infra (per Fable)**: abilitare la publication `supabase_realtime` (+ `REPLICA IDENTITY`) sulle tabelle condivise beta — `temperature_readings`, `maintenance_completions`, `maintenance_tasks` (già), `task_completions`, `generic_tasks`, tabelle shopping — e agganciare un hook `useXxxRealtime` per lente. RLS `company_id` già filtra i canali.
+
+---
+
 ## Per il masterplan §8
 - Le domande "Mappatura area-per-area" e le "due lenti" delle 5 mappe hanno ora **risposte owner** su 10 bivi → §8 spuntabile.
-- **[NUOVO SCOPE] Timbro fine turno** (dec. 7): aprire voce dedicata (design comportamento + schema) — non era nel codice legacy.
+- **[NUOVO SCOPE] Timbro fine turno** (dec. 7) **definito 2026-07-06**: «sigilla la giornata» (orario + attestazione «tutto registrato» → `shift_seals` append-only, firma audit-grade). Design comportamento/UI = prossima seduta Track A.
 - Restano da progettare: schema timbro; forma esatta `vat_number`/ragione sociale; profondità storico riordini.
