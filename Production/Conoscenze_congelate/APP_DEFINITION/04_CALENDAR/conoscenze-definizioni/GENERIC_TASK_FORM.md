@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-gap` · Fonte: [`FASE3_REPORT_A3`](../../META/FASE3_REPORT_A3_CALENDAR.md) §5.5  
+> **Motivo**: link rotto a `Generic-Task-creation_assignation/`; submit usa `frequency`+`custom_days`, non `recurrence_config` come doc maintenance.  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # GENERIC TASK FORM - DOCUMENTAZIONE
 
 **Data Creazione**: 2026-01-30

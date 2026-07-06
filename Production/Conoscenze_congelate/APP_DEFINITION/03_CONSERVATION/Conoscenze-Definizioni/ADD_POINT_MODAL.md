@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-ok` · Fonte: [`FASE3_REPORT_A2`](../../META/FASE3_REPORT_A2_CONSERVATION.md) §5.5  
+> **Motivo**: profili HACCP e colonne `conservation_points` allineati a codice + DB live.  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # ADD_POINT_MODAL - DOCUMENTAZIONE COMPLETA
 
 **Data Creazione**: 2026-01-16
@@ -472,9 +476,10 @@ export function AddPointModal({ isOpen, onClose, onSave, point, isLoading }: Add
 - **Scopo**: Genera array manutenzioni obbligatorie in base al tipo di punto
 - **Parametri**: `pointType` - tipo punto ('ambient' | 'fridge' | 'freezer' | 'blast')
 - **Ritorna**: `MandatoryMaintenanceTask[]` - array manutenzioni obbligatorie
-- **Logica**: 
+- **Logica**:
+  - Per tipo "blast" (Abbattitore): ritorna 1 manutenzione (solo sanificazione)
   - Per tipo "ambient": ritorna 2 manutenzioni (sanificazione, controllo_scadenze)
-  - Per altri tipi: ritorna 4 manutenzioni (rilevamento_temperatura, sanificazione, sbrinamento, controllo_scadenze)
+  - Per altri tipi (fridge/freezer): ritorna 4 manutenzioni (rilevamento_temperatura, sanificazione, sbrinamento, controllo_scadenze)
   - Ogni manutenzione ha frequenza, ruolo, categoria vuoti (da compilare utente)
 
 #### `validateForm()`

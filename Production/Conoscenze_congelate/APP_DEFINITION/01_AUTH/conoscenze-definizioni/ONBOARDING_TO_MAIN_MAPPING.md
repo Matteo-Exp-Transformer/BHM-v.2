@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-gap` · Fonte: [`FASE3_REPORT_A1`](../../META/FASE3_REPORT_A1_AUTH.md) §5.1  
+> **Motivo**: claim «Onboarding completato» — implementazione parziale; flusso core OK, hardening incompleto.  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # MAPPATURA ONBOARDING → MAIN APP
 
 **Data**: 2025-10-22 01:38

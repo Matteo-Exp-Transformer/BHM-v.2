@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-gap` · Fonte: [`FASE3_REPORT_A1`](../../META/FASE3_REPORT_A1_AUTH.md) §5.5  
+> **Motivo**: Remember Me UI attiva ma non collegata al login; password 12 char OK ma dual-schema; sezioni STATO ATTUALE desincronizzate.  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # LOGIN FLOW - SPECIFICA DEFINITIVA
 
 **Data Ultima Modifica**: 2025-10-22 14:19

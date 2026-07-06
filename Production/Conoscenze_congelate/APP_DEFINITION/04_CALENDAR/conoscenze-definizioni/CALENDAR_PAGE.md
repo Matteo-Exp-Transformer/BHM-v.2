@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-gap` · Fonte: [`FASE3_REPORT_A3`](../../META/FASE3_REPORT_A3_CALENDAR.md) §5.5  
+> **Motivo**: metriche righe obsolete (doc: 1095/996 — codice reale ~665/1052); architettura core OK.  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # CALENDAR_PAGE - DOCUMENTAZIONE COMPLETA
 
 **Data Creazione**: 2026-01-30
@@ -16,7 +20,7 @@ La pagina **Attività (Calendar)** è il centro di controllo per tutte le attivi
 - **Visualizzare** tutti gli eventi aggregati da 6 fonti diverse
 - **Gestire** manutenzioni, mansioni ricorrenti, scadenze prodotti
 - **Monitorare** alert per eventi urgenti (entro 72 ore)
-- **Filtrare** per reparto, stato, tipo evento
+- **Filtrare** per reparto (solo admin) e tipo evento
 - **Completare** attività direttamente dal calendario
 - **Creare** nuove mansioni ricorrenti
 
@@ -459,10 +463,12 @@ interface CalendarEvent {
 ```typescript
 interface CalendarFilters {
   departments: string[]      // UUID reparti
-  statuses: EventStatus[]    // 'to_complete' | 'completed' | 'overdue' | 'future'
+  statuses: EventStatus[]    // 'to_complete' | 'completed' | 'overdue' | 'future' — non esposto in UI (rimosso 05-02-2026)
   types: EventType[]         // 'generic_task' | 'maintenance' | 'product_expiry'
 }
 ```
+
+L'UI dei filtri (NewCalendarFilters) espone solo **Reparto** (solo admin) e **Tipo**; il campo `statuses` resta nel tipo per compatibilità e logica interna.
 
 ---
 

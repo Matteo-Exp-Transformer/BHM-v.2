@@ -386,4 +386,92 @@ Alzare la specificity del selettore `.fc-day-closed` in `calendar-custom.css` e/
 
 ---
 
+## 11. Bug aggiuntivi: Hover su celle Sab/Dom (mappatura 15-02-2026)
+
+**Stesso contesto:** celle di sabato e domenica (e in generale tutte le celle con `.fc-day-closed`). Due sintomi aggiuntivi riportati dall’utente.
+
+### 11.1 Sintomo A: Lampeggiamento (flickering) al passaggio del mouse
+
+| Campo | Valore |
+|-------|--------|
+| **Dove** | Cella giorno (es. "8") in vista mese, giorno chiuso (Sab/Dom). |
+| **DOM tipico** | `div.fc-daygrid-day-frame.fc-scrollgrid-sync-inner` dentro `td.fc-day.fc-day-sun.fc-day-past.fc-daygrid-day.fc-day-closed`. |
+| **Cosa succede** | Passando il mouse sulla casella, la cella inizia a lampeggiare. |
+| **Posizione riportata** | top=351px, left=1293px (es. cella domenica). |
+
+**Ipotesi causa:**
+- Lo stile `:hover` applica `transform: translateY(-1px)` e `box-shadow` (calendar-custom.css L119–127). Lo spostamento può causare un continuo “entra/esci” dal hit-testing (il mouse sembra uscire dalla cella, poi rientrare) → loop hover on/off → flicker.
+- In più FullCalendar può inserire un div `.fc-highlight` in un’altra cella (vedi Sintomo B). Se l’highlight appare nella cella adiacente e intercetta il mouse, la cella sotto il cursore perde l’hover → l’highlight scompare → hover ritorna → flicker.
+
+### 11.2 Sintomo B: Highlight sulla cella adiacente
+
+| Campo | Valore |
+|-------|--------|
+| **Dove** | Stesse celle (Sab/Dom / `.fc-day-closed`). |
+| **DOM highlight** | `div.fc-highlight` (data-cursor-element-id="cursor-el-742") dentro `div.fc-daygrid-bg-harness` della cella. |
+| **Cosa succede** | Passando il mouse su una casella, **si illumina la cella adiacente** (il div `.fc-highlight` appare nella cella sbagliata). |
+| **Posizione riportata** | Cella con highlight errato: top=352px, left=899px (casella “accanto”). |
+
+**Ipotesi causa:**
+- FullCalendar (v6, interaction plugin) gestisce l’highlight di selezione/hover e lo posiziona in base a coordinate o indici di cella. Possibili cause:
+  1. **Tabella “sync”**: la vista daygrid usa `table.fc-scrollgrid-sync-table` e layer separati (fc-daygrid-body, fc-scrollgrid-sync-inner). L’highlight potrebbe essere posizionato in un layer con indici/ordine non allineati alle celle effettive (es. off-by-one di colonna).
+  2. **firstDay: 1**: con settimana che inizia dal lunedì, il mapping colonna → giorno potrebbe essere sbagliato per le ultime due colonne (Sab/Dom).
+  3. **Manipolazione DOM**: l’applicazione ritardata di `fc-day-closed` via `useEffect` e la struttura con `::before` e overlay potrebbero cambiare il layout o l’ordine degli elementi e confondere il calcolo della cella “sotto il mouse”.
+
+### 11.3 Relazione con il bug “weekend unito”
+
+- Stesse celle: tutte le celle Sab/Dom (e in generale `.fc-day-closed`) coinvolte nel bug “weekend unito” (CSS specificity) sono le stesse in cui si osservano flicker e highlight sulla cella sbagliata.
+- Probabile interazione: finché le celle chiuse non sono ben distinte visivamente (specificity), overlay e layer moltiplicano gli effetti (hover + highlight FullCalendar) e rendono più evidenti flicker e disallineamento.
+
+### 11.4 Piano di soluzione (hover + highlight)
+
+1. **Ridurre/eliminare il lampeggiamento**
+   - **Opzione A (consigliata):** sulle celle `.fc-day-closed` non applicare `transform` in hover (o usare una transizione molto leggera). In `calendar-custom.css` aggiungere:
+     - `.fc .fc-daygrid-day.fc-day-closed:hover { transform: none; }` (e eventualmente solo un leggero cambio di opacità/box-shadow senza spostamento).
+   - In questo modo si evita lo spostamento che può far “uscire” il mouse dalla cella nel hit-testing e si riduce il flicker.
+
+2. **Evitare l’highlight sulla cella sbagliata**
+   - **Opzione B (consigliata):** disattivare visivamente l’highlight nativo di FullCalendar nella vista daygrid e usare solo gli stili CSS custom per hover/feedback:
+     - Nascondere `.fc-highlight` nella vista daygrid: es. `.fc-daygrid .fc-highlight { display: none !important; }` in `calendar-custom.css`.
+   - In questo modo si elimina sia l’effetto “cella adiacente illuminata” sia la possibile interferenza dell’highlight con il mouse (contributo al flicker).
+   - L’evidenziazione del giorno resta affidata a:
+     - `:hover` (gradiente/ombra già definiti),
+     - `fc-day-selected` al click (handleDayClick).
+
+3. **Verifiche post-fix**
+   - Passaggio del mouse su ogni giorno della settimana (inclusi Sab/Dom): nessun lampeggiamento.
+   - Nessun div `.fc-highlight` visibile sulla cella adiacente; al click, solo la cella cliccata mostra `fc-day-selected`.
+
+4. **Opzionale (se in futuro si riattiva l’highlight nativo)**
+   - Verificare versione FullCalendar e issue note su daygrid + firstDay + fc-highlight.
+   - Valutare se il bug è nell’uso della tabella sync e segnalare upstream se confermato.
+
+### 11.5 Sintomo C: Animazione hover assente su Sab/Dom (mappatura 15-02-2026)
+
+| Campo | Valore |
+|-------|--------|
+| **Sintomo** | Dopo il fix flicker + highlight: su sabato e domenica **non è presente** l’animazione responsive al passaggio del mouse (illuminazione/transizione) che è invece presente sulle altre caselle. |
+| **Celle interessate** | Solo celle con `.fc-day-closed` (Sab/Dom e eventuali chiusure specifiche). |
+| **Confronto** | Celle Lun–Ven: hover con gradiente, box-shadow, `transition`, (e `transform` che su chiuse è disattivato per evitare flicker). Celle Sab/Dom: nessun feedback visivo animato. |
+
+**Analisi root cause (mappatura a fondo):**
+
+1. **Transizione solo in :hover**  
+   La regola `.fc .fc-daygrid-day.fc-day-closed:hover` impostava `transition` solo nello stato hover. Se la **base** (stato non-hover) non ha `transition`, il browser può non animare correttamente il passaggio da base → hover (specie con `!important` su background/box-shadow in altre regole).
+
+2. **Specificity e ordine**  
+   Le regole per `.fc-day-sat` / `.fc-day-sun` (anche senza `:hover`) hanno specificity 0,0,3,0 o 0,0,4,0. La regola hover per `.fc-day-closed` era 0,0,3,0; in alcuni contesti di cascata (ordine caricamento CSS, stili inline in Calendar.tsx) poteva non prevalere su base/hover delle celle sabato/domenica.
+
+3. **Mancanza di classe dedicata**  
+   L’hover era legato solo a `.fc-day-closed`, condivisa con altre logiche (stile base, icona spiaggia). Nessuna classe esclusiva per “cella chiusa con hover/animazione” garantita da nostro codice.
+
+**Soluzione applicata (Tailwind-style + classi):**
+
+- **Classe dedicata** `calendar-cell-closed`: applicata insieme a `fc-day-closed` in `Calendar.tsx` (useEffect che applica le classi via DOM + `dayCellDidMount`). Usata solo per stili di transizione e hover.
+- **Transizione sulla base**: su `.fc .fc-daygrid-day.calendar-cell-closed` è impostata `transition: background-color 0.2s ease, background-image 0.2s ease, box-shadow 0.2s ease` (equivalente Tailwind duration-200, ease), così l’animazione è sempre attiva.
+- **Hover con specificity alta**: regole per `.fc .fc-daygrid-day.calendar-cell-closed:hover` e per `.fc .fc-daygrid-day.fc-day-sat.calendar-cell-closed:hover`, `.fc .fc-daygrid-day.fc-day-sun.calendar-cell-closed:hover` (0,0,4,0) con stesso effetto delle altre celle (gradiente + box-shadow), senza `transform`.
+- **Design token allineati**: stesso gradiente/ombra delle altre celle (es. `rgba(99, 102, 241, 0.06)`), `0 2px 8px rgba(0, 0, 0, 0.08)`.
+
+---
+
 **Fine report.**

@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-ok` · Fonte: [`FASE3_REPORT_A3`](../../META/FASE3_REPORT_A3_CALENDAR.md) §5.5  
+> **Nota**: filtri «Per Stato» rimossi da header pagina (05-02) ma **ancora presenti** in `MacroCategoryModal` — comportamento intenzionale.  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # FILTERS AND PERMISSIONS - DOCUMENTAZIONE
 
 **Data Creazione**: 2026-01-30
@@ -13,7 +17,7 @@ Il sistema Calendar implementa un **filtraggio a 2 layer**:
 
 1. **Layer 1 - Permessi** (`useFilteredEvents`): Filtra gli eventi in base al ruolo e alle assegnazioni dell'utente. Questo è un filtro **di sicurezza**.
 
-2. **Layer 2 - Visuale** (`NewCalendarFilters`): Filtra gli eventi in base alle preferenze visuali dell'utente (reparto, stato, tipo). Questo è un filtro **di preferenza**.
+2. **Layer 2 - Visuale** (`NewCalendarFilters`): Filtra gli eventi in base alle preferenze visuali dell'utente (reparto, tipo). Questo è un filtro **di preferenza**. *(Il filtro per stato non è più esposto in UI dal 05-02-2026.)*
 
 ---
 
@@ -117,7 +121,9 @@ Permettere all'utente di filtrare la vista per preferenza, senza rimuovere perme
 
 ### Filtri Disponibili
 
-#### 1. Filtro Reparto (Multi-select)
+#### 1. Filtro Reparto (Multi-select) — Solo Admin
+
+**Visibilità**: Solo utenti con ruolo `admin`. Per dipendenti, responsabili e collaboratori la sezione è nascosta e il filtro reparto viene azzerato automaticamente.
 
 ```typescript
 interface DepartmentFilter {
@@ -129,25 +135,9 @@ interface DepartmentFilter {
 // → Mostra eventi dove department_id === 'uuid1' OR department_id === 'uuid2'
 ```
 
-**UI**: Dropdown multi-select con conteggio eventi per reparto.
+**UI**: Grid di pulsanti con conteggio eventi per reparto. Visibile solo se `hasRole('admin')`.
 
-#### 2. Filtro Stato (Chips)
-
-```typescript
-type EventStatus = 'to_complete' | 'completed' | 'overdue' | 'future'
-
-interface StatusFilter {
-  statuses: EventStatus[]
-}
-
-// Logica: OR tra stati selezionati
-// Se statuses = ['to_complete', 'overdue']
-// → Mostra eventi pending O overdue
-```
-
-**UI**: Chips cliccabili con badge colorato.
-
-#### 3. Filtro Tipo (Chips)
+#### 2. Filtro Tipo (Chips)
 
 ```typescript
 type EventType = 'generic_task' | 'maintenance' | 'product_expiry'
@@ -183,14 +173,6 @@ function doesEventPassFilters(
     }
   }
 
-  // STATO: AND (deve passare se filtro attivo)
-  if (filters.statuses.length > 0) {
-    const eventStatus = mapToFilterStatus(event.status)
-    if (!filters.statuses.includes(eventStatus)) {
-      return false  // Non passa filtro stato
-    }
-  }
-
   // TIPO: AND (deve passare se filtro attivo)
   if (filters.types.length > 0) {
     const eventType = mapToFilterType(event)
@@ -203,23 +185,7 @@ function doesEventPassFilters(
 }
 ```
 
-### Mapping Status
-
-```typescript
-function mapToFilterStatus(status: CalendarEventStatus): EventStatus {
-  switch (status) {
-    case 'completed':
-      return 'completed'
-    case 'overdue':
-      return 'overdue'
-    case 'pending':
-      // Determina se è futuro o da completare
-      return isPast(event.start) ? 'to_complete' : 'future'
-    default:
-      return 'to_complete'
-  }
-}
-```
+*Nota: Il tipo `CalendarFilters` mantiene il campo `statuses` e la logica in `doesEventPassFilters` li considera ancora; con `statuses: []` (default) nessun evento viene filtrato per stato. L'UI non espone più il filtro stato.*
 
 ### Mapping Type
 
@@ -268,8 +234,7 @@ function mapToFilterType(event: CalendarEvent): EventType {
 │        LAYER 2: calendarFilters                          │
 │                                                          │
 │ Utente seleziona:                                        │
-│ - Reparto: "Cucina"                                      │
-│ - Stato: "to_complete", "overdue"                        │
+│ - Reparto: "Cucina" (solo admin)                         │
 │ - Tipo: "maintenance"                                    │
 │                                                          │
 │ eventsForFiltering.filter(doesEventPassFilters)          │
@@ -301,19 +266,14 @@ function mapToFilterType(event: CalendarEvent): EventType {
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ Filtri                                                   │
+│ Filtri Calendario                                        │
 ├─────────────────────────────────────────────────────────┤
 │                                                          │
-│ Reparto: [▼ Tutti (12)]                                 │
-│          ☐ Cucina (5)                                   │
-│          ☐ Sala (3)                                     │
-│          ☐ Magazzino (4)                                │
+│ Per Reparto (solo admin):                               │
+│          ☐ Cucina (5)  ☐ Sala (3)  ☐ Magazzino (4)     │
 │                                                          │
-│ Stato:   [Da completare] [Completati] [In ritardo]      │
-│               ✓             ○             ✓              │
-│                                                          │
-│ Tipo:    [🔧 Manutenzioni] [📋 Mansioni] [📦 Scadenze]  │
-│               ✓               ○              ○           │
+│ Per Tipo:  [🔧 Manutenzioni] [📋 Mansioni] [📦 Scadenze]│
+│                 ✓               ○              ○         │
 │                                                          │
 │ [Reset Filtri]                                           │
 └─────────────────────────────────────────────────────────┘
@@ -398,9 +358,10 @@ interface EventAssignment {
 - [x] Categoria 'all' mostra a tutti
 
 ### Layer 2 - Visuali
-- [x] Filtro reparto multi-select funzionante
-- [x] Filtro stato chips funzionante
+- [x] Filtro reparto multi-select funzionante (solo admin)
+- [x] Filtro reparto nascosto per non-admin; departments azzerato automaticamente
 - [x] Filtro tipo chips funzionante
+- [x] Filtro "Per Stato" rimosso dall'UI (05-02-2026)
 - [x] Combinazione AND tra categorie diverse
 - [x] Combinazione OR dentro stessa categoria
 - [x] Reset filtri funzionante
@@ -424,5 +385,5 @@ interface EventAssignment {
 
 ---
 
-**Ultimo Aggiornamento**: 2026-01-30
-**Versione**: 1.0.0
+**Ultimo Aggiornamento**: 2026-02-05
+**Versione**: 1.2.0 — Rimozione filtro "Per Stato" dall'UI; filtri esposti: Reparto (solo admin) e Tipo

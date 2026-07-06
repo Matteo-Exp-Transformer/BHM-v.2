@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-ok` · Fonte: [`FASE3_REPORT_A2`](../../META/FASE3_REPORT_A2_CONSERVATION.md) §5.5  
+> **Motivo**: copia legacy (v1.1.0); contenuto sostituito da `Conoscenze-Definizioni/SCHEDULED_MAINTENANCE_SECTION.md` (v3.1). Trigger/manutenzioni OK su DB live.  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # SCHEDULED_MAINTENANCE_SECTION - DOCUMENTAZIONE COMPLETA
 
 **Data Creazione**: 2026-01-16  

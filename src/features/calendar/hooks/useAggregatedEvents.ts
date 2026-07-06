@@ -9,10 +9,13 @@ import type { CalendarEvent } from '@/types/calendar'
 import type { MaintenanceTask } from '@/types/conservation'
 import type { Product } from '@/types/inventory'
 import type { StaffMember } from '@/features/management/hooks/useStaff'
+import { useCalendarSettings } from '@/hooks/useCalendarSettings'
+import { isCompanyClosedOnDate, shouldShowEventOnClosureDay } from '@/utils/calendarUtils'
 import { getEventColors } from '../utils/eventTransform'
 import { generateHaccpDeadlineEvents } from '../utils/haccpDeadlineGenerator'
 import { generateTemperatureCheckEvents } from '../utils/temperatureCheckGenerator'
-import { addDays, addWeeks, addMonths, startOfDay, endOfDay } from 'date-fns'
+import { addDays, addWeeks, addMonths, addYears, startOfDay, endOfDay, startOfYear, endOfYear } from 'date-fns'
+import type { MaintenanceRecurrenceConfig } from '@/types/conservation'
 import { supabase } from '@/lib/supabase/client'
 
 interface AggregatedEventsResult {
@@ -46,6 +49,7 @@ export function useAggregatedEvents(fiscalYearEnd?: Date, refreshKey?: number): 
   const { staff, isLoading: staffLoading } = useStaff()
   const { products, isLoading: productsLoading } = useProducts()
   const { tasks: genericTasks, isLoading: genericTasksLoading } = useGenericTasks()
+  const { settings: calendarSettings } = useCalendarSettings()
   const [taskCompletions, setTaskCompletions] = useState<TaskCompletion[]>([])
 
   // ✅ Debug: Log stato caricamento dati
@@ -192,7 +196,7 @@ export function useAggregatedEvents(fiscalYearEnd?: Date, refreshKey?: number): 
   }, [genericTasks, companyId, user?.id, taskCompletions, fiscalYearEnd])
 
   const allEvents = useMemo(() => {
-    return [
+    const merged = [
       ...maintenanceEvents,
       ...haccpExpiryEvents,
       ...productExpiryEvents,
@@ -200,6 +204,19 @@ export function useAggregatedEvents(fiscalYearEnd?: Date, refreshKey?: number): 
       ...temperatureEvents,
       ...genericTaskEvents,
     ]
+
+    // Filtra eventi nei giorni di chiusura aziendale
+    if (!calendarSettings?.is_configured) return merged
+
+    const { open_weekdays, closure_dates } = calendarSettings
+
+    return merged.filter(event => {
+      const eventDate = new Date(event.start)
+      // Giorno aperto → mostra tutto
+      if (!isCompanyClosedOnDate(eventDate, open_weekdays, closure_dates)) return true
+      // Giorno chiuso → mostra solo scadenze HACCP/personale
+      return shouldShowEventOnClosureDay(event)
+    })
   }, [
     maintenanceEvents,
     haccpExpiryEvents,
@@ -207,6 +224,7 @@ export function useAggregatedEvents(fiscalYearEnd?: Date, refreshKey?: number): 
     haccpDeadlineEvents,
     temperatureEvents,
     genericTaskEvents,
+    calendarSettings,
   ])
 
   // ✅ Debug: Log risultato finale
@@ -245,9 +263,112 @@ export function useAggregatedEvents(fiscalYearEnd?: Date, refreshKey?: number): 
   }
 }
 
+/** Mappa nomi giorni italiani (recurrence_config.weekdays) a getDay() (0=domenica, 1=lunedì, ...) */
+const WEEKDAY_IT_TO_DAY: Record<string, number> = {
+  domenica: 0,
+  lunedi: 1,
+  martedi: 2,
+  mercoledi: 3,
+  giovedi: 4,
+  venerdi: 5,
+  sabato: 6,
+}
+
 /**
- * Espande una task ricorrente in multiple occorrenze
- * Per frequenza "daily" genera un evento per ogni giorno dalla data di creazione
+ * Genera le date di occorrenza per una manutenzione nel range [rangeStart, rangeEnd]
+ * usando recurrence_config quando presente. Ritorna [] se non usa recurrence (fallback al loop classico).
+ */
+function getMaintenanceRecurrenceDates(
+  task: MaintenanceTask,
+  rangeStart: Date,
+  rangeEnd: Date
+): Date[] {
+  const cfg = task.recurrence_config as MaintenanceRecurrenceConfig | null | undefined
+  const frequency = task.frequency
+  const start = startOfDay(rangeStart)
+  const end = endOfDay(rangeEnd)
+  const dates: Date[] = []
+
+  if (frequency === 'daily' && cfg?.weekdays?.length) {
+    const dayNumbers = cfg.weekdays
+      .map(w => WEEKDAY_IT_TO_DAY[w.toLowerCase()])
+      .filter((n): n is number => n !== undefined)
+    if (dayNumbers.length === 0) return []
+    let d = new Date(start)
+    while (d <= end) {
+      if (dayNumbers.includes(d.getDay())) dates.push(new Date(d))
+      d = addDays(d, 1)
+    }
+    return dates
+  }
+
+  if (frequency === 'weekly' && cfg?.weekdays?.length) {
+    const dayNumbers = cfg.weekdays
+      .map(w => WEEKDAY_IT_TO_DAY[w.toLowerCase()])
+      .filter((n): n is number => n !== undefined)
+    if (dayNumbers.length === 0) return []
+    let d = new Date(start)
+    while (d <= end) {
+      if (dayNumbers.includes(d.getDay())) dates.push(new Date(d))
+      d = addDays(d, 1)
+    }
+    return dates
+  }
+
+  if (frequency === 'monthly' && cfg?.day_of_month != null) {
+    const dayOfMonth = Math.min(31, Math.max(1, cfg.day_of_month))
+    let y = start.getFullYear()
+    let m = start.getMonth()
+    while (true) {
+      // Ultimo giorno del mese per evitare 31 febbraio
+      const lastDay = new Date(y, m + 1, 0).getDate()
+      const useDay = Math.min(dayOfMonth, lastDay)
+      const candidate = new Date(y, m, useDay)
+      if (candidate >= start && candidate <= end) dates.push(candidate)
+      if (candidate > end) break
+      m += 1
+      if (m > 11) {
+        m = 0
+        y += 1
+      }
+    }
+    return dates
+  }
+
+  if ((frequency === 'annually' || frequency === 'annual') && cfg?.day_of_year) {
+    // day_of_year è ISO "YYYY-MM-DD" o "MM-DD": usiamo mese/giorno per ogni anno nel range
+    const parts = cfg.day_of_year.match(/^\d{4}-(\d{2})-(\d{2})$/) || cfg.day_of_year.match(/^(\d{2})-(\d{2})$/)
+    if (!parts) return []
+    const month = parseInt(parts[1], 10) - 1
+    const day = parseInt(parts[2], 10)
+    let y = start.getFullYear()
+    while (y <= end.getFullYear()) {
+      const lastDay = new Date(y, month + 1, 0).getDate()
+      const useDay = Math.min(day, lastDay)
+      const candidate = new Date(y, month, useDay)
+      if (candidate >= start && candidate <= end) dates.push(candidate)
+      y += 1
+    }
+    return dates
+  }
+
+  return []
+}
+
+/**
+ * Range di espansione per manutenzioni: anno corrente → fine anno successivo (o fiscal_year_end se più in là)
+ */
+function getMaintenanceExpansionRange(fiscalYearEnd?: Date): { rangeStart: Date; rangeEnd: Date } {
+  const now = new Date()
+  const rangeStart = startOfYear(now)
+  const endNextYear = endOfYear(addYears(now, 1))
+  const rangeEnd = fiscalYearEnd && fiscalYearEnd > endNextYear ? endOfDay(fiscalYearEnd) : endNextYear
+  return { rangeStart, rangeEnd }
+}
+
+/**
+ * Espande una task ricorrente in multiple occorrenze.
+ * Per le manutenzioni: range ampio (anno corrente → fine anno successivo) e uso di recurrence_config se presente.
  */
 function expandRecurringTask(
   task: MaintenanceTask | GenericTask,
@@ -258,52 +379,80 @@ function expandRecurringTask(
   fiscalYearEnd?: Date
 ): CalendarEvent[] {
   const frequency = task.frequency
-  
+
   // Se non è una frequenza ricorrente, restituisci un solo evento
   if (frequency === 'as_needed' || frequency === 'custom') {
     return type === 'maintenance'
       ? [convertMaintenanceTaskToEvent(task as MaintenanceTask, companyId, userId)]
       : [convertGenericTaskToEvent(task as GenericTask, companyId, userId, undefined, completions)]
   }
-  
-  // Data di inizio: usa next_due se disponibile (data scelta dall'utente), altrimenti created_at
+
+  // Solo per manutenzioni: range ampio e possibile uso di recurrence_config
+  if (type === 'maintenance') {
+    const { rangeStart, rangeEnd } = getMaintenanceExpansionRange(fiscalYearEnd)
+    const maintTask = task as MaintenanceTask
+    const recurrenceDates = getMaintenanceRecurrenceDates(maintTask, rangeStart, rangeEnd)
+    if (recurrenceDates.length > 0) {
+      return recurrenceDates.map(occurrenceDate =>
+        convertMaintenanceTaskToEvent(maintTask, companyId, userId, occurrenceDate)
+      )
+    }
+    // Fallback: stesso loop di prima ma con il nuovo range
+    const taskStartDate = maintTask.next_due ? new Date(maintTask.next_due) : new Date(maintTask.created_at)
+    const startDate = startOfDay(taskStartDate)
+    const events: CalendarEvent[] = []
+    let currentDate = startDate
+    while (currentDate <= rangeEnd) {
+      if (currentDate >= rangeStart) {
+        events.push(convertMaintenanceTaskToEvent(maintTask, companyId, userId, currentDate))
+      }
+      switch (frequency) {
+        case 'daily':
+          currentDate = addDays(currentDate, 1)
+          break
+        case 'weekly':
+          currentDate = addWeeks(currentDate, 1)
+          break
+        case 'monthly':
+          currentDate = addMonths(currentDate, 1)
+          break
+        case 'quarterly':
+          currentDate = addMonths(currentDate, 3)
+          break
+        case 'biannually':
+          currentDate = addMonths(currentDate, 6)
+          break
+        case 'annually':
+        case 'annual':
+          currentDate = addMonths(currentDate, 12)
+          break
+        default:
+          currentDate = addDays(rangeEnd, 1)
+      }
+    }
+    return events
+  }
+
+  // Generic tasks: logica esistente (end_date da description o fiscal_year_end o +90 giorni)
   const taskStartDate = 'next_due' in task && task.next_due ? new Date(task.next_due) : new Date(task.created_at)
   const startDate = startOfDay(taskStartDate)
-  
-  // Estrai end_date dalla description se presente (per generic tasks)
-  const taskEndDate = type === 'generic' ? extractEndDate((task as GenericTask).description) : null
-  
-  // Data di fine: usa fiscal_year_end se configurato, altrimenti +90 giorni
+  const taskEndDate = extractEndDate((task as GenericTask).description)
   let endDate: Date
   if (fiscalYearEnd) {
     if (taskEndDate) {
-      // Usa il minimo tra end_date specificato e fiscal_year_end
       endDate = endOfDay(taskEndDate < fiscalYearEnd ? taskEndDate : fiscalYearEnd)
     } else {
-      // Usa fiscal_year_end
       endDate = endOfDay(fiscalYearEnd)
     }
   } else if (taskEndDate) {
-    // Usa end_date specificato se non c'è fiscal_year_end
     endDate = endOfDay(taskEndDate)
   } else {
-    // Fallback: +90 giorni se niente è configurato
     endDate = endOfDay(addDays(new Date(), 90))
   }
-  
   const events: CalendarEvent[] = []
   let currentDate = startDate
-  
-  // Genera eventi ricorrenti in base alla frequenza
   while (currentDate <= endDate) {
-    // Crea l'evento per questa data
-    const event = type === 'maintenance'
-      ? convertMaintenanceTaskToEvent(task as MaintenanceTask, companyId, userId, currentDate)
-      : convertGenericTaskToEvent(task as GenericTask, companyId, userId, currentDate, completions)
-    
-    events.push(event)
-    
-    // Calcola la prossima occorrenza in base alla frequenza
+    events.push(convertGenericTaskToEvent(task as GenericTask, companyId, userId, currentDate, completions))
     switch (frequency) {
       case 'daily':
         currentDate = addDays(currentDate, 1)
@@ -325,11 +474,9 @@ function expandRecurringTask(
         currentDate = addMonths(currentDate, 12)
         break
       default:
-        // Per frequenze sconosciute, esci dal loop
         currentDate = addDays(endDate, 1)
     }
   }
-  
   return events
 }
 

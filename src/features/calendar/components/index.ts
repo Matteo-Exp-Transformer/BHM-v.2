@@ -18,6 +18,7 @@ export type { ViewSelectorProps, CompactViewSelectorProps, CalendarViewType } fr
 export { GenericTaskForm } from './GenericTaskForm'
 export { AlertModal } from './AlertModal'
 export { default as ProductExpiryModal } from './ProductExpiryModal'
-export { default as NewCalendarFilters } from './NewCalendarFilters'
+export { default as NewCalendarFilters, CalendarHeaderFilters } from './NewCalendarFilters'
+export type { CalendarHeaderFiltersProps } from './NewCalendarFilters'
 export { CalendarStatsPanel } from './CalendarStatsPanel'
 export { CalendarQuickOverview } from './CalendarQuickOverview'

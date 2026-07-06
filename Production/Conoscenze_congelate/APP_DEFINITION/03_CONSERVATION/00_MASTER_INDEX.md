@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-rotto` · Fonte: [`FASE3_REPORT_A2`](../../META/FASE3_REPORT_A2_CONSERVATION.md) §5.5  
+> **Motivo**: claim «Migration 015 APPLICATA» (§ Worker 2) — non applicata su DB live; colonne `temperature_readings` mancanti.  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # MASTER INDEX - Conservation Feature
 
 > **LEGGI PRIMA**: [PLAN.md](./PLAN.md) per capire il workflow

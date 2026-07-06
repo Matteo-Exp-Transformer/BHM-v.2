@@ -120,6 +120,7 @@ export function useConservationPoints() {
           next_due: task.next_due ? (task.next_due instanceof Date ? task.next_due.toISOString() : task.next_due) : null,
           status: 'scheduled' as const,
           instructions: task.instructions || [],
+          recurrence_config: task.recurrence_config ?? null,
         }))
 
         const { error: tasksError } = await supabase

@@ -157,13 +157,50 @@ export const validateClosureDates = (dates: string[], fiscalStart: string, fisca
 }
 
 export const isClosureDate = (date: Date, closureDates: string[]): boolean => {
-  const dateString = date.toISOString().split('T')[0]
+  // Usa formato locale (non UTC) per evitare shift di giorno con toISOString()
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const dateString = `${year}-${month}-${day}`
   return closureDates.includes(dateString)
 }
 
 export const isOpenWeekday = (date: Date, openWeekdays: number[]): boolean => {
   const dayOfWeek = date.getDay()
   return openWeekdays.includes(dayOfWeek)
+}
+
+/**
+ * Determina se una data cade in un giorno di chiusura aziendale.
+ * Un giorno è chiuso se il giorno della settimana NON è in open_weekdays
+ * OPPURE se la data è presente in closure_dates.
+ */
+export const isCompanyClosedOnDate = (
+  date: Date,
+  openWeekdays: number[],
+  closureDates: string[]
+): boolean => {
+  return !isOpenWeekday(date, openWeekdays) || isClosureDate(date, closureDates)
+}
+
+/**
+ * Determina se un evento del calendario va mostrato anche nei giorni di chiusura.
+ * Solo scadenze HACCP e scadenze personale sono visibili nei giorni chiusi.
+ */
+export const shouldShowEventOnClosureDay = (event: {
+  type: string
+  id: string
+  metadata?: { staff_id?: string; product_id?: string; [key: string]: any }
+}): boolean => {
+  // Scadenze HACCP personale (per ID prefix)
+  if (event.id.startsWith('haccp-expiry-') || event.id.startsWith('haccp-deadline-')) {
+    return true
+  }
+  // type 'custom' con staff_id e senza product_id = scadenza personale
+  if (event.type === 'custom' && event.metadata?.staff_id && !event.metadata?.product_id) {
+    return true
+  }
+  return false
 }
 
 export const getNextOpenDate = (

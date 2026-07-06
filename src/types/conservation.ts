@@ -109,6 +109,16 @@ export interface ConservationRule {
   requires_blast_chilling?: boolean
 }
 
+/** Configurazione ricorrenza manutenzione (allineata a migration 019) */
+export interface MaintenanceRecurrenceConfig {
+  /** Giorni settimana per daily/weekly: lunedi, martedi, ... */
+  weekdays?: string[]
+  /** Giorno del mese (1-31) per monthly */
+  day_of_month?: number
+  /** Data ISO (YYYY-MM-DD) per annually (es. sbrinamento) */
+  day_of_year?: string
+}
+
 export interface MaintenanceTask {
   id: string
   company_id: string
@@ -135,6 +145,9 @@ export interface MaintenanceTask {
   completed_at?: Date
   created_at: Date
   updated_at: Date
+
+  /** Configurazione ricorrenza (giorni settimana, giorno mese, data annuale) */
+  recurrence_config?: MaintenanceRecurrenceConfig | null
 
   // Relazioni
   conservation_point?: ConservationPoint

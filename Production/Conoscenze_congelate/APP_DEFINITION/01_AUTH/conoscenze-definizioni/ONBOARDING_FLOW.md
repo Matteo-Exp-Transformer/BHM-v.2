@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-gap` · Fonte: [`FASE3_REPORT_A1`](../../META/FASE3_REPORT_A1_AUTH.md) §5.5 · [`DECISIONI_OWNER_BETA`](../../META/MAPPATURA_AREE/DECISIONI_OWNER_BETA.md) dec. 4  
+> **Motivo**: campo licenza ancora in UI ma colonna assente su DB; acceptance criteria aperti; completamento solo `localStorage`.  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # ONBOARDING FLOW - SPECIFICA DETTAGLIATA
 
 **Data**: 2025-10-22 01:38

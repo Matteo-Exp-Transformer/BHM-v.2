@@ -14,8 +14,8 @@ const fs = require('fs').promises;
 const path = require('path');
 
 // Configurazione Supabase
-const SUPABASE_URL = 'https://tucqgcfrlzmwyfadiodo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1Y3FnY2ZybHptd3lmYWRpb2RvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NTY0ODksImV4cCI6MjA3NTUzMjQ4OX0.7m3bdxW8QMHO6YNQ4cxoxlzzgzq7DjTzufv89YAcHA4';
+const SUPABASE_URL = 'https://hjteuounjwkadmsbsmdm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqdGV1b3VuandrYWRtc2JzbWRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMzIyNDIsImV4cCI6MjA5ODgwODI0Mn0.LYUHcOxsmcxJYKSGQG_jkaDTOoJ0ABowL4L7D5871kw';
 
 // Credenziali test
 const TEST_EMAIL = 'matteo.cavallaro.work@gmail.com';

@@ -8,7 +8,6 @@ import {
   useCalendarView,
   GenericTaskForm,
   ProductExpiryModal,
-  NewCalendarFilters,
 } from './components'
 import { AlertModal } from './components/AlertModal'
 import { CalendarConfigModal } from './components/CalendarConfigModal'
@@ -39,7 +38,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 
 export const CalendarPage = () => {
-  const { companyId } = useAuth()
+  const { companyId, hasRole } = useAuth()
+  const isAdmin = hasRole('admin')
   const queryClient = useQueryClient()
   const { settings: calendarSettings, isLoading: settingsLoading, isConfigured } = useCalendarSettings()
   const { isRefreshing, refreshKey, handleManualRefresh, triggerRefresh } = useCalendarRefresh()
@@ -70,6 +70,8 @@ export const CalendarPage = () => {
     events?: any[]
     highlightMaintenanceTaskId?: string
   } | null>(null)
+  /** Intervallo di date visibile nel calendario (es. mese mostrato); usato per filtrare viewBasedEvents */
+  const [visibleRange, setVisibleRange] = useState<{ start: Date; end: Date } | null>(null)
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -133,12 +135,23 @@ export const CalendarPage = () => {
           const eventYear = new Date(event.start).getFullYear()
           return eventYear === now.getFullYear()
         })
-      case 'month':
+      case 'month': {
+        if (visibleRange?.start && visibleRange?.end) {
+          const rangeStart = new Date(visibleRange.start)
+          rangeStart.setHours(0, 0, 0, 0)
+          const rangeEnd = new Date(visibleRange.end)
+          rangeEnd.setHours(23, 59, 59, 999)
+          return displayEvents.filter(event => {
+            const eventDate = new Date(event.start)
+            return eventDate >= rangeStart && eventDate <= rangeEnd
+          })
+        }
         return displayEvents.filter(event => {
           const eventDate = new Date(event.start)
-          return eventDate.getMonth() === now.getMonth() && 
+          return eventDate.getMonth() === now.getMonth() &&
                  eventDate.getFullYear() === now.getFullYear()
         })
+      }
       case 'week': {
         // Logica settimana corrente
         const weekStart = new Date(now)
@@ -168,7 +181,7 @@ export const CalendarPage = () => {
       default:
         return displayEvents
     }
-  }, [displayEvents, view])
+  }, [displayEvents, view, visibleRange?.start?.getTime(), visibleRange?.end?.getTime()])
 
   // ✅ Sincronizza eventi del modal macro quando i dati sottostanti (viewBasedEvents) cambiano (es. dopo completamento)
   const categoryToEventType: Record<string, EventType> = {
@@ -189,6 +202,9 @@ export const CalendarPage = () => {
     })
     setSelectedMacroCategory(prev => {
       if (!prev) return null
+      // Non sovrascrivere con lista vuota quando gli eventi vengono dal click su macro (es. mese successivo):
+      // viewBasedEvents è filtrato per mese visibile; per date fuori dal mese corrente dayEvents è [].
+      if (dayEvents.length === 0 && (prev.events?.length ?? 0) > 0) return prev
       // Confronta id+status così il modal si aggiorna anche quando cambia solo lo stato (es. completamento)
       const prevSig = (prev.events ?? []).map((e: { id?: string; status?: string }) => `${e?.id}:${(e as any)?.status ?? ''}`).filter(Boolean).sort().join(',')
       const nextSig = dayEvents.map(e => `${e?.id}:${e?.status ?? ''}`).filter(Boolean).sort().join(',')
@@ -610,6 +626,7 @@ export const CalendarPage = () => {
             onEventDelete={onEventDelete}
             onDateSelect={onDateSelect}
             onDateClick={setSelectedCalendarDate}
+            onDatesSet={(start, end) => setVisibleRange({ start, end })}
             selectedMacroCategory={selectedMacroCategory}
             onMacroCategoryClose={() => setSelectedMacroCategory(null)}
             onMacroCategorySelect={(category, date, events) => {
@@ -647,13 +664,9 @@ export const CalendarPage = () => {
             calendarSettings={calendarSettings}
                    eventSources={viewBasedSources}
             calendarFilters={calendarFilters}
-            filters={
-              <NewCalendarFilters
-                filters={calendarFilters}
-                onFiltersChange={handleFilterChange}
-                availableDepartments={availableDepartments}
-              />
-            }
+            onFiltersChange={handleFilterChange}
+            availableDepartments={availableDepartments}
+            isAdmin={isAdmin}
           />
         </div>
 

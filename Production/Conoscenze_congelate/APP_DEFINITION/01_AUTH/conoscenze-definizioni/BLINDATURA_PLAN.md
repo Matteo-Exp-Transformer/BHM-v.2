@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-gap` · Fonte: [`FASE3_REPORT_A1`](../../META/FASE3_REPORT_A1_AUTH.md) §5.1  
+> **Motivo**: piano blindatura ott 2025 — processo utile ma **non** riflette stato implementazione post-Fase 3.  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # PIANO DI BLINDATURA - LOGIN E ONBOARDING
 
 **Data**: 2025-10-22 01:38

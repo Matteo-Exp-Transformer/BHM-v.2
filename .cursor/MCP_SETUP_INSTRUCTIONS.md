@@ -1,7 +1,7 @@
 # 🔧 Istruzioni Setup MCP - BHM v.2
 
 **Data**: 2026-01-07  
-**Progetto Supabase**: `tucqgcfrlzmwyfadiodo`
+**Progetto Supabase**: `hjteuounjwkadmsbsmdm`
 
 ---
 

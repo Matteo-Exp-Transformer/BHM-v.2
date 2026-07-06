@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-rotto` · Fonte: [`FASE3_REPORT_A0`](../../../../META/FASE3_REPORT_A0_DB_SCHEMA.md) §5.4  
+> **Motivo**: claim «tutti i 10 campi `temperature_readings` presenti» / migration 015 applicata — falsi su DB live (snapshot A0 2026-07-05).  
+> **Verità**: codice + DB live > questo documento.
+
 # WORKER 2 - Task 2.2: Verifica Schema Database
 
 **Data:** 2026-01-16  

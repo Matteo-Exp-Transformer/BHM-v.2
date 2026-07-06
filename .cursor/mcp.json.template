@@ -1,18 +1,7 @@
 {
   "mcpServers": {
-    "supabase": {
-      "command": "cmd",
-      "args": [
-        "/c",
-        "npx",
-        "-y",
-        "@supabase/mcp-server-supabase@latest",
-        "--read-only",
-        "--project-ref=tucqgcfrlzmwyfadiodo"
-      ],
-      "env": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_YOUR_SUPABASE_PERSONAL_ACCESS_TOKEN_HERE"
-      }
+    "supabase-bhm": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=hjteuounjwkadmsbsmdm&read_only=true&features=database,docs,development,debugging"
     },
     "playwright": {
       "command": "cmd",
@@ -33,7 +22,7 @@
         "@modelcontextprotocol/server-github"
       ],
       "env": {
-        "GITHUB_TOKEN": "ghp_YOUR_GITHUB_PERSONAL_ACCESS_TOKEN_HERE"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_YOUR_GITHUB_PERSONAL_ACCESS_TOKEN_HERE"
       }
     },
     "filesystem": {
@@ -49,8 +38,3 @@
     }
   }
 }
-
-
-
-
-

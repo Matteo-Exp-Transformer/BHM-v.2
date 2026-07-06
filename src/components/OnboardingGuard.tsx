@@ -65,9 +65,14 @@ const OnboardingGuard: React.FC<OnboardingGuardProps> = ({ children }) => {
     )
   }
 
-  // Se utente senza company e NON in onboarding → mostra loader 
-  // (il redirect avverrà nell'useEffect)
-  if (isSignedIn && companies.length === 0 && location.pathname !== '/onboarding') {
+  // Se utente senza company e NON in onboarding → mostra loader solo se serve redirect
+  const onboardingCompleted = localStorage.getItem('onboarding-completed') === 'true'
+  if (
+    isSignedIn &&
+    companiesCount === 0 &&
+    location.pathname !== '/onboarding' &&
+    !onboardingCompleted
+  ) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />

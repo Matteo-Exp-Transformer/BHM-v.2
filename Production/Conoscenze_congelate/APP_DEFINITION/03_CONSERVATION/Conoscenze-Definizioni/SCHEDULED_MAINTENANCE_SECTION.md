@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-ok` · Fonte: [`FASE3_REPORT_A2`](../../META/FASE3_REPORT_A2_CONSERVATION.md) §5.5  
+> **Motivo**: trigger ricorrenza e `maintenance_completions` presenti su DB live; gap UX minore (pulsante «Completa» inline).  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # SCHEDULED_MAINTENANCE_SECTION - DOCUMENTAZIONE COMPLETA
 
 **Data Creazione**: 2026-01-16
@@ -101,19 +105,19 @@ La sezione "Manutenzioni Programmate" permette all'utente di avere sott'occhio t
 
 Questa sezione risolve il bisogno di:
 - **Monitorare** tutte le manutenzioni obbligatorie programmate per ogni punto
-- **Consultare** rapidamente lo stato settimanale (verde/giallo/rosso) di ogni punto
-- **Visualizzare** la prossima manutenzione in scadenza per ogni punto (basata sul calendario)
+- **Consultare** rapidamente lo stato giornaliero (verde/giallo/rosso) di ogni punto (verde = nulla da completare oggi, giallo = da completare oggi, rosso = in ritardo)
+- **Visualizzare** la prossima manutenzione per data per ogni punto
 - **Verificare** chi è assegnato alle manutenzioni (ruolo, categoria, reparto, dipendente specifico)
 - **Organizzare** le manutenzioni per punto in una struttura scalabile e facilmente consultabile
 
 ### Scopo Tecnico
 La sezione è implementata tramite il componente `ScheduledMaintenanceCard` e include:
 
-- **CollapsibleCard principale**: "Manutenzioni Programmate" con sottotitolo "Situazione settimanale per punto di conservazione"
+- **CollapsibleCard principale**: "Manutenzioni Programmate" con sottotitolo "Situazione giornaliera per punto di conservazione"
 - **CollapsibleCard annidate per punto**: Ogni punto di conservazione ha la propria sezione espandibile
-- **Badge stato settimanale**: Pallino colorato (verde/giallo/rosso) che indica lo stato delle manutenzioni per questa settimana
-- **Conteggio manutenzioni**: Numero di manutenzioni obbligatorie associate al punto
-- **Lista manutenzioni espandibile**: Quando si clicca su un punto, mostra le manutenzioni con dettagli
+- **Badge stato giornaliero**: Pallino colorato (verde = nulla oggi, giallo = da completare oggi, rosso = in ritardo)
+- **Conteggio tipologie manutenzioni**: Numero di tipologie obbligatorie associate al punto (max 4)
+- **Lista manutenzioni espandibile**: Quando si clicca su un punto, mostra le manutenzioni con dettagli (prossima per data in ogni tipologia)
 
 ---
 

@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-gap` · Fonte: [`FASE3_REPORT_A4`](../META/FASE3_REPORT_A4_DASHBOARD.md) §5.4 · [`GUIDA_INTRODUTTIVA_AGENTE_SENIOR`](../META/GUIDA_INTRODUTTIVA_AGENTE_SENIOR.md) §4  
+> **Motivo**: struttura cartelle ideale — molte aree (`02_DASHBOARD`, `05_INVENTORY`, `06_SETTINGS`) **non esistono** nel repo.  
+> **Verità**: codice + DB live > questo documento.
+
 # SISTEMA DI DOCUMENTAZIONE DETTAGLIATA - BHM v.2
 
 **Data**: 2025-10-22 01:38

@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-ok` · Fonte: [`FASE3_REPORT_A2`](../../META/FASE3_REPORT_A2_CONSERVATION.md) §5.5  
+> **Motivo**: check-up card v2.1 allineato a codice verificato in Fase 3.  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # CONSERVATION_POINT_CARD - DOCUMENTAZIONE COMPLETA
 
 **Data Creazione**: 2026-01-16

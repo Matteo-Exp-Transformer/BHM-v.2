@@ -144,7 +144,11 @@ export const useCalendarSettings = () => {
       return false
     }
 
-    const dateString = date.toISOString().split('T')[0]
+    // Usa formato locale (non UTC) per evitare shift di giorno con toISOString()
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const dateString = `${year}-${month}-${day}`
     if (settings.closure_dates.includes(dateString)) {
       return false
     }

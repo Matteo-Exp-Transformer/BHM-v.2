@@ -8,10 +8,10 @@
  * @date 2025-01-09
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase/client'
-import type { User } from '@supabase/supabase-js'
+import { subscribeAuthSession, getAuthSnapshot } from '@/lib/supabase/authSessionManager'
 import { activityTrackingService } from '@/services/activityTrackingService'
 import { rememberMeService } from '@/services/auth/RememberMeService'
 
@@ -48,6 +48,7 @@ interface CompanyMembership {
 
 // User session (da tabella user_sessions)
 interface UserSession {
+  id?: string
   user_id: string
   active_company_id: string | null
   last_activity: string
@@ -106,97 +107,14 @@ const getPermissionsFromRole = (role: UserRole): UserPermissions => {
 
 export const useAuth = () => {
   const queryClient = useQueryClient()
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const authState = useSyncExternalStore(
+    subscribeAuthSession,
+    getAuthSnapshot,
+    getAuthSnapshot
+  )
+  const user = authState.user
+  const isLoading = authState.isLoading
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
-
-  // =============================================
-  // 1. Auth State Listener (Supabase Session)
-  // =============================================
-
-  useEffect(() => {
-    let isMounted = true
-    
-    // Timeout di sicurezza per evitare loading infinito
-    const loadingTimeout = setTimeout(() => {
-      if (isMounted) {
-        console.warn('⚠️ Timeout caricamento autenticazione (10s) - forzando stato finale')
-        setIsLoading(false)
-      }
-    }, 10000) // 10 secondi max
-
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }: any) => {
-      if (!isMounted) return
-      clearTimeout(loadingTimeout)
-      
-      if (error) {
-        console.error('❌ Errore recupero sessione iniziale:', error)
-        // Se il refresh token è invalido, pulisci la sessione
-        if (error.message?.includes('refresh_token') || error.message?.includes('Invalid Refresh Token')) {
-          console.log('🔄 Refresh token invalido - pulizia sessione')
-          supabase.auth.signOut().catch(console.error)
-        }
-        setUser(null)
-        setIsLoading(false)
-        return
-      }
-      setUser(session?.user ?? null)
-      setIsLoading(false)
-    }).catch((error) => {
-      if (!isMounted) return
-      clearTimeout(loadingTimeout)
-      console.error('❌ Errore critico recupero sessione:', error)
-      setUser(null)
-      setIsLoading(false)
-    })
-
-    return () => {
-      isMounted = false
-      clearTimeout(loadingTimeout)
-    }
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
-      console.log('🔐 Auth state change:', event, session ? 'session exists' : 'no session')
-      
-      // Gestisci errori di refresh token
-      if (event === 'TOKEN_REFRESHED' && !session) {
-        console.warn('⚠️ Token refresh fallito - sessione persa')
-        // Il refresh è fallito, la sessione è scaduta
-        setUser(null)
-        setIsLoading(false)
-        return
-      }
-
-      setUser(session?.user ?? null)
-      setIsLoading(false)
-
-      if (event === 'SIGNED_IN' && session?.user) {
-        const companyId = localStorage.getItem('active_company_id')
-        if (companyId) {
-          const sessionResult = await activityTrackingService.startSession(
-            session.user.id,
-            companyId
-          )
-          if (sessionResult.success && sessionResult.sessionId) {
-            setCurrentSessionId(sessionResult.sessionId)
-          }
-        }
-      }
-
-      if (event === 'SIGNED_OUT') {
-        if (currentSessionId) {
-          await activityTrackingService.endSession(currentSessionId, 'manual')
-          setCurrentSessionId(null)
-        }
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [currentSessionId])
 
   // =============================================
   // 2. Fetch User Profile
@@ -300,7 +218,6 @@ export const useAuth = () => {
 
   const {
     data: session,
-    isLoading: sessionLoading,
     refetch: refetchSession,
   } = useQuery({
     queryKey: ['user-session', user?.id],
@@ -323,6 +240,9 @@ export const useAuth = () => {
 
       // Se sessione esiste, ritornala
       if (existing) {
+        if (existing.id) {
+          setCurrentSessionId(existing.id)
+        }
         return existing as UserSession
       }
 
@@ -351,10 +271,19 @@ export const useAuth = () => {
 
         if (createError) {
           console.error('❌ Errore creazione sessione:', createError)
-          throw createError
+          // Sessione già esistente (unique user_id) — rileggi
+          if (createError.code === '23505') {
+            const { data: existingAfterConflict } = await supabase
+              .from('user_sessions')
+              .select('*')
+              .eq('user_id', user.id)
+              .single()
+            return (existingAfterConflict as UserSession) ?? null
+          }
+          return null
         }
 
-        // Start activity tracking session
+        // Aggiorna activity tracking sulla sessione esistente
         const sessionResult = await activityTrackingService.startSession(
           user.id,
           activeCompanyId
@@ -363,7 +292,13 @@ export const useAuth = () => {
           setCurrentSessionId(sessionResult.sessionId)
         }
 
-        return newSession as UserSession
+        const { data: createdOrExisting } = await supabase
+          .from('user_sessions')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+
+        return (createdOrExisting as UserSession) ?? (newSession as UserSession)
       }
 
       // Utente senza aziende
@@ -377,9 +312,11 @@ export const useAuth = () => {
   // 4. Get Current Company Membership
   // =============================================
 
-  const currentMembership = companies.find(
-    c => c.company_id === session?.active_company_id
-  )
+  const activeCompanyId =
+    session?.active_company_id ?? companies[0]?.company_id ?? null
+
+  const currentMembership =
+    companies.find((c) => c.company_id === activeCompanyId) ?? companies[0]
 
   // =============================================
   // 5. Switch Company Mutation
@@ -564,7 +501,10 @@ export const useAuth = () => {
   // 10. Loading States
   // =============================================
 
-  const isAuthLoading = isLoading || companiesLoading || sessionLoading
+  // Non bloccare l'UI in attesa di user_sessions se abbiamo già company_members
+  const isAuthLoading =
+    isLoading ||
+    (!!user?.id && companiesLoading && companies.length === 0)
   const isAuthenticated = !!user && !!currentMembership
 
   // =============================================
@@ -597,12 +537,12 @@ export const useAuth = () => {
     userRole,
     permissions,
     displayName,
-    companyId: session?.active_company_id || null,
+    companyId: activeCompanyId,
     sessionId: currentSessionId,
 
     // Multi-company (NUOVO)
     companies,
-    activeCompanyId: session?.active_company_id || null,
+    activeCompanyId,
     currentMembership,
     switchCompany: switchCompanyMutation.mutate,
     isSwitchingCompany: switchCompanyMutation.isPending,

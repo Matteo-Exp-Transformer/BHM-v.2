@@ -619,16 +619,32 @@ export function AddPointModal({
   const transformMaintenanceTaskToForm = (task: DBMaintenanceTask): MandatoryMaintenanceTask => {
     const standardType = REVERSE_MAINTENANCE_TYPE_MAPPING[task.type] || 'rilevamento_temperatura'
     const frequency = REVERSE_FREQUENCY_MAPPING[task.frequency] || 'giornaliera' as MaintenanceFrequency
-    
+    const rc = task.recurrence_config
+    const validWeekdays: Weekday[] = ['lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato', 'domenica']
+    const giorniSettimana = rc?.weekdays?.length
+      ? (rc.weekdays.filter((d): d is Weekday => validWeekdays.includes(d as Weekday)) as Weekday[])
+      : undefined
+    let giornoMese: number | undefined
+    let giornoAnno: number | undefined
+    if (rc?.day_of_month != null && rc.day_of_month >= 1 && rc.day_of_month <= 31) {
+      giornoMese = rc.day_of_month
+    }
+    if (rc?.day_of_year) {
+      const d = new Date(rc.day_of_year)
+      if (!Number.isNaN(d.getTime())) {
+        const start = new Date(d.getFullYear(), 0, 1)
+        giornoAnno = Math.floor((d.getTime() - start.getTime()) / 86400000) + 1
+      }
+    }
     return {
       manutenzione: standardType,
       frequenza: frequency,
       assegnatoARuolo: (task.assigned_to_role as StaffRole) || '' as StaffRole,
       assegnatoACategoria: task.assigned_to_category || undefined,
       assegnatoADipendenteSpecifico: task.assigned_to_staff_id || undefined,
-      giorniSettimana: undefined, // Non salvato nel DB, lasciato undefined
-      giornoMese: undefined, // Non salvato nel DB, lasciato undefined
-      giornoAnno: undefined, // Non salvato nel DB, lasciato undefined
+      giorniSettimana,
+      giornoMese,
+      giornoAnno,
       note: task.description || undefined,
     }
   }
@@ -939,6 +955,18 @@ export function AddPointModal({
       // Calcola assignment_type: 'staff' se assegnatoADipendenteSpecifico è presente, altrimenti 'role'
       const assignment_type = task.assegnatoADipendenteSpecifico ? 'staff' : 'role'
       
+      // recurrence_config per calendario e next_due (allineato a migration 019)
+      let recurrence_config: { weekdays?: string[]; day_of_month?: number; day_of_year?: string } | undefined
+      if ((frequency === 'daily' || frequency === 'weekly' || frequency === 'custom') && task.giorniSettimana?.length) {
+        recurrence_config = { weekdays: [...task.giorniSettimana] }
+      } else if (frequency === 'monthly' && task.giornoMese != null && task.giornoMese >= 1 && task.giornoMese <= 31) {
+        recurrence_config = { day_of_month: task.giornoMese }
+      } else if (frequency === 'annually' && task.giornoAnno != null && task.giornoAnno >= 1 && task.giornoAnno <= 366) {
+        // giornoAnno 1-366 → data ISO (anno 2024 come template per giorno/mese)
+        const template = new Date(2024, 0, task.giornoAnno)
+        recurrence_config = { day_of_year: template.toISOString().slice(0, 10) }
+      }
+      
       return {
         type: maintenanceType,
         frequency: frequency,
@@ -952,6 +980,7 @@ export function AddPointModal({
         priority: 'medium' as const,
         estimated_duration: 60, // Default duration
         instructions: [],
+        ...(recurrence_config && { recurrence_config }),
       }
     })
   }

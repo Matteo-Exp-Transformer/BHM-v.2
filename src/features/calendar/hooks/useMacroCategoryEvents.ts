@@ -10,6 +10,8 @@ import type { GenericTask } from './useGenericTasks'
 import { supabase } from '@/lib/supabase/client'
 import type { CalendarFilters, EventStatus } from '@/types/calendar-filters'
 import { areAllFiltersEmpty } from '@/types/calendar-filters'
+import { useCalendarSettings } from '@/hooks/useCalendarSettings'
+import { isCompanyClosedOnDate } from '@/utils/calendarUtils'
 
 export type MacroCategory = 'maintenance' | 'generic_tasks' | 'product_expiry'
 
@@ -131,6 +133,7 @@ function isUserAuthorizedForEvent(
 
 export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarFilters, refreshKey?: number): MacroCategoryResult {
   const { companyId, userRole } = useAuth()
+  const { settings: calendarSettings } = useCalendarSettings()
   const { maintenanceTasks, isLoading: maintenanceLoading } = useMaintenanceTasks()
   const { products, isLoading: productsLoading } = useProducts()
   const { tasks: genericTasks, isLoading: genericTasksLoading } = useGenericTasks()
@@ -332,9 +335,22 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
       ...productExpiryItems,
     ]
 
+    // Filtra items nei giorni di chiusura aziendale
+    // Macro-categorie contengono solo maintenance, generic_tasks, product_expiry
+    // (nessun evento HACCP/personale), quindi si nascondono tutti nei giorni chiusi
+    const filteredItems = (calendarSettings?.is_configured)
+      ? allItems.filter(item => {
+          return !isCompanyClosedOnDate(
+            item.dueDate,
+            calendarSettings.open_weekdays,
+            calendarSettings.closure_dates
+          )
+        })
+      : allItems
+
     const eventsByDateAndCategory = new Map<string, Map<MacroCategory, MacroCategoryItem[]>>()
 
-    allItems.forEach(item => {
+    filteredItems.forEach(item => {
       const dateKey = item.dueDate.toISOString().split('T')[0]
 
       if (!eventsByDateAndCategory.has(dateKey)) {
@@ -369,7 +385,7 @@ export function useMacroCategoryEvents(fiscalYearEnd?: Date, filters?: CalendarF
     })
 
     return result.sort((a, b) => a.date.localeCompare(b.date))
-  }, [maintenanceItems, genericTaskItems, productExpiryItems, refreshKey]) // ✅ Aggiunge refreshKey per forzare il refresh
+  }, [maintenanceItems, genericTaskItems, productExpiryItems, calendarSettings, refreshKey]) // ✅ Aggiunge refreshKey e calendarSettings per filtro giorni chiusura
 
   const getEventsForDate = (date: Date): MacroCategoryEvent[] => {
     const dateKey = date.toISOString().split('T')[0]

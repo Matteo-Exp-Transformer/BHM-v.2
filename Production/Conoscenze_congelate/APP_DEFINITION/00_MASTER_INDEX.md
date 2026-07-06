@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-gap` · Fonte: [`GUIDA_INTRODUTTIVA_AGENTE_SENIOR`](../META/GUIDA_INTRODUTTIVA_AGENTE_SENIOR.md) §8 · [`STATO_FASE3_INDICE.md`](./STATO_FASE3_INDICE.md)  
+> **Motivo**: checklist ~8/150 completata; cartelle `02_DASHBOARD`, `05_INVENTORY`, `06_SETTINGS`, `07_MANAGEMENT` **non esistono**. Usare report Fase 3 per stato reale.  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # 📚 MASTER INDEX - MAPPATURA COMPLETA ELEMENTI APP BHM v.2
 
 **Data Creazione**: 2026-01-16  

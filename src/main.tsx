@@ -4,6 +4,9 @@ import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
 import './styles/index.css'
+import { initAuthSession } from '@/lib/supabase/authSessionManager'
+
+initAuthSession()
 
 // Test Supabase connection in development
 if (import.meta.env.DEV) {

@@ -234,10 +234,11 @@ export const Calendar: React.FC<CalendarProps> = ({
 
         if (isClosedWeekday || isSpecificClosure) {
           if (!hasFcDayClosed) {
-            cell.classList.add('fc-day-closed')
+            cell.classList.add('fc-day-closed', 'calendar-cell-closed')
             appliedCount++
           } else {
             alreadyClosedCount++
+            cell.classList.add('calendar-cell-closed') /* assicura classe hover anche se fc-day-closed era già presente */
           }
 
           // Icona spiaggia solo per chiusure specifiche (non settimanali ricorrenti)
@@ -248,7 +249,7 @@ export const Calendar: React.FC<CalendarProps> = ({
             cell.querySelector('.fc-daygrid-day-frame')?.appendChild(beachIcon)
           }
         } else {
-          cell.classList.remove('fc-day-closed')
+          cell.classList.remove('fc-day-closed', 'calendar-cell-closed')
         }
       })
 
@@ -556,7 +557,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               const isClosedWeekday = !calendarSettings.open_weekdays.includes(dayOfWeek)
 
               if (isSpecificClosureDate || isClosedWeekday) {
-                arg.el.classList.add('fc-day-closed')
+                arg.el.classList.add('fc-day-closed', 'calendar-cell-closed')
 
                 // Icona solo per chiusure specifiche, non per chiusure settimanali ricorrenti
                 if (isSpecificClosureDate) {
@@ -1029,8 +1030,35 @@ export const Calendar: React.FC<CalendarProps> = ({
           filter: drop-shadow(0 2px 4px rgba(99, 102, 241, 0.2));
         }
 
-        /* 🔧 Stili fc-day-closed spostati in calendar-custom.css per evitare duplicazione
-           Beach icon for closed days */
+        /* 🔧 FIX BUG CALENDARIO: Stili per giorni chiusi (sabato/domenica) */
+        .fc .fc-daygrid-day.fc-day-closed {
+          background: linear-gradient(135deg,
+            rgba(224, 242, 254, 0.95) 0%,
+            rgba(186, 230, 253, 0.95) 50%,
+            rgba(224, 242, 254, 0.95) 100%) !important;
+          position: relative;
+          opacity: 1 !important;
+          /* box-shadow inset crea bordo visibile che separa celle adiacenti */
+          box-shadow: inset 0 0 0 4px #0ea5e9 !important;
+          z-index: 1;
+        }
+        
+        .fc .fc-daygrid-day.fc-day-sat.fc-day-closed,
+        .fc .fc-daygrid-day.fc-day-sun.fc-day-closed {
+          background: linear-gradient(135deg,
+            rgba(224, 242, 254, 0.95) 0%,
+            rgba(186, 230, 253, 0.95) 50%,
+            rgba(224, 242, 254, 0.95) 100%) !important;
+          box-shadow: inset 0 0 0 4px #0ea5e9 !important;
+          z-index: 1;
+        }
+        
+        /* FIX: Giorni chiusi "altro mese" visibili - override opacity 0.3 di fc-day-other */
+        .fc .fc-day-other.fc-day-closed .fc-daygrid-day-top {
+          opacity: 1 !important;
+        }
+        
+        /* Beach icon for closed days */
         .fc-day-beach-icon {
           position: absolute;
           top: 50%;

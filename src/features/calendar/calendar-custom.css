@@ -188,22 +188,23 @@
 
 /* ============================================
    UNIFORMITÀ GIORNI SETTIMANA
+   Esclude giorni chiusi (.fc-day-closed) per permettere il loro stile dedicato
    ============================================ */
-.fc .fc-day-sun,
-.fc .fc-day-sat,
-.fc .fc-non-business {
+.fc .fc-day-sun:not(.fc-day-closed),
+.fc .fc-day-sat:not(.fc-day-closed),
+.fc .fc-non-business:not(.fc-day-closed) {
   background-color: #ffffff !important;
   opacity: 1 !important;
 }
 
-.fc .fc-daygrid-day.fc-day-sun,
-.fc .fc-daygrid-day.fc-day-sat {
+.fc .fc-daygrid-day.fc-day-sun:not(.fc-day-closed),
+.fc .fc-daygrid-day.fc-day-sat:not(.fc-day-closed) {
   background-color: #ffffff !important;
   opacity: 1 !important;
 }
 
-.fc-daygrid-day.fc-day-sun:not(.fc-day-today):not(.fc-day-selected),
-.fc-daygrid-day.fc-day-sat:not(.fc-day-today):not(.fc-day-selected) {
+.fc-daygrid-day.fc-day-sun:not(.fc-day-today):not(.fc-day-selected):not(.fc-day-closed),
+.fc-daygrid-day.fc-day-sat:not(.fc-day-today):not(.fc-day-selected):not(.fc-day-closed) {
   background-color: #fafafa !important;
 }
 
@@ -275,19 +276,36 @@
 /* ============================================
    GIORNI CHIUSI - Design elegante
    Separazione visiva tra celle (es. sabato/domenica) per evitare effetto "unito"
+
+   🔧 FIX SPECIFICITY: Selettore .fc .fc-daygrid-day.fc-day-closed (0,0,3,0)
+   per vincere su .fc .fc-daygrid-day.fc-day-sat (0,0,3,0) con ordine sorgente.
+   Usa box-shadow inset al posto di border per immunità a border-collapse.
    ============================================ */
-.fc-day-closed {
+.fc .fc-daygrid-day.fc-day-closed {
   background: linear-gradient(135deg,
     rgba(224, 242, 254, 0.95) 0%,
     rgba(186, 230, 253, 0.95) 50%,
     rgba(224, 242, 254, 0.95) 100%) !important;
   position: relative;
   opacity: 1 !important;
-  /* 🔧 FIX: bordi visibili (opachi) per separare celle chiuse adiacenti (es. sabato/domenica) */
-  border: 2px solid #7dd3fc !important;
+  /* 🔧 FIX: box-shadow con spessore 4px e colore più scuro (#0ea5e9 sky-500) per maggiore visibilità */
+  box-shadow: inset 0 0 0 4px #0ea5e9 !important;
+  z-index: 1;
 }
 
-.fc-day-closed::before {
+/* Override esplicito per sabato/domenica chiusi — specificity (0,0,4,0) */
+.fc .fc-daygrid-day.fc-day-sat.fc-day-closed,
+.fc .fc-daygrid-day.fc-day-sun.fc-day-closed {
+  background: linear-gradient(135deg,
+    rgba(224, 242, 254, 0.95) 0%,
+    rgba(186, 230, 253, 0.95) 50%,
+    rgba(224, 242, 254, 0.95) 100%) !important;
+  /* 🔧 FIX: box-shadow con spessore 4px e colore più scuro per separare celle adiacenti */
+  box-shadow: inset 0 0 0 4px #0ea5e9 !important;
+  z-index: 1;
+}
+
+.fc .fc-daygrid-day.fc-day-closed::before {
   content: '';
   position: absolute;
   top: 0;
@@ -303,7 +321,7 @@
 }
 
 /* Numero del giorno sempre visibile sopra il overlay .fc-day-closed::before */
-.fc-day-closed .fc-daygrid-day-number {
+.fc .fc-daygrid-day.fc-day-closed .fc-daygrid-day-number {
   position: relative;
   z-index: 1;
 }
@@ -330,6 +348,42 @@
 .fc-day-closed:hover .fc-day-beach-icon {
   opacity: 0.7;
   transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* ============================================
+   FIX: Hover su celle Sab/Dom — no flicker, animazione come le altre
+   Classe .calendar-cell-closed applicata in Calendar.tsx (useEffect + dayCellDidMount).
+   Stili con specificità alta e transizione sulla base (Tailwind-style: duration-200, ease).
+   ============================================ */
+/* Nasconde l'highlight nativo FullCalendar in daygrid: evita "cella adiacente illuminata" */
+.fc-daygrid .fc-highlight {
+  display: none !important;
+}
+
+/* Base: transizione sempre attiva sulle celle chiuse (così l'hover anima) — equivalente transition duration-200 ease */
+.fc .fc-daygrid-day.calendar-cell-closed {
+  transition:
+    background-color 0.2s ease,
+    background-image 0.2s ease,
+    box-shadow 0.2s ease !important;
+}
+
+/* Hover: stessa illuminazione/ombra delle altre celle, SENZA transform (evita flicker). Specificity 0,0,3,0 */
+.fc .fc-daygrid-day.calendar-cell-closed:hover {
+  transform: none !important;
+  cursor: pointer !important;
+  /* Stesso effetto delle altre: gradient + shadow (design token come .fc-daygrid-day:hover) */
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, rgba(139, 92, 246, 0.06) 100%) !important;
+  box-shadow: inset 0 0 0 2px #7dd3fc, 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Sabato/Domenica chiusi: stessa regola con specificity 0,0,4,0 per vincere su regole .fc-day-sat/.fc-day-sun */
+.fc .fc-daygrid-day.fc-day-sat.calendar-cell-closed:hover,
+.fc .fc-daygrid-day.fc-day-sun.calendar-cell-closed:hover {
+  transform: none !important;
+  cursor: pointer !important;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, rgba(139, 92, 246, 0.06) 100%) !important;
+  box-shadow: inset 0 0 0 2px #7dd3fc, 0 2px 8px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* ============================================

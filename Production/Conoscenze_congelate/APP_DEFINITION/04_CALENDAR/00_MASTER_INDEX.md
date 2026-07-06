@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-gap` · Fonte: [`FASE3_REPORT_A3`](../../META/FASE3_REPORT_A3_CALENDAR.md) §5.5  
+> **Motivo**: tabella bug weekend «Parzialmente risolto» contraddice report 15-02 «RISOLTO»; codice+DB ok, doc interna in conflitto.  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # MASTER INDEX - Calendar/Attività Feature
 
 > **DOCUMENTAZIONE DETTAGLIATA**: [conoscenze-definizioni/](./conoscenze-definizioni/) per specifiche complete
@@ -90,12 +94,25 @@ Aggregazione per **data** + **categoria** (maintenance | generic_tasks | product
 
 ---
 
+## Bug riscontrati (Calendario / vista mese)
+
+| Bug | Celle interessate | Stato | Dettaglio |
+|-----|-------------------|--------|-----------|
+| **Weekend unito** | Sab/Dom (giorni chiusi) | Parzialmente risolto | `fc-day-closed` applicata via DOM; visivamente celle ancora “unite” per CSS specificity (regole `.fc-day-sat`/`.fc-day-sun` vincono). Fix proposta: alzare specificity e/o `box-shadow` inset in `calendar-custom.css`. |
+| **Lampeggiamento (flicker) al passaggio del mouse** | Stesse celle (Sab/Dom / `.fc-day-closed`) | **Risolto** | Hover con `transform: translateY(-1px)` causava loop enter/leave. Fix: `.fc-daygrid-day.fc-day-closed:hover { transform: none }` in `calendar-custom.css`. |
+| **Highlight sulla cella adiacente** | Stesse celle | **Risolto** | FullCalendar mostrava `.fc-highlight` sulla cella sbagliata. Fix: `.fc-daygrid .fc-highlight { display: none }`; feedback hover/click solo con stili custom. |
+
+**Report analisi e piano:** [Lavoro/12-02-2026/REPORT_BUG_WEEKEND_UNITO_ANALISI_APPROFONDITA_12-02-2026.md](./Lavoro/12-02-2026/REPORT_BUG_WEEKEND_UNITO_ANALISI_APPROFONDITA_12-02-2026.md) (include §11 mappatura hover/lampeggio e highlight 15-02-2026).
+
+---
+
 ## Lavoro (report implementazione)
 
 | Cartella | Contenuto |
 |----------|-----------|
 | [Lavoro/29-01-2026/](./Lavoro/29-01-2026/) | GenericTaskForm: recurrence_config, giorni custom, giorno mese, validazioni duplicati |
 | [Lavoro/04-02-2026/](./Lavoro/04-02-2026/) | **UI e Statistiche**: rimozione header Calendar, CollapsibleCard (spaziatura, hideHeader, stato controllato), correzione statistiche temporali (Questo Mese/Anno), sottotitolo vista su card Statistiche, testi/etichette pannello, casella "In Attesa" legata alla vista. Report: [REPORT_CALENDARIO_UI_E_STATISTICHE.md](./Lavoro/04-02-2026/REPORT_CALENDARIO_UI_E_STATISTICHE.md). Stesso giorno: anche [REPORT_SESSIONE_CALENDARIO_MACRO_MODAL.md](./Lavoro/04-02-2026/REPORT_SESSIONE_CALENDARIO_MACRO_MODAL.md) (MacroCategoryModal, refresh, completamento mansioni). |
+| [Lavoro/12-02-2026/](./Lavoro/12-02-2026/) | **Bug weekend unito + hover**: analisi root cause (race `dayCellDidMount`, CSS specificity), fix `fc-day-closed` via DOM, mappatura bug hover (lampeggio + highlight cella adiacente) e fix CSS. Report: [REPORT_BUG_WEEKEND_UNITO_ANALISI_APPROFONDITA_12-02-2026.md](./Lavoro/12-02-2026/REPORT_BUG_WEEKEND_UNITO_ANALISI_APPROFONDITA_12-02-2026.md). |
 
 ---
 
@@ -129,4 +146,4 @@ npm run build        # Build production
 
 ---
 
-**Ultimo aggiornamento**: 2026-02-04
+**Ultimo aggiornamento**: 2026-02-15

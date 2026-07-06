@@ -1,15 +1,23 @@
+> **Stato Fase 3** (2026-07-06): `verificato-rotto` · Fonte: [`FASE3_REPORT_A2`](../../META/FASE3_REPORT_A2_CONSERVATION.md) §5.5  
+> **Motivo**: claim «Campi Salvati» + migration 015 OK — insert fallisce su DB live (BUG-005; colonne `method`/`notes`/`photo_evidence`/`recorded_by` assenti).  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # ADD_TEMPERATURE_MODAL - DOCUMENTAZIONE COMPLETA
 
 **Data Creazione**: 2026-01-16
-**Ultima Modifica**: 2026-02-04
-**Versione**: 2.1.0
+**Ultima Modifica**: 2026-02-05
+**Versione**: 2.2.0
 **File Componente**: `src/features/conservation/components/AddTemperatureModal.tsx`
 **Tipo**: Modale / Form
 
-**Nuove Features (v2.1.0 - 04-02-2026)**:
+**Nuove Features (v2.2.0 - 05-02-2026)**:
+- ✅ **Tolleranza Unica ±1°C**: Setpoint ±1°C per tutti i tipi (dentro = conforme, fuori = critico). Fonte: `correctiveActions.ts` TOLERANCE_C = 1.0
+- ✅ **Campi Salvati**: `method`, `notes`, `photo_evidence`, `recorded_by` salvati in `temperature_readings` (migration 015)
+- ✅ **Chiusura modal**: Comportamento atteso: chiusura con X, Annulla, overlay e dopo salvataggio riuscito. Il modal resta aperto durante loading e in caso di errore (utente può riprovare).
+
+**Features (v2.1.0 - 04-02-2026)**:
 - ✅ **Chiusura modal**: Pulsante X, pulsante "Annulla" e click sull'area scura (overlay) chiamano `onClose`. Il click sul contenuto (pannello bianco) non chiude il modal (`stopPropagation`).
 - ✅ **Accessibilità**: `role="dialog"`, `aria-modal="true"`, `aria-labelledby="temperature-modal-title"` sul contenitore; titolo con `id="temperature-modal-title"`.
-- ⚠️ **Bug noto**: In alcune condizioni il modal potrebbe non chiudersi (X/Annulla/overlay). Tracciato in `Lavoro/04-02-2026/REPORT_SESSIONE_MODAL_TEMPERATURA_04-02-2026.md`.
 
 **Features (v2.0.0)**:
 - ✅ **`recorded_by` salvato**: Il campo user.id viene salvato in DB per ogni lettura
@@ -64,13 +72,13 @@ Il modal viene mostrato quando:
 ### Casi d'Uso Principali
 
 1. **Registrazione lettura conforme**
-   - **Scenario**: Un dipendente ha controllato la temperatura del "Frigo 2" (setpoint 3°C) e ha rilevato 4°C (dentro range ±2°C)
-   - **Azione**: Seleziona "Frigo 2" dal dropdown, inserisce 4°C, sistema mostra "Stato: Conforme", seleziona metodo "Termometro Digitale", salva
+   - **Scenario**: Un dipendente ha controllato la temperatura del "Frigo 2" (setpoint 3°C) e ha rilevato 3.5°C (dentro range ±1°C)
+   - **Azione**: Seleziona "Frigo 2" dal dropdown, inserisce 3.5°C, sistema mostra "Stato: Conforme", seleziona metodo "Termometro Digitale", salva
    - **Risultato**: Lettura registrata con stato "Conforme", visualizzata nella lista letture
 
 2. **Registrazione lettura critica con foto**
-   - **Scenario**: Un responsabile HACCP ha rilevato temperatura critica (8°C) su un frigorifero (setpoint 3°C, differenza 5°C > tolleranza+2)
-   - **Azione**: Seleziona punto, inserisce 8°C, sistema mostra "Stato: Critico" con messaggio "Temperatura in range critico - Azione richiesta", seleziona metodo, aggiunge note "Frigo spento durante la notte", inserisce URL foto del termometro, salva
+   - **Scenario**: Un responsabile HACCP ha rilevato temperatura critica (5°C) su un frigorifero (setpoint 3°C, differenza 2°C > tolleranza ±1°C)
+   - **Azione**: Seleziona punto, inserisce 5°C, sistema mostra "Stato: Critico" con messaggio "Temperatura fuori range - Azione richiesta", seleziona metodo, aggiunge note "Frigo spento durante la notte", inserisce URL foto del termometro, salva
    - **Risultato**: Lettura registrata con stato "Critico", visualizzata nella lista con badge rosso, alert HACCP visibile
 
 3. **Registrazione rapida senza note**

@@ -1,11 +1,25 @@
+> **Stato Fase 3** (2026-07-06): `verificato-gap` · Fonte: [`FASE3_REPORT_A3`](../../META/FASE3_REPORT_A3_CALENDAR.md) §5.5  
+> **Motivo**: claim «PRODUCTION-READY» / «100% funzionalità» — editing eventi stub (`EventDetailsModal` TODO); manutenzioni ricorrenti untested.  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # MASTER INDEX - Calendar/Attività Feature
-## Aggiornato: 2026-02-04
+## Aggiornato: 2026-02-05
 
 ---
 
-## LAVORO SVOLTO (04-02-2026)
+## LAVORO SVOLTO
 
-### Sessione 1 – MacroCategoryModal, refresh, completamento
+### 29-01-2026 – GenericTaskForm
+Report: **[Lavoro/29-01-2026/](../Lavoro/29-01-2026/)**
+
+| Intervento | Descrizione |
+|------------|-------------|
+| **recurrence_config** | Implementata configurazione ricorrenza completa |
+| **Giorni custom** | Selezione giorni specifici della settimana |
+| **Giorno mese** | Selezione giorno specifico del mese |
+| **Validazioni duplicati** | Prevenzione creazione mansioni duplicate |
+
+### 04-02-2026 – Sessione 1: MacroCategoryModal, refresh, completamento
 Report: **[REPORT_SESSIONE_CALENDARIO_MACRO_MODAL.md](../Lavoro/04-02-2026/REPORT_SESSIONE_CALENDARIO_MACRO_MODAL.md)**.
 
 | Intervento | Descrizione |
@@ -17,7 +31,7 @@ Report: **[REPORT_SESSIONE_CALENDARIO_MACRO_MODAL.md](../Lavoro/04-02-2026/REPOR
 | **Classificazione eventi** | Controlli temperatura (`temperature_reading`) → Manutenzioni (non più Mansioni generiche). |
 | **Ancora da Completare** | Pulsante in card espansa mansione completata; visibile solo a chi ha completato o admin; uncomplete con `completionId`/`periodDate` e filtro periodo per overlap (daily/weekly/monthly). |
 
-### Sessione 2 – UI Calendario e pannello Statistiche
+### 04-02-2026 – Sessione 2: UI Calendario e pannello Statistiche
 Report: **[REPORT_CALENDARIO_UI_E_STATISTICHE.md](../Lavoro/04-02-2026/REPORT_CALENDARIO_UI_E_STATISTICHE.md)**.
 
 | Intervento | Descrizione |
@@ -29,6 +43,34 @@ Report: **[REPORT_CALENDARIO_UI_E_STATISTICHE.md](../Lavoro/04-02-2026/REPORT_CA
 | **Sottotitolo vista** | Card Statistiche: sottotitolo "Statistiche annuali/mensili/settimanali/giornaliere" da `calendarView`. |
 | **Testi ed etichette** | Titolo card "Statistiche" (no emoji); sezione "Eventi da Completare"; box "Attività / Mansioni", "Completate", "In Attesa" (emoji rimosse). |
 | **Casella In Attesa** | Conteggio basato su `viewBasedEvents` così cambia con la vista calendario (Anno/Mese/Settimana/Giorno). |
+
+### 05-02-2026 – Allineamento Repository
+Report: **[REPORT_ALLINEAMENTO_REPOSITORY.md](../Lavoro/05-02-2026/REPORT_ALLINEAMENTO_REPOSITORY.md)**.
+
+| Intervento | Descrizione |
+|------------|-------------|
+| **Sicurezza** | Rimossi `.env.vercel` e file sensibili dalla storia git con `filter-branch` |
+| **Pulizia** | Rimossi 158 file temporanei/test dalla root |
+| **Dipendenze** | Aggiunta `cross-env` per script cross-platform |
+| **Allineamento** | Merge NoClerk → main, push forzato storia pulita |
+
+### 05-02-2026 – Filtro Reparto Solo Admin
+Report: **[REPORT_FILTRI_REPARTO_ADMIN.md](../Lavoro/05-02-2026/REPORT_FILTRI_REPARTO_ADMIN.md)**.
+
+| Intervento | Descrizione |
+|------------|-------------|
+| **Filtri Reparto** | Sezione "Per Reparto" visibile e applicabile solo a utenti `admin` |
+| **UI** | `NewCalendarFilters`: wrap condizionale `{isAdmin && (...)}` sulla sezione reparto |
+| **Comportamento** | Per non-admin: sezione nascosta; `departments` azzerato tramite `useEffect` |
+
+### 05-02-2026 – Rimozione Filtri Per Stato
+Report: **[REPORT_RIMOZIONE_FILTRI_STATO.md](../Lavoro/05-02-2026/REPORT_RIMOZIONE_FILTRI_STATO.md)**.
+
+| Intervento | Descrizione |
+|------------|-------------|
+| **Filtri Stato** | Rimossa dall'UI la sezione "Per Stato" (chips: Da completare, Completato, In ritardo, Eventi futuri) |
+| **NewCalendarFilters** | Rimosse `toggleStatus`, conteggio `statuses`, import `EventStatus`/`EVENT_STATUS_*`/`ListChecks` |
+| **Layer 2** | Filtri visuali ora solo: Reparto (solo admin) e Tipo |
 
 ---
 
@@ -76,7 +118,7 @@ Report: **[REPORT_CALENDARIO_UI_E_STATISTICHE.md](../Lavoro/04-02-2026/REPORT_CA
 | `Calendar.tsx` | Wrapper FullCalendar (996 righe) |
 | `MacroCategoryModal.tsx` | Lista eventi per data+categoria |
 | `GenericTaskForm.tsx` | Form creazione mansioni |
-| `NewCalendarFilters.tsx` | Filtri Reparto/Stato/Tipo |
+| `NewCalendarFilters.tsx` | Filtri Reparto (solo admin) e Tipo |
 | `CalendarStatsPanel.tsx` | Pannello statistiche |
 | `AlertModal.tsx` | Mostra alert urgenti |
 
@@ -125,9 +167,9 @@ Filtra per **ruolo/assegnazione** dell'utente:
 
 ### Layer 2 - Visuale (NewCalendarFilters)
 Filtra per **preferenza visiva**:
-- **Reparto**: OR tra reparti selezionati
-- **Stato**: to_complete | completed | overdue | future
-- **Tipo**: generic_task | maintenance | product_expiry
+- **Reparto** (solo admin): OR tra reparti selezionati — visibile e applicabile solo a utenti `admin`
+- **Tipo**: generic_task | maintenance | product_expiry  
+*(Filtro "Per Stato" rimosso dall'UI il 05-02-2026; tipo e logica `statuses` restano in calendar-filters per compatibilità.)*
 
 ---
 
@@ -169,6 +211,10 @@ CalendarPage:
 src/features/calendar/
 ├── CalendarPage.tsx              # Entry point (1095 righe)
 ├── Calendar.tsx                  # Wrapper FullCalendar (996 righe)
+├── CalendarFilter.tsx            # Filtri calendario (legacy)
+├── CalendarSettings.tsx          # Impostazioni calendario
+├── CreateEventModal.tsx          # Modal creazione evento
+├── EventDetailsModal.tsx         # Modal dettagli evento
 ├── hooks/
 │   ├── useAggregatedEvents.ts    # Aggregazione 6 fonti
 │   ├── useFilteredEvents.ts      # Filtri permessi
@@ -176,23 +222,43 @@ src/features/calendar/
 │   ├── useCalendarStats.ts       # Statistiche
 │   ├── useCalendarAlerts.ts      # Sistema alert
 │   ├── useCalendarRefresh.ts     # Auto-refresh
-│   └── useGenericTasks.ts        # CRUD mansioni
+│   ├── useGenericTasks.ts        # CRUD mansioni
+│   ├── useCalendar.ts            # Hook generico calendario
+│   └── useCalendarEvents.ts      # Gestione eventi
 ├── components/
 │   ├── MacroCategoryModal.tsx    # Modal categoria+data
+│   ├── CategoryEventsModal.tsx   # Modal eventi per categoria
 │   ├── GenericTaskForm.tsx       # Form mansioni
-│   ├── NewCalendarFilters.tsx    # Filtri UI
+│   ├── NewCalendarFilters.tsx    # Filtri UI (attuale)
+│   ├── CalendarFilters.tsx       # Filtri calendario
+│   ├── HorizontalCalendarFilters.tsx # Filtri orizzontali
 │   ├── CalendarStatsPanel.tsx    # Statistiche
-│   └── AlertModal.tsx            # Alert urgenti
+│   ├── CalendarQuickOverview.tsx # Overview rapido
+│   ├── CalendarConfigModal.tsx   # Config modale
+│   ├── CalendarLegend.tsx        # Legenda colori
+│   ├── CalendarEventLegend.tsx   # Legenda eventi
+│   ├── AlertModal.tsx            # Alert urgenti
+│   ├── EventModal.tsx            # Modal evento generico
+│   ├── EventBadge.tsx            # Badge evento
+│   ├── FilterPanel.tsx           # Pannello filtri
+│   ├── ProductExpiryModal.tsx    # Modal scadenze prodotti
+│   ├── QuickActions.tsx          # Azioni rapide
+│   ├── ViewSelector.tsx          # Selettore vista
+│   └── index.ts                  # Export componenti
 ├── utils/
 │   ├── eventTransform.ts         # Trasformazione eventi
 │   ├── colorUtils.ts             # Colori eventi
-│   └── recurrenceScheduler.ts    # Logica ricorrenza
+│   ├── recurrenceScheduler.ts    # Logica ricorrenza
+│   ├── temperatureCheckGenerator.ts # Generatore check temperatura
+│   └── haccpDeadlineGenerator.ts # Generatore scadenze HACCP
+├── __tests__/
+│   └── CalendarPage.test.tsx     # Test pagina calendario
 └── calendar-custom.css           # Stili FullCalendar
 ```
 
 ---
 
-## FILE CONOSCENZE-DEFINIZIONI
+## FILE DOCUMENTAZIONE
 
 | File | Descrizione |
 |------|-------------|
@@ -201,8 +267,15 @@ src/features/calendar/
 | **MACRO_CATEGORY_SYSTEM.md** | Sistema MacroCategory |
 | **FILTERS_AND_PERMISSIONS.md** | Sistema filtri 2-layer |
 | **EVENT_AGGREGATION.md** | Aggregazione 6 fonti |
-| **../Lavoro/04-02-2026/REPORT_SESSIONE_CALENDARIO_MACRO_MODAL.md** | Report lavoro 04-02-2026 (statistiche, refresh modal, completamento/uncomplete, temperature_reading) |
-| **../Generic-Task-creation_assignation/** | Documentazione GenericTaskForm |
+| **GENERIC_TASK_FORM.md** | Documentazione form mansioni |
+
+### Report Lavoro
+
+| Cartella | Contenuto |
+|----------|-----------|
+| **../Lavoro/29-01-2026/** | GenericTaskForm: recurrence_config, validazioni |
+| **../Lavoro/04-02-2026/** | MacroCategoryModal, UI Statistiche, completamento mansioni |
+| **../Lavoro/05-02-2026/** | Allineamento repository, filtri reparto solo admin, rimozione filtri Per Stato |
 
 ---
 
@@ -273,5 +346,5 @@ npm run dev
 
 ---
 
-**Ultimo aggiornamento**: 2026-02-04
-**Status**: PRODUCTION-READY - Sistema calendario completo con 6 fonti aggregate. Refresh modal, uncomplete mansioni, classificazione temperature_reading → Manutenzioni.
+**Ultimo aggiornamento**: 2026-02-05
+**Status**: PRODUCTION-READY - Sistema calendario completo con 6 fonti aggregate. Refresh modal, uncomplete mansioni, classificazione temperature_reading → Manutenzioni. Filtri UI: solo Reparto (admin) e Tipo; filtro Per Stato rimosso.

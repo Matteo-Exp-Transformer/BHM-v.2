@@ -7,7 +7,7 @@
 // Modifiche richiedono unlock manuale e re-test completo
 
 import React, { ReactNode, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth, UserRole, UserPermissions } from '@/hooks/useAuth'
 import { Loader2, AlertCircle, UserX } from 'lucide-react'
 
@@ -173,9 +173,11 @@ export const ProtectedRoute = ({
   showLoadingSpinner = true,
 }: ProtectedRouteProps) => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const isOnboardingPath = location.pathname === '/onboarding'
   const {
     isLoading,
-    isAuthenticated,
+    isSignedIn,
     isAuthorized,
     userRole,
     hasRole,
@@ -183,23 +185,30 @@ export const ProtectedRoute = ({
     authError,
   } = useAuth()
 
-  // ✅ Redirect a login se non autenticato
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isSignedIn) {
       console.log('🚫 Utente non autenticato - redirect a login')
       navigate('/sign-in', { replace: true })
     }
-  }, [isLoading, isAuthenticated, navigate])
+  }, [isLoading, isSignedIn, navigate])
 
-  // ✅ Redirect a onboarding se autenticato ma senza company (non a sign-in: utente è loggato)
   useEffect(() => {
-    if (!isLoading && isAuthenticated && !isAuthorized) {
+    if (!isLoading && isSignedIn && !isAuthorized && !isOnboardingPath) {
       console.log('🔄 Utente senza company - redirect a onboarding')
       navigate('/onboarding', { replace: true })
     }
-  }, [isLoading, isAuthenticated, isAuthorized, navigate])
+  }, [isLoading, isSignedIn, isAuthorized, isOnboardingPath, navigate])
 
   if (isLoading && showLoadingSpinner) {
+    return fallback || <LoadingFallback />
+  }
+
+  if (!isSignedIn) {
+    return null
+  }
+
+  // In attesa redirect verso onboarding
+  if (!isAuthorized && !isOnboardingPath) {
     return fallback || <LoadingFallback />
   }
 
@@ -219,6 +228,10 @@ export const ProtectedRoute = ({
         </button>
       </div>
     )
+  }
+
+  if (!isAuthorized && isOnboardingPath) {
+    return <>{children}</>
   }
 
   if (!isAuthorized) {

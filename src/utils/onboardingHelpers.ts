@@ -1835,6 +1835,14 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
             `⚠️ Dipendente specifico non mappato (frontend id: ${plan.assegnatoADipendenteSpecifico}), uso assegnazione per ruolo`
           )
         }
+        // recurrence_config per calendario (allineato a AddPointModal e migration 019)
+        const freq = plan.frequenza
+        const hasWeekdays = plan.giorniCustom && Array.isArray(plan.giorniCustom) && plan.giorniCustom.length > 0
+        const recurrence_config =
+          (freq === 'custom' || freq === 'giornaliera' || freq === 'settimanale') && hasWeekdays
+            ? { weekdays: [...plan.giorniCustom] }
+            : undefined
+
         return {
           company_id: companyId,
           conservation_point_id: realConservationPointId, // ✅ Usa ID reale
@@ -1857,6 +1865,7 @@ const saveAllDataToSupabase = async (formData: OnboardingData, companyId: string
           assignment_type: realStaffId ? 'staff' : 'role',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
+          ...(recurrence_config && { recurrence_config }),
         }
       })
       .filter(Boolean) // Rimuovi null

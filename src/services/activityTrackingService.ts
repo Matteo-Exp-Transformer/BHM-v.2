@@ -69,21 +69,43 @@ export const activityTrackingService = {
     userAgent?: string
   ): Promise<{ success: boolean; error?: string; sessionId?: string }> {
     try {
+      const now = new Date().toISOString()
+      const payload = {
+        user_id: userId,
+        active_company_id: companyId,
+        session_start: now,
+        last_activity: now,
+        is_active: true,
+        ip_address: ipAddress ?? null,
+        user_agent: userAgent ?? null,
+      }
+
       const { data: session, error: sessionError } = await supabase
         .from('user_sessions')
-        .insert({
-          user_id: userId,
-          active_company_id: companyId,
-          session_start: new Date().toISOString(),
-          last_activity: new Date().toISOString(),
-          is_active: true,
-          ip_address: ipAddress,
-          user_agent: userAgent,
-        })
+        .upsert(payload, { onConflict: 'user_id' })
         .select('id')
         .single()
 
       if (sessionError) {
+        // Sessione già presente: rileggi senza log di errore rumoroso
+        if (sessionError.code === '23505') {
+          const { data: existing } = await supabase
+            .from('user_sessions')
+            .select('id')
+            .eq('user_id', userId)
+            .single()
+          if (existing?.id) {
+            await supabase
+              .from('user_sessions')
+              .update({
+                active_company_id: companyId,
+                last_activity: now,
+                is_active: true,
+              })
+              .eq('user_id', userId)
+            return { success: true, sessionId: existing.id }
+          }
+        }
         console.error('Error creating session:', sessionError)
         return { success: false, error: sessionError.message }
       }

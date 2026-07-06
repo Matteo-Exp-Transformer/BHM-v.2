@@ -14,7 +14,7 @@ const SUPPORTED_PORTS = [3000, 3001, 3002, 3003, 3004, 3005]
 const STORAGE_KEYS = {
   SUPABASE_AUTH: 'bhm-supabase-auth', // Chiave corretta configurata in client.ts
   // Fallback per vecchia chiave (se esiste)
-  SUPABASE_AUTH_OLD: 'sb-tucqgcfrlzmwyfadiodo-auth-token',
+  SUPABASE_AUTH_OLD: 'sb-hjteuounjwkadmsbsmdm-auth-token',
 }
 
 /**

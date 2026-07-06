@@ -1,12 +1,21 @@
+> **Stato Fase 3** (2026-07-06): `verificato-rotto` · Fonte: [`FASE3_REPORT_A2`](../../META/FASE3_REPORT_A2_CONSERVATION.md) §5.5  
+> **Motivo**: claim «Campi Salvati» migration 015 — colonne assenti su DB live; letture non persistono (BUG-005).  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # TEMPERATURE_READINGS_SECTION - DOCUMENTAZIONE COMPLETA
 
 **Data Creazione**: 2026-01-16
-**Ultima Modifica**: 2026-02-04
-**Versione**: 3.0.0
+**Ultima Modifica**: 2026-02-05
+**Versione**: 3.2.0
 **File Componente**: `src/features/conservation/ConservationPage.tsx` (sezione "Letture Temperature")
 **Tipo**: Sezione Pagina
 
-**Nuove Features (v3.0.0 - 04-02-2026)**:
+**Nuove Features (v3.2.0 - 05-02-2026)**:
+- ✅ **Struttura 3 Tab**: Stato Corrente (griglia `TemperaturePointStatusCard`, punti senza blast, ordinati per tipo fridge→freezer→ambient), Storico (`TemperatureHistorySection` con filtri e raggruppamento date), Analisi (`TemperatureAnalysisTab` con grafico recharts e statistiche)
+- ✅ **Tolleranza Unica ±1°C**: Setpoint ±1°C per tutti i tipi (dentro = conforme, fuori = critico). Fonte: `correctiveActions.ts` TOLERANCE_C = 1.0
+- ✅ **Campi Salvati**: `method`, `notes`, `photo_evidence`, `recorded_by` salvati in `temperature_readings` (migration 015)
+
+**Features (v3.0.0 - 04-02-2026)**:
 - ✅ **Completamento automatico task "Rilevamento Temperature"**: Al salvataggio di una lettura (pulsante "Rileva Temperatura"), l'hook `useTemperatureReadings.createReading` inserisce in `maintenance_completions` le task di tipo "Rilevamento Temperature" per quel punto con `next_due <= recorded_at`. La task risulta completata in Conservazione (card Manutenzioni Programmate) e in Attività/calendario. Invalidazioni: `maintenance-tasks`, `maintenance-tasks-critical`, `calendar-events`, `macro-category-events`, `maintenance-completions` + evento `calendar-refresh`.
 
 **Features (v2.0.0)**:
@@ -31,12 +40,13 @@ Questa sezione risolve il bisogno di:
 - **Organizzare** migliaia di letture (considerando 1 anno intero di attività) in una struttura scalabile
 
 ### Scopo Tecnico
-La sezione è implementata all'interno di una `CollapsibleCard` e include:
+La sezione è implementata all'interno di una `CollapsibleCard` con navigazione a 3 tab:
 
-- **Statistiche COUNT**: Mini-card che mostrano conteggio totale, conformi, attenzione, critiche
-- **Dropdown registrazione**: Selettore punto di conservazione per aprire il modal di registrazione
-- **Lista letture**: Elenco scalabile di `TemperatureReadingCard` ordinate per data più recente
-- **Gestione stato**: Calcolo automatico dello stato (compliant/warning/critical) in base a temperatura e setpoint
+- **Tab "Stato Corrente"**: Griglia `TemperaturePointStatusCard` con punti (escluso blast), ordinati per tipo (fridge→freezer→ambient), badge stato, ultima lettura, azioni correttive
+- **Tab "Storico"**: `TemperatureHistorySection` con tabella letture, filtri periodo/punto/anomalie, raggruppamento per data, dettagli espandibili (metodo/note/foto)
+- **Tab "Analisi"**: `TemperatureAnalysisTab` con grafico recharts (banda range, tooltip, pallini conformi/fuori), statistiche aggregate
+- **Pulsante "Rileva Temperatura"**: Dropdown selettore punto nell'header per aprire modal registrazione
+- **Gestione stato**: Calcolo automatico stato (conforme/critico) con tolleranza ±1°C unica per tutti i tipi
 - **Nome utente** (v2.0.0): Risoluzione `recorded_by` → `user_profiles` → nome completo
 
 ---
@@ -364,39 +374,41 @@ Questa sezione non riceve props dirette. I dati vengono caricati tramite hooks c
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ CollapsibleCard: "Letture Temperature"                  │
-│ Header: Titolo + Counter "3 letture registrate"         │
-│         + Dropdown "Registra temperatura..."             │
+│ Header: Titolo + Counter "7 punti"                      │
+│         + Pulsante "Rileva Temperatura" (dropdown)       │
 ├─────────────────────────────────────────────────────────┤
 │ Content (se espanso):                                    │
 │                                                           │
 │   ┌───────────────────────────────────────────────────┐ │
-│   │ Mini Statistics Grid (4 card)                     │ │
-│   │ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐              │ │
-│   │ │Totale│ │Conf. │ │Attenz│ │Crit. │ (1x4 grid)   │ │
-│   │ └──────┘ └──────┘ └──────┘ └──────┘              │ │
+│   │ Tab Navigation: [Stato Corrente][Storico][Analisi]│ │
 │   └───────────────────────────────────────────────────┘ │
 │                                                           │
+│   [Tab "Stato Corrente" - attivo]                       │
 │   ┌───────────────────────────────────────────────────┐ │
-│   │ TemperatureReadingCard [0]                        │ │
-│   │ ┌───────────────────────────────────────────────┐ │ │
-│   │ │ Header: 6.0°C | "Frigo 2" | Badge "Attenzione"│ │ │
-│   │ ├───────────────────────────────────────────────┤ │ │
-│   │ │ Temperatura target: 3°C                        │ │ │
-│   │ │ Range tolleranza: 1.0°C - 5.0°C                │ │ │
-│   │ │ [+3.0°C] [Barra progresso colorata]            │ │ │
-│   │ │ 🕐 10/01/2026, 10:30                           │ │ │
-│   │ │ Messaggio HACCP: "⚠ La temperatura si sta...   │ │ │
-│   │ ├───────────────────────────────────────────────┤ │ │
-│   │ │ Actions: [Modifica] [Elimina]                  │ │ │
-│   │ └───────────────────────────────────────────────┘ │ │
+│   │ Griglia TemperaturePointStatusCard (2 colonne)     │ │
+│   │ ┌──────────────┐  ┌──────────────┐                │ │
+│   │ │ Frigo 1      │  │ Frigo 2      │                │ │
+│   │ │ Target: 3°C  │  │ Target: 4°C  │                │ │
+│   │ │ Badge verde  │  │ Badge rosso  │                │ │
+│   │ │ Ultima lett. │  │ Ultima lett. │                │ │
+│   │ └──────────────┘  └──────────────┘                │ │
+│   │ ┌──────────────┐  ┌──────────────┐                │ │
+│   │ │ Freezer 1    │  │ Ambiente 1   │                │ │
+│   │ └──────────────┘  └──────────────┘                │ │
 │   └───────────────────────────────────────────────────┘ │
 │                                                           │
+│   [Tab "Storico"]                                        │
 │   ┌───────────────────────────────────────────────────┐ │
-│   │ TemperatureReadingCard [1]                        │ │
-│   │ ... (stessa struttura)                            │ │
+│   │ Filtri: [Periodo] [Punto] [Solo anomalie]         │ │
+│   │ Tabella raggruppata per data con dettagli         │ │
+│   │ espandibili (metodo, note, foto)                   │ │
 │   └───────────────────────────────────────────────────┘ │
 │                                                           │
-│   [Altre card...]                                         │
+│   [Tab "Analisi"]                                        │
+│   ┌───────────────────────────────────────────────────┐ │
+│   │ Grafico recharts con banda range, tooltip,        │ │
+│   │ pallini conformi/fuori + statistiche aggregate     │ │
+│   └───────────────────────────────────────────────────┘ │
 │                                                           │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -803,9 +815,10 @@ interface CreateTemperatureReadingInput {
 | `temperature` | `temperature_readings.temperature` | Diretto (number) |
 | `recorded_at` | `temperature_readings.recorded_at` | Date → ISO string (default: now()) |
 | `conservation_point_id` | `temperature_readings.conservation_point_id` | Diretto (string UUID) |
-| `method` | `temperature_readings.method` | **NON SALVATO** - campo non esiste nel DB (TODO) |
-| `notes` | `temperature_readings.notes` | **NON SALVATO** - campo non esiste nel DB (TODO) |
-| `photo_evidence` | `temperature_readings.photo_evidence` | **NON SALVATO** - campo non esiste nel DB (TODO) |
+| `method` | `temperature_readings.method` | ✅ **SALVATO** - migration 015 (default: 'digital_thermometer') |
+| `notes` | `temperature_readings.notes` | ✅ **SALVATO** - migration 015 (nullable) |
+| `photo_evidence` | `temperature_readings.photo_evidence` | ✅ **SALVATO** - migration 015 (nullable, URL) |
+| `recorded_by` | `temperature_readings.recorded_by` | ✅ **SALVATO** - migration 015 (UUID user.id) |
 
 **Validazioni database:**
 
@@ -817,17 +830,17 @@ interface CreateTemperatureReadingInput {
 
 1. **Calcolo stato lettura**:
    ```typescript
+   // Tolleranza unica ±1°C per tutti i tipi (correctiveActions.ts: TOLERANCE_C = 1.0)
    function calculateTemperatureStatus(
      temperature: number,
      setpoint: number,
      type: 'ambient' | 'fridge' | 'freezer' | 'blast'
-   ): 'compliant' | 'warning' | 'critical' {
-     const tolerance = type === 'blast' ? 5 : type === 'ambient' ? 3 : 2
+   ): 'compliant' | 'critical' {
+     const tolerance = 1.0  // Tolleranza unica per tutti i tipi
      const diff = Math.abs(temperature - setpoint)
-     
-     if (diff <= tolerance) return 'compliant'
-     if (diff <= tolerance + 2) return 'warning'
-     return 'critical'
+
+     if (diff <= tolerance) return 'compliant'  // Dentro ±1°C = conforme
+     return 'critical'  // Fuori ±1°C = critico (no stato "warning")
    }
    ```
 

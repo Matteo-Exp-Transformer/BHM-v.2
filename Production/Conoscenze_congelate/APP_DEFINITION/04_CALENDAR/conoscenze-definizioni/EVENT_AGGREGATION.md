@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-ok` · Fonte: [`FASE3_REPORT_A3`](../../META/FASE3_REPORT_A3_CALENDAR.md) §5.3  
+> **Motivo**: aggregazione 6 fonti implementata in `useAggregatedEvents.ts`; manutenzioni ricorrenti presenti ma untested.  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # EVENT AGGREGATION - DOCUMENTAZIONE
 
 **Data Creazione**: 2026-01-30

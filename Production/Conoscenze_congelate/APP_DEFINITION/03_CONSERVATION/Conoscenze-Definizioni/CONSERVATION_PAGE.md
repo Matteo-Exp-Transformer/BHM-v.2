@@ -1,3 +1,7 @@
+> **Stato Fase 3** (2026-07-06): `verificato-gap` · Fonte: [`FASE3_REPORT_A2`](../../META/FASE3_REPORT_A2_CONSERVATION.md) §5.5  
+> **Motivo**: auto-complete task temperatura su lettura OK in codice/DB, ma **bloccato** finché insert temperatura fallisce (BUG-005).  
+> **Verità**: codice + DB live > questo documento (solo intento UX).
+
 # CONSERVATION_PAGE - DOCUMENTAZIONE COMPLETA
 
 **Data Creazione**: 2026-01-16
@@ -9,7 +13,12 @@
 **Nuove Features (v3.1.0 - 04-02-2026)**:
 - ✅ **Completamento automatico task "Rilevamento Temperature" su lettura**: Quando l'utente salva una lettura tramite il pulsante "Rileva Temperatura", le task "Rilevamento Temperature" per quel punto (con scadenza soddisfatta dalla lettura) vengono completate automaticamente (insert in `maintenance_completions`). La task risulta completata in Conservazione e in Attività/calendario. Flusso: click "Rileva Temperatura" → selezione punto → inserimento temperatura → salvataggio → lettura salvata + task temperatura completate in backend → card Manutenzioni Programmate e calendario si aggiornano.
 - ✅ **Apertura modal temperatura da Attività**: Se l'utente arriva dalla pagina Attività dopo aver cliccato "Completa Manutenzione" su un task "Rilevamento temperatura", la navigazione può passare `location.state.openTemperatureForPointId`. Un `useEffect` sulla pagina Conservazione apre il modal per quel punto e poi azzera lo state con `navigate(pathname, { replace: true, state: {} })`. Alla chiusura del modal, `closeTemperatureModal` azzera di nuovo `location.state` per evitare che l'effetto riapra il modal.
-- ✅ **Chiusura modal temperatura**: La chiusura avviene solo in `onSuccess` della mutation (create/update lettura); durante il salvataggio il modal resta aperto; in caso di errore l'utente può riprovare. La funzione `closeTemperatureModal` chiude il modal, resetta `selectedPointForTemperature` e `editingReading`, e chiama `navigate(pathname, { replace: true, state: {} })` per evitare ri-aperture da deep link. Il modal riceve `onClose={closeTemperatureModal}` (stesso handler per X, Annulla e click overlay). ⚠️ Bug noto: in alcune condizioni il modal potrebbe non chiudersi (vedi Lavoro/04-02-2026/REPORT_SESSIONE_MODAL_TEMPERATURA_04-02-2026.md).
+- ✅ **Chiusura modal temperatura**: La chiusura avviene solo in `onSuccess` della mutation (create/update lettura); durante il salvataggio il modal resta aperto; in caso di errore l'utente può riprovare. La funzione `closeTemperatureModal` chiude il modal, resetta `selectedPointForTemperature` e `editingReading`, e chiama `navigate(pathname, { replace: true, state: {} })` per evitare ri-aperture da deep link. Il modal riceve `onClose={closeTemperatureModal}` (stesso handler per X, Annulla e click overlay). Comportamento atteso: chiusura con X, Annulla, overlay e dopo salvataggio riuscito.
+
+**Features (v3.2.0 - 05-02-2026)**:
+- ✅ **Struttura 3 Tab per Letture Temperature**: Stato Corrente (griglia `TemperaturePointStatusCard`, punti senza blast), Storico (`TemperatureHistorySection`), Analisi (`TemperatureAnalysisTab`)
+- ✅ **Tolleranza Unica ±1°C**: Tutte le tolleranze temperature unificate a setpoint ±1°C (dentro = conforme, fuori = critico)
+- ✅ **Campi Temperature Salvati**: `method`, `notes`, `photo_evidence`, `recorded_by` salvati in DB (migration 015)
 
 **Features (v3.0.0 - 01-02-2026)**:
 - ✅ **Real-time Updates**: Hook `useConservationRealtime()` con 3 subscriptions Supabase
@@ -517,14 +526,20 @@ L'apertura può avvenire anche da **Attività**: se `location.state.openTemperat
 │                                                           │
 │ ┌─────────────────────────────────────────────────────┐ │
 │ │ CollapsibleCard: "Letture Temperature"              │ │
-│ │ Header: Titolo + Counter + Dropdown "Registra..."   │ │
+│ │ Header: Titolo + Counter + Pulsante "Rileva Temp."  │ │
 │ ├─────────────────────────────────────────────────────┤ │
 │ │ Content:                                            │ │
-│ │   ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐             │ │
-│ │   │Totale│ │Conf. │ │Attenz│ │Crit. │ (mini stats)│ │
-│ │   └──────┘ └──────┘ └──────┘ └──────┘             │ │
+│ │   ┌─────────────────────────────────────────────┐  │ │
+│ │   │ Tab Navigation: [Stato Corrente][Storico]   │  │ │
+│ │   │                 [Analisi]                     │  │ │
+│ │   └─────────────────────────────────────────────┘  │ │
 │ │                                                      │ │
-│ │   [Lista TemperatureReadingCard]                    │ │
+│ │   [Tab Stato Corrente: Griglia TemperaturePoint-   │ │
+│ │    StatusCard, punti senza blast, ordinati per tipo]│ │
+│ │   [Tab Storico: TemperatureHistorySection con      │ │
+│ │    filtri e raggruppamento per data]                │ │
+│ │   [Tab Analisi: TemperatureAnalysisTab con grafico │ │
+│ │    andamento e statistiche]                         │ │
 │ └─────────────────────────────────────────────────────┘ │
 │                                                           │
 │ ┌─────────────────────────────────────────────────────┐ │
@@ -1206,8 +1221,7 @@ interface CreateTemperatureReadingInput {
 1. **Feature "Visualizza ingredienti" non implementata**: L'utente ha menzionato che cliccando su un elemento nella ConservationPointCard dovrebbero essere visualizzati gli ingredienti associati, ma questa feature non esiste ancora e deve essere ancora definita (cosa visualizzare e come interagire)
 2. **Modifica lettura temperatura non implementata**: Mostra solo alert "Funzionalità in arrivo"
 3. **Conflitti multi-utente non gestiti**: Modifiche simultanee possono sovrascriversi
-4. **Real-time updates non implementati**: La pagina non si aggiorna automaticamente quando altri utenti modificano dati
-5. **Transazioni non atomiche**: Creazione punto + manutenzioni non è atomica (se manutenzioni falliscono, punto rimane senza manutenzioni)
+4. **Transazioni non atomiche**: Creazione punto + manutenzioni non è atomica (se manutenzioni falliscono, punto rimane senza manutenzioni)
 
 **Limitazioni tecniche:**
 - React Query cache time: 5 minuti - dati possono essere obsoleti
