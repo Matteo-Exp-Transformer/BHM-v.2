@@ -27,6 +27,7 @@ Interattivi. Toggle light/dark disponibile dove il visore lo espone.
 | 4 | **Regia** — vista titolare su tablet (respiro + "Genera dossier") | [`04_REGIA_titolare.html`](./04_REGIA_titolare.html) | 🫧 respiro azienda · 📦 dossier che si assembla · side-rail (unfold desktop) | https://claude.ai/code/artifact/a9dd38c4-11e3-4715-b579-71570c3ad9f3 |
 | 5 | **Onboarding titolare** — barra cantiere chiudibile/navigabile + temperatura dal profilo · 🔄 **v2 — attesa ok owner** | [`05_ONBOARDING_admin.html`](./05_ONBOARDING_admin.html) | 🏗️ 7 aree navigabili · 🌡️ temperatura che atterra read-only (dal profilo) · barra che apre/chiude sul progresso | https://claude.ai/code/artifact/face8ef3-3591-4bb0-a81b-eae7a5fd72fa |
 | 6 | **Scheletro di navigazione** — le 4 case su mobile **e** desktop, ruolo/reparti commutabili · 🔄 **proposto — attesa ok navigazione** | [`06_NAVIGAZIONE_shell.html`](./06_NAVIGAZIONE_shell.html) | 🧭 side-rail (desktop) ↔ bottom-bar (mobile) sincronizzati · barra che si trasforma col ruolo · tab Reparti dinamica · "stesso item, due lenti" | https://claude.ai/code/artifact/d4947df9-7c2c-4212-b9e5-d599a48aff69 |
+| 7 | **Scorte** — inventario + scadenze + lista spesa · 🔄 **proposto** | [`07_SCORTE.html`](./07_SCORTE.html) | 📦 «cosa manca → lista spesa» in un tap (§9.4) · scadenze + ciclo reinserimento (dec.10) · spunta ottimistica liste · filtro per reparto | https://claude.ai/code/artifact/e1e1a5d2-033b-443f-a41a-6757d4fe8204 |
 
 > 📋 Mappa dei campi per ogni step (fonte legacy) → [`MAPPATURA_ONBOARDING_STEP.md`](./MAPPATURA_ONBOARDING_STEP.md). È la base del "cosa chiediamo" del mockup 5.
 
@@ -77,4 +78,4 @@ Concept (cantiere che si popola + anteprima azienda viva) **promosso in principi
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-06 · serie base 4/4 approvata · mockup 5 v2 pubblicata · **mockup 6 Scheletro di navigazione** pubblicato (mobile+desktop, le 4 case, ruolo/reparti commutabili) — **attesa ok navigazione owner** · prossimo: schermate-chiave residue (onboarding dipendente · Scorte · setup Regia · stati-eccezione) prima del lancio Fable. → report sessione mappatura/UI 2026-07-06.
+**Ultimo aggiornamento**: 2026-07-06 · serie base 4/4 approvata · mockup 5 v2 · mockup 6 Navigazione · **mockup 7 Scorte** pubblicato (inventario + scadenze + «cosa manca → lista spesa» + spunta liste). **Onboarding dipendente**: NON si mockup-a — decisione owner = stesso stile dell'onboarding admin ma **semplificato**, **carta bianca a Fable**. Residue prima di Fable: setup Regia · stati-eccezione. → report sessione mappatura/UI 2026-07-06.
