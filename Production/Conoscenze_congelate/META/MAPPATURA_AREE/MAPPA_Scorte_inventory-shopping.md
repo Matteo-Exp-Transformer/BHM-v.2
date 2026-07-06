@@ -16,6 +16,34 @@
 
 ---
 
+## 1-bis. ⭐ Modello inventario riformulato (owner 2026-07-06) — vincola il port
+
+Questa è la **logica di prodotto decisa** (non solo l'as-is del codice). Vincola Fable.
+
+1. **Inventario = mansione ricorrente assegnabile** (nuovo tipo di mansione, accanto alle manutenzioni).
+   L'**admin assegna "Inventario"** a un responsabile/dipendente → l'assegnatario fa il **giro dei punti
+   di conservazione** del **reparto/frigo a cui è assegnato** e **conta le rimanenze**. Genera **reminder**
+   (come una manutenzione) e tiene il **catalogo aggiornato**. Vive quindi anche nella lente **Oggi** (mansione del giorno).
+2. **Ingrediente-level: «dovrei avere N» (par/scorta) vs rimanenza attuale (M)**. Quando `M < par` →
+   l'ingrediente è **sotto scorta** e confluisce nei **suggerimenti** della spesa.
+3. **Scadenza catturata all'INSERIMENTO del prodotto**, non nel giro d'inventario. Nel giro la scadenza è
+   solo un **check di conferma** (non ridigitata). Dato mostrato = **ultima scadenza disponibile** (unità/lotto
+   **più longevo**, = "ho scorta buona fino al …"); **ma** un'unità che scade **a breve** deve **emergere come
+   alert** (anche in **Oggi**) → doppia lente §12.1 (disponibilità-acquisto vs sicurezza-HACCP).
+4. **A inventario ben fatto la spesa è già ~compilata** (dai sotto-scorta), **ma resta libera**: l'utente
+   crea liste **diverse/personalizzate**, aggiunge/toglie voci. **NIENTE barra di avanzamento né
+   "completamento"** (logica pericolosa: la spesa varia; non deve dare sensazione di "incompleta").
+5. **Pezzo non ancora in catalogo → chiedi la scadenza** *(annotato owner 2026-07-06, da implementare)*:
+   se durante il giro/aggiunta compare un'unità che l'app **non conosceva**, è di fatto un **inserimento di
+   prodotto nuovo** → l'app **chiede la data di scadenza** (coerente col punto 3: la scadenza si prende
+   all'inserimento). Nel giro di conferma su ciò che già esiste, invece, non si ridigita.
+6. **[UI, annotato owner 2026-07-06]** cliccando il **nome della categoria** la sezione si **chiude/apre**
+   (accordion) per alleggerire la vista con molti ingredienti. *(Non ancora nel mockup — da applicare.)*
+
+> Mockup di riferimento: `MOCKUP_UI/07_SCORTE.html` (v2, artifact `e1e1a5d2`). Vedi anche `DECISIONI_OWNER_BETA` dec.12.
+
+---
+
 ## 2. Flusso utente (as-is → to-be)
 
 | Passo | Cosa fa l'utente | Oggi (Fase 3) | Nel prodotto nuovo |
@@ -82,6 +110,10 @@ DASHBOARD KPI: useDashboardData → useShoppingLists (LEGACY, query dirette)  �
 | `product_categories` estese (migration 010) | ❌ assenti | allergeni/expiry default se servono | migration 010 |
 | `department_id` prodotto | FK ok ma UI manda stringhe | sempre UUID valido | fix codice (non DB) |
 | dual-stack shopping | 2 implementazioni (legacy vs RPC) | **una** fonte per liste e KPI | consolidamento codice |
+| `products.par_level`/scorta minima ("dovrei avere N") | ❌ assente | soglia per-ingrediente che alimenta i suggerimenti spesa (dec.12) | migration products |
+| **conteggio rimanenze** (giro d'inventario) | ❌ nessuna traccia | storicizzare i conteggi per data/utente (audit + reminder freschezza) — es. `stock_counts` o campo `counted_at`/`counted_by` | migration nuova (design) |
+| **tipo mansione "Inventario"** | ❌ solo manutenzioni | nuovo tipo di task ricorrente assegnabile (accanto a manutenzione) → genera reminder in Oggi (dec.12) | schema tasks + generatore ricorrenze |
+| **scadenza per lotto/unità** | scadenza flat sul prodotto | catturata all'inserimento; "ultima scadenza" = max dei lotti; unità prossima = alert | valutare granularità lotto vs flat |
 
 > ⚠️ Regole HACCP su allergeni/scadenze normative → `src/compliance/haccp-rules.ts` (§14.3). Qui solo struttura.
 

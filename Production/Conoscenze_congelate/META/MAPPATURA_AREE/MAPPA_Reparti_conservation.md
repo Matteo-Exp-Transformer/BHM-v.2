@@ -16,6 +16,8 @@
 > Il confine con Oggi/Calendar (A3): le `maintenance_tasks` sono definite/visualizzate qui, ma la loro
 > **scadenza** e il completamento come "cosa da fare oggi" appartengono alla lente Oggi.
 > Il confine con Regia (A6): i **reparti** (departments) come CRUD sono in A6; qui sono il **contenitore-spazio**.
+> Il confine con Scorte (A5): la mansione **«Inventario»** (dec.12) fa il **giro dei punti di conservazione
+> di questo reparto** per contare le rimanenze — i *punti* sono di questa lente, i *conteggi/scorte* di Scorte.
 
 ---
 

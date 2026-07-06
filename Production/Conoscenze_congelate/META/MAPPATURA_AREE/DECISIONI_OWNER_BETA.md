@@ -80,6 +80,24 @@ Non chieste in intervista; assunte per non bloccare, allineate ai vincoli del ri
 
 ---
 
+## Decisione 12 — Inventario come mansione + spesa flessibile (seduta UI 2026-07-06)
+
+> Riformula la casa **Scorte** durante il mockup 7. Alimenta **port §6.6**, **Fondamenta** (schema) e **UI**.
+> Dettaglio + mockup: [`MAPPA_Scorte_inventory-shopping.md`](./MAPPA_Scorte_inventory-shopping.md) §1-bis · `MOCKUP_UI/07_SCORTE.html` (v2).
+
+1. **Inventario = mansione ricorrente assegnabile** (nuovo tipo, accanto alle manutenzioni): l'admin la assegna a responsabile/dipendente → giro dei **punti di conservazione del reparto/frigo assegnato** → **conta le rimanenze**. Genera **reminder**, tiene il catalogo aggiornato, appare in **Oggi**.
+2. **Ingrediente-level**: `par_level` («dovrei avere N») vs rimanenza (M); `M < par` → **sotto scorta** → suggerito in spesa.
+3. **Scadenza catturata all'inserimento del prodotto**, non nel giro; nel giro = **check di conferma**. Mostrata l'**ultima scadenza** (lotto più longevo); unità in scadenza a breve = **alert** (anche Oggi) → doppia lente.
+4. **Spesa flessibile**: auto-compilata dai sotto-scorta ma **editabile**, liste multiple/personalizzate; **NIENTE avanzamento/completamento** (la spesa varia — niente sensazione di "incompleta").
+
+**Conseguenze schema (per Fable)**: `products.par_level`; storicizzare i conteggi (`stock_counts` o `counted_at`/`counted_by`); nuovo tipo mansione «Inventario» nel sistema tasks + generatore ricorrenze/reminder; valutare scadenza per **lotto** vs flat.
+
+**Note UI/logica annotate (owner 2026-07-06, da implementare — non ancora nel mockup):**
+- **Pezzo non in catalogo → chiedi scadenza**: se aggiungo un'unità che l'app non conosceva, è un inserimento nuovo → richiedi la data di scadenza (nel giro su prodotti esistenti = solo conferma).
+- **Accordion categorie**: click sul nome categoria chiude/apre la sezione (alleggerisce la vista con molti ingredienti).
+
+---
+
 ## Per il masterplan §8
 - Le domande "Mappatura area-per-area" e le "due lenti" delle 5 mappe hanno ora **risposte owner** su 10 bivi → §8 spuntabile.
 - **[NUOVO SCOPE] Timbro fine turno** (dec. 7) **definito 2026-07-06**: «sigilla la giornata» (orario + attestazione «tutto registrato» → `shift_seals` append-only, firma audit-grade). Design comportamento/UI = prossima seduta Track A.
